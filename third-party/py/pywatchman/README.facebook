@@ -1,5 +1,5 @@
 Project URL: https://github.com/facebook/watchman
-Upstream revision: 222447241292c10d0a4eb49ec8659515456d1cb6
-Version: 1.3.0 (v4.4.0 tag of project)
+Upstream revision: df3ec5c12e9855c4621a96985770d8e9eb27318c
+Version: 4.9.0
 License: Apache 2.0
 Local modifications: We've only taken parts of the python/ directory

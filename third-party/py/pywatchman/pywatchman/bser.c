@@ -49,6 +49,7 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
+// clang-format off
 /* Return the smallest size int that can store the value */
 #define INT_SIZE(x) (((x) == ((int8_t)x))  ? 1 :    \
                      ((x) == ((int16_t)x)) ? 2 :    \
@@ -67,6 +68,8 @@ typedef unsigned __int64 uint64_t;
 #define BSER_NULL      0x0a
 #define BSER_TEMPLATE  0x0b
 #define BSER_SKIP      0x0c
+#define BSER_UTF8STRING 0x0d
+// clang-format on
 
 // An immutable object representation of BSER_OBJECT.
 // Rather than build a hash table, key -> value are obtained
@@ -79,24 +82,27 @@ typedef unsigned __int64 uint64_t;
 // approach, this is still faster for the mercurial use case
 // as it helps to eliminate creating N other objects to
 // represent the stat information in the hgwatchman extension
+// clang-format off
 typedef struct {
   PyObject_HEAD
   PyObject *keys;   // tuple of field names
   PyObject *values; // tuple of values
 } bserObject;
+// clang-format on
 
-static Py_ssize_t bserobj_tuple_length(PyObject *o) {
-  bserObject *obj = (bserObject*)o;
+static Py_ssize_t bserobj_tuple_length(PyObject* o) {
+  bserObject* obj = (bserObject*)o;
 
   return PySequence_Length(obj->keys);
 }
 
-static PyObject *bserobj_tuple_item(PyObject *o, Py_ssize_t i) {
-  bserObject *obj = (bserObject*)o;
+static PyObject* bserobj_tuple_item(PyObject* o, Py_ssize_t i) {
+  bserObject* obj = (bserObject*)o;
 
   return PySequence_GetItem(obj->values, i);
 }
 
+// clang-format off
 static PySequenceMethods bserobj_sq = {
   bserobj_tuple_length,      /* sq_length */
   0,                         /* sq_concat */
@@ -107,21 +113,22 @@ static PySequenceMethods bserobj_sq = {
   0,                         /* sq_inplace_concat */
   0                          /* sq_inplace_repeat */
 };
+// clang-format on
 
-static void bserobj_dealloc(PyObject *o) {
-  bserObject *obj = (bserObject*)o;
+static void bserobj_dealloc(PyObject* o) {
+  bserObject* obj = (bserObject*)o;
 
   Py_CLEAR(obj->keys);
   Py_CLEAR(obj->values);
   PyObject_Del(o);
 }
 
-static PyObject *bserobj_getattrro(PyObject *o, PyObject *name) {
-  bserObject *obj = (bserObject*)o;
+static PyObject* bserobj_getattrro(PyObject* o, PyObject* name) {
+  bserObject* obj = (bserObject*)o;
   Py_ssize_t i, n;
-  PyObject *name_bytes = NULL;
-  PyObject *ret = NULL;
-  const char *namestr;
+  PyObject* name_bytes = NULL;
+  PyObject* ret = NULL;
+  const char* namestr;
 
   if (PyIndex_Check(name)) {
     i = PyNumber_AsSsize_t(name, PyExc_IndexError);
@@ -154,8 +161,8 @@ static PyObject *bserobj_getattrro(PyObject *o, PyObject *name) {
 
   n = PyTuple_GET_SIZE(obj->keys);
   for (i = 0; i < n; i++) {
-    const char *item_name = NULL;
-    PyObject *key = PyTuple_GET_ITEM(obj->keys, i);
+    const char* item_name = NULL;
+    PyObject* key = PyTuple_GET_ITEM(obj->keys, i);
 
     item_name = PyBytes_AsString(key);
     if (!strcmp(item_name, namestr)) {
@@ -164,13 +171,14 @@ static PyObject *bserobj_getattrro(PyObject *o, PyObject *name) {
     }
   }
 
-  PyErr_Format(PyExc_AttributeError,
-              "bserobject has no attribute '%.400s'", namestr);
- bail:
+  PyErr_Format(
+      PyExc_AttributeError, "bserobject has no attribute '%.400s'", namestr);
+bail:
   Py_XDECREF(name_bytes);
   return ret;
 }
 
+// clang-format off
 static PyMappingMethods bserobj_map = {
   bserobj_tuple_length,     /* mp_length */
   bserobj_getattrro,        /* mp_subscript */
@@ -217,17 +225,18 @@ PyTypeObject bserObjectType = {
   0,                         /* tp_alloc */
   0,                         /* tp_new */
 };
+// clang-format on
 
 typedef struct loads_ctx {
   int mutable;
-  const char *value_encoding;
-  const char *value_errors;
+  const char* value_encoding;
+  const char* value_errors;
   uint32_t bser_version;
   uint32_t bser_capabilities;
 } unser_ctx_t;
 
-static PyObject *bser_loads_recursive(const char **ptr, const char *end,
-    const unser_ctx_t *ctx);
+static PyObject*
+bser_loads_recursive(const char** ptr, const char* end, const unser_ctx_t* ctx);
 
 static const char bser_true = BSER_TRUE;
 static const char bser_false = BSER_FALSE;
@@ -236,9 +245,7 @@ static const char bser_bytestring_hdr = BSER_BYTESTRING;
 static const char bser_array_hdr = BSER_ARRAY;
 static const char bser_object_hdr = BSER_OBJECT;
 
-
-static inline uint32_t next_power_2(uint32_t n)
-{
+static inline uint32_t next_power_2(uint32_t n) {
   n |= (n >> 16);
   n |= (n >> 8);
   n |= (n >> 4);
@@ -249,18 +256,17 @@ static inline uint32_t next_power_2(uint32_t n)
 
 // A buffer we use for building up the serialized result
 struct bser_buffer {
-  char *buf;
+  char* buf;
   int wpos, allocd;
   uint32_t bser_version;
   uint32_t capabilities;
 };
 typedef struct bser_buffer bser_t;
 
-static int bser_append(bser_t *bser, const char *data, uint32_t len)
-{
+static int bser_append(bser_t* bser, const char* data, uint32_t len) {
   int newlen = next_power_2(bser->wpos + len);
   if (newlen > bser->allocd) {
-    char *nbuf = realloc(bser->buf, newlen);
+    char* nbuf = realloc(bser->buf, newlen);
     if (!nbuf) {
       return 0;
     }
@@ -274,8 +280,7 @@ static int bser_append(bser_t *bser, const char *data, uint32_t len)
   return 1;
 }
 
-static int bser_init(bser_t *bser, uint32_t version, uint32_t capabilities)
-{
+static int bser_init(bser_t* bser, uint32_t version, uint32_t capabilities) {
   bser->allocd = 8192;
   bser->wpos = 0;
   bser->buf = malloc(bser->allocd);
@@ -285,38 +290,36 @@ static int bser_init(bser_t *bser, uint32_t version, uint32_t capabilities)
     return 0;
   }
 
-  // Leave room for the serialization header, which includes
-  // our overall length.  To make things simpler, we'll use an
-  // int32 for the header
+// Leave room for the serialization header, which includes
+// our overall length.  To make things simpler, we'll use an
+// int32 for the header
 #define EMPTY_HEADER "\x00\x01\x05\x00\x00\x00\x00"
 
-  // Version 2 also carries an integer indicating the capabilities. The
-  // capabilities integer comes before the PDU size.
-#define EMPTY_HEADER_V2 "\x00\x02\x05\x00\x00\x00\x00\x05\x00\x00\x00\x00"
+// Version 2 also carries an integer indicating the capabilities. The
+// capabilities integer comes before the PDU size.
+#define EMPTY_HEADER_V2 "\x00\x02\x00\x00\x00\x00\x05\x00\x00\x00\x00"
   if (version == 2) {
-    bser_append(bser, EMPTY_HEADER_V2, sizeof(EMPTY_HEADER_V2)-1);
+    bser_append(bser, EMPTY_HEADER_V2, sizeof(EMPTY_HEADER_V2) - 1);
   } else {
-    bser_append(bser, EMPTY_HEADER, sizeof(EMPTY_HEADER)-1);
+    bser_append(bser, EMPTY_HEADER, sizeof(EMPTY_HEADER) - 1);
   }
 
   return 1;
 }
 
-static void bser_dtor(bser_t *bser)
-{
+static void bser_dtor(bser_t* bser) {
   free(bser->buf);
   bser->buf = NULL;
 }
 
-static int bser_long(bser_t *bser, int64_t val)
-{
+static int bser_long(bser_t* bser, int64_t val) {
   int8_t i8;
   int16_t i16;
   int32_t i32;
   int64_t i64;
   char sz;
   int size = INT_SIZE(val);
-  char *iptr;
+  char* iptr;
 
   switch (size) {
     case 1:
@@ -340,8 +343,7 @@ static int bser_long(bser_t *bser, int64_t val)
       iptr = (char*)&i64;
       break;
     default:
-      PyErr_SetString(PyExc_RuntimeError,
-          "Cannot represent this long value!?");
+      PyErr_SetString(PyExc_RuntimeError, "Cannot represent this long value!?");
       return 0;
   }
 
@@ -352,12 +354,11 @@ static int bser_long(bser_t *bser, int64_t val)
   return bser_append(bser, iptr, size);
 }
 
-static int bser_bytestring(bser_t *bser, PyObject *sval)
-{
-  char *buf = NULL;
+static int bser_bytestring(bser_t* bser, PyObject* sval) {
+  char* buf = NULL;
   Py_ssize_t len;
   int res;
-  PyObject *utf = NULL;
+  PyObject* utf = NULL;
 
   if (PyUnicode_Check(sval)) {
     utf = PyUnicode_AsEncodedString(sval, "utf-8", "ignore");
@@ -396,8 +397,7 @@ out:
   return res;
 }
 
-static int bser_recursive(bser_t *bser, PyObject *val)
-{
+static int bser_recursive(bser_t* bser, PyObject* val) {
   if (PyBool_Check(val)) {
     if (val == Py_True) {
       return bser_append(bser, &bser_true, sizeof(bser_true));
@@ -409,7 +409,7 @@ static int bser_recursive(bser_t *bser, PyObject *val)
     return bser_append(bser, &bser_null, sizeof(bser_null));
   }
 
-  // Python 3 has one integer type.
+// Python 3 has one integer type.
 #if PY_MAJOR_VERSION < 3
   if (PyInt_Check(val)) {
     return bser_long(bser, PyInt_AS_LONG(val));
@@ -423,7 +423,6 @@ static int bser_recursive(bser_t *bser, PyObject *val)
   if (PyBytes_Check(val) || PyUnicode_Check(val)) {
     return bser_bytestring(bser, val);
   }
-
 
   if (PyFloat_Check(val)) {
     double dval = PyFloat_AS_DOUBLE(val);
@@ -448,7 +447,7 @@ static int bser_recursive(bser_t *bser, PyObject *val)
     }
 
     for (i = 0; i < len; i++) {
-      PyObject *ele = PyList_GET_ITEM(val, i);
+      PyObject* ele = PyList_GET_ITEM(val, i);
 
       if (!bser_recursive(bser, ele)) {
         return 0;
@@ -470,7 +469,7 @@ static int bser_recursive(bser_t *bser, PyObject *val)
     }
 
     for (i = 0; i < len; i++) {
-      PyObject *ele = PyTuple_GET_ITEM(val, i);
+      PyObject* ele = PyTuple_GET_ITEM(val, i);
 
       if (!bser_recursive(bser, ele)) {
         return 0;
@@ -509,16 +508,21 @@ static int bser_recursive(bser_t *bser, PyObject *val)
   return 0;
 }
 
-static PyObject *bser_dumps(PyObject *self, PyObject *args, PyObject *kw)
-{
+static PyObject* bser_dumps(PyObject* self, PyObject* args, PyObject* kw) {
   PyObject *val = NULL, *res;
   bser_t bser;
   uint32_t len, bser_version = 1, bser_capabilities = 0;
 
-  static char *kw_list[] = {"val", "version", "capabilities", NULL};
+  static char* kw_list[] = {"val", "version", "capabilities", NULL};
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii:dumps", kw_list, &val,
-                                   &bser_version, &bser_capabilities)) {
+  if (!PyArg_ParseTupleAndKeywords(
+          args,
+          kw,
+          "O|ii:dumps",
+          kw_list,
+          &val,
+          &bser_version,
+          &bser_capabilities)) {
     return NULL;
   }
 
@@ -542,8 +546,8 @@ static PyObject *bser_dumps(PyObject *self, PyObject *args, PyObject *kw)
   } else {
     len = bser.wpos - (sizeof(EMPTY_HEADER_V2) - 1);
     // The BSER capabilities block comes before the PDU length
-    memcpy(bser.buf + 3, &bser_capabilities, sizeof(bser_capabilities));
-    memcpy(bser.buf + 8, &len, sizeof(len));
+    memcpy(bser.buf + 2, &bser_capabilities, sizeof(bser_capabilities));
+    memcpy(bser.buf + 7, &len, sizeof(len));
   }
 
   res = PyBytes_FromStringAndSize(bser.buf, bser.wpos);
@@ -552,10 +556,9 @@ static PyObject *bser_dumps(PyObject *self, PyObject *args, PyObject *kw)
   return res;
 }
 
-int bunser_int(const char **ptr, const char *end, int64_t *val)
-{
+int bunser_int(const char** ptr, const char* end, int64_t* val) {
   int needed;
-  const char *buf = *ptr;
+  const char* buf = *ptr;
   int8_t i8;
   int16_t i16;
   int32_t i32;
@@ -575,8 +578,8 @@ int bunser_int(const char **ptr, const char *end, int64_t *val)
       needed = 9;
       break;
     default:
-      PyErr_Format(PyExc_ValueError,
-          "invalid bser int encoding 0x%02x", buf[0]);
+      PyErr_Format(
+          PyExc_ValueError, "invalid bser int encoding 0x%02x", buf[0]);
       return 0;
   }
   if (end - buf < needed) {
@@ -606,10 +609,12 @@ int bunser_int(const char **ptr, const char *end, int64_t *val)
   }
 }
 
-static int bunser_bytestring(const char **ptr, const char *end,
-    const char **start, int64_t *len)
-{
-  const char *buf = *ptr;
+static int bunser_bytestring(
+    const char** ptr,
+    const char* end,
+    const char** start,
+    int64_t* len) {
+  const char* buf = *ptr;
 
   // skip string marker
   buf++;
@@ -627,13 +632,12 @@ static int bunser_bytestring(const char **ptr, const char *end,
   return 1;
 }
 
-static PyObject *bunser_array(const char **ptr, const char *end,
-                              const unser_ctx_t *ctx)
-{
-  const char *buf = *ptr;
+static PyObject*
+bunser_array(const char** ptr, const char* end, const unser_ctx_t* ctx) {
+  const char* buf = *ptr;
   int64_t nitems, i;
   int mutable = ctx->mutable;
-  PyObject *res;
+  PyObject* res;
 
   // skip array header
   buf++;
@@ -654,7 +658,7 @@ static PyObject *bunser_array(const char **ptr, const char *end,
   }
 
   for (i = 0; i < nitems; i++) {
-    PyObject *ele = bser_loads_recursive(ptr, end, ctx);
+    PyObject* ele = bser_loads_recursive(ptr, end, ctx);
 
     if (!ele) {
       Py_DECREF(res);
@@ -672,14 +676,13 @@ static PyObject *bunser_array(const char **ptr, const char *end,
   return res;
 }
 
-static PyObject *bunser_object(const char **ptr, const char *end,
-    const unser_ctx_t *ctx)
-{
-  const char *buf = *ptr;
+static PyObject*
+bunser_object(const char** ptr, const char* end, const unser_ctx_t* ctx) {
+  const char* buf = *ptr;
   int64_t nitems, i;
   int mutable = ctx->mutable;
-  PyObject *res;
-  bserObject *obj;
+  PyObject* res;
+  bserObject* obj;
 
   // skip array header
   buf++;
@@ -698,10 +701,10 @@ static PyObject *bunser_object(const char **ptr, const char *end,
   }
 
   for (i = 0; i < nitems; i++) {
-    const char *keystr;
+    const char* keystr;
     int64_t keylen;
-    PyObject *key;
-    PyObject *ele;
+    PyObject* key;
+    PyObject* ele;
 
     if (!bunser_bytestring(ptr, end, &keystr, &keylen)) {
       Py_DECREF(res);
@@ -753,14 +756,13 @@ static PyObject *bunser_object(const char **ptr, const char *end,
   return res;
 }
 
-static PyObject *bunser_template(const char **ptr, const char *end,
-    const unser_ctx_t *ctx)
-{
-  const char *buf = *ptr;
+static PyObject*
+bunser_template(const char** ptr, const char* end, const unser_ctx_t* ctx) {
+  const char* buf = *ptr;
   int64_t nitems, i;
   int mutable = ctx->mutable;
-  PyObject *arrval;
-  PyObject *keys;
+  PyObject* arrval;
+  PyObject* keys;
   Py_ssize_t numkeys, keyidx;
   unser_ctx_t keys_ctx = {0};
   if (mutable) {
@@ -810,8 +812,8 @@ static PyObject *bunser_template(const char **ptr, const char *end,
   }
 
   for (i = 0; i < nitems; i++) {
-    PyObject *dict = NULL;
-    bserObject *obj = NULL;
+    PyObject* dict = NULL;
+    bserObject* obj = NULL;
 
     if (mutable) {
       dict = PyDict_New();
@@ -825,15 +827,15 @@ static PyObject *bunser_template(const char **ptr, const char *end,
       dict = (PyObject*)obj;
     }
     if (!dict) {
-fail:
+    fail:
       Py_DECREF(keys);
       Py_DECREF(arrval);
       return NULL;
     }
 
     for (keyidx = 0; keyidx < numkeys; keyidx++) {
-      PyObject *key;
-      PyObject *ele;
+      PyObject* key;
+      PyObject* ele;
 
       if (**ptr == BSER_SKIP) {
         *ptr = *ptr + 1;
@@ -866,39 +868,38 @@ fail:
   return arrval;
 }
 
-static PyObject *bser_loads_recursive(const char **ptr, const char *end,
-    const unser_ctx_t *ctx)
-{
-  const char *buf = *ptr;
+static PyObject* bser_loads_recursive(
+    const char** ptr,
+    const char* end,
+    const unser_ctx_t* ctx) {
+  const char* buf = *ptr;
 
   switch (buf[0]) {
     case BSER_INT8:
     case BSER_INT16:
     case BSER_INT32:
-    case BSER_INT64:
-      {
-        int64_t ival;
-        if (!bunser_int(ptr, end, &ival)) {
-          return NULL;
-        }
-        // Python 3 has one integer type.
+    case BSER_INT64: {
+      int64_t ival;
+      if (!bunser_int(ptr, end, &ival)) {
+        return NULL;
+      }
+// Python 3 has one integer type.
 #if PY_MAJOR_VERSION >= 3
-        return PyLong_FromLongLong(ival);
+      return PyLong_FromLongLong(ival);
 #else
-        if (ival < LONG_MIN || ival > LONG_MAX) {
-          return PyLong_FromLongLong(ival);
-        }
-        return PyInt_FromSsize_t(Py_SAFE_DOWNCAST(ival, int64_t, Py_ssize_t));
+      if (ival < LONG_MIN || ival > LONG_MAX) {
+        return PyLong_FromLongLong(ival);
+      }
+      return PyInt_FromSsize_t(Py_SAFE_DOWNCAST(ival, int64_t, Py_ssize_t));
 #endif // PY_MAJOR_VERSION >= 3
-      }
+    }
 
-    case BSER_REAL:
-      {
-        double dval;
-        memcpy(&dval, buf + 1, sizeof(dval));
-        *ptr = buf + 1 + sizeof(double);
-        return PyFloat_FromDouble(dval);
-      }
+    case BSER_REAL: {
+      double dval;
+      memcpy(&dval, buf + 1, sizeof(dval));
+      *ptr = buf + 1 + sizeof(double);
+      return PyFloat_FromDouble(dval);
+    }
 
     case BSER_TRUE:
       *ptr = buf + 1;
@@ -915,27 +916,42 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
       Py_INCREF(Py_None);
       return Py_None;
 
-    case BSER_BYTESTRING:
-      {
-        const char *start;
-        int64_t len;
+    case BSER_BYTESTRING: {
+      const char* start;
+      int64_t len;
 
-        if (!bunser_bytestring(ptr, end, &start, &len)) {
-          return NULL;
-        }
-
-        if (len > LONG_MAX) {
-          PyErr_Format(PyExc_ValueError, "string too long for python");
-          return NULL;
-        }
-
-        if (ctx->value_encoding != NULL) {
-          return PyUnicode_Decode(start, (long)len, ctx->value_encoding,
-                                  ctx->value_errors);
-        } else {
-          return PyBytes_FromStringAndSize(start, (long)len);
-        }
+      if (!bunser_bytestring(ptr, end, &start, &len)) {
+        return NULL;
       }
+
+      if (len > LONG_MAX) {
+        PyErr_Format(PyExc_ValueError, "string too long for python");
+        return NULL;
+      }
+
+      if (ctx->value_encoding != NULL) {
+        return PyUnicode_Decode(
+            start, (long)len, ctx->value_encoding, ctx->value_errors);
+      } else {
+        return PyBytes_FromStringAndSize(start, (long)len);
+      }
+    }
+
+    case BSER_UTF8STRING: {
+      const char* start;
+      int64_t len;
+
+      if (!bunser_bytestring(ptr, end, &start, &len)) {
+        return NULL;
+      }
+
+      if (len > LONG_MAX) {
+        PyErr_Format(PyExc_ValueError, "string too long for python");
+        return NULL;
+      }
+
+      return PyUnicode_Decode(start, (long)len, "utf-8", "strict");
+    }
 
     case BSER_ARRAY:
       return bunser_array(ptr, end, ctx);
@@ -953,14 +969,18 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
   return NULL;
 }
 
-static int _pdu_info_helper(const char *data, const char *end,
-    uint32_t *bser_version_out, uint32_t *bser_capabilities_out,
-    int64_t *expected_len_out, off_t *position_out) {
+static int _pdu_info_helper(
+    const char* data,
+    const char* end,
+    uint32_t* bser_version_out,
+    uint32_t* bser_capabilities_out,
+    int64_t* expected_len_out,
+    off_t* position_out) {
   uint32_t bser_version;
-  int64_t bser_capabilities = 0; // int64 because bunser_int requires it
-  int64_t expected_len, total_len;
+  uint32_t bser_capabilities = 0;
+  int64_t expected_len;
 
-  const char *start;
+  const char* start;
   start = data;
   // Validate the header and length
   if (memcmp(data, EMPTY_HEADER, 2) == 0) {
@@ -977,9 +997,10 @@ static int _pdu_info_helper(const char *data, const char *end,
   if (bser_version == 2) {
     // Expect an integer telling us what capabilities are supported by the
     // remote server (currently unused).
-    if (!bunser_int(&data, end, &bser_capabilities)) {
+    if (!memcpy(&bser_capabilities, &data, sizeof(bser_capabilities))) {
       return 0;
     }
+    data += sizeof(bser_capabilities);
   }
 
   // Expect an integer telling us how big the rest of the data
@@ -988,10 +1009,8 @@ static int _pdu_info_helper(const char *data, const char *end,
     return 0;
   }
 
-  total_len = expected_len + (data - start);
-
   *bser_version_out = bser_version;
-  *bser_capabilities_out = (uint32_t) bser_capabilities;
+  *bser_capabilities_out = (uint32_t)bser_capabilities;
   *expected_len_out = expected_len;
   *position_out = (off_t)(data - start);
   return 1;
@@ -999,13 +1018,16 @@ static int _pdu_info_helper(const char *data, const char *end,
 
 // This function parses the PDU header and provides info about the packet
 // Returns false if unsuccessful
-static int pdu_info_helper(PyObject *self, PyObject *args,
-    uint32_t *bser_version_out, uint32_t *bser_capabilities_out,
-    int64_t *total_len_out) {
-  const char *start = NULL;
-  const char *data = NULL;
+static int pdu_info_helper(
+    PyObject* self,
+    PyObject* args,
+    uint32_t* bser_version_out,
+    uint32_t* bser_capabilities_out,
+    int64_t* total_len_out) {
+  const char* start = NULL;
+  const char* data = NULL;
   int datalen = 0;
-  const char *end;
+  const char* end;
   int64_t expected_len;
   off_t position;
 
@@ -1015,8 +1037,13 @@ static int pdu_info_helper(PyObject *self, PyObject *args,
   data = start;
   end = data + datalen;
 
-  if (!_pdu_info_helper(data, end, bser_version_out, bser_capabilities_out,
-                        &expected_len, &position)) {
+  if (!_pdu_info_helper(
+          data,
+          end,
+          bser_version_out,
+          bser_capabilities_out,
+          &expected_len,
+          &position)) {
     return 0;
   }
   *total_len_out = (int64_t)(expected_len + position);
@@ -1028,8 +1055,7 @@ static int pdu_info_helper(PyObject *self, PyObject *args,
 // and the total length of the entire response that the peer is sending,
 // including the bytes already received. This allows the client  to compute the
 // data size it needs to read before it can decode the data.
-static PyObject *bser_pdu_info(PyObject *self, PyObject *args)
-{
+static PyObject* bser_pdu_info(PyObject* self, PyObject* args) {
   uint32_t version, capabilities;
   int64_t total_len;
   if (!pdu_info_helper(self, args, &version, &capabilities, &total_len)) {
@@ -1038,8 +1064,7 @@ static PyObject *bser_pdu_info(PyObject *self, PyObject *args)
   return Py_BuildValue("kkL", version, capabilities, total_len);
 }
 
-static PyObject *bser_pdu_len(PyObject *self, PyObject *args)
-{
+static PyObject* bser_pdu_len(PyObject* self, PyObject* args) {
   uint32_t version, capabilities;
   int64_t total_len;
   if (!pdu_info_helper(self, args, &version, &capabilities, &total_len)) {
@@ -1048,25 +1073,31 @@ static PyObject *bser_pdu_len(PyObject *self, PyObject *args)
   return Py_BuildValue("L", total_len);
 }
 
-static PyObject *bser_loads(PyObject *self, PyObject *args, PyObject *kw)
-{
-  const char *data = NULL;
+static PyObject* bser_loads(PyObject* self, PyObject* args, PyObject* kw) {
+  const char* data = NULL;
   int datalen = 0;
-  const char *start;
-  const char *end;
+  const char* start;
+  const char* end;
   int64_t expected_len;
   off_t position;
-  PyObject *mutable_obj = NULL;
-  const char *value_encoding = NULL;
-  const char *value_errors = NULL;
+  PyObject* mutable_obj = NULL;
+  const char* value_encoding = NULL;
+  const char* value_errors = NULL;
   unser_ctx_t ctx = {1, 0};
 
-  static char *kw_list[] = {"buf", "mutable", "value_encoding", "value_errors",
-                            NULL};
+  static char* kw_list[] = {
+      "buf", "mutable", "value_encoding", "value_errors", NULL};
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "s#|Ozz:loads", kw_list, &start,
-                                   &datalen, &mutable_obj, &value_encoding,
-                                   &value_errors)) {
+  if (!PyArg_ParseTupleAndKeywords(
+          args,
+          kw,
+          "s#|Ozz:loads",
+          kw_list,
+          &start,
+          &datalen,
+          &mutable_obj,
+          &value_encoding,
+          &value_errors)) {
     return NULL;
   }
 
@@ -1084,8 +1115,13 @@ static PyObject *bser_loads(PyObject *self, PyObject *args, PyObject *kw)
   data = start;
   end = data + datalen;
 
-  if (!_pdu_info_helper(data, end, &ctx.bser_version, &ctx.bser_capabilities,
-                        &expected_len, &position)) {
+  if (!_pdu_info_helper(
+          data,
+          end,
+          &ctx.bser_version,
+          &ctx.bser_capabilities,
+          &expected_len,
+          &position)) {
     return NULL;
   }
 
@@ -1099,20 +1135,29 @@ static PyObject *bser_loads(PyObject *self, PyObject *args, PyObject *kw)
   return bser_loads_recursive(&data, end, &ctx);
 }
 
-static PyObject *bser_load(PyObject *self, PyObject *args, PyObject *kw)
-{
-  PyObject *load, *string;
-  PyObject *fp = NULL;
-  PyObject *mutable_obj = NULL;
-  const char *value_encoding = NULL;
-  const char *value_errors = NULL;
+static PyObject* bser_load(PyObject* self, PyObject* args, PyObject* kw) {
+  PyObject* load;
+  PyObject* load_method;
+  PyObject* string;
+  PyObject* load_method_args;
+  PyObject* load_method_kwargs;
+  PyObject* fp = NULL;
+  PyObject* mutable_obj = NULL;
+  PyObject* value_encoding = NULL;
+  PyObject* value_errors = NULL;
 
-  static char *kw_list[] = {"fp", "mutable", "value_encoding", "value_errors",
-                            NULL};
+  static char* kw_list[] = {
+      "fp", "mutable", "value_encoding", "value_errors", NULL};
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "OOzz:load", kw_list, &fp,
-                                   &mutable_obj, &value_encoding,
-                                   &value_errors)) {
+  if (!PyArg_ParseTupleAndKeywords(
+          args,
+          kw,
+          "O|OOO:load",
+          kw_list,
+          &fp,
+          &mutable_obj,
+          &value_encoding,
+          &value_errors)) {
     return NULL;
   }
 
@@ -1120,12 +1165,38 @@ static PyObject *bser_load(PyObject *self, PyObject *args, PyObject *kw)
   if (load == NULL) {
     return NULL;
   }
-  string = PyObject_CallMethod(load, "load", "OOzz", fp, mutable_obj,
-                               value_encoding, value_errors);
+  load_method = PyObject_GetAttrString(load, "load");
+  if (load_method == NULL) {
+    return NULL;
+  }
+  // Mandatory method arguments
+  load_method_args = Py_BuildValue("(O)", fp);
+  if (load_method_args == NULL) {
+    return NULL;
+  }
+  // Optional method arguments
+  load_method_kwargs = PyDict_New();
+  if (load_method_kwargs == NULL) {
+    return NULL;
+  }
+  if (mutable_obj) {
+    PyDict_SetItemString(load_method_kwargs, "mutable", mutable_obj);
+  }
+  if (value_encoding) {
+    PyDict_SetItemString(load_method_kwargs, "value_encoding", value_encoding);
+  }
+  if (value_errors) {
+    PyDict_SetItemString(load_method_kwargs, "value_errors", value_errors);
+  }
+  string = PyObject_Call(load_method, load_method_args, load_method_kwargs);
+  Py_DECREF(load_method_kwargs);
+  Py_DECREF(load_method_args);
+  Py_DECREF(load_method);
   Py_DECREF(load);
   return string;
 }
 
+// clang-format off
 static PyMethodDef bser_methods[] = {
   {"loads", (PyCFunction)bser_loads, METH_VARARGS | METH_KEYWORDS,
    "Deserialize string."},
@@ -1148,10 +1219,10 @@ static struct PyModuleDef bser_module = {
   -1,
   bser_methods
 };
+// clang-format on
 
-PyMODINIT_FUNC PyInit_bser(void)
-{
-  PyObject *mod;
+PyMODINIT_FUNC PyInit_bser(void) {
+  PyObject* mod;
 
   mod = PyModule_Create(&bser_module);
   PyType_Ready(&bserObjectType);
@@ -1160,8 +1231,7 @@ PyMODINIT_FUNC PyInit_bser(void)
 }
 #else
 
-PyMODINIT_FUNC initbser(void)
-{
+PyMODINIT_FUNC initbser(void) {
   (void)Py_InitModule("bser", bser_methods);
   PyType_Ready(&bserObjectType);
 }
