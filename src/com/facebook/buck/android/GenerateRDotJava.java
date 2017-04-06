@@ -126,7 +126,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
           getProjectFilesystem(),
-          rDotTxtPath,
+          rDotTxtPath.getParent(),
           resourcesProvider.getResDirectories(),
           outputDirPath);
       steps.add(genNativeStringInfo);
