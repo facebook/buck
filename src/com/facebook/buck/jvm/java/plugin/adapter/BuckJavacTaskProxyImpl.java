@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.CompilationUnitTreeProxy;
-import com.facebook.buck.jvm.java.plugin.api.JavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.sun.source.util.JavacTask;
 
 import java.io.IOException;
@@ -35,11 +35,11 @@ import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 
-public class JavacTaskProxyImpl implements JavacTaskProxy {
-  private final JavacTask javacTask;
+public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
+  private final BuckJavacTask javacTask;
 
-  public JavacTaskProxyImpl(JavaCompiler.CompilationTask javacTask) {
-    this.javacTask = (JavacTask) javacTask;
+  public BuckJavacTaskProxyImpl(JavaCompiler.CompilationTask javacTask) {
+    this.javacTask = new BuckJavacTask((JavacTask) javacTask);
   }
 
   @Override

@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
-import com.facebook.buck.jvm.java.plugin.api.JavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
 import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
@@ -259,7 +259,7 @@ public abstract class Jsr199Javac implements Javac {
     PluginLoader pluginLoader =
         PluginLoader.newInstance(context.getClassLoaderCache(), compilationTask);
 
-    JavacTaskProxy javacTask = JavacTaskProxy.newInstance(pluginLoader, compilationTask);
+    BuckJavacTaskProxy javacTask = BuckJavacTaskProxy.newInstance(pluginLoader, compilationTask);
 
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(

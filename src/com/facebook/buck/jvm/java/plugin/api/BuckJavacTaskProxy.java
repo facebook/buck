@@ -30,11 +30,13 @@ import javax.tools.JavaFileObject;
  * directly accessible from within Buck's class loader. This interface is used as a proxy within
  * Buck's class loader to allow access to commonly-used methods.
  */
-public interface JavacTaskProxy extends JavaCompiler.CompilationTask {
-  static JavacTaskProxy newInstance(PluginClassLoader loader, JavaCompiler.CompilationTask task) {
-    Class<? extends JavacTaskProxy> proxyImplClass = loader.loadClass(
-        "com.facebook.buck.jvm.java.plugin.adapter.JavacTaskProxyImpl",
-        JavacTaskProxy.class);
+public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
+  static BuckJavacTaskProxy newInstance(
+      PluginClassLoader loader,
+      JavaCompiler.CompilationTask task) {
+    Class<? extends BuckJavacTaskProxy> proxyImplClass = loader.loadClass(
+        "com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl",
+        BuckJavacTaskProxy.class);
 
     try {
       return proxyImplClass.getConstructor(JavaCompiler.CompilationTask.class).newInstance(task);
