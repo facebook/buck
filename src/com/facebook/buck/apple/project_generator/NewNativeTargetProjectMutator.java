@@ -106,7 +106,6 @@ class NewNativeTargetProjectMutator {
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
-  private boolean frameworkHeadersEnabled = true;
   private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
@@ -154,11 +153,6 @@ class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setTargetName(String targetName) {
     this.targetName = targetName;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setFrameworkHeadersEnabled(boolean headersEnabled) {
-    this.frameworkHeadersEnabled = headersEnabled;
     return this;
   }
 
@@ -331,7 +325,6 @@ class NewNativeTargetProjectMutator {
     traverseGroupsTreeAndHandleSources(
         sourcesGroup,
         sourcesBuildPhase,
-        headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
             pathRelativizer::outputPathToSourcePath,
             sourcesWithFlags,
@@ -374,7 +367,6 @@ class NewNativeTargetProjectMutator {
   private void traverseGroupsTreeAndHandleSources(
       final PBXGroup sourcesGroup,
       final PBXSourcesBuildPhase sourcesBuildPhase,
-      final PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor = new GroupedSource.Visitor() {
       @Override
@@ -390,7 +382,6 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             publicHeader,
             sourcesGroup,
-            headersBuildPhase,
             HeaderVisibility.PUBLIC);
       }
 
@@ -399,7 +390,6 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             privateHeader,
             sourcesGroup,
-            headersBuildPhase,
             HeaderVisibility.PRIVATE);
       }
 
@@ -416,7 +406,6 @@ class NewNativeTargetProjectMutator {
         traverseGroupsTreeAndHandleSources(
             newSourceGroup,
             sourcesBuildPhase,
-            headersBuildPhase,
             sourceGroup);
       }
     };
@@ -466,7 +455,6 @@ class NewNativeTargetProjectMutator {
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
-      PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -475,13 +463,6 @@ class NewNativeTargetProjectMutator {
             Optional.empty()));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
-
-      if (this.frameworkHeadersEnabled &&
-          (this.productType == ProductType.FRAMEWORK ||
-              this.productType == ProductType.STATIC_FRAMEWORK)) {
-        headersBuildPhase.getFiles().add(buildFile);
-      }
-
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",

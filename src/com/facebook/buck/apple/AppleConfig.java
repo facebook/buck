@@ -274,13 +274,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         false);
   }
 
-  public boolean shouldEnableFrameworkHeadersInXcodeProject() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION,
-        "enable_framework_headers",
-        true);
-  }
-
   public boolean shouldGenerateHeaderSymlinkTreesOnly() {
     return delegate.getBooleanValue(
         APPLE_SECTION,

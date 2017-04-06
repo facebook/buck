@@ -233,9 +233,6 @@ public class ProjectGenerator {
 
     /** Generates only headers symlink trees. */
     GENERATE_HEADERS_SYMLINK_TREES_ONLY,
-
-    /** Adds exported headers to Copy Headers build phase for framework targets */
-    FRAMEWORK_HEADERS_ENABLED,
   }
 
   /**
@@ -1162,11 +1159,6 @@ public class ProjectGenerator {
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
-
-
-    boolean frameworkHeadersEnabled = options.contains(Option.FRAMEWORK_HEADERS_ENABLED) &&
-        isFocusedOnTarget;
-    mutator.setFrameworkHeadersEnabled(frameworkHeadersEnabled);
 
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
