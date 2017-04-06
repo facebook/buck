@@ -18,7 +18,6 @@ EXCEPTION_SRCS = [
 java_library(
     name = "exceptions",
     srcs = EXCEPTION_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/util:util",
     ],
@@ -48,7 +47,6 @@ IO_SRCS = [
 java_immutables_library(
     name = "io",
     srcs = IO_SRCS,
-    autodeps = True,
     immutable_types = [
         "DirectoryCleanerArgs",
     ],
@@ -150,7 +148,6 @@ WATCHMAN_WATCHER_SRCS = [
 java_library(
     name = "watchman",
     srcs = WATCHMAN_WATCHER_SRCS,
-    autodeps = True,
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/parser:config",
@@ -203,7 +200,6 @@ OBJECT_MAPPER_SRCS = [
 java_library(
     name = "object_mapper",
     srcs = OBJECT_MAPPER_SRCS,
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -222,7 +218,6 @@ PACKAGED_RESOURCE_SRCS = [
 java_library(
     name = "packaged_resource",
     srcs = PACKAGED_RESOURCE_SRCS,
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -265,7 +260,6 @@ java_immutables_library(
                    PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
         includes = ["*.java"],
     ),
-    autodeps = True,
     immutable_types = [
         "SampleRate",
         "PatternAndMessage",

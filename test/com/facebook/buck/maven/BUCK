@@ -7,7 +7,6 @@ java_library(
         ["*.java"],
         excludes = ["*Test.java"],
     ),
-    autodeps = True,
     visibility = [
         "//test/...",
     ],
@@ -170,7 +169,6 @@ java_library(
 java_test(
     name = "maven",
     srcs = glob(["*Test.java"]),
-    autodeps = True,
     resources = glob(
         ["testdata/**"],
         include_dotfiles = True,

@@ -1,7 +1,6 @@
 java_library(
     name = "headermap",
     srcs = ["HeaderMap.java"],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/apple/clang:headermap",
     ],
@@ -17,7 +16,6 @@ java_library(
 java_library(
     name = "printheadermap",
     srcs = ["PrintHeaderMap.java"],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],

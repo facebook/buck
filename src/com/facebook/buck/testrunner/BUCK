@@ -7,7 +7,6 @@ java_library(
     ],
     # Currently, we have decided to manage this manually.
     # We should see whether we can let `buck autodeps` take responsibility.
-    autodeps = False,
     deps = [
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
@@ -25,7 +24,6 @@ java_library(
         "JulLogFormatter.java",
         "SameThreadFailOnTimeout.java",
     ],
-    autodeps = False,  # See comment in deps. Should be manually maintained.
     tests = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],

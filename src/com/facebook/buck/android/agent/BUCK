@@ -1,7 +1,6 @@
 android_library(
     name = "agent-lib",
     srcs = glob(["*.java"]),
-    autodeps = False,  # See below.
     # Because this code gets dx'd, we restrict the source to Java 6 so that
     # trying to use something like try-with-resources is a compile-time error.
     source = "6",

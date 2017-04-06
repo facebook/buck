@@ -3,7 +3,6 @@
 java_library(
     name = "liteinfersupport",
     srcs = glob(["*.java"]),
-    autodeps = False,  # see below
     visibility = [
         "//src/com/facebook/buck/jvm/java:fat-jar-main",
         "//src/com/facebook/buck/jvm/java:java",

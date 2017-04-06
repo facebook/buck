@@ -8,7 +8,6 @@ java_test(
         ["*.java"],
         excludes = CACHE_INTEGRATION_SRCS,
     ),
-    autodeps = True,
     resources = glob(["*.soy"]),
     deps = [
         "//src-gen:thrift",
@@ -149,7 +148,6 @@ java_test(
 java_test(
     name = "httpserver_cache_integration_test",
     srcs = CACHE_INTEGRATION_SRCS,
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",

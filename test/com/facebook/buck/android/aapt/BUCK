@@ -1,7 +1,6 @@
 java_test(
     name = "aapt",
     srcs = glob(["*Test.java"]),
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",

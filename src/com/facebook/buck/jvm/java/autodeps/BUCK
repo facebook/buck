@@ -6,7 +6,6 @@ SYMBOL_EXTRACTOR_SRCS = [
 java_library(
     name = "SymbolExtractor",
     srcs = SYMBOL_EXTRACTOR_SRCS,
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -129,7 +128,6 @@ java_library(
         ["*.java"],
         excludes = SYMBOL_EXTRACTOR_SRCS,
     ),
-    autodeps = True,
     tests = [
         # JavaDepsFinder is verified via AutodepsCommandIntegrationTest.
         #

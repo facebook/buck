@@ -14,7 +14,6 @@ TYPES_SRCS = [
 java_immutables_library(
     name = "types",
     srcs = TYPES_SRCS,
-    autodeps = True,
     immutable_types = [
         "ClasspathMacro",
         "ExecutableMacro",

@@ -12,7 +12,6 @@ java_binary(
 java_library(
     name = "lib",
     srcs = glob(["*.java"]),
-    autodeps = True,
     deps = [
         "//third-party/java/asm:asm",
         "//third-party/java/guava:guava",

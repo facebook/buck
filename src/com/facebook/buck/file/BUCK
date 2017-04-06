@@ -13,7 +13,6 @@ java_library(
         "RetryingDownloader.java",
         "StackedDownloader.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
@@ -74,7 +73,6 @@ java_library(
         "RemoteFileBinary.java",
         "RemoteFileDescription.java",
     ],
-    autodeps = True,
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/rules:types",
@@ -159,7 +157,6 @@ java_library(
     srcs = [
         "WriteFile.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",

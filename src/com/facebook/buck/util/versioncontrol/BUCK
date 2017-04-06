@@ -22,7 +22,6 @@ HG_SRCS = [
 java_immutables_library(
     name = "versioncontrol",
     srcs = PUBLIC_SRCS,
-    autodeps = True,
     immutable_types = [
         "VersionControlStats",
     ],
@@ -49,7 +48,6 @@ java_immutables_library(
 java_library(
     name = "versioncontrol_config",
     srcs = CONFIG_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -109,7 +107,6 @@ java_library(
 java_library(
     name = "versioncontrol_generator",
     srcs = GENERATOR_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -158,7 +155,6 @@ java_library(
 java_library(
     name = "versioncontrol_hg",
     srcs = HG_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -194,7 +190,6 @@ java_library(
         ["*.java"],
         excludes = PUBLIC_SRCS + CONFIG_SRCS + GENERATOR_SRCS + HG_SRCS,
     ),
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],

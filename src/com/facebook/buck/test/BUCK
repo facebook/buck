@@ -20,7 +20,6 @@ CONFIG_SRCS = [
 java_immutables_library(
     name = "config",
     srcs = CONFIG_SRCS,
-    autodeps = True,
     immutable_types = [
         "TestResultSummaryVerbosity",
     ],
@@ -87,7 +86,6 @@ java_immutables_library(
         ["*.java"],
         excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS,
     ),
-    autodeps = True,
     immutable_types = [
         "TestResults",
         "TestRunningOptions",

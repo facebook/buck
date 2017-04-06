@@ -14,7 +14,6 @@ java_test(
         STANDARD_TEST_SRCS,
         excludes = STANDARD_INTEGRATION_TEST_SRCS,
     ),
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
@@ -178,7 +177,6 @@ java_test(
 java_test(
     name = "integration",
     srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
-    autodeps = True,
     labels = ["long_running"],
     resources = glob(["testdata/**"]),
     run_test_separately = True,

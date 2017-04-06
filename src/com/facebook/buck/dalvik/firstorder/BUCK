@@ -1,7 +1,6 @@
 java_library(
     name = "firstorder",
     srcs = glob(["*.java"]),
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/dalvik/firstorder:firstorder",
     ],

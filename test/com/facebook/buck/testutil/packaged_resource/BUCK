@@ -3,7 +3,6 @@ java_library(
     srcs = [
         "PackagedResourceTestUtil.java",
     ],
-    autodeps = True,
     resources = [
         "testdata/packaged_resource_one",
         "testdata/packaged_resource_two",

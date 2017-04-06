@@ -3,7 +3,6 @@ TEST_SRCS = glob(["*Test.java"])
 java_test(
     name = "integration",
     srcs = TEST_SRCS,
-    autodeps = True,
     visibility = [
         "//test/...",
     ],
@@ -167,7 +166,6 @@ java_library(
         ["*.java"],
         excludes = TEST_SRCS,
     ),
-    autodeps = True,
     visibility = [
         "//test/...",
     ],

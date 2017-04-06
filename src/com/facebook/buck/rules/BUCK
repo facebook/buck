@@ -5,7 +5,6 @@ java_library(
     srcs = [
         "CellPathResolver.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -17,7 +16,6 @@ java_library(
     srcs = [
         "CellPathResolverSerializer.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -43,7 +41,6 @@ java_immutables_library(
         "KnownBuildRuleTypes.java",
         "KnownBuildRuleTypesFactory.java",
     ],
-    autodeps = True,
     immutable_types = [
         "CellConstructionDelegateData",
     ],
@@ -200,7 +197,6 @@ java_library(
         "RuleKey.java",
         "RuleKeyDiagnosticsMode.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -293,7 +289,6 @@ java_immutables_library(
         "VisibilityPattern.java",
         "VisibilityPatternParser.java",
     ],
-    autodeps = True,
     immutable_types = [
         "AbstractVersionedTool",
         "BuildContext",
@@ -369,7 +364,6 @@ java_library(
     srcs = [
         "TargetGraphHashing.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -430,7 +424,6 @@ java_library(
     srcs = [
         "BuildEvent.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",
@@ -470,7 +463,6 @@ java_library(
         "CachingBuildEngineDelegate.java",
         "LocalCachingBuildEngineDelegate.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -567,7 +559,6 @@ java_immutables_library(
         "UnskippedRulesTracker.java",
         "WriteStringTemplateRule.java",
     ],
-    autodeps = True,
     immutable_types = [
         "BuildEngineBuildContext",
         "BuildRuleKeys",
@@ -653,7 +644,6 @@ java_library(
     srcs = [
         "CommandTool.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/rules:rules",
     ],
@@ -729,7 +719,6 @@ java_library(
     srcs = [
         "ActionGraphCache.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/rules:rules",
     ],
@@ -794,7 +783,6 @@ java_immutables_library(
     srcs = [
         "AbstractRelativeCellName.java",
     ],
-    autodeps = True,
     immutable_types = [
         "RelativeCellName",
     ],
@@ -813,7 +801,6 @@ java_library(
     srcs = [
         "DefaultCellPathResolver.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],

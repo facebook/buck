@@ -1,7 +1,6 @@
 java_test(
     name = "scala",
     srcs = glob(["*Test.java"]),
-    autodeps = True,
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],

@@ -1,7 +1,6 @@
 java_test(
     name = "ddplist",
     srcs = glob(["*.java"]),
-    autodeps = True,
     resources = glob(["test-files/*.plist"]),
     deps = [
         "//third-party/java/dd-plist:dd-plist",

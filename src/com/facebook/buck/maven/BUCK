@@ -9,7 +9,6 @@ java_library(
         ["*.java"],
         excludes = UTIL_SRCS,
     ),
-    autodeps = True,
     resources = [
         "build-file.st",
     ],
@@ -91,7 +90,6 @@ java_library(
 java_library(
     name = "util",
     srcs = UTIL_SRCS,
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/util:object_mapper",

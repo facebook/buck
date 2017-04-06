@@ -1,7 +1,6 @@
 java_test(
     name = "integration",
     srcs = glob(["*IntegrationTest.java"]),
-    autodeps = True,
     env = {
         "GOROOT": read_config("go", "root", "/usr/local/go"),
     },
@@ -166,7 +165,6 @@ java_test(
         ["*Test.java"],
         excludes = ["*IntegrationTest.java"],
     ),
-    autodeps = True,
     deps = [
         "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:packageable",
@@ -269,7 +267,6 @@ java_library(
     srcs = [
         "GoAssumptions.java",
     ],
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",

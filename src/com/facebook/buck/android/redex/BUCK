@@ -111,7 +111,6 @@ java_immutables_library(
     srcs = [
         "AbstractRedexOptions.java",
     ],
-    autodeps = True,
     immutable_types = [
         "RedexOptions",
     ],

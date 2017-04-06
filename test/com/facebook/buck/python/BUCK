@@ -7,7 +7,6 @@ java_library(
             "*Builder.java",
         ],
     ),
-    autodeps = True,
     visibility = [
         "//test/...",
     ],
@@ -65,7 +64,6 @@ java_library(
 java_library(
     name = "builders",
     srcs = glob(["*Builder.java"]),
-    autodeps = True,
     visibility = [
         "//test/...",
     ],
@@ -233,7 +231,6 @@ java_library(
 java_test(
     name = "python-binary-integration",
     srcs = ["PythonBinaryIntegrationTest.java"],
-    autodeps = True,
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
@@ -401,7 +398,6 @@ java_test(
         ["*Test.java"],
         excludes = ["PythonBinaryIntegrationTest.java"],
     ),
-    autodeps = True,
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",

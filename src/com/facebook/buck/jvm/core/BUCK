@@ -3,7 +3,6 @@ java_library(
     srcs = [
         "HasJavaClassHashes.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
@@ -59,7 +58,6 @@ java_library(
     srcs = [
         "JavaPackageFinder.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",

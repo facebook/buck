@@ -1,7 +1,6 @@
 java_library(
     name = "plugin",
     srcs = glob(["*.java"]),
-    autodeps = True,
     resources = [
         ":javac-plugin",
     ],

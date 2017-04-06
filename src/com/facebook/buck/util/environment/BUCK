@@ -21,7 +21,6 @@ java_immutables_library(
         ["*.java"],
         excludes = PLATFORM_SRCS,
     ),
-    autodeps = True,
     immutable_types = [
         "BuildEnvironmentDescription",
     ],

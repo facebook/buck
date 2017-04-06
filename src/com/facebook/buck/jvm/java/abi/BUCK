@@ -4,7 +4,6 @@ java_library(
         ["*.java"],
         excludes = ["ApiStubber.java"],
     ),
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],
@@ -90,7 +89,6 @@ java_binary(
 java_library(
     name = "lib-api-stubber",
     srcs = ["ApiStubber.java"],
-    autodeps = True,
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",

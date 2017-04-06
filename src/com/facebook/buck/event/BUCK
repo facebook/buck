@@ -12,7 +12,6 @@ EVENT_INTERFACES = [
 java_immutables_library(
     name = "interfaces",
     srcs = EVENT_INTERFACES,
-    autodeps = True,
     immutable_types = [
         "EventKey",
     ],

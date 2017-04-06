@@ -3,7 +3,6 @@ java_library(
     srcs = [
         "BuildType.java",
     ],
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],

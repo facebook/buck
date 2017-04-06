@@ -1,7 +1,6 @@
 java_test(
     name = "source",
     srcs = glob(["*Test.java"]),
-    autodeps = True,
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.
@@ -30,7 +29,6 @@ java_library(
         ["*.java"],
         excludes = ["*Test.java"],
     ),
-    autodeps = True,
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.

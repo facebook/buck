@@ -1,7 +1,6 @@
 java_library(
     name = "autodeps",
     srcs = ["AutodepsWriter.java"],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/autodeps:model",
@@ -40,7 +39,6 @@ java_library(
 java_library(
     name = "model",
     srcs = ["DepsForBuildFiles.java"],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",

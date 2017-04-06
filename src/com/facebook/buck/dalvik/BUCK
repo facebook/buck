@@ -3,7 +3,6 @@ java_library(
     srcs = [
         "DalvikStatsTool.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],
@@ -87,7 +86,6 @@ java_library(
         "ZipSplitter.java",
         "ZipSplitterFactory.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],
@@ -153,7 +151,6 @@ java_library(
     srcs = [
         "EstimateDexWeightStep.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/dalvik:dalvik",
     ],

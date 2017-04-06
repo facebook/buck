@@ -12,7 +12,6 @@ java_library(
         "ShTest.java",
         "ShTestDescription.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -118,7 +117,6 @@ java_library(
         "ShellStep.java",
         "SymlinkFilesIntoDirectoryStep.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -178,7 +176,6 @@ java_immutables_library(
     srcs = [
         "AbstractWorkerJobParams.java",
     ],
-    autodeps = True,
     immutable_types = [
         "WorkerJobParams",
     ],
@@ -197,7 +194,6 @@ java_library(
         "WorkerShellStep.java",
         "WorkerToolDescription.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -290,7 +286,6 @@ java_library(
     srcs = [
         "WorkerTool.java",
     ],
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -349,7 +344,6 @@ java_library(
     srcs = [
         "WorkerProcessPoolFactory.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
@@ -406,7 +400,6 @@ java_immutables_library(
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",
     ],
-    autodeps = True,
     immutable_types = [
         "WorkerProcessCommand",
         "WorkerJobResult",

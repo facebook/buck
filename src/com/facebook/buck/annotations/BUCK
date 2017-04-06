@@ -1,7 +1,6 @@
 java_library(
     name = "annotations",
     srcs = glob(["*.java"]),
-    autodeps = False,
     visibility = ["PUBLIC"],
 
     # Keep this list empty!

@@ -9,7 +9,6 @@ UTIL_SRCS = [
 java_library(
     name = "cache_handler",
     srcs = CACHE_HANDLER_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
     ],
@@ -76,7 +75,6 @@ java_library(
         ["*.java"],
         excludes = CACHE_HANDLER_SRCS + UTIL_SRCS,
     ),
-    autodeps = True,
     resources = glob(["*.soy"]),
     tests = [
         "//test/com/facebook/buck/httpserver:httpserver",
@@ -222,7 +220,6 @@ java_library(
 java_library(
     name = "util",
     srcs = UTIL_SRCS,
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/httpserver:httpserver",
     ],

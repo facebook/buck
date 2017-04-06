@@ -17,7 +17,6 @@ PUBLIC_API_SOURCES = [
 java_immutables_library(
     name = "artifact_cache",
     srcs = PUBLIC_API_SOURCES,
-    autodeps = True,
     immutable_types = [
         "ArtifactInfo",
         "CacheResult",
@@ -91,7 +90,6 @@ PROTOCOL_SOURCES = [
 java_immutables_library(
     name = "binary_protocol",
     srcs = PROTOCOL_SOURCES,
-    autodeps = True,
     immutable_types = [
         "HttpArtifactCacheArgs",
         "FetchResponseReadResult",
@@ -171,7 +169,6 @@ CONFIG_SOURCES = [
 java_immutables_library(
     name = "config",
     srcs = CONFIG_SOURCES,
-    autodeps = True,
     immutable_types = [
         "DirCacheEntry",
         "HttpCacheEntry",
@@ -259,7 +256,6 @@ java_library(
         ["*.java"],
         excludes = PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
     ),
-    autodeps = True,
     tests = [
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
     ],
@@ -389,7 +385,6 @@ java_binary(
 java_library(
     name = "lib-generate-hybrid-payloads",
     srcs = GENERATOR_SOURCE,
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:thrift",

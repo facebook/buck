@@ -4,7 +4,6 @@ java_library(
         "FatJar.java",
         "FatJarMain.java",
     ],
-    autodeps = False,  # See deps
     # Maximum compatibility
     source = "6",
     target = "6",
@@ -21,7 +20,6 @@ java_library(
     srcs = [
         "JavaBuckConfig.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
@@ -87,7 +85,6 @@ java_library(
     srcs = [
         "ZipEntryJavaFileObject.java",
     ],
-    autodeps = True,
     deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
@@ -99,7 +96,6 @@ java_library(
     srcs = [
         "JavacEventSink.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",
@@ -193,7 +189,6 @@ java_immutables_library(
         "StandardJavaFileManagerFactory.java",
         "TracingProcessorWrapper.java",
     ],
-    autodeps = True,
     immutable_types = [
         "JavaOptions",
         "JavacExecutionContext",
@@ -286,7 +281,6 @@ java_library(
         "JavaPackageFinderSerializer.java",
         "ResourcesRootPackageFinder.java",
     ],
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",
@@ -356,7 +350,6 @@ java_library(
         "PrebuiltJarDescription.java",
         "ZipArchiveDependencySupplier.java",
     ],
-    autodeps = True,
     resources = [
         "FatJar.java",
         "FatJarMain.java",
@@ -495,7 +488,6 @@ java_immutables_library(
         "JavacToJarStepFactory.java",
         "TestType.java",
     ],
-    autodeps = True,
     immutable_types = [
         "JUnitJvmArgs",
     ],
@@ -577,7 +569,6 @@ java_library(
     srcs = [
         "JavaFileParser.java",
     ],
-    autodeps = True,
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/ide/intellij:intellij",

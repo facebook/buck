@@ -15,7 +15,6 @@ UTIL_SRCS = glob(
 java_test(
     name = "cxx-binary-integration",
     srcs = BINARY_INTEGRATION_SRCS,
-    autodeps = True,
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
@@ -181,7 +180,6 @@ java_test(
 java_test(
     name = "cxx",
     srcs = TEST_SRCS,
-    autodeps = True,
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
@@ -364,7 +362,6 @@ java_test(
 java_library(
     name = "testutil",
     srcs = UTIL_SRCS,
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:thrift",

@@ -13,7 +13,6 @@ UTILS_SRCS = [
 java_library(
     name = "utils",
     srcs = UTILS_SRCS,
-    autodeps = True,
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
@@ -33,7 +32,6 @@ java_library(
         ["*.java"],
         excludes = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS,
     ),
-    autodeps = True,
     visibility = [
         "PUBLIC",
     ],
@@ -206,7 +204,6 @@ STEP_TEST_SRCS = [
 java_test(
     name = "steps",
     srcs = glob(STEP_TEST_SRCS),
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
@@ -381,7 +378,6 @@ java_test(
         excludes = STANDARD_INTEGRATION_TEST_SRCS +
                    STEP_TEST_SRCS,
     ),
-    autodeps = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
@@ -565,7 +561,6 @@ ANDROID_AAR_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "aar-integration",
     srcs = glob(ANDROID_AAR_INTEGRATION_TEST_SRCS),
-    autodeps = True,
     resources = glob(
         ["testdata/**"],
         include_dotfiles = True,
@@ -738,7 +733,6 @@ ANDROID_BINARY_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "binary-integration",
     srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
-    autodeps = True,
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
@@ -913,7 +907,6 @@ ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "build-config-integration",
     srcs = glob(ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
-    autodeps = True,
     resources = glob(
         ["testdata/**"],
         include_dotfiles = True,
@@ -1083,7 +1076,6 @@ ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "instrumentation-integration",
     srcs = glob(ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
-    autodeps = True,
     resources = glob(
         ["testdata/**"],
         include_dotfiles = True,
@@ -1256,7 +1248,6 @@ java_test(
                    ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
                    ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
     ),
-    autodeps = True,
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
