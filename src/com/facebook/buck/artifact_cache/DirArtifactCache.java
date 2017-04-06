@@ -62,21 +62,21 @@ public class DirArtifactCache implements ArtifactCache {
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
-  private final boolean doStore;
+  private final CacheReadMode cacheMode;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
-      boolean doStore,
+      CacheReadMode cacheMode,
       Optional<Long> maxCacheSizeBytes)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
-    this.doStore = doStore;
+    this.cacheMode = cacheMode;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -133,7 +133,7 @@ public class DirArtifactCache implements ArtifactCache {
       ArtifactInfo info,
       BorrowablePath output) {
 
-    if (!doStore) {
+    if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
 
@@ -251,12 +251,9 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
-  /**
-   * @return {@code true}: storing artifacts is always supported by this class.
-   */
   @Override
-  public boolean isStoreSupported() {
-    return doStore;
+  public CacheReadMode getCacheReadMode() {
+    return cacheMode;
   }
 
   @Override

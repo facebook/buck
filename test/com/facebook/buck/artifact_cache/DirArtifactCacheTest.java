@@ -87,7 +87,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(0L));
   }
 
@@ -104,7 +104,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -137,7 +137,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -180,7 +180,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -226,7 +226,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -322,7 +322,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -374,7 +374,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ false,
+        CacheReadMode.readonly,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -455,7 +455,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(tmpDir.getRoot()),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(1024L));
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -480,7 +480,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(tmpDir.getRoot()),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -512,7 +512,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(3L));
 
     Files.write(fileW, "w".getBytes(UTF_8));
@@ -549,7 +549,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(3L));
 
     DirectoryCleaner.PathSelector pathSelector = dirArtifactCache.getDirectoryCleanerPathSelector();
@@ -582,7 +582,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         cacheDir,
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.of(9L));
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -669,7 +669,7 @@ public class DirArtifactCacheTest {
         "dir",
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
-        /* doStore */ true,
+        CacheReadMode.readwrite,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -698,7 +698,7 @@ public class DirArtifactCacheTest {
             "dir",
             filesystem,
             Paths.get("cache"),
-            /* doStore */ true,
+            CacheReadMode.readwrite,
             /* maxCacheSizeBytes */ Optional.empty());
 
     RuleKey ruleKey = new RuleKey("0000");
@@ -734,7 +734,7 @@ public class DirArtifactCacheTest {
         "dir",
         new FakeProjectFilesystem(),
         Paths.get("cache"),
-        /* doStore */ false,
+        CacheReadMode.readonly,
         /* maxCacheSizeBytes */ Optional.empty());
 
     Path result = cache.getPathForRuleKey(

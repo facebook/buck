@@ -11,6 +11,7 @@ PUBLIC_API_SOURCES = [
     "DirArtifactCacheEvent.java",
     "ArtifactCacheConnectEvent.java",
     "CacheResultType.java",
+    "CacheReadMode.java",
     "NoopArtifactCache.java",
 ]
 

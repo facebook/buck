@@ -143,7 +143,7 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(cacheEntry.getWriteHeaders(), Matchers.equalTo(expectedWriteHeaders));
     assertThat(
         cacheEntry.getCacheReadMode(),
-        Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+        Matchers.is(CacheReadMode.readwrite));
   }
 
   @Test
@@ -179,7 +179,7 @@ public class ArtifactCacheBuckConfigTest {
         Matchers.equalTo(Paths.get("cache_dir").toAbsolutePath()));
     assertThat(
         dirCacheConfig.getCacheReadMode(),
-        Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readonly));
+        Matchers.is(CacheReadMode.readonly));
     assertThat(dirCacheConfig.getMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
   }
 
@@ -205,7 +205,7 @@ public class ArtifactCacheBuckConfigTest {
         Matchers.equalTo(Paths.get("cache_dir_name1").toAbsolutePath()));
     assertThat(
         name1Entry.getCacheReadMode(),
-        Matchers.equalTo(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+        Matchers.equalTo(CacheReadMode.readwrite));
     assertThat(
         name1Entry.getMaxSizeBytes(),
         Matchers.equalTo(Optional.of(1022L)));
@@ -216,7 +216,7 @@ public class ArtifactCacheBuckConfigTest {
         Matchers.equalTo(Paths.get("othername_dir_cache").toAbsolutePath()));
     assertThat(
         othernameDirCche.getCacheReadMode(),
-        Matchers.equalTo(ArtifactCacheBuckConfig.CacheReadMode.readonly));
+        Matchers.equalTo(CacheReadMode.readonly));
     assertThat(
         othernameDirCche.getMaxSizeBytes(),
         Matchers.equalTo(Optional.of(800L)));
@@ -261,7 +261,7 @@ public class ArtifactCacheBuckConfigTest {
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.empty())
                     .setCacheDir(cacheDir)
-                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
+                    .setCacheReadMode(CacheReadMode.readonly)
                     .build())));
 
     config = createFromText(
@@ -276,7 +276,7 @@ public class ArtifactCacheBuckConfigTest {
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.of(42L))
                     .setCacheDir(cacheDir)
-                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
+                    .setCacheReadMode(CacheReadMode.readonly)
                     .build())));
   }
 
@@ -294,7 +294,7 @@ public class ArtifactCacheBuckConfigTest {
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.empty())
                     .setCacheDir(cacheDir)
-                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readwrite)
+                    .setCacheReadMode(CacheReadMode.readwrite)
                     .build())));
   }
 
@@ -333,14 +333,14 @@ public class ArtifactCacheBuckConfigTest {
     HttpCacheEntry bobCache = FluentIterable.from(httpCacheEntries).get(0);
     assertThat(bobCache.getUrl(), Matchers.equalTo(URI.create("http://bob.com/")));
     assertThat(bobCache.getCacheReadMode(), Matchers.equalTo(
-            ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+            CacheReadMode.readwrite));
     assertThat(bobCache.getTimeoutSeconds(), Matchers.is(3));
 
     HttpCacheEntry fredCache = FluentIterable.from(httpCacheEntries).get(1);
     assertThat(fredCache.getUrl(), Matchers.equalTo(URI.create("http://fred.com/")));
     assertThat(fredCache.getTimeoutSeconds(), Matchers.is(42));
     assertThat(fredCache.getCacheReadMode(), Matchers.equalTo(
-            ArtifactCacheBuckConfig.CacheReadMode.readonly));
+            CacheReadMode.readonly));
     assertThat(fredCache.isWifiUsableForDistributedCache(Optional.of("wsad")), Matchers.is(true));
     assertThat(fredCache.isWifiUsableForDistributedCache(Optional.of("yolo")), Matchers.is(false));
   }
@@ -365,7 +365,7 @@ public class ArtifactCacheBuckConfigTest {
     HttpCacheEntry bobCache = FluentIterable.from(httpCacheEntries).get(1);
     assertThat(bobCache.getUrl(), Matchers.equalTo(URI.create("http://bob.com/")));
     assertThat(bobCache.getCacheReadMode(), Matchers.equalTo(
-            ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+            CacheReadMode.readwrite));
     assertThat(bobCache.getTimeoutSeconds(), Matchers.is(3));
   }
 

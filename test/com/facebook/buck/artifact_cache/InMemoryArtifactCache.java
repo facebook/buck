@@ -81,8 +81,8 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return true;
+  public CacheReadMode getCacheReadMode() {
+    return CacheReadMode.readwrite;
   }
 
   @Override

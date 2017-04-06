@@ -48,8 +48,8 @@ public class DummyArtifactCache extends NoopArtifactCache {
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return true;
+  public CacheReadMode getCacheReadMode() {
+    return CacheReadMode.readwrite;
   }
 
 }

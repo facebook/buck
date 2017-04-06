@@ -483,22 +483,6 @@ public class ArtifactCacheBuckConfig {
     thrift_over_http,
   }
 
-  public enum CacheReadMode {
-    readonly(false),
-    readwrite(true),
-    ;
-
-    private final boolean writable;
-
-    CacheReadMode(boolean writable) {
-      this.writable = writable;
-    }
-
-    public boolean isWritable() {
-      return writable;
-    }
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractArtifactCacheEntries {

@@ -102,11 +102,15 @@ public class ArtifactCachesTest {
 
     DirArtifactCache dir1 = (DirArtifactCache) c1;
     assertThat(dir1.getCacheDir(), Matchers.equalTo(Paths.get("dir1").toAbsolutePath()));
-    assertThat(dir1.isStoreSupported(), Matchers.equalTo(true));
+    assertThat(
+        dir1.getCacheReadMode(),
+        Matchers.equalTo(CacheReadMode.readwrite));
 
     DirArtifactCache dir2 = (DirArtifactCache) c2;
     assertThat(dir2.getCacheDir(), Matchers.equalTo(Paths.get("dir2").toAbsolutePath()));
-    assertThat(dir2.isStoreSupported(), Matchers.equalTo(false));
+    assertThat(
+        dir2.getCacheReadMode(),
+        Matchers.equalTo(CacheReadMode.readonly));
   }
 
   @Test

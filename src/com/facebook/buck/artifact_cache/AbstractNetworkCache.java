@@ -44,7 +44,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   protected final String scheduleType;
   protected final HttpService fetchClient;
   protected final HttpService storeClient;
-  private final boolean doStore;
+  private final CacheReadMode cacheReadMode;
   protected final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
   private final ListeningExecutorService httpWriteExecutorService;
@@ -59,7 +59,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     this.scheduleType = args.getScheduleType();
     this.fetchClient = args.getFetchClient();
     this.storeClient = args.getStoreClient();
-    this.doStore = args.getDoStore();
+    this.cacheReadMode = args.getCacheReadMode();
     this.projectFilesystem = args.getProjectFilesystem();
     this.buckEventBus = args.getBuckEventBus();
     this.httpWriteExecutorService = args.getHttpWriteExecutorService();
@@ -110,7 +110,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       final ArtifactInfo info,
       final BorrowablePath output) {
-    if (!isStoreSupported()) {
+    if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
 
@@ -180,8 +180,8 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return doStore;
+  public CacheReadMode getCacheReadMode() {
+    return cacheReadMode;
   }
 
   @Override

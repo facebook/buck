@@ -40,7 +40,7 @@ public interface ArtifactCache extends AutoCloseable {
    * execution.
    * Store may be performed synchronously or asynchronously.
    * <p>
-   * This is a noop if {@link #isStoreSupported()} returns {@code false}.
+   * This is a noop if {@link #getCacheReadMode()}} returns {@code readonly}.
    *
    * @param info information to store with the artifact
    * @param output path to read artifact from. If its borrowable, you may freely move the file into
@@ -55,7 +55,7 @@ public interface ArtifactCache extends AutoCloseable {
    * This method must return the same value over the lifetime of this object.
    * @return whether this{@link ArtifactCache} supports storing artifacts.
    */
-  boolean isStoreSupported();
+  CacheReadMode getCacheReadMode();
 
   @Override
   void close();

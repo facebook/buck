@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
@@ -345,7 +346,8 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -402,7 +404,8 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -589,7 +592,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -639,7 +643,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
       BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
       assertThat(
@@ -653,7 +658,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -722,7 +728,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
       BuildRuleEvent.Started startedDep = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(runtimeDep, durationTracker));
       assertThat(
@@ -736,7 +743,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
       BuildRuleEvent.Started startedTransitive = TestEventConfigurator.configureTestEvent(
           BuildRuleEvent.ruleKeyCalculationStarted(transitiveRuntimeDep, durationTracker));
       assertThat(
@@ -750,7 +758,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.empty(),
-                  Optional.empty(), Optional.empty())));
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -3190,7 +3199,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public boolean isStoreSupported() {
+    public CacheReadMode getCacheReadMode() {
       throw new UnsupportedOperationException();
     }
 

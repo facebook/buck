@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -188,9 +189,10 @@ public class BuildInfoRecorderTest {
     final ArtifactCache cache =
         new NoopArtifactCache() {
           @Override
-          public boolean isStoreSupported() {
-            return true;
+          public CacheReadMode getCacheReadMode() {
+            return CacheReadMode.readwrite;
           }
+
           @Override
           public ListenableFuture<Void> store(
               ArtifactInfo info,

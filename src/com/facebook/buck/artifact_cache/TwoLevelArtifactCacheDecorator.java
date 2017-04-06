@@ -220,8 +220,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return delegate.isStoreSupported();
+  public CacheReadMode getCacheReadMode() {
+    return delegate.getCacheReadMode();
   }
 
   @Override

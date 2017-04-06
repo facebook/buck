@@ -289,7 +289,7 @@ public class BuildInfoRecorder {
 
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
-    if (!artifactCache.isStoreSupported()) {
+    if (!artifactCache.getCacheReadMode().isWritable()) {
       return;
     }
 

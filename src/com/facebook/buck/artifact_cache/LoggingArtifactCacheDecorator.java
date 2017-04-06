@@ -66,8 +66,8 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return delegate.isStoreSupported();
+  public CacheReadMode getCacheReadMode() {
+    return delegate.getCacheReadMode();
   }
 
   @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -324,8 +325,8 @@ public class ServedCacheIntegrationTest {
       }
 
       @Override
-      public boolean isStoreSupported() {
-        return true;
+      public CacheReadMode getCacheReadMode() {
+        return CacheReadMode.readwrite;
       }
 
       @Override

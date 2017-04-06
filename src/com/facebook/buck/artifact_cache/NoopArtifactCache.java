@@ -37,10 +37,9 @@ public class NoopArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
-  /** @return {@code false}: storing artifacts is never supported by this class. */
   @Override
-  public boolean isStoreSupported() {
-    return false;
+  public CacheReadMode getCacheReadMode() {
+    return CacheReadMode.readonly;
   }
 
   @Override

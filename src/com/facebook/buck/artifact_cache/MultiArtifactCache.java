@@ -19,9 +19,10 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -42,8 +43,9 @@ public class MultiArtifactCache implements ArtifactCache {
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
-    this.writableArtifactCaches = ImmutableList.copyOf(
-        Iterables.filter(artifactCaches, ArtifactCache::isStoreSupported));
+    this.writableArtifactCaches = artifactCaches.stream()
+        .filter(c -> c.getCacheReadMode().equals(CacheReadMode.readwrite))
+        .collect(MoreCollectors.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 
@@ -61,7 +63,7 @@ public class MultiArtifactCache implements ArtifactCache {
       if (cacheResult.getType().isSuccess()) {
         break;
       }
-      if (artifactCache.isStoreSupported()) {
+      if (artifactCache.getCacheReadMode().isWritable()) {
         priorCaches.add(artifactCache);
       }
     }
@@ -109,10 +111,11 @@ public class MultiArtifactCache implements ArtifactCache {
     return storeToCaches(writableArtifactCaches, info, output);
   }
 
-  /** @return {@code true} if there is at least one ArtifactCache that supports storing. */
   @Override
-  public boolean isStoreSupported() {
-    return isStoreSupported;
+  public CacheReadMode getCacheReadMode() {
+    return isStoreSupported ?
+        CacheReadMode.readwrite :
+        CacheReadMode.readonly;
   }
 
   @Override
@@ -130,7 +133,8 @@ public class MultiArtifactCache implements ArtifactCache {
     }
   }
 
-  public ImmutableList<ArtifactCache> getArtifactCaches() {
-    return artifactCaches;
+  @VisibleForTesting
+  ImmutableList<ArtifactCache> getArtifactCaches() {
+    return ImmutableList.copyOf(artifactCaches);
   }
 }

@@ -34,7 +34,7 @@ interface AbstractNetworkCacheArgs {
   String getScheduleType();
   HttpService getFetchClient();
   HttpService getStoreClient();
-  boolean getDoStore();
+  CacheReadMode getCacheReadMode();
   ProjectFilesystem getProjectFilesystem();
   BuckEventBus getBuckEventBus();
   ListeningExecutorService getHttpWriteExecutorService();

@@ -39,7 +39,7 @@ public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
     this.remoteCache = remoteCache;
 
     Preconditions.checkState(
-        localCache.isStoreSupported(),
+        localCache.getCacheReadMode().isWritable(),
         "Local cache backing remote cache is read-only.");
   }
 
@@ -72,8 +72,8 @@ public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return remoteCache.isStoreSupported();
+  public CacheReadMode getCacheReadMode() {
+    return remoteCache.getCacheReadMode();
   }
 
   @Override

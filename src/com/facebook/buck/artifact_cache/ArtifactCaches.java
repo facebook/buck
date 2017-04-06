@@ -266,7 +266,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               CommonGroups.CONTROL) == CommonGroups.TEST) {
         MultiArtifactCache multiDirCache = new MultiArtifactCache(dirCaches);
         MultiArtifactCache multiRemoteCache = new MultiArtifactCache(remoteCaches);
-        if (!multiDirCache.isStoreSupported()) {
+        if (!multiDirCache.getCacheReadMode().isWritable()) {
           buckEventBus.post(DirCacheExperimentEvent.readOnly());
         } else {
           buckEventBus.post(DirCacheExperimentEvent.propagateOnly());
@@ -333,7 +333,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
           "dir",
           projectFilesystem,
           cacheDir,
-          dirCacheConfig.getCacheReadMode().isWritable(),
+          dirCacheConfig.getCacheReadMode(),
           dirCacheConfig.getMaxSizeBytes());
 
       if (!buckEventBus.isPresent()) {
@@ -447,7 +447,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     }
 
     String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
-    boolean doStore = cacheDescription.getCacheReadMode().isWritable();
     ArtifactCache result = factory.newInstance(
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
@@ -456,7 +455,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setScheduleType(config.getScheduleType())
             .setFetchClient(fetchService)
             .setStoreClient(storeService)
-            .setDoStore(doStore)
+            .setCacheReadMode(cacheDescription.getCacheReadMode())
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(buckEventBus)
             .setHttpWriteExecutorService(httpWriteExecutorService)

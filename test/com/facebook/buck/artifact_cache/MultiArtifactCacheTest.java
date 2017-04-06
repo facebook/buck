@@ -157,8 +157,8 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public boolean isStoreSupported() {
-      return true;
+    public CacheReadMode getCacheReadMode() {
+      return CacheReadMode.readwrite;
     }
 
     @Override
@@ -175,8 +175,8 @@ public class MultiArtifactCacheTest {
     SimpleArtifactCache fakeDirCache = new SimpleArtifactCache(filesystem);
     SimpleArtifactCache fakeReadOnlyCache = new SimpleArtifactCache(filesystem) {
       @Override
-      public boolean isStoreSupported() {
-        return false;
+      public CacheReadMode getCacheReadMode() {
+        return CacheReadMode.readonly;
       }
     };
     MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,24 +16,25 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
+/**
+ * Describes whether the cache allows stores.
+ */
+public enum CacheReadMode {
+  // No stores allowed.
+  readonly(false),
+  // "Depends who's asking". Stores allowed, however only from prior caches.
+  passthrough(true),
+  // All stores allowed.
+  readwrite(true),
+  ;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
+  private final boolean writable;
 
-public class TestArtifactCaches {
-  private TestArtifactCaches() {
-
+  CacheReadMode(boolean writable) {
+    this.writable = writable;
   }
 
-  public static ArtifactCache createDirCacheForTest(Path filesystemRoot, Path cacheDir)
-      throws IOException {
-    return new DirArtifactCache(
-        "dir",
-        new ProjectFilesystem(filesystemRoot),
-        cacheDir,
-        CacheReadMode.readwrite,
-        Optional.empty());
+  public boolean isWritable() {
+    return writable;
   }
 }

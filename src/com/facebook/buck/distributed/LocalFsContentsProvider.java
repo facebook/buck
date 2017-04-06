@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCache;
@@ -49,7 +50,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
         CACHE_NAME,
         new ProjectFilesystem(cacheDirAbsPath),
         Paths.get(CACHE_NAME),
-        true,
+        CacheReadMode.readwrite,
         Optional.empty());
   }
 
