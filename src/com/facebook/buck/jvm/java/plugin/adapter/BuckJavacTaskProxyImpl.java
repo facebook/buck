@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.CompilationUnitTreeProxy;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.sun.source.util.JavacTask;
+import com.sun.source.util.TaskListener;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -78,24 +79,26 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   }
 
   @Override
-  public void setTaskListener(BuckJavacTaskListener taskListener) {
+  public void setTaskListener(BuckJavacTaskListener buckTaskListener) {
+    javacTask.setTaskListener(getTaskListener(buckTaskListener));
+  }
+
+  @Override
+  public void addTaskListener(BuckJavacTaskListener buckTaskListener) {
+    javacTask.addTaskListener(getTaskListener(buckTaskListener));
+  }
+
+  @Override
+  public void removeTaskListener(BuckJavacTaskListener buckTaskListener) {
+    javacTask.removeTaskListener(getTaskListener(buckTaskListener));
+  }
+
+  private TaskListener getTaskListener(BuckJavacTaskListener taskListener) {
     if (taskListener instanceof TaskListenerProxy) {
-      javacTask.setTaskListener(((TaskListenerProxy) taskListener).getInner());
-    } else {
-      javacTask.setTaskListener(new BuckJavacTaskListenerProxy(taskListener));
+      return ((TaskListenerProxy) taskListener).getInner();
     }
-  }
 
-  @Override
-  public void addTaskListener(BuckJavacTaskListener taskListener) {
-    throw new UnsupportedOperationException(
-        "Need a java 8 tools stub in third-party to support this");
-  }
-
-  @Override
-  public void removeTaskListener(BuckJavacTaskListener taskListener) {
-    throw new UnsupportedOperationException(
-        "Need a java 8 tools stub in third-party to support this");
+    return new BuckJavacTaskListenerProxy(taskListener);
   }
 
   @Override

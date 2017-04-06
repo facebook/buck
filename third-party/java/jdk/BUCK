@@ -12,7 +12,7 @@ prebuilt_jar(
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//test/com/facebook/buck/jvm/java/abi/source:source",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
-        "//test/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+        "//test/com/facebook/buck/jvm/java/plugin/adapter:",
         "//test/com/facebook/buck/jvm/java/testutil:testutil",
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],
