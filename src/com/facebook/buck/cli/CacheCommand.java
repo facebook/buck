@@ -112,7 +112,7 @@ public class CacheCommand extends AbstractCommand {
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
 
-    BuildEvent.Started started = BuildEvent.started(getArguments(), false);
+    BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
     try (CommandThreadManager pool = new CommandThreadManager(

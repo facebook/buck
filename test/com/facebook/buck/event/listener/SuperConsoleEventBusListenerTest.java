@@ -779,7 +779,7 @@ public class SuperConsoleEventBusListenerTest {
             "[-] PARSING BUCK FILES...FINISHED 0.2s"));
 
     // trigger a distributed build instead of a local build
-    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs, true);
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             buildEventStarted,
@@ -805,27 +805,36 @@ public class SuperConsoleEventBusListenerTest {
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+
+    BuildEvent.DistBuildStarted distBuildStartedEvent = BuildEvent.distBuildStarted();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            distBuildStartedEvent,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             actionGraphStarted,
-            300L,
+            400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ActionGraphEvent.finished(actionGraphStarted),
-            400L,
+            500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
     final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
-    validateConsole(listener, 540L, ImmutableList.of(
+    validateConsole(listener, 640L, ImmutableList.of(
         parsingLine,
+        "[+] DISTBUILD...0.1s [0%] (STATUS: INIT)",
         DOWNLOAD_STRING,
-        "[+] DISTBUILD STATUS: INIT...",
-        "[+] BUILDING...0.1s [0%]"));
+        "[+] BUILDING...0.2s [0%]"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -836,15 +845,15 @@ public class SuperConsoleEventBusListenerTest {
                     .setETAMillis(2000)
                     .setLogBook(Optional.empty())
                     .build()),
-            800L,
+            900L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 900L, ImmutableList.of(
+    validateConsole(listener, 1000L, ImmutableList.of(
         parsingLine,
+        "[+] DISTBUILD...0.5s [29%] (STATUS: QUEUED,  [step 1])",
         DOWNLOAD_STRING,
-        "[+] DISTBUILD STATUS: QUEUED... ETA: 2.0s (step 1)",
-        "[+] BUILDING...0.5s [29%]"));
+        "[+] BUILDING...0.6s [29%]"));
 
 
     LinkedList<LogRecord> debugLogs = new LinkedList<LogRecord>();
@@ -864,17 +873,17 @@ public class SuperConsoleEventBusListenerTest {
                     .setETAMillis(1800)
                     .setLogBook(debugLogs)
                     .build()),
-            1000L,
+            1100L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 1100L, ImmutableList.of(
+    validateConsole(listener, 1200L, ImmutableList.of(
         distDebugLine,
         logLine1,
         parsingLine,
+        "[+] DISTBUILD...0.7s [50%] (STATUS: BUILDING,  [step 2])",
         DOWNLOAD_STRING,
-        "[+] DISTBUILD STATUS: BUILDING... ETA: 1.8s (step 2)",
-        "[+] BUILDING...0.7s [50%]"));
+        "[+] BUILDING...0.8s [50%]"));
 
 
     log = new LogRecord();
@@ -892,18 +901,18 @@ public class SuperConsoleEventBusListenerTest {
                     .setETAMillis(1600)
                     .setLogBook(debugLogs)
                     .build()),
-            1200L,
+            1300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 1300L, ImmutableList.of(
+    validateConsole(listener, 1400L, ImmutableList.of(
         distDebugLine,
         logLine1,
         logLine2,
         parsingLine,
+        "[+] DISTBUILD...0.9s [64%] (STATUS: BUILDING,  [step 2])",
         DOWNLOAD_STRING,
-        "[+] DISTBUILD STATUS: BUILDING... ETA: 1.6s (step 2)",
-        "[+] BUILDING...0.9s [64%]"));
+        "[+] BUILDING...1.0s [64%]"));
 
 
     log = new LogRecord();
@@ -927,21 +936,29 @@ public class SuperConsoleEventBusListenerTest {
                     .setETAMillis(0)
                     .setLogBook(debugLogs)
                     .build()),
-            1400L,
+            1500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String distbuildLine = "[-] DISTBUILD STATUS: FINISHED_SUCCESSFULLY... (step 3)";
-    validateConsole(listener, 1500L, ImmutableList.of(
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildEvent.distBuildFinished(distBuildStartedEvent, 0),
+            1500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String distbuildLine =
+        "[-] DISTBUILD...FINISHED 1.0s [100%] (STATUS: FINISHED_SUCCESSFULLY,  [step 3])";
+    validateConsole(listener, 1600L, ImmutableList.of(
         distDebugLine,
         logLine1,
         logLine2,
         logLine3,
         logLine4,
         parsingLine,
-        DOWNLOAD_STRING,
         distbuildLine,
-        "[+] BUILDING...1.1s [100%]"));
+        DOWNLOAD_STRING,
+        "[+] BUILDING...1.2s [100%]"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -952,27 +969,27 @@ public class SuperConsoleEventBusListenerTest {
 
     final String buildingLine = "[-] BUILDING...FINISHED 1.2s [100%]";
 
-    validateConsole(listener, 1600L, ImmutableList.of(
+    validateConsole(listener, 1700L, ImmutableList.of(
         distDebugLine,
         logLine1,
         logLine2,
         logLine3,
         logLine4,
         parsingLine,
-        FINISHED_DOWNLOAD_STRING,
         distbuildLine,
+        FINISHED_DOWNLOAD_STRING,
         buildingLine));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ConsoleEvent.severe(SEVERE_MESSAGE),
-            1700L,
+            1800L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
     validateConsoleWithLogLines(
         listener,
-        1750L,
+        1850L,
         ImmutableList.of(
             distDebugLine,
             logLine1,
@@ -980,8 +997,8 @@ public class SuperConsoleEventBusListenerTest {
             logLine3,
             logLine4,
             parsingLine,
-            FINISHED_DOWNLOAD_STRING,
             distbuildLine,
+            FINISHED_DOWNLOAD_STRING,
             buildingLine),
         ImmutableList.of(SEVERE_MESSAGE));
   }

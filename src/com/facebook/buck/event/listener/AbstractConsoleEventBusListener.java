@@ -124,6 +124,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile BuildEvent.Finished buildFinished;
 
   @Nullable
+  protected volatile BuildEvent.DistBuildStarted distBuildStarted;
+  @Nullable
+  protected volatile BuildEvent.DistBuildFinished distBuildFinished;
+
+  @Nullable
   protected volatile InstallEvent.Started installStarted;
   @Nullable
   protected volatile InstallEvent.Finished installFinished;
@@ -211,7 +216,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected Optional<Double> getApproximateBuildProgress() {
-    if (buildStarted != null && buildStarted.isDistributedBuild()) {
+    if (distBuildStarted != null) {
       return Optional.of(distributedBuildProgress);
     } else {
       if (progressEstimator.isPresent()) {
@@ -594,6 +599,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
+  public void distBuildStarted(BuildEvent.DistBuildStarted started) {
+    distBuildStarted = started;
+  }
+
+  @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = Optional.of(calculated.getNumRules());
     if (progressEstimator.isPresent()) {
@@ -645,6 +655,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     buildRuleThreadTracker.didFinishBuildRule(finished);
     cacheRateStatsKeeper.buildRuleFinished(finished);
+  }
+
+  @Subscribe
+  public void distBuildStarted(BuildEvent.DistBuildFinished finished) {
+    distBuildFinished = finished;
   }
 
   @Subscribe

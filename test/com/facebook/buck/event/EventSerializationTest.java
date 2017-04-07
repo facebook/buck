@@ -49,6 +49,10 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
 
+/**
+ * Failing an EventSerializationTest tells you that
+ * you're changing the public API (serialized JSON).
+ */
 public class EventSerializationTest {
 
   private long timestamp;
@@ -128,8 +132,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals("{%s,\"eventKey\":{\"value\":4242}," +
-            "\"buildArgs\":[\"//base:short\"], \"distributedBuild\":false," +
-            "\"type\":\"BuildStarted\"}",
+            "\"buildArgs\":[\"//base:short\"]," + "\"type\":\"BuildStarted\"}",
         message);
   }
 

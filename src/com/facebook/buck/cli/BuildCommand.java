@@ -408,7 +408,7 @@ public class BuildCommand extends AbstractCommand {
       this.arguments.addAll(additionalTargets);
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
-    int exitCode;
+    int exitCode = 0;
     try {
       ActionAndTargetGraphs graphs = createGraphs(
           params,
@@ -420,15 +420,16 @@ public class BuildCommand extends AbstractCommand {
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = 1;
+    } finally {
+      params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
     }
-    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
     return exitCode;
   }
 
   private BuildEvent.Started postBuildStartedEvent(CommandRunnerParams params) {
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    BuildEvent.Started started = BuildEvent.started(getArguments(), useDistributedBuild);
+    BuildEvent.Started started = BuildEvent.started(getArguments());
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
           started,
@@ -602,7 +603,6 @@ public class BuildCommand extends AbstractCommand {
         targetGraphAndBuildTargets.getTargetGraph(),
         buildTargets
     );
-
   }
 
   private int executeDistBuild(
@@ -620,8 +620,14 @@ public class BuildCommand extends AbstractCommand {
       return 0;
 
     } else {
+      BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
+      params.getBuckEventBus().post(started);
+
+      int distBuildExitCode = 1;
+      DistBuildClientExecutor.ExecutionResult distBuildResult;
       BuckVersion buckVersion = getBuckVersion();
       Preconditions.checkArgument(params.getInvocationInfo().isPresent());
+
       try (DistBuildService service = DistBuildFactory.newDistBuildService(params);
            DistBuildLogStateTracker distBuildLogStateTracker =
                DistBuildFactory.newDistBuildLogStateTracker(
@@ -633,36 +639,39 @@ public class BuildCommand extends AbstractCommand {
             distBuildLogStateTracker,
             buckVersion,
             Executors.newScheduledThreadPool(1));
-        DistBuildClientExecutor.ExecutionResult distBuildResult =
+        distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,
                 filesystem,
                 fileHashCache,
                 params.getBuckEventBus());
-        int distBuildExitCode = distBuildResult.exitCode;
+        distBuildExitCode = distBuildResult.exitCode;
+      } finally {
+        BuildEvent.DistBuildFinished finished =
+            BuildEvent.distBuildFinished(started, distBuildExitCode);
+        params.getBuckEventBus().post(finished);
+      }
 
-        DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
-        // After dist-build is complete, start build locally and we'll find everything in the cache.
-        // TODO(shivanker): Add a flag to disable building, and only fetch from the cache.
-        if (distBuildConfig.isSlowLocalBuildFallbackModeEnabled() || distBuildExitCode == 0) {
-          if (distBuildExitCode != 0) {
-            String errorMessage = String.format(
-                "The remote/distributed build with [%s] " +
-                    "failed with exit code [%d] trying to build " +
-                    "targets [%s]. This program will continue now by falling back to a " +
-                    "local build because config " +
-                    "[stampede.enable_slow_local_build_fallback=true]. ",
-                distBuildResult.stampedeId,
-                distBuildExitCode,
-                Joiner.on(" ").join(arguments));
-            params.getConsole().printErrorText(errorMessage);
-            LOG.error(errorMessage);
-          }
-
-          return executeLocalBuild(params, graphs.actionGraph, executorService);
-        } else {
-          return distBuildExitCode;
+      DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
+      // After dist-build is complete, start build locally and we'll find everything in the cache.
+      if (distBuildConfig.isSlowLocalBuildFallbackModeEnabled() || distBuildExitCode == 0) {
+        if (distBuildExitCode != 0) {
+          String errorMessage = String.format(
+              "The remote/distributed build with Stampede ID [%s] " +
+                  "failed with exit code [%d] trying to build " +
+                  "targets [%s]. This program will continue now by falling back to a " +
+                  "local build because config " +
+                  "[stampede.enable_slow_local_build_fallback=true]. ",
+              distBuildResult.stampedeId,
+              distBuildExitCode,
+              Joiner.on(" ").join(arguments));
+          params.getConsole().printErrorText(errorMessage);
+          LOG.error(errorMessage);
         }
+
+        return executeLocalBuild(params, graphs.actionGraph, executorService);
+      } else {
+        return distBuildExitCode;
       }
     }
   }

@@ -35,15 +35,19 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
   }
 
   public static Started started(Iterable<String> buildArgs) {
-    return started(buildArgs, false);
-  }
-
-  public static Started started(Iterable<String> buildArgs, boolean isDistributedBuild) {
-    return new Started(ImmutableSet.copyOf(buildArgs), isDistributedBuild);
+    return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
   public static Finished finished(Started started, int exitCode) {
     return new Finished(started, exitCode);
+  }
+
+  public static DistBuildStarted distBuildStarted() {
+    return new DistBuildStarted();
+  }
+
+  public static DistBuildFinished distBuildFinished(DistBuildStarted started, int exitCode) {
+    return new DistBuildFinished(started, exitCode);
   }
 
   public static RuleCountCalculated ruleCountCalculated(
@@ -59,12 +63,10 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
   public static class Started extends BuildEvent {
 
     private final ImmutableSet<String> buildArgs;
-    private final boolean isDistributedBuild;
 
-    protected Started(ImmutableSet<String> buildArgs, boolean isDistributedBuild) {
+    protected Started(ImmutableSet<String> buildArgs) {
       super(EventKey.unique());
       this.buildArgs = buildArgs;
-      this.isDistributedBuild = isDistributedBuild;
     }
 
     @Override
@@ -79,10 +81,6 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     public ImmutableSet<String> getBuildArgs() {
       return buildArgs;
-    }
-
-    public boolean isDistributedBuild() {
-      return isDistributedBuild;
     }
   }
 
@@ -128,6 +126,62 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     @Override
     public int hashCode() {
       return Objects.hashCode(super.hashCode(), buildArgs, exitCode);
+    }
+  }
+
+  public static class DistBuildStarted extends BuildEvent {
+
+    protected DistBuildStarted() {
+      super(EventKey.unique());
+    }
+
+    @Override
+    public String getEventName() {
+      return DIST_BUILD_STARTED;
+    }
+
+    @Override
+    protected String getValueString() {
+      return "";
+    }
+  }
+
+  public static class DistBuildFinished extends BuildEvent {
+
+    private final int exitCode;
+
+    protected DistBuildFinished(DistBuildStarted started, int exitCode) {
+      super(started.getEventKey());
+      this.exitCode = exitCode;
+    }
+
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    @Override
+    public String getEventName() {
+      return DIST_BUILD_FINISHED;
+    }
+
+    @Override
+    protected String getValueString() {
+      return String.format("exit code: %d", exitCode);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!super.equals(o)) {
+        return false;
+      }
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(super.hashCode(), exitCode);
     }
   }
 
