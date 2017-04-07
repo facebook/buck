@@ -13,6 +13,7 @@ import re
 import subprocess
 import os
 import tempfile
+import shutil
 import sys
 
 from collections import defaultdict
@@ -313,6 +314,22 @@ def get_buck_repo_root(path):
     return path
 
 
+def move_mount(from_mount, to_mount):
+    subprocess.check_call("sync")
+    subprocess.check_call(["mount", "--move", from_mount, to_mount])
+    for subdir, dirs, files in os.walk(to_mount):
+        for file in files:
+            path = os.path.join(subdir, file)
+            if (os.path.islink(path) and
+               os.path.realpath(path).startswith(from_mount + '/')):
+                new_path = os.path.realpath(path).replace(
+                    from_mount + '/',
+                    to_mount + '/'
+                )
+                os.unlink(path)
+                os.symlink(new_path, path)
+
+
 def main():
     args = createArgParser().parse_args()
     log('Running Performance Test!')
@@ -336,7 +353,20 @@ def main():
     cwd = os.path.join(cwd_root, args.project_under_test)
 
     log('Renaming %s to %s' % (args.repo_under_test, cwd_root))
-    os.rename(args.repo_under_test, cwd_root)
+    if not os.path.isfile('/proc/mounts'):
+        is_mounted = False
+    else:
+        with open('/proc/mounts', 'r') as mounts:
+            # grab the second element (mount point) from /proc/mounts
+            lines = [l.strip().split() for l in mounts.read().splitlines()]
+            lines = [l[1] for l in lines if len(l) >= 2]
+            is_mounted = args.repo_under_test in lines
+    if is_mounted:
+        if not os.path.exists(cwd_root):
+            os.makedirs(cwd_root)
+        move_mount(args.repo_under_test, cwd_root)
+    else:
+        os.rename(args.repo_under_test, cwd_root)
 
     try:
         log('== Checking for problems with absolute paths ==')
@@ -362,7 +392,11 @@ def main():
 
     finally:
         log('Renaming %s to %s' % (cwd_root, args.repo_under_test))
-        os.rename(cwd_root, args.repo_under_test)
+        if is_mounted:
+            move_mount(cwd_root, args.repo_under_test)
+            shutil.rmtree(cwd_root)
+        else:
+            os.rename(cwd_root, args.repo_under_test)
 
 
 if __name__ == '__main__':
