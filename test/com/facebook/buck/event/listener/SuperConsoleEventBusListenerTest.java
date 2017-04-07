@@ -847,7 +847,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.QUEUED)
+                    .setStatus(BuildStatus.QUEUED.toString())
                     .setMessage("step 1")
                     .setLogBook(Optional.empty())
                     .build()),
@@ -866,7 +866,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING)
+                    .setStatus(BuildStatus.BUILDING.toString())
                     .setMessage("step 2")
                     .build()),
             timeMillis,
@@ -894,7 +894,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING)
+                    .setStatus(BuildStatus.BUILDING.toString())
                     .setMessage("step 2")
                     .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
@@ -926,7 +926,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING)
+                    .setStatus(BuildStatus.BUILDING.toString())
                     .setMessage("step 2")
                     .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
@@ -962,7 +962,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING)
+                    .setStatus("CUSTOM")
                     .setMessage("step 2")
                     .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
@@ -973,7 +973,7 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
-        "[+] DISTBUILD...1.5s [96%] (STATUS: BUILDING, [step 2])",
+        "[+] DISTBUILD...1.5s [96%] (STATUS: CUSTOM, [step 2])",
         " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
         " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, " +
             "1 [5.0%] CACHE ERRORS)"));
@@ -984,7 +984,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus(BuildStatus.FINISHED_SUCCESSFULLY)
+                    .setStatus(BuildStatus.FINISHED_SUCCESSFULLY.toString())
                     .setMessage("step 3")
                     .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),

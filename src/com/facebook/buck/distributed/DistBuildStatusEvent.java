@@ -16,7 +16,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
@@ -65,7 +64,7 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
     /**
      * @return dist-build status
      */
-    abstract BuildStatus getStatus();
+    abstract String getStatus();
 
     /**
      * @return the message to display

@@ -115,11 +115,13 @@ public class DistBuildClientExecutor {
   private BuildJob initBuild(
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
-      FileHashCache fileHashCache) throws IOException, InterruptedException {
+      FileHashCache fileHashCache,
+      BuckEventBus eventBus) throws IOException, InterruptedException {
     BuildJob job = distBuildService.createBuild();
     final StampedeId stampedeId = job.getStampedeId();
     LOG.info("Created job. Build id = " + stampedeId.getId());
     logDebugInfo(job);
+    postDistBuildStatusEvent(eventBus, job, ImmutableList.of(), "UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
     LOG.info("Uploading local changes.");
@@ -149,6 +151,7 @@ public class DistBuildClientExecutor {
       LOG.error("Upload failed.");
       throw new RuntimeException(e);
     }
+    postDistBuildStatusEvent(eventBus, job, ImmutableList.of(), "STARTING REMOTE BUILD");
 
     distBuildService.setBuckVersion(stampedeId, buckVersion);
     LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
@@ -218,7 +221,11 @@ public class DistBuildClientExecutor {
       BuckEventBus eventBus)
       throws IOException, InterruptedException {
 
-    final BuildJob initJob = initBuild(networkExecutorService, projectFilesystem, fileHashCache);
+    final BuildJob initJob = initBuild(
+        networkExecutorService,
+        projectFilesystem,
+        fileHashCache,
+        eventBus);
     BuildJob finalJob;
 
     nextEventIdBySlaveRunId.clear();
@@ -243,11 +250,17 @@ public class DistBuildClientExecutor {
       }
     }
 
+    postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FETCHING LOG DIRS");
     materializeSlaveLogDirs(finalJob);
 
-    LOG.info("Build was " +
-        (finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? "" : "not ") +
-        "successful!");
+    if (finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)) {
+      LOG.info("DistBuild was successful!");
+      postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FINISHED");
+    } else {
+      LOG.info("DistBuild was not successful!");
+      postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FAILED");
+    }
+
     logDebugInfo(finalJob);
     return new ExecutionResult(
         finalJob.getStampedeId(),
@@ -256,6 +269,14 @@ public class DistBuildClientExecutor {
 
   private void postDistBuildStatusEvent(
       BuckEventBus eventBus, BuildJob job, List<BuildSlaveStatus> slaveStatuses) {
+    postDistBuildStatusEvent(eventBus, job, slaveStatuses, null);
+  }
+
+  private void postDistBuildStatusEvent(
+      BuckEventBus eventBus,
+      BuildJob job,
+      List<BuildSlaveStatus> slaveStatuses,
+      String statusOverride) {
     Optional<List<LogRecord>> logBook = Optional.empty();
 
     Optional<String> lastLine = Optional.empty();
@@ -266,8 +287,9 @@ public class DistBuildClientExecutor {
       }
     }
 
+    String stage = statusOverride == null ? job.getStatus().toString() : statusOverride;
     DistBuildStatus status = DistBuildStatus.builder()
-        .setStatus(job.getStatus())
+        .setStatus(stage)
         .setMessage(lastLine)
         .setLogBook(logBook)
         .setSlaveStatuses(slaveStatuses)

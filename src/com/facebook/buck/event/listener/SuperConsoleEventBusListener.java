@@ -538,7 +538,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (!distBuildStatus.isPresent()) {
         columns.add("STATUS: INIT");
       } else {
-        columns.add("STATUS: " + distBuildStatus.get().getStatus().toString());
+        columns.add("STATUS: " + distBuildStatus.get().getStatus());
 
         if (distBuildStatus.get().getMessage().isPresent()) {
           columns.add("[" + distBuildStatus.get().getMessage().get() + "]");
