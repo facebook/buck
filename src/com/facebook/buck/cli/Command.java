@@ -18,12 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.OptionalInt;
 
 public interface Command {
@@ -66,9 +64,7 @@ public interface Command {
 
 
   // If it gets messy adding more arguments here, make them into an Immutable instead.
-  Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem);
+  Iterable<BuckEventListener> getEventListeners();
 
   void printUsage(PrintStream stream);
 }

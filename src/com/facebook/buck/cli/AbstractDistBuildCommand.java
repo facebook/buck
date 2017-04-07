@@ -27,8 +27,9 @@ import javax.annotation.Nullable;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
 
+  protected static final String STAMPEDE_ID_ARG_NAME = "--stampede-id";
   @Nullable
-  @Option(name = "--stampede-id", usage = "Stampede distributed build id.")
+  @Option(name = STAMPEDE_ID_ARG_NAME, usage = "Stampede distributed build id.")
   private String stampedeId;
 
   public Optional<StampedeId> getStampedeIdOptional() {
@@ -44,7 +45,8 @@ public abstract class AbstractDistBuildCommand extends AbstractCommand {
   public StampedeId getStampedeId() {
     Optional<StampedeId> buildId = getStampedeIdOptional();
     if (!buildId.isPresent()) {
-      throw new HumanReadableException("--build-id argument is missing.");
+      throw new HumanReadableException(
+          String.format("%s argument is missing.", STAMPEDE_ID_ARG_NAME));
     }
 
     return buildId.get();

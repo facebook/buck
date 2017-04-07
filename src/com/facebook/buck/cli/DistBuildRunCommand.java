@@ -21,13 +21,18 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 import org.kohsuke.args4j.Option;
 
@@ -36,6 +41,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -64,6 +71,15 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       usage = "Full path to an existing directory that will contain a global cache across builds.")
   private Path globalCacheDir;
 
+  private static final String RUN_ID_ARG_NAME = "--buildslave-run-id";
+  @Nullable
+  @Option(name = RUN_ID_ARG_NAME,
+      usage = "Stampede RunId for this instance of BuildSlave.")
+  private String runId;
+
+  @Nullable
+  private DistBuildSlaveEventBusListener slaveEventListener;
+
   @Override
   public boolean isReadOnly() {
     return false;
@@ -79,6 +95,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     Stopwatch stopwatch = Stopwatch.createStarted();
     Console console = params.getConsole();
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
+      if (buildStateFile == null) {
+        slaveEventListener.setDistBuildService(service);
+      }
+
       Pair<BuildJobState, String> jobStateAndBuildName = getBuildJobStateAndBuildName(
           params.getCell().getFilesystem(),
           console,
@@ -160,6 +180,41 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       }
 
       return Optional.of(globalCacheDir);
+    }
+  }
+
+  private void checkArgs() {
+    if (buildStateFile == null && (!getStampedeIdOptional().isPresent() || runId == null)) {
+        throw new HumanReadableException(String.format(
+            "Options '%s' and '%s' are both required when '%s' is not provided.",
+            STAMPEDE_ID_ARG_NAME,
+            RUN_ID_ARG_NAME,
+            BUILD_STATE_FILE_ARG_NAME));
+    }
+  }
+
+  private void initEventListener() {
+    if (slaveEventListener == null) {
+      checkArgs();
+      RunId runId = new RunId();
+      runId.setId(this.runId);
+
+      ScheduledExecutorService networkScheduler = Executors.newScheduledThreadPool(1);
+      slaveEventListener = new DistBuildSlaveEventBusListener(
+          getStampedeId(),
+          runId,
+          new DefaultClock(),
+          networkScheduler);
+    }
+  }
+
+  @Override
+  public Iterable<BuckEventListener> getEventListeners() {
+    if (buildStateFile == null) {
+      initEventListener();
+      return ImmutableList.of(slaveEventListener);
+    } else {
+      return ImmutableList.of();
     }
   }
 }

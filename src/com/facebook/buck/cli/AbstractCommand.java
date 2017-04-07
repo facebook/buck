@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -347,9 +346,7 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
+  public Iterable<BuckEventListener> getEventListeners() {
     return ImmutableList.of();
   }
 

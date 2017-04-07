@@ -48,6 +48,7 @@ standard_java_library(
         "//test/com/facebook/buck/event:event",
     ],
     deps = [
+        "//src-gen:thrift",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

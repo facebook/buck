@@ -1,0 +1,244 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.event.listener;
+
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.test.selectors.Nullable;
+import com.facebook.buck.timing.Clock;
+import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.Subscribe;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+
+import javax.annotation.concurrent.GuardedBy;
+
+/**
+ * Listener to transmit DistBuildSlave events over to buck frontend.
+ * NOTE: We do not promise to transmit every single update to BuildSlaveStatus,
+ * but we do promise to always transmit BuildSlaveStatus with the latest updates.
+ */
+public class DistBuildSlaveEventBusListener implements BuckEventListener, Closeable {
+
+  private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
+
+  private static final int DEFAULT_SERVER_UPDATE_PERIOD_MILLIS = 500;
+
+  private final StampedeId stampedeId;
+  private final RunId runId;
+  private final Clock clock;
+  private final ScheduledFuture<?> scheduledServerUpdates;
+
+  private final Object consoleEventsLock = new Object();
+  @GuardedBy("consoleEventsLock")
+  private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
+
+  private final Object statusLock = new Object();
+  @GuardedBy("statusLock")
+  private final BuildSlaveStatus status = new BuildSlaveStatus();
+
+  private volatile @Nullable DistBuildService distBuildService;
+
+  public DistBuildSlaveEventBusListener(
+      StampedeId stampedeId,
+      RunId runId,
+      Clock clock,
+      ScheduledExecutorService networkScheduler) {
+    this(stampedeId, runId, clock, networkScheduler, DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
+  }
+
+  public DistBuildSlaveEventBusListener(
+      StampedeId stampedeId,
+      RunId runId,
+      Clock clock,
+      ScheduledExecutorService networkScheduler,
+      long serverUpdatePeriodMillis) {
+    this.stampedeId = stampedeId;
+    this.runId = runId;
+    this.clock = clock;
+
+    // No synchronization needed here because status is final.
+    status.setStampedeId(stampedeId);
+    status.setRunId(runId);
+
+    scheduledServerUpdates = networkScheduler.scheduleAtFixedRate(
+        this::sendServerUpdates,
+        0,
+        serverUpdatePeriodMillis,
+        TimeUnit.MILLISECONDS);
+  }
+
+  public void setDistBuildService(DistBuildService service) {
+    this.distBuildService = service;
+  }
+
+  @Override
+  public void outputTrace(BuildId buildId) throws InterruptedException {}
+
+  @Override
+  public void close() throws IOException {
+    scheduledServerUpdates.cancel(false);
+    // Send final updates.
+    sendServerUpdates();
+  }
+
+  private void sendStatusToFrontend() {
+    if (distBuildService == null) {
+      return;
+    }
+
+    BuildSlaveStatus statusCopy;
+    synchronized (statusLock) {
+      statusCopy = status.deepCopy();
+    }
+    try {
+      distBuildService.updateBuildSlaveStatus(stampedeId, runId, statusCopy);
+    } catch (IOException e) {
+      LOG.error(e, "Could not update slave status to frontend.");
+    }
+  }
+
+  private void sendConsoleEventsToFrontend() {
+    if (distBuildService == null) {
+      return;
+    }
+
+    ImmutableList<BuildSlaveConsoleEvent> consoleEventsCopy;
+    synchronized (consoleEventsLock) {
+      consoleEventsCopy = ImmutableList.copyOf(consoleEvents);
+      consoleEvents.clear();
+    }
+
+    if (consoleEventsCopy.size() == 0) {
+      return;
+    }
+
+    try {
+      distBuildService.uploadBuildSlaveConsoleEvents(
+          stampedeId,
+          runId,
+          consoleEventsCopy);
+    } catch (IOException e) {
+      LOG.error(e, "Could not upload slave console events to frontend.");
+    }
+  }
+
+  private void sendServerUpdates() {
+    sendStatusToFrontend();
+    sendConsoleEventsToFrontend();
+  }
+
+  @Subscribe
+  public void logEvent(ConsoleEvent event) {
+    if (!event.getLevel().equals(Level.WARNING) &&
+        !event.getLevel().equals(Level.SEVERE)) {
+      return;
+    }
+    synchronized (consoleEventsLock) {
+      consoleEvents.add(event.toBuildSlaveConsoleEvent(clock.currentTimeMillis()));
+    }
+  }
+
+  @Subscribe
+  public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
+    synchronized (statusLock) {
+      status.setTotalRulesCount(calculated.getNumRules());
+    }
+  }
+
+  @Subscribe
+  public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
+    synchronized (statusLock) {
+      status.setTotalRulesCount(updated.getNumRules());
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleStarted(BuildRuleEvent.Started started) {
+    synchronized (statusLock) {
+      status.setRulesStartedCount(status.getRulesStartedCount() + 1);
+    }
+  }
+
+  @Subscribe
+  public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    synchronized (statusLock) {
+      status.setRulesStartedCount(status.getRulesStartedCount() - 1);
+      status.setRulesFinishedCount(status.getRulesFinishedCount() + 1);
+
+      switch (finished.getStatus()) {
+        case SUCCESS:
+          status.setRulesSuccessCount(status.getRulesSuccessCount() + 1);
+          break;
+        case FAIL:
+          status.setRulesFailureCount(status.getRulesFailureCount() + 1);
+          break;
+        case CANCELED:
+          break;
+      }
+
+      switch (finished.getCacheResult().getType()) {
+        case HIT:
+          status.setCacheHitsCount(status.getCacheHitsCount() + 1);
+          break;
+        case MISS:
+          status.setCacheMissesCount(status.getCacheMissesCount() + 1);
+          break;
+        case ERROR:
+          status.setCacheErrorsCount(status.getCacheErrorsCount() + 1);
+          break;
+        case IGNORED:
+          status.setCacheIgnoresCount(status.getCacheIgnoresCount() + 1);
+          break;
+        case LOCAL_KEY_UNCHANGED_HIT:
+          status.setCacheLocalKeyUnchangedHitsCount(
+              status.getCacheLocalKeyUnchangedHitsCount() + 1);
+          break;
+      }
+    }
+  }
+
+  /**
+   * TODO(shivanker): Add support for keeping track of suspended rules.
+   *
+   * @Subscribe public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {}
+   * @Subscribe public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {}
+   */
+
+  /**
+   * TODO(shivanker): Add support for keeping track of cache uploads.
+   * @Subscribe
+   * public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {}
+   */
+
+}

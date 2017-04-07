@@ -1172,7 +1172,7 @@ public final class Main {
                   command
                       .getSubcommand()
                       .get()
-                      .getEventListeners(invocationInfo.getLogDirectoryPath(), filesystem) :
+                      .getEventListeners() :
                   ImmutableList.of();
 
           eventListeners = addEventListeners(

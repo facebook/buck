@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +28,6 @@ import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -147,9 +145,10 @@ public abstract class AbstractContainerCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
-    return ImmutableList.of();
+  public Iterable<BuckEventListener> getEventListeners() {
+    if (!getSubcommand().isPresent()) {
+      return ImmutableList.of();
+    }
+    return getSubcommand().get().getEventListeners();
   }
 }

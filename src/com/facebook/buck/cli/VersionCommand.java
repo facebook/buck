@@ -18,13 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -82,9 +80,7 @@ public class VersionCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
+  public Iterable<BuckEventListener> getEventListeners() {
     return ImmutableList.of();
   }
 
