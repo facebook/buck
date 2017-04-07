@@ -93,7 +93,6 @@ public class CommonThreadStateRenderer {
       Optional<String> placeholderStepInformation,
       long elapsedTimeMs,
       StringBuilder lineBuilder) {
-    lineBuilder.delete(0, lineBuilder.length());
     lineBuilder.append(" |=> ");
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       lineBuilder.append("IDLE");

@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class BuildThreadStateRenderer implements ThreadStateRenderer {
+public class BuildThreadStateRenderer implements MultiStateRenderer {
 
   private final CommonThreadStateRenderer commonThreadStateRenderer;
   private final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap;
@@ -86,12 +86,17 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
   }
 
   @Override
-  public int getThreadCount() {
+  public String getExecutorCollectionLabel() {
+    return "THREADS";
+  }
+
+  @Override
+  public int getExecutorCount() {
     return commonThreadStateRenderer.getThreadCount();
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
     return commonThreadStateRenderer.getSortedThreadIds(sortByTime);
   }
 

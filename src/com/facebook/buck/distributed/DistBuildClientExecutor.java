@@ -271,7 +271,6 @@ public class DistBuildClientExecutor {
         .setMessage(lastLine)
         .setLogBook(logBook)
         .setSlaveStatuses(slaveStatuses)
-        .setETAMillis(0)
         .build();
     eventBus.post(new DistBuildStatusEvent(status));
   }

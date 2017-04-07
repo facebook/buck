@@ -17,12 +17,14 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
@@ -69,6 +71,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Base class for {@link BuckEventListener}s responsible for outputting information about the
@@ -156,9 +159,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsKeeper networkStatsKeeper;
 
-  private volatile double distributedBuildProgress = 0;
+  private volatile Optional<Double> approximateDistBuildProgress = Optional.empty();
 
   protected BuildRuleThreadTracker buildRuleThreadTracker;
+
+  protected final Object distBuildStatusLock = new Object();
+  @GuardedBy("distBuildStatusLock")
+  protected Optional<DistBuildStatus> distBuildStatus = Optional.empty();
+
 
   public AbstractConsoleEventBusListener(
       Console console,
@@ -215,9 +223,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return String.format(minutes == 0 ? "%s" : "%2$dm %1$s", seconds, minutes);
   }
 
+  protected Optional<Double> getApproximateDistBuildProgress() {
+    return approximateDistBuildProgress;
+  }
+
   protected Optional<Double> getApproximateBuildProgress() {
-    if (distBuildStarted != null) {
-      return Optional.of(distributedBuildProgress);
+    if (distBuildStarted != null && distBuildFinished == null) {
+      return getApproximateDistBuildProgress();
     } else {
       if (progressEstimator.isPresent()) {
         return progressEstimator.get().getApproximateBuildProgress();
@@ -730,15 +742,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void distributedBuildStatus(DistBuildStatusEvent event) {
-    if (buildStarted != null)  {
-      long elapsed = clock.currentTimeMillis() - buildStarted.getTimestamp();
-      long left = event.getStatus().getETAMillis();
-      if (elapsed + left > 0) {
-        distributedBuildProgress = ((double) elapsed) / (elapsed + left);
-      } else {
-        distributedBuildProgress = 0;
-      }
+  public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
+    int totalRuleCount = 0;
+    int finishedRuleCount = 0;
+    synchronized (distBuildStatusLock) {
+      distBuildStatus = Optional.of(event.getStatus());
+    }
+
+    for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
+      totalRuleCount += status.getTotalRulesCount();
+      finishedRuleCount += status.getRulesFinishedCount();
+    }
+
+    if (totalRuleCount != 0) {
+      double buildProgress = (double) finishedRuleCount / totalRuleCount;
+      approximateDistBuildProgress = Optional.of(Math.floor(100 * buildProgress) / 100.0);
+    } else {
+      approximateDistBuildProgress = Optional.empty();
     }
   }
 

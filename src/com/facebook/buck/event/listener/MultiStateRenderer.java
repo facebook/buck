@@ -18,9 +18,10 @@ package com.facebook.buck.event.listener;
 
 import com.google.common.collect.ImmutableList;
 
-public interface ThreadStateRenderer {
-  int getThreadCount();
-  ImmutableList<Long> getSortedThreadIds(boolean sortByTime);
-  String renderStatusLine(long threadID, StringBuilder lineBuilder);
-  String renderShortStatus(long threadID);
+public interface MultiStateRenderer {
+  String getExecutorCollectionLabel();
+  int getExecutorCount();
+  ImmutableList<Long> getSortedExecutorIds(boolean sortByTime);
+  String renderStatusLine(long executorID, StringBuilder lineBuilder);
+  String renderShortStatus(long executorID);
 }

@@ -18,33 +18,38 @@ package com.facebook.buck.event.listener;
 
 import com.google.common.collect.ImmutableList;
 
-public class FakeThreadStateRenderer implements ThreadStateRenderer {
+public class FakeMultiStateRenderer implements MultiStateRenderer {
   private final ImmutableList<Long> threadIds;
   private boolean lastSortWasByTime = false;
 
-  public FakeThreadStateRenderer(ImmutableList<Long> threadIds) {
-    this.threadIds = threadIds;
+  public FakeMultiStateRenderer(ImmutableList<Long> executorIds) {
+    this.threadIds = executorIds;
   }
 
   @Override
-  public int getThreadCount() {
+  public String getExecutorCollectionLabel() {
+    return "THREADS";
+  }
+
+  @Override
+  public int getExecutorCount() {
     return threadIds.size();
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
     lastSortWasByTime = sortByTime;
     return threadIds;
   }
 
   @Override
-  public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
-    return " |=> Status of thread " + threadID;
+  public String renderStatusLine(long executorID, StringBuilder lineBuilder) {
+    return " |=> Status of thread " + executorID;
   }
 
   @Override
-  public String renderShortStatus(long threadID) {
-    return "t" + threadID;
+  public String renderShortStatus(long executorID) {
+    return "t" + executorID;
   }
 
   public boolean lastSortWasByTime() {

@@ -63,11 +63,6 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
   @Value.Immutable
   abstract static class AbstractDistBuildStatus {
     /**
-     * @return get ETA in millis
-     */
-    abstract long getETAMillis();
-
-    /**
      * @return dist-build status
      */
     abstract BuildStatus getStatus();

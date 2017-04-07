@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
-public class TestThreadStateRenderer implements ThreadStateRenderer {
+public class TestThreadStateRenderer implements MultiStateRenderer {
 
   private static final Level MIN_LOG_LEVEL = Level.INFO;
   private final CommonThreadStateRenderer commonThreadStateRenderer;
@@ -94,19 +94,24 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
   }
 
   @Override
-  public int getThreadCount() {
+  public String getExecutorCollectionLabel() {
+    return "THREADS";
+  }
+
+  @Override
+  public int getExecutorCount() {
     return commonThreadStateRenderer.getThreadCount();
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
     return commonThreadStateRenderer.getSortedThreadIds(sortByTime);
   }
 
   @Override
-  public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
+  public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
     ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
+        threadInformationMap.get(threadID));
     Optional<String> stepCategory = Optional.empty();
     Optional<? extends LeafEvent> runningStep = Optional.empty();
     if (threadInformation.getTestStatusMessage().isPresent() &&

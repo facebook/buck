@@ -212,7 +212,8 @@ public class BuildThreadStateRendererTest {
   private ImmutableList<String> renderLines(BuildThreadStateRenderer renderer, boolean sortByTime) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     StringBuilder lineBuilder = new StringBuilder();
-    for (long threadId : renderer.getSortedThreadIds(sortByTime)) {
+    for (long threadId : renderer.getSortedExecutorIds(sortByTime)) {
+      lineBuilder.delete(0, lineBuilder.length());
       lines.add(renderer.renderStatusLine(threadId, lineBuilder));
     }
     return lines.build();
@@ -222,7 +223,7 @@ public class BuildThreadStateRendererTest {
       BuildThreadStateRenderer renderer,
       boolean sortByTime) {
     ImmutableList.Builder<String> status = ImmutableList.builder();
-    for (long threadId : renderer.getSortedThreadIds(sortByTime)) {
+    for (long threadId : renderer.getSortedExecutorIds(sortByTime)) {
       status.add(renderer.renderShortStatus(threadId));
     }
     return status.build();

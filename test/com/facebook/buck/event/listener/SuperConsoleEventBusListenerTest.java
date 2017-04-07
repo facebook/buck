@@ -36,8 +36,9 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.LogRecord;
+import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -105,7 +106,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -753,29 +753,33 @@ public class SuperConsoleEventBusListenerTest {
     listener.setProgressEstimator(e);
     eventBus.register(listener);
 
+    long timeMillis = 0;
+
     ProjectBuildFileParseEvents.Started parseEventStarted =
         new ProjectBuildFileParseEvents.Started();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             parseEventStarted,
-            0L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
-    validateConsole(listener, 0L, ImmutableList.of(
+    validateConsole(listener, timeMillis, ImmutableList.of(
         "[+] PARSING BUCK FILES...0.0s"));
 
+    timeMillis += 100;
     validateConsole(
-        listener, 100L, ImmutableList.of(
+        listener, timeMillis, ImmutableList.of(
             "[+] PARSING BUCK FILES...0.1s"));
 
+    timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new ProjectBuildFileParseEvents.Finished(parseEventStarted),
-            200L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(
-        listener, 200L, ImmutableList.of(
+        listener, timeMillis, ImmutableList.of(
             "[-] PARSING BUCK FILES...FINISHED 0.2s"));
 
     // trigger a distributed build instead of a local build
@@ -783,18 +787,19 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             buildEventStarted,
-            200L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             parseStarted,
-            200L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 300L, ImmutableList.of(
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
         "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
@@ -802,7 +807,7 @@ public class SuperConsoleEventBusListenerTest {
             ParseEvent.finished(
                 parseStarted,
                 Optional.empty()),
-            300L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
@@ -810,59 +815,112 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             distBuildStartedEvent,
-            300L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    timeMillis += 100;
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             actionGraphStarted,
-            400L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ActionGraphEvent.finished(actionGraphStarted),
-            500L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    timeMillis += 150;
     final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
-    validateConsole(listener, 640L, ImmutableList.of(
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
-        "[+] DISTBUILD...0.1s [0%] (STATUS: INIT)",
-        DOWNLOAD_STRING,
-        "[+] BUILDING...0.2s [0%]"));
+        "[+] DISTBUILD...0.3s (STATUS: INIT)"));
 
+    timeMillis += 250;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.QUEUED)
                     .setMessage("step 1")
-                    .setETAMillis(2000)
                     .setLogBook(Optional.empty())
                     .build()),
-            900L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 1000L, ImmutableList.of(
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
-        "[+] DISTBUILD...0.5s [29%] (STATUS: QUEUED,  [step 1])",
-        DOWNLOAD_STRING,
-        "[+] BUILDING...0.6s [29%]"));
+        "[+] DISTBUILD...0.7s (STATUS: QUEUED, [step 1])"));
 
 
-    LinkedList<LogRecord> debugLogs = new LinkedList<LogRecord>();
-    LogRecord log = new LogRecord();
-    log.setName("buck-client");
-    log.setTimestampMillis(0);
-    debugLogs.add(log);
-    final String distDebugLine = "Distributed build debug info:";
-    final String logLine1 = "[1970-01-01 00:00:00.000] buck-client";
+    timeMillis += 100;
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new DistBuildStatusEvent(
+                DistBuildStatus.builder()
+                    .setStatus(BuildStatus.BUILDING)
+                    .setMessage("step 2")
+                    .build()),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
+        parsingLine,
+        "[+] DISTBUILD...0.9s (STATUS: BUILDING, [step 2])"));
+
+
+    RunId runId1 = new RunId();
+    runId1.setId("slave1");
+    BuildSlaveStatus slave1 = new BuildSlaveStatus();
+    slave1.setRunId(runId1);
+
+    RunId runId2 = new RunId();
+    runId2.setId("slave2");
+    BuildSlaveStatus slave2 = new BuildSlaveStatus();
+    slave2.setRunId(runId2);
+
+    timeMillis += 100;
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new DistBuildStatusEvent(
+                DistBuildStatus.builder()
+                    .setStatus(BuildStatus.BUILDING)
+                    .setMessage("step 2")
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .build()),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
+        parsingLine,
+        "[+] DISTBUILD...1.1s (STATUS: BUILDING, [step 2])",
+        " SERVER 0)=> PROCESSING BUILD GRAPH...",
+        " SERVER 1)=> PROCESSING BUILD GRAPH..."));
+
+    timeMillis += 100;
+    slave1.setTotalRulesCount(10);
+    slave1.setRulesFinishedCount(5);
+    slave1.setRulesSuccessCount(5);
+    slave1.setCacheHitsCount(4);
+    slave1.setCacheMissesCount(1);
+
+    slave2.setTotalRulesCount(20);
+    slave2.setRulesStartedCount(5);
+    slave2.setRulesFinishedCount(5);
+    slave2.setRulesSuccessCount(4);
+    slave2.setRulesFailureCount(1);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -870,27 +928,35 @@ public class SuperConsoleEventBusListenerTest {
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.BUILDING)
                     .setMessage("step 2")
-                    .setETAMillis(1800)
-                    .setLogBook(debugLogs)
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
-            1100L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 1200L, ImmutableList.of(
-        distDebugLine,
-        logLine1,
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
-        "[+] DISTBUILD...0.7s [50%] (STATUS: BUILDING,  [step 2])",
-        DOWNLOAD_STRING,
-        "[+] BUILDING...0.8s [50%]"));
+        "[+] DISTBUILD...1.3s [33%] (STATUS: BUILDING, [step 2])",
+        " SERVER 0)=> IDLE... (BUILT 5/10 JOBS, 1 [10.0%] CACHE MISS)",
+        " SERVER 1)=> WORKING ON 5 JOBS... (BUILT 5/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS)"));
 
+    timeMillis += 100;
+    slave1.setTotalRulesCount(10);
+    slave1.setRulesStartedCount(1);
+    slave1.setRulesFinishedCount(9);
+    slave1.setRulesSuccessCount(10);
+    slave1.setCacheHitsCount(8);
+    slave1.setCacheMissesCount(1);
 
-    log = new LogRecord();
-    log.setName("buck-frontend");
-    log.setTimestampMillis(100);
-    debugLogs.add(log);
-    final String logLine2 = "[1970-01-01 00:00:00.100] buck-frontend";
+    slave2.setTotalRulesCount(20);
+    slave2.setRulesStartedCount(0);
+    slave2.setRulesFinishedCount(20);
+    slave2.setRulesSuccessCount(19);
+    slave2.setRulesFailureCount(1);
+    slave2.setCacheErrorsCount(1);
+    slave2.setCacheMissesCount(0);
+    slave2.setCacheHitsCount(19);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -898,104 +964,78 @@ public class SuperConsoleEventBusListenerTest {
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.BUILDING)
                     .setMessage("step 2")
-                    .setETAMillis(1600)
-                    .setLogBook(debugLogs)
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
-            1300L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 1400L, ImmutableList.of(
-        distDebugLine,
-        logLine1,
-        logLine2,
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
-        "[+] DISTBUILD...0.9s [64%] (STATUS: BUILDING,  [step 2])",
-        DOWNLOAD_STRING,
-        "[+] BUILDING...1.0s [64%]"));
+        "[+] DISTBUILD...1.5s [96%] (STATUS: BUILDING, [step 2])",
+        " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
+        " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, " +
+            "1 [5.0%] CACHE ERRORS)"));
 
 
-    log = new LogRecord();
-    log.setName("build_slave_start");
-    log.setTimestampMillis(200);
-    debugLogs.add(log);
-    final String logLine3 = "[1970-01-01 00:00:00.200] build_slave_start";
-
-    log = new LogRecord();
-    log.setName("build_slave_end");
-    log.setTimestampMillis(300);
-    debugLogs.add(log);
-    final String logLine4 = "[1970-01-01 00:00:00.300] build_slave_end";
-
+    timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.FINISHED_SUCCESSFULLY)
                     .setMessage("step 3")
-                    .setETAMillis(0)
-                    .setLogBook(debugLogs)
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
-            1500L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildEvent.distBuildFinished(distBuildStartedEvent, 0),
-            1500L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    timeMillis += 100;
     final String distbuildLine =
-        "[-] DISTBUILD...FINISHED 1.0s [100%] (STATUS: FINISHED_SUCCESSFULLY,  [step 3])";
-    validateConsole(listener, 1600L, ImmutableList.of(
-        distDebugLine,
-        logLine1,
-        logLine2,
-        logLine3,
-        logLine4,
+        "[-] DISTBUILD...FINISHED 1.6s [100%] (STATUS: FINISHED_SUCCESSFULLY, [step 3])";
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
         distbuildLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...1.2s [100%]"));
+        "[+] BUILDING...1.6s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0),
-            1600L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "[-] BUILDING...FINISHED 1.2s [100%]";
-
-    validateConsole(listener, 1700L, ImmutableList.of(
-        distDebugLine,
-        logLine1,
-        logLine2,
-        logLine3,
-        logLine4,
+    final String buildingLine = "[-] BUILDING...FINISHED 1.6s";
+    timeMillis += 100;
+    validateConsole(listener, timeMillis, ImmutableList.of(
         parsingLine,
         distbuildLine,
         FINISHED_DOWNLOAD_STRING,
         buildingLine));
 
+    timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ConsoleEvent.severe(SEVERE_MESSAGE),
-            1800L,
+            timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    timeMillis += 50;
     validateConsoleWithLogLines(
         listener,
-        1850L,
+        timeMillis,
         ImmutableList.of(
-            distDebugLine,
-            logLine1,
-            logLine2,
-            logLine3,
-            logLine4,
             parsingLine,
             distbuildLine,
             FINISHED_DOWNLOAD_STRING,
@@ -2302,8 +2342,8 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     try (SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus)) {
 
-      FakeThreadStateRenderer fakeRenderer =
-          new FakeThreadStateRenderer(ImmutableList.of(2L, 1L, 4L, 8L, 5L));
+      FakeMultiStateRenderer fakeRenderer =
+          new FakeMultiStateRenderer(ImmutableList.of(2L, 1L, 4L, 8L, 5L));
       ImmutableList.Builder<String> lines;
 
       ImmutableList<String> fullOutput = ImmutableList.of(
@@ -2513,7 +2553,7 @@ public class SuperConsoleEventBusListenerTest {
 
   private void compareOutput(
       SuperConsoleEventBusListener listener,
-      FakeThreadStateRenderer fakeRenderer,
+      FakeMultiStateRenderer fakeRenderer,
       ImmutableList<String> fullOutput,
       int maxLines) {
     ImmutableList.Builder<String> lines;
