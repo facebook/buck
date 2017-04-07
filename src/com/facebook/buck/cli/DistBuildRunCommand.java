@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
@@ -95,48 +96,68 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     Stopwatch stopwatch = Stopwatch.createStarted();
     Console console = params.getConsole();
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
-      if (buildStateFile == null) {
+      if (slaveEventListener != null) {
         slaveEventListener.setDistBuildService(service);
       }
 
-      Pair<BuildJobState, String> jobStateAndBuildName = getBuildJobStateAndBuildName(
-          params.getCell().getFilesystem(),
-          console,
-          service);
-      BuildJobState jobState = jobStateAndBuildName.getFirst();
-      String buildName = jobStateAndBuildName.getSecond();
+      try {
+        Pair<BuildJobState, String> jobStateAndBuildName = getBuildJobStateAndBuildName(
+            params.getCell().getFilesystem(),
+            console,
+            service);
+        BuildJobState jobState = jobStateAndBuildName.getFirst();
+        String buildName = jobStateAndBuildName.getSecond();
 
-      console.getStdOut().println(String.format(
-          "BuildJob depends on a total of [%d] input deps.",
-          jobState.getFileHashesSize()));
-      try (CommandThreadManager pool = new CommandThreadManager(
-          getClass().getName(),
-          getConcurrencyLimit(params.getBuckConfig()))) {
-        DistBuildSlaveExecutor distBuildExecutor = DistBuildFactory.createDistBuildExecutor(
-            jobState,
-            params,
-            pool.getExecutor(),
-            service,
-            Preconditions.checkNotNull(distBuildMode),
-            coordinatorPort,
-            getStampedeIdOptional(),
-            getGlobalCacheDirOptional());
-        int returnCode = distBuildExecutor.buildAndReturnExitCode();
-        if (returnCode == 0) {
-          console.printSuccess(String.format(
-              "Successfully ran distributed build [%s] in [%d millis].",
-              buildName,
-              stopwatch.elapsed(
-                  TimeUnit.MILLISECONDS)));
-        } else {
-          console.printErrorText(
-              "Failed distributed build [%s] in [%d millis].",
-              buildName,
-              stopwatch.elapsed(
-                  TimeUnit.MILLISECONDS));
+        console.getStdOut().println(String.format(
+            "BuildJob depends on a total of [%d] input deps.",
+            jobState.getFileHashesSize()));
+        try (CommandThreadManager pool = new CommandThreadManager(
+            getClass().getName(),
+            getConcurrencyLimit(params.getBuckConfig()))) {
+          DistBuildSlaveExecutor distBuildExecutor = DistBuildFactory.createDistBuildExecutor(
+              jobState,
+              params,
+              pool.getExecutor(),
+              service,
+              Preconditions.checkNotNull(distBuildMode),
+              coordinatorPort,
+              getStampedeIdOptional(),
+              getGlobalCacheDirOptional());
+          int returnCode = distBuildExecutor.buildAndReturnExitCode();
+          if (returnCode == 0) {
+            console.printSuccess(String.format(
+                "Successfully ran distributed build [%s] in [%d millis].",
+                buildName,
+                stopwatch.elapsed(
+                    TimeUnit.MILLISECONDS)));
+          } else {
+            console.printErrorText(
+                "Failed distributed build [%s] in [%d millis].",
+                buildName,
+                stopwatch.elapsed(
+                    TimeUnit.MILLISECONDS));
+          }
+          return returnCode;
         }
-        return returnCode;
+      } catch (HumanReadableException e) {
+        logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);
+        throw e;
+      } catch (Exception e) {
+        logBuildFailureEvent(e.getMessage(), slaveEventListener);
+        throw e;
       }
+    }
+  }
+
+  /**
+   * Logs a severe error message prefixed with {@code BUILD SLAVE FAILED} to the frontend.
+   */
+  private static void logBuildFailureEvent(
+      String failureMessage,
+      @Nullable DistBuildSlaveEventBusListener slaveEventListener) {
+    if (slaveEventListener != null) {
+      slaveEventListener.logEvent(
+          ConsoleEvent.severe(String.format("BUILD SLAVE FAILED: %s", failureMessage)));
     }
   }
 
