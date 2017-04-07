@@ -132,7 +132,8 @@ public class RustCompileTest {
               .collect(MoreCollectors.toImmutableList()),
           /* linkerFlags */ ImmutableList.of(),
           srcs,
-          rootModule);
+          rootModule,
+          true);
     }
 
     static FakeRustCompileRule from(

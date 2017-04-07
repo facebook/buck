@@ -193,41 +193,47 @@ public class RustLibraryDescription implements
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           boolean direct,
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType) {
+          boolean isCheck,
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType depType) {
         BuildRule rule;
         CrateType crateType;
 
         // Determine a crate type from preferred linkage and deptype.
         // NOTE: DYLIB requires upstream rustc bug #38795 to be fixed, because otherwise
         // the use of -rpath will break with flavored paths containing ','.
-        switch (args.preferredLinkage) {
-          case ANY:
-          default:
-            switch (depType) {
-              case SHARED:
-                crateType = CrateType.DYLIB;
-                break;
-              case STATIC_PIC:
-                crateType = CrateType.RLIB_PIC;
-                break;
-              case STATIC:
-              default:
+        if (isCheck) {
+          crateType = CrateType.CHECK;
+        } else {
+          switch (args.preferredLinkage) {
+            case ANY:
+            default:
+              switch (depType) {
+                case SHARED:
+                  crateType = CrateType.DYLIB;
+                  break;
+                case STATIC_PIC:
+                  crateType = CrateType.RLIB_PIC;
+                  break;
+                case STATIC:
+                default:
+                  crateType = CrateType.RLIB;
+                  break;
+              }
+              break;
+
+            case SHARED:
+              crateType = CrateType.DYLIB;
+              break;
+
+            case STATIC:
+              if (depType == Linker.LinkableDepType.STATIC) {
                 crateType = CrateType.RLIB;
-                break;
-            }
-            break;
-
-          case SHARED:
-            crateType = CrateType.DYLIB;
-            break;
-
-          case STATIC:
-            if (depType == Linker.LinkableDepType.STATIC) {
-              crateType = CrateType.RLIB;
-            } else {
-              crateType = CrateType.RLIB_PIC;
-            }
-            break;
+              } else {
+                crateType = CrateType.RLIB_PIC;
+              }
+              break;
+          }
         }
 
         try {

@@ -83,6 +83,7 @@ public class RustCompileUtils {
   // - `-L dependency=<dir>` for transitive dependencies (?)
   // - `-L native=<dir>`
   // - `-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
+  // - `--emit metadata` if flavor is "check"
   // - `--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
   protected static RustCompileRule createBuild(
       BuildTarget target,
@@ -122,12 +123,21 @@ public class RustCompileUtils {
       relocModel = "static";
     }
 
+    Stream<String> checkArgs;
+    if (crateType.isCheck()) {
+      args.add(StringArg.of("--emit=metadata"));
+      checkArgs = rustConfig.getRustCheckFlags().stream();
+    } else {
+      checkArgs = Stream.of();
+    }
+
     Stream.of(
         Stream.of(
             String.format("--crate-name=%s", crateName),
             String.format("--crate-type=%s", crateType),
             String.format("-Crelocation-model=%s", relocModel)),
-        extraFlags.stream())
+        extraFlags.stream(),
+        checkArgs)
         .flatMap(x -> x)
         .map(StringArg::of)
         .forEach(args::add);
@@ -141,7 +151,8 @@ public class RustCompileUtils {
     // First pass - direct deps
     ruledeps.stream()
         .filter(RustLinkable.class::isInstance)
-        .map(rule -> ((RustLinkable) rule).getLinkerArg(true, cxxPlatform, depType))
+        .map(rule -> ((RustLinkable) rule).getLinkerArg(
+                true, crateType.isCheck(), cxxPlatform, depType))
         .forEach(args::add);
 
     // Second pass - indirect deps
@@ -159,8 +170,8 @@ public class RustCompileUtils {
 
           Arg arg = ((RustLinkable) rule).getLinkerArg(
               false,
-              cxxPlatform,
-              depType);
+              crateType.isCheck(),
+              cxxPlatform, depType);
 
           args.add(arg);
         }
@@ -220,9 +231,8 @@ public class RustCompileUtils {
             args.build(),
             linkerArgs.build(),
             CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
-            CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule)
-
-        ));
+            CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
+            crateType.hasOutput()));
   }
 
   public static RustCompileRule requireBuild(
@@ -309,8 +319,8 @@ public class RustCompileUtils {
       boolean rpath,
       ImmutableSortedSet<SourcePath> srcs,
       Optional<SourcePath> crateRoot,
-      ImmutableSet<String> defaultRoots
-  ) throws NoSuchBuildTargetException {
+      ImmutableSet<String> defaultRoots,
+      boolean isCheck) throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -345,7 +355,7 @@ public class RustCompileUtils {
     BuildTarget binaryTarget =
         params.getBuildTarget().withAppendedFlavors(
             cxxPlatform.getFlavor(),
-            RustDescriptionEnhancer.RFBIN);
+            isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -402,7 +412,7 @@ public class RustCompileUtils {
         rustcArgs.build(),
         linkerArgs.build(),
         /* linkerInputs */ ImmutableList.of(),
-        CrateType.BIN,
+        isCheck ? CrateType.CHECKBIN : CrateType.BIN,
         linkStyle,
         rpath,
         rootModuleAndSources.getSecond(),

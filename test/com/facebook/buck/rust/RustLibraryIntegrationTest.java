@@ -44,6 +44,63 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustLibraryBuild() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+      workspace
+          .runBuckBuild("//messenger:messenger#rlib")
+          .assertSuccess();
+  }
+
+  @Test
+  public void rustLibraryCheck() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild(
+            "--config",
+            "rust.rustc_check_flags=-Dwarnings",
+            "//messenger:messenger#check")
+        .assertSuccess();
+  }
+
+  @Test
+  public void rustLibraryCheckWarning() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckBuild(
+                "--config",
+                "rust.rustc_check_flags=-Dwarnings --cfg \"feature=\\\"warning\\\"\"",
+                "//messenger:messenger#check")
+            .getStderr(),
+        Matchers.containsString("error: method is never used: `unused` [-D dead-code]"));
+  }
+
+  @Test
+  public void rustLibraryCheckCompilerArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckBuild(
+                "--config",
+                "rust.rustc_check_flags=--this-is-a-bad-option",
+                "//messenger:messenger#check")
+            .getStderr(),
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
   public void rustLibraryCompilerArgs() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library", tmp);

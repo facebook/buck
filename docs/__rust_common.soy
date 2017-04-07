@@ -2,7 +2,17 @@
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.14.0 of Rust.
+Note: Buck is currently tested with (and therefore supports) version 1.16.0 of Rust.
+{/template}
+
+/***/
+{template .check_flavor}
+If you invoke a build with the <code>check</code> flavor, then Buck will invoke rustc
+to check the code (typecheck, produce warnings, etc), but won't generate an executable code.
+When applied to binaries it produces no output; for libraries it produces metadata for
+consumers of the library. When building with <code>check</code>, extra compiler flags from
+the <code>rust.rustc_check_flags</code> are added to the compiler's command line options,
+to allow for extra warnings, etc.
 {/template}
 
 /***/

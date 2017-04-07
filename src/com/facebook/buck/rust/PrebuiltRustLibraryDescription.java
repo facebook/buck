@@ -66,6 +66,7 @@ public class PrebuiltRustLibraryDescription implements
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           boolean direct,
+          boolean isCheck,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType) {
         return new RustLibraryArg(

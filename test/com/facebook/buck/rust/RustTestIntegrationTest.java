@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -99,6 +100,25 @@ public class RustTestIntegrationTest {
     assertThat(
         workspace.runBuckCommand("run", "//:test_success").assertSuccess().getStdout(),
         Matchers.containsString("test test_hello_world ... ok"));
+  }
+
+  @Test
+  public void testCheck() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:test_success#check").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:test_success#check");
+    workspace.resetBuildLogFile();
+
+    thrown.expect(IOException.class);
+    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+
+    workspace.runCommand(
+        workspace.resolve(
+            "buck-out/gen/test_success#binary,check,default/test_success").toString());
   }
 
   @Test

@@ -37,6 +37,7 @@ public class RustBuckConfig {
   private static final String RUSTC_FLAGS = "rustc_flags";
   private static final String RUSTC_BINARY_FLAGS = "rustc_binary_flags";
   private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
+  private static final String RUSTC_CHECK_FLAGS = "rustc_check_flags";
   private static final String RUSTC_TEST_FLAGS = "rustc_test_flags";
 
   private final BuckConfig delegate;
@@ -105,6 +106,20 @@ public class RustBuckConfig {
 
     builder.addAll(getRustCompilerFlags());
     builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_TEST_FLAGS, ' '));
+
+    return builder.build();
+  }
+
+  /**
+   * Get rustc flags for #check flavored builds. Caller must also include rule-dependent
+   * flags and common flags.
+   *
+   * @return List of rustc_check_flags.
+   */
+  ImmutableList<String> getRustCheckFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_CHECK_FLAGS, ' '));
 
     return builder.build();
   }

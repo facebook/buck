@@ -34,11 +34,17 @@ interface RustLinkable {
    * Return Arg for dependency.
    *
    * @param direct      true for direct dependency, false for transitive
+   * @param isCheck     true if we're generated check builds
    * @param cxxPlatform Current platform we're building for.
    * @param depType     What kind of linkage we want with the dependency.
+   *
    * @return Arg for linking dependency.
    */
-  Arg getLinkerArg(boolean direct, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
+  Arg getLinkerArg(
+      boolean direct,
+      boolean isCheck,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType depType);
 
   /**
    * Return {@link BuildTarget} for linkable

@@ -27,6 +27,12 @@ public enum CrateType {
   BIN(
       "bin", RustDescriptionEnhancer.RFBIN,
       (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
+  CHECK(
+      "lib", RustDescriptionEnhancer.RFCHECK,
+      (n, p) -> String.format("lib%s.rmeta", n)),
+  CHECKBIN(
+      "bin", RustDescriptionEnhancer.RFCHECK,
+      (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
   LIB(
       "lib", RustDescriptionEnhancer.RFLIB,
       (n, p) -> String.format("lib%s.rlib", n)), // XXX how to tell?
@@ -111,6 +117,23 @@ public enum CrateType {
    */
   public boolean isPic() {
     return isDynamic() || this == RLIB_PIC || this == STATIC_PIC || this == BIN;
+  }
+
+  /**
+   * We're just checking the code, and generating metadata to allow dependents to check.
+   * For libraries this means we emit a metadata file, and binaries produce no output (they
+   * just consume library metadata).
+   */
+  public boolean isCheck() {
+    return this == CHECK || this == CHECKBIN;
+  }
+
+  /**
+   * Returns true if the build is expected to produce output (vs is just being run for
+   * error-checking side-effects). The only build which produces no output is a CHECKBIN build
+   */
+  public boolean hasOutput() {
+    return this != CHECKBIN;
   }
 
   /**

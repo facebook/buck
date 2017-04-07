@@ -71,6 +71,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
 
   private final Path scratchDir;
   private final String filename;
+  @AddToRuleKey
+  private final boolean hasOutput;
 
   /**
    * Work out how to invoke the Rust compiler, rustc.
@@ -97,7 +99,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       ImmutableList<Arg> args,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> srcs,
-      SourcePath rootModule) {
+      SourcePath rootModule,
+      boolean hasOutput) {
     super(buildRuleParams);
 
     this.filename = filename;
@@ -109,6 +112,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
     this.srcs = srcs;
     this.scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-container");
+    this.hasOutput = hasOutput;
   }
 
   public static RustCompileRule from(
@@ -120,7 +124,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       ImmutableList<Arg> args,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> sources,
-      SourcePath rootModule) {
+      SourcePath rootModule,
+      boolean hasOutput) {
     return new RustCompileRule(
         params.copyReplacingExtraDeps(
             Suppliers.memoize(
@@ -142,7 +147,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
         args,
         linkerArgs,
         sources,
-        rootModule);
+        rootModule,
+        hasOutput);
   }
 
   protected static Path getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
@@ -190,7 +196,9 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
 
     Path output = getOutput();
 
-    buildableContext.recordArtifact(output);
+    if (hasOutput) {
+      buildableContext.recordArtifact(output);
+    }
 
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
 

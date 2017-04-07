@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -79,8 +80,15 @@ public class RustTestDescription implements
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
+    final BuildTarget buildTarget = params.getBuildTarget();
+
     BuildTarget exeTarget = params.getBuildTarget()
         .withAppendedFlavors(InternalFlavor.of("unittest"));
+
+    Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
+        RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
+
+    boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     BinaryWrapperRule testExeBuild = resolver.addToIndex(
         RustCompileUtils.createBinaryBuildRule(
@@ -100,7 +108,8 @@ public class RustTestDescription implements
             RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle),
             args.rpath, args.srcs,
             args.crateRoot,
-            ImmutableSet.of("lib.rs", "main.rs")
+            ImmutableSet.of("lib.rs", "main.rs"),
+            isCheck
         ));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -133,7 +142,17 @@ public class RustTestDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors);
+    if (cxxPlatforms.containsAnyOf(flavors)) {
+      return true;
+    }
+
+    for (RustBinaryDescription.Type type : RustBinaryDescription.Type.values()) {
+      if (flavors.contains(type.getFlavor())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override

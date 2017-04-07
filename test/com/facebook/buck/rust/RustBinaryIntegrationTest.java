@@ -64,6 +64,24 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryCheck() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:xyzzy#check").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy#check");
+    workspace.resetBuildLogFile();
+
+    thrown.expect(IOException.class);
+    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+
+    workspace.runCommand(
+        workspace.resolve("buck-out/gen/xyzzy#binary,check,default/xyzzy").toString());
+  }
+
+  @Test
   public void simpleBinaryWarnings() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
@@ -241,6 +259,26 @@ public class RustBinaryIntegrationTest {
         Matchers.allOf(
             Matchers.containsString("Hello, world!"),
             Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithLibraryCheck() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:hello#check").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:hello#check");
+    workspace.resetBuildLogFile();
+
+    // XXX check messenger.rmeta exists
+
+    thrown.expect(IOException.class);
+    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+
+    workspace.runCommand(
+        workspace.resolve("buck-out/gen/hello#binary,check,default/hello").toString());
   }
 
   @Test
