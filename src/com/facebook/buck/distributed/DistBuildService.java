@@ -121,6 +121,7 @@ public class DistBuildService implements Closeable {
     request.setType(FrontendRequestType.GET_BUILD_SLAVE_LOG_DIR);
     request.setMultiGetBuildSlaveLogDirRequest(getBuildSlaveLogDirRequest);
     FrontendResponse response = makeRequestChecked(request);
+    Preconditions.checkState(response.isSetMultiGetBuildSlaveLogDirResponse());
     return response.getMultiGetBuildSlaveLogDirResponse();
   }
 

@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.event;
 
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
-import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
 import com.google.common.base.Preconditions;
 
@@ -117,21 +115,5 @@ public class ConsoleEvent extends AbstractBuckEvent implements ConsoleEventExter
   @Override
   public String toString() {
     return getMessage();
-  }
-
-  public BuildSlaveConsoleEvent toBuildSlaveConsoleEvent(long timestampMillis) {
-    BuildSlaveConsoleEvent buildSlaveConsoleEvent = new BuildSlaveConsoleEvent();
-    buildSlaveConsoleEvent.setTimestampMillis(timestampMillis);
-    buildSlaveConsoleEvent.setMessage(getMessage());
-
-    if (getLevel().equals(Level.WARNING)) {
-      buildSlaveConsoleEvent.setSeverity(ConsoleEventSeverity.WARNING);
-    } else if (getLevel().equals(Level.SEVERE)) {
-      buildSlaveConsoleEvent.setSeverity(ConsoleEventSeverity.SEVERE);
-    } else {
-      buildSlaveConsoleEvent.setSeverity(ConsoleEventSeverity.INFO);
-    }
-
-    return buildSlaveConsoleEvent;
   }
 }

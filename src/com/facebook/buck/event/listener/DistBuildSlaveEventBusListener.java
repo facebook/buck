@@ -16,6 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.RunId;
@@ -164,7 +165,9 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       return;
     }
     synchronized (consoleEventsLock) {
-      consoleEvents.add(event.toBuildSlaveConsoleEvent(clock.currentTimeMillis()));
+      BuildSlaveConsoleEvent slaveConsoleEvent =
+          DistBuildUtil.createBuildSlaveConsoleEvent(event, clock.currentTimeMillis());
+      consoleEvents.add(slaveConsoleEvent);
     }
   }
 

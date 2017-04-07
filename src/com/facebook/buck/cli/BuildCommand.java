@@ -110,6 +110,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -630,8 +631,8 @@ public class BuildCommand extends AbstractCommand {
             jobState,
             service,
             distBuildLogStateTracker,
-            1000 /* millisBetweenStatusPoll */,
-            buckVersion);
+            buckVersion,
+            Executors.newScheduledThreadPool(1));
         DistBuildClientExecutor.ExecutionResult distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,

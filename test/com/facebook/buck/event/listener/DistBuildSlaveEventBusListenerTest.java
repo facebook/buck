@@ -25,9 +25,9 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -132,9 +132,9 @@ public class DistBuildSlaveEventBusListenerTest {
             .collect(Collectors.toList());
     Assert.assertEquals(capturedEvents.size(), 3);
     Assert.assertTrue(capturedEvents.containsAll(ImmutableList.of(
-        slaveEventFromConsoleEvent(consoleEvents.get(2), 20),
-        slaveEventFromConsoleEvent(consoleEvents.get(3), 30),
-        slaveEventFromConsoleEvent(consoleEvents.get(5), 50))));
+        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(2), 20),
+        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(3), 30),
+        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(5), 50))));
   }
 
   @Test
@@ -282,21 +282,5 @@ public class DistBuildSlaveEventBusListenerTest {
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
-  }
-
-  private BuildSlaveConsoleEvent slaveEventFromConsoleEvent(
-      ConsoleEvent consoleEvent,
-      long timestampMillis) {
-    BuildSlaveConsoleEvent event = new BuildSlaveConsoleEvent();
-    event.setTimestampMillis(timestampMillis);
-    event.setMessage(consoleEvent.getMessage());
-    if (consoleEvent.getLevel().equals(Level.INFO)) {
-      event.setSeverity(ConsoleEventSeverity.INFO);
-    } else if (consoleEvent.getLevel().equals(Level.WARNING)) {
-      event.setSeverity(ConsoleEventSeverity.WARNING);
-    } else if (consoleEvent.getLevel().equals(Level.SEVERE)) {
-      event.setSeverity(ConsoleEventSeverity.SEVERE);
-    }
-    return event;
   }
 }

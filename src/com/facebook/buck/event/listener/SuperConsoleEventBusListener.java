@@ -707,6 +707,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void distributedBuildStatus(DistBuildStatusEvent event) {
     super.distributedBuildStatus(event);
     distBuildStatus = Optional.of(event.getStatus());
+    // TODO(shivanker): Make use of event.getStatus().getSlaveStatuses().
   }
 
   @Subscribe

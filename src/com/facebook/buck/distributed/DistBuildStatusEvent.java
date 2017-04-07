@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -22,6 +23,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
@@ -79,5 +81,10 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
      * @return the debug info received
      */
     abstract Optional<List<LogRecord>> getLogBook();
+
+    /**
+     * @return the status of each build slave
+     */
+    abstract ImmutableList<BuildSlaveStatus> getSlaveStatuses();
   }
 }
