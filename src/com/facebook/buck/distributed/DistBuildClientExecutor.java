@@ -91,15 +91,23 @@ public class DistBuildClientExecutor {
     LOG.info("Created job. Build id = " + id.getId());
     logDebugInfo(job);
 
-    List<ListenableFuture<Void>> asyncJobs = new LinkedList<>();
+    List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
     LOG.info("Uploading local changes.");
-    asyncJobs.add(distBuildService.uploadMissingFiles(buildJobState.fileHashes, executorService));
+    asyncJobs.add(distBuildService.uploadMissingFilesAsync(
+        buildJobState.fileHashes,
+        executorService));
 
     LOG.info("Uploading target graph.");
-    asyncJobs.add(distBuildService.uploadTargetGraph(buildJobState, id, executorService));
+    asyncJobs.add(executorService.submit(() -> {
+      try {
+        distBuildService.uploadTargetGraph(buildJobState, id);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to upload target graph with exception.", e);
+      }
+    }));
 
     LOG.info("Uploading buck dot-files.");
-    asyncJobs.add(distBuildService.uploadBuckDotFiles(
+    asyncJobs.add(distBuildService.uploadBuckDotFilesAsync(
         id,
         projectFilesystem,
         fileHashCache,

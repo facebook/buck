@@ -16,22 +16,40 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.AppendBuildSlaveEventsRequest;
+import com.facebook.buck.distributed.thrift.AppendBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
+import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
+import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
+import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsRequest;
+import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
+import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
+import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
+import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -44,12 +62,15 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 // TODO(ruibm, shivanker): Revisit these tests and clean them up.
 public class DistBuildServiceTest {
@@ -97,7 +118,7 @@ public class DistBuildServiceTest {
     buildJobState.setTargetGraph(graph);
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId("check-id");
-    distBuildService.uploadTargetGraph(buildJobState, stampedeId, executor).get();
+    distBuildService.uploadTargetGraph(buildJobState, stampedeId);
 
     Assert.assertTrue(request.getValue().isSetType());
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.STORE_BUILD_GRAPH);
@@ -152,7 +173,7 @@ public class DistBuildServiceTest {
     fileHashes.get(1).setCellIndex(1);
     fileHashes.get(1).setEntries(new ArrayList<BuildJobStateFileHashEntry>());
     fileHashes.get(1).getEntries().add(files[2]);
-    distBuildService.uploadMissingFiles(fileHashes, executor).get();
+    distBuildService.uploadMissingFilesAsync(fileHashes, executor).get();
 
     Assert.assertEquals(containsRequest.getValue().getType(), FrontendRequestType.CAS_CONTAINS);
     Assert.assertTrue(containsRequest.getValue().isSetCasContainsRequest());
@@ -265,6 +286,198 @@ public class DistBuildServiceTest {
 
     Assert.assertTrue(job.isSetStampedeId());
     Assert.assertEquals(job.getStampedeId(), id);
+  }
+
+  @Test
+  public void canTransmitConsoleEvents() throws IOException {
+    // Check that uploadBuildSlaveConsoleEvents sends a valid thing,
+    // and then use that capture to reply to a multiGetBuildSlaveEvents request (using `andAnswer`),
+    // and finally verify that the events are the same.
+
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("super");
+    RunId runId = new RunId();
+    runId.setId("duper");
+
+    ImmutableList<BuildSlaveConsoleEvent> consoleEvents = ImmutableList.of(
+        new BuildSlaveConsoleEvent(),
+        new BuildSlaveConsoleEvent(),
+        new BuildSlaveConsoleEvent());
+    consoleEvents.get(0).setMessage("a");
+    consoleEvents.get(1).setMessage("b");
+    consoleEvents.get(2).setMessage("c");
+
+    Capture<FrontendRequest> request1 = EasyMock.newCapture();
+    Capture<FrontendRequest> request2 = EasyMock.newCapture();
+
+    FrontendResponse response = new FrontendResponse();
+    response.setWasSuccessful(true);
+    response.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    response.setAppendBuildSlaveEventsResponse(new AppendBuildSlaveEventsResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request1)))
+        .andReturn(response).once();
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request2)))
+        .andAnswer(() -> {
+          List<ByteBuffer> receivedBinaryEvents =
+              request1.getValue().getAppendBuildSlaveEventsRequest().getEvents();
+          List<SequencedBuildSlaveEvent> sequencedEvents = IntStream.range(0, 3).mapToObj(i -> {
+            SequencedBuildSlaveEvent slaveEvent = new SequencedBuildSlaveEvent();
+            slaveEvent.setEventNumber(i);
+            slaveEvent.setEvent(receivedBinaryEvents.get(i));
+            return slaveEvent;
+          }).collect(Collectors.toList());
+
+          BuildSlaveEventsQuery query = distBuildService.createBuildSlaveEventsQuery(
+              stampedeId,
+              runId,
+              2);
+          BuildSlaveEventsRange eventsRange = new BuildSlaveEventsRange();
+          eventsRange.setSuccess(true);
+          eventsRange.setQuery(query);
+          eventsRange.setEvents(sequencedEvents);
+
+          MultiGetBuildSlaveEventsResponse eventsResponse = new MultiGetBuildSlaveEventsResponse();
+          eventsResponse.addToResponses(eventsRange);
+          FrontendResponse response2 = new FrontendResponse();
+          response2.setWasSuccessful(true);
+          response2.setType(FrontendRequestType.MULTI_GET_BUILD_SLAVE_EVENTS);
+          response2.setMultiGetBuildSlaveEventsResponse(eventsResponse);
+          return response2;
+        }).once();
+    EasyMock.replay(frontendService);
+
+    distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, runId, consoleEvents);
+    BuildSlaveEventsQuery query = distBuildService.createBuildSlaveEventsQuery(
+        stampedeId,
+        runId,
+        2);
+    List<Pair<Integer, BuildSlaveEvent>> events = distBuildService.multiGetBuildSlaveEvents(
+        ImmutableList.of(query));
+
+    // Verify correct events are received.
+    Assert.assertEquals(events.size(), 3);
+    Assert.assertEquals((int) events.get(0).getFirst(), 0);
+    Assert.assertEquals((int) events.get(1).getFirst(), 1);
+    Assert.assertEquals((int) events.get(2).getFirst(), 2);
+    List<BuildSlaveEvent> buildSlaveEvents = events.stream().map(x -> x.getSecond()).collect(
+        Collectors.toList());
+    for (int i = 0; i < 3; ++i) {
+      BuildSlaveEvent event = buildSlaveEvents.get(i);
+      Assert.assertEquals(event.getEventType(), BuildSlaveEventType.CONSOLE_EVENT);
+      Assert.assertEquals(event.getStampedeId(), stampedeId);
+      Assert.assertEquals(event.getRunId(), runId);
+      Assert.assertEquals(event.getConsoleEvent(), consoleEvents.get(i));
+    }
+
+    // Verify validity of first request.
+    FrontendRequest receivedRequest = request1.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(receivedRequest.getType(), FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    Assert.assertTrue(receivedRequest.isSetAppendBuildSlaveEventsRequest());
+
+    AppendBuildSlaveEventsRequest appendRequest =
+        receivedRequest.getAppendBuildSlaveEventsRequest();
+    Assert.assertTrue(appendRequest.isSetStampedeId());
+    Assert.assertEquals(appendRequest.getStampedeId(), stampedeId);
+    Assert.assertTrue(appendRequest.isSetRunId());
+    Assert.assertEquals(appendRequest.getRunId(), runId);
+    Assert.assertTrue(appendRequest.isSetEvents());
+    Assert.assertEquals(appendRequest.getEvents().size(), 3);
+
+    // Verify validity of second request.
+    receivedRequest = request2.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(
+        receivedRequest.getType(),
+        FrontendRequestType.MULTI_GET_BUILD_SLAVE_EVENTS);
+    Assert.assertTrue(receivedRequest.isSetMultiGetBuildSlaveEventsRequest());
+
+    MultiGetBuildSlaveEventsRequest eventsRequest =
+        receivedRequest.getMultiGetBuildSlaveEventsRequest();
+    Assert.assertTrue(eventsRequest.isSetRequests());
+    Assert.assertEquals(eventsRequest.getRequests().size(), 1);
+
+    BuildSlaveEventsQuery receivedQuery = eventsRequest.getRequests().get(0);
+    Assert.assertTrue(receivedQuery.isSetStampedeId());
+    Assert.assertEquals(receivedQuery.getStampedeId(), stampedeId);
+    Assert.assertTrue(receivedQuery.isSetRunId());
+    Assert.assertEquals(receivedQuery.getRunId(), runId);
+    Assert.assertTrue(receivedQuery.isSetFirstEventNumber());
+    Assert.assertEquals(receivedQuery.getFirstEventNumber(), 2);
+  }
+
+  @Test
+  public void canTransmitSlaveStatus() throws IOException {
+    // Check that updateBuildSlaveStatus sends a valid thing,
+    // and then use that capture to reply to a fetchBuildSlaveStatusRequest request,
+    // and finally verify that the statuses is the same.
+
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("super");
+    RunId runId = new RunId();
+    runId.setId("duper");
+
+    BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
+    slaveStatus.setStampedeId(stampedeId);
+    slaveStatus.setRunId(runId);
+    slaveStatus.setTotalRulesCount(123);
+
+    Capture<FrontendRequest> request1 = EasyMock.newCapture();
+    Capture<FrontendRequest> request2 = EasyMock.newCapture();
+
+    FrontendResponse response = new FrontendResponse();
+    response.setWasSuccessful(true);
+    response.setType(FrontendRequestType.UPDATE_BUILD_SLAVE_STATUS);
+    response.setUpdateBuildSlaveStatusResponse(new UpdateBuildSlaveStatusResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request1)))
+        .andReturn(response).once();
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request2)))
+        .andAnswer(() -> {
+          FetchBuildSlaveStatusResponse statusResponse = new FetchBuildSlaveStatusResponse();
+          statusResponse.setBuildSlaveStatus(
+              request1.getValue().getUpdateBuildSlaveStatusRequest().getBuildSlaveStatus());
+
+          FrontendResponse response2 = new FrontendResponse();
+          response2.setWasSuccessful(true);
+          response2.setType(FrontendRequestType.FETCH_BUILD_SLAVE_STATUS);
+          response2.setFetchBuildSlaveStatusResponse(statusResponse);
+          return response2;
+        }).once();
+    EasyMock.replay(frontendService);
+
+    distBuildService.updateBuildSlaveStatus(stampedeId, runId, slaveStatus);
+    BuildSlaveStatus receivedStatus = distBuildService.fetchBuildSlaveStatus(
+        stampedeId,
+        runId).get();
+    Assert.assertEquals(receivedStatus, slaveStatus);
+
+    // Verify validity of first request.
+    FrontendRequest receivedRequest = request1.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(receivedRequest.getType(), FrontendRequestType.UPDATE_BUILD_SLAVE_STATUS);
+    Assert.assertTrue(receivedRequest.isSetUpdateBuildSlaveStatusRequest());
+
+    UpdateBuildSlaveStatusRequest updateRequest =
+        receivedRequest.getUpdateBuildSlaveStatusRequest();
+    Assert.assertTrue(updateRequest.isSetStampedeId());
+    Assert.assertEquals(updateRequest.getStampedeId(), stampedeId);
+    Assert.assertTrue(updateRequest.isSetRunId());
+    Assert.assertEquals(updateRequest.getRunId(), runId);
+    Assert.assertTrue(updateRequest.isSetBuildSlaveStatus());
+
+    // Verify validity of second request.
+    receivedRequest = request2.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(
+        receivedRequest.getType(),
+        FrontendRequestType.FETCH_BUILD_SLAVE_STATUS);
+    Assert.assertTrue(receivedRequest.isSetFetchBuildSlaveStatusRequest());
+
+    FetchBuildSlaveStatusRequest statusRequest = receivedRequest.getFetchBuildSlaveStatusRequest();
+    Assert.assertTrue(statusRequest.isSetStampedeId());
+    Assert.assertEquals(statusRequest.getStampedeId(), stampedeId);
+    Assert.assertTrue(statusRequest.isSetRunId());
+    Assert.assertEquals(statusRequest.getRunId(), runId);
   }
 
   @Test

@@ -33,6 +33,7 @@ import org.apache.thrift.transport.TTransport;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public final class ThriftUtil {
   private static final Logger LOGGER = Logger.get(ThriftUtil.class);
@@ -85,6 +86,16 @@ public final class ThriftUtil {
     TSerializer deserializer = new TSerializer(getProtocolFactory(protocol));
     try {
       return deserializer.serialize(source);
+    } catch (TException e) {
+      throw new ThriftException(e);
+    }
+  }
+
+  public static ByteBuffer serializeToByteBuffer(ThriftProtocol protocol,
+      TBase<?, ?> source) throws ThriftException {
+    TSerializer deserializer = new TSerializer(getProtocolFactory(protocol));
+    try {
+      return ByteBuffer.wrap(deserializer.serialize(source));
     } catch (TException e) {
       throw new ThriftException(e);
     }
