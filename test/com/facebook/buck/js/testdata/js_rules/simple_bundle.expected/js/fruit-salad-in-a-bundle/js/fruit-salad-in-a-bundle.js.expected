@@ -1,4 +1,4 @@
-bundle --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json --lib @/buck-out/gen/js/fruit-salad.json --sourcemap @/buck-out/gen/js/fruit-salad-in-a-bundle/map/fruit-salad-in-a-bundle.js.map --assets @/buck-out/gen/js/fruit-salad-in-a-bundle/res fruit-salad
+bundle --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json --lib @/buck-out/gen/js/fruit-salad.json --root @ --sourcemap @/buck-out/gen/js/fruit-salad-in-a-bundle/map/fruit-salad-in-a-bundle.js.map --assets @/buck-out/gen/js/fruit-salad-in-a-bundle/res fruit-salad
 library
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;

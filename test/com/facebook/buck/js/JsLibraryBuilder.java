@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
@@ -32,8 +33,9 @@ public class JsLibraryBuilder extends
 
   JsLibraryBuilder(
       BuildTarget target,
-      BuildTarget worker) {
-    super(libraryDescription, target);
+      BuildTarget worker,
+      ProjectFilesystem filesystem) {
+    super(libraryDescription, target, filesystem);
     arg.extraArgs = Optional.empty();
     arg.worker = worker;
     arg.srcs = ImmutableSortedSet.of();

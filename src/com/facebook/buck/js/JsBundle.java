@@ -70,13 +70,16 @@ public class JsBundle extends AbstractBuildRule implements JsBundleOutputs {
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
     final SourcePath resourcesDir = getSourcePathToResources();
 
+    this.getProjectFilesystem().getRootPath();
+
     String jobArgs = Stream.concat(
         Stream.of(
             "bundle",
             JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
             JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
             String.format(
-                "--sourcemap %s --assets %s --out %s/%s",
+                "--root %s --sourcemap %s --assets %s --out %s/%s",
+                getProjectFilesystem().getRootPath(),
                 sourcePathResolver.getAbsolutePath(sourceMapFile),
                 sourcePathResolver.getAbsolutePath(resourcesDir),
                 sourcePathResolver.getAbsolutePath(jsOutputDir),

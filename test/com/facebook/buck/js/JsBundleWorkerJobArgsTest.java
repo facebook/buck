@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
@@ -85,6 +86,15 @@ public class JsBundleWorkerJobArgsTest {
         ImmutableSortedSet.of());
 
     getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext));
+  }
+
+  @Test
+  public void testBuildRootIsPassed() throws NoSuchBuildTargetException {
+    final JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
+    assertThat(
+        getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
+        containsString(String.format(" --root %s ", scenario.filesystem.getRootPath()))
+    );
   }
 
   private static String targetWithFlavors(String target, Flavor... flavors) {

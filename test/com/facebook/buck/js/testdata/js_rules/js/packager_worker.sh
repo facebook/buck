@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+ROOT="$PWD"
+
 message_id () {
   echo "$1" | sed 's/.*"id":\([0-9]*\).*/\1/'
 }
@@ -52,6 +54,14 @@ write_sourcemap() {
     echo '{"version": 3, "mappings": "ABCDE;"}' > "$1"
 }
 
+replace_root() {
+  if [[ "$1" == "$ROOT" ]]; then
+    echo @
+  else
+    echo "${1/$ROOT\//@/}"
+  fi
+}
+
 run_command() {
   local args=
   local infiles=
@@ -68,8 +78,8 @@ run_command() {
         outfile="$2"
         shift
         ;;
-      --assets|--sourcemap)
-        args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
+      --assets|--root|--sourcemap)
+        args=$(concat $args "$1" "$(replace_root "$2")")
         if [[ "$1" == "--assets" ]]; then
           assets_dir="$2"
         elif [[ "$1" == "--sourcemap" ]]; then
@@ -78,7 +88,7 @@ run_command() {
         shift
         ;;
       --lib)
-        args=$(concat $args "$1" "${2/\/*\/buck-out\//@/buck-out/}")
+        args=$(concat $args "$1" "$(replace_root "$2")")
         infiles=$(concat $infiles "$2")
         shift
         ;;

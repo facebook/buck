@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -32,8 +33,9 @@ public class JsBundleBuilder extends
       BuildTarget target,
       BuildTarget worker,
       ImmutableSortedSet<BuildTarget> libs,
-      Either<ImmutableSet<String>, String> entry) {
-    super(bundleDescription, target);
+      Either<ImmutableSet<String>, String> entry,
+      ProjectFilesystem filesystem) {
+    super(bundleDescription, target, filesystem);
     arg.entry = entry;
     arg.libs = libs;
     arg.bundleName = Optional.empty();

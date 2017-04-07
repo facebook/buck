@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +43,7 @@ public class JsTestScenario {
   final TargetGraph targetGraph;
   final BuildRuleResolver resolver;
   final BuildTarget workerTarget;
+  final ProjectFilesystem filesystem;
 
   static Builder builder() {
     return new Builder();
@@ -49,10 +52,12 @@ public class JsTestScenario {
   private JsTestScenario(
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
-      BuildTarget workerTarget) {
+      BuildTarget workerTarget,
+      ProjectFilesystem filesystem) {
     this.targetGraph = targetGraph;
     this.resolver = resolver;
     this.workerTarget = workerTarget;
+    this.filesystem = filesystem;
   }
 
   JsBundle createBundle(
@@ -69,13 +74,15 @@ public class JsTestScenario {
         BuildTargetFactory.newInstance(target),
         workerTarget,
         libs,
-        entry
+        entry,
+        filesystem
     ).build(resolver, targetGraph);
   }
 
   static class Builder {
     private final Set<TargetNode<?, ?>> nodes = new LinkedHashSet<>();
     private final BuildTarget workerTarget = BuildTargetFactory.newInstance("//worker:tool");
+    private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     private Builder() {
       nodes.add(new FakeWorkerBuilder(workerTarget).build());
@@ -84,13 +91,13 @@ public class JsTestScenario {
     Builder bundle(BuildTarget target, BuildTarget... libraryDependencies) {
       final Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
       final ImmutableSortedSet<BuildTarget> libs = ImmutableSortedSet.copyOf(libraryDependencies);
-      nodes.add(new JsBundleBuilder(target, workerTarget, libs, entry).build());
+      nodes.add(new JsBundleBuilder(target, workerTarget, libs, entry, filesystem).build());
       return this;
     }
 
     Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
-          new JsLibraryBuilder(target, workerTarget)
+          new JsLibraryBuilder(target, workerTarget, filesystem)
               .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
               .build());
       return this;
@@ -117,7 +124,7 @@ public class JsTestScenario {
         String basePath,
         Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       nodes.add(
-          new JsLibraryBuilder(target, workerTarget)
+          new JsLibraryBuilder(target, workerTarget, filesystem)
               .setBasePath(basePath)
               .setSrcs(sources.collect(MoreCollectors.toImmutableSet()))
               .build());
@@ -139,7 +146,8 @@ public class JsTestScenario {
       return new JsTestScenario(
           graph,
           resolver,
-          workerTarget);
+          workerTarget,
+          filesystem);
     }
   }
 }
