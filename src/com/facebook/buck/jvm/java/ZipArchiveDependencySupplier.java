@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   private final ImmutableSortedSet<SourcePath> zipFiles;
@@ -40,18 +41,16 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
-    ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.naturalOrder();
-    for (SourcePath zipSourcePath : zipFiles) {
-      final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
-      try {
-        for (Path member : Unzip.getZipMembers(zipAbsolutePath)) {
-          builder.add(new ArchiveMemberSourcePath(zipSourcePath, member));
-        }
-      } catch (IOException e) {
-        throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
-      }
-    }
-    return builder.build();
+  public Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
+    return zipFiles.stream()
+        .flatMap(zipSourcePath -> {
+          final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
+          try {
+            return Unzip.getZipMembers(zipAbsolutePath).stream()
+                .map(member -> new ArchiveMemberSourcePath(zipSourcePath, member));
+          } catch (IOException e) {
+            throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
+          }
+        });
   }
 }

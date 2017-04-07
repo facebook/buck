@@ -581,8 +581,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate() {
-    // note, sorted set is intentionally converted to a hash set to achieve constant time look-up
-    return ImmutableSet.copyOf(abiClasspath.getArchiveMembers(getResolver()))::contains;
+    // a hash set is intentionally used to achieve constant time look-up
+    return abiClasspath.getArchiveMembers(getResolver())
+        .collect(MoreCollectors.toImmutableSet())::contains;
   }
 
   @Override

@@ -517,9 +517,10 @@ public class ProjectFilesystemTest {
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
         output);
 
-    ImmutableCollection<Path> actualContents = Unzip.getZipMembers(filesystem.resolve(output));
+    ImmutableCollection<Path> actualContents = ImmutableSortedSet.copyOf(
+        Unzip.getZipMembers(filesystem.resolve(output)));
     assertEquals(
-        ImmutableList.of(
+        ImmutableSortedSet.of(
             Paths.get("foo/bar.txt"),
             Paths.get("foo/baz.txt")),
         actualContents);

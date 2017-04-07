@@ -20,6 +20,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.stream.Stream;
+
 /**
  * Supplies dependencies that are archives. For normal rule-key generation, each archive is treated
  * as a single {@link SourcePath}. For input-based rule-key generation, each archive is treated
@@ -29,5 +31,5 @@ public interface ArchiveDependencySupplier extends Supplier<ImmutableSortedSet<S
   @Override
   ImmutableSortedSet<SourcePath> get();
 
-  ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver);
+  Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver);
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -161,7 +162,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     @Override
     protected Builder<RULE_KEY> setReflectively(@Nullable Object val) {
       if (val instanceof ArchiveDependencySupplier) {
-        Object members = ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver);
+        Object members = ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver)
+            .collect(MoreCollectors.toImmutableSortedSet());
         super.setReflectively(members);
       } else {
         super.setReflectively(val);

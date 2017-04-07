@@ -21,10 +21,9 @@ import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -34,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -262,13 +263,15 @@ public class Unzip {
         .collect(MoreCollectors.toImmutableList());
   }
 
-  public static ImmutableCollection<Path> getZipMembers(Path archiveAbsolutePath)
+  public static ImmutableSet<Path> getZipMembers(Path archiveAbsolutePath)
       throws IOException {
-    try (ZipFile zip = new ZipFile(archiveAbsolutePath.toFile())) {
-      return ImmutableList.copyOf(
-          Iterators.transform(
-              Iterators.forEnumeration(zip.getEntries()),
-              (Function<ZipArchiveEntry, Path>) input -> Paths.get(input.getName())));
+    try (FileSystem zipFs = FileSystems.newFileSystem(archiveAbsolutePath, null)) {
+      Path root = Iterables.getOnlyElement(zipFs.getRootDirectories());
+      return Files.walk(root)
+          .filter(path -> !Files.isDirectory(path))
+          .map(root::relativize)
+          .map(path -> Paths.get(path.toString())) // Clear the filesystem from the path
+          .collect(MoreCollectors.toImmutableSet());
     }
   }
 
