@@ -8,7 +8,6 @@
 namespace java com.facebook.buck.distributed.thrift
 
 include "stampede.thrift"
-
 ##############################################################################
 ## Buck build slave events
 ##############################################################################
@@ -19,8 +18,11 @@ enum BuildSlaveEventType {
 }
 
 struct BuildSlaveEvent {
-	1: optional BuildSlaveEventType eventType = BuildSlaveEventType.UNKNOWN;
-	2: optional BuildSlaveConsoleEvent consoleEvent;
+    1: optional BuildSlaveEventType eventType = BuildSlaveEventType.UNKNOWN;
+    2: optional stampede.StampedeId stampedeId;
+    3: optional stampede.RunId runId;
+
+    10: optional BuildSlaveConsoleEvent consoleEvent;
 }
 
 enum ConsoleEventSeverity {
@@ -30,9 +32,9 @@ enum ConsoleEventSeverity {
 }
 
 struct BuildSlaveConsoleEvent {
-    1: optional stampede.RunId runId;
-    2: optional string message;
-    3: optional ConsoleEventSeverity severity;
+    1: optional string message;
+    2: optional ConsoleEventSeverity severity;
+    3: optional i64 timestampMillis;
 }
 
 ##############################################################################
@@ -40,12 +42,18 @@ struct BuildSlaveConsoleEvent {
 ##############################################################################
 
 struct BuildSlaveStatus {
-    1: optional stampede.RunId runId;
-    2: optional i32 rulesStartedCount;
-    3: optional i32 rulesFinishedCount;
-    4: optional i32 totalRulesCount;
-    5: optional i32 cacheHitsCount;
-    6: optional i32 cacheMissesCount;
-    7: optional i32 cacheIgnoresCount;
-    8: optional i32 cacheLocalKeyUnchangedHitsCount;
+    1: optional stampede.StampedeId stampedeId;
+    2: optional stampede.RunId runId;
+
+    10: optional i32 totalRulesCount;
+    11: optional i32 rulesStartedCount;
+    12: optional i32 rulesFinishedCount;
+    13: optional i32 rulesSuccessCount;
+    14: optional i32 rulesFailureCount;
+
+    20: optional i32 cacheHitsCount;
+    21: optional i32 cacheMissesCount;
+    22: optional i32 cacheIgnoresCount;
+    23: optional i32 cacheErrorsCount;
+    24: optional i32 cacheLocalKeyUnchangedHitsCount;
 }
