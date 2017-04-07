@@ -69,7 +69,11 @@ args = [sys.executable, '-Es', '-c', STARTUP]
 # Default to 'd' warnings, but allow users to control this via PYTHONWARNINGS
 # The -E causes python to ignore all PYTHON* environment vars so we have to
 # pass this down using the command line.
-warnings = sys.warnoptions or ['d']
+warn_env = os.environ.get('PYTHONWARNINGS', None)
+if warn_env:
+    warnings = warn_env.split(',')
+else:
+    warnings = ['d']
 for item in reversed(warnings):
     args.insert(1, '-W{0}'.format(item.strip()))
 
