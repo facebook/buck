@@ -154,14 +154,20 @@ class TeeStream(object):
 
 
 class CallbackStream(object):
-    def __init__(self, callback, bytes_callback=None, fileno=None):
+    def __init__(self, callback, bytes_callback=None, orig=None):
         self._callback = callback
-        self._fileno = fileno
+        self._fileno = orig.fileno() if orig else None
 
-        # For python 3.x compatibility, self.buffer should look like an
-        # io.BufferedIOBase object.
-        if bytes_callback is not None:
-            self.buffer = CallbackStream(bytes_callback, fileno=fileno)
+        # Python 3 APIs:
+        # - `encoding` is a string holding the encoding name
+        # - `errors` is a string holding the error-handling mode for encoding
+        # - `buffer` should look like an io.BufferedIOBase object
+
+        self.errors = orig.errors if orig else None
+        if bytes_callback:
+            # those members are only on the io.TextIOWrapper
+            self.encoding = orig.encoding if orig else 'UTF-8'
+            self.buffer = CallbackStream(bytes_callback, orig=orig)
 
     def write(self, data):
         self._callback(data)
@@ -202,11 +208,12 @@ class BuckTestResult(unittest._TextTestResult):
         # Pass in the real stdout and stderr filenos.  We can't really do much
         # here to intercept callers who directly operate on these fileno
         # objects.
-        sys.stdout = CallbackStream(self.addStdout, self.addStdoutBytes,
-                                    fileno=sys.stdout.fileno())
-        sys.stderr = CallbackStream(self.addStderr, self.addStderrBytes,
-                                    fileno=sys.stderr.fileno())
-
+        sys.stdout = CallbackStream(
+            self.addStdout, self.addStdoutBytes, orig=sys.stdout,
+        )
+        sys.stderr = CallbackStream(
+            self.addStderr, self.addStderrBytes, orig=sys.stderr,
+        )
         self._current_test = test
         self._test_start_time = time.time()
         self._current_status = TestStatus.ABORTED
