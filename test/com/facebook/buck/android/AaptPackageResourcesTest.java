@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
@@ -49,7 +50,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class AaptPackageResourcesTest {
 
@@ -279,8 +282,11 @@ public class AaptPackageResourcesTest {
             constructorArgs.manifest,
             constructorArgs.filteredResourcesProvider,
             constructorArgs.hasAndroidResourceDeps,
+            Optional.empty(),
             false,
             false,
+            false,
+            EnumSet.noneOf(RDotTxtEntry.RType.class),
             constructorArgs.manifestEntries
         ));
   }
