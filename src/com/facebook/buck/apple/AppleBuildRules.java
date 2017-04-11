@@ -212,7 +212,7 @@ public final class AppleBuildRules {
             boolean nodeIsCxxLibrary =
                 node.getDescription() instanceof CxxLibraryDescription;
             if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
-              if (AppleLibraryDescription.isSharedLibraryNode(
+              if (AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
                   (TargetNode<CxxLibraryDescription.Arg, ?>) node)) {
                 deps = exportedDeps;
               } else {

@@ -2557,7 +2557,8 @@ public class ProjectGenerator {
           // Libraries and bundles which has system frameworks and libraries.
           Optional<TargetNode<CxxLibraryDescription.Arg, ?>> library =
               getLibraryNode(targetGraph, input);
-          if (library.isPresent() && !AppleLibraryDescription.isSharedLibraryNode(library.get())) {
+          if (library.isPresent() &&
+              !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get())) {
             return Iterables.concat(
                 library.get().getConstructorArg().getFrameworks(),
                 library.get().getConstructorArg().getLibraries());

@@ -29,9 +29,7 @@ apple_binary(
   name = 'DemoAppBinary',
   srcs = ['main.c'],
   deps = [
-    # TODO(srice) Adding this dependency exposes a bug in resource copying
-    # Uncomment this and make the test pass.
-    # ':BinaryLib',
+    ':BinaryLib',
     ':TestLib'
   ],
 )

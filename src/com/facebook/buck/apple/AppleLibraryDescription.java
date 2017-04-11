@@ -557,10 +557,12 @@ public class AppleLibraryDescription implements
         targetGraphOnlyDepsBuilder);
   }
 
-  public static boolean isSharedLibraryNode(TargetNode<CxxLibraryDescription.Arg, ?> node) {
+  public static boolean isNotStaticallyLinkedLibraryNode(
+      TargetNode<CxxLibraryDescription.Arg, ?> node) {
     SortedSet<Flavor> flavors = node.getBuildTarget().getFlavors();
     if (LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
-      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR) ||
+             flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     } else {
       return node.getConstructorArg().preferredLinkage.equals(Optional.of(Linkage.SHARED));
     }
