@@ -9,7 +9,6 @@ import __future__
 import contextlib
 from pathlib import Path, PurePath
 from pywatchman import bser, WatchmanError
-from contextlib import contextmanager, nested
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
@@ -577,19 +576,23 @@ class BuildFileProcessor(object):
         return wrapper
 
     @contextlib.contextmanager
-    def _with_env_interceptor(self, read, obj, attr):
+    def _with_env_interceptor(self, read, obj, *attrs):
         """
         Wrap a function, found at `obj.attr`, that reads an environment
         variable in a new function which records the env var read.
         """
 
-        real = getattr(obj, attr)
-        wrapped = self._wrap_env_var_read(read, real)
-        setattr(obj, attr, wrapped)
+        orig = []
+        for attr in attrs:
+            real = getattr(obj, attr)
+            wrapped = self._wrap_env_var_read(read, real)
+            setattr(obj, attr, wrapped)
+            orig.append((attr, real))
         try:
             yield
         finally:
-            setattr(obj, attr, real)
+            for attr, real in orig:
+                setattr(obj, attr, real)
 
     @contextlib.contextmanager
     def with_env_interceptors(self):
@@ -603,10 +606,9 @@ class BuildFileProcessor(object):
         read = dict(os.environ).get
 
         # Install interceptors into the main ways a user can read the env.
-        with contextlib.nested(
-                self._with_env_interceptor(read, os.environ, '__contains__'),
-                self._with_env_interceptor(read, os.environ, '__getitem__'),
-                self._with_env_interceptor(read, os.environ, 'get')):
+        with self._with_env_interceptor(
+            read, os.environ, '__contains__', '__getitem__', 'get'
+        ):
             yield
 
     def _merge_globals(self, mod, dst):
@@ -783,7 +785,7 @@ class BuildFileProcessor(object):
         path = self._get_include_path(name)
         build_env.includes.add(path)
 
-    @contextmanager
+    @contextlib.contextmanager
     def _set_build_env(self, build_env):
         """Set the given build context as the current context, unsetting it upon exit."""
         old_env = self._current_build_env
@@ -852,7 +854,7 @@ class BuildFileProcessor(object):
 
         return wrapper
 
-    @contextmanager
+    @contextlib.contextmanager
     def _wrap_fun_for_file_access(self, obj, attr, wrap=True):
         """
         Wrap a function to check if accessed files are known dependencies.
@@ -879,7 +881,7 @@ class BuildFileProcessor(object):
         """
         return self._wrap_fun_for_file_access(__builtin__, 'open', wrap)
 
-    @contextmanager
+    @contextlib.contextmanager
     def _build_file_sandboxing(self):
         """
         Creates a context that sandboxes build file processing.
@@ -1442,22 +1444,24 @@ def main():
 
     # Process the build files with the env var interceptors and builtins
     # installed.
-    with nested(
-            buildFileProcessor.with_env_interceptors(),
-            buildFileProcessor.with_builtins(__builtin__.__dict__)):
+    with buildFileProcessor.with_env_interceptors():
+        with buildFileProcessor.with_builtins(__builtin__.__dict__):
+            for build_file in args:
+                query = {
+                    'buildFile': build_file,
+                    'watchRoot': project_root,
+                    'projectPrefix': project_root,
+                }
+                process_with_diagnostics(query, buildFileProcessor, to_parent,
+                                         should_profile=options.profile)
 
-        for build_file in args:
-            query = {
-                'buildFile': build_file,
-                'watchRoot': project_root,
-                'projectPrefix': project_root,
-            }
-            process_with_diagnostics(query, buildFileProcessor, to_parent,
-                                     should_profile=options.profile)
-
-        for build_file_query in iter(lambda: bser.load(sys.stdin), None):
-            process_with_diagnostics(build_file_query, buildFileProcessor, to_parent,
-                                     should_profile=options.profile)
+            for build_file_query in iter(lambda: bser.load(sys.stdin), None):
+                process_with_diagnostics(
+                    build_file_query,
+                    buildFileProcessor,
+                    to_parent,
+                    should_profile=options.profile
+                )
 
     if options.quiet:
         sys.excepthook = orig_excepthook
