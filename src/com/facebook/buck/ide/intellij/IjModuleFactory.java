@@ -61,24 +61,6 @@ import java.util.Set;
  */
 public class IjModuleFactory {
 
-  /**
-   * These target types are mapped onto .iml module files.
-   */
-  public static final ImmutableSet<Class<? extends Description<?>>>
-      SUPPORTED_MODULE_DESCRIPTION_CLASSES = ImmutableSet.of(
-          AndroidBinaryDescription.class,
-          AndroidLibraryDescription.class,
-          AndroidResourceDescription.class,
-          CxxLibraryDescription.class,
-          JavaBinaryDescription.class,
-          JavaLibraryDescription.class,
-          JavaTestDescription.class,
-          RobolectricTestDescription.class,
-          GroovyLibraryDescription.class,
-          GroovyTestDescription.class,
-          KotlinLibraryDescription.class,
-          KotlinTestDescription.class);
-
   private static final Logger LOG = Logger.get(IjModuleFactory.class);
 
   /**
@@ -136,13 +118,13 @@ public class IjModuleFactory {
 
     this.moduleFactoryResolver = moduleFactoryResolver;
 
-    Preconditions.checkState(
-        moduleRuleIndex.keySet().equals(SUPPORTED_MODULE_DESCRIPTION_CLASSES));
+    Preconditions.checkState(SupportedTargetTypeRegistry.areTargetTypesEqual(
+        moduleRuleIndex.keySet()));
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
     Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getDescriptionClass()));
-    Preconditions.checkArgument(SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
+    Preconditions.checkArgument(SupportedTargetTypeRegistry.isTargetTypeSupported(
         rule.getDescriptionClass()));
     moduleRuleIndex.put(rule.getDescriptionClass(), rule);
   }

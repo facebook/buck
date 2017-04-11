@@ -57,7 +57,7 @@ public final class IjModuleGraphFactory {
 
     ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap = targetGraph.getNodes()
         .stream()
-        .filter(input -> IjModuleFactory.SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
+        .filter(input -> SupportedTargetTypeRegistry.isTargetTypeSupported(
             input.getDescription().getClass()))
         // IntelliJ doesn't support referring to source files which aren't below the root of the
         // project. Filter out those cases proactively, so that we don't try to resolve files
