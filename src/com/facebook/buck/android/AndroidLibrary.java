@@ -137,6 +137,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
     private AndroidLibraryDescription.JvmLanguage language =
         AndroidLibraryDescription.JvmLanguage.JAVA;
+    private Optional<SourcePath> androidManifest = Optional.empty();
 
     protected Builder(
         BuildRuleParams params,
@@ -162,6 +163,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       AndroidLibraryDescription.Arg androidArgs = (AndroidLibraryDescription.Arg) args;
       language = androidArgs.language.orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
       return setManifestFile(androidArgs.manifest);
+    }
+
+    @Override
+    public DefaultJavaLibraryBuilder setManifestFile(Optional<SourcePath> manifestFile) {
+      androidManifest = manifestFile;
+      return this;
     }
 
     @Override
@@ -194,7 +201,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             getCompileStepFactory(),
             resourcesRoot,
             mavenCoords,
-            manifestFile,
+            androidManifest,
             tests);
       }
 
