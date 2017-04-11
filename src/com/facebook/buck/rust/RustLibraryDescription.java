@@ -115,7 +115,6 @@ public class RustLibraryDescription implements
     return RustCompileUtils.requireBuild(
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         cxxPlatform,
         rustBuckConfig,

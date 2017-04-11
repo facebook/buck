@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
@@ -80,8 +79,7 @@ public class RustCompileUtils {
   // - rustc optim / feature / cfg / user-specified flags
   // - linker args
   // - `--extern <crate>=<rlibpath>` for direct dependencies
-  // - `-L dependency=<dir>` for transitive dependencies (?)
-  // - `-L native=<dir>`
+  // - `-L dependency=<dir>` for transitive dependencies
   // - `-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
   // - `--emit metadata` if flavor is "check"
   // - `--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
@@ -90,7 +88,6 @@ public class RustCompileUtils {
       String crateName,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       RustBuckConfig rustConfig,
@@ -192,23 +189,11 @@ public class RustCompileUtils {
           .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
-      // XXX currently breaks on paths containing commas, which all of ours do: see
-      // https://github.com/rust-lang/rust/issues/38795
       if (rpath && depType == Linker.LinkableDepType.SHARED) {
         args.add(StringArg.of("-Crpath"));
       }
 
       linkerArgs.addAll(nativeArgs);
-
-      // Also let rustc know about libraries as native deps (in case someone is using #[link]
-      // even though it won't generally work with Buck)
-      nativeArgs.stream()
-          .filter(HasSourcePath.class::isInstance)
-          .map(sp -> (HasSourcePath) sp)
-          .map(sp -> pathResolver.getRelativePath(sp.getPath()).getParent())
-          .map(dir -> String.format("-Lnative=%s", dir))
-          .map(StringArg::of)
-          .forEach(args::add);
     }
 
     // If we want shared deps or are building a dynamic rlib, make sure we prefer
@@ -238,7 +223,6 @@ public class RustCompileUtils {
   public static RustCompileRule requireBuild(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       RustBuckConfig rustConfig,
@@ -265,7 +249,6 @@ public class RustCompileUtils {
         crateName,
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         cxxPlatform,
         rustConfig,
@@ -405,7 +388,6 @@ public class RustCompileUtils {
         crate,
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         cxxPlatform,
         rustBuckConfig,
