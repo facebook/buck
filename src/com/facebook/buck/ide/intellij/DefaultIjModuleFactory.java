@@ -127,12 +127,19 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(
       Path moduleBasePath,
       ImmutableSet<TargetNode<?, ?>> targetNodes) {
-    Preconditions.checkArgument(!targetNodes.isEmpty());
+    return createModuleUsingSortedTargetNodes(
+        moduleBasePath,
+        ImmutableSortedSet.copyOf(targetNodes));
+  }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private IjModule createModuleUsingSortedTargetNodes(
+      Path moduleBasePath,
+      ImmutableSortedSet<TargetNode<?, ?>> targetNodes) {
+    Preconditions.checkArgument(!targetNodes.isEmpty());
 
     ImmutableSet<BuildTarget> moduleBuildTargets = targetNodes.stream()
         .map(TargetNode::getBuildTarget)

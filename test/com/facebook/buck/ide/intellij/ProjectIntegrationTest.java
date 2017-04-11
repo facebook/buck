@@ -143,6 +143,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("experimental_project_with_android_resources_in_the_same_folder");
   }
 
+  @Test
+  public void testAndroidResourcesWithPackagesAtTheSameLocation() throws IOException {
+    runBuckProjectAndVerify("project_with_multiple_resources_with_package_names");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
