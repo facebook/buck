@@ -1,0 +1,45 @@
+apple_resource(
+  name = 'Resources',
+  files = ['Resource.plist'],
+  dirs = [],
+)
+
+apple_library(
+  name = 'TestLib',
+  preferred_linkage = 'shared',
+  exported_headers = ['lib.h'],
+  srcs = ['lib.c'],
+  deps = [':Resources'],
+)
+
+apple_bundle(
+  name = 'TestFramework',
+  info_plist = 'Dummy-Info.plist',
+  binary = ':TestLib#shared',
+  extension = 'framework',
+)
+
+apple_library(
+  name = 'BinaryLib',
+  srcs = ['binlib.c'],
+  deps = [':TestLib#headers'],
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  srcs = ['main.c'],
+  deps = [
+    # TODO(srice) Adding this dependency exposes a bug in resource copying
+    # Uncomment this and make the test pass.
+    # ':BinaryLib',
+    ':TestLib'
+  ],
+)
+
+apple_bundle(
+  name = 'DemoApp',
+  info_plist = 'Dummy-Info.plist',
+  extension = 'app',
+  binary = ':DemoAppBinary',
+  deps = [':TestFramework'],
+)

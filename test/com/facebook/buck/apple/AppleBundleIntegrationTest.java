@@ -1094,6 +1094,39 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void onlyIncludesResourcesInBundlesWhichStaticallyLinkThem() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "app_bundle_with_embedded_framework_and_resources",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+
+    String resourceName = "Resource.plist";
+    assertFalse(Files.exists(appPath.resolve(resourceName)));
+
+    Path frameworkPath = appPath.resolve("Frameworks/TestFramework.framework");
+    assertTrue(Files.exists(frameworkPath.resolve(resourceName)));
+  }
+
+  @Test
   public void testTargetOutputForAppleBundle() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
