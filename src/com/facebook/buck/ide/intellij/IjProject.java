@@ -83,6 +83,7 @@ public class IjProject {
         projectConfig,
         requiredBuildTargets);
     IjModuleGraph moduleGraph = IjModuleGraphFactory.from(
+        projectFilesystem,
         projectConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,

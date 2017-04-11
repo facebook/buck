@@ -147,10 +147,6 @@ public class IjModuleFactory {
     moduleRuleIndex.put(rule.getDescriptionClass(), rule);
   }
 
-  public boolean isInRootCell(TargetNode<?, ?> targetNode) {
-    return targetNode.getFilesystem().equals(projectFilesystem);
-  }
-
   /**
    * Create an {@link IjModule} form the supplied parameters.
    *

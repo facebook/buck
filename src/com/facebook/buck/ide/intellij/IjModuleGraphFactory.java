@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -46,6 +47,7 @@ public final class IjModuleGraphFactory {
    * can't be prepresented in IntelliJ are missing from this mapping.
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
+      ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
@@ -61,7 +63,7 @@ public final class IjModuleGraphFactory {
         // project. Filter out those cases proactively, so that we don't try to resolve files
         // relative to the wrong ProjectFilesystem.
         // Maybe one day someone will fix this.
-        .filter(moduleFactory::isInRootCell)
+        .filter(targetNode -> isInRootCell(projectFilesystem, targetNode))
         .collect(
             MoreCollectors.toImmutableListMultimap(
                 targetNode -> {
@@ -157,12 +159,14 @@ public final class IjModuleGraphFactory {
    * nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
+      final ProjectFilesystem projectFilesystem,
       final IjProjectConfig projectConfig,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
       final IjModuleFactory moduleFactory) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
+            projectFilesystem,
             projectConfig,
             targetGraph,
             moduleFactory,
@@ -200,7 +204,7 @@ public final class IjModuleGraphFactory {
                 // the project. Filter out those cases proactively, so that we don't try to resolve
                 // files relative to the wrong ProjectFilesystem.
                 // Maybe one day someone will fix this.
-                return moduleFactory.isInRootCell(targetNode);
+                return isInRootCell(projectFilesystem, targetNode);
               })
               .filter(
                   input -> {
@@ -249,6 +253,12 @@ public final class IjModuleGraphFactory {
     referencedLibraries.forEach(library -> depsBuilder.put(library, ImmutableMap.of()));
 
     return new IjModuleGraph(depsBuilder.build());
+  }
+
+  private static boolean isInRootCell(
+      ProjectFilesystem projectFilesystem,
+      TargetNode<?, ?> targetNode) {
+    return targetNode.getFilesystem().equals(projectFilesystem);
   }
 
   private IjModuleGraphFactory() {

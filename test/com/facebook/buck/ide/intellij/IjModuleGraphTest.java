@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -820,8 +821,9 @@ public class IjModuleGraphTest {
         false,
         false,
         false);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     IjModuleFactory moduleFactory = new IjModuleFactory(
-        new FakeProjectFilesystem(),
+        filesystem,
         new IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
@@ -867,6 +869,7 @@ public class IjModuleGraphTest {
         projectConfig);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(
+        filesystem,
         projectConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
