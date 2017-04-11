@@ -269,6 +269,26 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
+  public void sourceChangeInHeaderOnlyDependencyDoesntCauseRebuild() throws IOException {
+    // gcc doesn't support the `-all_load` flag which we need to use to ensure our symbols don't
+    // get stripped. Skip the test on linux (a gcc platform) for now.
+    assumeTrue(Platform.detect() != Platform.LINUX);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "explicit_header_only_caching",
+            tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace.copyFile("lib1.c.new", "lib1.c");
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    BuckBuildLog log = workspace.getBuildLog();
+    log.assertTargetWasFetchedFromCache("//:lib3#default,static");
+  }
+
+  @Test
   public void sourceFromCxxGenrule() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
