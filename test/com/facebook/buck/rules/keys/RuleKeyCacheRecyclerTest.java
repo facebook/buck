@@ -71,6 +71,23 @@ public class RuleKeyCacheRecyclerTest {
   }
 
   @Test
+  public void pathWatchEventDoesInvalidateDirectoryInputContainingIt() {
+    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyAppendable appendable = sink -> {};
+    cache.get(
+        appendable,
+        a -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    RuleKeyCacheRecycler<Void> recycler =
+        RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
+    recycler.onFilesystemChange(
+        WatchEventsForTests.createPathEvent(
+            input.getPath().resolve("subpath"),
+            StandardWatchEventKinds.ENTRY_MODIFY));
+    assertFalse(cache.isCached(appendable));
+  }
+
+  @Test
   public void overflowWatchEventInvalidatesEverything() {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
 

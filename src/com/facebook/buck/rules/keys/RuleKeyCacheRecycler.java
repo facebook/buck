@@ -23,6 +23,7 @@ import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
@@ -33,6 +34,7 @@ import java.nio.file.WatchEvent;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
 
@@ -76,7 +78,7 @@ public class RuleKeyCacheRecycler<V> {
   }
 
   public static <V> RuleKeyCacheRecycler<V> create(RuleKeyCache<V> ruleKeyCache) {
-    return new RuleKeyCacheRecycler<V>(ruleKeyCache, ImmutableSet.of());
+    return new RuleKeyCacheRecycler<>(ruleKeyCache, ImmutableSet.of());
   }
 
   @Subscribe
@@ -93,7 +95,12 @@ public class RuleKeyCacheRecycler<V> {
             path,
             filesystem.getRootPath(),
             event);
-        cache.invalidateInputs(ImmutableList.of(RuleKeyInput.of(filesystem, path)));
+        cache.invalidateInputs(
+            // As inputs to rule keys can be directories, make sure we also invalidate any
+            // directories containing this path.
+            IntStream.range(1, path.getNameCount() + 1)
+                .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
+                .collect(MoreCollectors.toImmutableList()));
       } else {
         LOG.verbose(
             "invalidating filesystem at \"%s\" due to event (%s)",
