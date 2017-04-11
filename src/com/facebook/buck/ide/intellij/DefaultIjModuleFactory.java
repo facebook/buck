@@ -159,12 +159,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     String sdkType;
     Optional<String> sdkName;
     IjModuleType moduleType = context.getModuleType().orElse(IjModuleType.DEFAULT);
-    Optional<Path> metaInfDirectory = Optional.empty();
 
     if (moduleType == IjModuleType.PLUGIN_MODULE) {
       sdkType = SDK_TYPE_IDEA;
       sdkName = projectConfig.getIntellijModuleSdkName();
-      metaInfDirectory = context.getMetaInfDirectory();
     } else if (context.isAndroidFacetBuilderPresent()) {
       context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
           createAndroidGenPath(moduleBasePath));
@@ -188,7 +186,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setSdkType(sdkType)
         .setLanguageLevel(sourceLevel)
         .setModuleType(moduleType)
-        .setMetaInfDirectory(metaInfDirectory)
+        .setMetaInfDirectory(context.getMetaInfDirectory())
         .build();
   }
 
