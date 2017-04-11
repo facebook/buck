@@ -5,9 +5,7 @@ java_library(
         "NOTICE",
     ],
     visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
-    ],
+    deps = ["//third-party/java/guava:guava"],
 )
 
 export_file(

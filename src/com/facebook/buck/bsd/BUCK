@@ -9,9 +9,5 @@ standard_java_library(
     deps = [
         "//src/com/facebook/buck/charset:charset",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/jsr:jsr305",
     ],
 )

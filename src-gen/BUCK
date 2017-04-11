@@ -5,8 +5,5 @@ java_library(
         "//third-party/java/thrift:libthrift",
     ],
     visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/slf4j:slf4j",
-        "//third-party/java/slf4j:slf4j-api",
-    ],
+    deps = ["//third-party/java/slf4j:slf4j-api"],
 )

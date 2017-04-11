@@ -3,10 +3,4 @@ standard_java_library(
     immutable_types = [
         "NumberFormatterCacheKey",
     ],
-    deps = [
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/jsr:jsr305",
-    ],
 )

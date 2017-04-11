@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event.listener;
 
-import com.android.annotations.concurrency.GuardedBy;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
@@ -85,6 +84,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
