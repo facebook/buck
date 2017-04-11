@@ -28,42 +28,51 @@ import java.util.zip.ZipEntry;
  * A simple {@link CustomZipOutputStream} for testing purposes.
  */
 public class TestCustomZipOutputStream extends CustomZipOutputStream {
+  private static class Impl implements CustomZipOutputStream.Impl {
+    private ZipEntry currentEntry;
+    private ByteArrayOutputStream currentEntryContent = new ByteArrayOutputStream();
+    private List<ZipEntry> zipEntries = new ArrayList<>();
+    private List<String> entriesContent = new ArrayList<>();
 
-  private ZipEntry currentEntry;
-  private ByteArrayOutputStream currentEntryContent = new ByteArrayOutputStream();
-  private List<ZipEntry> zipEntries = new ArrayList<>();
-  private List<String> entriesContent = new ArrayList<>();
+    @Override
+    public void actuallyPutNextEntry(ZipEntry entry) throws IOException {
+      currentEntry = entry;
+      currentEntryContent.reset();
+    }
+
+    @Override
+    public void actuallyCloseEntry() throws IOException {
+      zipEntries.add(currentEntry);
+      entriesContent.add(currentEntryContent.toString());
+    }
+
+    @Override
+    public void actuallyWrite(byte[] b, int off, int len) throws IOException {
+      currentEntryContent.write(b, off, len);
+    }
+
+    @Override
+    public void actuallyClose() throws IOException {
+    }
+  }
+
+  private final Impl impl;
 
   public TestCustomZipOutputStream() {
-    super(new ByteArrayOutputStream());
+    this(new Impl());
   }
 
-  @Override
-  protected void actuallyPutNextEntry(ZipEntry entry) throws IOException {
-    currentEntry = entry;
-    currentEntryContent.reset();
+  private TestCustomZipOutputStream(Impl impl) {
+    super(impl);
+    this.impl = impl;
   }
 
-  @Override
-  protected void actuallyCloseEntry() throws IOException {
-    zipEntries.add(currentEntry);
-    entriesContent.add(currentEntryContent.toString());
-  }
-
-  @Override
-  protected void actuallyWrite(byte[] b, int off, int len) throws IOException {
-    currentEntryContent.write(b, off, len);
-  }
-
-  @Override
-  protected void actuallyClose() throws IOException {
-  }
 
   public List<ZipEntry> getZipEntries() {
-    return zipEntries;
+    return impl.zipEntries;
   }
 
   public List<String> getEntriesContent() {
-    return entriesContent;
+    return impl.entriesContent;
   }
 }

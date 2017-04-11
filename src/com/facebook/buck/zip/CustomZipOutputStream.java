@@ -27,14 +27,41 @@ import java.util.zip.ZipException;
  * An implementation of an {@link OutputStream} that will zip output. Note that, just as with
  * {@link java.util.zip.ZipOutputStream}, no implementation of this is thread-safe.
  */
-public abstract class CustomZipOutputStream extends OutputStream {
+public class CustomZipOutputStream extends OutputStream {
 
-  protected final OutputStream delegate;
+  protected static interface Impl {
+    /**
+     * Called by {@link CustomZipOutputStream#putNextEntry(ZipEntry)} and used by impls to put
+     * the next entry into the zip file. It is guaranteed that the {@code entry} won't be null and the
+     * stream will be open. It is also guaranteed that there's no current entry open.
+     *
+     * @param entry The {@link ZipEntry} to write.
+     */
+    void actuallyPutNextEntry(ZipEntry entry) throws IOException;
+
+    /**
+     * Called by {@link CustomZipOutputStream#close()} and used by impls to close the delegate stream.
+     * This method will be called at most once in the lifecycle of the CustomZipOutputStream.
+     */
+    void actuallyCloseEntry() throws IOException;
+
+    /**
+     * Called by {@link CustomZipOutputStream#write(byte[], int, int)} only once it is known that the
+     * stream has not been closed, and that a {@link ZipEntry} has already been put on the stream and
+     * not closed.
+     */
+    void actuallyWrite(byte b[], int off, int len) throws IOException;
+
+    void actuallyClose() throws IOException;
+  }
+
+  private final Impl impl;
+
   private State state;
   private boolean entryOpen;
 
-  protected CustomZipOutputStream(OutputStream out) {
-    this.delegate = out;
+  protected CustomZipOutputStream(Impl impl) {
+    this.impl = impl;
     this.state = State.CLEAN;
   }
 
@@ -44,7 +71,7 @@ public abstract class CustomZipOutputStream extends OutputStream {
     state = State.OPEN;
     closeEntry();
     validateEntry(entry);
-    actuallyPutNextEntry(entry);
+    impl.actuallyPutNextEntry(entry);
     entryOpen = true;
   }
 
@@ -56,15 +83,6 @@ public abstract class CustomZipOutputStream extends OutputStream {
     }
   }
 
-  /**
-   * Called by {@link #putNextEntry(ZipEntry)} and used by subclasses to put the next entry into the
-   * zip file. It is guaranteed that the {@code entry} won't be null and the stream will be open. It
-   * is also guaranteed that there's no current entry open.
-   *
-   * @param entry The {@link ZipEntry} to write.
-   */
-  protected abstract void actuallyPutNextEntry(ZipEntry entry) throws IOException;
-
   public final void closeEntry() throws IOException {
     Preconditions.checkState(state != State.CLOSED, "Stream has been closed");
     if (!entryOpen) {
@@ -72,14 +90,8 @@ public abstract class CustomZipOutputStream extends OutputStream {
     }
 
     entryOpen = false;
-    actuallyCloseEntry();
+    impl.actuallyCloseEntry();
   }
-
-  /**
-   * Called by {@link #close()} and used by subclasses to close the delegate stream. This method
-   * will be called at most once in the lifecycle of the CustomZipOutputStream.
-   */
-  protected abstract void actuallyCloseEntry() throws IOException;
 
   @Override
   public final void write(byte[] b, int off, int len) throws IOException {
@@ -89,14 +101,8 @@ public abstract class CustomZipOutputStream extends OutputStream {
       throw new ZipException("no current ZIP entry");
     }
 
-    actuallyWrite(b, off, len);
+    impl.actuallyWrite(b, off, len);
   }
-
-  /**
-   * Called by {@link #write(byte[], int, int)} only once it is known that the stream has not been
-   * closed, and that a {@link ZipEntry} has already been put on the stream and not closed.
-   */
-  protected abstract void actuallyWrite(byte b[], int off, int len) throws IOException;
 
   // javadocs taken from OutputStream and amended to make it clear what we're doing here.
   /**
@@ -124,13 +130,11 @@ public abstract class CustomZipOutputStream extends OutputStream {
 
     try {
       closeEntry();
-      actuallyClose();
+      impl.actuallyClose();
     } finally {
       state = State.CLOSED;
     }
   }
-
-  protected abstract void actuallyClose() throws IOException;
 
   /**
    * State of a {@link com.facebook.buck.zip.CustomZipOutputStream}. Certain operations are only

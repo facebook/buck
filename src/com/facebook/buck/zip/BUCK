@@ -1,13 +1,13 @@
 java_library(
     name = "stream",
     srcs = [
-        "AppendingZipOutputStream.java",
+        "AppendingZipOutputStreamImpl.java",
         "ByteIo.java",
         "CentralDirectory.java",
         "CustomZipEntry.java",
         "CustomZipOutputStream.java",
         "EntryAccounting.java",
-        "OverwritingZipOutputStream.java",
+        "OverwritingZipOutputStreamImpl.java",
         "ZipConstants.java",
         "ZipOutputStreams.java",
         "ZipWriteTest.java",

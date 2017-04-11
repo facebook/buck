@@ -41,8 +41,9 @@ import javax.annotation.Nullable;
  *   http://www.pkware.com/documents/casestudies/APPNOTE.TXT
  * </a>
  */
-class AppendingZipOutputStream extends CustomZipOutputStream {
+class AppendingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
 
+  private final OutputStream delegate;
   private final boolean throwExceptionsOnDuplicate;
   private final Clock clock;
   private long currentOffset = 0;
@@ -51,22 +52,23 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
 
   private Set<String> seenNames = Sets.newHashSet();
 
-  public AppendingZipOutputStream(Clock clock,
-        OutputStream stream,
-        boolean throwExceptionsOnDuplicate) {
-    super(stream);
+  public AppendingZipOutputStreamImpl(
+      Clock clock,
+      OutputStream stream,
+      boolean throwExceptionsOnDuplicate) {
+    this.delegate = stream;
     this.clock = clock;
     this.throwExceptionsOnDuplicate = throwExceptionsOnDuplicate;
   }
 
   @Override
-  protected void actuallyWrite(byte[] b, int off, int len) throws IOException {
+  public void actuallyWrite(byte[] b, int off, int len) throws IOException {
     Preconditions.checkNotNull(currentEntry);
     currentEntry.write(delegate, b, off, len);
   }
 
   @Override
-  protected void actuallyPutNextEntry(ZipEntry entry) throws IOException {
+  public void actuallyPutNextEntry(ZipEntry entry) throws IOException {
     if (throwExceptionsOnDuplicate && !seenNames.add(entry.getName())) {
       // Same exception as ZipOutputStream.
       throw new ZipException("duplicate entry: " + entry.getName());
@@ -79,7 +81,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
   }
 
   @Override
-  protected void actuallyCloseEntry() throws IOException {
+  public void actuallyCloseEntry() throws IOException {
     if (currentEntry == null) {
       return; // no-op
     }
@@ -90,9 +92,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
   }
 
   @Override
-  protected void actuallyClose() throws IOException {
-    closeEntry();
-
+  public void actuallyClose() throws IOException {
     new CentralDirectory().writeCentralDirectory(delegate, currentOffset, entries);
 
     delegate.close();

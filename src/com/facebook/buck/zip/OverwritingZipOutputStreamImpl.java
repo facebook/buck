@@ -45,18 +45,19 @@ import javax.annotation.Nullable;
  * name of the {@link ZipEntry} being stored. Once the stream is closed, these files are spooled
  * off disk and written to the OutputStream given to the constructor.
  */
-public class OverwritingZipOutputStream extends CustomZipOutputStream {
+public class OverwritingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
   // Attempt to maintain ordering of files that are added.
   private final Map<File, EntryAccounting> entries = Maps.newLinkedHashMap();
   private final File scratchDir;
   private final Clock clock;
+  private final OutputStream delegate;
   @Nullable private EntryAccounting currentEntry;
   /** Place-holder for bytes. */
   @Nullable private OutputStream currentOutput;
 
-  public OverwritingZipOutputStream(Clock clock, OutputStream out) {
-    super(out);
+  public OverwritingZipOutputStreamImpl(Clock clock, OutputStream out) {
     this.clock = clock;
+    this.delegate = out;
 
     try {
       scratchDir = Files.createTempDirectory("overwritingzip").toFile();
@@ -70,7 +71,7 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
   }
 
   @Override
-  protected void actuallyPutNextEntry(ZipEntry entry) throws IOException {
+  public void actuallyPutNextEntry(ZipEntry entry) throws IOException {
     // We calculate the actual offset when closing the stream, so 0 is fine.
     currentEntry = new EntryAccounting(clock, entry, /* currentOffset */ 0);
 
@@ -86,7 +87,7 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
   }
 
   @Override
-  protected void actuallyCloseEntry() throws IOException {
+  public void actuallyCloseEntry() throws IOException {
     // We'll close the entry once we have the ultimate output stream and know the entry's location
     // within the generated zip.
     if (currentOutput != null) {
@@ -97,14 +98,14 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
   }
 
   @Override
-  protected void actuallyWrite(byte[] b, int off, int len) throws IOException {
+  public void actuallyWrite(byte[] b, int off, int len) throws IOException {
     Preconditions.checkNotNull(currentEntry);
     Preconditions.checkNotNull(currentOutput);
     currentEntry.write(currentOutput, b, off, len);
   }
 
   @Override
-  protected void actuallyClose() throws IOException {
+  public void actuallyClose() throws IOException {
     long currentOffset = 0;
 
     for (Map.Entry<File, EntryAccounting> mapEntry : entries.entrySet()) {

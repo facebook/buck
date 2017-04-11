@@ -85,12 +85,12 @@ public class ZipOutputStreams {
     switch (mode) {
       case APPEND_TO_ZIP:
       case THROW_EXCEPTION:
-        return new AppendingZipOutputStream(
+        return new CustomZipOutputStream(new AppendingZipOutputStreamImpl(
             clock,
             out,
-            mode == HandleDuplicates.THROW_EXCEPTION);
+            mode == HandleDuplicates.THROW_EXCEPTION));
       case OVERWRITE_EXISTING:
-        return new OverwritingZipOutputStream(clock, out);
+        return new CustomZipOutputStream(new OverwritingZipOutputStreamImpl(clock, out));
       default:
         throw new HumanReadableException(
             "Unable to determine which zip output mode to use: %s", mode);
