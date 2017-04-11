@@ -3,7 +3,7 @@ FAKE_BUCK_CONFIG_SRCS = [
 ]
 
 STANDARD_TEST_SRCS = [
-    "**/*Test.java",
+    "*Test.java",
 ]
 
 java_library(
