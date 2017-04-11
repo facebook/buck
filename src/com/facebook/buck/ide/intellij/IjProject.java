@@ -87,7 +87,7 @@ public class IjProject {
         projectConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
-        new IjModuleFactory(
+        new DefaultIjModuleFactory(
             projectFilesystem,
             moduleFactoryResolver,
             projectConfig));

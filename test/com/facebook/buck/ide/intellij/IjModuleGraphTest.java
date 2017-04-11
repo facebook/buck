@@ -822,7 +822,7 @@ public class IjModuleGraphTest {
         false,
         false);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    IjModuleFactory moduleFactory = new IjModuleFactory(
+    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(
         filesystem,
         new IjModuleFactoryResolver() {
           @Override

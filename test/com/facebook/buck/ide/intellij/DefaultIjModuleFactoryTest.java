@@ -60,7 +60,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class IjModuleFactoryTest {
+public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testModuleDep() {
@@ -607,7 +607,7 @@ public class IjModuleFactoryTest {
   }
 
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
-    return new IjModuleFactory(
+    return new DefaultIjModuleFactory(
         new FakeProjectFilesystem(),
         new IjModuleFactoryResolver() {
           @Override
