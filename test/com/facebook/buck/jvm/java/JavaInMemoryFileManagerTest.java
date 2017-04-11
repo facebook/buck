@@ -18,11 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestCustomZipOutputStream;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 import javax.tools.DiagnosticCollector;
@@ -88,7 +91,7 @@ public class JavaInMemoryFileManagerTest {
   }
 
   @Test
-  public void testIntermediateDirectoriesAreCreated() throws Exception {
+  public void testIntermediateDirectoriesAreNotCreated() throws Exception {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
         StandardLocation.CLASS_OUTPUT,
         "jvm.java.JavaFileParser",
@@ -97,11 +100,10 @@ public class JavaInMemoryFileManagerTest {
 
     fileObject.openOutputStream().close();
 
-    List<ZipEntry> zipEntries = outputStream.getZipEntries();
-    assertEquals(3, zipEntries.size());
-    assertEquals("jvm/", zipEntries.get(0).getName());
-    assertEquals("jvm/java/", zipEntries.get(1).getName());
-    assertEquals("jvm/java/JavaFileParser.class", zipEntries.get(2).getName());
+    List<String> zipEntries = outputStream.getZipEntries().stream()
+        .map(ZipEntry::getName)
+        .collect(Collectors.toList());
+    assertThat(zipEntries, Matchers.contains("jvm/java/JavaFileParser.class"));
   }
 
   @Test
@@ -121,12 +123,14 @@ public class JavaInMemoryFileManagerTest {
     fileObject1.openOutputStream().close();
     fileObject2.openOutputStream().close();
 
-    List<ZipEntry> zipEntries = outputStream.getZipEntries();
-    assertEquals(4, zipEntries.size());
-    assertEquals("jvm/", zipEntries.get(0).getName());
-    assertEquals("jvm/java/", zipEntries.get(1).getName());
-    assertEquals("jvm/java/JavaFileParser.class", zipEntries.get(2).getName());
-    assertEquals("jvm/java/JavaInMemoryFileManager.class", zipEntries.get(3).getName());
+    List<String> zipEntries = outputStream.getZipEntries().stream()
+        .map(ZipEntry::getName)
+        .collect(Collectors.toList());
+    assertThat(
+        zipEntries,
+        Matchers.contains(
+            "jvm/java/JavaFileParser.class",
+            "jvm/java/JavaInMemoryFileManager.class"));
   }
 
   @Test

@@ -226,10 +226,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private JavaFileObject getJavaMemoryFileObject(
       JavaFileObject.Kind kind,
       String path) throws IOException {
-    if (!fileForOutputPaths.containsKey(path)) {
-      // Sadly, we can't call this in the computeIfAbsent because it throws.
-      ensureDirectories(path);
-    }
     return fileForOutputPaths.computeIfAbsent(path,
         p -> new JavaInMemoryFileObject(
             getUriPath(p),
@@ -243,33 +239,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return fileForOutputPaths.computeIfAbsent(
         path,
         p -> new JavaNoOpFileObject(getUriPath(p), p, kind));
-  }
-
-  /*
-   * Creates the directories within the jar file to represent java packages
-   */
-  private void ensureDirectories(String filePath) throws IOException {
-    for (int i = 0; i < filePath.length(); ++i) {
-      if (filePath.charAt(i) == '/') {
-        String directoryPath = getPath(filePath.substring(0, i + 1));
-        if (directoryPaths.contains(directoryPath)) {
-          continue;
-        }
-        createDirectory(directoryPath);
-        directoryPaths.add(directoryPath);
-      }
-    }
-  }
-
-  private void createDirectory(String name) throws IOException {
-    URI uri = URI.create(name);
-    jarFileSemaphore.acquireUninterruptibly();
-    try {
-      jarOutputStream.putNextEntry(createEntry(uri.getPath()));
-      jarOutputStream.closeEntry();
-    } finally {
-      jarFileSemaphore.release();
-    }
   }
 
   private String encodeURL(String path) {
