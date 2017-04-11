@@ -145,6 +145,34 @@ public class BuckJavacTaskTest {
             "3: finished ENTER"));
   }
 
+  @Test
+  public void testPluginsGetTheFirstEvent() throws IOException {
+    BuckJavacTask javacTask = new BuckJavacTask(testCompiler.getJavacTask());
+    List<String> events = new ArrayList<>();
+
+    javacTask.addPlugin(new BuckJavacPlugin() {
+      @Override
+      public String getName() {
+        return "Plugin!";
+      }
+
+      @Override
+      public void init(BuckJavacTask task, String... args) {
+        TestTaskListenerAdapter.setTaskListener(task, new RecordingTaskListener("Plugin", events));
+      }
+    });
+    javacTask.setProcessors(Collections.emptyList());
+    javacTask.enter();
+
+    assertThat(
+        events,
+        Matchers.contains(
+            "Plugin: started PARSE",
+            "Plugin: finished PARSE",
+            "Plugin: started ENTER",
+            "Plugin: finished ENTER"));
+  }
+
   class RecordingTaskListener implements TestTaskListener {
     private final String name;
     private final List<String> events;

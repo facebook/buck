@@ -18,29 +18,45 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.JavacTask;
+import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.lang.model.element.TypeElement;
 
 /**
  * Extends {@link JavacTask} with functionality that is useful for Buck:
  * <ul>
- *   <li>Exposes the enter method from JavacTaskImpl</li>
- *   <li>Pre-javac-8 support for addTaskListener/removeTaskListener</li>
+ * <li>Exposes the enter method from JavacTaskImpl</li>
+ * <li>Pre-javac-8 support for addTaskListener/removeTaskListener</li>
  * </ul>
  */
 public class BuckJavacTask extends JavacTaskWrapper {
+  private final Map<BuckJavacPlugin, String[]> pluginsAndArgs = new LinkedHashMap<>();
   private final MultiplexingTaskListener taskListeners = new MultiplexingTaskListener();
+
+  private boolean pluginsInstalled = false;
 
   @Nullable
   private TaskListener singleTaskListener;
 
   public BuckJavacTask(JavacTask inner) {
     super(inner);
-    inner.setTaskListener(taskListeners);
+    inner.setTaskListener(new TaskListener() {
+      @Override
+      public void started(TaskEvent e) {
+        BuckJavacTask.this.started(e);
+      }
+
+      @Override
+      public void finished(TaskEvent e) {
+        BuckJavacTask.this.finished(e);
+      }
+    });
   }
 
   public Iterable<? extends TypeElement> enter() throws IOException {
@@ -64,7 +80,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
    * Sets a {@link TaskListener}. Like {@link JavacTask}'s implementation of this method, the
    * listener does not replace listeners added with {@link #addTaskListener(TaskListener)}. Instead,
    * it replaces only the listener provided in the previous call to this method, if any.
-   *
+   * <p>
    * Presumably this behavior was to enable {@link com.sun.source.util.Plugin}s to work properly
    * with build systems that were written when only a single {@link TaskListener} was supported
    * at a time.
@@ -88,5 +104,36 @@ public class BuckJavacTask extends JavacTaskWrapper {
   @Override
   public void removeTaskListener(TaskListener taskListener) {
     taskListeners.removeListener(taskListener);
+  }
+
+  public void addPlugin(BuckJavacPlugin plugin, String... args) {
+    pluginsAndArgs.put(plugin, args);
+  }
+
+  protected void started(TaskEvent e) {
+    // Initialize plugins just before sending the first event to registered listeners. We do it
+    // this way (rather than initializing plugins just before starting to run the task) because
+    // most plugins will call methods like getElements, which in javac 7 are not safe to call
+    // before the task is actually running.
+    installPlugins();
+
+    taskListeners.started(e);
+  }
+
+  protected void finished(TaskEvent e) {
+    taskListeners.finished(e);
+  }
+
+  private void installPlugins() {
+    if (pluginsInstalled) {
+      return;
+    }
+
+    for (Map.Entry<BuckJavacPlugin, String[]> pluginAndArgs : pluginsAndArgs.entrySet()) {
+      pluginAndArgs.getKey().init(BuckJavacTask.this, pluginAndArgs.getValue());
+    }
+
+    pluginsAndArgs.clear();
+    pluginsInstalled = true;
   }
 }

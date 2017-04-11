@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
@@ -24,7 +25,6 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -47,7 +47,7 @@ import javax.tools.JavaFileObject;
  * about references to symbols defined in those dependencies. See the documentation of
  * {@link com.facebook.buck.jvm.java.abi.source} for details.
  */
-public class FrontendOnlyJavacTask extends JavacTask {
+public class FrontendOnlyJavacTask extends BuckJavacTask {
   private final JavacTask javacTask;
   private final Elements javacElements;
   private final Trees javacTrees;
@@ -61,6 +61,7 @@ public class FrontendOnlyJavacTask extends JavacTask {
   private List<TreeBackedTypeElement> topLevelElements;
 
   public FrontendOnlyJavacTask(JavacTask javacTask) {
+    super(javacTask);
     this.javacTask = javacTask;
     javacElements = javacTask.getElements();
     javacTrees = Trees.instance(javacTask);
@@ -81,21 +82,14 @@ public class FrontendOnlyJavacTask extends JavacTask {
     return parsedCompilationUnits;
   }
 
+  @Override
   public Iterable<? extends TypeElement> enter() throws IOException {
-    if (topLevelElements == null) {
-      try {
-        @SuppressWarnings("unchecked")
-        Iterable<? extends TypeElement> javacTopLevelElements = (Iterable<? extends TypeElement>)
-            javacTask.getClass().getMethod("enter").invoke(javacTask);
+    Iterable<? extends TypeElement> javacTopLevelElements = super.enter();
 
-        topLevelElements = StreamSupport.stream(javacTopLevelElements.spliterator(), false)
-            .map(elements::getCanonicalElement)
-            .map(element -> (TreeBackedTypeElement) element)
-            .collect(Collectors.toList());
-      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-        throw new AssertionError(e);
-      }
-    }
+    topLevelElements = StreamSupport.stream(javacTopLevelElements.spliterator(), false)
+        .map(elements::getCanonicalElement)
+        .map(element -> (TreeBackedTypeElement) element)
+        .collect(Collectors.toList());
 
     return topLevelElements;
   }
@@ -115,24 +109,14 @@ public class FrontendOnlyJavacTask extends JavacTask {
     throw new UnsupportedOperationException("NYI");
   }
 
-  // TODO(jkeljo): Get a java 8 stub to compile against and then uncomment the below:
-  // @Override
+  @Override
   public void addTaskListener(TaskListener taskListener) {
-    // If check is just here to shut up the compiler about the unused parameter. Updating our tools
-    // stub to java 8 will fix that too
-    if (taskListener != null) {
-      throw new UnsupportedOperationException("NYI");
-    }
+    throw new UnsupportedOperationException("NYI");
   }
 
-  // TODO(jkeljo): Get a java 8 stub to compile against and then uncomment the below:
-  // @Override
+  @Override
   public void removeTaskListener(TaskListener taskListener) {
-    // If check is just here to shut up the compiler about the unused parameter. Updating our tools
-    // stub to java 8 will fix that too
-    if (taskListener != null) {
-      throw new UnsupportedOperationException("NYI");
-    }
+    throw new UnsupportedOperationException("NYI");
   }
 
   @Override
