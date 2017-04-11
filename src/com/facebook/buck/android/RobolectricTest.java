@@ -190,7 +190,7 @@ public class RobolectricTest extends JavaTest {
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
     robolectricManifest.ifPresent(s -> vmArgsBuilder.add(String.format(
-        "-D%s=%s", ROBOLECTRIC_MANIFEST, s)));
+        "-D%s=%s", ROBOLECTRIC_MANIFEST, pathResolver.getAbsolutePath(s))));
     robolectricRuntimeDependency.ifPresent(s -> vmArgsBuilder.add(String.format(
         "-D%s=%s", ROBOLECTRIC_DEPENDENCY_DIR, s)));
   }
