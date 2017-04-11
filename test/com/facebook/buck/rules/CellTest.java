@@ -165,7 +165,7 @@ public class CellTest {
         .setCellConfigOverride(
             CellConfig.builder()
                 .put(RelativeCellName.fromComponents("second"), "test", "value", "cell2")
-                .put(CellConfig.ALL_CELLS_OVERRIDE, "test", "common_value", "all")
+                .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "test", "common_value", "all")
                 .build())
         .build();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");

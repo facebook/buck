@@ -35,10 +35,12 @@ import java.util.Optional;
 @BuckStyleTuple
 abstract class AbstractRelativeCellName {
   public static final char CELL_NAME_COMPONENT_SEPARATOR = '/';
-  public static final String ALL_CELLS_SPECIAL_NAME = "*";
+  public static final String ALL_CELLS_SPECIAL_STRING = "*";
 
   public static final RelativeCellName ROOT_CELL_NAME =
       RelativeCellName.of(ImmutableList.of());
+  public static final RelativeCellName ALL_CELLS_SPECIAL_NAME =
+      RelativeCellName.of(ImmutableSet.of(ALL_CELLS_SPECIAL_STRING));
 
   public abstract ImmutableList<String> getComponents();
 
@@ -72,12 +74,12 @@ abstract class AbstractRelativeCellName {
   @Value.Check
   protected void checkComponents() {
     // Special case for the single-component 'all cells' designator'
-    if (getComponents().size() == 1 && getComponents().get(0).equals(ALL_CELLS_SPECIAL_NAME)) {
+    if (getComponents().size() == 1 && getComponents().get(0).equals(ALL_CELLS_SPECIAL_STRING)) {
       return;
     }
     ImmutableSet<String> prohibitedSubstrings = ImmutableSet.of(
         Character.toString(CELL_NAME_COMPONENT_SEPARATOR),
-        ALL_CELLS_SPECIAL_NAME);
+        ALL_CELLS_SPECIAL_STRING);
     for (String prohibited : prohibitedSubstrings) {
       for (String component : getComponents()) {
         Preconditions.checkState(

@@ -48,9 +48,6 @@ import java.util.Optional;
 @Value.Immutable(singleton = true, builder = false, copy = false)
 @BuckStyleTuple
 abstract class AbstractCellConfig {
-  public static final RelativeCellName ALL_CELLS_OVERRIDE =
-      RelativeCellName.of(ImmutableSet.of(RelativeCellName.ALL_CELLS_SPECIAL_NAME));
-
   public abstract ImmutableMap<RelativeCellName, RawConfig> getValues();
 
   /**
@@ -60,8 +57,9 @@ abstract class AbstractCellConfig {
    */
   public RawConfig getForCell(RelativeCellName cellName) {
     RawConfig config = Optional.ofNullable(getValues().get(cellName)).orElse(RawConfig.of());
-    RawConfig starConfig =
-        Optional.ofNullable(getValues().get(ALL_CELLS_OVERRIDE)).orElse(RawConfig.of());
+    RawConfig starConfig = Optional
+      .ofNullable(getValues().get(RelativeCellName.ALL_CELLS_SPECIAL_NAME))
+      .orElse(RawConfig.of());
     return RawConfig.builder()
       .putAll(starConfig)
       .putAll(config)
@@ -78,7 +76,7 @@ abstract class AbstractCellConfig {
 
     ImmutableSet<RelativeCellName> relativeNamesOfCellsWithOverrides =
         FluentIterable.from(getValues().keySet())
-            .filter(Predicates.not(ALL_CELLS_OVERRIDE::equals))
+            .filter(Predicates.not(RelativeCellName.ALL_CELLS_SPECIAL_NAME::equals))
             .toSet();
     ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
     for (RelativeCellName cellWithOverride : relativeNamesOfCellsWithOverrides) {

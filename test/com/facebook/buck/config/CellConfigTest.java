@@ -39,7 +39,7 @@ public class CellConfigTest {
     String section = "section";
     CellConfig cellConfig = CellConfig.builder()
         .put(RelativeCellName.ROOT_CELL_NAME, section, "root_cell", "root")
-        .put(CellConfig.ALL_CELLS_OVERRIDE, section, "all_cells", "all")
+        .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, section, "all_cells", "all")
         .put(RelativeCellName.fromComponents("cell"), section, "cell", "cell")
         .build();
 
