@@ -6,6 +6,7 @@ java_library(
         "CentralDirectory.java",
         "CustomZipEntry.java",
         "CustomZipOutputStream.java",
+        "DeterministicManifest.java",
         "EntryAccounting.java",
         "OverwritingZipOutputStreamImpl.java",
         "ZipConstants.java",

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.zip;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -27,22 +27,42 @@ import java.nio.charset.StandardCharsets;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-public class DeterministicJarManifestWriterTest {
+public class DeterministicManifestTest {
 
-  private DeterministicJarManifestWriter manifestWriter;
+  private DeterministicManifest manifestWriter;
   private ByteArrayOutputStream outputStream;
 
   @Before
   public void setUp() {
     outputStream = new ByteArrayOutputStream();
-    manifestWriter = new DeterministicJarManifestWriter(outputStream);
+    manifestWriter = new DeterministicManifest();
   }
+
+
+  @Test
+  public void testManifestAttributesSeparatedFromEntries() throws IOException {
+    manifestWriter.setManifestAttribute(Attributes.Name.MANIFEST_VERSION.toString(), "1.0");
+    manifestWriter.setEntryAttribute("Z", "Foo", "Bar");
+    manifestWriter.setEntryAttribute("A", "Foo", "Bar");
+    manifestWriter.write(outputStream);
+
+    assertManifestContents(
+        "Manifest-Version: 1.0\r\n" +
+        "\r\n" +
+            "Name: A\r\n" +
+            "Foo: Bar\r\n" +
+            "\r\n" +
+            "Name: Z\r\n" +
+            "Foo: Bar\r\n" +
+            "\r\n");
+  }
+
 
   @Test
   public void testEntriesWrittenInSortedOrder() throws IOException {
     manifestWriter.setEntryAttribute("Z", "Foo", "Bar");
     manifestWriter.setEntryAttribute("A", "Foo", "Bar");
-    manifestWriter.write();
+    manifestWriter.write(outputStream);
 
     assertManifestContents(
         "\r\n" +
@@ -58,7 +78,7 @@ public class DeterministicJarManifestWriterTest {
   public void testAttributesWrittenInSortedOrder() throws IOException {
     manifestWriter.setEntryAttribute("A", "Foo", "Bar");
     manifestWriter.setEntryAttribute("A", "Baz", "Bar");
-    manifestWriter.write();
+    manifestWriter.write(outputStream);
 
     assertManifestContents(
         "\r\n" +
@@ -143,7 +163,7 @@ public class DeterministicJarManifestWriterTest {
         "last line";
 
     manifestWriter.setEntryAttribute(entryName, key, value);
-    manifestWriter.write();
+    manifestWriter.write(outputStream);
 
     Manifest jdkManifest = new Manifest();
     Attributes attrs = new Attributes();
@@ -160,7 +180,7 @@ public class DeterministicJarManifestWriterTest {
 
   private void assertEntryWrittenAs(String expected, String key, String value) throws IOException {
     manifestWriter.setEntryAttribute("Entry", key, value);
-    manifestWriter.write();
+    manifestWriter.write(outputStream);
 
     assertManifestContents(expected);
   }

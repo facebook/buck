@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.io;
 
+import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
@@ -33,11 +34,11 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
   public static final String DIGEST_ATTRIBUTE_NAME = "Murmur3-128-Digest";
 
   private final ZipOutputStream jar;
-  private final DeterministicJarManifestWriter manifestWriter;
+  private final DeterministicManifest manifest;
 
   public HashingDeterministicJarWriter(ZipOutputStream jar) {
     this.jar = jar;
-    manifestWriter = new DeterministicJarManifestWriter(jar);
+    manifest = new DeterministicManifest();
   }
 
   public HashingDeterministicJarWriter writeEntry(
@@ -46,7 +47,7 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
     try (HashingInputStream hashingContents =
              new HashingInputStream(Hashing.murmur3_128(), contents)) {
         writeToJar(name, hashingContents);
-        manifestWriter.setEntryAttribute(
+        manifest.setEntryAttribute(
             name,
             DIGEST_ATTRIBUTE_NAME,
             hashingContents.hash().toString());
@@ -64,9 +65,9 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    if (manifestWriter.hasEntries()) {
+    if (manifest.hasEntries()) {
       putEntry(jar, JarFile.MANIFEST_NAME);
-      manifestWriter.write();
+      manifest.write(jar);
       jar.closeEntry();
     }
     jar.close();
