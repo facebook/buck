@@ -56,13 +56,11 @@ public class VersionControlStatsGenerator {
           } catch (InterruptedException e) {
             LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
             Thread.currentThread().interrupt(); // Re-set interrupt flag
-          } catch (VersionControlCommandFailedException e) {
-            LOG.warn(e, "Failed to generate VC stats due to exception. Skipping..");
           }
         });
   }
 
-  private void generateStats() throws InterruptedException, VersionControlCommandFailedException {
+  private void generateStats() throws InterruptedException {
     LOG.info("Starting generation of version control stats.");
 
     if (!versionControlCmdLineInterface.isSupportedVersionControlSystem()) {
