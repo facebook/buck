@@ -39,6 +39,22 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
   }
 
   @Override
+  @SuppressWarnings("unchecked")
+  public Iterable<BuildRule> getPythonPackageDeps(
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    return resolver
+        .requireMetadata(
+            getBuildTarget().withAppendedFlavors(
+                PythonLibraryDescription.MetadataType.PACKAGE_DEPS.getFlavor(),
+                pythonPlatform.getFlavor(),
+                cxxPlatform.getFlavor()),
+            Iterable.class)
+        .orElseThrow(IllegalStateException::new);
+  }
+
+  @Override
   public PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform)

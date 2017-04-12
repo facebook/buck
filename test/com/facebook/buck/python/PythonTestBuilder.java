@@ -105,6 +105,12 @@ public class PythonTestBuilder
     return this;
   }
 
+  public PythonTestBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    arg.platformDeps = deps;
+    return this;
+  }
+
   public PythonTestBuilder setPlatform(String platform) {
     arg.platform = Optional.of(platform);
     return this;

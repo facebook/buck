@@ -321,8 +321,8 @@ public class LuaBinaryDescription implements
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
       @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        ImmutableSet<BuildRule> deps = empty;
+      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+        Iterable<BuildRule> deps = empty;
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
           LuaPackageComponents components = packageable.getLuaPackageComponents();
@@ -354,8 +354,9 @@ public class LuaBinaryDescription implements
               MoreMaps.transformKeys(
                   components.getNativeLibraries(),
                   Object::toString));
+          deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform);
           if (components.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getBuildDeps()) {
+            for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -363,7 +364,6 @@ public class LuaBinaryDescription implements
               }
             }
           }
-          deps = rule.getBuildDeps();
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
           luaExtensions.put(extension.getBuildTarget(), extension);

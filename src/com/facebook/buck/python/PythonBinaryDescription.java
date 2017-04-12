@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
@@ -300,6 +301,9 @@ public class PythonBinaryDescription implements
             params,
             resolver,
             ruleFinder,
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps).stream()
+                .map(resolver::getRule)
+                .collect(MoreCollectors.toImmutableList()),
             binaryPackageComponents,
             pythonPlatform,
             cxxBuckConfig,
@@ -359,6 +363,8 @@ public class PythonBinaryDescription implements
     public Optional<SourcePath> main;
     public Optional<String> mainModule;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
+        PatternMatchedCollection.of();
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
     public ImmutableList<String> buildArgs = ImmutableList.of();

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -93,6 +94,7 @@ public class PythonLibraryDescription
         METADATA_TYPE.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
     BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
     switch (type.getValue()) {
+
       case PACKAGE_COMPONENTS: {
         Map.Entry<Flavor, PythonPlatform> pythonPlatform =
             pythonPlatforms.getFlavorAndValue(baseTarget)
@@ -139,6 +141,24 @@ public class PythonLibraryDescription
 
         return Optional.of(components).map(metadataClass::cast);
       }
+
+      case PACKAGE_DEPS: {
+        Map.Entry<Flavor, PythonPlatform> pythonPlatform =
+            pythonPlatforms.getFlavorAndValue(baseTarget)
+                .orElseThrow(IllegalArgumentException::new);
+        Map.Entry<Flavor, CxxPlatform> cxxPlatform =
+            cxxPlatforms.getFlavorAndValue(baseTarget)
+                .orElseThrow(IllegalArgumentException::new);
+        baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
+        ImmutableList<BuildTarget> depTargets =
+            PythonUtil.getDeps(
+                pythonPlatform.getValue(),
+                cxxPlatform.getValue(),
+                args.deps,
+                args.platformDeps);
+        return Optional.of(resolver.getAllRules(depTargets)).map(metadataClass::cast);
+      }
+
     }
 
     throw new IllegalStateException();
@@ -147,6 +167,7 @@ public class PythonLibraryDescription
   enum MetadataType implements FlavorConvertible {
 
     PACKAGE_COMPONENTS(InternalFlavor.of("package-components")),
+    PACKAGE_DEPS(InternalFlavor.of("package-deps")),
     ;
 
     private final Flavor flavor;
@@ -172,6 +193,8 @@ public class PythonLibraryDescription
     public Optional<VersionMatchedCollection<SourceList>> versionedResources;
     public PatternMatchedCollection<SourceList> platformResources = PatternMatchedCollection.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
+        PatternMatchedCollection.of();
     public Optional<String> baseModule = Optional.empty();
     public Optional<Boolean> zipSafe = Optional.empty();
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();

@@ -53,6 +53,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
@@ -81,6 +82,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class PythonBinaryDescriptionTest {
 
@@ -986,6 +988,43 @@ public class PythonBinaryDescriptionTest {
       // Verify that the rule keys are identical.
       assertThat(ruleKeyWithoutDep, Matchers.equalTo(ruleKeyWithDep));
     }
+  }
+
+  @Test
+  public void platformDeps() throws Exception {
+    SourcePath libASrc = new FakeSourcePath("libA.py");
+    PythonLibraryBuilder libraryABuilder =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
+    SourcePath libBSrc = new FakeSourcePath("libB.py");
+    PythonLibraryBuilder libraryBBuilder =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libB"))
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
+    PythonBinaryBuilder binaryBuilder =
+        PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setMainModule("main")
+            .setPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(
+                            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
+                            Pattern.LITERAL),
+                        ImmutableSortedSet.of(libraryABuilder.getTarget()))
+                    .add(
+                        Pattern.compile("matches nothing", Pattern.LITERAL),
+                        ImmutableSortedSet.of(libraryBBuilder.getTarget()))
+                    .build());
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            libraryABuilder.build(),
+            libraryBBuilder.build(),
+            binaryBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonBinary binary = (PythonBinary) resolver.requireRule(binaryBuilder.getTarget());
+    assertThat(
+        binary.getComponents().getModules().values(),
+        Matchers.allOf(Matchers.hasItem(libASrc), Matchers.not(Matchers.hasItem(libBSrc))));
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

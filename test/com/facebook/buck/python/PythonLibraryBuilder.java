@@ -76,6 +76,12 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<
     return this;
   }
 
+  public PythonLibraryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    arg.platformDeps = deps;
+    return this;
+  }
+
   public PythonLibraryBuilder setVersionedSrcs(VersionMatchedCollection<SourceList> versionedSrcs) {
     arg.versionedSrcs = Optional.of(versionedSrcs);
     return this;

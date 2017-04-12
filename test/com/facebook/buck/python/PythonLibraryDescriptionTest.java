@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.FixedVersionSelector;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionedAliasBuilder;
@@ -311,6 +313,46 @@ public class PythonLibraryDescriptionTest {
     assertThat(
         components.getModules().values(),
         Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM)));
+  }
+
+  @Test
+  public void platformDeps() throws Exception {
+    PythonLibraryBuilder libraryABuilder =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"));
+    PythonLibraryBuilder libraryBBuilder =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libB"));
+    PythonLibraryBuilder ruleBuilder =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(
+                            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
+                            Pattern.LITERAL),
+                        ImmutableSortedSet.of(libraryABuilder.getTarget()))
+                    .add(
+                        Pattern.compile("matches nothing", Pattern.LITERAL),
+                        ImmutableSortedSet.of(libraryBBuilder.getTarget()))
+                    .build());
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            libraryABuilder.build(),
+            libraryBBuilder.build(),
+            ruleBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary rule = (PythonLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    assertThat(
+        RichStream
+            .from(
+                rule.getPythonPackageDeps(
+                    PythonTestUtils.PYTHON_PLATFORM,
+                    CxxPlatformUtils.DEFAULT_PLATFORM))
+            .map(BuildRule::getBuildTarget)
+            .toImmutableSet(),
+        Matchers.allOf(
+            Matchers.hasItem(libraryABuilder.getTarget()),
+            Matchers.not(Matchers.hasItem(libraryBBuilder.getTarget()))));
   }
 
 }

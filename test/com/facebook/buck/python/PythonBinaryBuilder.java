@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -95,6 +96,12 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<
 
   public PythonBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
+    return this;
+  }
+
+  public PythonBinaryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    arg.platformDeps = deps;
     return this;
   }
 

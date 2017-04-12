@@ -56,6 +56,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
@@ -395,6 +396,17 @@ public class CxxPythonExtensionDescription implements
       @Override
       public Path getModule() {
         return module;
+      }
+
+      @Override
+      public Iterable<BuildRule> getPythonPackageDeps(
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform) {
+        return PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps)
+            .stream()
+            .map(ruleResolver::getRule)
+            .filter(PythonPackagable.class::isInstance)
+            .collect(MoreCollectors.toImmutableList());
       }
 
       @Override

@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -42,6 +43,13 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
       SourcePath binarySrc) {
     super(params);
     this.binarySrc = binarySrc;
+  }
+
+  @Override
+  public Iterable<BuildRule> getPythonPackageDeps(
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) {
+    return getBuildDeps();
   }
 
   @Override

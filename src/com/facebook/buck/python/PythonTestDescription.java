@@ -43,6 +43,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -250,11 +251,18 @@ public class PythonTestDescription implements
         ImmutableMap.of(),
         ImmutableSet.of(),
         args.zipSafe);
+    ImmutableList<BuildRule> deps =
+        RichStream
+            .from(PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps))
+            .concat(args.neededCoverage.stream().map(NeededCoverageSpec::getBuildTarget))
+            .map(resolver::getRule)
+            .collect(MoreCollectors.toImmutableList());
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             params,
             resolver,
             ruleFinder,
+            deps,
             testComponents,
             pythonPlatform,
             cxxBuckConfig,
@@ -293,8 +301,7 @@ public class PythonTestDescription implements
         ImmutableList.builder();
     for (NeededCoverageSpec coverageSpec : args.neededCoverage) {
         BuildRule buildRule = resolver.getRule(coverageSpec.getBuildTarget());
-        if (params.getBuildDeps().contains(buildRule) &&
-            buildRule instanceof PythonLibrary) {
+        if (deps.contains(buildRule) && buildRule instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
           ImmutableSortedSet<Path> paths;
           if (coverageSpec.getPathName().isPresent()) {

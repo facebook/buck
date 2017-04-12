@@ -46,6 +46,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -60,6 +61,7 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,22 @@ public class PythonUtil {
               "location", new LocationMacroExpander()));
 
   private PythonUtil() {}
+
+  public static ImmutableList<BuildTarget> getDeps(
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<BuildTarget> deps,
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
+    return RichStream.<BuildTarget>empty()
+        .concat(deps.stream())
+        .concat(
+            platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
+                .flatMap(Collection::stream))
+        .concat(
+            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
+                .flatMap(Collection::stream))
+        .toImmutableList();
+  }
 
   public static ImmutableMap<Path, SourcePath> getModules(
       BuildTarget target,
@@ -166,6 +184,7 @@ public class PythonUtil {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
+      Iterable<BuildRule> deps,
       final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
@@ -189,7 +208,7 @@ public class PythonUtil {
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
-        params.getBuildDeps()) {
+        Iterables.concat(deps, ruleResolver.getAllRules(preloadDeps))) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
@@ -200,7 +219,7 @@ public class PythonUtil {
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
-          for (BuildRule dep : rule.getBuildDeps()) {
+          for (BuildRule dep : extension.getPythonPackageDeps(pythonPlatform, cxxPlatform)) {
             if (dep instanceof CxxPythonExtension) {
               cxxpydeps.add(dep);
             }
@@ -212,7 +231,7 @@ public class PythonUtil {
               packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
           allComponents.addComponent(comps, rule.getBuildTarget());
           if (comps.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getBuildDeps()) {
+            for (BuildRule dep : packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform)) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -220,7 +239,7 @@ public class PythonUtil {
               }
             }
           }
-          deps = rule.getBuildDeps();
+          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform);
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
