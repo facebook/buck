@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.cache.LoadingCache;
@@ -70,6 +71,14 @@ public class HaskellPrebuiltLibraryDescription implements
                   ImmutableMap<BuildTarget, CxxPreprocessorInput>
               > transitiveCxxPreprocessorInputCache =
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+
+      @Override
+      public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
+        return RichStream.from(args.deps)
+            .map(resolver::getRule)
+            .filter(HaskellCompileDep.class::isInstance)
+            .toImmutableList();
+      }
 
       @Override
       public HaskellCompileInput getCompileInput(

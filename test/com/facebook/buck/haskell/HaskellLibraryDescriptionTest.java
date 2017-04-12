@@ -34,8 +34,10 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
@@ -50,6 +52,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class HaskellLibraryDescriptionTest {
 
@@ -250,6 +253,44 @@ public class HaskellLibraryDescriptionTest {
                 library.getBuildTarget(),
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.STATIC)));
+  }
+
+  @Test
+  public void platformDeps() throws Exception {
+    HaskellLibraryBuilder depABuilder =
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:depA"));
+    HaskellLibraryBuilder depBBuilder =
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:depB"));
+    HaskellLibraryBuilder ruleBuilder =
+        new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(
+                            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
+                            Pattern.LITERAL),
+                        ImmutableSortedSet.of(depABuilder.getTarget()))
+                    .add(
+                        Pattern.compile("matches nothing", Pattern.LITERAL),
+                        ImmutableSortedSet.of(depBBuilder.getTarget()))
+                    .build());
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            depABuilder.build(),
+            depBBuilder.build(),
+            ruleBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    HaskellLibrary depA = (HaskellLibrary) resolver.requireRule(depABuilder.getTarget());
+    HaskellLibrary depB = (HaskellLibrary) resolver.requireRule(depBBuilder.getTarget());
+    HaskellLibrary rule = (HaskellLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    assertThat(
+        rule.getCompileDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
+    assertThat(
+        ImmutableList.copyOf(
+            rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 
 }

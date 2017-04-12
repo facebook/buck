@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,6 +75,12 @@ public class HaskellLibraryBuilder extends AbstractNodeBuilder<
 
   public HaskellLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
+    return this;
+  }
+
+  public HaskellLibraryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
+    arg.platformDeps = platformDeps;
     return this;
   }
 

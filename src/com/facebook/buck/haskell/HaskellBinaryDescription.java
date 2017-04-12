@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -120,9 +122,12 @@ public class HaskellBinaryDescription implements
     }
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
-    params.getDeclaredDeps().get().stream()
-        .filter(NativeLinkable.class::isInstance)
-        .forEach(depsBuilder::add);
+    depsBuilder.addAll(
+        CxxDeps.builder()
+            .addDeps(args.deps)
+            .addPlatformDeps(args.platformDeps)
+            .build()
+            .get(resolver, cxxPlatform));
     args.depsQuery.ifPresent(
         query ->
             QueryUtils.resolveDepQuery(
@@ -187,7 +192,9 @@ public class HaskellBinaryDescription implements
                 params,
                 resolver,
                 ruleFinder,
-                deps,
+                RichStream.from(deps)
+                    .filter(HaskellCompileDep.class::isInstance)
+                    .toImmutableSet(),
                 cxxPlatform,
                 haskellConfig,
                 depType,
@@ -303,6 +310,8 @@ public class HaskellBinaryDescription implements
     public SourceList srcs = SourceList.EMPTY;
     public ImmutableList<String> compilerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
+        PatternMatchedCollection.of();
     public Optional<Query> depsQuery = Optional.empty();
     public Optional<String> main;
     public Optional<Linker.LinkableDepType> linkStyle;

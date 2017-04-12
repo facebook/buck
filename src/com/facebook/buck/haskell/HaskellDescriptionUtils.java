@@ -47,6 +47,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.util.Collection;
 import java.util.Map;
@@ -94,11 +96,12 @@ public class HaskellDescriptionUtils {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        ImmutableSet<BuildRule> ruleDeps = empty;
+        Iterable<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
-          ruleDeps = rule.getBuildDeps();
+          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
+          ruleDeps = haskellCompileDep.getCompileDeps(cxxPlatform);
           HaskellCompileInput compileInput =
-              ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType);
+              haskellCompileDep.getCompileInput(cxxPlatform, depType);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
           depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
@@ -291,7 +294,9 @@ public class HaskellDescriptionUtils {
                 // TODO(agallagher): We shouldn't need any deps to compile an empty module, but ghc
                 // implicitly tries to load the prelude and in some setups this is provided via a
                 // Buck dependency.
-                baseParams.getBuildDeps(),
+                RichStream.from(deps)
+                    .filter(BuildRule.class)
+                    .toImmutableSortedSet(Ordering.natural()),
                 cxxPlatform,
                 haskellConfig,
                 depType,
