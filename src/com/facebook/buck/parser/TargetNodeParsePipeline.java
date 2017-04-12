@@ -76,7 +76,8 @@ public class TargetNodeParsePipeline
       ParserTargetNodeFactory<TargetNode<?, ?>> targetNodeDelegate,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      boolean speculativeDepsTraversal, RawNodeParsePipeline rawNodeParsePipeline) {
+      boolean speculativeDepsTraversal,
+      RawNodeParsePipeline rawNodeParsePipeline) {
     super(executorService, cache);
 
     this.delegate = targetNodeDelegate;
@@ -122,20 +123,15 @@ public class TargetNodeParsePipeline
       if (speculativeDepsTraversal) {
         executorService.submit(() -> {
           for (BuildTarget depTarget : targetNode.getParseDeps()) {
-            Path depCellPath = depTarget.getCellPath();
-            // TODO(mkosiba): Support crossing cell boundary from within the pipeline.
-            // Currently the cell name->Cell object mapping is held by the PerBuildState in a
-            // non-threadsafe way making it inconvenient to access from the pipeline.
-            if (depCellPath.equals(cell.getRoot())) {
-              try {
-                if (depTarget.isFlavored()) {
-                  getNodeJob(cell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
-                }
-                getNodeJob(cell, depTarget);
-              } catch (BuildTargetException e) {
-                // No biggie, we'll hit the error again in the non-speculative path.
-                LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
+            Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
+            try {
+              if (depTarget.isFlavored()) {
+                getNodeJob(depCell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
               }
+              getNodeJob(depCell, depTarget);
+            } catch (BuildTargetException e) {
+              // No biggie, we'll hit the error again in the non-speculative path.
+              LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
             }
           }
         });
