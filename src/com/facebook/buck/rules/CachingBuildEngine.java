@@ -776,7 +776,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           }
 
           // Try get the output size now that all outputs have been recorded.
-          outputSize.set(buildInfoRecorder.getOutputSize());
+          if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+            outputSize.set(buildInfoRecorder.getOutputSize());
+          }
 
           // If the success type means the rule has potentially changed it's outputs...
           if (success.outputsHaveChanged()) {
