@@ -165,7 +165,7 @@ public final class CellProvider {
             // TODO(13777679): cells in other watchman roots do not work correctly.
 
             return new Cell(
-                cellPathResolver.getKnownRoots(),
+                getKnownRoots(cellPathResolver),
                 cellFilesystem,
                 watchman,
                 buckConfig,
@@ -176,7 +176,7 @@ public final class CellProvider {
         cellProvider -> {
           try {
             return new Cell(
-                rootCellCellPathResolver.getKnownRoots(),
+                getKnownRoots(rootCellCellPathResolver),
                 rootFilesystem,
                 watchman,
                 rootConfig,
@@ -212,5 +212,12 @@ public final class CellProvider {
           }
         },
         null);
+  }
+
+  private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {
+    return ImmutableSet.<Path>builder()
+        .addAll(resolver.getCellPaths().values())
+        .add(resolver.getCellPath(Optional.empty()))
+        .build();
   }
 }

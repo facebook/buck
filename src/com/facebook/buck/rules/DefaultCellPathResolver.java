@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
@@ -86,13 +85,6 @@ public class DefaultCellPathResolver implements CellPathResolver {
 
   public Path getRoot() {
     return root;
-  }
-
-  public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder()
-        .addAll(getPartialMapping().values())
-        .add(root)
-        .build();
   }
 
   private ImmutableMap<String, Path> getPartialMapping() {

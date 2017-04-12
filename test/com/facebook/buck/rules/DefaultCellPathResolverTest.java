@@ -39,27 +39,6 @@ public class DefaultCellPathResolverTest {
       "[" + DefaultCellPathResolver.REPOSITORIES_SECTION + "]";
 
   @Test
-  public void knownRulesForSimpleSetup() throws Exception {
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-
-    Path root = vfs.getPath("/opt/local/");
-    Path cell1Root = root.resolve("repo1");
-    Files.createDirectories(cell1Root);
-    Path cell2Root = root.resolve("repo2");
-    Files.createDirectories(cell2Root);
-
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " simple = " + cell2Root.toString()));
-
-    assertThat(
-        cellPathResolver.getKnownRoots(),
-        Matchers.containsInAnyOrder(cell1Root, cell2Root));
-  }
-
-  @Test
   public void transtiveMappingForSimpleSetup() throws Exception {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
