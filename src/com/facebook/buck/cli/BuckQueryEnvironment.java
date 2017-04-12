@@ -16,6 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
+
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
@@ -34,28 +39,35 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.MoreExceptions;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -74,7 +86,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final Map<Cell, BuildFileTree> buildFileTrees =  new HashMap<>();
   private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
 
-  private TargetGraph graph = TargetGraph.EMPTY;
+  // Query execution is single threaded, however the buildTransitiveClosure implementation
+  // traverses the graph in parallel.
+  private MutableDirectedGraph<TargetNode<?, ?>> graph = MutableDirectedGraph.createConcurrent();
+  private Map<BuildTarget, TargetNode<?, ?>> targetsToNodes = new ConcurrentHashMap<>();
 
   private BuckQueryEnvironment(
       Cell rootCell,
@@ -123,8 +138,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     );
   }
 
-  public TargetGraph getTargetGraph() {
-    return graph;
+  public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
+    return new DirectedAcyclicGraph<>(graph);
   }
 
   public PerBuildState getParserState() {
@@ -189,17 +204,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
           target,
           target.getClass().getName()));
     }
-    ListeningExecutorService executor = null;
     try {
-      executor = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-          MostExecutors.newSingleThreadExecutor("buck query.getNode"));
       return parserState.getTargetNode(((QueryBuildTarget) target).getBuildTarget());
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
-    } finally {
-      if (executor != null) {
-        executor.shutdown();
-      }
     }
   }
 
@@ -239,15 +247,6 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return builder.build();
   }
 
-  /** Given a set of target nodes, returns the build targets. */
-  private static Set<BuildTarget> getTargetsFromNodes(Iterable<TargetNode<?, ?>> input) {
-    Set<BuildTarget> result = new LinkedHashSet<>();
-    for (TargetNode<?, ?> node : input) {
-      result.add(node.getBuildTarget());
-    }
-    return result;
-  }
-
   @Override
   public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
@@ -285,18 +284,19 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     for (QueryTarget target : targets) {
       nodes.add(getNode(target));
     }
-    // Reusing the existing getSubgraph() for simplicity. It builds the graph when we only need the
-    // nodes. The impact of creating the edges in terms of time and space should be minimal.
-    return getTargetsFromTargetNodes(graph.getSubgraph(nodes).getNodes());
-  }
+    ImmutableSet.Builder<QueryTarget> result = ImmutableSet.builder();
 
-  private void buildGraphForBuildTargets(Set<BuildTarget> targets)
-      throws QueryException, InterruptedException {
-    try {
-      graph = parserState.buildTargetGraph(targets);
-    } catch (BuildFileParseException | BuildTargetException | IOException e) {
-      throw new QueryException(e, "Error in building dependency graph");
-    }
+    new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(nodes) {
+      @Override
+      public ImmutableSet<TargetNode<?, ?>>visit(TargetNode<?, ?> node) {
+        result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
+        return node.getParseDeps().stream()
+            .map(targetsToNodes::get)
+            .collect(MoreCollectors.toImmutableSet());
+      }
+    }.start();
+
+    return result.build();
   }
 
   @Override
@@ -306,24 +306,80 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
-    Set<BuildTarget> graphTargets = getTargetsFromNodes(graph.getNodes());
     Set<BuildTarget> newBuildTargets = new HashSet<>();
     for (QueryTarget target : targets) {
       if (target instanceof QueryBuildTarget) {
         BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
-        if (!graphTargets.contains(buildTarget)) {
+        if (!targetsToNodes.containsKey(buildTarget)) {
           newBuildTargets.add(buildTarget);
         }
       }
     }
+
+    ConcurrentHashMap<BuildTarget, ListenableFuture<TargetNode<?, ?>>> jobsCache =
+        new ConcurrentHashMap<>();
+
+    try {
+      List<ListenableFuture<TargetNode<?, ?>>> depsFuture = new ArrayList<>();
+      for (BuildTarget buildTarget : newBuildTargets) {
+        depsFuture.add(buildTransitiveClosureRecursiveWorker(buildTarget, jobsCache));
+      }
+      Futures.allAsList(depsFuture).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() != null) {
+        throw new QueryException(e.getCause(), "Failed parsing: " + e.getLocalizedMessage());
+      }
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+    } catch (BuildFileParseException | BuildTargetException e) {
+      throw new QueryException(
+          e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+    }
+
     if (!newBuildTargets.isEmpty()) {
-      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets));
-      for (BuildTarget buildTarget : getTargetsFromNodes(graph.getNodes())) {
+      for (BuildTarget buildTarget : targetsToNodes.keySet()) {
         if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
           buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
         }
       }
     }
+  }
+
+  private ListenableFuture<TargetNode<?, ?>> buildTransitiveClosureRecursiveWorker(
+      BuildTarget buildTarget,
+      ConcurrentHashMap<BuildTarget, ListenableFuture<TargetNode<?, ?>>> jobsCache)
+      throws InterruptedException, QueryException, BuildFileParseException, BuildTargetException {
+    ListenableFuture<TargetNode<?, ?>> job = jobsCache.get(buildTarget);
+    if (job != null) {
+      return job;
+    }
+    SettableFuture<TargetNode<?, ?>> newJob = SettableFuture.create();
+    if (jobsCache.putIfAbsent(buildTarget, newJob) != null) {
+      return Preconditions.checkNotNull(jobsCache.get(buildTarget));
+    }
+
+    ListenableFuture<TargetNode<?, ?>> future = Futures.transformAsync(
+        parserState.getTargetNodeJob(buildTarget),
+        targetNode -> {
+          targetsToNodes.put(buildTarget, targetNode);
+          List<ListenableFuture<TargetNode<?, ?>>> depsFuture = new ArrayList<>();
+          final Set<BuildTarget> parseDeps = targetNode.getParseDeps();
+          for (BuildTarget parseDep : parseDeps) {
+            depsFuture.add(
+                Futures.transform(
+                    buildTransitiveClosureRecursiveWorker(parseDep, jobsCache),
+                    depNode -> {
+                      graph.addEdge(targetNode, depNode);
+                      return depNode;
+                    }
+                ));
+          }
+          return Futures.transform(
+              Futures.allAsList(depsFuture),
+              Functions.constant(targetNode));
+        });
+    newJob.setFuture(future);
+    return newJob;
   }
 
   @Override

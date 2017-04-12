@@ -146,6 +146,13 @@ public class PerBuildState implements AutoCloseable {
     return targetNodeParsePipeline.getNode(owningCell, target);
   }
 
+  public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
+      throws BuildFileParseException, BuildTargetException {
+    Cell owningCell = getCell(target);
+
+    return targetNodeParsePipeline.getNodeJob(owningCell, target);
+  }
+
   public ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
