@@ -5,13 +5,15 @@ CONFIG_SRCS = [
 java_library(
     name = "config",
     srcs = CONFIG_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/cli:config",
+    ],
     resources = [
         "__test_main__.py",
     ],
     visibility = ["PUBLIC"],
     deps = [
         ":support",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/cxx:platform",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",

@@ -33,7 +33,7 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<
     PythonLibraryDescription,
     PythonLibrary> {
 
-  private PythonLibraryBuilder(
+  PythonLibraryBuilder(
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       FlavorDomain<CxxPlatform> cxxPlatforms) {

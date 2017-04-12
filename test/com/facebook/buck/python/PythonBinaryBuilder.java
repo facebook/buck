@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -112,6 +113,11 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<
 
   public PythonBinaryBuilder setPlatform(String platform) {
     arg.platform = Optional.of(platform);
+    return this;
+  }
+
+  public PythonBinaryBuilder setCxxPlatform(Flavor platform) {
+    arg.cxxPlatform = Optional.of(platform);
     return this;
   }
 

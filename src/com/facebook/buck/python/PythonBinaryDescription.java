@@ -248,6 +248,12 @@ public class PythonBinaryDescription implements
 
   }
 
+  private CxxPlatform getCxxPlatform(BuildTarget target, Arg args) {
+    return cxxPlatforms.getValue(target)
+        .orElse(args.cxxPlatform.map(cxxPlatforms::getValue)
+            .orElse(defaultCxxPlatform));
+  }
+
   @Override
   public <A extends Arg> PythonBinary createBuildRule(
       TargetGraph targetGraph,
@@ -294,8 +300,7 @@ public class PythonBinaryDescription implements
             pythonPlatforms.getValue(
                 args.platform.<Flavor>map(InternalFlavor::of).orElse(
                     pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
-        defaultCxxPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             params,
@@ -343,8 +348,7 @@ public class PythonBinaryDescription implements
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // We need to use the C/C++ linker for native libs handling, so add in the C/C++ linker to
     // parse time deps.
-    extraDepsBuilder.addAll(
-        cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform).getLd().getParseTimeDeps());
+    extraDepsBuilder.addAll(getCxxPlatform(buildTarget, constructorArg).getLd().getParseTimeDeps());
 
     if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle()) ==
         PythonBuckConfig.PackageStyle.STANDALONE) {
@@ -369,6 +373,7 @@ public class PythonBinaryDescription implements
     public Optional<Boolean> zipSafe;
     public ImmutableList<String> buildArgs = ImmutableList.of();
     public Optional<String> platform;
+    public Optional<Flavor> cxxPlatform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public ImmutableSet<BuildTarget> preloadDeps = ImmutableSet.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
