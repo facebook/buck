@@ -96,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -165,7 +166,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
 
-  private final ConcurrentMap<Path, BuildInfoStore> buildInfoStores = Maps.newConcurrentMap();
+  private final ConcurrentHashMap<Path, BuildInfoStore> buildInfoStores = new ConcurrentHashMap<>();
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
