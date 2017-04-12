@@ -199,8 +199,7 @@ public class RecordingFileHashLoaderTest {
   }
 
   private static PathWithUnixSeparators unixPath(String path) {
-    return new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(
-        path));
+    return new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(path));
   }
 
   public class FakeFileHashLoader implements FileHashLoader {

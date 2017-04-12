@@ -115,7 +115,8 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     List<PathWithUnixSeparators> childrenRelativePaths = new ArrayList<>();
     for (Path relativeChildPath : projectFilesystem.getDirectoryContents(path)) {
       childrenRelativePaths.add(
-          new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(relativeChildPath)));
+          new PathWithUnixSeparators()
+              .setPath(MorePaths.pathWithUnixSeparators(relativeChildPath)));
       remainingPaths.add(relativeChildPath);
     }
 
@@ -222,17 +223,20 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
       Path symLinkRoot =
           projectFilesystem.getPathRelativeToProjectRoot(symLinkRootAndTarget.getFirst()).get();
-      fileHashEntry.setRootSymLink(new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(
-          symLinkRoot)));
+      fileHashEntry.setRootSymLink(
+          new PathWithUnixSeparators()
+              .setPath(MorePaths.pathWithUnixSeparators(symLinkRoot)));
       fileHashEntry.setRootSymLinkTarget(
-          new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(
+          new PathWithUnixSeparators()
+              .setPath(MorePaths.pathWithUnixSeparators(
               symLinkRootAndTarget.getSecond().toAbsolutePath())));
     }
 
     fileHashEntry.setIsDirectory(isDirectory);
     fileHashEntry.setHashCode(hashCode.toString());
     fileHashEntry.setPath(
-        new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(entryKey)));
+        new PathWithUnixSeparators()
+            .setPath(MorePaths.pathWithUnixSeparators(entryKey)));
     if (memRelPath.isPresent()) {
       fileHashEntry.setArchiveMemberPath(memRelPath.get().toString());
     }

@@ -392,8 +392,7 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   private static PathWithUnixSeparators unixPath(Path path) {
-    return new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(
-        path));
+    return new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(path));
   }
 
 }

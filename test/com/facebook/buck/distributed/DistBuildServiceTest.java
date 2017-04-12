@@ -160,7 +160,7 @@ public class DistBuildServiceTest {
       files[i] = new BuildJobStateFileHashEntry();
       files[i].setHashCode(Integer.toString(i));
       files[i].setContents(("content" + Integer.toString(i)).getBytes());
-      files[i].setPath(new PathWithUnixSeparators("/tmp/" + i));
+      files[i].setPath(new PathWithUnixSeparators().setPath("/tmp/" + i));
     }
 
     List<BuildJobStateFileHashes> fileHashes = new ArrayList<>();
