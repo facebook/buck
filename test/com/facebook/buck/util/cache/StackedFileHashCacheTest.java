@@ -21,10 +21,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
@@ -37,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.jar.JarOutputStream;
 
 public class StackedFileHashCacheTest {
 
@@ -312,8 +312,9 @@ public class StackedFileHashCacheTest {
   }
 
   private void writeJarWithHashes(ProjectFilesystem filesystem, Path path) throws IOException {
-    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-        new JarOutputStream(filesystem.newFileOutputStream(path)))) {
+    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
+        filesystem.newFileOutputStream(path))) {
+      jar.setEntryHashingEnabled(true);
       jar
           .writeEntry(
               SOME_FILE_INSIDE_JAR,

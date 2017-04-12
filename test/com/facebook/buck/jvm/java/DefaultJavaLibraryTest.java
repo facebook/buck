@@ -34,7 +34,6 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -79,6 +78,8 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
@@ -109,7 +110,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nullable;
 
@@ -1375,8 +1375,9 @@ public class DefaultJavaLibraryTest {
       Path abiJarPath,
       String fileName,
       String fileContents) throws IOException {
-    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-        new ZipOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
+    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
+        filesystem.newFileOutputStream(abiJarPath))) {
+      jar.setEntryHashingEnabled(true);
       jar.writeEntry(
           fileName,
           new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)));

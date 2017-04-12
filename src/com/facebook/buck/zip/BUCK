@@ -4,6 +4,7 @@ java_library(
         "AppendingZipOutputStreamImpl.java",
         "ByteIo.java",
         "CentralDirectory.java",
+        "CustomJarOutputStream.java",
         "CustomZipEntry.java",
         "CustomZipOutputStream.java",
         "DeterministicManifest.java",

@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -49,7 +49,7 @@ public class JarContentHasher {
       throw new UnsupportedOperationException(
           "Cache does not know how to return hash codes for archive members except " +
               "when the archive contains a META-INF/MANIFEST.MF with " +
-              HashingDeterministicJarWriter.DIGEST_ATTRIBUTE_NAME +
+              CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME +
               " attributes for each file.");
     }
 
@@ -58,7 +58,7 @@ public class JarContentHasher {
       Path memberPath = Paths.get(nameAttributesEntry.getKey());
       Attributes attributes = nameAttributesEntry.getValue();
       String hashStringValue = attributes.getValue(
-          HashingDeterministicJarWriter.DIGEST_ATTRIBUTE_NAME);
+          CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME);
       if (hashStringValue == null) {
         continue;
       }

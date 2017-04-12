@@ -43,6 +43,10 @@ public class ZipOutputStreams {
     return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
   }
 
+  public static CustomJarOutputStream newJarOutputStream(Path jarFile) throws IOException {
+    return newJarOutputStream(new BufferedOutputStream(Files.newOutputStream(jarFile)));
+  }
+
   /**
    * Create a new {@link CustomZipOutputStream} that will by default act in the same way as
    * {@link java.util.zip.ZipOutputStream}, notably by throwing an exception if duplicate entries
@@ -52,6 +56,10 @@ public class ZipOutputStreams {
    */
   public static CustomZipOutputStream newOutputStream(OutputStream out) {
     return newOutputStream(out, HandleDuplicates.THROW_EXCEPTION);
+  }
+
+  public static CustomJarOutputStream newJarOutputStream(OutputStream out) {
+    return newJarOutputStream(out, HandleDuplicates.THROW_EXCEPTION);
   }
 
   /**
@@ -67,6 +75,12 @@ public class ZipOutputStreams {
     return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)), mode);
   }
 
+  public static CustomJarOutputStream newJarOutputStream(Path jarFile, HandleDuplicates mode)
+      throws IOException {
+
+    return newJarOutputStream(new BufferedOutputStream(Files.newOutputStream(jarFile)), mode);
+  }
+
   /**
    * Create a new {@link CustomZipOutputStream} that handles duplicate entries in the way dictated
    * by {@code mode}.
@@ -78,23 +92,46 @@ public class ZipOutputStreams {
     return newOutputStream(out, mode, new DefaultClock());
   }
 
+  public static CustomJarOutputStream newJarOutputStream(OutputStream out, HandleDuplicates mode) {
+    return newJarOutputStream(out, mode, new DefaultClock());
+  }
+
   public static CustomZipOutputStream newOutputStream(
       OutputStream out,
       HandleDuplicates mode,
       Clock clock) {
+    return new CustomZipOutputStream(newImpl(out, mode, clock));
+  }
+
+  public static CustomJarOutputStream newJarOutputStream(
+      OutputStream out,
+      HandleDuplicates mode,
+      Clock clock) {
+    return new CustomJarOutputStream(newImpl(out, mode, clock));
+  }
+
+  protected static CustomZipOutputStream.Impl newImpl(
+      OutputStream out,
+      HandleDuplicates mode,
+      Clock clock) {
+    CustomZipOutputStream.Impl impl;
     switch (mode) {
       case APPEND_TO_ZIP:
       case THROW_EXCEPTION:
-        return new CustomZipOutputStream(new AppendingZipOutputStreamImpl(
+        impl = new AppendingZipOutputStreamImpl(
             clock,
             out,
-            mode == HandleDuplicates.THROW_EXCEPTION));
+            mode == HandleDuplicates.THROW_EXCEPTION);
+        break;
       case OVERWRITE_EXISTING:
-        return new CustomZipOutputStream(new OverwritingZipOutputStreamImpl(clock, out));
+        impl = new OverwritingZipOutputStreamImpl(clock, out);
+        break;
       default:
         throw new HumanReadableException(
             "Unable to determine which zip output mode to use: %s", mode);
     }
+
+    return impl;
   }
 
   public enum HandleDuplicates {

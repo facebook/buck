@@ -25,7 +25,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -51,6 +50,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -75,7 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.jar.JarOutputStream;
 
 public class DistBuildFileHashesTest {
   @Rule
@@ -234,10 +234,10 @@ public class DistBuildFileHashesTest {
       archiveMemberPath = getPath("Archive.class");
 
       projectFilesystem.createParentDirs(archivePath);
-      try (HashingDeterministicJarWriter jarWriter =
-               new HashingDeterministicJarWriter(
-                   new JarOutputStream(
-                       projectFilesystem.newFileOutputStream(archivePath)))) {
+      try (CustomJarOutputStream jarWriter =
+               ZipOutputStreams.newJarOutputStream(
+                   projectFilesystem.newFileOutputStream(archivePath))) {
+        jarWriter.setEntryHashingEnabled(true);
         byte[] archiveMemberData = "data".getBytes(Charsets.UTF_8);
         archiveMemberHash = Hashing.murmur3_128().hashBytes(archiveMemberData);
         jarWriter.writeEntry("Archive.class", new ByteArrayInputStream(archiveMemberData));

@@ -13,10 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
+package com.facebook.buck.zip;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
@@ -33,16 +32,16 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-import java.util.zip.ZipOutputStream;
 
-public class HashingDeterministicJarWriterTest {
+public class CustomJarOutputStreamTest {
   private ByteArrayOutputStream out;
-  private HashingDeterministicJarWriter writer;
+  private CustomJarOutputStream writer;
 
   @Before
   public void setUp() {
     out = new ByteArrayOutputStream();
-    writer = new HashingDeterministicJarWriter(new ZipOutputStream(out));
+    writer = ZipOutputStreams.newJarOutputStream(out);
+    writer.setEntryHashingEnabled(true);
   }
 
   @Test
@@ -73,40 +72,23 @@ public class HashingDeterministicJarWriterTest {
     String entryName = "A";
     InputStream contents = new ByteArrayInputStream("contents".getBytes(StandardCharsets.UTF_8));
     try (HashingInputStream hashingContents = new HashingInputStream(
-             Hashing.murmur3_128(),
-             contents)) {
+        Hashing.murmur3_128(),
+        contents)) {
       writer.writeEntry(entryName, hashingContents);
       writer.close();
 
       try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
-          jar.getNextJarEntry();
-          JarEntry manifestEntry = jar.getNextJarEntry();
-          assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
-          Manifest manifest = new Manifest();
-          manifest.read(jar);
+        jar.getNextJarEntry();
+        JarEntry manifestEntry = jar.getNextJarEntry();
+        assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
+        Manifest manifest = new Manifest();
+        manifest.read(jar);
 
-          String expectedHash = hashingContents.hash().toString();
-          assertEquals(
-              expectedHash,
-              manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
+        String expectedHash = hashingContents.hash().toString();
+        assertEquals(
+            expectedHash,
+            manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
       }
-    }
-  }
-
-  @Test
-  public void manifestDoesNotContainEntryHashesForUnhashedEntries() throws IOException {
-    String entryName = "A";
-    InputStream contents = new ByteArrayInputStream("contents".getBytes(StandardCharsets.UTF_8));
-    writer.writeUnhashedEntry(entryName, contents);
-    writer.close();
-
-    try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
-      jar.getNextJarEntry();
-      jar.getNextJarEntry();
-      Manifest manifest = new Manifest();
-      manifest.read(jar);
-
-      assertFalse(manifest.getEntries().containsKey(entryName));
     }
   }
 }

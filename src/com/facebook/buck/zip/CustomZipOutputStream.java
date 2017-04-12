@@ -17,8 +17,10 @@
 package com.facebook.buck.zip;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -120,6 +122,16 @@ public class CustomZipOutputStream extends OutputStream {
     byte[] buf = new byte[1];
     buf[0] = (byte) (b & 0xff);
     write(buf, 0, 1);
+  }
+
+  public void writeEntry(String name, InputStream contents) throws IOException {
+    try {
+      putNextEntry(new CustomZipEntry(name));
+      ByteStreams.copy(contents, this);
+      closeEntry();
+    } finally {
+      contents.close();
+    }
   }
 
   @Override

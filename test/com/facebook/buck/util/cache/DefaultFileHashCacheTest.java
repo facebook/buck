@@ -23,10 +23,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -163,8 +165,9 @@ public class DefaultFileHashCacheTest {
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("SomeClass.class");
     String memberContents = "Some contents";
-    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
+    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
+        filesystem.newFileOutputStream(abiJarPath))) {
+      jar.setEntryHashingEnabled(true);
       jar.writeEntry(
           memberPath.toString(),
           new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
@@ -185,15 +188,16 @@ public class DefaultFileHashCacheTest {
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("Unhashed.txt");
     String memberContents = "Some contents";
-    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
-      jar
-          .writeEntry(
-              "SomeClass.class",
-              new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)))
-          .writeUnhashedEntry(
-              memberPath.toString(),
-              new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
+    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
+        filesystem.newFileOutputStream(abiJarPath))) {
+      jar.setEntryHashingEnabled(true);
+      jar.writeEntry(
+          "SomeClass.class",
+          new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
+      jar.setEntryHashingEnabled(false);
+      jar.writeEntry(
+          memberPath.toString(),
+          new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
     }
 
     cache.get(ArchiveMemberPath.of(abiJarPath, memberPath));
@@ -224,15 +228,14 @@ public class DefaultFileHashCacheTest {
     Path abiJarPath = Paths.get("empty-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
 
-    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
-      jar
-          .writeUnhashedEntry(
-              JarFile.MANIFEST_NAME,
-              new ByteArrayInputStream(new byte[0]))
-          .writeUnhashedEntry(
-              memberPath.toString(),
-              new ByteArrayInputStream("Contents".getBytes(StandardCharsets.UTF_8)));
+    try (CustomZipOutputStream jar = ZipOutputStreams.newOutputStream(
+        filesystem.newFileOutputStream(abiJarPath))) {
+      jar.writeEntry(
+          JarFile.MANIFEST_NAME,
+          new ByteArrayInputStream(new byte[0]));
+      jar.writeEntry(
+          memberPath.toString(),
+          new ByteArrayInputStream("Contents".getBytes(StandardCharsets.UTF_8)));
     }
 
     cache.get(ArchiveMemberPath.of(abiJarPath, memberPath));

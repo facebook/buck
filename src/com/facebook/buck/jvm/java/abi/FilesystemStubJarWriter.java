@@ -16,9 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
 
@@ -28,13 +29,12 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.jar.JarOutputStream;
 
 /**
  * A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}.
  */
 class FilesystemStubJarWriter implements StubJarWriter {
-  private final HashingDeterministicJarWriter jar;
+  private final CustomJarOutputStream jar;
   private boolean closed = false;
 
   public FilesystemStubJarWriter(
@@ -49,8 +49,8 @@ class FilesystemStubJarWriter implements StubJarWriter {
       filesystem.createParentDirs(outputPath);
     }
 
-    jar = new HashingDeterministicJarWriter(
-        new JarOutputStream(filesystem.newFileOutputStream(outputPath)));
+    jar = ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(outputPath));
+    jar.setEntryHashingEnabled(true);
   }
 
   @Override
