@@ -74,8 +74,7 @@ abstract class AbstractRuleKeyFactories {
             fieldLoader,
             fileHashCache,
             pathResolver,
-            ruleFinder,
-            inputRuleKeyFileSizeLimit));
+            ruleFinder));
   }
 
 }
