@@ -35,7 +35,6 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -44,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -60,7 +58,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -448,7 +445,7 @@ class DaemonicParserState {
 
             // Added or removed files can affect globs, so invalidate the package build file
             // "containing" {@code path} unless its filename matches a temp file pattern.
-            if (!isTempFile(cell, path)) {
+            if (!cell.getFilesystem().isIgnored(path)) {
               invalidateContainingBuildFile(cell, buildFiles, path);
             } else {
               LOG.debug(
@@ -549,15 +546,6 @@ class DaemonicParserState {
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 
-  /**
-   * @param path The {@link Path} to test.
-   * @return true if {@code path} is a temporary or backup file.
-   */
-  private boolean isTempFile(Cell cell, Path path) {
-    final String fileName = path.getFileName().toString();
-    Predicate<Pattern> patternMatches = pattern -> pattern.matcher(fileName).matches();
-    return Iterators.any(cell.getTempFilePatterns().iterator(), patternMatches);
-  }
 
   private synchronized boolean invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {

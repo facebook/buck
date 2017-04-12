@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -296,10 +295,6 @@ public class Cell {
   @Override
   public int hashCode() {
     return hashCodeSupplier.get();
-  }
-
-  public Iterable<Pattern> getTempFilePatterns() {
-    return config.getView(ParserConfig.class).getTempFilePatterns();
   }
 
   public CellPathResolver getCellPathResolver() {

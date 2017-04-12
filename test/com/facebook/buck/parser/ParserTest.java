@@ -33,6 +33,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -194,7 +195,9 @@ public class ParserTest {
 
     // Create a temp directory with some build files.
     Path root = tempDir.getRoot().toRealPath();
-    filesystem = new ProjectFilesystem(root);
+    filesystem = new ProjectFilesystem(
+        root,
+        ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
     cellRoot = filesystem.getRootPath();
     eventBus = BuckEventBusFactory.newInstance();
 
@@ -206,11 +209,8 @@ public class ParserTest {
       configSectionsBuilder.put(
           "project",
           ImmutableMap.of(
-              "temp_files", ".*\\.swp$",
               "parallel_parsing", "true",
               "parsing_threads", Integer.toString(threads)));
-    } else {
-      configSectionsBuilder.put("project", ImmutableMap.of("temp_files", ".*\\.swp$"));
     }
 
     configSectionsBuilder.put("unknown_flavors_messages",
@@ -273,11 +273,11 @@ public class ParserTest {
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
     assertThat(events, Matchers.contains(
+        Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
+        Matchers.allOf(
             Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
-            Matchers.allOf(
-                Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
-                Matchers.hasProperty("graph", equalTo(Optional.of(targetGraph)))
-            )));
+            Matchers.hasProperty("graph", equalTo(Optional.of(targetGraph)))
+        )));
   }
 
   @Test
@@ -375,7 +375,7 @@ public class ParserTest {
     Files.write(
         buckFile,
         ("export_file(name = 'cake', src = 'hello.txt')\n" +
-        "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
+            "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
 
     parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
   }
@@ -1639,10 +1639,9 @@ public class ParserTest {
         cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
-    Files.write(
-        testFooBuckFile,
-        ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
-         "java_library(name = 'lib2', deps = [':lib'], visibility=['PUBLIC'])\n").getBytes(UTF_8));
+    Files.write(testFooBuckFile,
+        ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library(" +
+            "name = 'lib2', deps = [':lib'], visibility=['PUBLIC'])\n").getBytes(UTF_8));
 
     hashes = buildTargetGraphAndGetHashCodes(
         parser,
@@ -1709,12 +1708,12 @@ public class ParserTest {
         fooLibTarget);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
-      SortedMap<String, Object> rules = parser.getRawTargetNode(
-          eventBus,
-          cell,
-          false,
-          executorService,
-          targetNode);
+    SortedMap<String, Object> rules = parser.getRawTargetNode(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        targetNode);
     assertThat(rules, Matchers.hasKey("name"));
     assertThat(
         (String) rules.get("name"),
@@ -1754,7 +1753,7 @@ public class ParserTest {
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
           ImmutableSortedSet.of(new PathSourcePath(filesystem, Paths.get("foo/bar/Bar.java"))),
-              libRule.getJavaSrcs());
+          libRule.getJavaSrcs());
     }
 
     tempDir.newFile("bar/Baz.java");
@@ -1852,8 +1851,8 @@ public class ParserTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "Target //foo:lib contains input files under a path which contains a symbolic link (" +
-        "{foo/bar=bar}). To resolve this, use separate rules and declare dependencies instead of " +
-        "using symbolic links.");
+            "{foo/bar=bar}). To resolve this, use separate rules and declare dependencies " +
+            "instead of using symbolic links.");
 
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
@@ -2299,10 +2298,10 @@ public class ParserTest {
     Files.write(
         buckFile,
         ("cxx_library(" +
-        "  name = 'lib', " +
-        "  srcs=glob(['*.c']), " +
-        "  defaults={'platform':'iphonesimulator-x86_64'}" +
-        ")").getBytes(UTF_8));
+            "  name = 'lib', " +
+            "  srcs=glob(['*.c']), " +
+            "  defaults={'platform':'iphonesimulator-x86_64'}" +
+            ")").getBytes(UTF_8));
 
     ImmutableSet<BuildTarget> result =
         parser.buildTargetGraphForTargetNodeSpecs(
@@ -2336,9 +2335,9 @@ public class ParserTest {
     Files.write(
         buckFile,
         ("cxx_library(" +
-        "  name = 'lib', " +
-        "  srcs=glob(['*.c']) " +
-        ")").getBytes(UTF_8));
+            "  name = 'lib', " +
+            "  srcs=glob(['*.c']) " +
+            ")").getBytes(UTF_8));
 
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
@@ -2386,10 +2385,10 @@ public class ParserTest {
     Files.write(
         buckFile,
         ("cxx_library(" +
-        "  name = 'lib', " +
-        "  srcs=glob(['*.c']), " +
-        "  defaults={'platform':'macosx-x86_64'}" +
-        ")").getBytes(UTF_8));
+            "  name = 'lib', " +
+            "  srcs=glob(['*.c']), " +
+            "  defaults={'platform':'macosx-x86_64'}" +
+            ")").getBytes(UTF_8));
 
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)

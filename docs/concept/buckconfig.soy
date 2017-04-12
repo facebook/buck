@@ -2422,18 +2422,6 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'project' /}
-  {param name: 'temp_files' /}
-  {param example_value}{literal}^#.*#$, .*~$, .*\.swp${/literal}{/param}
-  {param description}
-    A comma-separated list of <code>java.util.regex.Pattern</code> regular expressions which match
-    temporary and backup files which should be ignored by Buck daemon filesystem monitoring.
-    Setting this property to match any temporary files created by your IDE or editor will avoid
-    unnecessary cache invalidation when using the Buck daemon.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
   {param name: 'pre_process' /}
   {param example_value: 'scripts/pre_process_buck_project.py' /}
   {param description}

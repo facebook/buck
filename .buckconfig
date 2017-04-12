@@ -29,20 +29,30 @@
     ; Directories that do not contain input files.
     ; All of these directories should also appear in the "ignore_dirs" list
     ; in .watchmanconfig, with the exception of ".git".
+    ; Common temp file patterns: vim, emacs, intelliJ
     ignore = \
       .git, \
       .buckd, \
       build, \
-      bin
+      bin, \
+      **/*.swp, \
+      **/*#, \
+      **/*$, \
+      **/*~, \
+      **/*___jb_bak___, \
+      **/*___jb_old___, \
+      **/*___jb_tmp___, \
+      **/.*.swp, \
+      **/.*.swx, \
+      **/.*.swpx, \
+      **/.*.swo, \
+      **/*.pyc, \
+      **/.#*, \
+      **/*~, \
+      **/4913, \
+      **/*.linted, \
+      **/*.iml
 
-    ; Common temp file patterns:
-    ; .*\.swp$ (vim)
-    ; ^#.*#$, .*~$ (emacs)
-    ; .*___jb_bak___$, .*___jb_old___$ (intellij idea)
-    temp_files = \
-      .*\.swp$, \
-      ^#.*#$, .*~$, \
-      .*___jb_bak___$, .*___jb_old___$,
     ; Forbid symlinks for source files so Buck does not have to dump its
     ; cache every time it encounters one.
     allow_symlinks = forbid
