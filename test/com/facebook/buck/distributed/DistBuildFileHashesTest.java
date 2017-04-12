@@ -53,7 +53,6 @@ import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -72,9 +71,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class DistBuildFileHashesTest {
@@ -358,24 +355,6 @@ public class DistBuildFileHashesTest {
     Assert.assertEquals("B.java", secondaryCellHashes.getEntries().get(0).getPath().getPath());
   }
 
-  private static class FakeIndexer implements Function<Path, Integer> {
-    private final Map<Path, Integer> cache;
-
-    private FakeIndexer() {
-      cache = new HashMap<>();
-    }
-
-    @Override
-    public Integer apply(Path input) {
-      Integer result = cache.get(input);
-      if (result == null) {
-        result = cache.size();
-        cache.put(input, result);
-      }
-      return result;
-    }
-  }
-
   private abstract static class Fixture {
 
     protected final ProjectFilesystem projectFilesystem;
@@ -388,7 +367,6 @@ public class DistBuildFileHashesTest {
     protected final BuildRuleResolver buildRuleResolver;
     protected final SourcePathRuleFinder ruleFinder;
     protected final SourcePathResolver sourcePathResolver;
-    protected final FakeIndexer cellIndexer;
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
@@ -405,7 +383,6 @@ public class DistBuildFileHashesTest {
       sourcePathResolver = new SourcePathResolver(ruleFinder);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
-      cellIndexer = new FakeIndexer();
       BuckConfig buckConfig = createBuckConfig();
       Cell rootCell = new TestCellBuilder()
           .setFilesystem(projectFilesystem)
@@ -417,7 +394,7 @@ public class DistBuildFileHashesTest {
           sourcePathResolver,
           ruleFinder,
           createFileHashCache(),
-          cellIndexer,
+          new DistBuildCellIndexer(rootCell),
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0,
           rootCell);

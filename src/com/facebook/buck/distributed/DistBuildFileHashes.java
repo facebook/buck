@@ -73,7 +73,7 @@ public class DistBuildFileHashes {
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache originalHashCache,
-      Function<? super Path, Integer> cellIndexer,
+      DistBuildCellIndexer cellIndexer,
       ListeningExecutorService executorService,
       int keySeed,
       final Cell rootCell) {
@@ -83,7 +83,7 @@ public class DistBuildFileHashes {
     StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
         originalCache -> {
           Path fsRootPath = originalCache.getFilesystem().getRootPath();
-          RecordedFileHashes fileHashes = getRemoteFileHashes(cellIndexer.apply(fsRootPath));
+          RecordedFileHashes fileHashes = getRemoteFileHashes(cellIndexer.getCellIndex(fsRootPath));
           if (rootCell.getKnownRoots().contains(fsRootPath)) {
             Cell cell = rootCell.getCell(fsRootPath);
             return RecordingProjectFileHashCache.createForCellRoot(

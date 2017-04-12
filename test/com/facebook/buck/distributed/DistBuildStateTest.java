@@ -334,7 +334,7 @@ public class DistBuildStateTest {
         ruleFinder,
         new StackedFileHashCache(ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(
             projectFilesystem))),
-        Functions.constant(0),
+        new DistBuildCellIndexer(rootCell),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,
         rootCell);

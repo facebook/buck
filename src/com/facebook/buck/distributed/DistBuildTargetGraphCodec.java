@@ -67,7 +67,7 @@ public class DistBuildTargetGraphCodec {
 
   public BuildJobStateTargetGraph dump(
       Collection<TargetNode<?, ?>> targetNodes,
-      Function<Path, Integer> cellIndexer) {
+      DistBuildCellIndexer cellIndexer) {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
 
 
@@ -76,7 +76,7 @@ public class DistBuildTargetGraphCodec {
       ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
 
       BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
-      remoteNode.setCellIndex(cellIndexer.apply(projectFilesystem.getRootPath()));
+      remoteNode.setCellIndex(cellIndexer.getCellIndex(projectFilesystem.getRootPath()));
       remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
       try {
         remoteNode.setRawNode(ObjectMappers.WRITER.writeValueAsString(rawTargetNode));

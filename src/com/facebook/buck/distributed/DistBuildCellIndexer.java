@@ -21,7 +21,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.rules.Cell;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
@@ -34,7 +33,7 @@ import java.util.Map;
 /**
  * Keeps track of {@link Cell}s encountered while serializing the distributed build state.
  */
-public class DistBuildCellIndexer implements Function<Path, Integer> {
+public class DistBuildCellIndexer {
 
   public static final Integer ROOT_CELL_INDEX = 0;
 
@@ -47,15 +46,14 @@ public class DistBuildCellIndexer implements Function<Path, Integer> {
     this.index = new HashMap<>();
     this.state = new HashMap<>();
     // Make sure root cell is at index 0.
-    Preconditions.checkState(ROOT_CELL_INDEX == this.apply(rootCell.getRoot()));
+    Preconditions.checkState(ROOT_CELL_INDEX == this.getCellIndex(rootCell.getRoot()));
   }
 
   public Map<Integer, BuildJobStateCell> getState() {
     return state;
   }
 
-  @Override
-  public Integer apply(Path input) {
+  public Integer getCellIndex(Path input) {
     // Non-cell Paths are just stored in the root cell data marked as absolute paths.
     Integer i = rootCell.getKnownRoots().contains(input) ? index.get(input) : ROOT_CELL_INDEX;
     if (i == null) {
