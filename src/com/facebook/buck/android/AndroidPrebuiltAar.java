@@ -55,7 +55,7 @@ public class AndroidPrebuiltAar
       Iterable<PrebuiltJar> exportedDeps,
       ImmutableSortedSet<SourcePath> abiInputs) {
     super(
-        androidLibraryParams,
+        androidLibraryParams.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)),
         resolver,
         ruleFinder,
         /* srcs */ ImmutableSortedSet.of(),

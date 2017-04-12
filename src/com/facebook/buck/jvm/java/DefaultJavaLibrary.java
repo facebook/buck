@@ -179,55 +179,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
-    this(
-        params,
-        resolver,
-        ruleFinder,
-        srcs,
-        resources,
-        generatedSourceFolder,
-        proguardConfig,
-        postprocessClassesCommands,
-        fullJarDeclaredDeps,
-        fullJarExportedDeps,
-        fullJarProvidedDeps,
-        compileTimeClasspathDeps,
-        trackClassUsage,
-        new JarArchiveDependencySupplier(abiInputs),
-        abiJar,
-        compileStepFactory,
-        resourcesRoot,
-        manifestFile,
-        mavenCoords,
-        tests,
-        classesToRemoveFromJar);
-  }
-
-  private DefaultJavaLibrary(
-      BuildRuleParams params,
-      final SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
-      Optional<Path> generatedSourceFolder,
-      Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> fullJarDeclaredDeps,
-      ImmutableSortedSet<BuildRule> fullJarExportedDeps,
-      ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
-      ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
-      boolean trackClassUsage,
-      final JarArchiveDependencySupplier abiClasspath,
-      BuildTarget abiJar,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
-      Optional<SourcePath> manifestFile,
-      Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests,
-      ImmutableSet<Pattern> classesToRemoveFromJar) {
-    super(
-        params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
-        resolver);
+    super(params, resolver);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
 
@@ -256,7 +208,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.tests = tests;
 
     this.trackClassUsage = trackClassUsage;
-    this.abiClasspath = abiClasspath;
+    this.abiClasspath = new JarArchiveDependencySupplier(abiInputs);
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {

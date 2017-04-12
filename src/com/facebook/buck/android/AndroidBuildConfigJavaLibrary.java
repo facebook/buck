@@ -55,7 +55,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       ImmutableSortedSet<SourcePath> abiInputs,
       AndroidBuildConfig androidBuildConfig) {
     super(
-        params,
+        params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)),
         resolver,
         ruleFinder,
         /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),

@@ -341,12 +341,15 @@ public class DefaultJavaLibraryBuilder {
       return compileStepFactory;
     }
 
-    protected BuildRuleParams buildFinalParams() {
+    protected BuildRuleParams buildFinalParams() throws NoSuchBuildTargetException {
+      ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
+
       return params.copyReplacingDeclaredAndExtraDeps(
           this::getFinalFullJarDeclaredDeps,
           () -> ImmutableSortedSet.copyOf(Iterables.concat(
               params.getExtraDeps().get(),
               Sets.difference(getCompileTimeClasspathUnfilteredFullDeps(), params.getBuildDeps()),
+              Sets.difference(compileTimeClasspathAbiDeps, params.getBuildDeps()),
               getCompileStepFactory().getExtraDeps(ruleFinder))));
     }
 
