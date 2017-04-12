@@ -52,7 +52,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     this(root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
-  private static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
+  static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
       Path root,
       ImmutableMap<String, String> repositoriesSection) {
     return ImmutableMap.copyOf(
@@ -90,7 +90,6 @@ public class DefaultCellPathResolver implements CellPathResolver {
   private ImmutableMap<String, Path> getPartialMapping() {
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
-
     ImmutableMap.Builder<String, Path> rootsMap = ImmutableMap.builder();
     for (String cellName : sortedCellNames) {
       Path cellRoot = Preconditions.checkNotNull(getCellPath(cellName));
@@ -148,7 +147,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     Path path = cellPaths.get(cellName);
     if (path == null) {
       throw new HumanReadableException(
-          "Unable to find repository '%s' in cell rooted at: %s", cellName, root);
+          "In cell rooted at %s: cell named '%s' is not defined.", root, cellName);
     }
     return path;
   }

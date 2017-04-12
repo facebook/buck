@@ -20,7 +20,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        ":default_cell_path_resolver",
+        ":cell_path_resolver_impls",
         ":interfaces",
         "//src/com/facebook/buck/config:config",
         "//third-party/java/guava:guava",
@@ -46,7 +46,7 @@ java_immutables_library(
     ],
     deps = [
         ":build_rule",
-        ":default_cell_path_resolver",
+        ":cell_path_resolver_impls",
         ":interfaces",
         ":relative_cell_name",
         ":rules",
@@ -456,8 +456,9 @@ java_immutables_library(
 )
 
 java_library(
-    name = "default_cell_path_resolver",
+    name = "cell_path_resolver_impls",
     srcs = [
+        "CellPathResolverView.java",
         "DefaultCellPathResolver.java",
     ],
     visibility = [

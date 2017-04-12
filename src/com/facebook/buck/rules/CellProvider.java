@@ -127,12 +127,13 @@ public final class CellProvider {
                     .orElse(RawConfig.of(ImmutableMap.of()));
             Config config = Configs.createDefaultConfig(normalizedCellPath, configOverrides);
 
-            DefaultCellPathResolver cellPathResolver =
-                new DefaultCellPathResolver(
-                    normalizedCellPath,
-                    config);
+            ImmutableMap<String, Path> cellMapping =
+                DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
+                    cellPath,
+                    config.get(DefaultCellPathResolver.REPOSITORIES_SECTION));
+
             // The cell should only contain a subset of cell mappings of the root cell.
-            cellPathResolver.getCellPaths().forEach((name, path) -> {
+            cellMapping.forEach((name, path) -> {
               Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
               if (pathInRootResolver == null) {
                 throw new HumanReadableException(
@@ -151,6 +152,9 @@ public final class CellProvider {
                     path);
               }
             });
+
+            CellPathResolver cellPathResolver =
+                new CellPathResolverView(rootCellCellPathResolver, cellMapping.keySet(), cellPath);
 
             ProjectFilesystem cellFilesystem = new ProjectFilesystem(normalizedCellPath, config);
 
