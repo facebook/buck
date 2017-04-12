@@ -90,6 +90,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -687,7 +688,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       }
     }
     filesystem.createParentDirs(metadataTypePath);
-    filesystem.writeContentsToPath(metadataStorage.toString(), metadataTypePath);
+    // If metadata.type becomes corrupt (e.g., is created but not written), then buck-out is in an
+    // unrecoverable state, since we don't know how the existing metadata is stored.  Prevent this
+    // from happening by writing to a temp file and then moving it into place.
+    Path tempMetadataTypePath = filesystem.createTempFile("metadata", ".type");
+    filesystem.writeContentsToPath(metadataStorage.toString(), tempMetadataTypePath);
+    // Using {@link StandardCopyOption#ATOMIC_MOVE} would be ideal, but it's implementation-defined
+    // whether overwrites can be done atomically.  Since overwriting is what we need, let's hope
+    // this is "atomic enough".
+    filesystem.move(tempMetadataTypePath, metadataTypePath, StandardCopyOption.REPLACE_EXISTING);
   }
 
   private BuildInfoStore getOrCreateBuildInfoStore(ProjectFilesystem filesystem) {
