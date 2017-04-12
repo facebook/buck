@@ -37,10 +37,12 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.junit.Rule;
@@ -58,6 +60,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
@@ -293,6 +296,31 @@ public class JarDirectoryStepTest {
   }
 
   @Test
+  public void shouldSortManifestAttributesAndEntries() throws IOException {
+    Manifest fromJar = createManifestWithExampleSection(
+        ImmutableMap.of("foo", "bar", "baz", "waz"));
+    Manifest fromUser = createManifestWithExampleSection(
+        ImmutableMap.of("bar", "foo", "waz", "baz"));
+
+    String seenManifest = new String(
+        jarDirectoryAndReadManifestContents(fromJar, fromUser, true),
+        UTF_8);
+
+    assertEquals(
+        Joiner.on("\r\n").join(
+            "Manifest-Version: 1.0",
+            "",
+            "Name: example",
+            "bar: foo",
+            "baz: waz",
+            "foo: bar",
+            "waz: baz",
+            "",
+            ""),
+        seenManifest);
+  }
+
+  @Test
   public void shouldNotIncludeFilesInBlacklist() throws IOException {
     Path zipup = folder.newFolder();
     Path first = createZip(
@@ -480,6 +508,15 @@ public class JarDirectoryStepTest {
       Manifest fromJar,
       Manifest fromUser,
       boolean mergeEntries)
+    throws IOException {
+    byte[] contents = jarDirectoryAndReadManifestContents(fromJar, fromUser, mergeEntries);
+    return new Manifest(new ByteArrayInputStream(contents));
+  }
+
+  private byte[] jarDirectoryAndReadManifestContents(
+      Manifest fromJar,
+      Manifest fromUser,
+      boolean mergeEntries)
       throws IOException {
     // Create a jar with a manifest we'd expect to see merged.
     Path originalJar = folder.newFile("unexpected.jar");
@@ -506,9 +543,11 @@ public class JarDirectoryStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 
-    // Now verify that the created manifest matches the expected one.
-    try (JarInputStream jis = new JarInputStream(Files.newInputStream(output))) {
-      return jis.getManifest();
+    try (JarFile jf = new JarFile(output.toFile())) {
+      JarEntry manifestEntry = jf.getJarEntry(JarFile.MANIFEST_NAME);
+      try (InputStream manifestStream = jf.getInputStream(manifestEntry)) {
+        return ByteStreams.toByteArray(manifestStream);
+      }
     }
   }
 

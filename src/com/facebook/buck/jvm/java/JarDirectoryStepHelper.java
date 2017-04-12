@@ -22,6 +22,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
@@ -189,7 +190,7 @@ public class JarDirectoryStepHelper {
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       boolean mergeManifests) throws IOException {
-    Manifest manifest = new Manifest();
+    Manifest manifest = new DeterministicManifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     if (mergeManifests) {
