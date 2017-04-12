@@ -144,7 +144,6 @@ abstract class AbstractExecutionContext implements Closeable {
   public ConcurrencyLimit getConcurrencyLimit() {
     return new ConcurrencyLimit(
         /* threadLimit */ Runtime.getRuntime().availableProcessors(),
-        /* loadLimit */ Double.POSITIVE_INFINITY,
         ResourceAllocationFairness.FAIR,
         ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT,
         ResourceAmountsEstimator.DEFAULT_AMOUNTS,

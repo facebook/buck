@@ -119,7 +119,7 @@ public class BuckConfig implements ConfigPathGetter {
         ImmutableMap.builder();
     ignoreFieldsForDaemonRestartBuilder.put(
         "apple", ImmutableSet.of("generate_header_symlink_tree_only"));
-    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads", "load_limit"));
+    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads"));
     ignoreFieldsForDaemonRestartBuilder.put("cache", ImmutableSet.of(
         "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put("client",
@@ -856,13 +856,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   public Optional<ImmutableList<String>> getAllowedJavaSpecificationVersions() {
     return getOptionalListWithoutComments("project", "allowed_java_specification_versions");
-  }
-
-  /**
-   * @return the maximum load limit that Buck should stay under on the system.
-   */
-  public float getLoadLimit() {
-    return config.getFloat("build", "load_limit").orElse(Float.POSITIVE_INFINITY);
   }
 
   public long getCountersFirstFlushIntervalMillis() {

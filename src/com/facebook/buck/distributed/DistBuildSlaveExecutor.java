@@ -321,7 +321,6 @@ public class DistBuildSlaveExecutor {
               args.getClock(),
               new ConcurrencyLimit(
                   4,
-                  1,
                   distBuildConfig.getResourceAllocationFairness(),
                   4,
                   distBuildConfig.getDefaultResourceAmounts(),

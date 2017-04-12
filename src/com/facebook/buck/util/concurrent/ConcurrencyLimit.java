@@ -27,7 +27,6 @@ public class ConcurrencyLimit {
    * Considered as number of build threads that are available for extensive computations.
    */
   public final int threadLimit;
-  public final double loadLimit;
   public final ResourceAllocationFairness resourceAllocationFairness;
   /**
    * Number of threads that Buck can manage and use them as worker threads. This number includes
@@ -46,13 +45,11 @@ public class ConcurrencyLimit {
 
   public ConcurrencyLimit(
       int threadLimit,
-      double loadLimit,
       ResourceAllocationFairness resourceAllocationFairness,
       int managedThreadCount,
       ResourceAmounts defaultAmounts,
       ResourceAmounts maximumAmounts) {
     this.threadLimit = threadLimit;
-    this.loadLimit = loadLimit;
     this.resourceAllocationFairness = resourceAllocationFairness;
     this.managedThreadCount = managedThreadCount;
     this.defaultAmounts = defaultAmounts;

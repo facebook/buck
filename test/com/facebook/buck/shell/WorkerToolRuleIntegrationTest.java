@@ -90,9 +90,6 @@ public class WorkerToolRuleIntegrationTest {
    * This test builds two genrules simultaneously. //:test4 and //:test5 both reference the same
    * worker_tool, with `max_workers` set to unlimited. They will both communicate with their own
    * separate external process, started up with the same command line.
-   *
-   * @throws IOException
-   * @throws InterruptedException
    */
   @Test
   public void testGenrulesThatUseWorkerMacrosWithConcurrency() throws Exception {

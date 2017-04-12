@@ -62,7 +62,6 @@ public abstract class AbstractCommand implements Command {
   private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
   private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
-  private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead.
@@ -79,13 +78,6 @@ public abstract class AbstractCommand implements Command {
   @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
   @Nullable
   private Integer numThreads = null;
-
-  @Nullable
-  @Option(name = LOAD_LIMIT_LONG_ARG,
-      aliases = "-L",
-      usage = "[Float] Do not start new jobs when system load is above this level." +
-          " See uptime(1).")
-  private Double loadLimit = null;
 
   @Option(
       name = "--config",
@@ -292,14 +284,9 @@ public abstract class AbstractCommand implements Command {
         .build();
   }
 
-  public double getLoadLimit(BuckConfig buckConfig) {
-    return this.loadLimit == null ? buckConfig.getLoadLimit() : this.loadLimit;
-  }
-
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
     return new ConcurrencyLimit(
         buckConfig.getNumThreads(),
-        getLoadLimit(buckConfig),
         buckConfig.getResourceAllocationFairness(),
         buckConfig.getManagedThreadCount(),
         buckConfig.getDefaultResourceAmounts(),
@@ -315,10 +302,6 @@ public abstract class AbstractCommand implements Command {
     if (numThreads != null) {
       builder.add(NUM_THREADS_LONG_ARG);
       builder.add(numThreads.toString());
-    }
-    if (loadLimit != null) {
-      builder.add(LOAD_LIMIT_LONG_ARG);
-      builder.add(loadLimit.toString());
     }
     if (noCache) {
       builder.add(NO_CACHE_LONG_ARG);

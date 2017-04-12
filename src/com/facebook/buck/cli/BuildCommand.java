@@ -895,8 +895,7 @@ public class BuildCommand extends AbstractCommand {
         ResourceAmounts.ZERO,
         Math.min(
             config.getMaximumResourceAmounts().getNetworkIO(),
-            (int) new ArtifactCacheBuckConfig(config).getThreadPoolSize()),
-        getLoadLimit(config));
+            (int) new ArtifactCacheBuckConfig(config).getThreadPoolSize()));
   }
 
   @Override

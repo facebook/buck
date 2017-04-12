@@ -318,7 +318,6 @@ public class TestCommand extends BuildCommand {
 
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         getNumTestThreads(params.getBuckConfig()),
-        params.getBuckConfig().getLoadLimit(),
         params.getBuckConfig().getResourceAllocationFairness(),
         getNumTestManagedThreads(params.getBuckConfig()),
         params.getBuckConfig().getDefaultResourceAmounts(),

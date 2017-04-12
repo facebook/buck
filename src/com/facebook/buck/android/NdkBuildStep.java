@@ -94,10 +94,6 @@ public class NdkBuildStep extends ShellStep {
         "-C",
         this.root.toString());
 
-    if (concurrencyLimit.loadLimit < Double.POSITIVE_INFINITY) {
-      builder.add("--load-average", Double.toString(concurrencyLimit.loadLimit));
-    }
-
     Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
     builder.addAll(flags);
 

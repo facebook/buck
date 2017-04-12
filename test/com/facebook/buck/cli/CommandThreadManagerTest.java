@@ -41,7 +41,6 @@ public class CommandThreadManagerTest {
 
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         /* threadLimit */ 1,
-        /* loadLimit */ Double.POSITIVE_INFINITY,
         ResourceAllocationFairness.FAIR,
         /* managedThreadCount */ 1,
         ResourceAmountsEstimator.DEFAULT_AMOUNTS,

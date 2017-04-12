@@ -20,8 +20,6 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
-import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -63,7 +61,6 @@ public class CommandThreadManager implements AutoCloseable {
       ListeningMultiSemaphore semaphore,
       ResourceAmounts defaultAmounts,
       int managedThreadCount,
-      double loadLimit,
       long shutdownTimeout,
       TimeUnit shutdownTimeoutUnit) {
     this.threadGroup = new ThreadGroup(name);
@@ -76,16 +73,14 @@ public class CommandThreadManager implements AutoCloseable {
             semaphore,
             defaultAmounts,
             listeningDecorator(
-                new LimitedThreadPoolExecutor(
+                MostExecutors.newMultiThreadExecutor(
                     new ThreadFactoryBuilder()
                         .setNameFormat(name + "-%d")
                         .setThreadFactory(
                             new CommandThreadFactory(
                                 r -> new Thread(threadGroup, r)))
                         .build(),
-                    new LinkedBlockingStack<>(),
-                    managedThreadCount,
-                    loadLimit)));
+                    managedThreadCount)));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
   }
@@ -94,14 +89,12 @@ public class CommandThreadManager implements AutoCloseable {
       String name,
       ListeningMultiSemaphore semaphore,
       ResourceAmounts defaultAmounts,
-      int managedThreadCount,
-      double loadLimit) {
+      int managedThreadCount) {
     this(
         name,
         semaphore,
         defaultAmounts,
         managedThreadCount,
-        loadLimit,
         DEFAULT_SHUTDOWN_TIMEOUT,
         DEFAULT_SHUTDOWN_TIMEOUT_UNIT
     );
@@ -120,7 +113,6 @@ public class CommandThreadManager implements AutoCloseable {
             concurrencyLimit.resourceAllocationFairness),
         concurrencyLimit.defaultAmounts,
         concurrencyLimit.managedThreadCount,
-        concurrencyLimit.loadLimit,
         shutdownTimeout,
         shutdownTimeoutUnit);
   }
