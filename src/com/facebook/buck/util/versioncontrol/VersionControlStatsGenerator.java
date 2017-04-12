@@ -31,8 +31,9 @@ public class VersionControlStatsGenerator {
 
   private static final Logger LOG = Logger.get(VersionControlStatsGenerator.class);
 
+  public static final String REMOTE_MASTER = "remote/master";
   public static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
-      "remote/master");
+      REMOTE_MASTER);
 
   private final ExecutorService executorService;
   private final VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory;

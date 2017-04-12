@@ -16,14 +16,15 @@
 
 package com.facebook.buck.rage;
 
+import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.REMOTE_MASTER;
 import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.TRACKED_BOOKMARKS;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,7 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Responsible foe getting information out of the version control system.
+ * Responsible for getting information out of the version control system.
  */
 public class VcsInfoCollector {
 
@@ -51,32 +52,34 @@ public class VcsInfoCollector {
     return Optional.of(new VcsInfoCollector(vcCmdLineInterface));
   }
 
-  public SourceControlInfo gatherScmInformation()
+  SourceControlInfo gatherScmInformation()
       throws InterruptedException, VersionControlCommandFailedException {
+    SourceControlInfo.Builder sourceControlInfoBuilder = SourceControlInfo.builder();
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();
+    sourceControlInfoBuilder.setCurrentRevisionId(currentRevisionId);
+
     ImmutableMap<String, String> bookmarksRevisionIds =
         vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
-    Pair<String, Long> baseRevisionInfo = vcCmdLineInterface.commonAncestorAndTS(
-        currentRevisionId,
-        Preconditions.checkNotNull(bookmarksRevisionIds.get("remote/master")));
 
-    ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
-    for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
-      if (bookmark.getValue().startsWith(baseRevisionInfo.getFirst())) {
-        baseBookmarks.add(bookmark.getKey());
-      }
+    if (!bookmarksRevisionIds.containsKey(REMOTE_MASTER)) {
+      Pair<String, Long> baseRevisionInfo = vcCmdLineInterface.commonAncestorAndTS(
+          currentRevisionId,
+          bookmarksRevisionIds.get(REMOTE_MASTER));
+      ImmutableSet<String> baseBookmarks = bookmarksRevisionIds.entrySet().stream()
+          .filter(e -> e.getValue().startsWith(baseRevisionInfo.getFirst()))
+          .map(Map.Entry::getKey)
+          .collect(MoreCollectors.toImmutableSet());
+      sourceControlInfoBuilder
+          .setRevisionIdOffTracked(baseRevisionInfo.getFirst())
+          .setRevisionTimestampOffTracked(baseRevisionInfo.getSecond())
+          .setBasedOffWhichTracked(baseBookmarks)
+          .setDiff(vcCmdLineInterface.diffBetweenRevisionsOrAbsent(
+              baseRevisionInfo.getFirst(),
+              currentRevisionId))
+          .setDirtyFiles(vcCmdLineInterface.changedFiles(baseRevisionInfo.getFirst()));
     }
 
-    return SourceControlInfo.builder()
-        .setCurrentRevisionId(currentRevisionId)
-        .setRevisionIdOffTracked(baseRevisionInfo.getFirst())
-        .setRevisionTimestampOffTracked(baseRevisionInfo.getSecond())
-        .setBasedOffWhichTracked(baseBookmarks.build())
-        .setDiff(vcCmdLineInterface.diffBetweenRevisionsOrAbsent(
-            baseRevisionInfo.getFirst(),
-            currentRevisionId))
-        .setDirtyFiles(vcCmdLineInterface.changedFiles(baseRevisionInfo.getFirst()))
-        .build();
+    return sourceControlInfoBuilder.build();
   }
 
   @Value.Immutable
