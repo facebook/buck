@@ -37,6 +37,7 @@ java_immutables_library(
     ],
     immutable_types = [
         "CellConstructionDelegateData",
+        "DistBuildCellParams",
     ],
     tests = [
         "//test/com/facebook/buck/rules:rules",

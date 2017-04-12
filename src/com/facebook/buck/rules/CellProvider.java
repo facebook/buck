@@ -23,6 +23,7 @@ import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -31,6 +32,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -177,45 +180,37 @@ public final class CellProvider {
                 cellProvider);
           }
         },
-        cellProvider -> {
-          try {
-            return new Cell(
-                getKnownRoots(rootCellCellPathResolver),
-                rootFilesystem,
-                watchman,
-                rootConfig,
-                knownBuildRuleTypesFactory,
-                cellProvider);
-          } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while loading root cell", e);
-          } catch (IOException e) {
-            throw new HumanReadableException("Failed to load root cell", e);
-          }
-        });
+        cellProvider -> new Cell(
+            getKnownRoots(rootCellCellPathResolver),
+            rootFilesystem,
+            watchman,
+            rootConfig,
+            knownBuildRuleTypesFactory,
+            cellProvider));
   }
 
   public static CellProvider createForDistributedBuild(
-      ImmutableMap<Path, BuckConfig> cellConfigs,
-      ImmutableMap<Path, ProjectFilesystem> cellFilesystems,
+      ImmutableMap<Path, DistBuildCellParams> cellParams,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
     return new CellProvider(
-        cellProvider -> new CacheLoader<Path, Cell>() {
-          @Override
-          public Cell load(Path cellPath) throws Exception {
-            ProjectFilesystem cellFilesystem =
-                Preconditions.checkNotNull(cellFilesystems.get(cellPath));
-            BuckConfig buckConfig = Preconditions.checkNotNull(cellConfigs.get(cellPath));
-
+        cellProvider -> CacheLoader.from(cellPath -> {
+            DistBuildCellParams cellParam = Preconditions.checkNotNull(cellParams.get(cellPath));
             return new Cell(
-                cellConfigs.keySet(),
-                cellFilesystem,
+                cellParams.keySet(),
+                cellParam.getFilesystem(),
                 Watchman.NULL_WATCHMAN,
-                buckConfig,
+                cellParam.getConfig(),
                 knownBuildRuleTypesFactory,
                 cellProvider);
-          }
-        },
+        }),
         null);
+  }
+
+  @Value.Immutable(copy = false)
+  @BuckStyleTuple
+  interface AbstractDistBuildCellParams {
+    BuckConfig getConfig();
+    ProjectFilesystem getFilesystem();
   }
 
   private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {

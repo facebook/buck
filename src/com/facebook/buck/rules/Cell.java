@@ -73,7 +73,7 @@ public class Cell {
       final Watchman watchman,
       final BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final CellProvider cellProvider) throws IOException, InterruptedException {
+      final CellProvider cellProvider) {
 
     this.knownRoots = knownRoots;
     this.filesystem = filesystem;

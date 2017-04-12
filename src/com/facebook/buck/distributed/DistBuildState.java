@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DistBuildCellParams;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -103,8 +104,7 @@ public class DistBuildState {
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
-    ImmutableMap.Builder<Path, BuckConfig> cellConfigs = ImmutableMap.builder();
-    ImmutableMap.Builder<Path, ProjectFilesystem> cellFilesystems = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, DistBuildCellParams> cellParams = ImmutableMap.builder();
     ImmutableMap.Builder<Integer, Path> cellIndex = ImmutableMap.builder();
 
     Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
@@ -123,16 +123,12 @@ public class DistBuildState {
       Config config = createConfig(remoteCell.getConfig(), localBuckConfig);
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
-      cellConfigs.put(cellRoot, buckConfig);
-      cellFilesystems.put(cellRoot, projectFilesystem);
+      cellParams.put(cellRoot, DistBuildCellParams.of(buckConfig, projectFilesystem));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
     CellProvider cellProvider =
-        CellProvider.createForDistributedBuild(
-            cellConfigs.build(),
-            cellFilesystems.build(),
-            knownBuildRuleTypesFactory);
+        CellProvider.createForDistributedBuild(cellParams.build(), knownBuildRuleTypesFactory);
 
     ImmutableBiMap<Integer, Cell> cells = ImmutableBiMap.copyOf(
         Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
