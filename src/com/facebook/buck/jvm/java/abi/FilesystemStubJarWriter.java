@@ -29,6 +29,7 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.jar.Attributes;
 
 /**
  * A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}.
@@ -51,6 +52,7 @@ class FilesystemStubJarWriter implements StubJarWriter {
 
     jar = ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(outputPath));
     jar.setEntryHashingEnabled(true);
+    jar.getManifest().getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
   }
 
   @Override
