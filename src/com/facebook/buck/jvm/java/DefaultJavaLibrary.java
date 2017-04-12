@@ -235,10 +235,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.classesToRemoveFromJar = classesToRemoveFromJar;
   }
 
-  private Path getPathToAbiOutputDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__abi");
-  }
-
   public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargets.getGenPath(filesystem, target, "lib__%s__output");
   }
@@ -365,9 +361,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         .filter(rule -> rule != null)
         .map(context.getSourcePathResolver()::getAbsolutePath)
         .collect(MoreCollectors.toImmutableSortedSet());
-
-    // Make sure that this directory exists because ABI information will be written here.
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToAbiOutputDir()));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     JavaPackageFinder finder = context.getJavaPackageFinder();

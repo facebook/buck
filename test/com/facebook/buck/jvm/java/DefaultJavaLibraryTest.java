@@ -1322,8 +1322,8 @@ public class DefaultJavaLibraryTest {
             new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))),
         new FakeBuildableContext());
 
-    assertEquals(14, steps.size());
-    assertTrue(((JavacStep) steps.get(10)).getJavac() instanceof Jsr199Javac);
+    assertEquals(12, steps.size());
+    assertTrue(((JavacStep) steps.get(8)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1353,8 +1353,8 @@ public class DefaultJavaLibraryTest {
         FakeBuildContext.withSourcePathResolver(
             new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))),
         new FakeBuildableContext());
-    assertEquals(14, steps.size());
-    Javac javacStep = ((JavacStep) steps.get(10)).getJavac();
+    assertEquals(12, steps.size());
+    Javac javacStep = ((JavacStep) steps.get(8)).getJavac();
     assertTrue(javacStep instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep);
     assertEquals(
