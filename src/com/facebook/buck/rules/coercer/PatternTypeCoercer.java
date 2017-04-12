@@ -18,11 +18,17 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 public class PatternTypeCoercer extends LeafTypeCoercer<Pattern> {
+  private final LoadingCache<String, Pattern> patternCache = CacheBuilder.newBuilder()
+      .weakValues()
+      .build(CacheLoader.from(string -> Pattern.compile(string)));
 
   @Override
   public Class<Pattern> getOutputClass() {
@@ -36,7 +42,7 @@ public class PatternTypeCoercer extends LeafTypeCoercer<Pattern> {
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
-      return Pattern.compile((String) object);
+      return patternCache.getUnchecked((String) object);
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
