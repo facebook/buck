@@ -99,7 +99,7 @@ public class TargetsCommandTest {
       ProjectFilesystem filesystem,
       String buildTarget) {
     SortedSet<TargetNode<?, ?>> buildRules = Sets.newTreeSet();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, buildTarget);
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
     TargetNode<?, ?> node = JavaLibraryBuilder
         .createBuilder(target)
         .build();

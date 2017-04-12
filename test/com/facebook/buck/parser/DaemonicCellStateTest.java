@@ -80,7 +80,9 @@ public class DaemonicCellStateTest {
   public void testPutComputedNodeIfNotPresent()
       throws BuildTargetException, IOException, InterruptedException {
     Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//path/to:target");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        filesystem.getRootPath(),
+        "//path/to:target");
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);
@@ -104,7 +106,9 @@ public class DaemonicCellStateTest {
     Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
 
     Path targetPath = cell.getRoot().resolve("path/to/BUCK");
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "xplat//path/to:target");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        filesystem.getRootPath(),
+        "xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);

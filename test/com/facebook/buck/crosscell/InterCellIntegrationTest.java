@@ -351,7 +351,7 @@ public class InterCellIntegrationTest {
 
     Cell primaryCell = primary.asCell();
     BuildTarget namedTarget = BuildTargetFactory.newInstance(
-        primaryCell.getFilesystem(),
+        primaryCell.getFilesystem().getRootPath(),
         targetName);
 
     // It's enough that this parses cleanly.

@@ -108,7 +108,7 @@ public class ParsePipelineTest {
     final Cell cell = fixture.getCell();
     TargetNode<?, ?> libTargetNode = fixture.getTargetNodeParsePipeline().getNode(
         cell,
-        BuildTargetFactory.newInstance(cell.getFilesystem(), "//:lib"));
+        BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"));
 
     waitForAll(
         libTargetNode.getBuildDeps(),
@@ -146,7 +146,7 @@ public class ParsePipelineTest {
       expectedException.expectMessage("No rule found when resolving target //:notthere");
       fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:notthere"));
+          BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"));
     }
   }
 
@@ -186,7 +186,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:base"));
+          BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"));
     }
   }
 
@@ -259,7 +259,7 @@ public class ParsePipelineTest {
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//a:lib"));
+          BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"));
     }
   }
 
@@ -270,7 +270,7 @@ public class ParsePipelineTest {
       try {
         fixture.getTargetNodeParsePipeline().getNode(
             cell,
-            BuildTargetFactory.newInstance(cell.getFilesystem(), "//error:error"));
+            BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//error:error"));
         Assert.fail("Expected BuildFileParseException");
       } catch (BuildFileParseException e) {
         assertThat(e.getMessage(), containsString("crash!"));
@@ -278,7 +278,7 @@ public class ParsePipelineTest {
 
       fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//correct:correct"));
+          BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//correct:correct"));
     }
   }
 

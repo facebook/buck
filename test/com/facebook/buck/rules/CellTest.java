@@ -54,7 +54,9 @@ public class CellTest {
       throws IOException, InterruptedException {
     Cell cell = new TestCellBuilder().build();
 
-    BuildTarget target = BuildTargetFactory.newInstance(cell.getFilesystem(), "//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        cell.getFilesystem().getRootPath(),
+        "//does/not:matter");
     Cell owner = cell.getCell(target);
 
     assertSame(cell, owner);
@@ -66,7 +68,7 @@ public class CellTest {
     Cell cell = new TestCellBuilder().build();
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        FakeProjectFilesystem.createJavaOnlyFilesystem(),
+        FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath(),
         "//does/not:matter");
 
     // Target's filesystem root is unknown to cell.
@@ -95,7 +97,9 @@ public class CellTest {
         .build();
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        filesystem2.getRootPath(),
+        "//does/not:matter");
     Cell other = cell1.getCell(target);
 
     assertEquals(cell2Root, other.getFilesystem().getRootPath());
@@ -168,14 +172,18 @@ public class CellTest {
                 .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "test", "common_value", "all")
                 .build())
         .build();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        filesystem2.getRootPath(),
+        "//does/not:matter");
 
     Cell cell2 = cell1.getCell(target);
     assertThat(
         cell2.getBuckConfig().getValue("test", "value"),
         Matchers.equalTo(Optional.of("cell2")));
 
-    BuildTarget target3 = BuildTargetFactory.newInstance(filesystem3, "//does/not:matter");
+    BuildTarget target3 = BuildTargetFactory.newInstance(
+        filesystem3.getRootPath(),
+        "//does/not:matter");
     Cell cell3 = cell1.getCell(target3);
     assertThat(
         cell3.getBuckConfig().getValue("test", "common_value"),

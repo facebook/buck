@@ -135,8 +135,12 @@ public class ConstructorArgMarshallerTest {
             "local", ":fish"
         ));
 
-    assertEquals(BuildTargetFactory.newInstance(filesystem, "//cake:walk"), dto.target);
-    assertEquals(BuildTargetFactory.newInstance(filesystem, "//example/path:fish"), dto.local);
+    assertEquals(
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cake:walk"),
+        dto.target);
+    assertEquals(
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example/path:fish"),
+        dto.local);
   }
 
   @Test

@@ -82,7 +82,7 @@ public class IntraCellIntegrationTest {
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(BuildTargetFactory.newInstance(
-            cell.getFilesystem(),
+            cell.getFilesystem().getRootPath(),
             "//just-a-directory:rule")));
 
     Cell childCell = cell.getCell(BuildTargetFactory.newInstance(
@@ -97,7 +97,7 @@ public class IntraCellIntegrationTest {
           false,
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
           ImmutableSet.of(BuildTargetFactory.newInstance(
-              childCell.getFilesystem(),
+              childCell.getFilesystem().getRootPath(),
               "//:child-target")));
       fail("Didn't expect parsing to work because of visibility");
     } catch (HumanReadableException e) {

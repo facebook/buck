@@ -118,7 +118,7 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        projectFilesystem,
+        projectFilesystem.getRootPath(),
         "//java/src/com/facebook/base:res");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem)
@@ -154,7 +154,7 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        projectFilesystem,
+        projectFilesystem.getRootPath(),
         "//java/src/com/facebook/base:res");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem)

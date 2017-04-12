@@ -424,7 +424,7 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//:example");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:example");
     BuildRule rule = GenruleBuilder
         .newGenruleBuilder(target, filesystem)
         .setBash("ignored")

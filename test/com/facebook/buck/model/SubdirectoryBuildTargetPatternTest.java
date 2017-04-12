@@ -39,13 +39,13 @@ public class SubdirectoryBuildTargetPatternTest {
 
     assertFalse(pattern.apply(null));
     assertTrue(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem,
+        filesystem.getRootPath(),
         "//src/com/facebook/buck:buck")));
     assertTrue(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem,
+        filesystem.getRootPath(),
         "//src/com/facebook/buck/bar:bar")));
     assertFalse(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem,
+        filesystem.getRootPath(),
         "//src/com/facebook/foo:foo")));
   }
 

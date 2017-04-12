@@ -386,10 +386,10 @@ public class DistBuildStateTest {
       ProjectFilesystem cellOneFilesystem,
       ProjectFilesystem cellTwoFilesystem) {
     Preconditions.checkArgument(!cellOneFilesystem.equals(cellTwoFilesystem));
-    BuildTarget target = BuildTargetFactory.newInstance(cellTwoFilesystem, "//:foo");
+    BuildTarget target = BuildTargetFactory.newInstance(cellTwoFilesystem.getRootPath(), "//:foo");
     return TargetGraphFactory.newInstance(
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(cellOneFilesystem, "//:foo"),
+            BuildTargetFactory.newInstance(cellOneFilesystem.getRootPath(), "//:foo"),
             cellOneFilesystem)
             .addSrc(new DefaultBuildTargetSourcePath(target))
             .build(),

@@ -1268,7 +1268,7 @@ public class CxxBinaryIntegrationTest {
                     .getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
-                            filesystem,
+                            filesystem.getRootPath(),
                             "//foo:binary_with_chain_deps#infer-analyze"),
                         "infer-analysis-%s")
                     .resolve("captured/top_chain.c_captured/top_chain.c.cfg"))));

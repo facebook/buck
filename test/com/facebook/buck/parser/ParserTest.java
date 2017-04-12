@@ -360,7 +360,9 @@ public class ParserTest {
         cell,
         false,
         executorService,
-        Collections.singleton(BuildTargetFactory.newInstance(cell.getFilesystem(), "//:cake")));
+        Collections.singleton(BuildTargetFactory.newInstance(
+            cell.getFilesystem().getRootPath(),
+            "//:cake")));
   }
 
   @Test
@@ -2226,14 +2228,14 @@ public class ParserTest {
 
   @Test
   public void resolveTargetSpecsPreservesOrder() throws Exception {
-    BuildTarget foo = BuildTargetFactory.newInstance(filesystem, "//foo:foo");
+    BuildTarget foo = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:foo");
     Path buckFile = cellRoot.resolve("foo/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(
         buckFile,
         "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
 
-    BuildTarget bar = BuildTargetFactory.newInstance(filesystem, "//bar:bar");
+    BuildTarget bar = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//bar:bar");
     buckFile = cellRoot.resolve("bar/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(

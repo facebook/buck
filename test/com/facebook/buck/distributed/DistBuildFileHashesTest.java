@@ -105,7 +105,8 @@ public class DistBuildFileHashesTest {
       writtenHashCode = Hashing.sha1().hashString(writtenContents, Charsets.UTF_8);
 
       JavaLibraryBuilder.createBuilder(
-          BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib"), projectFilesystem)
+          BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:java_lib"),
+          projectFilesystem)
           .addSrc(javaSrcPath)
           .build(resolver, projectFilesystem);
     }
@@ -321,13 +322,15 @@ public class DistBuildFileHashesTest {
         secondProjectFilesystem.writeContentsToPath("public class B {}", secondPath);
 
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib_at_root"),
+            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:java_lib_at_root"),
             projectFilesystem)
             .addSrc(firstPath)
             .build(resolver, projectFilesystem);
 
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(secondProjectFilesystem, "//:java_lib_at_secondary"),
+            BuildTargetFactory.newInstance(
+                secondProjectFilesystem.getRootPath(),
+                "//:java_lib_at_secondary"),
             secondProjectFilesystem)
             .addSrc(secondPath)
             .build(resolver, secondProjectFilesystem);

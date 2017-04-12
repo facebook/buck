@@ -99,11 +99,11 @@ public class TargetNodeTest {
       throws Exception {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
-    BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne, "//foo:bar");
+    BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");
     TargetNode<Arg, ExampleDescription> targetNodeOne = createTargetNode(buildTargetOne);
 
     ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
-    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
+    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo.getRootPath(), "//foo:bar");
     TargetNode<Arg, ExampleDescription> targetNodeTwo = createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);

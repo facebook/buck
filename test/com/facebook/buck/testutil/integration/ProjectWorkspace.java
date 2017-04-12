@@ -746,7 +746,9 @@ public class ProjectWorkspace {
 
   public BuildTarget newBuildTarget(String fullyQualifiedName)
       throws IOException, InterruptedException {
-    return BuildTargetFactory.newInstance(asCell().getFilesystem(), fullyQualifiedName);
+    return BuildTargetFactory.newInstance(
+        asCell().getFilesystem().getRootPath(),
+        fullyQualifiedName);
   }
 
   /** The result of running {@code buck} from the command line. */

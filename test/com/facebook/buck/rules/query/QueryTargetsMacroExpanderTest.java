@@ -68,13 +68,13 @@ public class QueryTargetsMacroExpanderTest {
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance(filesystem, "//exciting:dep"),
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:dep"),
         filesystem)
         .addSrc(Paths.get("Dep.java"))
         .build();
 
     TargetNode<?, ?> ruleNode = JavaLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance(filesystem, "//exciting:target"),
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:target"),
         filesystem)
         .addSrc(Paths.get("Other.java"))
         .addDep(depNode.getBuildTarget())
