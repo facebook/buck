@@ -50,8 +50,10 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * Failing an EventSerializationTest tells you that
- * you're changing the public API (serialized JSON).
+ * While it may seem that the main purpose of this test is to annoy anyone making changes to the
+ * Events under test, the purpose of this test is to make sure we're not making accidental changes
+ * to the serialized JSON representation of this events, as that JSON is the public API exposed
+ * via the websocket to the IntelliJ plugin and anyone else who might be listening.
  */
 public class EventSerializationTest {
 
