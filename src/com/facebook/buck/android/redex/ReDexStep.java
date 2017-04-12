@@ -18,6 +18,7 @@ package com.facebook.buck.android.redex;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -86,7 +87,7 @@ public class ReDexStep extends ShellStep {
       Path outputApkPath,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       Path proguardConfigDir,
-      SourcePathResolver pathResolver) {
+      BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Tool redexBinary = redexOptions.getRedex();
@@ -102,8 +103,11 @@ public class ReDexStep extends ShellStep {
         proguardConfigDir.resolve("mapping.txt"),
         proguardConfigDir.resolve("command-line.txt"),
         proguardConfigDir.resolve("seeds.txt"),
-        pathResolver);
+        resolver);
     steps.add(redexStep);
+
+    Path outputDir = outputApkPath.getParent();
+    buildableContext.recordArtifact(outputDir);
 
     return steps.build();
   }

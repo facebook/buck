@@ -5,6 +5,7 @@ import json
 import optparse
 import os
 from zipfile import ZipFile
+from os.path import dirname, join
 
 
 def main():
@@ -56,6 +57,11 @@ def main():
     with ZipFile(options.out, 'w') as zf:
         zf.write(tmp_out, arcname='app_redex')
 
+    # The additional artifacts
+    outdir = dirname(options.out)
+    open(join(outdir, 'redex-class-id-map.txt'), 'a').close()
+    open(join(outdir, 'redex-method-id-map.txt'), 'a').close()
+    open(join(outdir, 'redex-stats.txt'), 'a').close()
 
 if __name__ == '__main__':
     main()

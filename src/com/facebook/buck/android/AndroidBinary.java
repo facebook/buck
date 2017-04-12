@@ -622,8 +622,9 @@ public class AndroidBinary
     // redex
     if (applyRedex) {
       Path proguardConfigDir = getProguardTextFilesPath();
-      Path redexedApk = apkPath.getParent().resolve(apkPath.getFileName().toString() + ".redex");
+      Path redexedApk = getRedexedApkPath();
       apkToAlign = redexedApk;
+      steps.add(MkdirStep.of(getProjectFilesystem(), redexedApk.getParent()));
       ImmutableList<Step> redexSteps = ReDexStep.createSteps(
           getProjectFilesystem(),
           resolver,
@@ -632,7 +633,7 @@ public class AndroidBinary
           redexedApk,
           keystoreProperties,
           proguardConfigDir,
-          context.getSourcePathResolver()
+          buildableContext
       );
       steps.addAll(redexSteps);
     }
@@ -986,6 +987,11 @@ public class AndroidBinary
   /** The APK at this path will have compressed resources, but will not be zipaligned. */
   private Path getCompressedResourcesApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk"));
+  }
+
+  private Path getRedexedApkPath() {
+    Path path = BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
+    return path.resolve(getBuildTarget().getShortName() + ".redex.apk");
   }
 
   private Path getBinPath(String format) {

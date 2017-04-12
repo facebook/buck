@@ -1001,7 +1001,7 @@ public class AndroidBinaryIntegrationTest {
         workspace.resolve("keystores/debug.keystore").toString(),
         userData.get("keystore"));
     assertEquals(
-        "buck-out/gen/apps/sample/app_redex.apk.redex",
+        "buck-out/gen/apps/sample/app_redex__redex/app_redex.redex.apk",
         userData.get("out"));
     assertEquals(
         "buck-out/gen/apps/sample/app_redex/proguard/command-line.txt",
