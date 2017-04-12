@@ -130,7 +130,7 @@ import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
-import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
+import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
@@ -1212,10 +1212,10 @@ public final class Main {
                 vcBuckConfig.shouldGenerateStatistics())) {
               vcStatsGenerator = new VersionControlStatsGenerator(
                   diskIoExecutorService,
-                  new DefaultVersionControlCmdLineInterfaceFactory(
+                  new DelegatingVersionControlCmdLineInterface(
                       rootCell.getFilesystem().getRootPath(),
                       new PrintStreamProcessExecutorFactory(),
-                      vcBuckConfig,
+                      vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   buildEventBus);
 

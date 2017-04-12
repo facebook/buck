@@ -303,18 +303,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void givenNonVcDirThenFactoryReturnsNoOpCmdLine() throws InterruptedException {
-    DefaultVersionControlCmdLineInterfaceFactory vcFactory =
-        new DefaultVersionControlCmdLineInterfaceFactory(
-            tempFolder.getRoot().toPath(),
-            new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.of());
-    VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
-    assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
-  }
-
-  @Test
   public void testExtractRawManifestNoChanges()
     throws VersionControlCommandFailedException, InterruptedException, IOException {
     HgCmdLineInterface hgCmdLineInterface = (HgCmdLineInterface) repoTwoCmdLine;
@@ -411,12 +399,10 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir)
       throws InterruptedException {
-    DefaultVersionControlCmdLineInterfaceFactory vcFactory =
-        new DefaultVersionControlCmdLineInterfaceFactory(
-            repoRootDir,
-            new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.of());
-    return vcFactory.createCmdLineInterface();
+    return new DelegatingVersionControlCmdLineInterface(
+        repoRootDir,
+        new TestProcessExecutorFactory(),
+        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        ImmutableMap.of());
   }
 }

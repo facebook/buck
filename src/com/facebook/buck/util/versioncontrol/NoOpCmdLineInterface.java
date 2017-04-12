@@ -27,7 +27,7 @@ import java.util.Optional;
  */
 public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
-  public boolean isSupportedVersionControlSystem() {
+  public boolean isSupportedVersionControlSystem() throws InterruptedException {
     return false;
   }
 

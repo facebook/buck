@@ -36,15 +36,15 @@ public class VersionControlStatsGenerator {
       REMOTE_MASTER);
 
   private final ExecutorService executorService;
-  private final VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory;
+  private final VersionControlCmdLineInterface versionControlCmdLineInterface;
   private final BuckEventBus buckEventBus;
 
   public VersionControlStatsGenerator(
       ExecutorService executorService,
-      VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory,
+      VersionControlCmdLineInterface versionControlCmdLineInterface,
       BuckEventBus buckEventBus) {
     this.executorService = executorService;
-    this.versionControlCmdLineInterfaceFactory = versionControlCmdLineInterfaceFactory;
+    this.versionControlCmdLineInterface = versionControlCmdLineInterface;
     this.buckEventBus = buckEventBus;
   }
 
@@ -65,10 +65,7 @@ public class VersionControlStatsGenerator {
   private void generateStats() throws InterruptedException, VersionControlCommandFailedException {
     LOG.info("Starting generation of version control stats.");
 
-    VersionControlCmdLineInterface vcCmdLineInterface =
-        versionControlCmdLineInterfaceFactory.createCmdLineInterface();
-
-    if (!vcCmdLineInterface.isSupportedVersionControlSystem()) {
+    if (!versionControlCmdLineInterface.isSupportedVersionControlSystem()) {
       LOG.warn("Skipping generation of version control stats as unsupported repository type.");
       return;
     }
@@ -80,15 +77,16 @@ public class VersionControlStatsGenerator {
       try {
         // Get a list of the revision ids of all the tracked bookmarks.
         ImmutableMap<String, String> bookmarksRevisionIds =
-            vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
+            versionControlCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
         // Get the current revision id.
-        String currentRevisionId = vcCmdLineInterface.currentRevisionId();
+        String currentRevisionId = versionControlCmdLineInterface.currentRevisionId();
         // Get the common ancestor of master and current revision
-        Pair<String, Long> branchedFromMasterInfo = vcCmdLineInterface.commonAncestorAndTS(
-            currentRevisionId,
-            Preconditions.checkNotNull(bookmarksRevisionIds.get("remote/master")));
+        Pair<String, Long> branchedFromMasterInfo =
+            versionControlCmdLineInterface.commonAncestorAndTS(
+                currentRevisionId,
+                Preconditions.checkNotNull(bookmarksRevisionIds.get("remote/master")));
         // Get the list of tracked changes files.
-        ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
+        ImmutableSet<String> changedFiles = versionControlCmdLineInterface.changedFiles(".");
 
         ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
         for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {

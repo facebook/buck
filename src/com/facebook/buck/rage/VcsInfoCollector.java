@@ -45,7 +45,8 @@ public class VcsInfoCollector {
   }
 
   public static Optional<VcsInfoCollector> create(
-      VersionControlCmdLineInterface vcCmdLineInterface) {
+      VersionControlCmdLineInterface vcCmdLineInterface)
+      throws InterruptedException {
     if (!vcCmdLineInterface.isSupportedVersionControlSystem()) {
       return Optional.empty();
     }

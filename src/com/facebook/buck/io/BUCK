@@ -68,7 +68,7 @@ java_library(
         "//src/com/facebook/buck/util/autosparse:autosparse",
         "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/environment:platform",
-        "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//third-party/java/eden:eden-thrift-bindings",
         "//third-party/java/guava:guava",
     ],

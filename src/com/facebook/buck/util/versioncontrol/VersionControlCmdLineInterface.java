@@ -30,7 +30,7 @@ public interface VersionControlCmdLineInterface {
    *
    * @return true if project is using version control, and we support it (i.e. hg)
    */
-  boolean isSupportedVersionControlSystem();
+  boolean isSupportedVersionControlSystem() throws InterruptedException;
 
   /**
    * @param name Bookmark name, e.g. master

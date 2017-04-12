@@ -25,9 +25,9 @@ import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
-import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
-import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
+import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.facebook.buck.zip.Unzip;
@@ -35,8 +35,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -94,14 +94,11 @@ public class AutoSparseIntegrationTest {
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
     repoPath = explodeRepoZip();
-
-    DefaultVersionControlCmdLineInterfaceFactory vcFactory =
-        new DefaultVersionControlCmdLineInterfaceFactory(
-            repoPath,
-            new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.of());
-    repoCmdline = vcFactory.createCmdLineInterface();
+    repoCmdline = new DelegatingVersionControlCmdLineInterface(
+        repoPath,
+        new TestProcessExecutorFactory(),
+        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        ImmutableMap.of());
   }
 
   @Before

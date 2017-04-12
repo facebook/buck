@@ -1,11 +1,3 @@
-PUBLIC_SRCS = [
-    "AbstractVersionControlStats.java",
-    "VersionControlCmdLineInterface.java",
-    "VersionControlCmdLineInterfaceFactory.java",
-    "VersionControlCommandFailedException.java",
-    "NoOpCmdLineInterface.java",
-]
-
 CONFIG_SRCS = [
     "VersionControlBuckConfig.java",
 ]
@@ -14,32 +6,6 @@ GENERATOR_SRCS = [
     "VersionControlStatsEvent.java",
     "VersionControlStatsGenerator.java",
 ]
-
-HG_SRCS = [
-    "HgCmdLineInterface.java",
-]
-
-java_immutables_library(
-    name = "versioncontrol",
-    srcs = PUBLIC_SRCS,
-    immutable_types = [
-        "VersionControlStats",
-    ],
-    resources = [
-        "rawmanifest.py",
-    ],
-    tests = [
-        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/model:simple_types",
-        "//third-party/java/jackson:jackson-annotations",
-    ],
-)
 
 java_library(
     name = "versioncontrol_config",
@@ -75,26 +41,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "versioncontrol_hg",
-    srcs = HG_SRCS,
-    tests = [
-        "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":versioncontrol",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util:util",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 export_file(
     name = "rawmanifest",
     src = "rawmanifest.py",
@@ -103,27 +49,29 @@ export_file(
     ],
 )
 
-java_library(
-    name = "impl",
+java_immutables_library(
+    name = "versioncontrol",
     srcs = glob(
         ["*.java"],
-        excludes = PUBLIC_SRCS + CONFIG_SRCS + GENERATOR_SRCS + HG_SRCS,
+        excludes = CONFIG_SRCS + GENERATOR_SRCS,
     ),
+    resources = [
+        "rawmanifest.py",
+    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
     visibility = [
-        "//src/com/facebook/buck/cli:cli",
-        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
-        "//test/com/facebook/buck/util/autosparse/...",
-        "//test/com/facebook/buck/util/versioncontrol/...",
+        "PUBLIC",
     ],
     deps = [
-        ":versioncontrol",
-        ":versioncontrol_config",
-        ":versioncontrol_hg",
         "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jsr:jsr305",
     ],
 )
