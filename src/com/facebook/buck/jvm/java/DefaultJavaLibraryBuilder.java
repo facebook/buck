@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -242,7 +243,7 @@ public class DefaultJavaLibraryBuilder {
           getFinalFullJarDeclaredDeps(),
           fullJarExportedDeps,
           fullJarProvidedDeps,
-          getFinalCompileTimeClasspathDeps(),
+          getFinalCompileTimeClasspathSourcePaths(),
           getAbiInputs(),
           getAbiJar(),
           trackClassUsage,
@@ -298,11 +299,16 @@ public class DefaultJavaLibraryBuilder {
       return finalFullJarDeclaredDeps;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getFinalCompileTimeClasspathDeps()
+    protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths()
         throws NoSuchBuildTargetException {
-      return compileAgainstAbis ?
+      ImmutableSortedSet<BuildRule> buildRules = compileAgainstAbis ?
           getCompileTimeClasspathAbiDeps() :
           getCompileTimeClasspathFullDeps();
+
+      return buildRules.stream()
+          .map(BuildRule::getSourcePathToOutput)
+          .filter(Objects::nonNull)
+          .collect(MoreCollectors.toImmutableSortedSet());
     }
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {

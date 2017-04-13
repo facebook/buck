@@ -232,7 +232,7 @@ public class AndroidLibraryDescriptionTest {
         .build(resolver, targetGraph);
 
     assertThat(
-        androidLibrary.getCompileTimeClasspathDeps(),
+        androidLibrary.getCompileTimeClasspathSourcePaths(),
         Matchers.empty());
   }
 }

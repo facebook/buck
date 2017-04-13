@@ -127,7 +127,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   private final boolean trackClassUsage;
-  private final ImmutableSortedSet<BuildRule> compileTimeClasspathDeps;
+  private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final JarArchiveDependencySupplier abiClasspath;
@@ -169,7 +169,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
-      ImmutableSortedSet<BuildRule> compileTimeClasspathDeps,
+      ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       ImmutableSortedSet<SourcePath> abiInputs,
       BuildTarget abiJar,
       boolean trackClassUsage,
@@ -201,7 +201,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.fullJarDeclaredDeps = fullJarDeclaredDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
-    this.compileTimeClasspathDeps = compileTimeClasspathDeps;
+    this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
@@ -323,8 +323,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     return outputClasspathEntriesSupplier.get();
   }
 
-  public ImmutableSortedSet<BuildRule> getCompileTimeClasspathDeps() {
-    return compileTimeClasspathDeps;
+  public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return compileTimeClasspathSourcePaths;
   }
 
   @Override
@@ -355,10 +355,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
-    ImmutableSortedSet<Path> compileTimeClasspathPaths = compileTimeClasspathDeps
+    ImmutableSortedSet<Path> compileTimeClasspathPaths = compileTimeClasspathSourcePaths
         .stream()
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(rule -> rule != null)
         .map(context.getSourcePathResolver()::getAbsolutePath)
         .collect(MoreCollectors.toImmutableSortedSet());
 
@@ -558,20 +556,18 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
       SourcePathResolver pathResolver) {
     ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
-    for (BuildRule rule : compileTimeClasspathDeps) {
-      SourcePath sourcePath = rule.getSourcePathToOutput();
-      if (sourcePath != null) {
-        Path path = pathResolver.getAbsolutePath(sourcePath);
-        if (rule instanceof HasJavaAbi) {
-          if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
-            BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-            pathToSourcePathMapBuilder.put(
-                path,
-                new DefaultBuildTargetSourcePath(buildTarget));
-          }
-        } else if (rule instanceof CalculateAbi) {
-          pathToSourcePathMapBuilder.put(path, sourcePath);
+    for (SourcePath sourcePath : compileTimeClasspathSourcePaths) {
+      BuildRule rule = ruleFinder.getRule(sourcePath).get();
+      Path path = pathResolver.getAbsolutePath(sourcePath);
+      if (rule instanceof HasJavaAbi) {
+        if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
+          BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
+          pathToSourcePathMapBuilder.put(
+              path,
+              new DefaultBuildTargetSourcePath(buildTarget));
         }
+      } else if (rule instanceof CalculateAbi) {
+        pathToSourcePathMapBuilder.put(path, sourcePath);
       }
     }
     return pathToSourcePathMapBuilder.build();
