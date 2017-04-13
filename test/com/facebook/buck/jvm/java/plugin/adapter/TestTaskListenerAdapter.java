@@ -22,7 +22,7 @@ import com.sun.source.util.TaskListener;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-class TestTaskListenerAdapter implements TaskListener {
+public class TestTaskListenerAdapter implements TaskListener {
   public static void addTaskListener(BuckJavacTask task, TestTaskListener listener) {
     task.addTaskListener(getTaskListener(listener));
   }

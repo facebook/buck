@@ -51,13 +51,11 @@ import javax.tools.JavaFileObject;
  */
 class TreeBackedProcessorWrapper implements Processor {
   private final Processor inner;
-  private final TreeBackedElements elements;
-  private final TreeBackedTypes types;
+  private final FrontendOnlyJavacTask task;
 
-  TreeBackedProcessorWrapper(TreeBackedElements elements, TreeBackedTypes types, Processor inner) {
+  TreeBackedProcessorWrapper(FrontendOnlyJavacTask task, Processor inner) {
+    this.task = task;
     this.inner = inner;
-    this.elements = elements;
-    this.types = types;
   }
 
   @Override
@@ -93,7 +91,9 @@ class TreeBackedProcessorWrapper implements Processor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return inner.process(
-        annotations.stream().map(elements::getCanonicalElement).collect(Collectors.toSet()),
+        annotations.stream()
+            .map(task.getElements()::getCanonicalElement)
+            .collect(Collectors.toSet()),
         wrap(roundEnv));
   }
 
@@ -116,12 +116,12 @@ class TreeBackedProcessorWrapper implements Processor {
 
       @Override
       public Elements getElementUtils() {
-        return elements;
+        return task.getElements();
       }
 
       @Override
       public Types getTypeUtils() {
-        return types;
+        return task.getTypes();
       }
 
       @Override
@@ -151,21 +151,22 @@ class TreeBackedProcessorWrapper implements Processor {
       @Override
       public Set<? extends Element> getRootElements() {
         return javacRoundEnvironment.getRootElements().stream()
-            .map(elements::getCanonicalElement)
+            .map(task.getElements()::getCanonicalElement)
             .collect(Collectors.toSet());
       }
 
       @Override
       public Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
-        return javacRoundEnvironment.getElementsAnnotatedWith(elements.getJavacElement(a)).stream()
-            .map(elements::getCanonicalElement)
+        return javacRoundEnvironment
+            .getElementsAnnotatedWith(task.getElements().getJavacElement(a)).stream()
+            .map(task.getElements()::getCanonicalElement)
             .collect(Collectors.toSet());
       }
 
       @Override
       public Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
         return javacRoundEnvironment.getElementsAnnotatedWith(a).stream()
-            .map(elements::getCanonicalElement)
+            .map(task.getElements()::getCanonicalElement)
             .collect(Collectors.toSet());
       }
     };
@@ -181,7 +182,7 @@ class TreeBackedProcessorWrapper implements Processor {
       @Override
       public void printMessage(
           Diagnostic.Kind kind, CharSequence msg, Element e) {
-        javacMessager.printMessage(kind, msg, elements.getJavacElement(e));
+        javacMessager.printMessage(kind, msg, task.getElements().getJavacElement(e));
       }
 
       @Override
@@ -207,13 +208,17 @@ class TreeBackedProcessorWrapper implements Processor {
       @Override
       public JavaFileObject createSourceFile(
           CharSequence name, Element... originatingElements) throws IOException {
-        return javacFiler.createSourceFile(name, elements.getJavacElements(originatingElements));
+        return javacFiler.createSourceFile(
+            name,
+            task.getElements().getJavacElements(originatingElements));
       }
 
       @Override
       public JavaFileObject createClassFile(
           CharSequence name, Element... originatingElements) throws IOException {
-        return javacFiler.createClassFile(name, elements.getJavacElements(originatingElements));
+        return javacFiler.createClassFile(
+            name,
+            task.getElements().getJavacElements(originatingElements));
       }
 
       @Override
@@ -226,7 +231,7 @@ class TreeBackedProcessorWrapper implements Processor {
             location,
             pkg,
             relativeName,
-            elements.getJavacElements(originatingElements));
+            task.getElements().getJavacElements(originatingElements));
       }
 
       @Override

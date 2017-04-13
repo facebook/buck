@@ -16,18 +16,20 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
-import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -36,6 +38,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 
 /**
@@ -49,28 +52,27 @@ import javax.tools.JavaFileObject;
  */
 public class FrontendOnlyJavacTask extends BuckJavacTask {
   private final JavacTask javacTask;
-  private final Elements javacElements;
-  private final Trees javacTrees;
-  private final TreeBackedElements elements;
-  private final TreeBackedTrees trees;
-  private final TreeBackedTypes types;
+
+  @Nullable
+  private TreeBackedElements elements;
+  @Nullable
+  private TreeBackedTrees trees;
+  @Nullable
+  private TreeBackedTypes types;
 
   @Nullable
   private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
   @Nullable
   private List<TreeBackedTypeElement> topLevelElements;
+  private boolean stopCompilationAfterEnter = false;
 
-  public FrontendOnlyJavacTask(JavacTask javacTask) {
-    super(javacTask);
-    this.javacTask = javacTask;
-    javacElements = javacTask.getElements();
-    javacTrees = Trees.instance(javacTask);
-    types = new TreeBackedTypes(javacTask.getTypes());
-    elements = new TreeBackedElements(javacElements, javacTrees);
-    trees = new TreeBackedTrees(javacTrees, elements, types);
-    types.setElements(elements);
-    elements.setResolver(new TreeBackedElementResolver(elements, types));
-    javacTask.setTaskListener(new EnteringTaskListener(elements, trees));
+  public FrontendOnlyJavacTask(JavaCompiler.CompilationTask task) {
+    super((JavacTask) task);
+    javacTask = (JavacTask) task;
+
+    // Add the entering plugin first so that all other plugins and annotation processors will
+    // run with the TreeBackedElements already entered
+    addPlugin(new EnteringPlugin());
   }
 
   @Override
@@ -87,7 +89,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     Iterable<? extends TypeElement> javacTopLevelElements = super.enter();
 
     topLevelElements = StreamSupport.stream(javacTopLevelElements.spliterator(), false)
-        .map(elements::getCanonicalElement)
+        .map(getElements()::getCanonicalElement)
         .map(element -> (TreeBackedTypeElement) element)
         .collect(Collectors.toList());
 
@@ -105,55 +107,53 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   }
 
   @Override
-  public void setTaskListener(TaskListener taskListener) {
-    throw new UnsupportedOperationException("NYI");
-  }
-
-  @Override
-  public void addTaskListener(TaskListener taskListener) {
-    throw new UnsupportedOperationException("NYI");
-  }
-
-  @Override
-  public void removeTaskListener(TaskListener taskListener) {
-    throw new UnsupportedOperationException("NYI");
-  }
-
-  @Override
   public TypeMirror getTypeMirror(Iterable<? extends Tree> path) {
     throw new UnsupportedOperationException();
   }
 
-  /* package */ JavacTask getInnerTask() {
-    return javacTask;
-  }
-
   @Override
   public TreeBackedElements getElements() {
-    return elements;
+    if (elements == null) {
+      initUtils();
+    }
+    return Preconditions.checkNotNull(elements);
   }
 
   @Override
   public TreeBackedTrees getTrees() {
-    return trees;
+    if (trees == null) {
+      initUtils();
+    }
+    return Preconditions.checkNotNull(trees);
   }
 
   @Override
   public TreeBackedTypes getTypes() {
-    return types;
+    if (types == null) {
+      initUtils();
+    }
+    return Preconditions.checkNotNull(types);
+  }
+
+  private void initUtils() {
+    Elements javacElements = javacTask.getElements();
+    Trees javacTrees = super.getTrees();
+    types = new TreeBackedTypes(javacTask.getTypes());
+    elements = new TreeBackedElements(javacElements, javacTrees);
+    trees = new TreeBackedTrees(javacTrees, elements, types);
+    types.setElements(elements);
+    elements.setResolver(new TreeBackedElementResolver(elements, types));
   }
 
   @Override
   public void setProcessors(Iterable<? extends Processor> processors) {
-    if (processors.iterator().hasNext()) {
-      javacTask.setProcessors(wrap(processors));
-    }
+    javacTask.setProcessors(wrap(processors));
   }
 
   private List<TreeBackedProcessorWrapper> wrap(Iterable<? extends Processor> processors) {
     List<TreeBackedProcessorWrapper> result = new ArrayList<>();
     for (Processor processor : processors) {
-      result.add(new TreeBackedProcessorWrapper(elements, types, processor));
+      result.add(new TreeBackedProcessorWrapper(this, processor));
     }
 
     return result;
@@ -166,6 +166,24 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
 
   @Override
   public Boolean call() {
-    throw new UnsupportedOperationException("NYI");
+    try {
+      stopCompilationAfterEnter = true;
+      return javacTask.call();
+    } catch (RuntimeException e) {
+      if (e.getCause() instanceof StopCompilation) {
+        return true;
+      }
+
+      throw e;
+    }
+  }
+
+  @Override
+  protected void onPostEnter(Set<TypeElement> topLevelTypes) {
+    super.onPostEnter(topLevelTypes);
+
+    if (stopCompilationAfterEnter) {
+      throw new StopCompilation();
+    }
   }
 }

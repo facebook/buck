@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
@@ -146,6 +147,12 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
   public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
     getJavacTask().addPostEnterCallback(callback);
+  }
+
+  public void addPlugin(BuckJavacPlugin plugin, String... args) {
+    BuckJavacTask task = getJavacTask();
+
+    task.addPlugin(plugin, args);
   }
 
   public void setProcessors(List<Processor> processors) {
