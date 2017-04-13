@@ -19,6 +19,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

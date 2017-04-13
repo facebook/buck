@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;

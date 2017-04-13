@@ -32,7 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ParamInfoException;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;

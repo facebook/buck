@@ -14,13 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.CaseFormat;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

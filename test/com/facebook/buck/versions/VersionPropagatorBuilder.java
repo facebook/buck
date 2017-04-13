@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;

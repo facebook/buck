@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;

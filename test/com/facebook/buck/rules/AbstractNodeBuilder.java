@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;

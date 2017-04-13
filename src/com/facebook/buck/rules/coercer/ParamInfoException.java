@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 /**
  * Exception type thrown from `ParamInfo` methods. May originate from `ParamInfo` code (e.g. for

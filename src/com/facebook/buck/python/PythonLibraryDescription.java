@@ -30,7 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

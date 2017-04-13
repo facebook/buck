@@ -30,7 +30,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ParamInfoException;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;

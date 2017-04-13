@@ -18,7 +18,7 @@ package com.facebook.buck.query;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;

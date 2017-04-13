@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;

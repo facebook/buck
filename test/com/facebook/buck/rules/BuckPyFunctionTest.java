@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

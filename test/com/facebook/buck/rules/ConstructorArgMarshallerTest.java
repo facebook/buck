@@ -27,6 +27,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.Hint;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;

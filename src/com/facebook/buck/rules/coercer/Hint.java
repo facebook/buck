@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 
 /**
  * Represents hints given when deal with the value returned by
- * {@link Description#createUnpopulatedConstructorArg()}.
+ * {@link com.facebook.buck.rules.Description#createUnpopulatedConstructorArg()}.
  */
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})

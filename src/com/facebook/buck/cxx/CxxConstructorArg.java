@@ -21,7 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
