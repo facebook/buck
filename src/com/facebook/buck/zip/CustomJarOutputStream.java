@@ -51,6 +51,10 @@ public class CustomJarOutputStream extends CustomZipOutputStream {
     impl.setEntryHashingEnabled(shouldHashEntries);
   }
 
+  public void writeManifest() throws IOException {
+    impl.writeManifest();
+  }
+
   private static class HashingImpl extends OutputStream implements Impl {
     private static final HashFunction HASH_FUNCTION = Hashing.murmur3_128();
 

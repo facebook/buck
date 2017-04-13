@@ -29,6 +29,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
@@ -123,7 +124,7 @@ public abstract class Jsr199Javac implements Javac {
       Optional<Path> workingDirectory,
       CompilationMode compilationMode) {
     JavaCompiler compiler = createCompiler(context);
-    CustomZipOutputStream jarOutputStream = null;
+    CustomJarOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
     JavaInMemoryFileManager inMemoryFileManager = null;
     try {
@@ -133,7 +134,7 @@ public abstract class Jsr199Javac implements Javac {
       if (context.getDirectToJarOutputSettings().isPresent()) {
         Path path = context.getProjectFilesystem().getPathForRelativePath(
             context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-        jarOutputStream = ZipOutputStreams.newOutputStream(
+        jarOutputStream = ZipOutputStreams.newJarOutputStream(
             path,
             ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
         inMemoryFileManager = new JavaInMemoryFileManager(

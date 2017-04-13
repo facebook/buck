@@ -137,7 +137,6 @@ public class JavaBinaryIntegrationTest {
     Path binaryJarWithoutBlacklist = workspace.buildAndReturnOutput("//:bin-no-blacklist");
 
     ImmutableSet<String> commonEntries = ImmutableSet.of(
-        "META-INF/",
         "META-INF/MANIFEST.MF",
         "com/",
         "com/example/",
