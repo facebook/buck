@@ -168,6 +168,7 @@ public class AppleBundle
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
+  private final Path sdkPath;
 
   private final String minOSVersion;
   private final String binaryName;
@@ -227,6 +228,7 @@ public class AppleBundle
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platform = sdk.getApplePlatform();
     this.sdkName = sdk.getName();
+    this.sdkPath = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
     this.sdkVersion = sdk.getVersion();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
@@ -801,6 +803,7 @@ public class AppleBundle
                   getProjectFilesystem(),
                   getBuildTarget(),
                   tempDirPattern),
+              this.sdkPath,
               destinationPath,
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)
