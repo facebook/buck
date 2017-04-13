@@ -27,12 +27,17 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -100,6 +105,9 @@ public class ResourcesFilter extends AbstractBuildRule
   private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey
   private final FilterResourcesStep.ResourceFilter resourceFilter;
+  @AddToRuleKey
+  private final Optional<Arg> postFilterResourcesCmd;
+
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
@@ -108,7 +116,8 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
-      FilterResourcesStep.ResourceFilter resourceFilter) {
+      FilterResourcesStep.ResourceFilter resourceFilter,
+      Optional<Arg> postFilterResourcesCmd) {
     super(params);
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
@@ -116,6 +125,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.postFilterResourcesCmd = postFilterResourcesCmd;
   }
 
   @Override
@@ -151,11 +161,13 @@ public class ResourcesFilter extends AbstractBuildRule
     ImmutableList<Path> resPaths = resDirectories.stream()
         .map(context.getSourcePathResolver()::getRelativePath)
         .collect(MoreCollectors.toImmutableList());
-    final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
+    ImmutableBiMap<Path, Path> inResDirToOutResDirMap = createInResDirToOutResDirMap(
         resPaths,
+        filteredResDirectoriesBuilder);
+    final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
         whitelistedStringPaths,
         locales,
-        filteredResDirectoriesBuilder);
+        inResDirToOutResDirMap);
     steps.add(filterResourcesStep);
 
     final ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
@@ -172,6 +184,8 @@ public class ResourcesFilter extends AbstractBuildRule
     for (Path outputResourceDir : filteredResDirectories) {
       buildableContext.recordArtifact(outputResourceDir);
     }
+
+    addPostFilterCommandSteps(context.getSourcePathResolver(), steps, inResDirToOutResDirMap);
 
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
@@ -193,6 +207,29 @@ public class ResourcesFilter extends AbstractBuildRule
     return steps.build();
   }
 
+  @VisibleForTesting
+  void addPostFilterCommandSteps(
+      SourcePathResolver sourcePathResolver,
+      ImmutableList.Builder<Step> steps,
+      ImmutableBiMap<Path, Path> inResDirToOutResDirMap) {
+    if (!postFilterResourcesCmd.isPresent()) {
+      return;
+    }
+
+    ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
+    postFilterResourcesCmd.get().appendToCommandLine(
+        commandLineBuilder,
+        sourcePathResolver);
+    commandLineBuilder.addAll(inResDirToOutResDirMap.values().stream()
+        .map(Path::toString)
+        .map(Escaper.SHELL_ESCAPER::apply)
+        .collect(MoreCollectors.toImmutableList()));
+    String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
+    steps.add(new BashStep(
+        getProjectFilesystem().getRootPath(),
+        commandLine));
+  }
+
   /**
    * Sets up filtering of resources, images/drawables and strings in particular, based on build
    * rule parameters {@link #resourceFilter} and {@link #resourceCompressionMode}.
@@ -209,20 +246,9 @@ public class ResourcesFilter extends AbstractBuildRule
    */
   @VisibleForTesting
   FilterResourcesStep createFilterResourcesStep(
-      ImmutableList<Path> resourceDirectories,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
-      ImmutableList.Builder<Path> filteredResDirectories) {
-    ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
-    String resDestinationBasePath = getResDestinationBasePath();
-    int count = 0;
-    for (Path resDir : resourceDirectories) {
-      Path filteredResourceDir = Paths.get(resDestinationBasePath, String.valueOf(count++));
-      filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
-      filteredResDirectories.add(filteredResourceDir);
-    }
-
-    ImmutableBiMap<Path, Path> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
+      ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
     FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
         .setProjectFilesystem(getProjectFilesystem())
         .setInResToOutResDirMap(resSourceToDestDirMap)
@@ -236,6 +262,21 @@ public class ResourcesFilter extends AbstractBuildRule
     filterResourcesStepBuilder.setLocales(locales);
 
     return filterResourcesStepBuilder.build();
+  }
+
+  @VisibleForTesting
+  ImmutableBiMap<Path, Path> createInResDirToOutResDirMap(
+      ImmutableList<Path> resourceDirectories,
+      ImmutableList.Builder<Path> filteredResDirectories) {
+    ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
+    String resDestinationBasePath = getResDestinationBasePath();
+    int count = 0;
+    for (Path resDir : resourceDirectories) {
+      Path filteredResourceDir = Paths.get(resDestinationBasePath, String.valueOf(count++));
+      filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
+      filteredResDirectories.add(filteredResourceDir);
+    }
+    return filteredResourcesDirMapBuilder.build();
   }
 
   private String getResDestinationBasePath() {

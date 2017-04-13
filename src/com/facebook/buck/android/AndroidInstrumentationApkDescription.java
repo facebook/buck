@@ -166,7 +166,8 @@ public class AndroidInstrumentationApkDescription
             targetGraph,
             params.getBuildTarget(),
             Optional.empty()),
-        dxConfig);
+        dxConfig,
+        /* postFilterResourcesCommands */ Optional.empty());
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

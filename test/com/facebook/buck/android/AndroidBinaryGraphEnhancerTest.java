@@ -169,7 +169,8 @@ public class AndroidBinaryGraphEnhancerTest {
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
             Optional.empty()),
-        new DxConfig(FakeBuckConfig.builder().build()));
+        new DxConfig(FakeBuckConfig.builder().build()),
+        Optional.empty());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -328,7 +329,8 @@ public class AndroidBinaryGraphEnhancerTest {
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
             Optional.empty()),
-        new DxConfig(FakeBuckConfig.builder().build()));
+        new DxConfig(FakeBuckConfig.builder().build()),
+        Optional.empty());
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -478,7 +480,8 @@ public class AndroidBinaryGraphEnhancerTest {
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
             Optional.empty()),
-        new DxConfig(FakeBuckConfig.builder().build()));
+        new DxConfig(FakeBuckConfig.builder().build()),
+        Optional.empty());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -543,7 +546,8 @@ public class AndroidBinaryGraphEnhancerTest {
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
             Optional.empty()),
-        new DxConfig(FakeBuckConfig.builder().build()));
+        new DxConfig(FakeBuckConfig.builder().build()),
+        Optional.empty());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -635,7 +639,8 @@ public class AndroidBinaryGraphEnhancerTest {
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
             Optional.empty()),
-        new DxConfig(FakeBuckConfig.builder().build()));
+        new DxConfig(FakeBuckConfig.builder().build()),
+        Optional.empty());
     graphEnhancer.createAdditionalBuildables();
 
 

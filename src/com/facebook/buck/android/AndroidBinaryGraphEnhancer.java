@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreCollectors;
@@ -148,7 +149,8 @@ public class AndroidBinaryGraphEnhancer {
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
       APKModuleGraph apkModuleGraph,
-      DxConfig dxConfig) {
+      DxConfig dxConfig,
+      Optional<Arg> postFilterResourcesCmd) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getBuildDeps();
@@ -197,7 +199,8 @@ public class AndroidBinaryGraphEnhancer {
         skipCrunchPngs,
         includesVectorDrawables,
         bannedDuplicateResourceTypes,
-        manifestEntries);
+        manifestEntries,
+        postFilterResourcesCmd);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
   }

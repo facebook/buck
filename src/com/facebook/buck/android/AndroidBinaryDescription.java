@@ -268,7 +268,8 @@ public class AndroidBinaryDescription implements
           args.manifestEntries,
           cxxBuckConfig,
           apkModuleGraph,
-          dxConfig);
+          dxConfig,
+          getPostFilterResourcesArgs(args, params, resolver, cellRoots));
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
       if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -447,6 +448,18 @@ public class AndroidBinaryDescription implements
     }
   }
 
+  private Optional<com.facebook.buck.rules.args.Arg> getPostFilterResourcesArgs(
+      Arg arg,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots) {
+    return arg.postFilterResourcesCmd.map(MacroArg.toMacroArgFunction(
+        MACRO_HANDLER,
+        params.getBuildTarget(),
+        cellRoots,
+        resolver)::apply);
+  }
+
   private Optional<RedexOptions> getRedexOptions(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -554,6 +567,7 @@ public class AndroidBinaryDescription implements
     public Optional<Boolean> redex;
     public Optional<SourcePath> redexConfig;
     public ImmutableList<String> redexExtraArgs = ImmutableList.of();
+    public Optional<String> postFilterResourcesCmd = Optional.empty();
 
     public Optional<SourcePath> buildConfigValuesFile;
     public boolean skipProguard = false;

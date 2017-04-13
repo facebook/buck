@@ -147,4 +147,9 @@ public class AndroidBinaryBuilder extends
     arg.allowedDuplicateResourceTypes = value;
     return this;
   }
+
+  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
+    arg.postFilterResourcesCmd = command;
+    return this;
+  }
 }

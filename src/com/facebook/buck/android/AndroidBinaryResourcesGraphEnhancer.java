@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -70,6 +71,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   private final ManifestEntries manifestEntries;
   private final BuildTarget originalBuildTarget;
+  private final Optional<Arg> postFilterResourcesCmd;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildRuleParams buildRuleParams,
@@ -85,7 +87,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      Optional<Arg> postFilterResourcesCmd) {
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
@@ -102,6 +105,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalBuildTarget;
+    this.postFilterResourcesCmd = postFilterResourcesCmd;
   }
 
   @Value.Immutable
@@ -251,7 +255,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         locales,
         resourceCompressionMode,
-        resourceFilter);
+        resourceFilter,
+        postFilterResourcesCmd);
   }
 
   private AaptPackageResources createAaptPackageResources(
