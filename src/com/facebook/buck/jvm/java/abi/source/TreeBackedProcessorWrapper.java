@@ -16,31 +16,18 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.Completion;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
 
 /**
  * Wraps an annotation processor to ensure that it always sees canonical elements -- that is,
@@ -75,7 +62,7 @@ class TreeBackedProcessorWrapper implements Processor {
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnv) {
-    inner.init(wrap(processingEnv));
+    inner.init(new TreeBackedProcessingEnvironment(task, processingEnv));
   }
 
   @Override
@@ -94,153 +81,6 @@ class TreeBackedProcessorWrapper implements Processor {
         annotations.stream()
             .map(task.getElements()::getCanonicalElement)
             .collect(Collectors.toSet()),
-        wrap(roundEnv));
-  }
-
-  private ProcessingEnvironment wrap(ProcessingEnvironment javacProcessingEnvironment) {
-    return new ProcessingEnvironment() {
-      @Override
-      public Map<String, String> getOptions() {
-        return javacProcessingEnvironment.getOptions();
-      }
-
-      @Override
-      public Messager getMessager() {
-        return wrap(javacProcessingEnvironment.getMessager());
-      }
-
-      @Override
-      public Filer getFiler() {
-        return wrap(javacProcessingEnvironment.getFiler());
-      }
-
-      @Override
-      public Elements getElementUtils() {
-        return task.getElements();
-      }
-
-      @Override
-      public Types getTypeUtils() {
-        return task.getTypes();
-      }
-
-      @Override
-      public SourceVersion getSourceVersion() {
-        return javacProcessingEnvironment.getSourceVersion();
-      }
-
-      @Override
-      public Locale getLocale() {
-        return javacProcessingEnvironment.getLocale();
-      }
-    };
-  }
-
-  private RoundEnvironment wrap(RoundEnvironment javacRoundEnvironment) {
-    return new RoundEnvironment() {
-      @Override
-      public boolean processingOver() {
-        return javacRoundEnvironment.processingOver();
-      }
-
-      @Override
-      public boolean errorRaised() {
-        return javacRoundEnvironment.errorRaised();
-      }
-
-      @Override
-      public Set<? extends Element> getRootElements() {
-        return javacRoundEnvironment.getRootElements().stream()
-            .map(task.getElements()::getCanonicalElement)
-            .collect(Collectors.toSet());
-      }
-
-      @Override
-      public Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
-        return javacRoundEnvironment
-            .getElementsAnnotatedWith(task.getElements().getJavacElement(a)).stream()
-            .map(task.getElements()::getCanonicalElement)
-            .collect(Collectors.toSet());
-      }
-
-      @Override
-      public Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-        return javacRoundEnvironment.getElementsAnnotatedWith(a).stream()
-            .map(task.getElements()::getCanonicalElement)
-            .collect(Collectors.toSet());
-      }
-    };
-  }
-
-  private Messager wrap(Messager javacMessager) {
-    return new Messager() {
-      @Override
-      public void printMessage(Diagnostic.Kind kind, CharSequence msg) {
-        javacMessager.printMessage(kind, msg);
-      }
-
-      @Override
-      public void printMessage(
-          Diagnostic.Kind kind, CharSequence msg, Element e) {
-        javacMessager.printMessage(kind, msg, task.getElements().getJavacElement(e));
-      }
-
-      @Override
-      public void printMessage(
-          Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-        throw new UnsupportedOperationException("Annotations NYI");
-      }
-
-      @Override
-      public void printMessage(
-          Diagnostic.Kind kind,
-          CharSequence msg,
-          Element e,
-          AnnotationMirror a,
-          AnnotationValue v) {
-        throw new UnsupportedOperationException("Annotations NYI");
-      }
-    };
-  }
-
-  private Filer wrap(Filer javacFiler) {
-    return new Filer() {
-      @Override
-      public JavaFileObject createSourceFile(
-          CharSequence name, Element... originatingElements) throws IOException {
-        return javacFiler.createSourceFile(
-            name,
-            task.getElements().getJavacElements(originatingElements));
-      }
-
-      @Override
-      public JavaFileObject createClassFile(
-          CharSequence name, Element... originatingElements) throws IOException {
-        return javacFiler.createClassFile(
-            name,
-            task.getElements().getJavacElements(originatingElements));
-      }
-
-      @Override
-      public FileObject createResource(
-          JavaFileManager.Location location,
-          CharSequence pkg,
-          CharSequence relativeName,
-          Element... originatingElements) throws IOException {
-        return javacFiler.createResource(
-            location,
-            pkg,
-            relativeName,
-            task.getElements().getJavacElements(originatingElements));
-      }
-
-      @Override
-      public FileObject getResource(
-          JavaFileManager.Location location,
-          CharSequence pkg,
-          CharSequence relativeName) throws IOException {
-        return javacFiler.getResource(location, pkg, relativeName);
-      }
-    };
+        new TreeBackedRoundEnvironment(task, roundEnv));
   }
 }
