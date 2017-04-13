@@ -485,7 +485,7 @@ class DaemonicParserState {
    * @param path A {@link Path}, relative to the project root and "contained"
    *             within the build file to find and invalidate.
    */
-  private synchronized void invalidateContainingBuildFile(
+  private void invalidateContainingBuildFile(
       Cell cell,
       BuildFileTree buildFiles,
       Path path) {
@@ -518,12 +518,13 @@ class DaemonicParserState {
     buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
     pathsAddedOrRemovedInvalidatingBuildFiles.add(path.toString());
 
+    DaemonicCellState state;
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
-      // Invalidate all the packages we found.
-      for (Path buildFile : packageBuildFiles) {
-        invalidatePath(state, buildFile.resolve(cell.getBuildFileName()));
-      }
+      state = cellPathToDaemonicState.get(cell.getRoot());
+    }
+    // Invalidate all the packages we found.
+    for (Path buildFile : packageBuildFiles) {
+      invalidatePath(state, buildFile.resolve(cell.getBuildFileName()));
     }
   }
 
@@ -547,7 +548,7 @@ class DaemonicParserState {
   }
 
 
-  private synchronized boolean invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
+  private boolean invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
@@ -602,14 +603,12 @@ class DaemonicParserState {
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
       cachedIncludes.put(cell.getRoot(), defaultIncludes);
     }
-    synchronized (this) {
-      if (invalidateCellCaches(cell) && invalidatedByDefaultIncludesChange) {
-        LOG.warn(
-            "Invalidating cache on default includes change (%s != %s)",
-            expected,
-            defaultIncludes);
-        cacheInvalidatedByDefaultIncludesChangeCounter.inc();
-      }
+    if (invalidateCellCaches(cell) && invalidatedByDefaultIncludesChange) {
+      LOG.warn(
+          "Invalidating cache on default includes change (%s != %s)",
+          expected,
+          defaultIncludes);
+      cacheInvalidatedByDefaultIncludesChangeCounter.inc();
     }
     return true;
   }
