@@ -41,11 +41,11 @@ import java.util.Objects;
  */
 public class MacroArg extends Arg {
 
-  private final MacroHandler expander;
-  private final BuildTarget target;
-  private final CellPathResolver cellNames;
-  private final BuildRuleResolver resolver;
-  private final String unexpanded;
+  protected final MacroHandler expander;
+  protected final BuildTarget target;
+  protected final CellPathResolver cellNames;
+  protected final BuildRuleResolver resolver;
+  protected final String unexpanded;
 
   public MacroArg(
       MacroHandler expander,
