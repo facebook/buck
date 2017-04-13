@@ -131,7 +131,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final JarArchiveDependencySupplier abiClasspath;
-  @Nullable private Path depFileOutputPath;
+  @Nullable private Path depFileRelativePath;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -208,6 +208,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     this.tests = tests;
 
     this.trackClassUsage = trackClassUsage;
+    if (this.trackClassUsage) {
+      depFileRelativePath = getUsedClassesFilePath(
+          params.getBuildTarget(),
+          params.getProjectFilesystem());
+    }
     this.abiClasspath = new JarArchiveDependencySupplier(abiInputs);
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
@@ -386,12 +391,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     if (!getJavaSrcs().isEmpty()) {
       ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
-        final Path usedClassesFilePath =
-            getUsedClassesFilePath(getBuildTarget(), getProjectFilesystem());
-        depFileOutputPath = getProjectFilesystem().getPathForRelativePath(usedClassesFilePath);
-        usedClassesFileWriter = new DefaultClassUsageFileWriter(usedClassesFilePath);
+        usedClassesFileWriter = new DefaultClassUsageFileWriter(depFileRelativePath);
 
-        buildableContext.recordArtifact(usedClassesFilePath);
+        buildableContext.recordArtifact(depFileRelativePath);
       } else {
         usedClassesFileWriter = NoOpClassUsageFileWriter.instance();
       }
@@ -549,7 +551,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
         getProjectFilesystem(),
-        Preconditions.checkNotNull(depFileOutputPath),
+        getProjectFilesystem().getPathForRelativePath(
+            Preconditions.checkNotNull(depFileRelativePath)),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
   }
 
