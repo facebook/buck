@@ -11,6 +11,7 @@
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%androidFacet.module_gen_path%" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%androidFacet.android_manifest%" />
         <option name="RES_FOLDERS_RELATIVE_PATH" value="%androidFacet.res%" />
+        <option name="RES_FOLDER_RELATIVE_PATH" value="/src/main/res" />
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%androidFacet.asset_folder%" />
         <option name="LIBS_FOLDER_RELATIVE_PATH" value="%androidFacet.libs_path%" />
         <option name="APK_PATH" value="%androidFacet.apk_path%" />
