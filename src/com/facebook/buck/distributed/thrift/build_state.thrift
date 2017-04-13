@@ -22,6 +22,7 @@ struct BuildJobStateBuckConfig {
   2: optional map<string, list<OrderedStringMapEntry>> rawBuckConfig;
   3: optional string architecture;
   4: optional string platform;
+  5: optional map<string, i32> cellAliasToIndex;
 }
 
 struct PathWithUnixSeparators {
@@ -73,6 +74,7 @@ struct BuildJobStateCell {
   // This is just so we can generate a user-friendly path, we should not rely on this being unique.
   1: optional string nameHint;
   2: optional BuildJobStateBuckConfig config;
+  3: optional string canonicalName;
 }
 
 struct BuildJobStateTargetGraph {

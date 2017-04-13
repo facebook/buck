@@ -98,7 +98,7 @@ public class IntraCellIntegrationTest {
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
           ImmutableSet.of(BuildTargetFactory.newInstance(
               childCell.getFilesystem().getRootPath(),
-              "//:child-target")));
+              "child//:child-target")));
       fail("Didn't expect parsing to work because of visibility");
     } catch (HumanReadableException e) {
       // This is expected

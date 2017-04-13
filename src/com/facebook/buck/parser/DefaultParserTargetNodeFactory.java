@@ -110,7 +110,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     // Because of the way that the parser works, we know this can never return null.
     Description<?> description = cell.getDescription(buildRuleType);
 
-    UnflavoredBuildTarget unflavoredBuildTarget = target.withoutCell().getUnflavoredBuildTarget();
+    UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(
@@ -135,6 +135,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
         RawNodeParsePipeline.parseBuildTargetFromRawRule(
             cell.getRoot(),
+            cell.getCanonicalName(),
             rawNode,
             buildFile);
     if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {

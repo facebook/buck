@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
@@ -55,6 +56,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
    */
   public static UnflavoredBuildTarget parseBuildTargetFromRawRule(
       Path cellRoot,
+      Optional<String> cellName,
       Map<String, Object> map,
       Path rulePathForDebug) {
     String basePath = (String) map.get("buck.base_path");
@@ -76,6 +78,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
         .setBaseName(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath)
         .setShortName(name)
         .setCellPath(cellRoot)
+        .setCell(cellName)
         .build();
   }
 

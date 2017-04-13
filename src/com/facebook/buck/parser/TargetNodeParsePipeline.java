@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -90,8 +91,12 @@ public class TargetNodeParsePipeline
 
   @Override
   protected BuildTarget getBuildTarget(
-      Path root, Path buildFile, Map<String, Object> from) {
-    return BuildTarget.of(RawNodeParsePipeline.parseBuildTargetFromRawRule(root, from, buildFile));
+      Path root,
+      Optional<String> cellName,
+      Path buildFile,
+      Map<String, Object> from) {
+    return BuildTarget.of(
+        RawNodeParsePipeline.parseBuildTargetFromRawRule(root, cellName, from, buildFile));
   }
 
   @Override

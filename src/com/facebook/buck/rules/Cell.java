@@ -49,6 +49,7 @@ import java.util.Optional;
 public class Cell {
 
   private final ImmutableSet<Path> knownRoots;
+  private final Optional<String> canonicalName;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -67,14 +68,16 @@ public class Cell {
    * Should only be constructed by {@link CellProvider}.
    */
   Cell(
-      final ImmutableSet<Path> knownRoots,
-      final ProjectFilesystem filesystem,
-      final Watchman watchman,
-      final BuckConfig config,
-      final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final CellProvider cellProvider) {
+      ImmutableSet<Path> knownRoots,
+      Optional<String> canonicalName,
+      ProjectFilesystem filesystem,
+      Watchman watchman,
+      BuckConfig config,
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      CellProvider cellProvider) {
 
     this.knownRoots = knownRoots;
+    this.canonicalName = canonicalName;
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
@@ -118,6 +121,10 @@ public class Cell {
 
   public String getBuildFileName() {
     return config.getView(ParserConfig.class).getBuildFileName();
+  }
+
+  public Optional<String> getCanonicalName() {
+    return canonicalName;
   }
 
   /**

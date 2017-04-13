@@ -614,13 +614,13 @@ public class BuildJobStateBuildTarget implements org.apache.thrift.TBase<BuildJo
           case 4: // FLAVORS
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
-                org.apache.thrift.protocol.TSet _set28 = iprot.readSetBegin();
-                struct.flavors = new HashSet<String>(2*_set28.size);
-                String _elem29;
-                for (int _i30 = 0; _i30 < _set28.size; ++_i30)
+                org.apache.thrift.protocol.TSet _set38 = iprot.readSetBegin();
+                struct.flavors = new HashSet<String>(2*_set38.size);
+                String _elem39;
+                for (int _i40 = 0; _i40 < _set38.size; ++_i40)
                 {
-                  _elem29 = iprot.readString();
-                  struct.flavors.add(_elem29);
+                  _elem39 = iprot.readString();
+                  struct.flavors.add(_elem39);
                 }
                 iprot.readSetEnd();
               }
@@ -670,9 +670,9 @@ public class BuildJobStateBuildTarget implements org.apache.thrift.TBase<BuildJo
           oprot.writeFieldBegin(FLAVORS_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, struct.flavors.size()));
-            for (String _iter31 : struct.flavors)
+            for (String _iter41 : struct.flavors)
             {
-              oprot.writeString(_iter31);
+              oprot.writeString(_iter41);
             }
             oprot.writeSetEnd();
           }
@@ -722,9 +722,9 @@ public class BuildJobStateBuildTarget implements org.apache.thrift.TBase<BuildJo
       if (struct.isSetFlavors()) {
         {
           oprot.writeI32(struct.flavors.size());
-          for (String _iter32 : struct.flavors)
+          for (String _iter42 : struct.flavors)
           {
-            oprot.writeString(_iter32);
+            oprot.writeString(_iter42);
           }
         }
       }
@@ -748,13 +748,13 @@ public class BuildJobStateBuildTarget implements org.apache.thrift.TBase<BuildJo
       }
       if (incoming.get(3)) {
         {
-          org.apache.thrift.protocol.TSet _set33 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.flavors = new HashSet<String>(2*_set33.size);
-          String _elem34;
-          for (int _i35 = 0; _i35 < _set33.size; ++_i35)
+          org.apache.thrift.protocol.TSet _set43 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.flavors = new HashSet<String>(2*_set43.size);
+          String _elem44;
+          for (int _i45 = 0; _i45 < _set43.size; ++_i45)
           {
-            _elem34 = iprot.readString();
-            struct.flavors.add(_elem34);
+            _elem44 = iprot.readString();
+            struct.flavors.add(_elem44);
           }
         }
         struct.setFlavorsIsSet(true);

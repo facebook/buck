@@ -60,8 +60,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -81,6 +84,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class InterCellIntegrationTest {
 
@@ -366,7 +370,6 @@ public class InterCellIntegrationTest {
   @Test
   @Ignore
   public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {
-
   }
 
   @Test
@@ -647,6 +650,72 @@ public class InterCellIntegrationTest {
     assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+  }
+
+  @Test
+  public void targetsReferencingSameTargetsWithDifferentCellNamesAreConsideredTheSame()
+      throws Exception {
+    // This test case builds a cxx binary rule with libraries that all depend on the same targets.
+    // If these targets were treated as distinct targets, the rule will have duplicate symbols.
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/canonicalization/primary",
+        "inter-cell/canonicalization/secondary");
+
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+
+    Path output = primary.buildAndReturnOutput(":a.out");
+    assertEquals(
+        "The produced binary should give the expected exit code",
+        111,
+        primary.runCommand(output.toString()).getExitCode());
+  }
+
+  @Test
+  public void targetsInOtherCellsArePrintedAsRelativeToRootCell() throws Exception {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/canonicalization/primary",
+        "inter-cell/canonicalization/secondary");
+
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+
+    String queryResult = primary.runBuckCommand("query", "deps(//:a.out)")
+        .assertSuccess()
+        .getStdout();
+    assertEquals(
+        "Should refer to root cell targets without prefix and secondary cell targets with prefix",
+        Joiner.on("\n").join(
+            "//:a.out",
+            "//:rootlib",
+            "secondary//:lib",
+            "secondary//:lib2"),
+        sortLines(queryResult));
+
+    queryResult = primary.runBuckCommand("query", "deps(secondary//:lib)")
+        .assertSuccess()
+        .getStdout();
+    assertEquals(
+        "... even if query starts in a non-root cell.",
+        Joiner.on("\n").join(
+            "//:rootlib",
+            "secondary//:lib",
+            "secondary//:lib2"),
+        sortLines(queryResult));
+  }
+
+  private static String sortLines(String input) {
+    return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
+        .sorted()
+        .collect(Collectors.joining("\n"));
   }
 
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
