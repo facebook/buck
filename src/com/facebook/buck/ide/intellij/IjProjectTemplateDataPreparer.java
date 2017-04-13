@@ -177,6 +177,8 @@ public class IjProjectTemplateDataPreparer {
     ImmutableSortedSet<IjSourceFolder> sourceFolders = simplifiedFolders
         .stream()
         .map(transformToFolder::apply)
+        .filter(folder -> !(folder.getType().equals("excludeFolder")
+              && (folder.getUrl().endsWith("/res") || folder.getUrl().endsWith("/assets"))))
         .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     return ContentRoot.builder()
         .setUrl(url)
