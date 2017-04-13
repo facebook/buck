@@ -65,4 +65,9 @@ final class CellPathResolverView implements CellPathResolver {
     return ImmutableMap.copyOf(
         Maps.filterKeys(delegate.getCellPaths(), declaredCellNames::contains));
   }
+
+  @Override
+  public Optional<String> getCanonicalCellName(Path cellPath) {
+    return delegate.getCanonicalCellName(cellPath);
+  }
 }

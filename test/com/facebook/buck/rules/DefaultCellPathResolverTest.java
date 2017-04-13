@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.ConfigBuilder;
@@ -33,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class DefaultCellPathResolverTest {
   private static final String REPOSITORIES_SECTION =
@@ -220,5 +222,43 @@ public class DefaultCellPathResolverTest {
                 .put(RelativeCellName.of(ImmutableList.of("right")), cellRightRoot)
             .build())
         );
+  }
+
+  @Test
+  public void canonicalCellNameForRootIsEmpty() {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
+        vfs.getPath("/foo/root"),
+        ImmutableMap.of("root", vfs.getPath("/foo/root")));
+    assertEquals(
+        Optional.empty(),
+        cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/root")));
+  }
+
+  @Test
+  public void canonicalCellNameForCellIsLexicographicallySmallest() {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
+        vfs.getPath("/foo/root"),
+        ImmutableMap.of(
+            "root", vfs.getPath("/foo/root"),
+            "a", vfs.getPath("/foo/cell"),
+            "b", vfs.getPath("/foo/cell")));
+
+    assertEquals(
+        Optional.of("a"),
+        cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
+
+    cellPathResolver = new DefaultCellPathResolver(
+        vfs.getPath("/foo/root"),
+        ImmutableMap.of(
+            "root", vfs.getPath("/foo/root"),
+            "b", vfs.getPath("/foo/cell"),
+            "a", vfs.getPath("/foo/cell")));
+
+    assertEquals(
+        "After flipping insertion order, still smallest.",
+        Optional.of("a"),
+        cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
   }
 }

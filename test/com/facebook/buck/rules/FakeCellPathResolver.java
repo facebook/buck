@@ -62,4 +62,14 @@ public final class FakeCellPathResolver implements CellPathResolver {
   public ImmutableMap<String, Path> getCellPaths() {
     return cellPaths;
   }
+
+  @Override
+  public Optional<String> getCanonicalCellName(Path cellPath) {
+    if (cellPath.equals(projectFilesystem.getRootPath())) {
+      return Optional.empty();
+    } else {
+      return Optional.of(
+          cellPaths.asMultimap().inverse().get(cellPath).stream().sorted().findFirst().get());
+    }
+  }
 }

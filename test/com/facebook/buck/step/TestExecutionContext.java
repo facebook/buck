@@ -45,6 +45,11 @@ public class TestExecutionContext {
     public ImmutableMap<String, Path> getCellPaths() {
       return ImmutableMap.of();
     }
+
+    @Override
+    public Optional<String> getCanonicalCellName(Path cellPath) {
+      return Optional.empty();
+    }
   };
 
   private TestExecutionContext() {

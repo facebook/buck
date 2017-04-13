@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -109,6 +110,8 @@ public class BuildTargetParser {
     baseName = baseName.replace("\\", "/");
     checkBaseName(baseName, buildTargetName);
 
+    Path cellPath = cellNames.getCellPath(givenCellName);
+
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder()
             .setBaseName(baseName)
@@ -116,9 +119,9 @@ public class BuildTargetParser {
             // Set the cell path correctly. Because the cellNames comes from the owning cell we can
             // be sure that if this doesn't throw an exception the target cell is visible to the
             // owning cell.
-            .setCellPath(cellNames.getCellPath(givenCellName))
+            .setCellPath(cellPath)
             // We are setting the cell name so we can print it later
-            .setCell(givenCellName);
+            .setCell(cellNames.getCanonicalCellName(cellPath));
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
 

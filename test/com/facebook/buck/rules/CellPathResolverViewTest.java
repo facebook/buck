@@ -64,6 +64,22 @@ public class CellPathResolverViewTest {
     Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.empty()));
   }
 
+  @Test
+  public void canonicalCellNameRelativeToDelegateCell() {
+    CellPathResolverView view = new CellPathResolverView(
+        getTestDelegate(),
+        ImmutableSet.of("b", "c"),
+        filesystem.getPath("foo/c"));
+    Assert.assertEquals(
+        "root cell resolves to no prefix.",
+        Optional.empty(),
+        view.getCanonicalCellName(filesystem.getPath("foo/root")));
+    Assert.assertEquals(
+        "current cell resolves to current cell's prefix.",
+        Optional.of("c"),
+        view.getCanonicalCellName(filesystem.getPath("foo/c")));
+  }
+
   private CellPathResolver getTestDelegate() {
     return new DefaultCellPathResolver(
         filesystem.getPath("foo/root"),
