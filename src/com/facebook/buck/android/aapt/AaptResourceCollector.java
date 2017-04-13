@@ -22,10 +22,10 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,7 +41,7 @@ public class AaptResourceCollector {
   private final Set<RDotTxtEntry> resources;
 
   public AaptResourceCollector() {
-    this.enumerators = Maps.newHashMap();
+    this.enumerators = new HashMap<>();
     this.resources = Sets.newHashSet();
     this.currentTypeId = 1;
   }

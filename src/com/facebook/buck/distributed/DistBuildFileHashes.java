@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -78,7 +79,7 @@ public class DistBuildFileHashes {
       int keySeed,
       final Cell rootCell) {
 
-    this.remoteFileHashes = Maps.newHashMap();
+    this.remoteFileHashes = new HashMap<>();
 
     StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
         originalCache -> {

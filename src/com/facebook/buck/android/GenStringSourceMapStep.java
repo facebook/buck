@@ -26,7 +26,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -37,6 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -94,9 +94,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
 
-  private final Map<String, Integer> stringResourceNameToIdMap = Maps.newHashMap();
-  private final Map<String, Integer> pluralsResourceNameToIdMap = Maps.newHashMap();
-  private final Map<String, Integer> arrayResourceNameToIdMap = Maps.newHashMap();
+  private final Map<String, Integer> stringResourceNameToIdMap = new HashMap<>();
+  private final Map<String, Integer> pluralsResourceNameToIdMap = new HashMap<>();
+  private final Map<String, Integer> arrayResourceNameToIdMap = new HashMap<>();
 
   /**
    * Associates each string resource with it's integer id (as assigned by {@code aapt} during
@@ -159,9 +159,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   }
 
   private Map<String, Map<String, NativeResourceInfo>> parseStringFiles(ExecutionContext context) {
-    Map<String, NativeResourceInfo> nativeStrings = Maps.newHashMap();
-    Map<String, NativeResourceInfo> nativePlurals = Maps.newHashMap();
-    Map<String, NativeResourceInfo> nativeArrays = Maps.newHashMap();
+    Map<String, NativeResourceInfo> nativeStrings = new HashMap<>();
+    Map<String, NativeResourceInfo> nativePlurals = new HashMap<>();
+    Map<String, NativeResourceInfo> nativeArrays = new HashMap<>();
 
     for (Path resDir : resDirectories) {
       Path stringsPath = resDir.resolve("values").resolve("strings.xml");
@@ -188,7 +188,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       }
     }
 
-    Map<String, Map<String, NativeResourceInfo>> resultMap = Maps.newHashMap();
+    Map<String, Map<String, NativeResourceInfo>> resultMap = new HashMap<>();
     resultMap.put("strings", nativeStrings);
     resultMap.put("plurals", nativePlurals);
     resultMap.put("string-arrays", nativeArrays);

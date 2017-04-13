@@ -32,10 +32,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class AndroidPackageableCollector {
   private final ImmutableList.Builder<SourcePath> resourceDirectories = ImmutableList.builder();
 
   // Map is used instead of ImmutableMap.Builder for its containsKey() method.
-  private final Map<String, BuildConfigFields> buildConfigs = Maps.newHashMap();
+  private final Map<String, BuildConfigFields> buildConfigs = new HashMap<>();
 
   private final ImmutableSet.Builder<HasJavaClassHashes> javaClassHashesProviders =
       ImmutableSet.builder();

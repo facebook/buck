@@ -77,7 +77,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -87,6 +86,8 @@ import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -168,7 +169,7 @@ public class Project {
     List<SerializableModule> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
-    List<String> modifiedFiles = Lists.newArrayList();
+    List<String> modifiedFiles = new ArrayList<>();
 
     // Process the JSON config to generate the .xml and .iml files for IntelliJ.
     ExitCodeAndOutput result = processJsonConfig(jsonTempFile, generateMinimalProject);
@@ -237,7 +238,7 @@ public class Project {
 
   @VisibleForTesting
   List<SerializableModule> createModulesForProjectConfigs() throws IOException {
-    List<SerializableModule> modules = Lists.newArrayList();
+    List<SerializableModule> modules = new ArrayList<>();
 
     // Convert the project_config() targets into modules and find the union of all jars passed to
     // no_dx.
@@ -508,7 +509,7 @@ public class Project {
       boolean includeSourceFolder,
       LinkedHashSet<SerializableDependentModule> dependencies,
       SerializableDependentModule jdkDependency) {
-    List<SerializableDependentModule> dependenciesInOrder = Lists.newArrayList();
+    List<SerializableDependentModule> dependenciesInOrder = new ArrayList<>();
 
     // If the source folder module is present, add it to the front of the list.
     if (includeSourceFolder) {
@@ -516,7 +517,7 @@ public class Project {
     }
 
     // List the libraries before the non-libraries.
-    List<SerializableDependentModule> nonLibraries = Lists.newArrayList();
+    List<SerializableDependentModule> nonLibraries = new ArrayList<>();
     for (SerializableDependentModule dep : dependencies) {
       if (dep.isLibrary()) {
         dependenciesInOrder.add(dep);
@@ -719,7 +720,7 @@ public class Project {
       Set<Path> noDxJars,
       SourcePathResolver resolver) {
 
-    Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
+    Map<String, Path> intelliJLibraryNameToJarPath = new HashMap<>();
     for (Path jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
       intelliJLibraryNameToJarPath.put(libraryName, jarPath);

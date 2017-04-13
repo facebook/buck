@@ -70,7 +70,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
@@ -89,6 +88,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -179,12 +179,12 @@ public class TestRunning {
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
-    List<ListenableFuture<TestResults>> results = Lists.newArrayList();
+    List<ListenableFuture<TestResults>> results = new ArrayList<>();
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(buildEngine);
     final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
-    final List<TestRun> separateTestRuns = Lists.newArrayList();
-    List<TestRun> parallelTestRuns = Lists.newArrayList();
+    final List<TestRun> separateTestRuns = new ArrayList<>();
+    List<TestRun> parallelTestRuns = new ArrayList<>();
     for (final TestRule test : tests) {
       // Determine whether the test needs to be executed.
       final Callable<TestResults> resultsInterpreter = getCachingCallable(
@@ -352,7 +352,7 @@ public class TestRunning {
 
     ListenableFuture<List<TestResults>> parallelTestStepsFuture = Futures.allAsList(results);
 
-    final List<TestResults> completedResults = Lists.newArrayList();
+    final List<TestResults> completedResults = new ArrayList<>();
 
     final ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
     ListenableFuture<Void> uberFuture = MoreFutures.addListenableCallback(
@@ -362,7 +362,7 @@ public class TestRunning {
           public void onSuccess(List<TestResults> parallelTestResults) {
             LOG.debug("Parallel tests completed, running separate tests...");
             completedResults.addAll(parallelTestResults);
-            List<ListenableFuture<TestResults>> separateResultsList = Lists.newArrayList();
+            List<ListenableFuture<TestResults>> separateResultsList = new ArrayList<>();
             for (TestRun testRun : separateTestRuns) {
               separateResultsList.add(
                   transformTestResults(

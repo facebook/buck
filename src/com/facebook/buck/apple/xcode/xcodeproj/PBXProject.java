@@ -19,9 +19,9 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class PBXProject extends PBXContainer {
   public PBXProject(String name) {
     this.name = name;
     this.mainGroup = new PBXGroup("mainGroup", null, PBXReference.SourceTree.GROUP);
-    this.targets = Lists.newArrayList();
+    this.targets = new ArrayList<>();
     this.buildConfigurationList = new XCConfigurationList();
     this.compatibilityVersion = "Xcode 3.2";
   }

@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -40,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -68,7 +68,7 @@ class WorkspaceGenerator {
     private final SortedMap<String, WorkspaceNode> children;
 
     WorkspaceGroup() {
-      this.children = Maps.newTreeMap();
+      this.children = new TreeMap<>();
     }
 
     public Map<String, WorkspaceNode> getChildren() {
@@ -95,7 +95,7 @@ class WorkspaceGenerator {
     this.projectFilesystem = projectFilesystem;
     this.workspaceName = workspaceName;
     this.outputDirectory = outputDirectory;
-    this.children = Maps.newTreeMap();
+    this.children = new TreeMap<>();
   }
 
   /**

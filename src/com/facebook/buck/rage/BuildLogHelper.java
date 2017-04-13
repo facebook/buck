@@ -25,7 +25,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
 
@@ -37,6 +36,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -150,7 +150,7 @@ public class BuildLogHelper {
   }
 
   public Collection<Path> getAllBuckLogFiles() throws IOException {
-    final List<Path> logfiles = Lists.newArrayList();
+    final List<Path> logfiles = new ArrayList<>();
     projectFilesystem.walkRelativeFileTree(
         projectFilesystem.getBuckPaths().getLogDir(),
         new FileVisitor<Path>() {

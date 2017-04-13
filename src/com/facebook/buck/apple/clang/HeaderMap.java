@@ -20,7 +20,6 @@ import static java.lang.Math.max;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,6 +30,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -106,7 +106,7 @@ public class HeaderMap {
     this.buckets = new Bucket[numBuckets];
     this.stringBytes = new byte[stringBytesLength];
     this.stringBytesActualLength = 0;
-    this.addedStrings = Maps.newHashMap();
+    this.addedStrings = new HashMap<>();
   }
 
   public int getNumEntries() {

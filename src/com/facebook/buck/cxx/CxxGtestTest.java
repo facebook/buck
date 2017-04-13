@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -57,6 +56,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -159,7 +159,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     // It's possible the test output had invalid characters in it's output, so make sure to
     // ignore these as we parse the output lines.
     Optional<String> currentTest = Optional.empty();
-    Map<String, ChunkAccumulator> stdout = Maps.newHashMap();
+    Map<String, ChunkAccumulator> stdout = new HashMap<>();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
     try (InputStream input = getProjectFilesystem().newFileInputStream(output);

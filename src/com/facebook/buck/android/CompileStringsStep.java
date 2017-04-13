@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -133,10 +134,10 @@ public class CompileStringsStep implements Step {
     this.stringFiles = stringFiles;
     this.rDotTxtFile = rDotTxtFile;
     this.pathBuilder = pathBuilder;
-    this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
-    this.stringResourceNameToIdMap = Maps.newHashMap();
-    this.pluralsResourceNameToIdMap = Maps.newHashMap();
-    this.arrayResourceNameToIdMap = Maps.newHashMap();
+    this.regionSpecificToBaseLocaleMap = new HashMap<>();
+    this.stringResourceNameToIdMap = new HashMap<>();
+    this.pluralsResourceNameToIdMap = new HashMap<>();
+    this.arrayResourceNameToIdMap = new HashMap<>();
   }
 
   @Override
@@ -154,7 +155,7 @@ public class CompileStringsStep implements Step {
     }
 
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(stringFiles);
-    Map<String, StringResources> resourcesByLocale = Maps.newHashMap();
+    Map<String, StringResources> resourcesByLocale = new HashMap<>();
     for (String locale : filesByLocale.keySet()) {
       try {
         resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
@@ -289,9 +290,9 @@ public class CompileStringsStep implements Step {
   private StringResources compileStringFiles(
       ProjectFilesystem filesystem,
       Collection<Path> filepaths) throws IOException, SAXException {
-    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = Maps.newTreeMap();
-    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newTreeMap();
-    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = Maps.newTreeMap();
+    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = new TreeMap<>();
+    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new TreeMap<>();
+    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
 
     for (Path stringFilePath : filepaths) {
       Document dom = XmlDomParser.parse(filesystem.getPathForRelativePath(stringFilePath));

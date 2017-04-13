@@ -22,7 +22,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 
 import java.io.BufferedReader;
@@ -42,6 +41,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -243,7 +243,7 @@ public final class MoreFiles {
    */
   @VisibleForTesting
   static List<String> diffFileContents(Iterable<String> lines, File file) throws IOException {
-    List<String> diffLines = Lists.newArrayList();
+    List<String> diffLines = new ArrayList<>();
     Iterator<String> iter = lines.iterator();
     try (BufferedReader reader = Files.newBufferedReader(file.toPath(), Charsets.UTF_8)) {
       while (iter.hasNext()) {

@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static java.nio.charset.Charset.defaultCharset;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -34,6 +33,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +63,7 @@ public class CxxCompilationDatabaseUtils {
           .fromJson(
               fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {
               }.getType());
-      Map<String, CxxCompilationDatabaseEntry> fileToEntry = Maps.newHashMap();
+      Map<String, CxxCompilationDatabaseEntry> fileToEntry = new HashMap<>();
       for (CxxCompilationDatabaseEntry entry : entries) {
         fileToEntry.put(entry.getFile(), entry);
       }

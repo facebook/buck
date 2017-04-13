@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.ini4j.Ini;
@@ -35,6 +34,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,7 +65,7 @@ public class TestDataHelper {
 
   public static Path getTestDataDirectory(Class<?> testCaseClass) {
     String javaPackage = testCaseClass.getPackage().getName();
-    List<String> parts = Lists.newArrayList();
+    List<String> parts = new ArrayList<>();
     for (String component : JAVA_PACKAGE_SPLITTER.split(javaPackage)) {
       parts.add(component);
     }

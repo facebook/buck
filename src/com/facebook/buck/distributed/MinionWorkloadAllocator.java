@@ -19,8 +19,8 @@ package com.facebook.buck.distributed;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +37,7 @@ public class MinionWorkloadAllocator {
 
   public MinionWorkloadAllocator(BuildTargetsQueue queue, int maxTargetsPerMinion) {
     this.queue = queue;
-    this.minionAllocations = Maps.newHashMap();
+    this.minionAllocations = new HashMap<>();
     this.targetsNotAssignedYet =
         Lists.newArrayList(queue.dequeueZeroDependencyNodes(ImmutableList.of()));
     this.maxTargetsPerMinion = maxTargetsPerMinion;

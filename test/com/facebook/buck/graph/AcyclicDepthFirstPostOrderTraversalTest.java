@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -174,7 +174,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
   private static class TestDagDepthFirstSearch {
 
     private final Multimap<String, String> graph;
-    private final List<String> exploredNodes = Lists.newArrayList();
+    private final List<String> exploredNodes = new ArrayList<>();
     private int numFindChildrenCalls;
 
     public TestDagDepthFirstSearch(Multimap<String, String> graph) {

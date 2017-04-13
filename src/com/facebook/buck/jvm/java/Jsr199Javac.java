@@ -45,13 +45,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -366,7 +366,7 @@ public abstract class Jsr199Javac implements Javac {
       StandardJavaFileManager fileManager,
       Function<Path, Path> absolutifier,
       Set<Path> javaSourceFilePaths) throws IOException {
-    List<JavaFileObject> compilationUnits = Lists.newArrayList();
+    List<JavaFileObject> compilationUnits = new ArrayList<>();
     for (Path path : javaSourceFilePaths) {
       String pathString = path.toString();
       if (pathString.endsWith(".java")) {

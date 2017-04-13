@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,7 +28,7 @@ public abstract class PBXBuildPhase extends PBXProjectItem {
   private final List<PBXBuildFile> files;
 
   public PBXBuildPhase() {
-    this.files = Lists.newArrayList();
+    this.files = new ArrayList<>();
   }
 
   public List<PBXBuildFile> getFiles() {

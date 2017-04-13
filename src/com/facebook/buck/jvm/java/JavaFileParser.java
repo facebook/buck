@@ -24,7 +24,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -983,7 +982,7 @@ public class JavaFileParser {
 
   @Nullable
   private String getFullyQualifiedTypeName(AbstractTypeDeclaration node) {
-    LinkedList<String> nameParts = Lists.newLinkedList();
+    LinkedList<String> nameParts = new LinkedList<>();
     nameParts.add(node.getName().toString());
     ASTNode parent = node.getParent();
     while (!(parent instanceof CompilationUnit)) {

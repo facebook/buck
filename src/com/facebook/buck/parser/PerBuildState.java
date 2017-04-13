@@ -38,7 +38,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -51,6 +50,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -279,7 +279,7 @@ public class PerBuildState implements AutoCloseable {
       Collection<Path> inputs,
       ProjectFilesystem projectFilesystem,
       Map<Path, Optional<Path>> symlinkExistenceCache) throws IOException {
-    Map<Path, Path> newSymlinksEncountered = Maps.newHashMap();
+    Map<Path, Path> newSymlinksEncountered = new HashMap<>();
     for (Path input : inputs) {
       for (int i = 1; i < input.getNameCount(); i++) {
         Path subpath = input.subpath(0, i);

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
@@ -38,6 +37,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -75,7 +75,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     this.info = info;
     this.lock = new Object();
     this.outputExecutor = outputExecutor;
-    this.logLines = Lists.newArrayList();
+    this.logLines = new ArrayList<>();
   }
 
   @Subscribe
@@ -90,7 +90,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       return;
     }
 
-    List<String> newLogLines = Lists.newArrayList();
+    List<String> newLogLines = new ArrayList<>();
     for (RuleKey key : event.getRuleKeys()) {
       newLogLines.add(toTsv(key, cacheResultType));
     }
@@ -153,7 +153,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private void submitFlushLogLines() {
     synchronized (lock) {
       List<String> linesToFlush = logLines;
-      logLines = Lists.newArrayList();
+      logLines = new ArrayList<>();
       if (!linesToFlush.isEmpty()) {
         outputExecutor.execute(() -> actuallyFlushLogLines(linesToFlush));
       }

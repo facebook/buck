@@ -36,7 +36,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,6 +46,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,7 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Parameterized.Parameters(name = "{0},{1},{2}")
   public static Collection<Object[]> data() {
-    List<Object[]> data = Lists.newArrayList();
+    List<Object[]> data = new ArrayList<>();
     for (String arch : ImmutableList.of("arm", "armv7", "arm64", "x86", "x86_64")) {
       data.add(
           new Object[]{

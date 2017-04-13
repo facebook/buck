@@ -50,13 +50,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -192,7 +192,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   private String getOutputName(String name) {
-    List<String> parts = Lists.newArrayList();
+    List<String> parts = new ArrayList<>();
     for (String part : Splitter.on(File.separator).omitEmptyStrings().split(name)) {
       // TODO(#7877540): Remove once we prevent disabling package boundary checks.
       parts.add(part.equals("..") ? "__PAR__" : part);

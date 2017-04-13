@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -92,7 +92,7 @@ public abstract class ShellStep implements Step {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
 
     builder.setCommand(getShellCommand(context));
-    Map<String, String> environment = Maps.newHashMap();
+    Map<String, String> environment = new HashMap<>();
     setProcessEnvironment(context, environment, workingDirectory.toFile());
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(workingDirectory);

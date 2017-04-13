@@ -27,12 +27,12 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -125,10 +125,10 @@ public class ServerHealthManager {
 
   private Optional<URI> calculateBestServer() throws NoHealthyServersException {
     ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
-    Map<URI, PerServerData.Builder> allPerServerData = Maps.newHashMap();
+    Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
     try {
       long epochMillis = clock.currentTimeMillis();
-      List<Pair<URI, Long>> serverLatencies = Lists.newArrayList();
+      List<Pair<URI, Long>> serverLatencies = new ArrayList<>();
       for (ServerHealthState state : servers.values()) {
         URI server = state.getServer();
         PerServerData.Builder perServerData = PerServerData.builder().setServer(server);

@@ -101,7 +101,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
@@ -281,7 +280,7 @@ public class CachingBuildEngineTest {
       // Replay the mocks to instantiate the AbstractCachingBuildRule.
       replayAll();
       String pathToOutputFile = "buck-out/gen/src/com/facebook/orca/some_file";
-      List<Step> buildSteps = Lists.newArrayList();
+      List<Step> buildSteps = new ArrayList<>();
       final BuildRule ruleToTest = createRule(
           filesystem,
           resolver,

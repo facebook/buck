@@ -19,10 +19,10 @@ package com.facebook.buck.graph;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -56,7 +56,7 @@ public class AbstractBottomUpTraversalTest {
     DirectedAcyclicGraph<String> immutableGraph =
         new DirectedAcyclicGraph<>(mutableGraph);
 
-    final List<String> visitedNodes = Lists.newLinkedList();
+    final List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
@@ -101,7 +101,7 @@ public class AbstractBottomUpTraversalTest {
     DirectedAcyclicGraph<String> immutableGraph =
         new DirectedAcyclicGraph<String>(mutableGraph);
 
-    final List<String> visitedNodes = Lists.newLinkedList();
+    final List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 

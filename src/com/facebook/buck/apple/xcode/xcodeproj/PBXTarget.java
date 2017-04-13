@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -37,8 +37,8 @@ public abstract class PBXTarget extends PBXProjectItem {
 
   public PBXTarget(String name) {
     this.name = name;
-    this.dependencies = Lists.newArrayList();
-    this.buildPhases = Lists.newArrayList();
+    this.dependencies = new ArrayList<>();
+    this.buildPhases = new ArrayList<>();
     this.buildConfigurationList = new XCConfigurationList();
   }
 

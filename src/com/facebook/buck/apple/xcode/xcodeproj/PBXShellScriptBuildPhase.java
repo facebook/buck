@@ -19,8 +19,8 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -38,8 +38,8 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   private static final NSString DEFAULT_SHELL_SCRIPT = new NSString("");
 
   public PBXShellScriptBuildPhase() {
-    this.inputPaths = Lists.newArrayList();
-    this.outputPaths = Lists.newArrayList();
+    this.inputPaths = new ArrayList<>();
+    this.outputPaths = new ArrayList<>();
   }
 
   @Override

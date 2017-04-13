@@ -31,7 +31,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
@@ -40,6 +39,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -160,7 +160,7 @@ final class OwnersReport {
       ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
       final Path rootPath = cellFilesystem.getRootPath();
       Preconditions.checkState(rootPath.isAbsolute());
-      Map<Path, ImmutableSet<TargetNode<?, ?>>> targetNodes = Maps.newHashMap();
+      Map<Path, ImmutableSet<TargetNode<?, ?>>> targetNodes = new HashMap<>();
       OwnersReport report = emptyReport();
 
       for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {

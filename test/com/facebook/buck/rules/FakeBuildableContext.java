@@ -23,10 +23,10 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +35,7 @@ import java.util.Set;
  */
 public class FakeBuildableContext implements BuildableContext {
 
-  private final Map<String, Object> metadata = Maps.newHashMap();
+  private final Map<String, Object> metadata = new HashMap<>();
 
   private final Set<Path> artifacts = Sets.newHashSet();
 

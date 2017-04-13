@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.collect.Lists;
-
 import org.kohsuke.args4j.Argument;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -46,7 +45,7 @@ public class AuditCellCommand extends AbstractCommand {
   }
 
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;

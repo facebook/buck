@@ -34,8 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -43,6 +41,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -154,7 +153,7 @@ public class PreDexedFilesSorter {
   }
 
   public class DexStoreContents {
-    private List<List<DexWithClasses>> dexesContents;
+    private List<List<DexWithClasses>> dexesContents = new ArrayList<>();
     private int primaryDexSize;
     private List<DexWithClasses> primaryDexContents;
     private int currentDexSize;
@@ -172,11 +171,10 @@ public class PreDexedFilesSorter {
       this.filesystem = filesystem;
       this.steps = steps;
       this.apkModule = apkModule;
-      dexesContents = Lists.newArrayList();
       currentDexSize = 0;
-      currentDexContents = Lists.newArrayList();
+      currentDexContents = new ArrayList<>();
       primaryDexSize = 0;
-      primaryDexContents = Lists.newArrayList();
+      primaryDexContents = new ArrayList<>();
     }
 
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
@@ -189,7 +187,7 @@ public class PreDexedFilesSorter {
       // If we're over the size threshold, start writing to a new dex
       if (dexWithClasses.getWeightEstimate() + currentDexSize > dexWeightLimit) {
         currentDexSize = 0;
-        currentDexContents = Lists.newArrayList();
+        currentDexContents = new ArrayList<>();
       }
 
       // If this is the first class in the dex, initialize it with a canary and add it to the set of
@@ -218,7 +216,7 @@ public class PreDexedFilesSorter {
         throwErrorForPrimaryDexExceedsWeightLimit();
       }
 
-      Map<Path, DexWithClasses> metadataTxtEntries = Maps.newHashMap();
+      Map<Path, DexWithClasses> metadataTxtEntries = new HashMap<>();
       ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
 

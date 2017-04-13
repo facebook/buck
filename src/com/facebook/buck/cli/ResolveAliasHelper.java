@@ -23,10 +23,10 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -49,7 +49,7 @@ public class ResolveAliasHelper {
       boolean enableProfiling,
       List<String> aliases) {
 
-    List<String> resolvedAliases = Lists.newArrayList();
+    List<String> resolvedAliases = new ArrayList<>();
     for (String alias : aliases) {
       ImmutableSet<String> buildTargets;
       if (alias.startsWith("//")) {

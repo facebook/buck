@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -30,6 +29,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -103,7 +103,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       NodeList nodes;
       nodes = (NodeList) launchableActivitiesExpression.evaluate(doc, XPathConstants.NODESET);
 
-      List<String> activities = Lists.newArrayList();
+      List<String> activities = new ArrayList<>();
       for (int i = 0; i < nodes.getLength(); i++) {
         activities.add(nodes.item(i).getTextContent());
       }

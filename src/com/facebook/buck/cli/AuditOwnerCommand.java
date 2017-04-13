@@ -20,12 +20,12 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.MoreExceptions;
-import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AuditOwnerCommand extends AbstractCommand {
@@ -39,7 +39,7 @@ public class AuditOwnerCommand extends AbstractCommand {
   }
 
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;

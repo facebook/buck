@@ -19,11 +19,11 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +32,7 @@ import java.util.List;
 public class SuggestCommand extends AbstractCommand {
   /** This command has one required argument, which must be a build target or alias. */
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> arguments = new ArrayList<>();
 
   /**
    * Normalizes the sole build target argument and partitions it using a

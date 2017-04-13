@@ -53,10 +53,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -161,7 +161,7 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getNativeLinkableInput(Iterable<BuildRule> deps) {
-    List<NativeLinkableInput> inputs = Lists.newArrayList();
+    List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
     ImmutableList<BuildRule> ocamlDeps = getTransitiveOcamlLibraryDeps(deps);
@@ -173,7 +173,7 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getBytecodeLinkableInput(Iterable<BuildRule> deps) {
-    List<NativeLinkableInput> inputs = Lists.newArrayList();
+    List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
     ImmutableList<BuildRule> ocamlDeps = getTransitiveOcamlLibraryDeps(deps);

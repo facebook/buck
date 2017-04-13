@@ -16,8 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -116,7 +115,7 @@ public class XCScheme {
     private final boolean parallelizeBuild;
 
     public BuildAction(boolean parallelizeBuild) {
-      buildActionEntries = Lists.newArrayList();
+      buildActionEntries = new ArrayList<>();
       this.parallelizeBuild = parallelizeBuild;
     }
 
@@ -243,7 +242,7 @@ public class XCScheme {
     private final String buildConfiguration;
 
     public TestAction(String buildConfiguration) {
-      this.testables = Lists.newArrayList();
+      this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
     }
 

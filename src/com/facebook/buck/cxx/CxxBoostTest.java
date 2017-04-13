@@ -41,8 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -52,6 +50,8 @@ import org.w3c.dom.NodeList;
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -184,9 +184,9 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
     // Process the test run output to grab the individual test stdout/stderr and
     // test run times.
-    Map<String, String> messages = Maps.newHashMap();
-    Map<String, List<String>> stdout = Maps.newHashMap();
-    Map<String, Long> times = Maps.newHashMap();
+    Map<String, String> messages = new HashMap<>();
+    Map<String, List<String>> stdout = new HashMap<>();
+    Map<String, Long> times = new HashMap<>();
     try (BufferedReader reader = Files.newBufferedReader(output, Charsets.US_ASCII)) {
       Stack<String> testSuite = new Stack<>();
       Optional<String> currentTest = Optional.empty();
@@ -203,7 +203,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         } else if ((matcher = CASE_START.matcher(line)).matches()) {
           String test = Joiner.on(".").join(testSuite) + "." + matcher.group(1);
           currentTest = Optional.of(test);
-          stdout.put(test, Lists.newArrayList());
+          stdout.put(test, new ArrayList<>());
         } else if ((matcher = CASE_END.matcher(line)).matches()) {
           String test = Joiner.on(".").join(testSuite) + "." + matcher.group(1);
           Preconditions.checkState(currentTest.isPresent() && currentTest.get().equals(test));

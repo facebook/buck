@@ -25,10 +25,10 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -140,7 +140,7 @@ public class CommandThreadManager implements AutoCloseable {
 
     // If the shutdown failed, print the stacks for all the blocked threads.
     if (!shutdown) {
-      List<String> parts = Lists.newArrayList();
+      List<String> parts = new ArrayList<>();
 
       parts.add(
           String.format(

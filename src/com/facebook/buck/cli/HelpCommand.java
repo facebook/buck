@@ -16,19 +16,18 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.collect.Lists;
-
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HelpCommand extends AbstractCommand {
 
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> arguments = new ArrayList<>();
 
   @Override
   public boolean isReadOnly() {

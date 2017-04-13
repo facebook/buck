@@ -23,11 +23,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Deque;
+import java.util.LinkedList;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
@@ -64,7 +64,7 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
     }
 
     Path directory = pathRelativeToProjectRoot.getParent();
-    Deque<String> parts = Lists.newLinkedList();
+    Deque<String> parts = new LinkedList<>();
     while (directory != null && !pathElements.contains(directory.getFileName().toString())) {
       parts.addFirst(directory.getFileName().toString());
       directory = directory.getParent();

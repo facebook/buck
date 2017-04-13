@@ -73,7 +73,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.easymock.EasyMock;
@@ -87,6 +86,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -957,9 +957,9 @@ public class AppleCxxPlatformsTest {
   // to the NDK don't cause changes.
   @Test
   public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
-    Map<String, ImmutableMap<Flavor, RuleKey>> preprocessAndCompileRukeKeys = Maps.newHashMap();
-    Map<String, ImmutableMap<Flavor, RuleKey>> compileRukeKeys = Maps.newHashMap();
-    Map<String, ImmutableMap<Flavor, RuleKey>> linkRukeKeys = Maps.newHashMap();
+    Map<String, ImmutableMap<Flavor, RuleKey>> preprocessAndCompileRukeKeys = new HashMap<>();
+    Map<String, ImmutableMap<Flavor, RuleKey>> compileRukeKeys = new HashMap<>();
+    Map<String, ImmutableMap<Flavor, RuleKey>> linkRukeKeys = new HashMap<>();
 
     // Iterate building up rule keys for combinations of different platforms and NDK root
     // directories.

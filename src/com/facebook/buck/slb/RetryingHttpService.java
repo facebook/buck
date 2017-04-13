@@ -21,11 +21,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import okhttp3.Request;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Request;
 
 public class RetryingHttpService implements HttpService {
 
@@ -73,7 +74,7 @@ public class RetryingHttpService implements HttpService {
 
   @Override
   public HttpResponse makeRequest(String path, Request.Builder request) throws IOException {
-    List<IOException> allExceptions = Lists.newArrayList();
+    List<IOException> allExceptions = new ArrayList<>();
     for (int retryCount = 0; retryCount < maxNumberOfAttempts; retryCount++) {
       try {
         if (retryCount > 0) {

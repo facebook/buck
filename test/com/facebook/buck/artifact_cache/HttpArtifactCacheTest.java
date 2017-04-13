@@ -36,7 +36,6 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -54,6 +53,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -149,7 +149,7 @@ public class HttpArtifactCacheTest {
 
   @Test
   public void testFetchNotFound() throws Exception {
-    final List<Response> responseList = Lists.newArrayList();
+    final List<Response> responseList = new ArrayList<>();
     argsBuilder.setFetchClient(withMakeRequest((path, requestBuilder) -> {
       Response response =
           new Response.Builder()
@@ -181,7 +181,7 @@ public class HttpArtifactCacheTest {
     final String data = "test";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final List<Response> responseList = Lists.newArrayList();
+    final List<Response> responseList = new ArrayList<>();
     argsBuilder.setProjectFilesystem(filesystem);
     argsBuilder.setFetchClient(withMakeRequest((path, requestBuilder) -> {
       Request request = requestBuilder.url(SERVER + path).build();
@@ -242,7 +242,7 @@ public class HttpArtifactCacheTest {
   public void testFetchBadChecksum() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
-    final List<Response> responseList = Lists.newArrayList();
+    final List<Response> responseList = new ArrayList<>();
     argsBuilder.setFetchClient(withMakeRequest((path, requestBuilder) -> {
       Request request = requestBuilder.url(SERVER + path).build();
       Response response =
@@ -275,7 +275,7 @@ public class HttpArtifactCacheTest {
   public void testFetchExtraPayload() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
-    final List<Response> responseList = Lists.newArrayList();
+    final List<Response> responseList = new ArrayList<>();
     argsBuilder.setFetchClient(withMakeRequest((path, requestBuilder) -> {
       Request request = requestBuilder.url(SERVER + path).build();
       Response response =

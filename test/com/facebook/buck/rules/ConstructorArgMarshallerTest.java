@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +42,7 @@ import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -267,7 +267,7 @@ public class ConstructorArgMarshallerTest {
     BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
 
     DtoWithDepsAndNotDeps dto = new DtoWithDepsAndNotDeps();
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
     args.put("notdeps", ImmutableList.of(notDep));
 
@@ -291,7 +291,7 @@ public class ConstructorArgMarshallerTest {
     final String dep = "//should/be:ignored";
 
     DtoWithFakeDeps dto = new DtoWithFakeDeps();
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -313,7 +313,7 @@ public class ConstructorArgMarshallerTest {
   public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
       throws Exception {
     DtoWithOptionalSetOfStrings dto = new DtoWithOptionalSetOfStrings();
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     // Deliberately not populating args
 
     marshaller.populate(
@@ -522,7 +522,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldPopulateDefaultValuesAsBeingAbsent() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("defaultString", null);
     args.put("defaultSourcePath", null);
     DtoWithOptionalValues dto = new DtoWithOptionalValues();
@@ -545,7 +545,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldRespectSpecifiedDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("something", null);
     args.put("things", null);
     args.put("another", null);
@@ -569,7 +569,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldAllowOverridingDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
     args.put("another", 1234L);

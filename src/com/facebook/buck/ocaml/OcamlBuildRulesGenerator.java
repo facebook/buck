@@ -39,10 +39,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -447,7 +447,7 @@ public class OcamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmxFiles = ImmutableList.builder();
 
-    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = Maps.newHashMap();
+    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {
@@ -546,7 +546,7 @@ public class OcamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmoFiles = ImmutableList.builder();
 
-    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = Maps.newHashMap();
+    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {

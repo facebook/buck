@@ -50,8 +50,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 
 public class CompileStringsStepTest extends EasyMockSupport {
@@ -187,7 +189,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     EnumMap<Gender, String> map5 = Maps.newEnumMap(Gender.class);
     map5.put(Gender.unknown, "Value with %1$s");
 
-    Map<Integer, EnumMap<Gender, String>> stringsMap = Maps.newHashMap();
+    Map<Integer, EnumMap<Gender, String>> stringsMap = new HashMap<>();
     CompileStringsStep step = createNonExecutingStep();
     step.addStringResourceNameToIdMap(ImmutableMap.of(
             "name1", 1,
@@ -254,7 +256,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     EnumMap<Gender, ImmutableMap<String, String>> map3 = Maps.newEnumMap(Gender.class);
     map3.put(Gender.unknown, ImmutableMap.of());
 
-    Map<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newHashMap();
+    Map<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new HashMap<>();
     CompileStringsStep step = createNonExecutingStep();
     step.addPluralsResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
@@ -303,7 +305,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string-array");
 
-    Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = Maps.newTreeMap();
+    Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
     CompileStringsStep step = createNonExecutingStep();
     step.addArrayResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
@@ -347,9 +349,9 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string-array");
 
-    Map<Integer, EnumMap<Gender, String>> stringMap = Maps.newTreeMap();
-    Map<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newTreeMap();
-    Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = Maps.newTreeMap();
+    Map<Integer, EnumMap<Gender, String>> stringMap = new TreeMap<>();
+    Map<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new TreeMap<>();
+    Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
 
     EnumMap<Gender, String> map1 = Maps.newEnumMap(Gender.class);
     map1.put(Gender.unknown, "1");

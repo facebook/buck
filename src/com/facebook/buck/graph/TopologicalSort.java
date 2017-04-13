@@ -19,10 +19,10 @@ package com.facebook.buck.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -36,7 +36,7 @@ public class TopologicalSort {
       TraversableGraph<T> graph) {
 
     // AtomicInteger is used to decrement the integer value in-place.
-    Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();
+    Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = new HashMap<>();
     Queue<T> nextLevel = Queues.newArrayDeque(graph.getNodesWithNoOutgoingEdges());
     Set<T> visitedNodes = Sets.newHashSet();
     ImmutableList.Builder<T> toReturn = ImmutableList.builder();

@@ -29,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
@@ -47,6 +46,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -331,7 +331,7 @@ public class JarDirectoryStepHelper {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
-    final Map<String, Pair<JarEntry, Optional<Path>>> entries = Maps.newTreeMap();
+    final Map<String, Pair<JarEntry, Optional<Path>>> entries = new TreeMap<>();
 
     filesystem.walkFileTree(
         directory,

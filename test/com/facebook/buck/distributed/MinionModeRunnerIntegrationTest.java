@@ -19,12 +19,12 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MinionModeRunnerIntegrationTest {
@@ -62,7 +62,7 @@ public class MinionModeRunnerIntegrationTest {
     private final List<List<String>> callArguments;
 
     public LocalBuilderImpl() {
-      callArguments = Lists.newArrayList();
+      callArguments = new ArrayList<>();
     }
 
     public List<List<String>> getCallArguments() {

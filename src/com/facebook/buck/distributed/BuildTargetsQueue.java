@@ -22,9 +22,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -42,15 +43,15 @@ public class BuildTargetsQueue {
   }
 
   public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(Lists.newArrayList(), Maps.newHashMap());
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>());
   }
 
   public static BuildTargetsQueue newQueue(
       BuildRuleResolver resolver,
       Iterable<BuildTarget> targetsToBuild) {
     // Build the reverse dependency graph by traversing the action graph Top-Down.
-    Map<String, Set<String>> allReverseDeps = Maps.newHashMap();
-    Map<String, Integer> numberOfDependencies = Maps.newHashMap();
+    Map<String, Set<String>> allReverseDeps = new HashMap<>();
+    Map<String, Integer> numberOfDependencies = new HashMap<>();
     Set<String> visitedTargets = Sets.newHashSet();
     Queue<BuildRule> buildRulesToProcess = Lists.newLinkedList(
         FluentIterable.from(targetsToBuild).transform(
@@ -78,14 +79,14 @@ public class BuildTargetsQueue {
     }
 
     // Do the reference counting and create the EnqueuedTargets.
-    List<EnqueuedTarget> zeroDependencyTargets = Lists.newArrayList();
-    Map<String, EnqueuedTarget> allEnqueuedTargets = Maps.newHashMap();
+    List<EnqueuedTarget> zeroDependencyTargets = new ArrayList<>();
+    Map<String, EnqueuedTarget> allEnqueuedTargets = new HashMap<>();
     for (String target : visitedTargets) {
       Iterable<String> currentRevDeps = null;
       if (allReverseDeps.containsKey(target)) {
         currentRevDeps = allReverseDeps.get(target);
       } else {
-        currentRevDeps = Lists.newArrayList();
+        currentRevDeps = new ArrayList<>();
       }
 
       EnqueuedTarget enqueuedTarget = new EnqueuedTarget(

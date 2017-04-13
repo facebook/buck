@@ -22,10 +22,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AbstractBreadthFirstTraversalTest {
@@ -53,7 +53,7 @@ public class AbstractBreadthFirstTraversalTest {
 
     FakeNode initialNode = createNode("J", nodeF, nodeG, nodeH, nodeI);
 
-    final List<FakeNode> nodeTraversalOrder = Lists.newArrayList();
+    final List<FakeNode> nodeTraversalOrder = new ArrayList<>();
     new AbstractBreadthFirstTraversal<FakeNode>(initialNode) {
       @Override
       public ImmutableSet<FakeNode> visit(FakeNode node) {
@@ -100,7 +100,7 @@ public class AbstractBreadthFirstTraversalTest {
 
     FakeNode initialNode = createNode("10", node6, node7, node8, node9);
 
-    final List<FakeNode> nodeTraversalOrder = Lists.newArrayList();
+    final List<FakeNode> nodeTraversalOrder = new ArrayList<>();
 
     // This visitor only visits dependencies whose node names are even numbers.
     new AbstractBreadthFirstTraversal<FakeNode>(initialNode) {

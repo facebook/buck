@@ -21,15 +21,15 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -233,9 +233,9 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
     private Tarjan(MutableDirectedGraph<S> graph) {
       this.graph = graph;
-      this.indexes = Maps.newHashMap();
-      this.lowlinks = Maps.newHashMap();
-      this.nodeStack = Lists.newLinkedList();
+      this.indexes = new HashMap<>();
+      this.lowlinks = new HashMap<>();
+      this.nodeStack = new LinkedList<>();
       this.stronglyConnectedComponents = Sets.newHashSet();
       this.index = 0;
     }

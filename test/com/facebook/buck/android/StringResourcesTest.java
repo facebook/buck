@@ -114,11 +114,11 @@ public class StringResourcesTest {
 
   @Test
   public void testBinaryStream() throws IOException {
-    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = Maps.newTreeMap();
+    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = new TreeMap<>();
     stringsMap.putAll(strings);
-    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newTreeMap();
+    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new TreeMap<>();
     pluralsMap.putAll(plurals);
-    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = Maps.newTreeMap();
+    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
     arraysMap.putAll(arrays);
     byte[] binaryOutput = new StringResources(stringsMap, pluralsMap, arraysMap)
         .getBinaryFileContent();

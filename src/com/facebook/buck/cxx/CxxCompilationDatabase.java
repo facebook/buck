@@ -42,11 +42,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -155,7 +155,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
 
     @VisibleForTesting
     Iterable<CxxCompilationDatabaseEntry> createEntries() {
-      List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
+      List<CxxCompilationDatabaseEntry> entries = new ArrayList<>();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
         entries.add(createEntry(compileRule));
       }

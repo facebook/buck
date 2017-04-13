@@ -45,13 +45,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -164,7 +164,7 @@ abstract class GoDescriptors {
   static ImmutableMap<Path, Path> getPackageImportMap(
       ImmutableList<Path> globalVendorPaths,
       Path basePackagePath, Iterable<Path> packageNameIter) {
-    Map<Path, Path> importMapBuilder = Maps.newHashMap();
+    Map<Path, Path> importMapBuilder = new HashMap<>();
     ImmutableSortedSet<Path> packageNames = ImmutableSortedSet.copyOf(packageNameIter);
 
     ImmutableList.Builder<Path> vendorPathsBuilder = ImmutableList.builder();

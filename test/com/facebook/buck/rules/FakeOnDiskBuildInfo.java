@@ -19,19 +19,19 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
-  private Map<String, String> metadata = Maps.newHashMap();
-  private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
-  private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
+  private Map<String, String> metadata = new HashMap<>();
+  private Map<String, ImmutableList<String>> metadataValues = new HashMap<>();
+  private Map<Path, ImmutableList<String>> pathsToContents = new HashMap<>();
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {

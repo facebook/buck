@@ -21,9 +21,9 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -78,7 +78,7 @@ public class BuckEventBusFactory {
   }
 
   public static class CapturingConsoleEventListener {
-    private final List<ConsoleEvent> logEvents = Lists.newArrayList();
+    private final List<ConsoleEvent> logEvents = new ArrayList<>();
 
     @Subscribe
     public void logEvent(ConsoleEvent event) {

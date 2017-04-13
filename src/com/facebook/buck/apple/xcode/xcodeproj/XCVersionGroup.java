@@ -20,8 +20,8 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +38,7 @@ public class XCVersionGroup extends PBXReference {
 
   public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
-    children = Lists.newArrayList();
+    children = new ArrayList<>();
 
     fileReferencesBySourceTreePath = CacheBuilder.newBuilder().build(
         new CacheLoader<SourceTreePath, PBXFileReference>() {

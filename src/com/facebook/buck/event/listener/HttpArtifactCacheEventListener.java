@@ -25,11 +25,11 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +57,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
 
   @Override
   public void outputTrace(final BuildId buildId) {
-    List<ListenableFuture<Void>> futures = Lists.newArrayList();
+    List<ListenableFuture<Void>> futures = new ArrayList<>();
     futures.add(fetchRequestLogger.forceFlush());
     futures.add(storeRequestLogger.forceFlush());
     try {

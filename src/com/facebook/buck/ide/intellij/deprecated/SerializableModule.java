@@ -26,10 +26,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +82,7 @@ final class SerializableModule {
   }
 
   @JsonProperty
-  List<SourceFolder> sourceFolders = Lists.newArrayList();
+  List<SourceFolder> sourceFolders = new ArrayList<>();
   @JsonProperty
   boolean isRootModule = false;
   /**
@@ -92,7 +92,7 @@ final class SerializableModule {
   SortedSet<SourceFolder> excludeFolders = Sets.newTreeSet(ALPHABETIZER);
   @Nullable
   @JsonProperty
-  List<SerializableDependentModule> dependencies = Lists.newArrayList();
+  List<SerializableDependentModule> dependencies = new ArrayList<>();
   // ANDROID_BINARY / ANDROID_LIBRARY
   @Nullable
   @JsonProperty

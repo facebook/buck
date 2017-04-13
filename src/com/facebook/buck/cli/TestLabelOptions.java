@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -32,6 +31,7 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +85,7 @@ class TestLabelOptions {
       Suppliers.memoize(new Supplier<ImmutableList<LabelSelector>>() {
         @Override
         public ImmutableList<LabelSelector> get() {
-          TreeMap<Integer, LabelSelector> all = Maps.newTreeMap();
+          TreeMap<Integer, LabelSelector> all = new TreeMap<>();
           all.putAll(includedLabelSets);
 
           // Invert the sense of anything given to --exclude.
@@ -138,7 +138,7 @@ class TestLabelOptions {
      */
     private static final AtomicInteger ordinal = new AtomicInteger();
 
-    private final Map<Integer, LabelSelector> labels = Maps.newHashMap();
+    private final Map<Integer, LabelSelector> labels = new HashMap<>();
 
     public LabelsOptionHandler(
         CmdLineParser parser,

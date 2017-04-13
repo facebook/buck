@@ -56,7 +56,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -65,6 +64,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -437,7 +437,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Log build time, excluding time spent in parsing.
     String jobSummary = null;
     if (ruleCount.isPresent()) {
-      List<String> columns = Lists.newArrayList();
+      List<String> columns = new ArrayList<>();
       columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
           cacheRateStatsKeeper.getStats();
@@ -483,7 +483,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private String getNetworkStatsLine(
       @Nullable BuildEvent.Finished finishedEvent) {
     String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + "DOWNLOADING" + "...";
-    List<String> columns = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
     if (finishedEvent != null) {
       Pair<Double, SizeUnit> avgDownloadSpeed =
           networkStatsKeeper.getAverageDownloadSpeed();
@@ -532,7 +532,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private Optional<String> getOptionalDistBuildLineSuffix()  {
     String parseLine;
-    List<String> columns = Lists.newArrayList();
+    List<String> columns = new ArrayList<>();
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {

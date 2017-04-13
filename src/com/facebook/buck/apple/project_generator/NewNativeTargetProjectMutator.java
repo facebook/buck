@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
@@ -75,6 +74,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -613,7 +613,7 @@ class NewNativeTargetProjectMutator {
       resourceCallback.accept(fileReference);
     }
 
-    Map<String, PBXVariantGroup> variantGroups = Maps.newHashMap();
+    Map<String, PBXVariantGroup> variantGroups = new HashMap<>();
     for (Path variantFilePath : variantResourceFiles) {
       String lprojSuffix = ".lproj";
       Path variantDirectory = variantFilePath.getParent();

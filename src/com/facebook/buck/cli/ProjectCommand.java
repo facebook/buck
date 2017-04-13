@@ -112,6 +112,7 @@ import java.io.InputStreamReader;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -370,7 +371,7 @@ public class ProjectCommand extends BuildCommand {
     if (additionalInitialTargets.isEmpty()) {
       initialTargets = getInitialTargets(buckConfig);
     } else {
-      initialTargets = Lists.newArrayList();
+      initialTargets = new ArrayList<>();
       initialTargets.addAll(getInitialTargets(buckConfig));
       initialTargets.addAll(additionalInitialTargets);
     }

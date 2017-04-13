@@ -36,13 +36,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class RunCommand extends AbstractCommand {
@@ -54,10 +54,10 @@ public final class RunCommand extends AbstractCommand {
    * </pre>
    */
   @Argument
-  private List<String> noDashArguments = Lists.newArrayList();
+  private List<String> noDashArguments = new ArrayList<>();
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
-  private List<String> withDashArguments = Lists.newArrayList();
+  private List<String> withDashArguments = new ArrayList<>();
 
   private final Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
       () -> {

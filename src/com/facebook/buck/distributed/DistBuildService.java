@@ -63,7 +63,6 @@ import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -359,7 +358,7 @@ public class DistBuildService implements Closeable {
       ListeningExecutorService executorService) throws IOException {
     ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
         executorService.submit(() -> {
-          List<Path> buckDotFilesExceptConfig = Lists.newArrayList();
+          List<Path> buckDotFilesExceptConfig = new ArrayList<>();
           for (Path path : filesystem.getDirectoryContents(filesystem.getRootPath())) {
             String fileName = path.getFileName().toString();
             if (!filesystem.isDirectory(path) &&

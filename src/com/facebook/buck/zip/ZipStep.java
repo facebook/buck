@@ -27,7 +27,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
@@ -43,6 +42,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 
 /**
@@ -102,7 +102,7 @@ public class ZipStep implements Step {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
-    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = Maps.newTreeMap();
+    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
     FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
       private boolean isSkipFile(Path file) {

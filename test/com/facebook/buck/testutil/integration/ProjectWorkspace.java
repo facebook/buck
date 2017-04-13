@@ -73,7 +73,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
@@ -148,7 +147,7 @@ public class ProjectWorkspace {
 
   private boolean isSetUp = false;
   private boolean manageLocalConfigs = false;
-  private final Map<String, Map<String, String>> localConfigs = Maps.newHashMap();
+  private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private final Path templatePath;
   private final Path destPath;
   private final Supplier<ProjectFilesystemAndConfig> projectFilesystemAndConfig;
@@ -257,7 +256,7 @@ public class ProjectWorkspace {
   }
 
   private Map<String, String> getBuckConfigLocalSection(String section) {
-    Map<String, String> newValue = Maps.newHashMap();
+    Map<String, String> newValue = new HashMap<>();
     Map<String, String> oldValue = localConfigs.putIfAbsent(section, newValue);
     if (oldValue != null) {
       return oldValue;

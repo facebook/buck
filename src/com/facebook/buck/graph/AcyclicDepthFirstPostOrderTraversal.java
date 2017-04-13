@@ -20,12 +20,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -52,7 +52,7 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
   public Iterable<T> traverse(Iterable<? extends T> initialNodes) throws CycleException {
     // This corresponds to the current chain of nodes being explored. Enforcing this invariant makes
     // this data structure useful for debugging.
-    Deque<Explorable> toExplore = Lists.newLinkedList();
+    Deque<Explorable> toExplore = new LinkedList<>();
     for (T node : initialNodes) {
       toExplore.add(new Explorable(node));
     }
@@ -117,7 +117,7 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
 
   private CycleException createCycleException(T collisionNode,
       Iterable<Explorable> currentExploration) {
-    Deque<T> chain = Lists.newLinkedList();
+    Deque<T> chain = new LinkedList<>();
     chain.add(collisionNode);
 
     boolean foundStartOfCycle = false;

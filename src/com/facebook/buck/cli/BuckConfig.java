@@ -68,6 +68,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -437,7 +438,7 @@ public class BuckConfig implements ConfigPathGetter {
 
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
-    Map<Path, String> basePathToAlias = Maps.newHashMap();
+    Map<Path, String> basePathToAlias = new HashMap<>();
     for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entries()) {
       String alias = entry.getKey();
       BuildTarget buildTarget = entry.getValue();

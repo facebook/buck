@@ -22,14 +22,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +66,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     // Initialize basePathToNodeIndex with a Node that corresponds to the empty string. This ensures
     // that findParent() will always return a non-null Node because the empty string is a prefix of
     // all base paths.
-    basePathToNodeIndex = Maps.newHashMap();
+    basePathToNodeIndex = new HashMap<>();
     Node root = new Node(Paths.get(""));
     basePathToNodeIndex.put(Paths.get(""), root);
 
@@ -152,7 +152,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
 
     void addChild(Node node) {
       if (children == null) {
-        children = Lists.newArrayList();
+        children = new ArrayList<>();
       }
       children.add(node);
     }

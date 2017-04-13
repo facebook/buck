@@ -19,13 +19,13 @@ package com.facebook.buck.log;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -118,7 +118,7 @@ public class LogFileHandler extends Handler {
 
               @Override
               public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
-                List<Path> dirPaths = Lists.newArrayList();
+                List<Path> dirPaths = new ArrayList<>();
                 try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootPath)) {
                   for (Path path : directoryStream) {
                     Matcher matcher = DIR_PATTERN.matcher(path.getFileName().toString());

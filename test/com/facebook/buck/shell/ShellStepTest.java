@@ -32,7 +32,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
 import org.junit.Test;
@@ -41,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -280,10 +280,10 @@ public class ShellStepTest {
                 "CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE",
                 "PWD", "/wrong-pwd"))
         .build();
-    Map<String, String> subProcessEnvironment = Maps.newHashMap();
+    Map<String, String> subProcessEnvironment = new HashMap<>();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
     command.setProcessEnvironment(context, subProcessEnvironment, new File("/right-pwd"));
-    Map<String, String> actualProcessEnvironment = Maps.newHashMap();
+    Map<String, String> actualProcessEnvironment = new HashMap<>();
     actualProcessEnvironment.putAll(context.getEnvironment());
     actualProcessEnvironment.remove("PWD");
     assertEquals(

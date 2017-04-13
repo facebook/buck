@@ -36,7 +36,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.testutil.Zip;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
@@ -56,6 +55,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -525,7 +525,7 @@ public class ZipOutputStreamTest {
   }
 
   private static List<NameAndContent> getExtractedEntries(Path zipFile) throws IOException {
-    List<NameAndContent> entries = Lists.newArrayList();
+    List<NameAndContent> entries = new ArrayList<>();
     try (ZipInputStream in = new ZipInputStream(Files.newInputStream(zipFile))) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         entries.add(new NameAndContent(entry.getName(), ByteStreams.toByteArray(in)));

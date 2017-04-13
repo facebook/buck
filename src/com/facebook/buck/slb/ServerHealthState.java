@@ -17,9 +17,9 @@
 package com.facebook.buck.slb;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import java.net.URI;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -42,8 +42,8 @@ public class ServerHealthState {
         maxSamplesStored);
     this.maxSamplesStored = maxSamplesStored;
     this.server = server;
-    this.pingLatencies = Lists.newLinkedList();
-    this.requests = Lists.newLinkedList();
+    this.pingLatencies = new LinkedList<>();
+    this.requests = new LinkedList<>();
   }
 
   /**

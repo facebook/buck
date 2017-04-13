@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -127,7 +127,7 @@ class SchemeGenerator {
 
   public Path writeScheme() throws IOException {
     Map<PBXTarget, XCScheme.BuildableReference>
-        buildTargetToBuildableReferenceMap = Maps.newHashMap();
+        buildTargetToBuildableReferenceMap = new HashMap<>();
 
     for (PBXTarget target : Iterables.concat(orderedBuildTargets, orderedBuildTestTargets)) {
       String blueprintName = target.getProductName();

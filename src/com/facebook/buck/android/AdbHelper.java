@@ -48,7 +48,6 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -58,6 +57,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -154,7 +154,7 @@ public class AdbHelper {
       return null;
     }
 
-    List<IDevice> devices = Lists.newArrayList();
+    List<IDevice> devices = new ArrayList<>();
     Optional<Boolean> emulatorsOnly = Optional.empty();
     if (deviceOptions.isEmulatorsOnlyModeEnabled() && options.isMultiInstallModeEnabled()) {
       emulatorsOnly = Optional.empty();
@@ -266,7 +266,7 @@ public class AdbHelper {
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
       console.printBuildFailure("Failed to create adb connection.");
-      return Lists.newArrayList();
+      return new ArrayList<>();
     }
 
     // Build list of matching devices.
@@ -278,7 +278,7 @@ public class AdbHelper {
             String.format("%d device(s) matches specified device filter (1 expected).\n" +
                 "Either disconnect other devices or enable multi-install mode (%s).",
                 devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-        return Lists.newArrayList();
+        return new ArrayList<>();
       }
       if (!quiet) {
         // Report if multiple devices are matching the filter.
@@ -292,7 +292,7 @@ public class AdbHelper {
       devices = filterDevices(adb.getDevices());
     }
     if (devices == null) {
-      return Lists.newArrayList();
+      return new ArrayList<>();
     }
     return devices;
   }
@@ -307,7 +307,7 @@ public class AdbHelper {
 
   public List<String> getDeviceCPUAbis() throws InterruptedException {
     class GetCpuAbiCallable extends AdbHelper.AdbCallable {
-      public List<String> results = Lists.newArrayList();
+      public List<String> results = new ArrayList<>();
       @Override
       public boolean call(IDevice device) throws Exception {
         String arch = device.getProperty("ro.product.cpu.abi");
@@ -363,7 +363,7 @@ public class AdbHelper {
     }
 
     // Start executions on all matching devices.
-    List<ListenableFuture<Boolean>> futures = Lists.newArrayList();
+    List<ListenableFuture<Boolean>> futures = new ArrayList<>();
     ListeningExecutorService executorService =
         listeningDecorator(
             newMultiThreadExecutor(

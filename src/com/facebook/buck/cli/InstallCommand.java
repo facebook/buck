@@ -66,7 +66,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Option;
@@ -74,6 +73,7 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -127,7 +127,7 @@ public class InstallCommand extends BuildCommand {
       usage = "Arguments passed when running with -r. Only valid for Apple targets.",
       handler = ConsumeAllOptionsHandler.class,
       depends = "-r")
-  private List<String> runArgs = Lists.newArrayList();
+  private List<String> runArgs = new ArrayList<>();
 
   @Option(
       name = RUN_LONG_ARG,

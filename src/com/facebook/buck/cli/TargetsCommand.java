@@ -71,8 +71,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -87,6 +85,7 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -185,7 +184,7 @@ public class TargetsCommand extends AbstractCommand {
   private Supplier<ImmutableSet<String>> outputAttributes;
 
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -1001,7 +1000,7 @@ public class TargetsCommand extends AbstractCommand {
         new AcyclicDepthFirstPostOrderTraversal<>(
             node -> targetGraphWithTests.getAll(node.getParseDeps()).iterator());
 
-    Map<BuildTarget, HashCode> hashesWithTests = Maps.newHashMap();
+    Map<BuildTarget, HashCode> hashesWithTests = new HashMap<>();
 
     for (TargetNode<?, ?> node : traversal.traverse(inputTargets)) {
       hashNodeWithDependencies(

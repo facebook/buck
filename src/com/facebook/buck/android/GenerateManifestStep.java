@@ -29,12 +29,12 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GenerateManifestStep implements Step {
@@ -74,7 +74,7 @@ public class GenerateManifestStep implements Step {
       return StepExecutionResult.ERROR;
     }
 
-    List<File> libraryManifestFiles = Lists.newArrayList();
+    List<File> libraryManifestFiles = new ArrayList<>();
 
     for (Path path : libraryManifestPaths) {
       Path manifestPath = filesystem.getPathForRelativeExistingPath(path).toAbsolutePath();

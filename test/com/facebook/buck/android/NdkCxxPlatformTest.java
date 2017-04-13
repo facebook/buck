@@ -52,7 +52,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
@@ -63,6 +62,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -207,11 +207,11 @@ public class NdkCxxPlatformTest {
             new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.LIBCXX));
     for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          preprocessAndCompileRukeKeys = Maps.newHashMap();
+          preprocessAndCompileRukeKeys = new HashMap<>();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          compileRukeKeys = Maps.newHashMap();
+          compileRukeKeys = new HashMap<>();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          linkRukeKeys = Maps.newHashMap();
+          linkRukeKeys = new HashMap<>();
 
       // Iterate building up rule keys for combinations of different platforms and NDK root
       // directories.

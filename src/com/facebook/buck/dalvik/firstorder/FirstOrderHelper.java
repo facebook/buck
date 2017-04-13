@@ -17,11 +17,11 @@
 package com.facebook.buck.dalvik.firstorder;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class FirstOrderHelper {
@@ -35,7 +35,7 @@ public class FirstOrderHelper {
       ImmutableSet.Builder<String> resultBuilder) {
     this.scenarioTypes = scenarioTypes;
     this.resultBuilder = resultBuilder;
-    this.knownTypes = Maps.newHashMap();
+    this.knownTypes = new HashMap<>();
   }
 
   public static void addTypesAndDependencies(

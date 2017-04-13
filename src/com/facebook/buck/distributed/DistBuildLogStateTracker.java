@@ -31,8 +31,6 @@ import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.BufferedOutputStream;
@@ -42,7 +40,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class DistBuildLogStateTracker implements Closeable {
 
   private final Path logDirectoryPath;
   private final ProjectFilesystem filesystem;
-  private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = Maps.newHashMap();
+  private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
   private Set<String> createdLogDirRootsByRunId = Sets.newHashSet();
 
 
@@ -68,7 +68,7 @@ public class DistBuildLogStateTracker implements Closeable {
 
   public List<LogLineBatchRequest> createRealtimeLogRequests(
       Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
-    List<LogLineBatchRequest> requests = Lists.newArrayList();
+    List<LogLineBatchRequest> requests = new ArrayList<>();
     for (LogStreamType streamType : SUPPORTED_STREAM_TYPES) {
       for (BuildSlaveInfo buildSlaveInfo : latestBuildSlaveInfos) {
         createRealtimeLogRequests(buildSlaveInfo, streamType, requests);
@@ -94,7 +94,7 @@ public class DistBuildLogStateTracker implements Closeable {
 
   public List<RunId> runIdsToMaterializeLogDirsFor(
       Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
-    List<RunId> runIds = Lists.newArrayList();
+    List<RunId> runIds = new ArrayList<>();
     for (BuildSlaveInfo buildSlaveInfo : latestBuildSlaveInfos) {
       if (!buildSlaveInfo.isSetLogDirZipWritten()) {
         LOG.error("No log dir written for runId [%s]", buildSlaveInfo.runId);
@@ -159,7 +159,7 @@ public class DistBuildLogStateTracker implements Closeable {
     }
 
     // Determines which log lines need writing, and then writes them to disk.
-    List<String> newLines = Lists.newArrayList();
+    List<String> newLines = new ArrayList<>();
     for (LogLineBatch batch : streamLogs.logLineBatches) {
       if (batch.batchNumber < seenStreamState.seenBatchNumber) {
         continue;

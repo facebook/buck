@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -26,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,7 +50,7 @@ public class DirectoryCleaner {
 
   public void clean(Path pathToClean) throws IOException {
 
-    List<PathStats> pathStats = Lists.newArrayList();
+    List<PathStats> pathStats = new ArrayList<>();
     long totalSizeBytes = 0;
     for (Path path : args.getPathSelector().getCandidatesToDelete(pathToClean)) {
       PathStats stats = computePathStats(path);

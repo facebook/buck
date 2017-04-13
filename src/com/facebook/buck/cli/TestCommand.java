@@ -68,7 +68,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
 
@@ -78,6 +77,7 @@ import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -192,7 +192,7 @@ public class TestCommand extends BuildCommand {
           "Available options after -- are specific to that particular test runner and you may " +
           "also want to consult its help pages.",
       handler = ConsumeAllOptionsHandler.class)
-  private List<String> withDashArguments = Lists.newArrayList();
+  private List<String> withDashArguments = new ArrayList<>();
 
   public boolean isRunAllTests() {
     return all || getArguments().isEmpty();
@@ -354,7 +354,7 @@ public class TestCommand extends BuildCommand {
     TestRunningOptions options = getTestRunningOptions(params);
 
     // Walk the test rules, collecting all the specs.
-    List<ExternalTestRunnerTestSpec> specs = Lists.newArrayList();
+    List<ExternalTestRunnerTestSpec> specs = new ArrayList<>();
     for (TestRule testRule : testRules) {
       if (!(testRule instanceof ExternalTestRunnerRule)) {
         params.getBuckEventBus().post(ConsoleEvent.severe(String.format(

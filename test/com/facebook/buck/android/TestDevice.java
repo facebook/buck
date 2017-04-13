@@ -30,11 +30,11 @@ import com.android.ddmlib.SyncService;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -70,7 +70,7 @@ public class TestDevice implements IDevice {
   }
 
   public TestDevice() {
-    properties = Maps.newHashMap();
+    properties = new HashMap<>();
   }
 
   public void setSerialNumber(String serialNumber) {

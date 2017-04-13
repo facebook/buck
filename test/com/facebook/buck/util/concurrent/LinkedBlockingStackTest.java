@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -166,7 +165,7 @@ public class LinkedBlockingStackTest {
   @Test
   public void drainTo() {
     LinkedBlockingStack<Integer> stack = new LinkedBlockingStack<>();
-    ArrayList<Integer> list = Lists.newArrayList();
+    ArrayList<Integer> list = new ArrayList<>();
 
     stack.addAll(ImmutableList.of(5, 8, 3, 6, 7));
     stack.drainTo(list);
