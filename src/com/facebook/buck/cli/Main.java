@@ -752,24 +752,12 @@ public final class Main {
           args);
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
-        (new Console(
-            Verbosity.STANDARD_INFORMATION,
-            stdOut,
-            stdErr,
-            new Ansi(
-                AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
-                    platform, clientEnvironment)))).printBuildFailure(e.getMessage());
+        makeStandardConsole(context).printBuildFailure(e.getMessage());
       } else {
         LOG.error(e);
       }
     } catch (HumanReadableException e) {
-      Console console = new Console(
-          Verbosity.STANDARD_INFORMATION,
-          stdOut,
-          stdErr,
-          new Ansi(
-              AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, clientEnvironment)));
-      console.printBuildFailure(e.getHumanReadableErrorMessage());
+      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
       if (context.isPresent()) {
         context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
@@ -785,6 +773,17 @@ public final class Main {
       // keep the VM alive.
       System.exit(exitCode);
     }
+  }
+
+  private Console makeStandardConsole(Optional<NGContext> context) {
+    return new Console(
+        Verbosity.STANDARD_INFORMATION,
+        stdOut,
+        stdErr,
+        new Ansi(
+            AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
+                platform,
+                getClientEnvironment(context))));
   }
 
   /**
