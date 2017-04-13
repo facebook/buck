@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.TypeElement;
@@ -141,6 +142,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
   public void setTaskListener(TaskListener taskListener) {
     getJavacTask().setTaskListener(taskListener);
+  }
+
+  public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
+    getJavacTask().addPostEnterCallback(callback);
   }
 
   public void setProcessors(List<Processor> processors) {

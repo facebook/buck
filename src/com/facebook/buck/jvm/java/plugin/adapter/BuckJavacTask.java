@@ -24,8 +24,12 @@ import com.sun.source.util.Trees;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.lang.model.element.TypeElement;
 
@@ -39,6 +43,8 @@ import javax.lang.model.element.TypeElement;
 public class BuckJavacTask extends JavacTaskWrapper {
   private final Map<BuckJavacPlugin, String[]> pluginsAndArgs = new LinkedHashMap<>();
   private final MultiplexingTaskListener taskListeners = new MultiplexingTaskListener();
+  private final PostEnterTaskListener postEnterTaskListener;
+  private final List<Consumer<Set<TypeElement>>> postEnterCallbacks = new ArrayList<>();
 
   private boolean pluginsInstalled = false;
 
@@ -62,6 +68,8 @@ public class BuckJavacTask extends JavacTaskWrapper {
         BuckJavacTask.this.finished(e);
       }
     });
+
+    postEnterTaskListener = new PostEnterTaskListener(this, this::onPostEnter);
   }
 
   public Iterable<? extends TypeElement> enter() throws IOException {
@@ -115,6 +123,10 @@ public class BuckJavacTask extends JavacTaskWrapper {
     pluginsAndArgs.put(plugin, args);
   }
 
+  public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
+    postEnterCallbacks.add(callback);
+  }
+
   public Trees getTrees() {
     return Trees.instance(inner);
   }
@@ -127,10 +139,16 @@ public class BuckJavacTask extends JavacTaskWrapper {
     installPlugins();
 
     taskListeners.started(e);
+    postEnterTaskListener.started(e);
   }
 
   protected void finished(TaskEvent e) {
     taskListeners.finished(e);
+    postEnterTaskListener.finished(e);
+  }
+
+  protected void onPostEnter(Set<TypeElement> topLevelTypes) {
+    postEnterCallbacks.forEach(callback -> callback.accept(topLevelTypes));
   }
 
   private void installPlugins() {
