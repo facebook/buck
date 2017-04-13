@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
@@ -48,10 +48,12 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-/** Base class for tests that want to use the Compiler Tree API exposed by javac. */
+/**
+ * Base class for tests that want to use the Compiler Tree API exposed by javac.
+ */
 public abstract class CompilerTreeApiTest {
   public interface TaskListenerFactory {
-    TaskListener newTaskListener(JavacTask task);
+    TaskListener newTaskListener(BuckJavacTask task);
   }
 
   @Rule
@@ -197,6 +199,7 @@ public abstract class CompilerTreeApiTest {
       fail(String.format("Expected different types, but both were: %s", expected));
     }
   }
+
   protected void assertNoErrors() {
     assertThat(testCompiler.getDiagnosticMessages(), Matchers.empty());
   }

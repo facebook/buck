@@ -20,6 +20,7 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
+import com.sun.source.util.Trees;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -46,6 +47,10 @@ public class BuckJavacTask extends JavacTaskWrapper {
 
   public BuckJavacTask(JavacTask inner) {
     super(inner);
+    if (inner instanceof BuckJavacTask) {
+      throw new IllegalArgumentException();
+    }
+
     inner.setTaskListener(new TaskListener() {
       @Override
       public void started(TaskEvent e) {
@@ -108,6 +113,10 @@ public class BuckJavacTask extends JavacTaskWrapper {
 
   public void addPlugin(BuckJavacPlugin plugin, String... args) {
     pluginsAndArgs.put(plugin, args);
+  }
+
+  public Trees getTrees() {
+    return Trees.instance(inner);
   }
 
   protected void started(TaskEvent e) {

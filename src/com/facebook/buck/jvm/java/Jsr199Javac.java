@@ -22,6 +22,8 @@ import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoaderFactory;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
 import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
@@ -250,17 +252,18 @@ public abstract class Jsr199Javac implements Javac {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
-    JavaCompiler.CompilationTask compilationTask = compiler.getTask(
+    PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
+    BuckJavacTaskProxy javacTask = BuckJavacTaskProxy.getTask(
+        loaderFactory,
+        compiler,
         compilerOutputWriter,
         context.getUsedClassesFileWriter().wrapFileManager(fileManager),
         diagnostics,
         options,
         classNamesForAnnotationProcessing,
         compilationUnits);
-    PluginLoader pluginLoader =
-        PluginLoader.newInstance(context.getClassLoaderCache(), compilationTask);
 
-    BuckJavacTaskProxy javacTask = BuckJavacTaskProxy.newInstance(pluginLoader, compilationTask);
+    PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
@@ -272,7 +275,7 @@ public abstract class Jsr199Javac implements Javac {
         .contains(compilationMode)) {
       taskListener = SourceBasedAbiStubber.newValidatingTaskListener(
           pluginLoader,
-          compilationTask,
+          javacTask,
           new FileManagerBootClasspathOracle(fileManager),
           compilationMode == CompilationMode.FULL_ENFORCING_REFERENCES ?
               Diagnostic.Kind.ERROR :

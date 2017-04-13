@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
-import com.facebook.buck.jvm.java.plugin.api.CompilationUnitTreeProxy;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.CompilationUnitTreeProxy;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 
@@ -41,6 +41,14 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
 
   public BuckJavacTaskProxyImpl(JavaCompiler.CompilationTask javacTask) {
     this.javacTask = new BuckJavacTask((JavacTask) javacTask);
+  }
+
+  public BuckJavacTaskProxyImpl(BuckJavacTask javacTask) {
+    this.javacTask = javacTask;
+  }
+
+  public BuckJavacTask getInner() {
+    return javacTask;
   }
 
   @Override

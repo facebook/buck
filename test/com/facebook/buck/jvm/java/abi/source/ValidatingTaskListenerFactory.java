@@ -17,16 +17,17 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 
 import javax.tools.Diagnostic;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
   @Override
-  public TaskListener newTaskListener(JavacTask task) {
-    return new ValidatingTaskListener(task, new BootClasspathOracle() {
+  public TaskListener newTaskListener(BuckJavacTask task) {
+    return new ValidatingTaskListener(new BuckJavacTaskProxyImpl(task), new BootClasspathOracle() {
       @Override
       public boolean isOnBootClasspath(String binaryName) {
         return binaryName.startsWith("java.");

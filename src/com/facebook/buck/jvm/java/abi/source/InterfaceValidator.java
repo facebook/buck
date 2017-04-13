@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 
@@ -65,10 +65,10 @@ class InterfaceValidator {
 
   public InterfaceValidator(
       Diagnostic.Kind messageKind,
-      JavacTask task,
+      BuckJavacTask task,
       BootClasspathOracle bootClasspathOracle) {
     this.messageKind = messageKind;
-    trees = Trees.instance(task);
+    trees = task.getTrees();
     elements = task.getElements();
     this.bootClasspathOracle = bootClasspathOracle;
   }

@@ -17,10 +17,12 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
@@ -28,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.tools.Diagnostic;
-import javax.tools.JavaCompiler;
 
 /**
  * A {@link TaskListener} that is used during full compilation to validate the guesses made by
@@ -36,7 +37,7 @@ import javax.tools.JavaCompiler;
  */
 public class ValidatingTaskListener
     implements TaskListener {
-  private final JavacTask javacTask;
+  private final BuckJavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private final BootClasspathOracle bootClasspathOracle;
   private final Diagnostic.Kind messageKind;
@@ -47,10 +48,10 @@ public class ValidatingTaskListener
   private boolean annotationProcessing = false;
 
   public ValidatingTaskListener(
-      JavaCompiler.CompilationTask task,
+      BuckJavacTaskProxy task,
       BootClasspathOracle bootClasspathOracle,
       Diagnostic.Kind messageKind) {
-    this.javacTask = (JavacTask) task;
+    this.javacTask = ((BuckJavacTaskProxyImpl) task).getInner();
     this.bootClasspathOracle = bootClasspathOracle;
     this.messageKind = messageKind;
   }

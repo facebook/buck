@@ -17,19 +17,19 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
-import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
 import com.facebook.buck.util.HumanReadableException;
 
 import java.lang.reflect.Constructor;
 
 import javax.tools.Diagnostic;
-import javax.tools.JavaCompiler;
 
 public final class SourceBasedAbiStubber {
   public static BuckJavacTaskListener newValidatingTaskListener(
-      PluginLoader pluginLoader,
-      JavaCompiler.CompilationTask task,
+      PluginClassLoader pluginLoader,
+      BuckJavacTaskProxy task,
       BootClasspathOracle bootClasspathOracle,
       Diagnostic.Kind messageKind) {
     try {
@@ -38,7 +38,7 @@ public final class SourceBasedAbiStubber {
           Object.class);
       final Constructor<?> constructor =
           validatingTaskListenerClass.getConstructor(
-              JavaCompiler.CompilationTask.class,
+              BuckJavacTaskProxy.class,
               BootClasspathOracle.class,
               Diagnostic.Kind.class);
 

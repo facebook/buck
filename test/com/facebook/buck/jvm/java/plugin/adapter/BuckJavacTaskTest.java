@@ -44,7 +44,7 @@ public class BuckJavacTaskTest {
 
   @Test
   public void testTaskListenersGetEventsInOrder() throws IOException {
-    BuckJavacTask javacTask = new BuckJavacTask(testCompiler.getJavacTask());
+    BuckJavacTask javacTask = testCompiler.getJavacTask();
     List<String> events = new ArrayList<>();
 
     RecordingTaskListener tl1 = new RecordingTaskListener("1", events);
@@ -76,7 +76,7 @@ public class BuckJavacTaskTest {
 
   @Test
   public void testTaskListenersCanUnregister() throws IOException {
-    BuckJavacTask javacTask = new BuckJavacTask(testCompiler.getJavacTask());
+    BuckJavacTask javacTask = testCompiler.getJavacTask();
     List<String> events = new ArrayList<>();
 
     RecordingTaskListener tl1 = new RecordingTaskListener("1", events);
@@ -113,7 +113,7 @@ public class BuckJavacTaskTest {
 
   @Test
   public void testSetTaskListenerDoesNotEraseAddedListeners() throws IOException {
-    BuckJavacTask javacTask = new BuckJavacTask(testCompiler.getJavacTask());
+    BuckJavacTask javacTask = testCompiler.getJavacTask();
     List<String> events = new ArrayList<>();
 
     RecordingTaskListener tl1 = new RecordingTaskListener("1", events);
@@ -147,7 +147,7 @@ public class BuckJavacTaskTest {
 
   @Test
   public void testPluginsGetTheFirstEvent() throws IOException {
-    BuckJavacTask javacTask = new BuckJavacTask(testCompiler.getJavacTask());
+    BuckJavacTask javacTask = testCompiler.getJavacTask();
     List<String> events = new ArrayList<>();
 
     javacTask.addPlugin(new BuckJavacPlugin() {
@@ -192,5 +192,4 @@ public class BuckJavacTaskTest {
       events.add(String.format("%s: finished %s", name, event));
     }
   }
-
 }

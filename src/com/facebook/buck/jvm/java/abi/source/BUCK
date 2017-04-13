@@ -11,6 +11,9 @@ java_library(
 
         # Interface-only api module for communicating back to Buck core, also loaded by the bootstrapper
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+
+        # Another interface-only api module for communicating back to Buck core, also loaded by the bootstrapper
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],
     tests = [
         "//test/com/facebook/buck/jvm/java/abi/source:source",

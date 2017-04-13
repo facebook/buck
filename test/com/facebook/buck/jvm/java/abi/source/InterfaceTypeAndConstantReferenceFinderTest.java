@@ -18,12 +18,12 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePath;
 
@@ -567,7 +567,7 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         // the run so that we can still look at them.
         new TaskListenerFactory() {
           @Override
-          public TaskListener newTaskListener(JavacTask task) {
+          public TaskListener newTaskListener(BuckJavacTask task) {
             return new PostEnterCallback() {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {

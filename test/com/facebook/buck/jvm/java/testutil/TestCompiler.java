@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
+import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.sun.source.tree.CompilationUnitTree;
@@ -77,7 +78,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private final List<JavaFileObject> sourceFiles = new ArrayList<>();
 
   private TestCompiler classpathCompiler;
-  private JavacTask javacTask;
+  private BuckJavacTask javacTask;
   private boolean useFrontendOnlyJavacTask = false;
   private boolean allowCompilationErrors = false;
   private Set<String> classpath = new LinkedHashSet<>();
@@ -155,7 +156,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   public Iterable<? extends TypeElement> enter() throws IOException {
-    JavacTask javacTask = getJavacTask();
+    BuckJavacTask javacTask = getJavacTask();
 
     try {
       @SuppressWarnings("unchecked")
@@ -194,19 +195,15 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   public Trees getTrees() {
-    JavacTask javacTask = getJavacTask();
-    if (javacTask instanceof FrontendOnlyJavacTask) {
-      return ((FrontendOnlyJavacTask) javacTask).getTrees();
-    }
-
-    return Trees.instance(javacTask);
+    BuckJavacTask javacTask = getJavacTask();
+    return javacTask.getTrees();
   }
 
   public Types getTypes() {
     return getJavacTask().getTypes();
   }
 
-  public JavacTask getJavacTask() {
+  public BuckJavacTask getJavacTask() {
     if (javacTask == null) {
       compileClasspath();
 
@@ -218,7 +215,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
         options.add(Joiner.on(File.pathSeparatorChar).join(classpath));
       }
 
-      javacTask = (JavacTask) javaCompiler.getTask(
+      JavacTask innerTask = (JavacTask) javaCompiler.getTask(
           null,
           null,
           diagnosticCollector,
@@ -227,7 +224,9 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
           sourceFiles);
 
       if (useFrontendOnlyJavacTask) {
-        javacTask = new FrontendOnlyJavacTask(javacTask);
+        javacTask = new FrontendOnlyJavacTask(innerTask);
+      } else {
+        javacTask = new BuckJavacTask(innerTask);
       }
     }
 

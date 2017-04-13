@@ -133,6 +133,7 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     return elements;
   }
 
+  @Override
   public TreeBackedTrees getTrees() {
     return trees;
   }

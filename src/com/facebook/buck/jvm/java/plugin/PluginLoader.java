@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.plugin;
 
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoaderFactory;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -90,6 +91,15 @@ public final class PluginLoader implements PluginClassLoader {
       ClassLoaderCache classLoaderCache,
       JavaCompiler.CompilationTask compiler) {
     return new PluginLoader(getPluginClassLoader(classLoaderCache, compiler));
+  }
+
+  public static PluginClassLoaderFactory newFactory(ClassLoaderCache cache) {
+    return new PluginClassLoaderFactory() {
+      @Override
+      public PluginClassLoader getPluginClassLoader(JavaCompiler.CompilationTask task) {
+        return PluginLoader.newInstance(cache, task);
+      }
+    };
   }
 
   private PluginLoader(ClassLoader classLoader) {
