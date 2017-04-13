@@ -38,7 +38,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 
 /**
@@ -66,9 +65,9 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   private List<TreeBackedTypeElement> topLevelElements;
   private boolean stopCompilationAfterEnter = false;
 
-  public FrontendOnlyJavacTask(JavaCompiler.CompilationTask task) {
-    super((JavacTask) task);
-    javacTask = (JavacTask) task;
+  public FrontendOnlyJavacTask(JavacTask task) {
+    super(task);
+    javacTask = task;
 
     // Add the entering plugin first so that all other plugins and annotation processors will
     // run with the TreeBackedElements already entered

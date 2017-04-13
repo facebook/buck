@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        # Don't add deps; this is a super-light library that can be used outside of Buck
+        # Don't add deps that aren't already in the plugin; this is a super-light library
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],
 )
