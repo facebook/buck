@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -903,6 +904,13 @@ public class AppleBundleIntegrationTest {
             "%s")
         .resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve(target.getShortName()))));
+
+    NSDictionary plist = (NSDictionary) PropertyListParser.parse(
+        Files.readAllBytes(workspace.getPath(appPath.resolve("Info.plist"))));
+    assertThat(
+        "Should contain xcode build version",
+        (String) plist.get("DTXcodeBuild").toJavaObject(),
+        not(emptyString()));
   }
 
   @Test
