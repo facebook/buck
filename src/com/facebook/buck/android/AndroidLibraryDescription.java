@@ -21,10 +21,10 @@ import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.SourceJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -97,7 +97,13 @@ public class AndroidLibraryDescription
       CellPathResolver cellRoots,
       A args) throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, args.srcs, args.mavenCoords);
+      return new SourceJar(
+          params,
+          args.javaVersion.orElse(javaBuckConfig.getDefaultJavacOptions().getSourceLevel()),
+          args.srcs,
+          args.mavenCoords,
+          args.mavenPomTemplate,
+          ImmutableSortedSet.of());
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

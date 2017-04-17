@@ -28,10 +28,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -140,68 +138,6 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   @Override
   public Iterable<BuildRule> getPackagedDependencies() {
     return traversedDeps.packagedDeps;
-  }
-
-  public static class SourceJar extends JavaSourceJar implements MavenPublishable {
-
-    private final TraversedDeps traversedDeps;
-    private final Optional<SourcePath> mavenPomTemplate;
-
-    public SourceJar(
-        BuildRuleParams params,
-        ImmutableSortedSet<SourcePath> srcs,
-        Optional<String> mavenCoords,
-        Optional<SourcePath> mavenPomTemplate,
-        TraversedDeps traversedDeps) {
-      super(params, srcs, mavenCoords);
-      this.traversedDeps = traversedDeps;
-      this.mavenPomTemplate = mavenPomTemplate;
-    }
-
-    public static SourceJar create(
-        BuildRuleParams params,
-        ImmutableSortedSet<SourcePath> topLevelSrcs,
-        Optional<String> mavenCoords,
-        Optional<SourcePath> mavenPomTemplate) {
-      TraversedDeps traversedDeps = TraversedDeps.traverse(params.getBuildDeps());
-
-      params = adjustParams(params, traversedDeps);
-
-      ImmutableSortedSet<SourcePath> sourcePaths =
-          FluentIterable
-              .from(traversedDeps.packagedDeps)
-              .filter(HasSources.class)
-              .transformAndConcat(
-                  new Function<HasSources, Iterable<SourcePath>>() {
-                    @Override
-                    public Iterable<SourcePath> apply(HasSources input) {
-                      return input.getSources();
-                    }
-                  })
-              .append(topLevelSrcs)
-              .toSortedSet(Ordering.natural());
-      return new SourceJar(
-          params,
-          sourcePaths,
-          mavenCoords,
-          mavenPomTemplate,
-          traversedDeps);
-    }
-
-    @Override
-    public Optional<SourcePath> getPomTemplate() {
-      return mavenPomTemplate;
-    }
-
-    @Override
-    public Iterable<HasMavenCoordinates> getMavenDeps() {
-      return traversedDeps.mavenDeps;
-    }
-
-    @Override
-    public Iterable<BuildRule> getPackagedDependencies() {
-      return traversedDeps.packagedDeps;
-    }
   }
 
   private static class TraversedDeps {

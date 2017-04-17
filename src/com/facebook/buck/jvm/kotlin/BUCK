@@ -21,6 +21,7 @@ standard_java_library(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
