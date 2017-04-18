@@ -35,7 +35,7 @@ public abstract class VersionedTargetGraphEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return "";
   }
 

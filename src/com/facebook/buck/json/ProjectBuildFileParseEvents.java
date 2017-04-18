@@ -51,7 +51,7 @@ public abstract class ProjectBuildFileParseEvents
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "";
     }
   }
@@ -76,7 +76,7 @@ public abstract class ProjectBuildFileParseEvents
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "";
     }
   }

@@ -1867,13 +1867,15 @@ public final class Main {
           TimeUnit.MILLISECONDS);
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(
+    SimpleConsoleEventBusListener simpleListener = new SimpleConsoleEventBusListener(
         console,
         clock,
         testResultSummaryVerbosity,
         locale,
         testLogPath,
         executionEnvironment);
+    simpleListener.startRenderScheduler(1, TimeUnit.SECONDS);
+    return simpleListener;
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

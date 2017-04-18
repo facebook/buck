@@ -38,7 +38,7 @@ public abstract class UninstallEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return packageName;
   }
 

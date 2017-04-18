@@ -76,7 +76,7 @@ public abstract class TestSummaryEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return String.format("Test case %s test %s", testCaseName, testName);
     }
   }
@@ -103,7 +103,7 @@ public abstract class TestSummaryEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return testResultSummary.toString();
     }
   }

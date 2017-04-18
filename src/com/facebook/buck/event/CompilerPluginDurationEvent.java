@@ -60,7 +60,7 @@ public abstract class CompilerPluginDurationEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return "";
   }
 

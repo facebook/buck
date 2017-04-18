@@ -108,7 +108,7 @@ public class ConsoleEvent extends AbstractBuckEvent implements ConsoleEventExter
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return String.format("%s: %s", getLevel(), getMessage());
   }
 

@@ -38,7 +38,7 @@ public class HangMonitorTest {
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "work";
     }
 

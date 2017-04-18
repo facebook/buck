@@ -29,7 +29,7 @@ public abstract class ActionGraphEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return "";
   }
 

@@ -267,7 +267,7 @@ public class UnskippedRulesTrackerTest {
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "Fake event";
     }
 

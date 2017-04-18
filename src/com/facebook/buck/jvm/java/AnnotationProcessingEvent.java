@@ -80,7 +80,7 @@ public abstract class AnnotationProcessingEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return buildTarget.toString();
   }
 

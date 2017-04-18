@@ -48,7 +48,7 @@ public abstract class StartActivityEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return String.format("%s %s", getBuildTarget().getFullyQualifiedName(), getActivityName());
   }
 

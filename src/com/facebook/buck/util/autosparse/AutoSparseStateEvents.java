@@ -40,7 +40,7 @@ public abstract class AutoSparseStateEvents
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return "";
   }
 
