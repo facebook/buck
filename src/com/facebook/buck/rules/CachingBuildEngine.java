@@ -1363,9 +1363,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private synchronized ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
       final BuildEngineBuildContext context) {
-    ListenableFuture<RuleKey> ruleKey = ruleKeys.get(rule.getBuildTarget());
-    if (ruleKey != null) {
-      return ruleKey;
+    ListenableFuture<RuleKey> fromOurCache = ruleKeys.get(rule.getBuildTarget());
+    if (fromOurCache != null) {
+      return fromOurCache;
     }
 
     // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
@@ -1384,7 +1384,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
     // Setup a future to calculate this rule key once the dependencies have been calculated.
-    ruleKey = Futures.transform(
+    ListenableFuture<RuleKey> calculated = Futures.transform(
         depKeys,
         (List<RuleKey> input) -> {
           try (BuildRuleEvent.Scope scope =
@@ -1399,9 +1399,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
     // Record the rule key future.
-    ruleKeys.put(rule.getBuildTarget(), ruleKey);
+    ruleKeys.put(rule.getBuildTarget(), calculated);
 
-    return ruleKey;
+    return calculated;
   }
 
   @Override
