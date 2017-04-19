@@ -36,7 +36,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -46,8 +45,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
-import org.immutables.value.Value;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -374,7 +371,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckEventBus.post(parseBuckFileStarted);
 
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
-    String profile = "";
+    Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
       Path cellPath = options.getProjectRoot().toAbsolutePath();
       String watchRoot = cellPath.toString();
@@ -415,8 +412,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       LOG.verbose("Got rules: %s", values);
       LOG.verbose("Parsed %d rules from %s", values.size(), buildFile);
       profile = resultObject.getProfile();
-      if (profile != null && profile.length() > 0) {
-        LOG.debug("Profile result: %s", profile);
+      if (profile.isPresent()) {
+        LOG.debug("Profile result: %s", profile.get());
       }
       return values;
     } finally {
@@ -438,9 +435,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
     } catch (ClassCastException e) {
       throw new IOException("Invalid parser values", e);
     }
-    List<Map<String, String>> diagnostics;
+    List<Map<String, Object>> diagnostics;
     try {
-      diagnostics = (List<Map<String, String>>) decodedResult.get("diagnostics");
+      diagnostics = (List<Map<String, Object>>) decodedResult.get("diagnostics");
     } catch (ClassCastException e) {
       throw new IOException("Invalid parser diagnostics", e);
     }
@@ -453,18 +450,18 @@ public class ProjectBuildFileParser implements AutoCloseable {
     return BuildFilePythonResult.of(
         values,
         diagnostics == null ? ImmutableList.of() : diagnostics,
-        profile == null ? "" : profile);
+        Optional.ofNullable(profile));
   }
 
   private static void handleDiagnostics(
       Path buildFile,
       Path buckPyDir,
-      List<Map<String, String>> diagnosticsList,
+      List<Map<String, Object>> diagnosticsList,
       BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
-    for (Map<String, String> diagnostic : diagnosticsList) {
-      String level = diagnostic.get("level");
-      String message = diagnostic.get("message");
-      String source = diagnostic.get("source");
+    for (Map<String, Object> diagnostic : diagnosticsList) {
+      String level = (String) diagnostic.get("level");
+      String message = (String) diagnostic.get("message");
+      String source = (String) diagnostic.get("source");
       if (level == null || message == null) {
         throw new IOException(
             String.format(
@@ -754,13 +751,5 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPythonProgram = BuckPythonProgram.newInstance(typeCoercerFactory, descriptions);
     }
     return buckPythonProgram.getExecutablePath();
-  }
-
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractBuildFilePythonResult {
-    List<Map<String, Object>> getValues();
-    List<Map<String, String>> getDiagnostics();
-    String getProfile();
   }
 }
