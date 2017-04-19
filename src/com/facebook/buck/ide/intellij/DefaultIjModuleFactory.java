@@ -560,7 +560,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class RobolectricTestModuleRule extends JavaTestModuleRule {
+  private class RobolectricTestModuleRule extends BaseIjModuleRule<RobolectricTestDescription.Arg> {
+
+    protected RobolectricTestModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -569,8 +573,12 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
     @Override
     public void apply(
-        TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
-      super.apply(target, context);
+        TargetNode<RobolectricTestDescription.Arg, ?> target, ModuleBuildContext context) {
+      addDepsAndTestSources(
+          target,
+          true /* wantsPackagePrefix */,
+          context);
+      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
 
       context.getOrCreateAndroidFacetBuilder()
           .setAutogenerateSources(autogenerateAndroidFacetSources)
@@ -578,7 +586,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     @Override
-    public IjModuleType detectModuleType(TargetNode<JavaTestDescription.Arg, ?> targetNode) {
+    public IjModuleType detectModuleType(TargetNode<RobolectricTestDescription.Arg, ?> targetNode) {
       return IjModuleType.ANDROID_MODULE;
     }
   }
