@@ -99,7 +99,7 @@ public class BuildTargetParser {
         parts.get(0).isEmpty() ? buildTargetPatternParser.getBaseName() : parts.get(0);
     String shortName = parts.get(1);
     Iterable<String> flavorNames = new HashSet<>();
-    int hashIndex = shortName.indexOf("#");
+    int hashIndex = shortName.indexOf('#');
     if (hashIndex != -1 && hashIndex < shortName.length()) {
       flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
       shortName = shortName.substring(0, hashIndex);
@@ -107,7 +107,7 @@ public class BuildTargetParser {
 
     Preconditions.checkNotNull(baseName);
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-    baseName = baseName.replace("\\", "/");
+    baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);
 
     Path cellPath = cellNames.getCellPath(givenCellName);

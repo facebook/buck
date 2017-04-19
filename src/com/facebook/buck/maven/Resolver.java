@@ -112,7 +112,7 @@ import javax.annotation.Nullable;
 public class Resolver {
 
   private static final String TEMPLATE =
-      Resolver.class.getPackage().getName().replace(".", "/") + "/build-file.st";
+      Resolver.class.getPackage().getName().replace('.', '/') + "/build-file.st";
   public static final String ARTIFACT_FILE_NAME_FORMAT = "%s-%s.%s";
   public static final String ARTIFACT_FILE_NAME_REGEX_FORMAT =
       ARTIFACT_FILE_NAME_FORMAT.replace(".", "\\.");

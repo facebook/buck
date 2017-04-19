@@ -102,7 +102,7 @@ public class PregeneratedCodeWriter {
 
     Path fileToWrite = androidFacet
         .getGeneratedSourcePath()
-        .resolve(packageName.replace(".", "/"))
+        .resolve(packageName.replace('.', '/'))
         .resolve(className + ".java");
 
     cleaner.doNotDelete(fileToWrite);

@@ -78,7 +78,7 @@ public class TestDataHelper {
     if (!Files.exists(result)) {
       result = Paths
           .get("test")
-          .resolve(testCaseClass.getPackage().getName().replace(".", "/"))
+          .resolve(testCaseClass.getPackage().getName().replace('.', '/'))
           .resolve("testdata");
     }
     return result;
