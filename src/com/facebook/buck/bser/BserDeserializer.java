@@ -30,10 +30,8 @@ import static com.facebook.buck.bser.BserConstants.BSER_STRING;
 import static com.facebook.buck.bser.BserConstants.BSER_TEMPLATE;
 import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MapWrapperForNullValues;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ForwardingMap;
-import com.google.common.collect.ForwardingMapEntry;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteStreams;
@@ -47,14 +45,11 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -346,73 +341,6 @@ public class BserDeserializer {
         return deserializeTemplate(buffer);
       default:
         throw new IOException(String.format("Unrecognized BSER value type %d", type));
-    }
-  }
-
-  /**
-   * {@link ImmutableMap} uses 16 fewer bytes per entry than {@link TreeMap}, but does not allow
-   * null values. This wrapper class lets us have our cake and eat it too -- we use a sentinel
-   * object in the underlying {@link ImmutableMap} and translate it on any read path.
-   */
-  private static final class MapWrapperForNullValues<K, V> extends ForwardingMap<K, V> {
-    private static final Object NULL = new Object();
-    private final Map<K, V> delegate;
-
-    public MapWrapperForNullValues(Map<K, V> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    protected Map<K, V> delegate() {
-      return delegate;
-    }
-
-    @Override
-    public V get(@Nullable Object key) {
-      V result = super.get(key);
-      if (result == NULL) {
-        return null;
-      }
-      return result;
-    }
-
-    @Override
-    public Collection<V> values() {
-      return super.values().stream()
-          .map(v -> v == NULL ? null : v)
-          .collect(Collectors.toList());
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-      return super.entrySet().stream()
-          .map(e -> e.getValue() == NULL
-              ? new EntryWrapperForNullValues<>(e)
-              : e)
-          // Use ImmutableSet instead of Set here to preserve iteration order:
-          .collect(MoreCollectors.toImmutableSet());
-    }
-
-    private static class EntryWrapperForNullValues<K, V> extends ForwardingMapEntry<K, V> {
-      private final Map.Entry<K, V> delegate;
-
-      public EntryWrapperForNullValues(Map.Entry<K, V> delegate) {
-        this.delegate = delegate;
-      }
-
-      @Override
-      protected Entry<K, V> delegate() {
-        return delegate;
-      }
-
-      @Override
-      public V getValue() {
-        V result = super.getValue();
-        if (result == NULL) {
-          return null;
-        }
-        return result;
-      }
     }
   }
 }
