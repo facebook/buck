@@ -101,7 +101,7 @@ public class StubJarTest {
   private List<String> diagnostics;
   private Set<String> allowedInnerClassNames = new HashSet<>();
 
-  @Parameterized.Parameters
+  @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
     return new Object[]{MODE_JAR_BASED, MODE_SOURCE_BASED, MODE_SOURCE_BASED_MISSING_DEPS};
   }

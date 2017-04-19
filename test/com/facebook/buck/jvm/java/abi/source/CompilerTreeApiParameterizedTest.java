@@ -31,7 +31,7 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   @Parameterized.Parameter
   public String implementation;
 
-  @Parameterized.Parameters
+  @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
     return new Object[] { JAVAC, TREES };
   }
