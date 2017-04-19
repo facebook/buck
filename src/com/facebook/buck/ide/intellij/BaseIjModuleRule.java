@@ -37,9 +37,9 @@ import java.util.Set;
 
 public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
 
-  private final ProjectFilesystem projectFilesystem;
-  private final IjModuleFactoryResolver moduleFactoryResolver;
-  private final IjProjectConfig projectConfig;
+  protected final ProjectFilesystem projectFilesystem;
+  protected final IjModuleFactoryResolver moduleFactoryResolver;
+  protected final IjProjectConfig projectConfig;
 
   protected BaseIjModuleRule(
       ProjectFilesystem projectFilesystem,

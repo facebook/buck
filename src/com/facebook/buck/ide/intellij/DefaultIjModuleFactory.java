@@ -57,7 +57,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
   private final IjProjectConfig projectConfig;
-  private final boolean autogenerateAndroidFacetSources;
 
   /**
    * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
@@ -68,7 +67,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
-    this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
     this.moduleFactoryResolver = moduleFactoryResolver;
 
     addToIndex(new AndroidBinaryModuleRule());
@@ -186,10 +184,14 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class AndroidBinaryModuleRule
-      extends BaseIjModuleRule<AndroidBinaryDescription.Arg> {
+      extends AndroidModuleRule<AndroidBinaryDescription.Arg> {
 
     private AndroidBinaryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig,
+          false);
     }
 
     @Override
@@ -201,14 +203,13 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     public void apply(
         TargetNode<AndroidBinaryDescription.Arg, ?> target,
         ModuleBuildContext context) {
+      super.apply(target, context);
       context.addDeps(target.getBuildDeps(), DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
       androidFacetBuilder
           .setManifestPath(moduleFactoryResolver.getAndroidManifestPath(target))
-          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target))
-          .setAutogenerateSources(autogenerateAndroidFacetSources)
-          .setAndroidLibrary(false);
+          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
     }
 
     @Override
@@ -218,10 +219,14 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class AndroidLibraryModuleRule
-      extends BaseIjModuleRule<AndroidLibraryDescription.Arg> {
+      extends AndroidModuleRule<AndroidLibraryDescription.Arg> {
 
     private AndroidLibraryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig,
+          true);
     }
 
     @Override
@@ -232,6 +237,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     @Override
     public void apply(TargetNode<AndroidLibraryDescription.Arg, ?> target,
         ModuleBuildContext context) {
+      super.apply(target, context);
       addDepsAndSources(
           target,
           true /* wantsPackagePrefix */,
@@ -247,8 +253,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       if (manifestPath.isPresent()) {
         builder.setManifestPath(manifestPath.get());
       }
-      builder.setAutogenerateSources(autogenerateAndroidFacetSources);
-      builder.setAndroidLibrary(true);
     }
 
     @Override
@@ -258,10 +262,14 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class AndroidResourceModuleRule
-      extends BaseIjModuleRule<AndroidResourceDescription.Arg> {
+      extends AndroidModuleRule<AndroidResourceDescription.Arg> {
 
     private AndroidResourceModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig,
+          true);
     }
 
     @Override
@@ -273,11 +281,9 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     public void apply(
         TargetNode<AndroidResourceDescription.Arg, ?> target,
         ModuleBuildContext context) {
+      super.apply(target, context);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-      androidFacetBuilder
-          .setAutogenerateSources(autogenerateAndroidFacetSources)
-          .setAndroidLibrary(true);
 
       Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
       if (assets.isPresent()) {
@@ -313,7 +319,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
       }
-      context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
 
       context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
     }
@@ -327,7 +332,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription.Arg> {
 
     private CxxLibraryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -354,7 +362,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       extends BaseIjModuleRule<JavaBinaryDescription.Args> {
 
     private JavaBinaryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -401,7 +412,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.Arg> {
 
     private JavaLibraryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -429,7 +443,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescription.Arg> {
 
     private GroovyLibraryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -456,7 +473,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription.Arg> {
 
     private GroovyTestModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -483,7 +503,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg> {
 
     private JavaTestModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -509,7 +532,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescription.Arg> {
 
     private KotlinLibraryModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -536,7 +562,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription.Arg> {
 
     private KotlinTestModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig);
     }
 
     @Override
@@ -560,10 +589,15 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class RobolectricTestModuleRule extends BaseIjModuleRule<RobolectricTestDescription.Arg> {
+  private class RobolectricTestModuleRule
+      extends AndroidModuleRule<RobolectricTestDescription.Arg> {
 
     protected RobolectricTestModuleRule() {
-      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+      super(
+          DefaultIjModuleFactory.this.projectFilesystem,
+          DefaultIjModuleFactory.this.moduleFactoryResolver,
+          DefaultIjModuleFactory.this.projectConfig,
+          true);
     }
 
     @Override
@@ -574,15 +608,12 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     @Override
     public void apply(
         TargetNode<RobolectricTestDescription.Arg, ?> target, ModuleBuildContext context) {
+      super.apply(target, context);
       addDepsAndTestSources(
           target,
           true /* wantsPackagePrefix */,
           context);
       JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-
-      context.getOrCreateAndroidFacetBuilder()
-          .setAutogenerateSources(autogenerateAndroidFacetSources)
-          .setAndroidLibrary(true);
     }
 
     @Override
