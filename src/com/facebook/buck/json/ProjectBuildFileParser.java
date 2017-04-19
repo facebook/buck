@@ -16,8 +16,6 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.bser.BserDeserializer;
-import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
@@ -32,10 +30,13 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreThrowables;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -79,14 +80,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
-  @Nullable private BufferedOutputStream buckPyStdinWriter;
+  @Nullable private JsonGenerator buckPyProcessJsonGenerator;
+  @Nullable private JsonParser buckPyProcessJsonParser;
 
   private final ProjectBuildFileParserOptions options;
   private final TypeCoercerFactory typeCoercerFactory;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
-  private final BserDeserializer bserDeserializer;
-  private final BserSerializer bserSerializer;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final boolean ignoreBuckAutodepsFiles;
 
@@ -111,8 +111,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
-    this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.SORTED);
-    this.bserSerializer = new BserSerializer();
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
     this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
 
@@ -124,7 +122,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 Files.createDirectories(rawConfigJson1.getParent());
                 try (OutputStream output =
                          new BufferedOutputStream(Files.newOutputStream(rawConfigJson1))) {
-                  bserSerializer.serializeToStream(options.getRawConfig(), output);
+                  ObjectMappers.WRITER.writeValue(output, options.getRawConfig());
                 }
                 return rawConfigJson1;
               } catch (IOException e) {
@@ -139,11 +137,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 Files.createDirectories(ignorePathsJson1.getParent());
                 try (OutputStream output =
                          new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
-                  bserSerializer.serializeToStream(
+                  ObjectMappers.WRITER.writeValue(
+                      output,
                       options.getIgnorePaths().stream()
                           .map(PathOrGlobMatcher::getPathOrGlob)
-                          .collect(MoreCollectors.toImmutableList()),
-                      output);
+                          .collect(MoreCollectors.toImmutableList()));
                 }
                 return ignorePathsJson1;
               } catch (IOException e) {
@@ -222,8 +220,18 @@ public class ProjectBuildFileParser implements AutoCloseable {
           params.getEnvironment());
       buckPyProcess = processExecutor.launchProcess(params);
       LOG.debug("Started process %s successfully", buckPyProcess);
+      buckPyProcessJsonGenerator =
+          ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
+      // We have to wait to create the JsonParser until after we write our
+      // first request, because Jackson "helpfully" synchronously reads
+      // from the InputStream trying to detect whether the encoding is
+      // UTF-8 or UTF-16 as soon as you create a JsonParser:
+      //
+      // https://git.io/vSgnA
+      //
+      // Since buck.py doesn't write any data until after it receives
+      // a query, creating the JsonParser here would hang indefinitely.
 
-      OutputStream stdin = buckPyProcess.getOutputStream();
       InputStream stderr = buckPyProcess.getErrorStream();
 
       InputStreamConsumer stderrConsumer = new InputStreamConsumer(
@@ -235,8 +243,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
           ProjectBuildFileParser.class.getSimpleName(),
           stderrConsumerTerminationFuture);
       stderrConsumerThread.start();
-
-      buckPyStdinWriter = new BufferedOutputStream(stdin);
     }
   }
 
@@ -352,6 +358,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try {
       return getAllRulesInternal(buildFile);
     } catch (IOException e) {
+      LOG.warn(e, "Error getting all rules for %s", buildFile);
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
     }
@@ -364,7 +371,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     initIfNeeded();
 
     // Check isInitialized implications (to avoid Eradicate warnings).
-    Preconditions.checkNotNull(buckPyStdinWriter);
     Preconditions.checkNotNull(buckPyProcess);
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
@@ -383,24 +389,51 @@ public class ProjectBuildFileParser implements AutoCloseable {
           projectPrefix = projectWatch.getProjectPrefix().get();
         }
       }
-      bserSerializer.serializeToStream(
+      buckPyProcessJsonGenerator.writeObject(
           ImmutableMap.of(
               "buildFile", buildFile.toString(),
               "watchRoot", watchRoot,
-              "projectPrefix", projectPrefix),
-          buckPyStdinWriter);
-      buckPyStdinWriter.flush();
-
-      LOG.verbose("Parsing output of process %s...", buckPyProcess);
-      Object deserializedValue;
+              "projectPrefix", projectPrefix));
       try {
-        deserializedValue = bserDeserializer.deserializeBserValue(
-            buckPyProcess.getInputStream());
-      } catch (BserDeserializer.BserEofException e) {
-        LOG.warn(e, "Parser exited while decoding BSER data");
-        throw new IOException("Parser exited unexpectedly", e);
+        // We disable autoflush at the ObjectMapper level for
+        // performance reasons, but our protocol requires us to
+        // flush newline-delimited JSON for each buck.py query.
+        buckPyProcessJsonGenerator.flush();
+        // I tried using MinimalPrettyPrinter.setRootValueSeparator("\n") and
+        // setting it on the JsonGenerator, but it doesn't seem to
+        // actually write a newline after each element.
+        buckPyProcess.getOutputStream().write('\n');
+        // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
+        // but it doesn't actually flush.
+        buckPyProcess.getOutputStream().flush();
+      } catch (IOException e) {
+        // https://issues.apache.org/jira/browse/EXEC-101 -- Java 8 throws
+        // IOException if the child process exited before writing/flushing
+        LOG.debug(e, "Swallowing exception on flush");
       }
-      BuildFilePythonResult resultObject = handleDeserializedValue(deserializedValue);
+
+      if (buckPyProcessJsonParser == null) {
+        // We have to wait to create the JsonParser until after we write our
+        // first request, because Jackson "helpfully" synchronously reads
+        // from the InputStream trying to detect whether the encoding is
+        // UTF-8 or UTF-16 as soon as you create a JsonParser:
+        //
+        // https://git.io/vSgnA
+        //
+        // Since buck.py doesn't write any data until after it receives
+        // a query, creating the JsonParser any earlier than this would
+        // hang indefinitely.
+        buckPyProcessJsonParser =
+            ObjectMappers.createParser(buckPyProcess.getInputStream());
+      }
+      LOG.verbose("Parsing output of process %s...", buckPyProcess);
+      BuildFilePythonResult resultObject;
+      try {
+        resultObject = buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
+      } catch (IOException e) {
+        LOG.warn(e, "Parser exited while decoding JSON data");
+        throw e;
+      }
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
           buildFile,
@@ -419,38 +452,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     } finally {
       buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, values, profile));
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static BuildFilePythonResult handleDeserializedValue(@Nullable Object deserializedValue)
-      throws IOException {
-    if (!(deserializedValue instanceof Map<?, ?>)) {
-      throw new IOException(
-          String.format("Invalid parser output (expected map, got %s)", deserializedValue));
-    }
-    Map<String, Object> decodedResult = (Map<String, Object>) deserializedValue;
-    List<Map<String, Object>> values;
-    try {
-      values = (List<Map<String, Object>>) Preconditions.checkNotNull(decodedResult.get("values"));
-    } catch (ClassCastException e) {
-      throw new IOException("Invalid parser values", e);
-    }
-    List<Map<String, Object>> diagnostics;
-    try {
-      diagnostics = (List<Map<String, Object>>) decodedResult.get("diagnostics");
-    } catch (ClassCastException e) {
-      throw new IOException("Invalid parser diagnostics", e);
-    }
-    String profile;
-    try {
-      profile = (String) decodedResult.get("profile");
-    } catch (ClassCastException e) {
-      throw new IOException("Invalid parser profile", e);
-    }
-    return BuildFilePythonResult.of(
-        values,
-        diagnostics == null ? ImmutableList.of() : diagnostics,
-        Optional.ofNullable(profile));
   }
 
   private static void handleDiagnostics(
@@ -688,15 +689,30 @@ public class ProjectBuildFileParser implements AutoCloseable {
       if (isInitialized) {
 
         // Check isInitialized implications (to avoid Eradicate warnings).
-        Preconditions.checkNotNull(buckPyStdinWriter);
         Preconditions.checkNotNull(buckPyProcess);
 
         // Allow buck.py to terminate gracefully.
-        try {
-          buckPyStdinWriter.close();
-        } catch (IOException e) {
-          // Safe to ignore since we've already flushed everything we wanted
-          // to write.
+        if (buckPyProcessJsonGenerator != null) {
+          try {
+            LOG.debug("Closing buck.py process stdin");
+            // Closing the JSON generator has the side effect of closing stdin,
+            // which lets buck.py terminate gracefully.
+            buckPyProcessJsonGenerator.close();
+          } catch (IOException e) {
+            // Safe to ignore since we've already flushed everything we wanted
+            // to write.
+          } finally {
+            buckPyProcessJsonGenerator = null;
+          }
+        }
+
+        if (buckPyProcessJsonParser != null) {
+          try {
+            buckPyProcessJsonParser.close();
+          } catch (IOException e) {
+          } finally {
+            buckPyProcessJsonParser = null;
+          }
         }
 
         if (stderrConsumerThread != null) {

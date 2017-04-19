@@ -1,12 +1,13 @@
 import __builtin__
 import contextlib
+import json
 import os
 import unittest
 import shutil
 import tempfile
 import StringIO
 
-from pywatchman import bser, WatchmanError
+from pywatchman import WatchmanError
 from typing import Sequence
 
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
@@ -382,7 +383,7 @@ class BuckTest(unittest.TestCase):
                 fake_stdout)
         self.assertTrue(self.watchman_client.query_invoked)
         result = fake_stdout.getvalue()
-        decoded_result = bser.loads(result)
+        decoded_result = json.loads(result)
         self.assertEqual([], decoded_result['values'])
         self.assertEqual(1, len(decoded_result['diagnostics']))
         diagnostic = decoded_result['diagnostics'][0]
@@ -778,7 +779,7 @@ class BuckTest(unittest.TestCase):
             os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
             build_file_processor._get_include_path('//bar/baz'))
 
-    def test_bser_encoding_failure(self):
+    def test_json_encoding_failure(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         fake_stdout = StringIO.StringIO()
         build_file = ProjectFile(
@@ -801,7 +802,7 @@ class BuckTest(unittest.TestCase):
                 build_file_processor,
                 fake_stdout)
         result = fake_stdout.getvalue()
-        decoded_result = bser.loads(result)
+        decoded_result = json.loads(result)
         self.assertEqual(
             [],
             decoded_result['values'])

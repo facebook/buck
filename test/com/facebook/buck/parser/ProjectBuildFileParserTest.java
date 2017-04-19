@@ -21,7 +21,6 @@ import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
@@ -38,6 +37,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,8 +53,6 @@ import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,28 +74,26 @@ public class ProjectBuildFileParserTest {
     cell = new TestCellBuilder().build();
   }
 
-  private static FakeProcess fakeProcessWithBserOutput(
+  private static FakeProcess fakeProcessWithJsonOutput(
       int returnCode,
       List<Object> values,
       Optional<List<Object>> diagnostics,
       Optional<String> stdout) {
-    BserSerializer bserSerializer = new BserSerializer();
-    ByteBuffer buffer = ByteBuffer.allocate(512).order(ByteOrder.nativeOrder());
+    Map<String, Object> outputToSerialize = new LinkedHashMap<>();
+    outputToSerialize.put("values", values);
+    if (diagnostics.isPresent()) {
+      outputToSerialize.put("diagnostics", diagnostics.get());
+    }
+    byte[] serialized;
     try {
-      Map<String, Object> outputToSerialize = new LinkedHashMap<>();
-      outputToSerialize.put("values", values);
-      if (diagnostics.isPresent()) {
-        outputToSerialize.put("diagnostics", diagnostics.get());
-      }
-      buffer = bserSerializer.serializeToBuffer(outputToSerialize, buffer);
+      serialized = ObjectMappers.WRITER.writeValueAsBytes(outputToSerialize);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    buffer.flip();
     return new FakeProcess(
         returnCode,
         new ByteArrayOutputStream(),
-        new ByteArrayInputStream(buffer.array()),
+        new ByteArrayInputStream(serialized),
         new ByteArrayInputStream(stdout.orElse("").getBytes(StandardCharsets.UTF_8)));
   }
 
@@ -461,7 +457,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   1,
                   ImmutableList.of(),
                   Optional.empty(),
@@ -474,7 +470,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   0,
                   ImmutableList.of(),
                   Optional.empty(),
@@ -488,7 +484,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   0,
                   ImmutableList.of(),
                   Optional.empty(),
@@ -504,7 +500,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   0,
                   ImmutableList.of(),
                   Optional.of(
@@ -528,7 +524,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   0,
                   ImmutableList.of(),
                   Optional.of(
@@ -553,7 +549,7 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              params -> fakeProcessWithBserOutput(
+              params -> fakeProcessWithJsonOutput(
                   1,
                   ImmutableList.of(),
                   Optional.of(

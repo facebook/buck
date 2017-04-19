@@ -7,8 +7,9 @@ import __builtin__
 import __future__
 
 import contextlib
+import json
 from pathlib import Path, PurePath
-from pywatchman import bser, WatchmanError
+from pywatchman import WatchmanError
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
@@ -1149,7 +1150,7 @@ def encode_result(values, diagnostics, profile):
     if profile is not None:
         result['profile'] = profile
     try:
-        return bser.dumps(result)
+        return json.dumps(result, sort_keys=True)
     except Exception as e:
         # Try again without the values
         result['values'] = []
@@ -1161,7 +1162,7 @@ def encode_result(values, diagnostics, profile):
             'source': 'parse',
             'exception': format_exception_info(sys.exc_info()),
         })
-        return bser.dumps(result)
+        return json.dumps(result, sort_keys=True)
 
 
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
@@ -1257,12 +1258,12 @@ def _optparse_store_kv(option, opt_str, value, parser):
 # directories of generated files produced by Buck.
 #
 # All of the build rules that are parsed from the BUCK files will be printed
-# to stdout encoded in BSER. That means that printing out other information
-# for debugging purposes will break the BSER encoding, so be careful!
+# to stdout encoded in JSON. That means that printing out other information
+# for debugging purposes will break the JSON encoding, so be careful!
 
 
 def main():
-    # Our parent expects to read BSER from our stdout, so if anyone
+    # Our parent expects to read JSON from our stdout, so if anyone
     # uses print, buck will complain with a helpful "but I wanted an
     # array!" message and quit.  Redirect stdout to stderr so that
     # doesn't happen.  Actually dup2 the file handle so that writing
@@ -1378,7 +1379,7 @@ def main():
     watchman_client = None
     use_mercurial_glob = False
     if options.use_watchman_glob:
-        client_args = {}
+        client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
         if options.watchman_query_timeout_ms is not None:
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
@@ -1408,14 +1409,14 @@ def main():
     configs = {}
     if options.config is not None:
         with open(options.config, 'rb') as f:
-            for section, contents in bser.loads(f.read()).iteritems():
+            for section, contents in json.load(f).iteritems():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
 
     ignore_paths = []
     if options.ignore_paths is not None:
         with open(options.ignore_paths, 'rb') as f:
-            ignore_paths = [make_glob(i) for i in bser.loads(f.read())]
+            ignore_paths = [make_glob(i) for i in json.load(f)]
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
@@ -1455,13 +1456,21 @@ def main():
                 process_with_diagnostics(query, buildFileProcessor, to_parent,
                                          should_profile=options.profile)
 
-            for build_file_query in iter(lambda: bser.load(sys.stdin), None):
+            # From https://docs.python.org/2/using/cmdline.html :
+            #
+            # Note that there is internal buffering in file.readlines()
+            # and File Objects (for line in sys.stdin) which is not
+            # influenced by this option. To work around this, you will
+            # want to use file.readline() inside a while 1: loop.
+            for line in iter(sys.stdin.readline, ''):
+                if line == '':
+                    break
+                build_file_query = json.loads(line)
                 process_with_diagnostics(
                     build_file_query,
                     buildFileProcessor,
                     to_parent,
-                    should_profile=options.profile
-                )
+                    should_profile=options.profile)
 
     if options.quiet:
         sys.excepthook = orig_excepthook
