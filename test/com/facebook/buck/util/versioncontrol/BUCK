@@ -1,11 +1,18 @@
 standard_java_testutil(
     name = "testutil",
+    deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 standard_java_test(
     name = "versioncontrol",
     run_test_separately = True,
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
