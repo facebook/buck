@@ -26,9 +26,9 @@ import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.kotlin.KotlinLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.kotlin.KotlinTestModuleRule;
+import com.facebook.buck.ide.intellij.lang.groovy.GroovyLibraryModuleRule;
+import com.facebook.buck.ide.intellij.lang.groovy.GroovyTestModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
-import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
@@ -89,8 +89,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         projectFilesystem,
         moduleFactoryResolver,
         projectConfig));
-    addToIndex(new GroovyLibraryModuleRule());
-    addToIndex(new GroovyTestModuleRule());
+    addToIndex(new GroovyLibraryModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
+    addToIndex(new GroovyTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new KotlinLibraryModuleRule(
         projectFilesystem,
         moduleFactoryResolver,
@@ -223,66 +226,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
     @Override
     public IjModuleType detectModuleType(TargetNode<CxxLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.UNKNOWN_MODULE;
-    }
-  }
-
-  private class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescription.Arg> {
-
-    private GroovyLibraryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return GroovyLibraryDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<GroovyLibraryDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      addDepsAndSources(
-          target,
-          false /* wantsPackagePrefix */,
-          context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<GroovyLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.UNKNOWN_MODULE;
-    }
-  }
-
-  private class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription.Arg> {
-
-    private GroovyTestModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return GroovyTestDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<GroovyTestDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      addDepsAndTestSources(
-          target,
-          false /* wantsPackagePrefix */,
-          context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<GroovyTestDescription.Arg, ?> targetNode) {
       return IjModuleType.UNKNOWN_MODULE;
     }
   }
