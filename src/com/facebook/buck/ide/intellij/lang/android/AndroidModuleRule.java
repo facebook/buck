@@ -13,8 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.lang.android;
 
+import com.facebook.buck.ide.intellij.BaseIjModuleRule;
+import com.facebook.buck.ide.intellij.IjModuleFactoryResolver;
+import com.facebook.buck.ide.intellij.IjProjectConfig;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.TargetNode;
 

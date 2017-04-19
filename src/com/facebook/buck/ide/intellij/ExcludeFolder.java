@@ -38,7 +38,7 @@ public class ExcludeFolder extends IjFolder {
     super(path, false, inputs);
   }
 
-  ExcludeFolder(Path path) {
+  public ExcludeFolder(Path path) {
     super(path);
   }
 

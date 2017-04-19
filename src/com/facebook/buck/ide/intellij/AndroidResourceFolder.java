@@ -32,7 +32,7 @@ public class AndroidResourceFolder extends SelfMergingOnlyFolder {
     super(path, true, inputs);
   }
 
-  AndroidResourceFolder(Path path) {
+  public AndroidResourceFolder(Path path) {
     super(path);
   }
 

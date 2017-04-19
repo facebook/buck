@@ -16,14 +16,13 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidBinaryDescription;
-import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.ide.intellij.lang.android.AndroidBinaryModuleRule;
+import com.facebook.buck.ide.intellij.lang.android.AndroidLibraryModuleRule;
+import com.facebook.buck.ide.intellij.lang.android.AndroidResourceModuleRule;
+import com.facebook.buck.ide.intellij.lang.android.RobolectricTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaBinaryModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
-import com.facebook.buck.ide.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
@@ -45,7 +44,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -71,14 +69,26 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     this.projectConfig = projectConfig;
     this.moduleFactoryResolver = moduleFactoryResolver;
 
-    addToIndex(new AndroidBinaryModuleRule());
-    addToIndex(new AndroidLibraryModuleRule());
-    addToIndex(new AndroidResourceModuleRule());
+    addToIndex(new AndroidBinaryModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
+    addToIndex(new AndroidLibraryModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
+    addToIndex(new AndroidResourceModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
     addToIndex(new CxxLibraryModuleRule());
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new RobolectricTestModuleRule());
+    addToIndex(new RobolectricTestModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
     addToIndex(new GroovyLibraryModuleRule());
     addToIndex(new GroovyTestModuleRule());
     addToIndex(new KotlinLibraryModuleRule());
@@ -183,152 +193,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     return result;
-  }
-
-  private class AndroidBinaryModuleRule
-      extends AndroidModuleRule<AndroidBinaryDescription.Arg> {
-
-    private AndroidBinaryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig,
-          false);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return AndroidBinaryDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<AndroidBinaryDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      super.apply(target, context);
-      context.addDeps(target.getBuildDeps(), DependencyType.PROD);
-
-      IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-      androidFacetBuilder
-          .setManifestPath(moduleFactoryResolver.getAndroidManifestPath(target))
-          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-      return IjModuleType.ANDROID_MODULE;
-    }
-  }
-
-  private class AndroidLibraryModuleRule
-      extends AndroidModuleRule<AndroidLibraryDescription.Arg> {
-
-    private AndroidLibraryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig,
-          true);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return AndroidLibraryDescription.class;
-    }
-
-    @Override
-    public void apply(TargetNode<AndroidLibraryDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      super.apply(target, context);
-      addDepsAndSources(
-          target,
-          true /* wantsPackagePrefix */,
-          context);
-      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-      Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
-      if (dummyRDotJavaClassPath.isPresent()) {
-        context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
-      }
-
-      IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
-      Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);
-      if (manifestPath.isPresent()) {
-        builder.setManifestPath(manifestPath.get());
-      }
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.ANDROID_MODULE;
-    }
-  }
-
-  private class AndroidResourceModuleRule
-      extends AndroidModuleRule<AndroidResourceDescription.Arg> {
-
-    private AndroidResourceModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig,
-          true);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return AndroidResourceDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<AndroidResourceDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      super.apply(target, context);
-
-      IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-
-      Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
-      if (assets.isPresent()) {
-        androidFacetBuilder.addAssetPaths(assets.get());
-      }
-
-      Optional<Path> resources = moduleFactoryResolver.getAndroidResourcePath(target);
-      ImmutableSet<Path> resourceFolders;
-      if (resources.isPresent()) {
-        resourceFolders = ImmutableSet.of(resources.get());
-
-        androidFacetBuilder.addAllResourcePaths(resourceFolders);
-
-        List<String> excludedResourcePaths = projectConfig.getExcludedResourcePaths();
-
-        for (Path resourceFolder : resourceFolders) {
-          context.addSourceFolder(
-              new AndroidResourceFolder(resourceFolder)
-          );
-
-          excludedResourcePaths
-              .stream()
-              .map((file) -> resourceFolder.resolve(file))
-              .forEach((folder) -> context.addSourceFolder(new ExcludeFolder(folder)));
-        }
-      } else {
-        resourceFolders = ImmutableSet.of();
-      }
-
-      androidFacetBuilder.setPackageName(target.getConstructorArg().rDotJavaPackage);
-
-      Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
-      if (dummyRDotJavaClassPath.isPresent()) {
-        context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
-      }
-
-      context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-      return IjModuleType.ANDROID_RESOURCES_MODULE;
-    }
   }
 
   private class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription.Arg> {
@@ -480,36 +344,4 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class RobolectricTestModuleRule
-      extends AndroidModuleRule<RobolectricTestDescription.Arg> {
-
-    protected RobolectricTestModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig,
-          true);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return RobolectricTestDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<RobolectricTestDescription.Arg, ?> target, ModuleBuildContext context) {
-      super.apply(target, context);
-      addDepsAndTestSources(
-          target,
-          true /* wantsPackagePrefix */,
-          context);
-      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<RobolectricTestDescription.Arg, ?> targetNode) {
-      return IjModuleType.ANDROID_MODULE;
-    }
-  }
 }
