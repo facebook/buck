@@ -914,6 +914,52 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void infoPlistSubstitutionsAreAppliedToEntitlements()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "application_bundle_with_entitlements_substitutions",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#iphoneos-arm64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s"));
+    workspace.assertFilesEqual(
+        Paths.get("DemoApp.xcent.expected"),
+        BuildTargets.getScratchPath(
+            filesystem,
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(),
+            "%s.xcent"));
+
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
+
+    assertTrue(checkCodeSigning(appPath));
+  }
+
+  @Test
   public void productNameChangesBundleAndBinaryNames() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
