@@ -246,14 +246,14 @@ public class IjProjectTemplateDataPreparer {
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
     ImmutableSet<IjFolder> sourcesAndExcludes = Stream
             .concat(module.getFolders().stream(), createExcludes(module).stream())
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(MoreCollectors.toImmutableSortedSet());
     return createContentRoot(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
   public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(final IjModule module) {
     return module.getGeneratedSourceCodeFolders().stream()
         .map(new IjFolderToIjSourceFolderTransform(module)::apply)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
