@@ -28,27 +28,19 @@ import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,24 +52,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
   private static final Logger LOG = Logger.get(DefaultIjModuleFactory.class);
 
-  /**
-   * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the
-   * {@link IjModule} being constructed.
-   *
-   * @param <T> TargetNode type.
-   */
-  private interface IjModuleRule<T> {
-    Class<? extends Description<?>> getDescriptionClass();
-    void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
-    IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
-  }
-
   private final ProjectFilesystem projectFilesystem;
   private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
       new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
   private final IjProjectConfig projectConfig;
-  private final boolean excludeShadows;
   private final boolean autogenerateAndroidFacetSources;
 
   /**
@@ -88,9 +67,9 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
-    this.excludeShadows = projectConfig.isExcludeArtifactsEnabled();
     this.projectConfig = projectConfig;
     this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
+    this.moduleFactoryResolver = moduleFactoryResolver;
 
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
@@ -104,8 +83,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     addToIndex(new GroovyTestModuleRule());
     addToIndex(new KotlinLibraryModuleRule());
     addToIndex(new KotlinTestModuleRule());
-
-    this.moduleFactoryResolver = moduleFactoryResolver;
 
     Preconditions.checkState(SupportedTargetTypeRegistry.areTargetTypesEqual(
         moduleRuleIndex.keySet()));
@@ -208,212 +185,12 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     return result;
   }
 
-  /**
-   * Calculate the set of directories containing inputs to the target.
-   *
-   * @param paths inputs to a given target.
-   * @return index of path to set of inputs in that path
-   */
-  private static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
-      ImmutableSet<Path> paths) {
-    Path defaultParent = Paths.get("");
-    return paths
-        .stream()
-        .collect(
-            MoreCollectors.toImmutableMultimap(
-                path -> {
-                  Path parent = path.getParent();
-                  return parent == null ? defaultParent : parent;
-                },
-                path -> path)
-        );
-  }
-
-  /**
-   * @param paths paths to check
-   * @return whether any of the paths pointed to something not in the source tree.
-   */
-  private static boolean containsNonSourcePath(Collection<SourcePath> paths) {
-    return paths.stream().anyMatch(path -> !(path instanceof PathSourcePath));
-  }
-
-  /**
-   * Add the set of input paths to the {@link IjModule.Builder} as source folders.
-   *
-   * @param foldersToInputsIndex mapping of source folders to their inputs.
-   * @param wantsPackagePrefix whether folders should be annotated with a package prefix. This
-   *                           only makes sense when the source folder is Java source code.
-   * @param context the module to add the folders to.
-   */
-  private static void addSourceFolders(
-      IJFolderFactory factory,
-      ImmutableMultimap<Path, Path> foldersToInputsIndex,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
-    for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
-      context.addSourceFolder(
-          factory.create(
-              entry.getKey(),
-              wantsPackagePrefix,
-              ImmutableSortedSet.copyOf(Ordering.natural(), entry.getValue())
-          )
-      );
-    }
-  }
-
-  private void addDepsAndFolder(
-      IJFolderFactory folderFactory,
-      DependencyType dependencyType,
-      TargetNode<?, ?> targetNode,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context,
-      ImmutableSet<Path> inputPaths
-  ) {
-    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(inputPaths);
-    addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
-    addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
-
-    addGeneratedOutputIfNeeded(folderFactory, targetNode, context);
-
-    if (targetNode.getConstructorArg() instanceof JvmLibraryArg) {
-      addAnnotationOutputIfNeeded(folderFactory, targetNode, context);
-    }
-  }
-
-  private void addDepsAndFolder(
-      IJFolderFactory folderFactory,
-      DependencyType dependencyType,
-      TargetNode<?, ?> targetNode,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context
-  ) {
-    addDepsAndFolder(
-        folderFactory,
-        dependencyType,
-        targetNode,
-        wantsPackagePrefix,
-        context,
-        targetNode.getInputs());
-  }
-
-  private void addDepsAndSources(
-      TargetNode<?, ?> targetNode,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
-    addDepsAndFolder(
-        SourceFolder.FACTORY,
-        DependencyType.PROD,
-        targetNode,
-        wantsPackagePrefix,
-        context);
-  }
-
-  private void addDepsAndTestSources(
-      TargetNode<?, ?> targetNode,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
-    addDepsAndFolder(
-        TestFolder.FACTORY,
-        DependencyType.TEST,
-        targetNode,
-        wantsPackagePrefix,
-        context);
-  }
-
-  private static void addDeps(
-      ImmutableMultimap<Path, Path> foldersToInputsIndex,
-      TargetNode<?, ?> targetNode,
-      DependencyType dependencyType,
-      ModuleBuildContext context) {
-    context.addDeps(
-        foldersToInputsIndex.keySet(),
-        targetNode.getBuildDeps(),
-        dependencyType);
-  }
-
-  private <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
-      TargetNode<T, ?> targetNode,
-      ModuleBuildContext context) {
-    if (excludeShadows) {
-      return;
-    }
-
-    T arg = targetNode.getConstructorArg();
-    // TODO(mkosiba): investigate supporting annotation processors without resorting to this.
-    boolean hasAnnotationProcessors = !arg.annotationProcessors.isEmpty();
-    if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
-      context.addCompileShadowDep(targetNode.getBuildTarget());
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void addAnnotationOutputIfNeeded(
-      IJFolderFactory folderFactory,
-      TargetNode<?, ?> targetNode,
-      ModuleBuildContext context) {
-    TargetNode<? extends JvmLibraryArg, ?> jvmLibraryTargetNode =
-        (TargetNode<? extends JvmLibraryArg, ?>) targetNode;
-
-    Optional<Path> annotationOutput =
-        moduleFactoryResolver.getAnnotationOutputPath(jvmLibraryTargetNode);
-    if (!annotationOutput.isPresent()) {
-      return;
-    }
-
-    Path annotationOutputPath = annotationOutput.get();
-    context.addGeneratedSourceCodeFolder(
-        folderFactory.create(
-            annotationOutputPath,
-            false,
-            ImmutableSortedSet.of(annotationOutputPath))
-    );
-  }
-
-  private void addGeneratedOutputIfNeeded(
-      IJFolderFactory folderFactory,
-      TargetNode<?, ?> targetNode,
-      ModuleBuildContext context) {
-
-    Set<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
-
-    for (Path generatedSourcePath : generatedSourcePaths) {
-      context.addGeneratedSourceCodeFolder(
-          folderFactory.create(
-              generatedSourcePath,
-              false,
-              ImmutableSortedSet.of(generatedSourcePath))
-      );
-    }
-  }
-
-  private Set<Path> findConfiguredGeneratedSourcePaths(TargetNode<?, ?> targetNode) {
-    ImmutableMap<String, String> depToGeneratedSourcesMap =
-        projectConfig.getDepToGeneratedSourcesMap();
-    BuildTarget buildTarget = targetNode.getBuildTarget();
-
-    Set<Path> generatedSourcePaths = new HashSet<>();
-
-    for (BuildTarget dependencyTarget : targetNode.getBuildDeps()) {
-      String buildTargetName = dependencyTarget.toString();
-      String generatedSourceWithPattern = depToGeneratedSourcesMap.get(buildTargetName);
-      if (generatedSourceWithPattern != null) {
-        String generatedSource = generatedSourceWithPattern.replaceAll(
-            "%name%",
-            buildTarget.getShortNameAndFlavorPostfix());
-        Path generatedSourcePath = BuildTargets.getGenPath(
-            projectFilesystem,
-            buildTarget,
-            generatedSource);
-
-        generatedSourcePaths.add(generatedSourcePath);
-      }
-    }
-
-    return generatedSourcePaths;
-  }
-
   private class AndroidBinaryModuleRule
-      implements IjModuleRule<AndroidBinaryDescription.Arg> {
+      extends BaseIjModuleRule<AndroidBinaryDescription.Arg> {
+
+    private AndroidBinaryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -441,7 +218,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class AndroidLibraryModuleRule
-      implements IjModuleRule<AndroidLibraryDescription.Arg> {
+      extends BaseIjModuleRule<AndroidLibraryDescription.Arg> {
+
+    private AndroidLibraryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -455,7 +236,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           target,
           true /* wantsPackagePrefix */,
           context);
-      addCompiledShadowIfNeeded(target, context);
+      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
       Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
@@ -477,7 +258,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class AndroidResourceModuleRule
-      implements IjModuleRule<AndroidResourceDescription.Arg> {
+      extends BaseIjModuleRule<AndroidResourceDescription.Arg> {
+
+    private AndroidResourceModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -539,7 +324,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
+  private class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription.Arg> {
+
+    private CxxLibraryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -562,7 +351,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   private class JavaBinaryModuleRule
-      implements IjModuleRule<JavaBinaryDescription.Args> {
+      extends BaseIjModuleRule<JavaBinaryDescription.Args> {
+
+    private JavaBinaryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -605,7 +398,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
+  private class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.Arg> {
+
+    private JavaLibraryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -620,7 +417,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           target,
           true /* wantsPackagePrefix */,
           context);
-      addCompiledShadowIfNeeded(target, context);
+      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     }
 
     @Override
@@ -629,7 +426,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class GroovyLibraryModuleRule implements IjModuleRule<GroovyLibraryDescription.Arg> {
+  private class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescription.Arg> {
+
+    private GroovyLibraryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -652,7 +453,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class GroovyTestModuleRule implements IjModuleRule<GroovyTestDescription.Arg> {
+  private class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription.Arg> {
+
+    private GroovyTestModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -675,7 +480,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class JavaTestModuleRule implements IjModuleRule<JavaTestDescription.Arg> {
+  private class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg> {
+
+    private JavaTestModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -688,7 +497,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           target,
           true /* wantsPackagePrefix */,
           context);
-      addCompiledShadowIfNeeded(target, context);
+      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     }
 
     @Override
@@ -697,7 +506,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class KotlinLibraryModuleRule implements IjModuleRule<KotlinLibraryDescription.Arg> {
+  private class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescription.Arg> {
+
+    private KotlinLibraryModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
@@ -720,7 +533,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class KotlinTestModuleRule implements IjModuleRule<KotlinTestDescription.Arg> {
+  private class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription.Arg> {
+
+    private KotlinTestModuleRule() {
+      super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    }
 
     @Override
     public Class<? extends Description<?>> getDescriptionClass() {
