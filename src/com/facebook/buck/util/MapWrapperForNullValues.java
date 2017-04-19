@@ -71,6 +71,30 @@ public final class MapWrapperForNullValues<K, V> extends ForwardingMap<K, V> {
         .collect(MoreCollectors.toImmutableSet());
   }
 
+  // Note the warning here:
+  //
+  // https://google.github.io/guava/releases/19.0/api/docs/com/google/common/collect/ForwardingMap.html
+  //
+  // In particular, overriding `entrySet()` means we need to
+  // override `equals()`, `hashCode()`, and `toString()`.
+  //
+  // (We don't need to override `putAll()`, because this is
+  // immutable.)
+  @Override
+  public boolean equals(Object other) {
+    return standardEquals(other);
+  }
+
+  @Override
+  public int hashCode() {
+    return standardHashCode();
+  }
+
+  @Override
+  public String toString() {
+    return standardToString();
+  }
+
   private static class EntryWrapperForNullValues<K, V> extends ForwardingMapEntry<K, V> {
     private final Map.Entry<K, V> delegate;
 
@@ -91,6 +115,27 @@ public final class MapWrapperForNullValues<K, V> extends ForwardingMap<K, V> {
         return null;
       }
       return result;
+    }
+
+    // Note the warning here:
+    //
+    // https://google.github.io/guava/releases/21.0/api/docs/com/google/common/collect/ForwardingMapEntry.html
+    //
+    // In particular, overriding `getValue()` means we need to
+    // override `equals()`, `hashCode()`, and `toString()`,
+    @Override
+    public boolean equals(Object other) {
+      return standardEquals(other);
+    }
+
+    @Override
+    public int hashCode() {
+      return standardHashCode();
+    }
+
+    @Override
+    public String toString() {
+      return standardToString();
     }
   }
 }
