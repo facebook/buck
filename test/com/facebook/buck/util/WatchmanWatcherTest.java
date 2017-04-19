@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -33,6 +34,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.MorePaths;
@@ -579,21 +581,20 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of(),
         "warning", message);
-    Capture<WatchmanDiagnosticEvent> eventCapture = newCapture();
     EventBus eventBus = new EventBus("watchman test");
-    BuckEventBus buckEventBus = createStrictMock(BuckEventBus.class);
-    buckEventBus.post(capture(eventCapture));
-    replay(buckEventBus);
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         buckEventBus,
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(buckEventBus);
-    assertThat(
-        eventCapture.getValue().getDiagnostic().getMessage(),
-        Matchers.containsString(message));
+    ImmutableList<WatchmanDiagnosticEvent> diagnostics = RichStream.from(listener.getEvents())
+        .filter(WatchmanDiagnosticEvent.class).toImmutableList();
+    assertThat(diagnostics, hasSize(1));
+    assertThat(diagnostics.get(0).getDiagnostic().getMessage(), Matchers.containsString(message));
   }
 
   @Test
