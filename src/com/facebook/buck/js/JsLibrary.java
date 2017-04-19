@@ -67,8 +67,9 @@ public class JsLibrary extends AbstractBuildRule {
 
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
     final String jobArgs = String.format(
-        "library %s --out %s %s",
+        "library %s --root %s --out %s %s",
         JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--lib " + p),
+        getProjectFilesystem().getRootPath(),
         outputPath,
         JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString));
     return ImmutableList.of(

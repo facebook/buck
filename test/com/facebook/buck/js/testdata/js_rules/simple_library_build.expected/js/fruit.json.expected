@@ -1,4 +1,4 @@
-library
+library --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js
