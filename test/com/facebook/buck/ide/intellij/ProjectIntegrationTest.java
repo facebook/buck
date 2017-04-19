@@ -58,7 +58,10 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectSourceMerging() throws IOException {
-    runBuckProjectAndVerify("experimental_project_source_merge", "//java/code/modules/tip");
+    runBuckProjectAndVerify(
+        "experimental_project_source_merge",
+        "//java/code/modules/tip",
+        "//java/code/java_modules");
   }
 
   @Test
