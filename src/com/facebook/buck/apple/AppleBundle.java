@@ -488,10 +488,25 @@ public class AppleBundle
                         "SOURCE_ROOT", srcRoot.toString(),
                         "SRCROOT", srcRoot.toString()
                     )));
-        if (entitlementsPlistString.isPresent()) {
-          entitlementsPlist = Optional.of(
-              srcRoot.resolve(Paths.get(entitlementsPlistString.get())));
-        }
+        entitlementsPlist = entitlementsPlistString
+            .map(entitlementsPlistName -> {
+              ProjectFilesystem filesystem = getProjectFilesystem();
+              Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+              Path entitlementsPlistWithSubstitutions =
+                  BuildTargets.getScratchPath(
+                      filesystem,
+                      getBuildTarget(),
+                      "%s-Entitlements.plist");
+
+              stepsBuilder.add(
+                  new FindAndReplaceStep(
+                      filesystem,
+                      originalEntitlementsPlist,
+                      entitlementsPlistWithSubstitutions,
+                      InfoPlistSubstitution.createVariableExpansionFunction(infoPlistSubstitutions)));
+
+              return filesystem.resolve(entitlementsPlistWithSubstitutions);
+            });
 
         signingEntitlementsTempPath = Optional.of(
             BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
