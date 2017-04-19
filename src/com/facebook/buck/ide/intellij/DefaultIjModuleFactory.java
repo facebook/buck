@@ -24,13 +24,13 @@ import com.facebook.buck.ide.intellij.lang.android.RobolectricTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaBinaryModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
+import com.facebook.buck.ide.intellij.lang.kotlin.KotlinLibraryModuleRule;
+import com.facebook.buck.ide.intellij.lang.kotlin.KotlinTestModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
-import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
@@ -91,8 +91,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         projectConfig));
     addToIndex(new GroovyLibraryModuleRule());
     addToIndex(new GroovyTestModuleRule());
-    addToIndex(new KotlinLibraryModuleRule());
-    addToIndex(new KotlinTestModuleRule());
+    addToIndex(new KotlinLibraryModuleRule(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig));
+    addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
 
     Preconditions.checkState(SupportedTargetTypeRegistry.areTargetTypesEqual(
         moduleRuleIndex.keySet()));
@@ -280,66 +283,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
     @Override
     public IjModuleType detectModuleType(TargetNode<GroovyTestDescription.Arg, ?> targetNode) {
-      return IjModuleType.UNKNOWN_MODULE;
-    }
-  }
-
-  private class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescription.Arg> {
-
-    private KotlinLibraryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return KotlinLibraryDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<KotlinLibraryDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      addDepsAndSources(
-          target,
-          false /* wantsPackagePrefix */,
-          context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<KotlinLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.UNKNOWN_MODULE;
-    }
-  }
-
-  private class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription.Arg> {
-
-    private KotlinTestModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return KotlinTestDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<KotlinTestDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      addDepsAndTestSources(
-          target,
-          false /* wantsPackagePrefix */,
-          context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<KotlinTestDescription.Arg, ?> targetNode) {
       return IjModuleType.UNKNOWN_MODULE;
     }
   }
