@@ -1,5 +1,9 @@
 standard_java_library(
     name = "intellij",
+    srcs = glob(
+        ["**/*.java"],
+        excludes = ["deprecated/*.java"],
+    ),
     immutable_types = [
         "IjLibrary",
         "IjModule",

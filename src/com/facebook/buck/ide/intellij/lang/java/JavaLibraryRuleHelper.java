@@ -13,8 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.lang.java;
 
+import com.facebook.buck.ide.intellij.IjProjectConfig;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;

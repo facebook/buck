@@ -32,7 +32,7 @@ import java.util.Optional;
 /**
  * Holds all of the mutable state required during {@link IjModule} creation.
  */
-class ModuleBuildContext {
+public class ModuleBuildContext {
 
   private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 

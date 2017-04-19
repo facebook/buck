@@ -21,12 +21,14 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.ide.intellij.lang.java.JavaBinaryModuleRule;
+import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
+import com.facebook.buck.ide.intellij.lang.java.JavaLibraryRuleHelper;
+import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
-import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
@@ -73,9 +75,9 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
     addToIndex(new CxxLibraryModuleRule());
-    addToIndex(new JavaBinaryModuleRule());
-    addToIndex(new JavaLibraryModuleRule());
-    addToIndex(new JavaTestModuleRule());
+    addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new RobolectricTestModuleRule());
     addToIndex(new GroovyLibraryModuleRule());
     addToIndex(new GroovyTestModuleRule());
@@ -358,88 +360,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
   }
 
-  private class JavaBinaryModuleRule
-      extends BaseIjModuleRule<JavaBinaryDescription.Args> {
-
-    private JavaBinaryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return JavaBinaryDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<JavaBinaryDescription.Args, ?> target,
-        ModuleBuildContext context) {
-      context.addDeps(target.getBuildDeps(), DependencyType.PROD);
-      saveMetaInfDirectoryForIntellijPlugin(target, context);
-    }
-
-    private void saveMetaInfDirectoryForIntellijPlugin(
-        TargetNode<JavaBinaryDescription.Args, ?> target,
-        ModuleBuildContext context) {
-      Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
-      for (BuildTarget dep : target.getBuildDeps()) {
-        Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
-        if (metaInfDirectory.isPresent() &&
-            intellijLibraries.contains(dep.getFullyQualifiedName())) {
-          context.setMetaInfDirectory(metaInfDirectory.get());
-          break;
-        }
-      }
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<JavaBinaryDescription.Args, ?> targetNode) {
-      Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
-      for (BuildTarget dep : targetNode.getBuildDeps()) {
-        Optional<Path> metaInfDirectory = targetNode.getConstructorArg().metaInfDirectory;
-        if (metaInfDirectory.isPresent() &&
-            intellijLibraries.contains(dep.getFullyQualifiedName())) {
-          return IjModuleType.INTELLIJ_PLUGIN_MODULE;
-        }
-      }
-      return IjModuleType.JAVA_MODULE;
-    }
-  }
-
-  private class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.Arg> {
-
-    private JavaLibraryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return JavaLibraryDescription.class;
-    }
-
-    @Override
-    public void apply(
-        TargetNode<JavaLibraryDescription.Arg, ?> target,
-        ModuleBuildContext context) {
-      addDepsAndSources(
-          target,
-          true /* wantsPackagePrefix */,
-          context);
-      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.JAVA_MODULE;
-    }
-  }
-
   private class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescription.Arg> {
 
     private GroovyLibraryModuleRule() {
@@ -497,35 +417,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     @Override
     public IjModuleType detectModuleType(TargetNode<GroovyTestDescription.Arg, ?> targetNode) {
       return IjModuleType.UNKNOWN_MODULE;
-    }
-  }
-
-  private class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg> {
-
-    private JavaTestModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return JavaTestDescription.class;
-    }
-
-    @Override
-    public void apply(TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
-      addDepsAndTestSources(
-          target,
-          true /* wantsPackagePrefix */,
-          context);
-      JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<JavaTestDescription.Arg, ?> targetNode) {
-      return IjModuleType.JAVA_MODULE;
     }
   }
 

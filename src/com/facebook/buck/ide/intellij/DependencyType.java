@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.Map;
 
-enum DependencyType {
+public enum DependencyType {
   /**
    * The current {@link IjModule} depends on the other element from test code only. This
    * only happens if a particular module contains both test and production code and only code in
