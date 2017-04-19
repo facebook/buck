@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,25 +14,29 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model.folders;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.immutables.value.Value;
+import java.nio.file.Path;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractContentRoot implements Comparable<ContentRoot> {
-  public abstract String getUrl();
-  public abstract ImmutableSortedSet<IjSourceFolder> getFolders();
+/**
+ * A path which contains a set of sources we wish to present to IntelliJ.
+ */
+public class TestFolder extends InclusiveFolder {
+
+  public static final IJFolderFactory FACTORY = TestFolder::new;
+
+  TestFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
+    super(path, wantsPackagePrefix, inputs);
+  }
+
+  public TestFolder(Path path) {
+    super(path);
+  }
 
   @Override
-  public int compareTo(ContentRoot o) {
-    if (this == o) {
-      return 0;
-    }
-
-    return getUrl().compareTo(o.getUrl());
+  public IJFolderFactory getFactory() {
+    return FACTORY;
   }
 }

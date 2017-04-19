@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.ide.intellij.IjDependencyListBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;

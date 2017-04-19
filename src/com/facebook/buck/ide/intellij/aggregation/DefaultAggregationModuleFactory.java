@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.ide.intellij.IjModuleRule;
+import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.SupportedTargetTypeRegistry;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;

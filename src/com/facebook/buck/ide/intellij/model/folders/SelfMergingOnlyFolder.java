@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -26,11 +26,14 @@ import java.nio.file.Path;
  */
 public abstract class SelfMergingOnlyFolder extends InclusiveFolder {
 
-  SelfMergingOnlyFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
+  public SelfMergingOnlyFolder(
+      Path path,
+      boolean wantsPackagePrefix,
+      ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);
   }
 
-  SelfMergingOnlyFolder(Path path) {
+  public SelfMergingOnlyFolder(Path path) {
     super(path);
   }
 

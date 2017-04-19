@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
 import com.google.common.base.Preconditions;
 

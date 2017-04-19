@@ -19,6 +19,9 @@ package com.facebook.buck.ide.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;

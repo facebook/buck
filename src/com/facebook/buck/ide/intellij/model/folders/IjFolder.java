@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -153,7 +153,7 @@ public abstract class IjFolder implements Comparable<IjFolder> {
             getInputs();
   }
 
-  static ImmutableSortedSet<Path> combineInputs(IjFolder first, IjFolder second) {
+  public static ImmutableSortedSet<Path> combineInputs(IjFolder first, IjFolder second) {
     return ImmutableSortedSet.<Path>naturalOrder()
               .addAll(first.getInputs())
               .addAll(second.getInputs())

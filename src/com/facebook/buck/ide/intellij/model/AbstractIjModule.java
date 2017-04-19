@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.ide.intellij.IjDependencyListBuilder;
+import com.facebook.buck.ide.intellij.Util;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

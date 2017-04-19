@@ -18,7 +18,7 @@ package com.facebook.buck.ide.intellij.aggregation;
 
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
-import com.facebook.buck.ide.intellij.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;

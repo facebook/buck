@@ -16,6 +16,13 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
+import com.facebook.buck.ide.intellij.model.IjModuleRule;
+import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;

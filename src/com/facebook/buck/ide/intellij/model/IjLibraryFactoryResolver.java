@@ -14,24 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Interface for building {@link IjLibrary} objects from {@link TargetNode}s.
- */
-public abstract class IjLibraryFactory {
+public interface IjLibraryFactoryResolver {
+  /**
+   * Does it get an absolute path? Does it get a relative path? Who knows!
+   */
+  Path getPath(SourcePath path);
 
   /**
-   * Creates an IjLibrary.
-   *
-   * @param target target to create it from.
-   * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or
-   *   if the target's output is a .jar an instance is returned.
+   * @param targetNode node to look up.
+   * @return path to the output of target but only if that path points to a .jar.
    */
-  public abstract Optional<IjLibrary> getLibrary(TargetNode<?, ?> target);
-
+  Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode);
 }

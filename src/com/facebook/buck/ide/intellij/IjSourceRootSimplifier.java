@@ -17,7 +17,11 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;

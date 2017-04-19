@@ -14,26 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.rules.TargetNode;
+
+import java.util.Optional;
 
 /**
- * Common interface shared between {@link IjModule} and {@link IjLibrary}.
+ * Interface for building {@link IjLibrary} objects from {@link TargetNode}s.
  */
-public interface IjProjectElement {
+public abstract class IjLibraryFactory {
 
   /**
-   * @return unique string identifying the element. This will be used by modules to refer to it.
+   * Creates an IjLibrary.
+   *
+   * @param target target to create it from.
+   * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or
+   *   if the target's output is a .jar an instance is returned.
    */
-  String getName();
+  public abstract Optional<IjLibrary> getLibrary(TargetNode<?, ?> target);
 
-  /**
-   * @return set of targets this element corresponds to in the IntelliJ project.
-   */
-  ImmutableSet<BuildTarget> getTargets();
-
-  void addAsDependency(DependencyType dependencyType,
-      IjDependencyListBuilder dependencyListBuilder);
 }

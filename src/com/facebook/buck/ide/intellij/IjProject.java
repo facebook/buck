@@ -18,6 +18,9 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.ide.intellij.lang.java.ParsingJavaPackageFinder;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;

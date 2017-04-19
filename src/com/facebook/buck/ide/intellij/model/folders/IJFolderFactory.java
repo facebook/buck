@@ -14,36 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
 /**
- * A path which contains a set of sources we wish to present to IntelliJ.
+ * Interface for factory classes which can create each type of folder.
  */
-public abstract class InclusiveFolder extends IjFolder {
-
-  private static final String FOLDER_IJ_NAME = "sourceFolder";
-
-  InclusiveFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
-    super(path, wantsPackagePrefix, inputs);
-  }
-
-  InclusiveFolder(Path path, boolean wantsPackagePrefix) {
-    super(path, wantsPackagePrefix);
-  }
-
-  InclusiveFolder(Path path) {
-    super(path);
-  }
-
-  /**
-   * @return name IntelliJ would use to refer to this type of folder.
-   */
-  @Override
-  public String getIjName() {
-    return FOLDER_IJ_NAME;
-  }
+public interface IJFolderFactory {
+  IjFolder create(Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs);
 }

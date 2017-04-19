@@ -19,7 +19,7 @@ package com.facebook.buck.ide.intellij.aggregation;
 import static com.facebook.buck.ide.intellij.aggregation.AggregationTreeNodeTest.createModule;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.ide.intellij.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 

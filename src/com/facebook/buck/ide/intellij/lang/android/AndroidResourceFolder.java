@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.lang.android;
 
+import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;

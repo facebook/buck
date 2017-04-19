@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.ide.intellij.IjModule;
-import com.facebook.buck.ide.intellij.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;

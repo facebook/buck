@@ -16,8 +16,8 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
-import com.facebook.buck.ide.intellij.IjModuleFactoryResolver;
-import com.facebook.buck.ide.intellij.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.TargetNode;

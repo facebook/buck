@@ -13,21 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableSet;
+
+import java.nio.file.Path;
+import java.util.Set;
 
 /**
- * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the
- * {@link IjModule} being constructed.
- *
- * @param <T> TargetNode type.
+ * Builds {@link IjModule}s out of {@link TargetNode}s.
  */
-public interface IjModuleRule<T> {
-  Class<? extends Description<?>> getDescriptionClass();
-  void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
-  IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
-  void applyDuringAggregation(AggregationContext context, TargetNode<T, ?> targetNode);
+public interface IjModuleFactory {
+  /**
+   * Create an {@link IjModule} form the supplied parameters.
+   *
+   * @param moduleBasePath the top-most directory the module is responsible for.
+   * @param targetNodes set of nodes the module is to be created from.
+   * @return nice shiny new module.
+   */
+  IjModule createModule(
+      Path moduleBasePath,
+      ImmutableSet<TargetNode<?, ?>> targetNodes,
+      Set<Path> excludes);
 }

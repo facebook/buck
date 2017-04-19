@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.ide.intellij.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;

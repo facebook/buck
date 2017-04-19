@@ -16,6 +16,13 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;

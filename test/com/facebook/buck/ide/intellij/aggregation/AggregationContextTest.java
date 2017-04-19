@@ -18,7 +18,7 @@ package com.facebook.buck.ide.intellij.aggregation;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.ide.intellij.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 
 import org.junit.Before;
 import org.junit.Test;

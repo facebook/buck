@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.ide.intellij.lang.java;
 
-import com.facebook.buck.ide.intellij.IjProjectConfig;
 import com.facebook.buck.ide.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.PathSourcePath;

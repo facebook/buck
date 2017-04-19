@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -23,15 +23,19 @@ import java.nio.file.Path;
 /**
  * A path which contains a set of sources we wish to present to IntelliJ.
  */
-public class TestFolder extends InclusiveFolder {
+public class SourceFolder extends InclusiveFolder {
 
-  public static final IJFolderFactory FACTORY = TestFolder::new;
+  public static final IJFolderFactory FACTORY = SourceFolder::new;
 
-  TestFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
+  public SourceFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);
   }
 
-  TestFolder(Path path) {
+  public SourceFolder(Path path, boolean wantsPackagePrefix) {
+    super(path, wantsPackagePrefix);
+  }
+
+  public SourceFolder(Path path) {
     super(path);
   }
 

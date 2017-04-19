@@ -18,6 +18,8 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Ignore;

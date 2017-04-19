@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/**
- * Interface for factory classes which can create each type of folder.
- */
-interface IJFolderFactory {
-  IjFolder create(Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs);
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractContentRoot implements Comparable<ContentRoot> {
+  public abstract String getUrl();
+  public abstract ImmutableSortedSet<IjSourceFolder> getFolders();
+
+  @Override
+  public int compareTo(ContentRoot o) {
+    if (this == o) {
+      return 0;
+    }
+
+    return getUrl().compareTo(o.getUrl());
+  }
 }
