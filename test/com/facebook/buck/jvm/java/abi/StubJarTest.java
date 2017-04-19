@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
@@ -52,6 +53,10 @@ import org.objectweb.asm.tree.TypeAnnotationNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,10 +66,14 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StubJarTest {
@@ -1582,6 +1591,27 @@ public class StubJarTest {
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
+  @Test
+  public void stubJarShouldHaveManifestWithEntriesForClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        "public class A { }");
+
+    FileSystem fileSystem = FileSystems.newFileSystem(paths.stubJar, null);
+    Path manifestPath = fileSystem.getPath("META-INF", "MANIFEST.MF");
+
+    assertTrue(Files.exists(manifestPath));
+
+    try (InputStream manifestStream = Files.newInputStream(manifestPath)) {
+      Manifest jarManifest = new Manifest(manifestStream);
+
+      assertThat(
+          jarManifest.getEntries().get("A.class").getValue("Murmur3-128-Digest"),
+          Matchers.equalTo("525ca9a11a7442a820dfbd94da7b4166"));
+    }
+  }
+
   private JarPaths createFullAndStubJars(
       ImmutableSortedSet<Path> classPath,
       String fileName,
@@ -1615,20 +1645,35 @@ public class StubJarTest {
       Path outputDir) throws IOException {
     Path stubJar = outputDir.resolve("stub.jar");
 
-    List<Processor> processors = Collections.singletonList(new StubJarGeneratingProcessor(
-        filesystem,
-        stubJar,
-        SourceVersion.RELEASE_8));
-
     try (TestCompiler testCompiler = new TestCompiler()) {
       testCompiler.init();
       testCompiler.useFrontendOnlyJavacTask();
       testCompiler.addSourceFileContents(fileName, source);
       testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(processors);
-      testCompiler.enter();
-    }
+      testCompiler.setProcessors(ImmutableList.of(
+          new AbstractProcessor() {
+            @Override
+            public Set<String> getSupportedAnnotationTypes() {
+              return Collections.singleton("*");
+            }
 
+            @Override
+            public boolean process(
+                Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+              return false;
+            }
+          }
+      ));
+      StubGenerator generator = new StubGenerator(
+          SourceVersion.RELEASE_8,
+          testCompiler.getElements(),
+          testCompiler.getFileManager());
+
+      testCompiler.addPostEnterCallback(generator::generate);
+
+      testCompiler.compile();
+      testCompiler.getClasses().createJar(stubJar, true);
+    }
     return stubJar;
   }
 
@@ -1655,7 +1700,7 @@ public class StubJarTest {
       diagnostics = compiler.getDiagnosticMessages();
 
       Path jarPath = outputDir.toPath().resolve("output.jar");
-      compiler.getClasses().createJar(jarPath);
+      compiler.getClasses().createJar(jarPath, false);
       return jarPath;
     }
   }

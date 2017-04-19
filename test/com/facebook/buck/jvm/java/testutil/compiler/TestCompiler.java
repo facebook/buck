@@ -54,6 +54,7 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
@@ -139,6 +140,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     }
 
     this.useFrontendOnlyJavacTask = true;
+  }
+
+  public JavaFileManager getFileManager() {
+    return fileManager;
   }
 
   public void setTaskListener(TaskListener taskListener) {
@@ -229,7 +234,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
       JavacTask innerTask = (JavacTask) javaCompiler.getTask(
           null,
-          null,
+          fileManager,
           diagnosticCollector,
           options,
           null,

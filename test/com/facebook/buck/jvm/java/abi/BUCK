@@ -1,5 +1,10 @@
 standard_java_testutil(
     name = "testutil",
+    provided_deps = [
+        # Tools.jar is the compiler itself, and will already be present at runtime;
+        # we compile against a stub.
+        "//third-party/java/jdk:compiler-tree-api",
+    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
@@ -155,6 +160,11 @@ standard_java_testutil(
 
 standard_java_test(
     name = "abi",
+    provided_deps = [
+        # Tools.jar is the compiler itself, and will already be present at runtime;
+        # we compile against a stub.
+        "//third-party/java/jdk:compiler-tree-api",
+    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
@@ -206,6 +216,7 @@ standard_java_test(
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi:abi",
+        "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/autodeps:SymbolExtractor",
         "//src/com/facebook/buck/jvm/java/autodeps:autodeps",

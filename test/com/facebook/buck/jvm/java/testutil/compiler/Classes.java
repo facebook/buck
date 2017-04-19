@@ -26,5 +26,5 @@ import java.nio.file.Path;
  */
 public interface Classes {
   void acceptClassVisitor(String qualifiedName, int flags, ClassVisitor cv) throws IOException;
-  void createJar(Path jarPath) throws IOException;
+  void createJar(Path jarPath, boolean hashEntries) throws IOException;
 }

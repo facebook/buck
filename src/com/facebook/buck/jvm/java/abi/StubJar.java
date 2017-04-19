@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import javax.tools.JavaFileManager;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
@@ -56,6 +57,12 @@ public class StubJar {
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
     try (StubJarWriter writer = new FilesystemStubJarWriter(filesystem, path)) {
+      writeTo(writer);
+    }
+  }
+
+  public void writeTo(JavaFileManager fileManager) throws IOException {
+    try (StubJarWriter writer = new JavaFileManagerStubJarWriter(fileManager)) {
       writeTo(writer);
     }
   }

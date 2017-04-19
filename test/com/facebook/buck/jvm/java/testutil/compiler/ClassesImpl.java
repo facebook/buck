@@ -17,7 +17,8 @@
 package com.facebook.buck.jvm.java.testutil.compiler;
 
 import com.facebook.buck.io.MorePaths;
-import com.google.common.io.ByteStreams;
+import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 
 import org.junit.rules.TemporaryFolder;
 import org.objectweb.asm.ClassReader;
@@ -29,9 +30,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
 
 class ClassesImpl implements Classes {
   private final TemporaryFolder root;
@@ -55,18 +54,20 @@ class ClassesImpl implements Classes {
   }
 
   @Override
-  public void createJar(Path jarPath) throws IOException {
-    try (JarOutputStream jar = new JarOutputStream(Files.newOutputStream(jarPath))) {
+  public void createJar(Path jarPath, boolean hashEntries) throws IOException {
+    try (CustomJarOutputStream jar =
+             ZipOutputStreams.newJarOutputStream(Files.newOutputStream(jarPath))) {
+      jar.setEntryHashingEnabled(hashEntries);
       List<Path> files = Files.walk(root.getRoot().toPath())
           .filter(path -> path.toFile().isFile())
           .collect(Collectors.toList());
 
       for (Path file : files) {
-        ZipEntry entry = new ZipEntry(
-            MorePaths.pathWithUnixSeparators(root.getRoot().toPath().relativize(file)));
-        jar.putNextEntry(entry);
-        ByteStreams.copy(Files.newInputStream(file), jar);
-        jar.closeEntry();
+        try (InputStream inputStream = Files.newInputStream(file)) {
+          jar.writeEntry(
+              MorePaths.pathWithUnixSeparators(root.getRoot().toPath().relativize(file)),
+              inputStream);
+        }
       }
     }
   }
