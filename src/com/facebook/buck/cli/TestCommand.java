@@ -206,7 +206,7 @@ public class TestCommand extends BuildCommand {
   public TestRunningOptions.TestResultCacheMode getResultsCacheMode(BuckConfig buckConfig) {
     // The option is negative (--no-X) but we prefer to reason about positives, in the code.
     if (isResultsCacheDisabled == null) {
-      boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
+      boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, false);
       isResultsCacheDisabled = !isUseResultsCache;
     }
     if (isOnlyFailing == null) {

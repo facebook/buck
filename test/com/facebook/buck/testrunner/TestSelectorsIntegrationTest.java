@@ -23,8 +23,8 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Before;
@@ -87,10 +87,11 @@ public class TestSelectorsIntegrationTest {
   @Test
   public void shouldNeverCacheWhenUsingSelectors() throws IOException {
     String spammyTestOutput = String.valueOf(BINARY_OUTPUTS.ordinal());
-    String[] commandWithoutSelector = {"test", "-v", spammyTestOutput, "--all"};
+    String[] commandWithoutSelector =
+        {"test", "--config", "test.use_results_cache=true", "-v", spammyTestOutput, "--all"};
     String[] commandWithSelector =
-        {"test", "-v", spammyTestOutput,
-        "--all", "--test-selectors", "#testIsComical"};
+        {"test", "--config", "test.use_results_cache=true", "-v", spammyTestOutput, "--all",
+            "--test-selectors", "#testIsComical"};
 
     // Without selectors, the first run isn't cached and the second run is.
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(commandWithoutSelector);
