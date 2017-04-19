@@ -334,6 +334,46 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testJavaLibraryOnlyDependsOnTheAbiVersionsOfItsDeps()
+      throws IOException {
+    compileAgainstAbisOnly();
+    setUpProjectWorkspaceForScenerio("depends_only_on_abi_test");
+    workspace.enableDirCache();
+
+    // Build A
+    ProcessResult firstBuildResult = workspace.runBuckBuild("//:a");
+    firstBuildResult.assertSuccess("Successful build should exit with 0.");
+
+    // Perform clean
+    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    cleanResult.assertSuccess("Successful clean should exit with 0.");
+
+    // Edit A
+    workspace.replaceFileContents("A.java", "getB", "getNewB");
+
+    // Rebuild A
+    ProcessResult secondBuildResult = workspace.runBuckBuild("//:a");
+    secondBuildResult.assertSuccess("Successful build should exit with 0.");
+
+    BuildTarget b = BuildTargetFactory.newInstance("//:b");
+    BuildTarget c = BuildTargetFactory.newInstance("//:c");
+    BuildTarget d = BuildTargetFactory.newInstance("//:d");
+
+    // Confirm that we got an input based rule key hit on B#abi, C#abi, D#abi
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(
+        b.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(
+        c.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(
+        d.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+
+    // Confirm that B, C, and D were not re-built
+    workspace.getBuildLog().assertNoLogEntry(b.getFullyQualifiedName());
+    workspace.getBuildLog().assertNoLogEntry(c.getFullyQualifiedName());
+    workspace.getBuildLog().assertNoLogEntry(d.getFullyQualifiedName());
+  }
+
+  @Test
   public void testAnnotationProcessorDepChangeThatDoesNotModifyAbiCausesRebuild()
       throws IOException {
     setUpProjectWorkspaceForScenerio("annotation_processors");

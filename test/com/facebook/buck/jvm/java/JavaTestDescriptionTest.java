@@ -18,63 +18,101 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeExportDependenciesRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
-public class JavaTestDescriptionTest {
+import java.nio.file.Paths;
+
+public class JavaTestDescriptionTest extends AbiCompilationModeTest {
+
+  private JavaBuckConfig javaBuckConfig;
+
+  @Before
+  public void setUp() {
+    javaBuckConfig = getJavaBuckConfigWithCompilationMode();
+  }
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+        .build();
+    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+        .addExportedDep(exportedNode.getBuildTarget())
+        .build();
+    TargetNode<?, ?> javaTestNode = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+        .addDep(exportingNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        exportedNode,
+        exportingNode,
+        javaTestNode);
+
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    FakeBuildRule exportedRule =
-        resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
-    FakeExportDependenciesRule exportingRule =
-        resolver.addToIndex(
-            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+    JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
+    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    JavaTest javaTest = JavaTestBuilder.createBuilder(target)
-        .addDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
 
     ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
-    assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(deps, Matchers.hasItem(exportedRule));
   }
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+        .build();
+    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+        .addExportedDep(exportedNode.getBuildTarget())
+        .build();
+    TargetNode<?, ?> javaTestNode = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+        .addProvidedDep(exportingNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        exportedNode,
+        exportingNode,
+        javaTestNode);
+
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    FakeBuildRule exportedRule =
-        resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
-    FakeExportDependenciesRule exportingRule =
-        resolver.addToIndex(
-            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+    JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
+    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    JavaTest javaTest = JavaTestBuilder.createBuilder(target)
-        .addProvidedDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
 
     ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
-    assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(deps, Matchers.hasItem(exportedRule));
   }
 
 }

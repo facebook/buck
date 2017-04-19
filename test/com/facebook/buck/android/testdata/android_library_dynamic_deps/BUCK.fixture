@@ -25,6 +25,7 @@ android_resource(
 
 android_library(
   name = 'top_level',
+  srcs = [ 'TopLevel.java' ],
   deps = [
     ':lib_b',
     ':res',
