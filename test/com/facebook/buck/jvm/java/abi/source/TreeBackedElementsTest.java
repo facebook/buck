@@ -27,6 +27,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.Map;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
@@ -87,5 +93,31 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
     assertSame(
         elements.getPackageElement("com.facebook.foo"),
         elements.getPackageOf(elements.getTypeElement("com.facebook.foo.Foo")));
+  }
+
+  @Test
+  public void testGetElementValuesWithDefaults() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.foo;",
+        "@Anno(a=4)",
+        "class Foo { }",
+        "@interface Anno {",
+        "  int a() default 1;",
+        "  int b() default 2;",
+        "}"));
+
+    TypeElement fooType = elements.getTypeElement("com.facebook.foo.Foo");
+    TypeElement annotationType = elements.getTypeElement("com.facebook.foo.Anno");
+
+    ExecutableElement aParam = findMethod("a", annotationType);
+    ExecutableElement bParam = findMethod("b", annotationType);
+
+    AnnotationMirror annotation = fooType.getAnnotationMirrors().get(0);
+    Map<? extends ExecutableElement, ? extends AnnotationValue> elementValuesWithDefaults =
+        elements.getElementValuesWithDefaults(annotation);
+
+    assertEquals(4, elementValuesWithDefaults.get(aParam).getValue());
+    assertEquals(2, elementValuesWithDefaults.get(bParam).getValue());
+    assertEquals(2, elementValuesWithDefaults.size());
   }
 }
