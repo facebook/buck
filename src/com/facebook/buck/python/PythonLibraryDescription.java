@@ -30,11 +30,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
@@ -90,8 +90,14 @@ public class PythonLibraryDescription
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
 
-    Map.Entry<Flavor, MetadataType> type =
-        METADATA_TYPE.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+    Optional<Map.Entry<Flavor, MetadataType>> optionalType =
+        METADATA_TYPE.getFlavorAndValue(buildTarget);
+    if (!optionalType.isPresent()) {
+      return Optional.empty();
+    }
+
+    Map.Entry<Flavor, MetadataType> type = optionalType.get();
+
     BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
     switch (type.getValue()) {
 
