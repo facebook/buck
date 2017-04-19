@@ -1107,7 +1107,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
                   // Try get the output size.
                   try {
-                    outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    if (success.shouldUploadResultingArtifact()) {
+                      outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    }
                   } catch (IOException e) {
                     buildContext.getEventBus().post(
                         ThrowableConsoleEvent.create(
