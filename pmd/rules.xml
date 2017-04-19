@@ -20,6 +20,11 @@
       statically import many methods, which we allow.
     -->
     <exclude name="TooManyStaticImports" />
+
+    <!--
+      Checkstyle covers this one; we don't need two messages.
+    -->
+    <exclude name="UnusedImports" />
   </rule>
 
   <rule ref="rulesets/java/coupling.xml/LooseCoupling" />
