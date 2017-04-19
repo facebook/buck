@@ -110,6 +110,7 @@ import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
@@ -474,8 +475,7 @@ public class ProjectGenerator {
               project,
               (TargetNode<AppleNativeTargetDescriptionArg, ?>) targetNode,
               Optional.empty()));
-    } else if (
-        targetNode.getDescription() instanceof CxxLibraryDescription) {
+    } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       result = Optional.of(
           generateCxxLibraryTarget(
               project,
@@ -483,14 +483,12 @@ public class ProjectGenerator {
               ImmutableSet.of(),
               ImmutableSet.of(),
               Optional.empty()));
-    } else if (
-        targetNode.getDescription() instanceof AppleBinaryDescription) {
+    } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       result = Optional.of(
           generateAppleBinaryTarget(
               project,
               (TargetNode<AppleNativeTargetDescriptionArg, ?>) targetNode));
-    } else if (
-        targetNode.getDescription() instanceof AppleBundleDescription) {
+    } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescription.Arg, ?> bundleTargetNode =
           (TargetNode<AppleBundleDescription.Arg, ?>) targetNode;
       result = Optional.of(
@@ -500,16 +498,13 @@ public class ProjectGenerator {
               (TargetNode<AppleNativeTargetDescriptionArg, ?>)
                   targetGraph.get(bundleTargetNode.getConstructorArg().binary),
               Optional.empty()));
-    } else if (
-        targetNode.getDescription() instanceof AppleTestDescription) {
+    } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result = Optional.of(
           generateAppleTestTarget((TargetNode<AppleTestDescription.Arg, ?>) targetNode));
-    } else if (
-        targetNode.getDescription() instanceof AppleResourceDescription) {
+    } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescription.Arg, ?>) targetNode);
-    } else if (
-        targetNode.getDescription() instanceof HalideLibraryDescription) {
+    } else if (targetNode.getDescription() instanceof HalideLibraryDescription) {
       TargetNode<HalideLibraryDescription.Arg, ?> halideTargetNode =
           (TargetNode<HalideLibraryDescription.Arg, ?>) targetNode;
       BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -540,6 +535,10 @@ public class ProjectGenerator {
                 HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
                 defaultCxxPlatform.getFlavor()));
       }
+    } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
+        addGenruleFiles(
+            project,
+            (TargetNode<AbstractGenruleDescription.Arg, ?>) targetNode);
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
@@ -1354,6 +1353,26 @@ public class ProjectGenerator {
           Joiner.on(' ').join(ldRunpathSearchPaths));
     }
     return results.build();
+  }
+
+  private void addGenruleFiles(
+      PBXProject project,
+      TargetNode<AbstractGenruleDescription.Arg, ?> targetNode) {
+    PBXGroup group = project.getMainGroup();
+    for (SourcePath sourcePath : targetNode.getConstructorArg().srcs) {
+      Path path = pathRelativizer.outputPathToSourcePath(sourcePath);
+      ImmutableList<String> targetGroupPath = null;
+      PBXGroup sourceGroup = group.getOrCreateChildGroupByName("Other");
+      if (path.getParent() != null) {
+        targetGroupPath = RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
+        sourceGroup = sourceGroup.getOrCreateDescendantGroupByPath(targetGroupPath);
+      }
+      sourceGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              path,
+              Optional.empty()));
+    }
   }
 
   private static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {

@@ -106,6 +106,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -250,6 +251,67 @@ public class ProjectGeneratorTest {
         sourcesGroup.getChildren(),
         PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
+  }
+
+  @Test
+  public void testProjectStructureWithGenruleSources() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+    BuildTarget genruleTarget = BuildTarget.builder(rootPath, "//foo", "genrule").build();
+
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("foo.h")))
+        .build();
+
+    TargetNode<?, ?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(libraryTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath(("Info.plist")))
+        .build();
+
+    TargetNode<?, ?> genruleNode = GenruleBuilder
+        .newGenruleBuilder(genruleTarget)
+        .setSrcs(
+          ImmutableList.of(
+            new FakeSourcePath("foo/foo.json"),
+            new FakeSourcePath("bar.json")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, bundleNode, genruleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup bundleGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(bundleGroup.getChildren(), hasSize(2));
+
+    Iterable<String> childNames = Iterables.transform(
+        sourcesGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("Info.plist"));
+
+    PBXGroup otherGroup = project.getMainGroup()
+        .getOrCreateChildGroupByName("Other")
+        .getOrCreateChildGroupByName("..");
+    assertThat(otherGroup.getChildren(), hasSize(2));
+    childNames = Iterables.transform(
+        otherGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("bar.json"));
+
+    PBXGroup otherFooGroup = otherGroup.getOrCreateChildGroupByName("foo");
+    assertThat(otherFooGroup.getChildren(), hasSize(1));
+    childNames = Iterables.transform(
+        otherFooGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("foo.json"));
   }
 
   @Test
