@@ -16,13 +16,16 @@
 package com.facebook.buck.ide.intellij.lang.java;
 
 import com.facebook.buck.ide.intellij.IjProjectConfig;
+import com.facebook.buck.ide.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public class JavaLibraryRuleHelper {
   /**
@@ -47,6 +50,27 @@ public class JavaLibraryRuleHelper {
     if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());
     }
+  }
+
+  public static <T extends JavaLibraryDescription.Arg> Optional<String> getLanguageLevel(
+      IjProjectConfig projectConfig,
+      TargetNode<T, ?> targetNode) {
+
+    JavaLibraryDescription.Arg arg = targetNode.getConstructorArg();
+
+    if (arg.source.isPresent()) {
+      JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
+      String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
+      String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
+      boolean languageLevelsAreDifferent =
+          !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
+              !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
+      if (languageLevelsAreDifferent) {
+        return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.source.get()));
+      }
+    }
+
+    return Optional.empty();
   }
 
   private JavaLibraryRuleHelper() {

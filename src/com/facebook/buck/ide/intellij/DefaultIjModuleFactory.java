@@ -29,8 +29,6 @@ import com.facebook.buck.ide.intellij.lang.groovy.GroovyLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.groovy.GroovyTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.cxx.CxxLibraryModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
@@ -45,7 +43,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class DefaultIjModuleFactory implements IjModuleFactory {
@@ -55,7 +52,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private final ProjectFilesystem projectFilesystem;
   private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
       new HashMap<>();
-  private final IjProjectConfig projectConfig;
 
   /**
    * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
@@ -65,7 +61,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
-    this.projectConfig = projectConfig;
 
     addToIndex(new AndroidBinaryModuleRule(
         projectFilesystem,
@@ -146,8 +141,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           seenTypes);
     }
 
-    Optional<String> sourceLevel = getSourceLevel(targetNodes);
-
     if (context.isAndroidFacetBuilderPresent()) {
       context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
           createAndroidGenPath(moduleBasePath));
@@ -161,7 +154,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
-        .setLanguageLevel(sourceLevel)
+        .setLanguageLevel(context.getJavaLanguageLevel())
         .setModuleType(context.getModuleType())
         .setMetaInfDirectory(context.getMetaInfDirectory())
         .build();
@@ -173,30 +166,4 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .resolve(moduleBasePath)
         .resolve("gen");
   }
-
-  private Optional<String> getSourceLevel(
-      Iterable<TargetNode<?, ?>> targetNodes) {
-    Optional<String> result = Optional.empty();
-    for (TargetNode<?, ?> targetNode : targetNodes) {
-      if (!(targetNode.getDescription() instanceof JavaLibraryDescription)) {
-        continue;
-      }
-
-      JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
-      String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
-      String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
-      JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();
-      if (!defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
-          !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel))) {
-        result = arg.source;
-      }
-    }
-
-    if (result.isPresent()) {
-      result = Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(result.get()));
-    }
-
-    return result;
-  }
-
 }

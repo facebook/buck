@@ -18,7 +18,7 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.infer.annotation.PropagatesNullable;
 
-final class JavaLanguageLevelHelper {
+public final class JavaLanguageLevelHelper {
 
   private JavaLanguageLevelHelper() {
   }

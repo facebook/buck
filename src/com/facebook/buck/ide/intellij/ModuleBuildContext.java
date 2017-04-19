@@ -45,6 +45,7 @@ public class ModuleBuildContext {
   private Multimap<Path, BuildTarget> dependencyOriginMap;
   private IjModuleType moduleType;
   private Optional<Path> metaInfDirectory;
+  private Optional<String> javaLanguageLevel;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
@@ -56,6 +57,7 @@ public class ModuleBuildContext {
     this.dependencyOriginMap = HashMultimap.create();
     this.moduleType = IjModuleType.UNKNOWN_MODULE;
     this.metaInfDirectory = Optional.empty();
+    this.javaLanguageLevel = Optional.empty();
   }
 
   public void ensureAndroidFacetBuilder() {
@@ -113,6 +115,16 @@ public class ModuleBuildContext {
 
   public void setMetaInfDirectory(Path metaInfDirectory) {
     this.metaInfDirectory = Optional.of(metaInfDirectory);
+  }
+
+  public Optional<String> getJavaLanguageLevel() {
+    return javaLanguageLevel;
+  }
+
+  public void setJavaLanguageLevel(Optional<String> javaLanguageLevel) {
+    if (!this.javaLanguageLevel.isPresent()) {
+      this.javaLanguageLevel = javaLanguageLevel;
+    }
   }
 
   /**
