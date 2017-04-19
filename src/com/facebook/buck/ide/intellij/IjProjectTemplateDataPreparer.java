@@ -76,12 +76,7 @@ public class IjProjectTemplateDataPreparer {
     this.projectFilesystem = projectFilesystem;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
-    this.librariesToBeWritten = moduleGraph
-        .getNodes()
-        .stream()
-        .filter(node -> node instanceof IjLibrary)
-        .map(IjLibrary.class::cast)
-        .collect(MoreCollectors.toImmutableSet());
+    this.librariesToBeWritten = moduleGraph.getLibraries();
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -117,7 +112,7 @@ public class IjProjectTemplateDataPreparer {
   public static ImmutableSet<Path> createPackageLookupPathSet(IjModuleGraph moduleGraph) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    for (IjModule module : moduleGraph.getModuleNodes()) {
+    for (IjModule module : moduleGraph.getModules()) {
       for (IjFolder folder : module.getFolders()) {
         if (!folder.getWantsPackagePrefix()) {
           continue;
@@ -137,7 +132,7 @@ public class IjProjectTemplateDataPreparer {
   private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get("");
     boolean hasRootModule = graph
-        .getModuleNodes()
+        .getModules()
         .stream()
         .anyMatch(module -> rootModuleBasePath.equals(module.getModuleBasePath()));
 
@@ -152,7 +147,7 @@ public class IjProjectTemplateDataPreparer {
     }
 
     return Stream
-        .concat(graph.getModuleNodes().stream(), supplementalModules.stream())
+        .concat(graph.getModules().stream(), supplementalModules.stream())
         .collect(MoreCollectors.toImmutableSet());
   }
 

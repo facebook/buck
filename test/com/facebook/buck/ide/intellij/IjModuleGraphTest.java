@@ -400,7 +400,7 @@ public class IjModuleGraphTest {
 
     assertEquals(ImmutableMap.of(libraryModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(productModule));
-    assertEquals(2, moduleGraph.getModuleNodes().size());
+    assertEquals(2, moduleGraph.getModules().size());
   }
 
   @Test
