@@ -119,7 +119,7 @@ class ModuleBuildContext {
    * @param metaInfDirectory directory where the plugin's plugin.xml descriptor lives
    */
   public void setIsIntellijPlugin(Path metaInfDirectory) {
-    setModuleType(IjModuleType.PLUGIN_MODULE);
+    setModuleType(IjModuleType.INTELLIJ_PLUGIN_MODULE);
     setMetaInfDirectory(metaInfDirectory);
   }
 

@@ -80,17 +80,17 @@ public class IjProjectWriter {
         projectDataPreparer.getAndroidProperties(module));
     moduleContents.add(
         "sdk",
-        module.getSdkName().orElse(null));
+        module.getModuleType().getSdkName(projectConfig).orElse(null));
     moduleContents.add(
         "sdkType",
-        module.getSdkType().orElse(null));
+        module.getModuleType().getSdkType(projectConfig));
     moduleContents.add(
         "languageLevel",
         JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(
             module.getLanguageLevel().orElse(null)));
     moduleContents.add(
         "moduleType",
-        module.getModuleType().orElse(IjModuleType.DEFAULT));
+        module.getModuleType().getImlModuleType());
     moduleContents.add(
         "metaInfDirectory",
         module.getMetaInfDirectory()

@@ -52,6 +52,7 @@ public class IjModuleTest {
     return IjModule.builder()
         .setTargets(ImmutableSet.of(targetNode))
         .setModuleBasePath(moduleBasePath)
+        .setModuleType(IjModuleType.JAVA_MODULE)
         .build();
   }
 }

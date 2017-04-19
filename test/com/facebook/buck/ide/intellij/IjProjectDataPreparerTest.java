@@ -256,11 +256,11 @@ public class IjProjectDataPreparerTest {
                         true,
                         ImmutableSortedSet.of(baseTargetSrcFilePath)))
                 .setModuleType(IjModuleType.JAVA_MODULE)
-                .setSdkType("JavaSDK")
                 .build(),
             IjModule.builder()
                 .setModuleBasePath(Paths.get(""))
                 .setTargets(ImmutableSet.of())
+                .setModuleType(IjModuleType.UNKNOWN_MODULE)
                 .build()
         )
     );

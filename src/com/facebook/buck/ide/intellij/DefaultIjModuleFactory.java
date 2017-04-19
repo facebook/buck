@@ -71,15 +71,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
   }
 
-  // From constructor of com.intellij.openapi.projectRoots.impl.JavaSdkImpl
-  private static final String SDK_TYPE_JAVA = "JavaSDK";
-
-  // From constructor of org.jetbrains.android.sdk.AndroidSdkType
-  private static final String SDK_TYPE_ANDROID = "Android SDK";
-
-  // From constructor of org.jetbrains.idea.devkit.projectRoots.IdeaJdk
-  private static final String SDK_TYPE_IDEA = "IDEA JDK";
-
   private final ProjectFilesystem projectFilesystem;
   private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
       new HashMap<>();
@@ -163,22 +154,16 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     Optional<String> sourceLevel = getSourceLevel(targetNodes);
-    String sdkType;
-    Optional<String> sdkName;
-    IjModuleType moduleType = context.getModuleType().orElse(IjModuleType.DEFAULT);
+    IjModuleType moduleType = context.getModuleType().orElse(null);
 
-    if (moduleType == IjModuleType.PLUGIN_MODULE) {
-      sdkType = SDK_TYPE_IDEA;
-      sdkName = projectConfig.getIntellijModuleSdkName();
-    } else if (context.isAndroidFacetBuilderPresent()) {
-      context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
-          createAndroidGenPath(moduleBasePath));
-
-      sdkType = projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
-      sdkName = projectConfig.getAndroidModuleSdkName();
-    } else {
-      sdkType = projectConfig.getJavaModuleSdkType().orElse(SDK_TYPE_JAVA);
-      sdkName = projectConfig.getJavaModuleSdkName();
+    if (moduleType != IjModuleType.INTELLIJ_PLUGIN_MODULE) {
+      if (context.isAndroidFacetBuilderPresent()) {
+        context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
+            createAndroidGenPath(moduleBasePath));
+        moduleType = IjModuleType.ANDROID_MODULE;
+      } else {
+        moduleType = IjModuleType.JAVA_MODULE;
+      }
     }
 
     return IjModule.builder()
@@ -189,8 +174,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
-        .setSdkName(sdkName)
-        .setSdkType(sdkType)
         .setLanguageLevel(sourceLevel)
         .setModuleType(moduleType)
         .setMetaInfDirectory(context.getMetaInfDirectory())

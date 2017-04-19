@@ -16,24 +16,81 @@
 
 package com.facebook.buck.ide.intellij;
 
-/**
- * Values for the xml attribute <code>type</code> for IntelliJ <code>*.iml</code>-style modules.
- */
+import java.util.Optional;
+
 public enum IjModuleType {
-  /**
-   * Both normal Java and android-flavor Java modules are of this type.
-   */
-  JAVA_MODULE,
+  JAVA_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getJavaModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getJavaModuleSdkType().orElse(SDK_TYPE_JAVA);
+    }
+  },
+
+  ANDROID_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
+    }
+  },
+
+  UNKNOWN_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return Optional.empty();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return SDK_TYPE_JAVA;
+    }
+  },
 
   /**
    * Modules that contain IntelliJ plugins use this custom type to indicate
    * that they should be run in an environment with an IDEA installation.
    */
-  PLUGIN_MODULE;
+  INTELLIJ_PLUGIN_MODULE("PLUGIN_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getIntellijModuleSdkName();
+    }
 
-  /**
-   * All IJ modules must have a module type.  If we don't know better,
-   * arbitrarily choose java.
-   */
-  public static final IjModuleType DEFAULT = JAVA_MODULE;
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return SDK_TYPE_IDEA;
+    }
+  };
+
+  // From constructor of com.intellij.openapi.projectRoots.impl.JavaSdkImpl
+  private static final String SDK_TYPE_JAVA = "JavaSDK";
+
+  // From constructor of org.jetbrains.android.sdk.AndroidSdkType
+  private static final String SDK_TYPE_ANDROID = "Android SDK";
+
+  // From constructor of org.jetbrains.idea.devkit.projectRoots.IdeaJdk
+  private static final String SDK_TYPE_IDEA = "IDEA JDK";
+
+  IjModuleType(String imlModuleType) {
+    this.imlModuleType = imlModuleType;
+  }
+
+  private final String imlModuleType;
+
+  public abstract Optional<String> getSdkName(IjProjectConfig projectConfig);
+
+  public abstract String getSdkType(IjProjectConfig projectConfig);
+
+  public String getImlModuleType() {
+    return imlModuleType;
+  }
 }

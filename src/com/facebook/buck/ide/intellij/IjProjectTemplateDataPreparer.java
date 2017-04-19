@@ -147,6 +147,7 @@ public class IjProjectTemplateDataPreparer {
           IjModule.builder()
               .setModuleBasePath(rootModuleBasePath)
               .setTargets(ImmutableSet.of())
+              .setModuleType(IjModuleType.UNKNOWN_MODULE)
               .build());
     }
 
