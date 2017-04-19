@@ -256,6 +256,13 @@ public class ProjectCommand extends BuildCommand {
   @Nullable
   private String modulesToFocusOn = null;
 
+  @Option(
+      name = "--file-with-list-of-generated-files",
+      usage = "If present, forces command to save the list of generated file names to a provided" +
+          " file")
+  @Nullable
+  private String generatedFilesListFilename = null;
+
   public boolean getCombinedProject() {
     return combinedProject;
   }
@@ -618,6 +625,7 @@ public class ProjectCommand extends BuildCommand {
     IjProjectConfig projectConfig = IjProjectBuckConfig.create(
         buckConfig,
         intellijAggregationMode,
+        generatedFilesListFilename,
         runIjCleaner,
         removeUnusedLibraries,
         excludeArtifacts);

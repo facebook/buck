@@ -41,6 +41,7 @@ public class IjProjectBuckConfig {
   public static IjProjectConfig create(
       BuckConfig buckConfig,
       @Nullable AggregationMode aggregationMode,
+      @Nullable String generatedFilesListFilename,
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,
       boolean excludeArtifacts) {
@@ -113,6 +114,7 @@ public class IjProjectBuckConfig {
         .setExcludeArtifactsEnabled(
             isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))
         .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
+        .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
         .build();
   }
 

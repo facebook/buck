@@ -648,12 +648,14 @@ public class DefaultIjModuleFactoryTest {
         ? IjProjectBuckConfig.create(
         FakeBuckConfig.builder().build(),
         AggregationMode.AUTO,
+        null,
         false,
         false,
         false)
         : IjProjectBuckConfig.create(
         buckConfig,
         AggregationMode.AUTO,
+        null,
         false,
         false,
         false);

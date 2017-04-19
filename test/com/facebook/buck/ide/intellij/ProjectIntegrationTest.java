@@ -158,6 +158,14 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("aggregation_with_cxx_library");
   }
 
+  @Test
+  public void testSavingGeneratedFilesList() throws IOException {
+    runBuckProjectAndVerify(
+        "save_generated_files_list",
+        "--file-with-list-of-generated-files",
+        ".idea/generated-files.txt");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {

@@ -130,6 +130,10 @@ public class IjProject {
         projectConfig.isCleanerEnabled(),
         projectConfig.isRemovingUnusedLibrariesEnabled());
 
+    if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
+      cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
+    }
+
     return requiredBuildTargets.build();
   }
 }

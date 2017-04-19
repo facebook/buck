@@ -633,6 +633,7 @@ public class IjModuleGraphTest {
     IjProjectConfig projectConfig = IjProjectBuckConfig.create(
         buckConfig,
         aggregationMode,
+        null,
         false,
         false,
         false);
