@@ -5,4 +5,7 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = [
+        "//java/code/java_modules/modules_with_java_7/dep1/jni:jni",
+    ],
 )

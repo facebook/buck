@@ -35,7 +35,7 @@
     <content url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules/gen" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Android SDK" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

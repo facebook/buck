@@ -1,6 +1,6 @@
 java_library(
     name = "tip",
-    srcs = glob(["src/**/*.java"]),
+    srcs = glob(["src/**/*.java"], excludes=["src/nested_module/**/*.java"]),
     visibility = [
         "PUBLIC",
     ],

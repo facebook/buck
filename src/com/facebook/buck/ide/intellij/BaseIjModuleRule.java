@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
@@ -229,5 +230,10 @@ public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
     }
 
     return generatedSourcePaths;
+  }
+
+  @Override
+  public void applyDuringAggregation(AggregationContext context, TargetNode<T, ?> targetNode) {
+    context.setModuleType(detectModuleType(targetNode));
   }
 }

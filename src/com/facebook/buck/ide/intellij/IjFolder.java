@@ -23,7 +23,7 @@ import java.nio.file.Path;
 /**
  * A path which contains a set of sources we wish to present to IntelliJ.
  */
-abstract class IjFolder implements Comparable<IjFolder> {
+public abstract class IjFolder implements Comparable<IjFolder> {
 
   private static final ImmutableSortedSet<Path> EMPTY_INPUTS = ImmutableSortedSet.of();
 

@@ -3,10 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/java_code_java_modules.iml" filepath="$PROJECT_DIR$/java/code/java_modules/java_code_java_modules.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/dep1/java_code_java_modules_modules_with_java_7_dep1.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/dep1/java_code_java_modules_modules_with_java_7_dep1.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/tip/java_code_java_modules_modules_with_java_7_tip.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/tip/java_code_java_modules_modules_with_java_7_tip.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/dep1/java_code_java_modules_modules_with_java_8_dep1.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/dep1/java_code_java_modules_modules_with_java_8_dep1.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/tip/java_code_java_modules_modules_with_java_8_tip.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/tip/java_code_java_modules_modules_with_java_8_tip.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_default_language_level/tip/src/nested_module/java_code_java_modules_modules_with_default_language_level_tip_src_nested_module.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_default_language_level/tip/src/nested_module/java_code_java_modules_modules_with_default_language_level_tip_src_nested_module.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/java_code_java_modules_modules_with_java_7.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_7/java_code_java_modules_modules_with_java_7.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/java_code_java_modules_modules_with_java_8.iml" filepath="$PROJECT_DIR$/java/code/java_modules/modules_with_java_8/java_code_java_modules_modules_with_java_8.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/java/code/modules/java_code_modules.iml" filepath="$PROJECT_DIR$/java/code/modules/java_code_modules.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
     </modules>

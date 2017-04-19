@@ -61,6 +61,11 @@ public enum IjModuleType {
     public String getSdkType(IjProjectConfig projectConfig) {
       return projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
     }
+
+    @Override
+    public boolean canBeAggregated() {
+      return false;
+    }
   },
 
   /**
@@ -123,6 +128,10 @@ public enum IjModuleType {
   public abstract Optional<String> getSdkName(IjProjectConfig projectConfig);
 
   public abstract String getSdkType(IjProjectConfig projectConfig);
+
+  public boolean canBeAggregated() {
+    return true;
+  }
 
   public String getImlModuleType() {
     return imlModuleType;

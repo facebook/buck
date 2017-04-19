@@ -46,16 +46,19 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   @Override
   public IjModule createModule(
       Path moduleBasePath,
-      ImmutableSet<TargetNode<?, ?>> targetNodes) {
+      ImmutableSet<TargetNode<?, ?>> targetNodes,
+      Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
         moduleBasePath,
-        ImmutableSortedSet.copyOf(targetNodes));
+        ImmutableSortedSet.copyOf(targetNodes),
+        excludes);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private IjModule createModuleUsingSortedTargetNodes(
       Path moduleBasePath,
-      ImmutableSortedSet<TargetNode<?, ?>> targetNodes) {
+      ImmutableSortedSet<TargetNode<?, ?>> targetNodes,
+      Set<Path> excludes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
     ImmutableSet<BuildTarget> moduleBuildTargets = targetNodes.stream()
@@ -86,6 +89,12 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
     }
 
+    excludes
+        .stream()
+        .map(moduleBasePath::resolve)
+        .map(ExcludeFolder::new)
+        .forEach(context::addSourceFolder);
+
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(moduleBuildTargets)
@@ -99,5 +108,4 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setMetaInfDirectory(context.getMetaInfDirectory())
         .build();
   }
-
 }

@@ -5,3 +5,5 @@
 [project]
   ignore = buck-out
   intellij_aggregation_mode = shallow
+[intellij]
+  android_module_sdk_name = Android SDK

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,27 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.ide.intellij;
+
+package com.facebook.buck.ide.intellij.aggregation;
 
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
-/**
- * Builds {@link IjModule}s out of {@link TargetNode}s.
- */
-public interface IjModuleFactory {
-  /**
-   * Create an {@link IjModule} form the supplied parameters.
-   *
-   * @param moduleBasePath the top-most directory the module is responsible for.
-   * @param targetNodes set of nodes the module is to be created from.
-   * @return nice shiny new module.
-   */
-  IjModule createModule(
+public interface AggregationModuleFactory {
+  AggregationModule createAggregationModule(
       Path moduleBasePath,
-      ImmutableSet<TargetNode<?, ?>> targetNodes,
-      Set<Path> excludes);
+      ImmutableSet<TargetNode<?, ?>> targetNodes);
 }

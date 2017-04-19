@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.ide.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -94,7 +95,8 @@ public class IjProject {
         libraryFactory,
         new DefaultIjModuleFactory(
             projectFilesystem,
-            typeRegistry));
+            typeRegistry),
+        new DefaultAggregationModuleFactory(typeRegistry));
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,
         projectFilesystem,

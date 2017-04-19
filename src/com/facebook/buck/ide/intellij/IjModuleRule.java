@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
@@ -24,8 +25,9 @@ import com.facebook.buck.rules.TargetNode;
  *
  * @param <T> TargetNode type.
  */
-interface IjModuleRule<T> {
+public interface IjModuleRule<T> {
   Class<? extends Description<?>> getDescriptionClass();
   void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
   IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
+  void applyDuringAggregation(AggregationContext context, TargetNode<T, ?> targetNode);
 }

@@ -5,14 +5,15 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/modules_with_default_language_level/dep1/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules_with_default_language_level/tip/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/modules_with_default_language_level/tip/src/nested_module" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/modules_with_java_7" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/modules_with_java_8" isTestSource="false" />
 
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_7_dep1" scope="COMPILE"  />
-    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_7_tip" scope="COMPILE"  />
-    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_8_dep1" scope="COMPILE"  />
-    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_8_tip" scope="COMPILE"  />
+    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_7" scope="COMPILE"  />
+    <orderEntry type="module" module-name="java_code_java_modules_modules_with_java_8" scope="COMPILE"  />
 
   </component>
 </module>

@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.ide.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -52,7 +53,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -470,103 +470,6 @@ public class IjModuleGraphTest {
         ImmutableMap.of(rDotJavaLibrary, DependencyType.PROD));
   }
 
-
-  public void doSingleAggregationModePathFunctionTest(
-      AggregationMode aggregationMode,
-      int graphSize,
-      boolean expectTrimmed) {
-
-    ImmutableList<Path> originalPaths = ImmutableList.of(
-        Paths.get("a", "b", "c", "d", "e"),
-        Paths.get("a", "b", "c", "d"),
-        Paths.get("a", "b", "c"),
-        Paths.get("a", "b"),
-        Paths.get("a"),
-        Paths.get(""));
-    ImmutableList<Path> trimmedPaths = ImmutableList.of(
-        Paths.get("a", "b", "c"),
-        Paths.get("a", "b", "c"),
-        Paths.get("a", "b", "c"),
-        Paths.get("a", "b"),
-        Paths.get("a"),
-        Paths.get(""));
-
-    BlockedPathNode dummyAggregationStops = new BlockedPathNode();
-    int minimumDepth = aggregationMode.getGraphMinimumDepth(graphSize);
-    ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
-    for (Path path : originalPaths) {
-      transformedPaths.add(IjModuleGraphFactory.simplifyPath(
-          path,
-          minimumDepth,
-          dummyAggregationStops));
-    }
-
-    assertThat(
-        transformedPaths.build(),
-        Matchers.equalTo(expectTrimmed ? trimmedPaths : originalPaths));
-  }
-
-  @Test
-  public void testAggregationModePathFunction() {
-
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.NONE,
-        10,
-        /* expectTrimmed */ false);
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.NONE,
-        10000,
-        /* expectTrimmed */ false);
-
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.SHALLOW,
-        10,
-        /* expectTrimmed */ true);
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.SHALLOW,
-        10000,
-        /* expectTrimmed */ true);
-
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.AUTO,
-        10,
-        /* expectTrimmed */ false);
-    doSingleAggregationModePathFunctionTest(
-        AggregationMode.AUTO,
-        10000,
-        /* expectTrimmed */ true);
-  }
-
-  @Test
-  public void testCustomAggregationMode() {
-    AggregationMode testAggregationMode =
-        new AggregationMode(2);
-
-    ImmutableList<Path> originalPaths = ImmutableList.of(
-        Paths.get("a", "b", "c"),
-        Paths.get("a", "b"),
-        Paths.get("a"),
-        Paths.get(""));
-
-    ImmutableList<Path> expectedPaths = ImmutableList.of(
-        Paths.get("a", "b"),
-        Paths.get("a", "b"),
-        Paths.get("a"),
-        Paths.get(""));
-
-    BlockedPathNode dummyAggregationStops = new BlockedPathNode();
-    int minimumDepth = testAggregationMode.getGraphMinimumDepth(originalPaths.size());
-    ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
-    for (Path path : originalPaths) {
-      transformedPaths.add(IjModuleGraphFactory.simplifyPath(
-          path,
-          minimumDepth,
-          dummyAggregationStops));
-    }
-
-    assertThat(transformedPaths.build(), Matchers.equalTo(expectedPaths));
-  }
-
   @Test(expected = HumanReadableException.class)
   public void testCustomAggregationModeAtZero() {
     AggregationMode.fromString("0");
@@ -681,104 +584,6 @@ public class IjModuleGraphTest {
         Matchers.not(Matchers.equalTo(blah2Module.getModuleBasePath())));
   }
 
-  @Test
-  public void testBlockedPathDepthCalculation() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    Path blockedChild = Paths.get("/a/b/c/block/e/f");
-    assertThat(
-        IjModuleGraphFactory.calculatePathDepth(blockedChild, 2, rootNode),
-        Matchers.equalTo(blockedPathNameCount));
-  }
-
-  @Test
-  public void testUnblockedDivergentPathDepthCalculation() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    // Paths diverge one level above the block
-    Path unblockedPath = Paths.get("/a/b/c/noblock/e/f");
-    assertThat(
-        IjModuleGraphFactory.calculatePathDepth(unblockedPath, 2, rootNode),
-        Matchers.equalTo(blockedPathNameCount - 1));
-
-
-    // Paths diverge two levels above the block
-    Path unblockedPath2 = Paths.get("/a/b/x/noblock/e/f");
-    assertThat(
-        IjModuleGraphFactory.calculatePathDepth(unblockedPath2, 2, rootNode),
-        Matchers.equalTo(blockedPathNameCount - 2));
-  }
-
-  @Test
-  public void testUnblockedPathDepthCalculation() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    Path unblockedPath = Paths.get("/z/y/x/w/v");
-
-    assertThat(
-        IjModuleGraphFactory.calculatePathDepth(unblockedPath, 2, rootNode),
-        Matchers.equalTo(2));
-  }
-
-  @Test
-  public void testPathBlockerBlocksExactMatch() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    assertThat(
-        rootNode.findLowestPotentialBlockedOnPath(blockedPath, 0, blockedPathNameCount),
-        Matchers.equalTo(blockedPathNameCount));
-  }
-
-  @Test
-  public void testPathBlockerBlocksSubpathAtRightPlace() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    Path subPath = Paths.get("/a/b/c/block/e/f");
-    int subPathNameCount = subPath.getNameCount();
-
-    assertThat(
-        rootNode.findLowestPotentialBlockedOnPath(subPath, 0, subPathNameCount),
-        Matchers.equalTo(blockedPathNameCount));
-  }
-
-  @Test
-  public void testPathBlockerBlockingOfChildOfSibling() {
-    BlockedPathNode rootNode = new BlockedPathNode();
-
-    Path blockedPath = Paths.get("/a/b/c/block");
-    int blockedPathNameCount = blockedPath.getNameCount();
-    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
-
-    // Paths diverge one level above the block
-    Path subPath = Paths.get("/a/b/c/noblock/f/g");
-    int subPathNameCount = subPath.getNameCount();
-
-    assertThat(
-        rootNode.findLowestPotentialBlockedOnPath(subPath, 0, subPathNameCount),
-        Matchers.equalTo(blockedPathNameCount - 1));
-  }
-
-
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?, ?>> targets) {
     return createModuleGraph(targets, ImmutableMap.of(),
         Functions.constant(Optional.empty()));
@@ -874,7 +679,8 @@ public class IjModuleGraphTest {
         projectConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
-        moduleFactory);
+        moduleFactory,
+        new DefaultAggregationModuleFactory(typeRegistry));
   }
 
   public static IjProjectElement getProjectElementForTarget(

@@ -59,6 +59,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 
 public class DefaultIjModuleFactoryTest {
@@ -78,7 +79,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibBase));
+        ImmutableSet.of(javaLibBase),
+        Collections.emptySet());
 
     assertEquals(ImmutableMap.of(buildTargetGuava, DependencyType.PROD),
         module.getDependencies());
@@ -107,7 +109,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibBase, javaLibExtra));
+        ImmutableSet.of(javaLibBase, javaLibExtra),
+        Collections.emptySet());
 
     assertEquals(ImmutableMap.of(
             buildTargetGuava, DependencyType.PROD,
@@ -130,7 +133,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaTestExtra));
+        ImmutableSet.of(javaTestExtra),
+        Collections.emptySet());
 
     assertEquals(ImmutableMap.of(buildTargetJunit, DependencyType.TEST),
         module.getDependencies());
@@ -159,7 +163,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibBase, javaTestBase));
+        ImmutableSet.of(javaLibBase, javaTestBase),
+        Collections.emptySet());
 
     // Guava is a dependency of both a prod and test target therefore it should be kept as a
     // prod dependency.
@@ -202,7 +207,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibBase, javaTestBase, javaTest));
+        ImmutableSet.of(javaLibBase, javaTestBase, javaTest),
+        Collections.emptySet());
 
     // Because both javaLibBase and javaTestBase have source files in the same folder and IntelliJ
     // operates at folder level granularity it is impossible to split the files into separate test
@@ -235,11 +241,13 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule moduleJavaLib = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibBase));
+        ImmutableSet.of(javaLibBase),
+        Collections.emptySet());
 
     IjModule moduleFromBinary = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(androidBinary));
+        ImmutableSet.of(androidBinary),
+        Collections.emptySet());
 
     assertEquals(ImmutableMap.of(
             buildTargetGuava, DependencyType.PROD),
@@ -272,11 +280,13 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule moduleJavaLibWithGenrule = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibWithGenrule));
+        ImmutableSet.of(javaLibWithGenrule),
+        Collections.emptySet());
 
     IjModule moduleJavaLibWithAnnotationProcessor = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLibWithAnnotationProcessor));
+        ImmutableSet.of(javaLibWithAnnotationProcessor),
+        Collections.emptySet());
 
     assertEquals(ImmutableMap.of(
             genruleBuildTarget, DependencyType.PROD,
@@ -301,7 +311,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLib));
+        ImmutableSet.of(javaLib),
+        Collections.emptySet());
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
@@ -326,7 +337,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("groovy/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?, ?>>of(groovyLib));
+        ImmutableSet.of(groovyLib),
+        Collections.emptySet());
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
@@ -351,7 +363,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("kotlin/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?, ?>>of(kotlinLib));
+        ImmutableSet.of(kotlinLib),
+        Collections.emptySet());
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
@@ -376,7 +389,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(javaLib));
+        ImmutableSet.of(javaLib),
+        Collections.emptySet());
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
 
@@ -407,7 +421,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         Paths.get("java/com/example"),
-        ImmutableSet.of(javaLib1, javaLib2));
+        ImmutableSet.of(javaLib1, javaLib2),
+        Collections.emptySet());
 
     ImmutableSet<Path> folderPaths = getFolderPaths(module.getFolders());
     assertEquals(
@@ -435,7 +450,8 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         Paths.get("third-party/example"),
-        ImmutableSet.of(javaLib, javaTest));
+        ImmutableSet.of(javaLib, javaTest),
+        Collections.emptySet());
 
     assertEquals(ImmutableSet.of(Paths.get("third-party/example")),
         getFolderPaths(module.getFolders()));
@@ -453,7 +469,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(androidLib));
+        ImmutableSet.of(androidLib),
+        Collections.emptySet());
 
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(ImmutableSet.of(moduleBasePath), getFolderPaths(module.getFolders()));
@@ -474,7 +491,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(androidLib, javaLib));
+        ImmutableSet.of(androidLib, javaLib),
+        Collections.emptySet());
 
     assertTrue(module.getAndroidFacet().isPresent());
   }
@@ -493,7 +511,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(androidBinary));
+        ImmutableSet.of(androidBinary),
+        Collections.emptySet());
 
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(Paths.get(manifestName), module.getAndroidFacet().get().getManifestPath().get());
@@ -517,10 +536,12 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule moduleWithDefault = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(defaultJavaNode));
+        ImmutableSet.of(defaultJavaNode),
+        Collections.emptySet());
     IjModule moduleWithJava8 = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(java8Node));
+        ImmutableSet.of(java8Node),
+        Collections.emptySet());
 
     assertThat(moduleWithDefault.getModuleType(), equalTo(IjModuleType.JAVA_MODULE));
     assertThat(moduleWithJava8.getModuleType(), equalTo(IjModuleType.JAVA_MODULE));
@@ -548,10 +569,12 @@ public class DefaultIjModuleFactoryTest {
 
     IjModule moduleWithDefault = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(defaultJavaNode));
+        ImmutableSet.of(defaultJavaNode),
+        Collections.emptySet());
     IjModule moduleWithJava8 = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(java8Node));
+        ImmutableSet.of(java8Node),
+        Collections.emptySet());
 
     assertThat(moduleWithDefault.getModuleType(), equalTo(IjModuleType.JAVA_MODULE));
     assertThat(moduleWithJava8.getModuleType(), equalTo(IjModuleType.JAVA_MODULE));
@@ -683,7 +706,8 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("cpp/lib");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.of(cxxLibrary));
+        ImmutableSet.of(cxxLibrary),
+        Collections.emptySet());
 
     IjFolder cxxLibraryModel =
         new SourceFolder(
