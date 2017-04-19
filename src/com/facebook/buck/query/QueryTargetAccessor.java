@@ -18,11 +18,11 @@ package com.facebook.buck.query;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
@@ -34,8 +34,7 @@ import java.nio.file.Path;
 
 public class QueryTargetAccessor {
 
-  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-  );
+  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
   private QueryTargetAccessor() { }
 

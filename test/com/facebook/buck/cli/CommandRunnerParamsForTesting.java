@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
@@ -83,7 +84,7 @@ public class CommandRunnerParamsForTesting {
       JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     return CommandRunnerParams.builder()
         .setConsole(console)
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
