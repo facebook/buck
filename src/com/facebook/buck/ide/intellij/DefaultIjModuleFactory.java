@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.ide.intellij.lang.android.AndroidBinaryModuleRule;
 import com.facebook.buck.ide.intellij.lang.android.AndroidLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceModuleRule;
@@ -28,6 +27,7 @@ import com.facebook.buck.ide.intellij.lang.kotlin.KotlinLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.kotlin.KotlinTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.groovy.GroovyLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.groovy.GroovyTestModuleRule;
+import com.facebook.buck.ide.intellij.lang.cxx.CxxLibraryModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -55,7 +55,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private final ProjectFilesystem projectFilesystem;
   private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
       new HashMap<>();
-  private final IjModuleFactoryResolver moduleFactoryResolver;
   private final IjProjectConfig projectConfig;
 
   /**
@@ -67,7 +66,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
-    this.moduleFactoryResolver = moduleFactoryResolver;
 
     addToIndex(new AndroidBinaryModuleRule(
         projectFilesystem,
@@ -81,7 +79,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         projectFilesystem,
         moduleFactoryResolver,
         projectConfig));
-    addToIndex(new CxxLibraryModuleRule());
+    addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
@@ -199,35 +197,6 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     return result;
-  }
-
-  private class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription.Arg> {
-
-    private CxxLibraryModuleRule() {
-      super(
-          DefaultIjModuleFactory.this.projectFilesystem,
-          DefaultIjModuleFactory.this.moduleFactoryResolver,
-          DefaultIjModuleFactory.this.projectConfig);
-    }
-
-    @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
-      return CxxLibraryDescription.class;
-    }
-
-    @Override
-    public void apply(TargetNode<CxxLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
-      addSourceFolders(
-          SourceFolder.FACTORY,
-          getSourceFoldersToInputsIndex(target.getInputs()),
-          false /* wantsPackagePrefix */,
-          context);
-    }
-
-    @Override
-    public IjModuleType detectModuleType(TargetNode<CxxLibraryDescription.Arg, ?> targetNode) {
-      return IjModuleType.UNKNOWN_MODULE;
-    }
   }
 
 }
