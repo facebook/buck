@@ -292,6 +292,7 @@ public class ChromeTraceBuildListenerTest {
             BuildRuleKeys.of(ruleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
+            Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
             Optional.empty(), Optional.empty()));

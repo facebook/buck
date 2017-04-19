@@ -88,6 +88,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       BuildRuleKeys ruleKeys,
       BuildRuleStatus status,
       CacheResult cacheResult,
+      Optional<BuildId> origin,
       Optional<BuildRuleSuccessType> successType,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
@@ -97,6 +98,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         ruleKeys,
         status,
         cacheResult,
+        origin,
         successType,
         outputHash,
         outputSize,
@@ -224,6 +226,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
+    private final Optional<BuildId> origin;
     private final Optional<BuildRuleSuccessType> successType;
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
@@ -235,6 +238,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         BuildRuleKeys ruleKeys,
         BuildRuleStatus status,
         CacheResult cacheResult,
+        Optional<BuildId> origin,
         Optional<BuildRuleSuccessType> successType,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
@@ -242,6 +246,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
+      this.origin = origin;
       this.successType = successType;
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
@@ -257,6 +262,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonView(JsonViews.MachineReadableLog.class)
     public CacheResult getCacheResult() {
       return cacheResult;
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public Optional<BuildId> getOrigin() {
+      return origin;
     }
 
     @JsonIgnore

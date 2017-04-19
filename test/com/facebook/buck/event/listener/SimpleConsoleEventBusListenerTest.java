@@ -166,6 +166,7 @@ public class SimpleConsoleEventBusListenerTest {
                 BuildRuleKeys.of(new RuleKey("aaaa")),
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
+                Optional.empty(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
                 Optional.empty(), Optional.empty()),

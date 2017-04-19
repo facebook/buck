@@ -78,6 +78,11 @@ public class BuildInfo {
      * Key for {@link OnDiskBuildInfo} to store the cache key of the manifest.
      */
     static final String MANIFEST_KEY = "MANIFEST_KEY";
+
+    /**
+     * Key containing the ID of the build that originally built the rule.
+     */
+    static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
   }
 
   /**

@@ -31,6 +31,7 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
@@ -549,6 +550,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   fillMissingBuildMetadataFromCache(
                       cacheResult,
                       buildInfoRecorder,
+                      BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
                       BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE);
@@ -912,6 +914,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             }
           }
 
+          // Make sure the origin field is fileld in.
+          BuildId buildId = buildContext.getBuildId();
+          if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+            buildInfoRecorder.addBuildMetadata(
+                BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+                buildId.toString());
+          } else if (success.outputsHaveChanged()) {
+            Preconditions.checkState(
+                buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+                    .isPresent(),
+                "Cache hits must populate the %s field (%s)",
+                BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+                success);
+          }
+
           // Make sure that all of the local files have the same values they would as if the
           // rule had been built locally.
           buildInfoRecorder.addBuildMetadata(
@@ -1130,6 +1147,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     getBuildRuleKeys(rule, onDiskBuildInfo),
                     input.getStatus(),
                     input.getCacheResult(),
+                    onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+                        .map(BuildId::new),
                     successType,
                     outputHash,
                     outputSize,
@@ -1865,6 +1884,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
+          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(
@@ -1927,6 +1947,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
+          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(
