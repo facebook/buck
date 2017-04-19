@@ -156,6 +156,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("project_with_cxx_library");
   }
 
+  @Test
+  public void testAggregatingCxxLibrary() throws IOException {
+    runBuckProjectAndVerify("aggregation_with_cxx_library");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
