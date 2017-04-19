@@ -184,10 +184,18 @@ public class AndroidBinaryDescription implements
             keystore.getType());
       }
 
-      APKModuleGraph apkModuleGraph = new APKModuleGraph(
+      APKModuleGraph apkModuleGraph = null;
+      if (!args.applicationModuleConfigs.isEmpty()) {
+        apkModuleGraph = new APKModuleGraph(
+          Optional.of(args.applicationModuleConfigs),
+          targetGraph,
+          target);
+      } else {
+        apkModuleGraph = new APKModuleGraph(
           targetGraph,
           target,
           Optional.of(args.applicationModuleTargets));
+      }
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
           args.androidSdkProguardConfig.orElse(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
@@ -525,6 +533,7 @@ public class AndroidBinaryDescription implements
     public Optional<SourcePath> secondaryDexHeadClassesFile;
     public Optional<SourcePath> secondaryDexTailClassesFile;
     public Set<BuildTarget> applicationModuleTargets = ImmutableSet.of();
+    public Map<String, List<BuildTarget>> applicationModuleConfigs = ImmutableMap.of();
     public Optional<Long> linearAllocHardLimit;
     public List<String> resourceFilter = ImmutableList.of();
 
