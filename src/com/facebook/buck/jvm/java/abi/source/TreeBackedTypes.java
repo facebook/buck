@@ -208,7 +208,34 @@ class TreeBackedTypes implements Types {
 
   @Override
   public TypeMirror erasure(TypeMirror t) {
-    throw new UnsupportedOperationException();
+    if (isArtificialType(t)) {
+      return erasure((StandaloneTypeMirror) t);
+    }
+
+    return javacTypes.erasure(t);
+  }
+
+  private TypeMirror erasure(StandaloneTypeMirror t) {
+    switch (t.getKind()) {
+      case ARRAY: {
+        ArrayType arrayType = (ArrayType) t;
+        return getArrayType(erasure(arrayType.getComponentType()));
+      }
+      case DECLARED: {
+        DeclaredType declaredType = (DeclaredType) t;
+        TypeElement typeElement = (TypeElement) declaredType.asElement();
+        if (declaredType.getEnclosingType().getKind() == TypeKind.DECLARED) {
+          DeclaredType enclosingType = (DeclaredType) declaredType.getEnclosingType();
+
+          return getDeclaredType((DeclaredType) erasure(enclosingType), typeElement);
+        }
+
+        return getDeclaredType(typeElement);
+      }
+      // $CASES-OMITTED$
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
 
   @Override
