@@ -110,7 +110,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       IjLibrary.Builder libraryBuilder = IjLibrary.builder();
       rule.applyRule(targetNode, libraryBuilder);
       libraryBuilder.setName(libraryName);
-      libraryBuilder.setTargets(ImmutableSet.of(targetNode));
+      libraryBuilder.setTargets(ImmutableSet.of(targetNode.getBuildTarget()));
       return libraryBuilder.build();
     });
   }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -32,7 +32,7 @@ public interface IjProjectElement {
   /**
    * @return set of targets this element corresponds to in the IntelliJ project.
    */
-  ImmutableSet<TargetNode<?, ?>> getTargets();
+  ImmutableSet<BuildTarget> getTargets();
 
   void addAsDependency(DependencyType dependencyType,
       IjDependencyListBuilder dependencyListBuilder);

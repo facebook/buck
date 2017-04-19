@@ -249,7 +249,7 @@ public class IjProjectDataPreparerTest {
         containsInAnyOrder(
             IjModule.builder()
                 .setModuleBasePath(Paths.get("java/com/example/base"))
-                .setTargets(ImmutableSet.of(baseTargetNode))
+                .setTargets(ImmutableSet.of(baseTargetNode.getBuildTarget()))
                 .addFolders(
                     new SourceFolder(
                         Paths.get("java/com/example/base"),

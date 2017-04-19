@@ -884,7 +884,7 @@ public class IjModuleGraphTest {
         .filter(type)
         .firstMatch(
             (Predicate<IjProjectElement>) input -> FluentIterable.from(input.getTargets()).anyMatch(
-                input1 -> input1.getBuildTarget().equals(target.getBuildTarget()))).get();
+                input1 -> input1.equals(target.getBuildTarget()))).get();
   }
 
   public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?, ?> target) {

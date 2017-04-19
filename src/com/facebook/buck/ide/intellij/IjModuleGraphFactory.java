@@ -210,8 +210,7 @@ public final class IjModuleGraphFactory {
                   input -> {
                     // The exported deps closure can contain references back to targets contained
                     // in the module, so filter those out.
-                    TargetNode<?, ?> targetNode = targetGraph.get(input);
-                    return !module.getTargets().contains(targetNode);
+                    return !module.getTargets().contains(input);
                   })
               .map(
                   depTarget-> {

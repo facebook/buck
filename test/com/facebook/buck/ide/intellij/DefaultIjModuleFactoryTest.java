@@ -305,7 +305,7 @@ public class DefaultIjModuleFactoryTest {
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
     assertEquals(1, module.getFolders().size());
-    assertEquals(ImmutableSet.of(javaLib), module.getTargets());
+    assertEquals(ImmutableSet.of(javaLib.getBuildTarget()), module.getTargets());
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("java/com/example/base"), folder.getPath());
@@ -330,7 +330,7 @@ public class DefaultIjModuleFactoryTest {
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
     assertEquals(1, module.getFolders().size());
-    assertEquals(ImmutableSet.of(groovyLib), module.getTargets());
+    assertEquals(ImmutableSet.of(groovyLib.getBuildTarget()), module.getTargets());
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("groovy/com/example/base"), folder.getPath());
@@ -355,7 +355,7 @@ public class DefaultIjModuleFactoryTest {
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
     assertEquals(1, module.getFolders().size());
-    assertEquals(ImmutableSet.of(kotlinLib), module.getTargets());
+    assertEquals(ImmutableSet.of(kotlinLib.getBuildTarget()), module.getTargets());
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("kotlin/com/example/base"), folder.getPath());

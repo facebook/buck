@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +36,7 @@ abstract class AbstractIjLibrary implements IjProjectElement {
   public abstract String getName();
 
   @Override
-  public abstract ImmutableSet<TargetNode<?, ?>> getTargets();
+  public abstract ImmutableSet<BuildTarget> getTargets();
 
   /**
    * @return path to the binary (.jar or .aar) the library represents.

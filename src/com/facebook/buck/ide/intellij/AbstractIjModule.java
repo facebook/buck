@@ -18,8 +18,6 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +43,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   }
 
   @Override
-  public abstract ImmutableSet<TargetNode<?, ?>> getTargets();
+  public abstract ImmutableSet<BuildTarget> getTargets();
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
@@ -93,8 +91,8 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Value.Check
   protected void allRulesAreChildrenOfBasePath() {
     Path moduleBasePath = getModuleBasePath();
-    for (TargetNode<?, ?> target : getTargets()) {
-      Path targetBasePath = target.getBuildTarget().getBasePath();
+    for (BuildTarget target : getTargets()) {
+      Path targetBasePath = target.getBasePath();
       Preconditions.checkArgument(
           targetBasePath.startsWith(moduleBasePath),
           "A module cannot be composed of targets which are outside of its base path.");
@@ -103,15 +101,11 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   @Value.Check
   protected void checkDependencyConsistency() {
-    ImmutableSet<BuildTarget> buildTargets = getTargets().stream()
-        .map(TargetNode::getBuildTarget)
-        .collect(MoreCollectors.toImmutableSet());
-
     for (Map.Entry<BuildTarget, DependencyType> entry :
         getDependencies().entrySet()) {
       BuildTarget depBuildTarget = entry.getKey();
       DependencyType dependencyType = entry.getValue();
-      boolean isSelfDependency = buildTargets.contains(depBuildTarget);
+      boolean isSelfDependency = getTargets().contains(depBuildTarget);
 
       if (dependencyType.equals(DependencyType.COMPILED_SHADOW)) {
         Preconditions.checkArgument(

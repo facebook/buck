@@ -148,7 +148,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
-        .setTargets(targetNodes)
+        .setTargets(moduleBuildTargets)
         .addAllFolders(context.getSourceFolders())
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())
