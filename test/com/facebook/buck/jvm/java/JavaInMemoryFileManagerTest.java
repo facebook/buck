@@ -28,7 +28,6 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Paths;
@@ -49,13 +48,16 @@ import javax.tools.ToolProvider;
 public class JavaInMemoryFileManagerTest {
 
   private JavaInMemoryFileManager inMemoryFileManager;
+  private TestCustomZipOutputStream outputStream;
 
   @Before
   public void setUp() {
+    outputStream = new TestCustomZipOutputStream();
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     inMemoryFileManager = new JavaInMemoryFileManager(
         ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
         Paths.get(URI.create("file:///tmp/test.jar!/")),
+        outputStream,
         /*classesToBeRemovedFromJar */ ImmutableSet.of());
   }
 
@@ -83,48 +85,9 @@ public class JavaInMemoryFileManagerTest {
     stream.write("Hello World!".getBytes());
     stream.close();
 
-    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> entries = outputStream.getEntriesContent();
     assertEquals(1, entries.size());
     assertEquals("Hello World!", entries.get(0));
-  }
-
-  @Test
-  public void testFilesWrittenInSortedOrder() throws Exception {
-    JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
-        StandardLocation.CLASS_OUTPUT,
-        "B.C",
-        JavaFileObject.Kind.CLASS,
-        null);
-    fileObject.openOutputStream().close();
-
-    fileObject = inMemoryFileManager.getJavaFileForOutput(
-        StandardLocation.CLASS_OUTPUT,
-        "A",
-        JavaFileObject.Kind.CLASS,
-        null);
-    fileObject.openOutputStream().close();
-
-    fileObject = inMemoryFileManager.getJavaFileForOutput(
-        StandardLocation.CLASS_OUTPUT,
-        "B",
-        JavaFileObject.Kind.CLASS,
-        null);
-    fileObject.openOutputStream().close();
-
-    fileObject = inMemoryFileManager.getJavaFileForOutput(
-        StandardLocation.CLASS_OUTPUT,
-        "B$D",
-        JavaFileObject.Kind.CLASS,
-        null);
-    fileObject.openOutputStream().close();
-
-    TestCustomZipOutputStream outputStream = writeToJar();
-    assertThat(
-        outputStream.getZipEntries().stream()
-        .map(ZipEntry::getName)
-        .collect(Collectors.toList()),
-        Matchers.contains("A.class", "B$D.class", "B.class", "B/C.class"));
   }
 
   @Test
@@ -137,7 +100,6 @@ public class JavaInMemoryFileManagerTest {
 
     fileObject.openOutputStream().close();
 
-    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> zipEntries = outputStream.getZipEntries().stream()
         .map(ZipEntry::getName)
         .collect(Collectors.toList());
@@ -161,7 +123,6 @@ public class JavaInMemoryFileManagerTest {
     fileObject1.openOutputStream().close();
     fileObject2.openOutputStream().close();
 
-    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> zipEntries = outputStream.getZipEntries().stream()
         .map(ZipEntry::getName)
         .collect(Collectors.toList());
@@ -258,11 +219,5 @@ public class JavaInMemoryFileManagerTest {
 
     assertEquals(fileObject1, recursiveIterable.next());
     assertFalse(recursiveIterable.hasNext());
-  }
-
-  private TestCustomZipOutputStream writeToJar() throws IOException {
-    TestCustomZipOutputStream os = new TestCustomZipOutputStream();
-    inMemoryFileManager.writeToJar(os);
-    return os;
   }
 }
