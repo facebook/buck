@@ -85,12 +85,14 @@ public class Parser {
 
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   public Parser(
       BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.permState = new DaemonicParserState(
         broadcastEventListener,
         typeCoercerFactory,
@@ -100,6 +102,10 @@ public class Parser {
 
   protected DaemonicParserState getPermState() {
     return permState;
+  }
+
+  protected TypeCoercerFactory getTypeCoercerFactory() {
+    return typeCoercerFactory;
   }
 
   protected ConstructorArgMarshaller getMarshaller() {

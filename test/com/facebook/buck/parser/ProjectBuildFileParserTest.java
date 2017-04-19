@@ -30,7 +30,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -590,7 +589,7 @@ public class ProjectBuildFileParserTest {
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .build(),
-            new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+            new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),
             buckEventBus,
             processExecutor,

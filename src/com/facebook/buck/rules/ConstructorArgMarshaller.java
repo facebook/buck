@@ -18,23 +18,19 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Used to derive information from the constructor args returned by {@link Description} instances.
@@ -45,7 +41,6 @@ import java.util.concurrent.ExecutionException;
 public class ConstructorArgMarshaller {
 
   private final TypeCoercerFactory typeCoercerFactory;
-  private final Cache<Class<?>, ImmutableSet<ParamInfo>> coercedTypes;
 
   /**
    * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
@@ -55,7 +50,6 @@ public class ConstructorArgMarshaller {
    */
   public ConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
-    this.coercedTypes = CacheBuilder.newBuilder().build();
   }
 
   /**
@@ -89,7 +83,8 @@ public class ConstructorArgMarshaller {
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       ImmutableSet.Builder<VisibilityPattern> withinViewPatterns,
       Map<String, ?> instance) throws ParamInfoException {
-    for (ParamInfo info : getAllParamInfo(dto)) {
+    for (ParamInfo info :
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass())) {
       info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);
@@ -110,7 +105,8 @@ public class ConstructorArgMarshaller {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       Object dto) throws ParamInfoException {
-    for (ParamInfo info : getAllParamInfo(dto)) {
+    for (ParamInfo info :
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass())) {
       if (info.isOptional()) {
         info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
       }
@@ -166,29 +162,6 @@ public class ConstructorArgMarshaller {
           );
         }
       }
-    }
-  }
-
-  ImmutableSet<ParamInfo> getAllParamInfo(Object dto) {
-    final Class<?> argClass = dto.getClass();
-    try {
-      return coercedTypes.get(argClass, () -> {
-        ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
-
-        for (Field field : argClass.getFields()) {
-          if (Modifier.isFinal(field.getModifiers())) {
-            continue;
-          }
-          allInfo.add(new ParamInfo(typeCoercerFactory, argClass, field));
-        }
-
-        return allInfo.build();
-      });
-    } catch (ExecutionException e) {
-      // This gets thrown if we saw an error when loading the value. Nothing sane to do here, and
-      // we (previously, before using a cache), simply allowed a RuntimeException to bubble up.
-      // Maintain that behaviour.
-      throw new RuntimeException(e);
     }
   }
 }

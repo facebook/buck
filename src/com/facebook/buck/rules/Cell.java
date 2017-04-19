@@ -26,6 +26,7 @@ import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -228,7 +229,7 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
       boolean ignoreBuckAutodepsFiles) {
@@ -268,7 +269,7 @@ public class Cell {
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build(),
-        marshaller,
+        typeCoercerFactory,
         config.getEnvironment(),
         eventBus,
         new DefaultProcessExecutor(console),

@@ -54,6 +54,8 @@ import java.util.regex.Pattern;
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
+  private final PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode;
+
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
@@ -64,6 +66,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   public DefaultTypeCoercerFactory(
       PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode) {
+    this.pathExistenceVerificationMode = pathExistenceVerificationMode;
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
@@ -277,5 +280,19 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     Preconditions.checkState(type.getActualTypeArguments().length == 1,
         "expected type '%s' to have one parameter", type);
     return type.getActualTypeArguments()[0];
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof DefaultTypeCoercerFactory)) {
+      return false;
+    }
+    return pathExistenceVerificationMode ==
+        ((DefaultTypeCoercerFactory) obj).pathExistenceVerificationMode;
+  }
+
+  @Override
+  public int hashCode() {
+    return pathExistenceVerificationMode.hashCode();
   }
 }

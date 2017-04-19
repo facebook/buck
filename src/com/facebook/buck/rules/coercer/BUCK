@@ -1,5 +1,6 @@
 INTERFACE_SRCS = [
     "CoerceFailedException.java",
+    "CoercedTypeCache.java",
     "Hint.java",
     "ParamInfo.java",
     "ParamInfoException.java",
