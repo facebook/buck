@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
@@ -251,12 +252,12 @@ public class IjSourceRootSimplifier {
    * a/b/c has the package c/.
    */
   private static class PackagePathCache {
-    ParsingJavaPackageFinder.PackagePathCache delegate;
+    JavaPackagePathCache delegate;
 
     public PackagePathCache(
         ImmutableSet<IjFolder> startingFolders,
         JavaPackageFinder javaPackageFinder) {
-      delegate = new ParsingJavaPackageFinder.PackagePathCache();
+      delegate = new JavaPackagePathCache();
       for (IjFolder startingFolder : startingFolders) {
         if (!startingFolder.getWantsPackagePrefix()) {
           continue;

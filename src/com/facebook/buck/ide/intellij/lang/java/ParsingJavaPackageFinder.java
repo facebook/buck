@@ -14,16 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.lang.java;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -31,8 +29,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -56,7 +52,7 @@ public abstract class ParsingJavaPackageFinder {
       ProjectFilesystem projectFilesystem,
       ImmutableSet<Path> filesToParse,
       JavaPackageFinder fallbackPackageFinder) {
-    PackagePathCache packagePathCache = new PackagePathCache();
+    JavaPackagePathCache packagePathCache = new JavaPackagePathCache();
     for (Path path : ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)) {
       Optional<String> packageNameFromSource = Optionals.bind(
           projectFilesystem.readFileIfItExists(path),
@@ -73,49 +69,13 @@ public abstract class ParsingJavaPackageFinder {
     return Paths.get(javaPackage.replace('.', File.separatorChar));
   }
 
-  public static class PackagePathCache {
-    private Map<Path, Path> cache;
-
-    public PackagePathCache() {
-      this.cache = new HashMap<>();
-    }
-
-    public void insert(Path pathRelativeToProjectRoot, Path packageFolder) {
-      Path parentPath = pathRelativeToProjectRoot.getParent();
-      cache.put(parentPath, packageFolder);
-
-      if (parentPath.endsWith(Preconditions.checkNotNull(packageFolder))) {
-        Path packagePath = packageFolder;
-        for (int i = 0; i <= packageFolder.getNameCount(); ++i) {
-          cache.put(parentPath, packagePath);
-          parentPath = MorePaths.getParentOrEmpty(parentPath);
-          packagePath = MorePaths.getParentOrEmpty(packagePath);
-        }
-      }
-    }
-
-    public Optional<Path> lookup(Path pathRelativeToProjectRoot) {
-      Path path = pathRelativeToProjectRoot.getParent();
-      while (path != null) {
-        Path prefix = cache.get(path);
-        if (prefix != null) {
-          Path suffix = path.relativize(pathRelativeToProjectRoot.getParent());
-          return Optional.of(prefix.resolve(suffix));
-        }
-        path = path.getParent();
-      }
-
-      return Optional.empty();
-    }
-  }
-
   private static class CacheBasedPackageFinder implements JavaPackageFinder {
     private JavaPackageFinder fallbackPackageFinder;
-    private PackagePathCache packagePathCache;
+    private JavaPackagePathCache packagePathCache;
 
     public CacheBasedPackageFinder(
         JavaPackageFinder fallbackPackageFinder,
-        PackagePathCache packagePathCache) {
+        JavaPackagePathCache packagePathCache) {
       this.fallbackPackageFinder = fallbackPackageFinder;
       this.packagePathCache = packagePathCache;
     }
