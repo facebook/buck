@@ -47,7 +47,6 @@ public class JavaInMemoryFileObject extends JarFileObject {
 
   private boolean isOpened = false;
   private boolean isWritten = false;
-  private final CustomZipOutputStream jarOutputStream;
   private final Semaphore jarFileSemaphore;
   private final ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
 
@@ -55,10 +54,8 @@ public class JavaInMemoryFileObject extends JarFileObject {
       URI uri,
       String pathInJar,
       Kind kind,
-      CustomZipOutputStream jarOutputStream,
       Semaphore jarFileSemaphore) {
     super(uri, pathInJar, kind);
-    this.jarOutputStream = jarOutputStream;
     this.jarFileSemaphore = jarFileSemaphore;
   }
 
@@ -76,7 +73,6 @@ public class JavaInMemoryFileObject extends JarFileObject {
       throw new IOException(ALREADY_OPENED);
     }
     isOpened = true;
-    final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
     return new OutputStream() {
       @Override
       public void write(int b) throws IOException {
@@ -86,15 +82,7 @@ public class JavaInMemoryFileObject extends JarFileObject {
       @Override
       public void close() throws IOException {
         bos.close();
-        jarFileSemaphore.acquireUninterruptibly();
-        try {
-          jarOutputStream.putNextEntry(entry);
-          jarOutputStream.write(bos.toByteArray());
-          jarOutputStream.closeEntry();
-          isWritten = true;
-        } finally {
-          jarFileSemaphore.release();
-        }
+        isWritten = true;
       }
     };
   }
@@ -112,5 +100,18 @@ public class JavaInMemoryFileObject extends JarFileObject {
   @Override
   public Writer openWriter() throws IOException {
     return new OutputStreamWriter(this.openOutputStream());
+  }
+
+  @Override
+  public void writeToJar(CustomZipOutputStream jarOutputStream) throws IOException {
+    jarFileSemaphore.acquireUninterruptibly();
+    try {
+      final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
+      jarOutputStream.putNextEntry(entry);
+      jarOutputStream.write(bos.toByteArray());
+      jarOutputStream.closeEntry();
+    } finally {
+      jarFileSemaphore.release();
+    }
   }
 }

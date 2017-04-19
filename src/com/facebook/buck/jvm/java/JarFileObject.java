@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.zip.CustomZipOutputStream;
+
+import java.io.IOException;
 import java.net.URI;
 
 import javax.annotation.Nullable;
@@ -92,4 +95,6 @@ public abstract class JarFileObject implements JavaFileObject {
   public String toString() {
     return this.getClass().getName() + "[" + toUri() + "]";
   }
+
+  public abstract void writeToJar(CustomZipOutputStream jarOutputStream) throws IOException;
 }
