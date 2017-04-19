@@ -21,14 +21,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
@@ -233,16 +232,7 @@ public class Cell {
       Console console,
       BuckEventBus eventBus,
       boolean ignoreBuckAutodepsFiles) {
-    ProjectBuildFileParserFactory factory = createBuildFileParserFactory();
-    return factory.createParser(
-        marshaller,
-        console,
-        config.getEnvironment(),
-        eventBus,
-        ignoreBuckAutodepsFiles);
-  }
 
-  private ProjectBuildFileParserFactory createBuildFileParserFactory() {
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
     boolean useWatchmanGlob =
@@ -257,7 +247,7 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new DefaultProjectBuildFileParserFactory(
+    return new ProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
@@ -277,7 +267,12 @@ public class Cell {
             .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build());
+            .build(),
+        marshaller,
+        config.getEnvironment(),
+        eventBus,
+        new DefaultProcessExecutor(console),
+        ignoreBuckAutodepsFiles);
   }
 
   @Override

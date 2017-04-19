@@ -22,17 +22,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.bser.BserSerializer;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
-import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -40,8 +36,6 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -453,7 +447,7 @@ public class ProjectBuildFileParserTest {
    * ProjectBuildFileParser test double which counts the number of times rules are parsed to test
    * caching logic in Parser.
    */
-  private static class TestProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
+  private static class TestProjectBuildFileParserFactory {
     private final Path projectRoot;
     private final KnownBuildRuleTypes buildRuleTypes;
 
@@ -462,22 +456,6 @@ public class ProjectBuildFileParserTest {
         KnownBuildRuleTypes buildRuleTypes) {
       this.projectRoot = projectRoot;
       this.buildRuleTypes = buildRuleTypes;
-    }
-
-    @Override
-    public ProjectBuildFileParser createParser(
-        ConstructorArgMarshaller marshaller,
-        Console console,
-        ImmutableMap<String, String> environment,
-        BuckEventBus buckEventBus,
-        boolean ignoreBuckAutodepsFiles) {
-      PythonBuckConfig config = new PythonBuckConfig(
-          FakeBuckConfig.builder().setEnvironment(environment).build(),
-          new ExecutableFinder());
-      return new TestProjectBuildFileParser(
-          config.getPythonInterpreter(),
-          new DefaultProcessExecutor(console),
-          BuckEventBusFactory.newInstance());
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsError() {

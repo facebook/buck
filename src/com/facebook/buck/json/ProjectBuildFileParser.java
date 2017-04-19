@@ -101,7 +101,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private Thread stderrConsumerThread;
   @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
 
-  protected ProjectBuildFileParser(
+  public ProjectBuildFileParser(
       final ProjectBuildFileParserOptions options,
       final ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,

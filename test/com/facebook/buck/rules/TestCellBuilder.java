@@ -25,7 +25,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -35,16 +34,11 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-
 public class TestCellBuilder {
 
   private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
   private AndroidDirectoryResolver androidDirectoryResolver;
-  @Nullable
-  private ProjectBuildFileParserFactory parserFactory;
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
 
@@ -85,29 +79,12 @@ public class TestCellBuilder {
         executor,
         androidDirectoryResolver);
 
-    if (parserFactory == null) {
-      return CellProvider.createForLocalBuild(
-          filesystem,
-          watchman,
-          config,
-          cellConfig,
-          typesFactory).getCellByPath(filesystem.getRootPath());
-    }
-
-    // The constructor for `Cell` is private, and it's in such a central location I don't really
-    // want to make it public. Brace yourselves.
-
-    Enhancer enhancer = new Enhancer();
-    enhancer.setSuperclass(Cell.class);
-    enhancer.setCallback((MethodInterceptor) (obj, method, args, proxy) -> {
-      if ("createBuildFileParserFactory".equals(method.getName())) {
-        return parserFactory;
-      }
-
-      return proxy.invokeSuper(obj, args);
-    });
-
-    return (Cell) enhancer.create();
+    return CellProvider.createForLocalBuild(
+        filesystem,
+        watchman,
+        config,
+        cellConfig,
+        typesFactory).getCellByPath(filesystem.getRootPath());
   }
 
   public static CellPathResolver createCellRoots(

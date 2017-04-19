@@ -33,7 +33,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
@@ -47,6 +46,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -112,7 +112,7 @@ public class ResolverIntegrationTest {
         new RemoteFileDescription(new ExplodingDownloader()),
         new PrebuiltJarDescription());
 
-    DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
+    buildFileParser = new ProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(filesystem.getRootPath())
             .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
@@ -122,12 +122,11 @@ public class ResolverIntegrationTest {
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(descriptions)
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build());
-    buildFileParser = parserFactory.createParser(
+            .build(),
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
-        new TestConsole(),
         ImmutableMap.of(),
         BuckEventBusFactory.newInstance(),
+        new DefaultProcessExecutor(new TestConsole()),
         /* ignoreBuckAutodepsFiles */ false);
   }
 
