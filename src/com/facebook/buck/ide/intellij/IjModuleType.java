@@ -18,42 +18,18 @@ package com.facebook.buck.ide.intellij;
 
 import java.util.Optional;
 
+/**
+ * List of module types that are recognized by the model.
+ * <p/>
+ * The types in this enum are ordered by priority. When multiple targets
+ * apply the type on a module only the type with the highest priority is
+ * used as the result type.
+ * <p/>
+ * For example, if one target's rule sets the type to ANDROID_MODULE and
+ * another target's rule sets it to JAVA_MODULE, the final module type
+ * would be ANDROID_MODULE.
+ */
 public enum IjModuleType {
-  JAVA_MODULE("JAVA_MODULE") {
-    @Override
-    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
-      return projectConfig.getJavaModuleSdkName();
-    }
-
-    @Override
-    public String getSdkType(IjProjectConfig projectConfig) {
-      return projectConfig.getJavaModuleSdkType().orElse(SDK_TYPE_JAVA);
-    }
-  },
-
-  ANDROID_MODULE("JAVA_MODULE") {
-    @Override
-    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
-      return projectConfig.getAndroidModuleSdkName();
-    }
-
-    @Override
-    public String getSdkType(IjProjectConfig projectConfig) {
-      return projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
-    }
-  },
-
-  UNKNOWN_MODULE("JAVA_MODULE") {
-    @Override
-    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
-      return Optional.empty();
-    }
-
-    @Override
-    public String getSdkType(IjProjectConfig projectConfig) {
-      return SDK_TYPE_JAVA;
-    }
-  },
 
   /**
    * Modules that contain IntelliJ plugins use this custom type to indicate
@@ -69,7 +45,65 @@ public enum IjModuleType {
     public String getSdkType(IjProjectConfig projectConfig) {
       return SDK_TYPE_IDEA;
     }
-  };
+  },
+
+  /**
+   * Similar to {@link #ANDROID_MODULE} but can contain Android resources and thus cannot
+   * be aggregated with a module located in the parent directory.
+   */
+  ANDROID_RESOURCES_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
+    }
+  },
+
+  /**
+   * A module with code that does not contain Android resources.
+   *
+   * @see #ANDROID_RESOURCES_MODULE
+   */
+  ANDROID_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
+    }
+  },
+
+  JAVA_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return projectConfig.getJavaModuleSdkName();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return projectConfig.getJavaModuleSdkType().orElse(SDK_TYPE_JAVA);
+    }
+  },
+
+  UNKNOWN_MODULE("JAVA_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return Optional.empty();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return SDK_TYPE_JAVA;
+    }
+  },
+  ;
 
   // From constructor of com.intellij.openapi.projectRoots.impl.JavaSdkImpl
   private static final String SDK_TYPE_JAVA = "JavaSDK";
@@ -92,5 +126,9 @@ public enum IjModuleType {
 
   public String getImlModuleType() {
     return imlModuleType;
+  }
+
+  public boolean hasHigherPriorityThan(IjModuleType moduleType) {
+    return this.compareTo(moduleType) < 0;
   }
 }

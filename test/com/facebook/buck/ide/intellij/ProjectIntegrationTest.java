@@ -148,6 +148,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("project_with_multiple_resources_with_package_names");
   }
 
+  @Test
+  public void testCxxLibrary() throws IOException {
+    runBuckProjectAndVerify("project_with_cxx_library");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {

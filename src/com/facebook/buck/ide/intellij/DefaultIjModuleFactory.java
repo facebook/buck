@@ -69,6 +69,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private interface IjModuleRule<T> {
     Class<? extends Description<?>> getDescriptionClass();
     void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
+    IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
   }
 
   private final ProjectFilesystem projectFilesystem;
@@ -144,6 +145,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       seenTypes.add(nodeType);
       IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(nodeType));
       rule.apply((TargetNode) targetNode, context);
+      context.setModuleType(rule.detectModuleType((TargetNode) targetNode));
     }
 
     if (seenTypes.size() > 1) {
@@ -154,16 +156,10 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     Optional<String> sourceLevel = getSourceLevel(targetNodes);
-    IjModuleType moduleType = context.getModuleType().orElse(null);
 
-    if (moduleType != IjModuleType.INTELLIJ_PLUGIN_MODULE) {
-      if (context.isAndroidFacetBuilderPresent()) {
-        context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
-            createAndroidGenPath(moduleBasePath));
-        moduleType = IjModuleType.ANDROID_MODULE;
-      } else {
-        moduleType = IjModuleType.JAVA_MODULE;
-      }
+    if (context.isAndroidFacetBuilderPresent()) {
+      context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
+          createAndroidGenPath(moduleBasePath));
     }
 
     return IjModule.builder()
@@ -175,7 +171,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
         .setLanguageLevel(sourceLevel)
-        .setModuleType(moduleType)
+        .setModuleType(context.getModuleType())
         .setMetaInfDirectory(context.getMetaInfDirectory())
         .build();
   }
@@ -437,6 +433,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           .setAutogenerateSources(autogenerateAndroidFacetSources)
           .setAndroidLibrary(false);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
+      return IjModuleType.ANDROID_MODULE;
+    }
   }
 
   private class AndroidLibraryModuleRule
@@ -467,6 +468,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       }
       builder.setAutogenerateSources(autogenerateAndroidFacetSources);
       builder.setAndroidLibrary(true);
+    }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
+      return IjModuleType.ANDROID_MODULE;
     }
   }
 
@@ -526,6 +532,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
       context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+      return IjModuleType.ANDROID_RESOURCES_MODULE;
+    }
   }
 
   private class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
@@ -543,6 +554,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           false /* wantsPackagePrefix */,
           context);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<CxxLibraryDescription.Arg, ?> targetNode) {
+      return IjModuleType.UNKNOWN_MODULE;
+    }
   }
 
   private class JavaBinaryModuleRule
@@ -558,21 +574,35 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         TargetNode<JavaBinaryDescription.Args, ?> target,
         ModuleBuildContext context) {
       context.addDeps(target.getBuildDeps(), DependencyType.PROD);
-      // If this is a binary based on an intellij provided library *and*
-      // it has a meta_inf_directory, then it's almost certainly an IntelliJ
-      // plugin, so mark the module as such.  This will allow users to create
-      // a "plugin" runtime configurations for that module in IntelliJ.
+      saveMetaInfDirectoryForIntellijPlugin(target, context);
+    }
+
+    private void saveMetaInfDirectoryForIntellijPlugin(
+        TargetNode<JavaBinaryDescription.Args, ?> target,
+        ModuleBuildContext context) {
       Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
       for (BuildTarget dep : target.getBuildDeps()) {
         Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
         if (metaInfDirectory.isPresent() &&
             intellijLibraries.contains(dep.getFullyQualifiedName())) {
-          context.setIsIntellijPlugin(metaInfDirectory.get());
+          context.setMetaInfDirectory(metaInfDirectory.get());
           break;
         }
       }
     }
 
+    @Override
+    public IjModuleType detectModuleType(TargetNode<JavaBinaryDescription.Args, ?> targetNode) {
+      Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
+      for (BuildTarget dep : targetNode.getBuildDeps()) {
+        Optional<Path> metaInfDirectory = targetNode.getConstructorArg().metaInfDirectory;
+        if (metaInfDirectory.isPresent() &&
+            intellijLibraries.contains(dep.getFullyQualifiedName())) {
+          return IjModuleType.INTELLIJ_PLUGIN_MODULE;
+        }
+      }
+      return IjModuleType.JAVA_MODULE;
+    }
   }
 
   private class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
@@ -592,6 +622,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           context);
       addCompiledShadowIfNeeded(target, context);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.Arg, ?> targetNode) {
+      return IjModuleType.JAVA_MODULE;
+    }
   }
 
   private class GroovyLibraryModuleRule implements IjModuleRule<GroovyLibraryDescription.Arg> {
@@ -609,6 +644,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           target,
           false /* wantsPackagePrefix */,
           context);
+    }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<GroovyLibraryDescription.Arg, ?> targetNode) {
+      return IjModuleType.UNKNOWN_MODULE;
     }
   }
 
@@ -628,6 +668,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           false /* wantsPackagePrefix */,
           context);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<GroovyTestDescription.Arg, ?> targetNode) {
+      return IjModuleType.UNKNOWN_MODULE;
+    }
   }
 
   private class JavaTestModuleRule implements IjModuleRule<JavaTestDescription.Arg> {
@@ -644,6 +689,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
+    }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<JavaTestDescription.Arg, ?> targetNode) {
+      return IjModuleType.JAVA_MODULE;
     }
   }
 
@@ -663,6 +713,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           false /* wantsPackagePrefix */,
           context);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<KotlinLibraryDescription.Arg, ?> targetNode) {
+      return IjModuleType.UNKNOWN_MODULE;
+    }
   }
 
   private class KotlinTestModuleRule implements IjModuleRule<KotlinTestDescription.Arg> {
@@ -681,6 +736,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
           false /* wantsPackagePrefix */,
           context);
     }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<KotlinTestDescription.Arg, ?> targetNode) {
+      return IjModuleType.UNKNOWN_MODULE;
+    }
   }
 
   private class RobolectricTestModuleRule extends JavaTestModuleRule {
@@ -698,6 +758,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       context.getOrCreateAndroidFacetBuilder()
           .setAutogenerateSources(autogenerateAndroidFacetSources)
           .setAndroidLibrary(true);
+    }
+
+    @Override
+    public IjModuleType detectModuleType(TargetNode<JavaTestDescription.Arg, ?> targetNode) {
+      return IjModuleType.ANDROID_MODULE;
     }
   }
 }
