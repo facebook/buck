@@ -202,7 +202,7 @@ public class DefaultJavaLibraryTest {
     scenario.addAnnotationProcessorTarget(validJavaBinary);
 
     scenario.getAnnotationProcessingParamsBuilder()
-        .addAllProcessors(ImmutableList.of("MyProcessor"));
+        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -238,7 +238,7 @@ public class DefaultJavaLibraryTest {
     scenario.addAnnotationProcessorTarget(validPrebuiltJar);
 
     scenario.getAnnotationProcessingParamsBuilder()
-        .addAllProcessors(ImmutableList.of("MyProcessor"));
+        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -258,7 +258,7 @@ public class DefaultJavaLibraryTest {
     scenario.addAnnotationProcessorTarget(validPrebuiltJar);
 
     scenario.getAnnotationProcessingParamsBuilder()
-        .addAllProcessors(ImmutableList.of("MyProcessor"));
+        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -280,7 +280,7 @@ public class DefaultJavaLibraryTest {
     scenario.addAnnotationProcessorTarget(validJavaLibrary);
 
     scenario.getAnnotationProcessingParamsBuilder()
-        .addAllProcessors(ImmutableList.of("MyProcessor"));
+        .setLegacyAnnotationProcessorNames(ImmutableList.of("MyProcessor"));
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -494,10 +494,10 @@ public class DefaultJavaLibraryTest {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(validJavaBinary);
 
-    scenario.getAnnotationProcessingParamsBuilder().addAllProcessors(
+    scenario.getAnnotationProcessingParamsBuilder().setLegacyAnnotationProcessorNames(
         ImmutableList.of("MyProcessor"));
-    scenario.getAnnotationProcessingParamsBuilder().addParameter("MyParameter");
-    scenario.getAnnotationProcessingParamsBuilder().addParameter("MyKey=MyValue");
+    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyParameter");
+    scenario.getAnnotationProcessingParamsBuilder().addParameters("MyKey=MyValue");
     scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
@@ -1467,8 +1467,8 @@ public class DefaultJavaLibraryTest {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
 
     public AnnotationProcessingScenario() throws IOException {
-      annotationProcessingParamsBuilder = new AnnotationProcessingParams.Builder()
-          .setSafeAnnotationProcessors(Collections.emptySet());
+      annotationProcessingParamsBuilder = AnnotationProcessingParams.builder()
+          .setLegacySafeAnnotationProcessors(Collections.emptySet());
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
@@ -1480,7 +1480,7 @@ public class DefaultJavaLibraryTest {
       BuildTarget target = processor.createTarget();
       BuildRule rule = processor.createRule(target);
 
-      annotationProcessingParamsBuilder.addProcessorBuildTarget(rule);
+      annotationProcessingParamsBuilder.addLegacyAnnotationProcessorDeps(rule);
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()

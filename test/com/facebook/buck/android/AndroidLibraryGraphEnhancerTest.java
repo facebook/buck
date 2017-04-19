@@ -187,7 +187,7 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC,
         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
             .setAnnotationProcessingParams(
-                new AnnotationProcessingParams.Builder()
+                AnnotationProcessingParams.builder()
                     .setProcessOnly(true)
                     .build())
             .setSourceLevel("7")
