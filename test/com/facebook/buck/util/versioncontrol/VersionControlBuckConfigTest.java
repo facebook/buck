@@ -22,9 +22,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class VersionControlBuckConfigTest {
   private static final String HG_CMD = "myhg";
@@ -73,4 +76,48 @@ public class VersionControlBuckConfigTest {
         VersionControlBuckConfig.GENERATE_STATISTICS_DEFAULT,
         is(equalTo(config.shouldGenerateStatistics())));
   }
+
+  @Test
+  public void givenNoPregeneratedStatsReturnsNothing() {
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
+        ImmutableMap.of(
+            VersionControlBuckConfig.VC_SECTION_KEY,
+            ImmutableMap.of())).build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(
+        config.getPregeneratedVersionControlStats(),
+        is(equalTo(Optional.empty())));
+  }
+
+  @Test
+  public void givenCompletePregeneratedStatsReturnsSomething() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                VersionControlBuckConfig.VC_SECTION_KEY,
+                ImmutableMap.of(
+                    VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00",
+                    VersionControlBuckConfig.PREGENERATED_BASE_BOOKMARKS, "remote/master",
+                    VersionControlBuckConfig.PREGENERATED_BASE_REVISION_ID, "b47",
+                    VersionControlBuckConfig.PREGENERATED_BASE_REVISION_TIMESTAMP, "0")))
+        .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(
+        config.getPregeneratedVersionControlStats().isPresent(),
+        is(equalTo(true)));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void givenIncompletePregeneratedStatsThrowsException() {
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                VersionControlBuckConfig.VC_SECTION_KEY,
+                ImmutableMap.of(
+                    VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00")))
+        .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    config.getPregeneratedVersionControlStats();
+  }
+
 }

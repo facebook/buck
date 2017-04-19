@@ -118,7 +118,7 @@ public class CommandRunnerParamsForTesting {
                 MoreExecutors.newDirectExecutorService()))
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
         .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface()))
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setInvocationInfo(Optional.empty())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))

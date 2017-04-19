@@ -17,8 +17,13 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /***
  * Provides simplified access to settings from the version_control section of a .buckconfig file.
@@ -40,13 +45,20 @@ import java.util.Optional;
  *    generate_statistics = true
  */
 public class VersionControlBuckConfig {
-  public static final String VC_SECTION_KEY = "version_control";
+  static final String VC_SECTION_KEY = "version_control";
 
-  public static final String GENERATE_STATISTICS_KEY = "generate_statistics";
-  public static final String HG_CMD_SETTING_KEY = "hg_cmd";
+  static final String GENERATE_STATISTICS_KEY = "generate_statistics";
+  static final boolean GENERATE_STATISTICS_DEFAULT = false;
 
-  public static final String HG_CMD_DEFAULT = "hg";
-  public static final boolean GENERATE_STATISTICS_DEFAULT = false;
+  static final String HG_CMD_SETTING_KEY = "hg_cmd";
+  static final String HG_CMD_DEFAULT = "hg";
+
+  static final String PREGENERATED_CURRENT_REVISION_ID =
+      "pregenerated_current_revision_id";
+  static final String PREGENERATED_BASE_BOOKMARKS = "pregenerated_base_bookmarks";
+  static final String PREGENERATED_BASE_REVISION_ID = "pregenerated_base_revision_id";
+  static final String PREGENERATED_BASE_REVISION_TIMESTAMP =
+      "pregenerated_base_revision_timestamp";
 
   private final BuckConfig delegate;
 
@@ -65,8 +77,54 @@ public class VersionControlBuckConfig {
         GENERATE_STATISTICS_DEFAULT);
   }
 
+  public Optional<PregeneratedVersionControlStats> getPregeneratedVersionControlStats() {
+    ImmutableSet<Optional<?>> stats =
+        ImmutableSet.of(
+            getPregeneratedCurrentRevisionId(),
+            getPregeneratedBaseBookmarks(),
+            getPregeneratedBaseRevisionId(),
+            getPregeneratedBaseRevisionTimestamp());
+    if (stats.stream().anyMatch(Optional::isPresent)) {
+      if (!stats.stream().allMatch(Optional::isPresent)) {
+        throw new HumanReadableException(
+            "Specified some of the pregenerated version control stats in the configs, " +
+                "but not all: " +
+                Stream
+                    .of(
+                        PREGENERATED_CURRENT_REVISION_ID,
+                        PREGENERATED_BASE_BOOKMARKS,
+                        PREGENERATED_BASE_REVISION_ID,
+                        PREGENERATED_BASE_REVISION_TIMESTAMP)
+                    .collect(Collectors.joining(", ")));
+      }
+      return Optional.of(
+          PregeneratedVersionControlStats.of(
+              getPregeneratedCurrentRevisionId().get(),
+              getPregeneratedBaseBookmarks().get(),
+              getPregeneratedBaseRevisionId().get(),
+              getPregeneratedBaseRevisionTimestamp().get()));
+    }
+    return Optional.empty();
+  }
+
+  private Optional<String> getPregeneratedCurrentRevisionId() {
+    return delegate.getValue(VC_SECTION_KEY, PREGENERATED_CURRENT_REVISION_ID);
+  }
+
+  private Optional<ImmutableList<String>> getPregeneratedBaseBookmarks() {
+    return delegate.getOptionalListWithoutComments(VC_SECTION_KEY, PREGENERATED_BASE_BOOKMARKS);
+  }
+
+  private Optional<String> getPregeneratedBaseRevisionId() {
+    return delegate.getValue(VC_SECTION_KEY, PREGENERATED_BASE_REVISION_ID);
+  }
+
+  private Optional<Long> getPregeneratedBaseRevisionTimestamp() {
+    return delegate.getLong(VC_SECTION_KEY, PREGENERATED_BASE_REVISION_TIMESTAMP);
+  }
+
   private String getValue(String section, String key, String defaultValue) {
     Optional<String> optionalValue = delegate.getValue(section, key);
-    return optionalValue.isPresent() ? optionalValue.get() : defaultValue;
+    return optionalValue.orElse(defaultValue);
   }
 }

@@ -165,7 +165,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setBuildEnvironmentDescription(
             CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
         .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface()))
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
         .setKnownBuildRuleTypesFactory(

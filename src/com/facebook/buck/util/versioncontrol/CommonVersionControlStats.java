@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,24 +17,25 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableSet;
 
-import org.immutables.value.Value;
+interface CommonVersionControlStats {
 
-import java.util.Optional;
-
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractVersionControlStats extends CommonVersionControlStats {
-
+  /* Commit hash of the current revision. */
   @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getPathsChangedInWorkingDirectory();
+  String getCurrentRevisionId();
 
-  /* The diff between base and current revision if it exists */
-  @JsonIgnore
-  Optional<String> getDiff();
+  /* A list of bookmarks that the current commit is based and also exist in TRACKED_BOOKMARKS */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  ImmutableSet<String> getBaseBookmarks();
+
+  /* Commit hash of the revision that is the common base between current revision and master. */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  String getBranchedFromMasterRevisionId();
+
+  /* The timestamp of the base revision */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  Long getBranchedFromMasterTS();
 
 }

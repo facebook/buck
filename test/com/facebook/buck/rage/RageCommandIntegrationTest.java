@@ -136,7 +136,7 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
           false,
           rageConfig,
           Optional::empty);
@@ -184,7 +184,7 @@ public class RageCommandIntegrationTest {
         filesystem,
         new TestConsole(),
         TestBuildEnvironmentDescription.INSTANCE,
-        new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
         false,
         rageConfig,
         new DefaultExtraInfoCollector(rageConfig, filesystem, new DefaultProcessExecutor(console)));
@@ -234,7 +234,7 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
           false,
           rageConfig,
           Optional::empty);
@@ -299,7 +299,7 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
           false,
           rageConfig,
           Optional::empty);

@@ -1208,14 +1208,18 @@ public final class Main {
                   rootCell.getFilesystem().getRootPath(),
                   new PrintStreamProcessExecutorFactory(),
                   vcBuckConfig.getHgCmd(),
-                  buckConfig.getEnvironment()));
+                  buckConfig.getEnvironment()),
+              vcBuckConfig.getPregeneratedVersionControlStats());
           if (command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
-            if (!commandMode.equals(CommandMode.TEST) && (
-                subcommand.isSourceControlStatsGatheringEnabled() ||
-                vcBuckConfig.shouldGenerateStatistics())) {
+            if (!commandMode.equals(CommandMode.TEST)) {
+              VersionControlStatsGenerator.Mode mode =
+                  subcommand.isSourceControlStatsGatheringEnabled() ||
+                      vcBuckConfig.shouldGenerateStatistics() ?
+                      VersionControlStatsGenerator.Mode.FAST :
+                      VersionControlStatsGenerator.Mode.PREGENERATED;
               vcStatsGenerator.generateStatsAsync(
-                  VersionControlStatsGenerator.Mode.FAST,
+                  mode,
                   diskIoExecutorService,
                   buildEventBus);
             }

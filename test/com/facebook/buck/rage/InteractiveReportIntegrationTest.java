@@ -199,7 +199,7 @@ public class InteractiveReportIntegrationTest {
             console,
             inputStream,
             TestBuildEnvironmentDescription.INSTANCE,
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
             rageConfig,
             extraInfoCollector,
             Optional.of(watchmanDiagReportCollector));
