@@ -61,9 +61,6 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
       .build();
 
   @Nullable
-  private ImmutableList<JavacPluginProperties> legacyProcessors = null;
-
-  @Nullable
   protected abstract BuildTarget getOwnerTarget();
 
   @Nullable
@@ -76,47 +73,44 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<String> getLegacyAnnotationProcessorNames();
 
+  @Value.Lazy
   protected ImmutableList<JavacPluginProperties> getLegacyProcessors() {
-    if (legacyProcessors == null) {
-      JavacPluginProperties.Builder legacySafeProcessorsBuilder = JavacPluginProperties.builder()
-          .setCanReuseClassLoader(true)
-          .setDoesNotAffectAbi(true)
-          .setSupportsAbiGenerationFromSource(false)
-          .setProcessorNames(
-              Sets.intersection(
-                  getLegacyAnnotationProcessorNames(),
-                  getLegacySafeAnnotationProcessors()));
+    JavacPluginProperties.Builder legacySafeProcessorsBuilder = JavacPluginProperties.builder()
+        .setCanReuseClassLoader(true)
+        .setDoesNotAffectAbi(true)
+        .setSupportsAbiGenerationFromSource(false)
+        .setProcessorNames(
+            Sets.intersection(
+                getLegacyAnnotationProcessorNames(),
+                getLegacySafeAnnotationProcessors()));
 
-      JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder = JavacPluginProperties.builder()
-          .setCanReuseClassLoader(false)
-          .setDoesNotAffectAbi(true)
-          .setSupportsAbiGenerationFromSource(false)
-          .setProcessorNames(
-              Sets.difference(
-                  getLegacyAnnotationProcessorNames(),
-                  getLegacySafeAnnotationProcessors()));
+    JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder = JavacPluginProperties.builder()
+        .setCanReuseClassLoader(false)
+        .setDoesNotAffectAbi(true)
+        .setSupportsAbiGenerationFromSource(false)
+        .setProcessorNames(
+            Sets.difference(
+                getLegacyAnnotationProcessorNames(),
+                getLegacySafeAnnotationProcessors()));
 
-      for (BuildRule dep : getLegacyAnnotationProcessorDeps()) {
-        legacySafeProcessorsBuilder.addDep(dep);
-        legacyUnsafeProcessorsBuilder.addDep(dep);
-      }
-
-      JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
-      JavacPluginProperties legacyUnsafeProcessors = legacyUnsafeProcessorsBuilder.build();
-
-
-      ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
-      if (!legacySafeProcessors.isEmpty()) {
-        resultBuilder.add(legacySafeProcessors);
-      }
-      if (!legacyUnsafeProcessors.isEmpty()) {
-        resultBuilder.add(legacyUnsafeProcessors);
-      }
-
-      legacyProcessors = resultBuilder.build();
+    for (BuildRule dep : getLegacyAnnotationProcessorDeps()) {
+      legacySafeProcessorsBuilder.addDep(dep);
+      legacyUnsafeProcessorsBuilder.addDep(dep);
     }
 
-    return legacyProcessors;
+    JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
+    JavacPluginProperties legacyUnsafeProcessors = legacyUnsafeProcessorsBuilder.build();
+
+
+    ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
+    if (!legacySafeProcessors.isEmpty()) {
+      resultBuilder.add(legacySafeProcessors);
+    }
+    if (!legacyUnsafeProcessors.isEmpty()) {
+      resultBuilder.add(legacyUnsafeProcessors);
+    }
+
+    return resultBuilder.build();
   }
 
   protected abstract ImmutableList<ResolvedJavacPluginProperties> getModernProcessors();
@@ -192,9 +186,5 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     } else {
       return null;
     }
-  }
-
-  protected abstract class Builder {
-
   }
 }
