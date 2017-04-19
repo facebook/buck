@@ -18,6 +18,8 @@ package com.facebook.buck.util;
 
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
@@ -229,7 +231,12 @@ public class WatchmanWatcher {
       WatchmanQuery query = queries.get(cellPath);
       WatchmanCursor cursor = cursors.get(cellPath);
       if (query != null && cursor != null) {
-        postEvents(buckEventBus, freshInstanceAction, query, cursor, filesHaveChanged);
+        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
+            buckEventBus,
+            PerfEventId.of("check_watchman"),
+            "cell", cellPath)) {
+          postEvents(buckEventBus, freshInstanceAction, query, cursor, filesHaveChanged);
+        }
       }
     }
     if (!filesHaveChanged.get()) {
@@ -245,96 +252,103 @@ public class WatchmanWatcher {
       WatchmanCursor cursor,
       AtomicBoolean filesHaveChanged) throws IOException, InterruptedException {
     try {
-      Optional<? extends Map<String, ? extends Object>> queryResponse =
-          watchmanClient.queryWithTimeout(
-              TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-              query.toList(cursor.get()).toArray());
-      if (!queryResponse.isPresent()) {
-        LOG.warn(
-            "Could not get response from Watchman for query %s within %d ms",
-            query,
-            timeoutMillis);
-        postWatchEvent(
-            createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
-        filesHaveChanged.set(true);
-        return;
+      Optional<? extends Map<String, ? extends Object>> queryResponse;
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "query")) {
+        queryResponse = watchmanClient.queryWithTimeout(
+            TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
+            query.toList(cursor.get()).toArray());
       }
 
-      Map<String, ? extends Object> response = queryResponse.get();
-      String error = (String) response.get("error");
-      if (error != null) {
-        // This message is not de-duplicated via WatchmanDiagnostic.
-        WatchmanWatcherException e = new WatchmanWatcherException(error);
-        LOG.error(
-            e,
-            "Error in Watchman output. Posting an overflow event to flush the caches");
-        postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
-        throw e;
-      }
-
-      if (cursor.get().startsWith("c:")) {
-        // Update the clockId
-        String newCursor = Optional
-          .ofNullable((String) response.get("clock"))
-          .orElse(Watchman.NULL_CLOCK);
-        LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
-        cursor.set(newCursor);
-      }
-
-      String warning = (String) response.get("warning");
-      if (warning != null) {
-        buckEventBus.post(
-            new WatchmanDiagnosticEvent(
-                WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning)));
-      }
-
-      Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
-      if (isFreshInstance != null && isFreshInstance) {
-        LOG.debug(
-            "Watchman indicated a fresh instance (fresh instance action %s)",
-            freshInstanceAction);
-        switch (freshInstanceAction) {
-          case NONE:
-            break;
-          case POST_OVERFLOW_EVENT:
-            postWatchEvent(createOverflowEvent("New Buck instance"));
-            break;
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
+          buckEventBus,
+          "process_response")) {
+        if (!queryResponse.isPresent()) {
+          LOG.warn(
+              "Could not get response from Watchman for query %s within %d ms",
+              query,
+              timeoutMillis);
+          postWatchEvent(
+              createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
+          filesHaveChanged.set(true);
+          return;
         }
-        filesHaveChanged.set(true);
-        return;
-      }
 
-      List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
-      if (files != null) {
-        for (Map<String, Object> file : files) {
-          String fileName = (String) file.get("name");
-          if (fileName == null) {
-            LOG.warn("Filename missing from Watchman file response %s", file);
-            postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
+        Map<String, ? extends Object> response = queryResponse.get();
+        String error = (String) response.get("error");
+        if (error != null) {
+          // This message is not de-duplicated via WatchmanDiagnostic.
+          WatchmanWatcherException e = new WatchmanWatcherException(error);
+          LOG.error(
+              e,
+              "Error in Watchman output. Posting an overflow event to flush the caches");
+          postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
+          throw e;
+        }
+
+        if (cursor.get().startsWith("c:")) {
+          // Update the clockId
+          String newCursor = Optional
+              .ofNullable((String) response.get("clock"))
+              .orElse(Watchman.NULL_CLOCK);
+          LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
+          cursor.set(newCursor);
+        }
+
+        String warning = (String) response.get("warning");
+        if (warning != null) {
+          buckEventBus.post(
+              new WatchmanDiagnosticEvent(
+                  WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning)));
+        }
+
+        Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
+        if (isFreshInstance != null && isFreshInstance) {
+          LOG.debug(
+              "Watchman indicated a fresh instance (fresh instance action %s)",
+              freshInstanceAction);
+          switch (freshInstanceAction) {
+            case NONE:
+              break;
+            case POST_OVERFLOW_EVENT:
+              postWatchEvent(createOverflowEvent("New Buck instance"));
+              break;
+          }
+          filesHaveChanged.set(true);
+          return;
+        }
+
+        List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
+        if (files != null) {
+          for (Map<String, Object> file : files) {
+            String fileName = (String) file.get("name");
+            if (fileName == null) {
+              LOG.warn("Filename missing from Watchman file response %s", file);
+              postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
+              filesHaveChanged.set(true);
+              return;
+            }
+            PathEventBuilder builder = new PathEventBuilder();
+            builder.setPath(Paths.get(fileName));
+            Boolean fileNew = (Boolean) file.get("new");
+            if (fileNew != null && fileNew) {
+              builder.setCreationEvent();
+            }
+            Boolean fileExists = (Boolean) file.get("exists");
+            if (fileExists != null && !fileExists) {
+              builder.setDeletionEvent();
+            }
+            postWatchEvent(builder.build());
+          }
+
+          if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
             filesHaveChanged.set(true);
-            return;
           }
-          PathEventBuilder builder = new PathEventBuilder();
-          builder.setPath(Paths.get(fileName));
-          Boolean fileNew = (Boolean) file.get("new");
-          if (fileNew != null && fileNew) {
-            builder.setCreationEvent();
-          }
-          Boolean fileExists = (Boolean) file.get("exists");
-          if (fileExists != null && !fileExists) {
-            builder.setDeletionEvent();
-          }
-          postWatchEvent(builder.build());
-        }
 
-        if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
-          filesHaveChanged.set(true);
-        }
-
-        LOG.debug("Posted %d Watchman events.", files.size());
-      } else {
-        if (freshInstanceAction == FreshInstanceAction.NONE) {
-          filesHaveChanged.set(true);
+          LOG.debug("Posted %d Watchman events.", files.size());
+        } else {
+          if (freshInstanceAction == FreshInstanceAction.NONE) {
+            filesHaveChanged.set(true);
+          }
         }
       }
     } catch (InterruptedException e) {
