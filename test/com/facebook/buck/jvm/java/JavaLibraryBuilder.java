@@ -88,6 +88,13 @@ public class JavaLibraryBuilder extends
     return new JavaLibraryBuilder(target, projectFilesystem, null);
   }
 
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target,
+      JavaBuckConfig javaBuckConfig,
+      ProjectFilesystem projectFilesystem) {
+    return new JavaLibraryBuilder(target, javaBuckConfig, projectFilesystem, null);
+  }
+
   public static JavaLibraryBuilder createBuilder(BuildTarget target, HashCode hashCode) {
     return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), hashCode);
   }

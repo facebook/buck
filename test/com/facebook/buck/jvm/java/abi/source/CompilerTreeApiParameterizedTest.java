@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 
 import org.junit.runners.Parameterized;
 

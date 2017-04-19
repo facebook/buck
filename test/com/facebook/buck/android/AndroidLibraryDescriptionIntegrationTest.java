@@ -20,6 +20,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -39,7 +40,8 @@ import java.nio.file.Paths;
 /**
  * Tests for AndroidLibraryDescription
  */
-public class AndroidLibraryDescriptionIntegrationTest {
+
+public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationModeTest {
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
@@ -49,6 +51,7 @@ public class AndroidLibraryDescriptionIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_library_dynamic_deps", tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test

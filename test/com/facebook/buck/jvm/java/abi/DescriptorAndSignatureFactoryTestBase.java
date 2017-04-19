@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.jvm.java.testutil.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Before;

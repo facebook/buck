@@ -605,6 +605,7 @@ java_test(
         "//test/com/facebook/buck/json:testutil",
         "//test/com/facebook/buck/jvm/java:javac-env",
         "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/jvm/java/testutil:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/python:builders",
         "//test/com/facebook/buck/rules:testutil",

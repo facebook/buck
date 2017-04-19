@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.testutil;
+package com.facebook.buck.jvm.java.testutil.compiler;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.io.ByteStreams;

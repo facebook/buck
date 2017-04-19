@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -47,7 +48,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class JavaLibraryClasspathProviderTest {
+public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
   private TargetNode<?, ?> aNode;
   private TargetNode<?, ?> bNode;
@@ -249,7 +250,7 @@ public class JavaLibraryClasspathProviderTest {
     return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
 
-  private static TargetNode<?, ?> makeRule(
+  private TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?, ?>> deps,
@@ -257,7 +258,7 @@ public class JavaLibraryClasspathProviderTest {
     return makeRule(target, srcs, deps, null, filesystem);
   }
 
-  private static TargetNode<?, ?> makeRule(
+  private TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?, ?>> deps,
@@ -265,7 +266,8 @@ public class JavaLibraryClasspathProviderTest {
       final ProjectFilesystem filesystem) throws Exception {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
-    builder = JavaLibraryBuilder.createBuilder(parsedTarget);
+    JavaBuckConfig testConfig = getJavaBuckConfigWithCompilationMode();
+    builder = JavaLibraryBuilder.createBuilder(parsedTarget, testConfig);
 
     for (String src : srcs) {
       builder.addSrc(filesystem.getBuckPaths().getGenDir().resolve(src));

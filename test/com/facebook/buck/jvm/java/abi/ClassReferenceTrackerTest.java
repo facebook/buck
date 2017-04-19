@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.testutil.Classes;
-import com.facebook.buck.jvm.java.testutil.TestCompiler;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.Classes;
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;

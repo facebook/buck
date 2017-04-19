@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;

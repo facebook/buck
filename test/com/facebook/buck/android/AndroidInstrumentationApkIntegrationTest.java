@@ -17,10 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 
@@ -29,7 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class AndroidInstrumentationApkIntegrationTest {
+public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationModeTest {
 
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
@@ -44,6 +45,7 @@ public class AndroidInstrumentationApkIntegrationTest {
         "android_instrumentation_apk_integration_test",
         tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     String target = "//:app_cxx_lib_dep";

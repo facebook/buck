@@ -22,7 +22,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/plugin:javac-plugin",
         "//test/com/facebook/buck/jvm/java/abi/source:source",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
-        "//test/com/facebook/buck/jvm/java/testutil:testutil",
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
     ],
     deps = [
         # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 
 import org.junit.Test;

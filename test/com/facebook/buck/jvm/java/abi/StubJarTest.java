@@ -26,8 +26,8 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
-import com.facebook.buck.jvm.java.testutil.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;

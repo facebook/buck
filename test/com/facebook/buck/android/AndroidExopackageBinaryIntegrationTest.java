@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
@@ -42,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-public class AndroidExopackageBinaryIntegrationTest {
+public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTest {
 
   private static final String DEX_EXOPACKAGE_TARGET = "//apps/multidex:app-dex-exo";
   private static final String NATIVE_EXOPACKAGE_TARGET = "//apps/multidex:app-native-exo";
@@ -65,6 +66,7 @@ public class AndroidExopackageBinaryIntegrationTest {
         "android_project",
         tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
 
     Properties properties = System.getProperties();
     properties.setProperty("buck.native_exopackage_fake_path",

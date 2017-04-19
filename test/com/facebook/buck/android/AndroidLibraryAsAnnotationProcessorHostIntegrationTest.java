@@ -20,6 +20,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -38,7 +39,7 @@ import java.nio.file.Paths;
 /**
  * Tests for AndroidLibraryDescription with query_deps
  */
-public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest {
+public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiCompilationModeTest {
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
@@ -50,6 +51,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
     workspace.addBuckConfigLocalOption("build", "depfiles", "cache");
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test
