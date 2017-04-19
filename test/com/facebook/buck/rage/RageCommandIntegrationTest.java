@@ -38,6 +38,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -135,7 +136,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          false,
           rageConfig,
           Optional::empty);
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult().get();
@@ -182,7 +184,8 @@ public class RageCommandIntegrationTest {
         filesystem,
         new TestConsole(),
         TestBuildEnvironmentDescription.INSTANCE,
-        VcsInfoCollector.create(new NoOpCmdLineInterface()),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+        false,
         rageConfig,
         new DefaultExtraInfoCollector(rageConfig, filesystem, new DefaultProcessExecutor(console)));
     automatedReport.collectAndSubmitResult();
@@ -231,7 +234,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          false,
           rageConfig,
           Optional::empty);
 
@@ -295,7 +299,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface()),
+          false,
           rageConfig,
           Optional::empty);
 

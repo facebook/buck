@@ -45,6 +45,8 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -115,6 +117,8 @@ public class CommandRunnerParamsForTesting {
                 ExecutorPool.PROJECT,
                 MoreExecutors.newDirectExecutorService()))
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
+        .setVersionControlStatsGenerator(
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setInvocationInfo(Optional.empty())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))

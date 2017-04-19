@@ -21,7 +21,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
@@ -43,7 +43,6 @@ import java.util.OptionalInt;
 public class InteractiveReport extends AbstractReport {
 
   private final BuildLogHelper buildLogHelper;
-  private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final Console console;
   private final UserInput input;
 
@@ -53,19 +52,20 @@ public class InteractiveReport extends AbstractReport {
       Console console,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      Optional<VcsInfoCollector> vcsInfoCollector,
+      VersionControlStatsGenerator versionControlStatsGenerator,
       RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector,
       Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
-    super(filesystem,
+    super(
+        filesystem,
         defectReporter,
         buildEnvironmentDescription,
+        versionControlStatsGenerator,
         console,
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem);
-    this.vcsInfoCollector = vcsInfoCollector;
     this.console = console;
     this.input = new UserInput(
         console.getStdOut(),
@@ -120,19 +120,11 @@ public class InteractiveReport extends AbstractReport {
   @Override
   protected Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException {
-    if (!vcsInfoCollector.isPresent() ||
-        !input.confirm("Would you like to attach source control information (this includes " +
-            "information about commits and changed files)?")) {
+    if (!input.confirm("Would you like to attach source control information (this includes " +
+        "information about commits and changed files)?")) {
       return Optional.empty();
     }
-
-    try {
-      return Optional.of(vcsInfoCollector.get().gatherScmInformation());
-    } catch (VersionControlCommandFailedException e) {
-      console.printErrorText(
-          "Failed to get source control information: %s, proceeding regardless.", e);
-    }
-    return Optional.empty();
+    return super.getSourceControlInfo();
   }
 
   private String prettyPrintExitCode(OptionalInt exitCode) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util.versioncontrol;
+package com.facebook.buck.rage;
 
-import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -27,30 +25,19 @@ import org.immutables.value.Value;
 import java.util.Optional;
 
 @Value.Immutable
-@BuckStyleImmutable
-interface AbstractVersionControlStats {
-
-  @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getPathsChangedInWorkingDirectory();
-
+@BuckStyleTuple
+interface AbstractSourceControlInfo {
   /* Commit hash of the current revision. */
-  @JsonView(JsonViews.MachineReadableLog.class)
   String getCurrentRevisionId();
-
   /* A list of bookmarks that the current commit is based and also exist in TRACKED_BOOKMARKS */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getBaseBookmarks();
-
+  ImmutableSet<String> getBasedOffWhichTracked();
   /* Commit hash of the revision that is the common base between current revision and master. */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getBranchedFromMasterRevisionId();
-
+  Optional<String> getRevisionIdOffTracked();
   /* The timestamp of the base revision */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  Long getBranchedFromMasterTS();
-
+  Optional<Long> getRevisionTimestampOffTracked();
   /* The diff between base and current revision if it exists */
   @JsonIgnore
   Optional<String> getDiff();
-
+  /* A list of all the files that are changed from the base revision. */
+  ImmutableSet<String> getDirtyFiles();
 }

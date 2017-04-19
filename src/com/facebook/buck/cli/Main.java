@@ -1062,7 +1062,6 @@ public final class Main {
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(new CommandThreadFactory(
                 "CounterAggregatorThread"));
-        VersionControlStatsGenerator vcStatsGenerator;
 
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
         // when connecting. For now, we'll use the default from the server environment.
@@ -1203,22 +1202,22 @@ public final class Main {
           }
 
 
+          VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
+          VersionControlStatsGenerator vcStatsGenerator = new VersionControlStatsGenerator(
+              new DelegatingVersionControlCmdLineInterface(
+                  rootCell.getFilesystem().getRootPath(),
+                  new PrintStreamProcessExecutorFactory(),
+                  vcBuckConfig.getHgCmd(),
+                  buckConfig.getEnvironment()));
           if (command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
-            VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
             if (!commandMode.equals(CommandMode.TEST) && (
                 subcommand.isSourceControlStatsGatheringEnabled() ||
                 vcBuckConfig.shouldGenerateStatistics())) {
-              vcStatsGenerator = new VersionControlStatsGenerator(
+              vcStatsGenerator.generateStatsAsync(
+                  VersionControlStatsGenerator.Mode.FAST,
                   diskIoExecutorService,
-                  new DelegatingVersionControlCmdLineInterface(
-                      rootCell.getFilesystem().getRootPath(),
-                      new PrintStreamProcessExecutorFactory(),
-                      vcBuckConfig.getHgCmd(),
-                      buckConfig.getEnvironment()),
                   buildEventBus);
-
-              vcStatsGenerator.generateStatsAsync();
             }
           }
 
@@ -1346,6 +1345,7 @@ public final class Main {
                         rootCell.getBuckConfig().getView(JavaBuckConfig.class)
                             .createDefaultJavaPackageFinder())
                     .setClock(clock)
+                    .setVersionControlStatsGenerator(vcStatsGenerator)
                     .setProcessManager(processManager)
                     .setPersistentWorkerPools(persistentWorkerPools)
                     .setWebServer(webServer)

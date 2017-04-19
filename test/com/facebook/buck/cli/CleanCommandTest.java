@@ -41,6 +41,8 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -162,6 +164,8 @@ public class CleanCommandTest extends EasyMockSupport {
         .setExecutors(ImmutableMap.of())
         .setBuildEnvironmentDescription(
             CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
+        .setVersionControlStatsGenerator(
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
         .setKnownBuildRuleTypesFactory(
