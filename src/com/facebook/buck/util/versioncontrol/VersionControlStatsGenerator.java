@@ -106,11 +106,14 @@ public class VersionControlStatsGenerator {
                     .map(Map.Entry::getKey)
                     .collect(MoreCollectors.toImmutableSet()))
             .setPathsChangedInWorkingDirectory(
-                versionControlCmdLineInterface.changedFiles(baseRevisionInfo.getFirst()))
+                mode == Mode.FULL ?
+                    versionControlCmdLineInterface.changedFiles(baseRevisionInfo.getFirst()) :
+                    ImmutableSet.of())
             .setDiff(
-                mode == Mode.FULL ? versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
-                    baseRevisionInfo.getFirst(),
-                    currentRevisionId) :
+                mode == Mode.FULL ?
+                    versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+                        baseRevisionInfo.getFirst(),
+                        currentRevisionId) :
                     Optional.empty());
       }
 
