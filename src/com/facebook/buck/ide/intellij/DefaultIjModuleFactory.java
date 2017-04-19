@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -84,7 +83,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
     if (context.isAndroidFacetBuilderPresent()) {
       context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
-          createAndroidGenPath(moduleBasePath));
+          IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
     }
 
     return IjModule.builder()
@@ -101,10 +100,4 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .build();
   }
 
-  private Path createAndroidGenPath(Path moduleBasePath) {
-    return Paths
-        .get(IjAndroidHelper.getAndroidGenDir(projectFilesystem))
-        .resolve(moduleBasePath)
-        .resolve("gen");
-  }
 }
