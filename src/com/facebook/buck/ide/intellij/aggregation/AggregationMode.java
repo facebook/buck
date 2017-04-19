@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij;
+package com.facebook.buck.ide.intellij.aggregation;
 
+import com.facebook.buck.ide.intellij.IjModule;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;

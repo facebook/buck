@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
