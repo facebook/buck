@@ -83,6 +83,10 @@ public class IjProject {
         projectFilesystem,
         projectConfig,
         requiredBuildTargets);
+    SupportedTargetTypeRegistry typeRegistry = new SupportedTargetTypeRegistry(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig);
     IjModuleGraph moduleGraph = IjModuleGraphFactory.from(
         projectFilesystem,
         projectConfig,
@@ -90,8 +94,7 @@ public class IjProject {
         libraryFactory,
         new DefaultIjModuleFactory(
             projectFilesystem,
-            moduleFactoryResolver,
-            projectConfig));
+            typeRegistry));
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,
         projectFilesystem,

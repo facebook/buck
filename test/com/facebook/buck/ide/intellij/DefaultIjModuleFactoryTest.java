@@ -31,6 +31,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -607,8 +608,22 @@ public class DefaultIjModuleFactoryTest {
   }
 
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
-    return new DefaultIjModuleFactory(
-        new FakeProjectFilesystem(),
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    IjProjectConfig projectConfig = buckConfig == null
+        ? IjProjectBuckConfig.create(
+        FakeBuckConfig.builder().build(),
+        AggregationMode.AUTO,
+        false,
+        false,
+        false)
+        : IjProjectBuckConfig.create(
+        buckConfig,
+        AggregationMode.AUTO,
+        false,
+        false,
+        false);
+    SupportedTargetTypeRegistry typeRegistry = new SupportedTargetTypeRegistry(
+        projectFilesystem,
         new IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
@@ -651,19 +666,8 @@ public class DefaultIjModuleFactoryTest {
             return Optional.empty();
           }
         },
-        buckConfig == null
-            ? IjProjectBuckConfig.create(
-                FakeBuckConfig.builder().build(),
-                AggregationMode.AUTO,
-                false,
-                false,
-                false)
-            : IjProjectBuckConfig.create(
-                buckConfig,
-                AggregationMode.AUTO,
-                false,
-                false,
-                false));
+        projectConfig);
+    return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);
   }
 
   @Test

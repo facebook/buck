@@ -822,7 +822,7 @@ public class IjModuleGraphTest {
         false,
         false);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(
+    SupportedTargetTypeRegistry typeRegistry = new SupportedTargetTypeRegistry(
         filesystem,
         new IjModuleFactoryResolver() {
           @Override
@@ -867,6 +867,7 @@ public class IjModuleGraphTest {
           }
         },
         projectConfig);
+    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(
         filesystem,

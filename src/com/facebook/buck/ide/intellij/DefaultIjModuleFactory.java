@@ -16,22 +16,9 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.ide.intellij.lang.android.AndroidBinaryModuleRule;
-import com.facebook.buck.ide.intellij.lang.android.AndroidLibraryModuleRule;
-import com.facebook.buck.ide.intellij.lang.android.AndroidResourceModuleRule;
-import com.facebook.buck.ide.intellij.lang.android.RobolectricTestModuleRule;
-import com.facebook.buck.ide.intellij.lang.java.JavaBinaryModuleRule;
-import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
-import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
-import com.facebook.buck.ide.intellij.lang.kotlin.KotlinLibraryModuleRule;
-import com.facebook.buck.ide.intellij.lang.kotlin.KotlinTestModuleRule;
-import com.facebook.buck.ide.intellij.lang.groovy.GroovyLibraryModuleRule;
-import com.facebook.buck.ide.intellij.lang.groovy.GroovyTestModuleRule;
-import com.facebook.buck.ide.intellij.lang.cxx.CxxLibraryModuleRule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
@@ -40,9 +27,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class DefaultIjModuleFactory implements IjModuleFactory {
@@ -50,58 +35,13 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private static final Logger LOG = Logger.get(DefaultIjModuleFactory.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
-      new HashMap<>();
+  private final SupportedTargetTypeRegistry typeRegistry;
 
-  /**
-   * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
-   */
   public DefaultIjModuleFactory(
       ProjectFilesystem projectFilesystem,
-      IjModuleFactoryResolver moduleFactoryResolver,
-      IjProjectConfig projectConfig) {
+      SupportedTargetTypeRegistry typeRegistry) {
     this.projectFilesystem = projectFilesystem;
-
-    addToIndex(new AndroidBinaryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new AndroidLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new AndroidResourceModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new RobolectricTestModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new GroovyLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new GroovyTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new KotlinLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-
-    Preconditions.checkState(SupportedTargetTypeRegistry.areTargetTypesEqual(
-        moduleRuleIndex.keySet()));
-  }
-
-  private void addToIndex(IjModuleRule<?> rule) {
-    Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getDescriptionClass()));
-    Preconditions.checkArgument(SupportedTargetTypeRegistry.isTargetTypeSupported(
-        rule.getDescriptionClass()));
-    moduleRuleIndex.put(rule.getDescriptionClass(), rule);
+    this.typeRegistry = typeRegistry;
   }
 
   @Override
@@ -129,7 +69,8 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     for (TargetNode<?, ?> targetNode : targetNodes) {
       Class<?> nodeType = targetNode.getDescription().getClass();
       seenTypes.add(nodeType);
-      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(nodeType));
+      IjModuleRule<?> rule =
+          Preconditions.checkNotNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
       rule.apply((TargetNode) targetNode, context);
       context.setModuleType(rule.detectModuleType((TargetNode) targetNode));
     }
