@@ -17,13 +17,11 @@
 package com.facebook.buck.apple.project_generator;
 
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -40,7 +38,6 @@ import com.facebook.buck.apple.AppleAssetCatalogBuilder;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
@@ -83,7 +80,6 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.ReactNativeBuckConfig;
@@ -91,7 +87,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -161,7 +156,6 @@ public class ProjectGeneratorTest {
       OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
   private static final Path OUTPUT_PROJECT_FILE_PATH =
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
-  private static final FlavorDomain<CxxPlatform> PLATFORMS = FlavorDomain.of("C/C++ platform");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private SettableFakeClock clock;
@@ -170,7 +164,6 @@ public class ProjectGeneratorTest {
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
-  private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule
@@ -209,7 +202,6 @@ public class ProjectGeneratorTest {
             "version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
-    appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
   }
 
@@ -3632,283 +3624,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAggregateTargetForBundleForBuildWithBuck() throws IOException {
-    BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
-    TargetNode<?, ?> binaryNode = AppleBinaryBuilder
-        .createBuilder(binaryTarget)
-        .setConfigs(
-            ImmutableSortedMap.of(
-                "Debug",
-                ImmutableMap.of()))
-        .build();
-
-    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
-    TargetNode<?, ?> bundleNode = AppleBundleBuilder
-        .createBuilder(bundleTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setBinary(binaryTarget)
-        .build();
-
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(bundleNode, binaryNode);
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    ProjectGenerator projectGenerator = new ProjectGenerator(
-        targetGraph,
-        cache,
-        nodes.stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
-        projectCell,
-        OUTPUT_DIRECTORY,
-        PROJECT_NAME,
-        "BUCK",
-        ImmutableSet.of(),
-        Optional.of(bundleTarget),
-        ImmutableList.of("--flag", "value with spaces"),
-        false,
-        Optional.empty(),
-        ImmutableSet.of(),
-        FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        getBuildRuleResolverNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget buildWithBuckTarget = null;
-    for (PBXTarget target : projectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getProductName() != null &&
-          target.getProductName().endsWith("-Buck")) {
-        buildWithBuckTarget = target;
-      }
-    }
-    assertThat(buildWithBuckTarget, is(notNullValue()));
-
-    assertHasConfigurations(buildWithBuckTarget, "Debug");
-    assertKeepsConfigurationsInMainGroup(
-        projectGenerator.getGeneratedProject(),
-        buildWithBuckTarget);
-
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    assertEquals(
-        "Should have exact number of build phases",
-        2,
-        buildWithBuckTarget.getBuildPhases().size());
-    PBXBuildPhase buildPhase = Iterables.get(buildWithBuckTarget.getBuildPhases(), 0);
-    assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "-- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
-                bundleTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
-
-    Path fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath(filesystem);
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "python " + fixUUIDScriptPath + " --verbose " +
-                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                    .resolve("bin/foo/bundle-unsanitised/bundle.app") + " " +
-                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                    .resolve("bin/foo/bundle-unsanitised/bundle.dSYM") + " " +
-                bundleTarget.getShortName()));
-
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "machoutils absolutify_object_paths --binary $BUCK_BUNDLE_OUTPUT_PATH/bundle " +
-                "--output " + filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                .resolve("bin/foo/bundle-unsanitised/bundle.app/bundle") + " --old_compdir " +
-                "\"./////////////////////"));
-    // skipping some slashes: ".//////////// ..... ///////"
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString("////////\" --new_compdir \"" + filesystem.getRootPath().toString() + "\""));
-
-    PBXBuildPhase codesignPhase = buildWithBuckTarget.getBuildPhases().get(1);
-    assertThat(codesignPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase codesignShellScriptPhase = (PBXShellScriptBuildPhase) codesignPhase;
-    Path codesignScriptPath = ProjectGenerator.getCodesignScriptPath(filesystem);
-    assertThat(
-        codesignShellScriptPhase.getShellScript(),
-        containsString(
-            "python " + codesignScriptPath + " /usr/bin/codesign " +
-                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                    .resolve("bin/foo/bundle-unsanitised/bundle.app")));
-  }
-
-  @Test
-  public void testAggregateTargetForBinaryForBuildWithBuck() throws IOException {
-    BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
-    TargetNode<?, ?> binaryNode = AppleBinaryBuilder
-        .createBuilder(binaryTarget)
-        .setConfigs(
-            ImmutableSortedMap.of(
-                "Debug",
-                ImmutableMap.of()))
-        .setSrcs(
-            ImmutableSortedSet.of(
-                SourceWithFlags.of(
-                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo"))))
-        .build();
-
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(binaryNode);
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    ProjectGenerator projectGenerator = new ProjectGenerator(
-        targetGraph,
-        cache,
-        nodes.stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
-        projectCell,
-        OUTPUT_DIRECTORY,
-        PROJECT_NAME,
-        "BUCK",
-        ImmutableSet.of(),
-        Optional.of(binaryTarget),
-        ImmutableList.of("--flag", "value with spaces"),
-        false,
-        Optional.empty(),
-        ImmutableSet.of(),
-        FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        getBuildRuleResolverNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget buildWithBuckTarget = null;
-    for (PBXTarget target : projectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getProductName() != null &&
-          target.getProductName().endsWith("-Buck")) {
-        buildWithBuckTarget = target;
-      }
-    }
-    assertThat(buildWithBuckTarget, is(notNullValue()));
-
-    assertHasConfigurations(buildWithBuckTarget, "Debug");
-    assertKeepsConfigurationsInMainGroup(
-        projectGenerator.getGeneratedProject(),
-        buildWithBuckTarget);
-
-    assertEquals(
-        "Should have exact number of build phases",
-        1,
-        buildWithBuckTarget.getBuildPhases().size());
-    PBXBuildPhase buildPhase = Iterables.getOnlyElement(buildWithBuckTarget.getBuildPhases());
-    assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "buck -- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
-                binaryTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath(filesystem);
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "python " + fixUUIDScriptPath + " --verbose " +
-                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                    .resolve("bin/foo/binary-unsanitised/binary.app") + " " +
-                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
-                    .resolve("bin/foo/binary-unsanitised/binary.dSYM") + " " +
-                binaryTarget.getShortName()));
-  }
-
-  @Test
-  public void testAggregateTargetForLibraryForBuildWithBuck() throws IOException {
-    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "library").build();
-    TargetNode<?, ?> binaryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .setConfigs(
-            ImmutableSortedMap.of(
-                "Debug",
-                ImmutableMap.of()))
-        .setSrcs(
-            ImmutableSortedSet.of(
-                SourceWithFlags.of(
-                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo"))))
-        .build();
-
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(binaryNode);
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    ProjectGenerator projectGenerator = new ProjectGenerator(
-        targetGraph,
-        cache,
-        nodes.stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
-        projectCell,
-        OUTPUT_DIRECTORY,
-        PROJECT_NAME,
-        "BUCK",
-        ImmutableSet.of(),
-        Optional.of(libraryTarget),
-        ImmutableList.of("--flag", "value with spaces"),
-        false,
-        Optional.empty(),
-        ImmutableSet.of(),
-        FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        getBuildRuleResolverNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget buildWithBuckTarget = null;
-    for (PBXTarget target : projectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getProductName() != null &&
-          target.getProductName().endsWith("-Buck")) {
-        buildWithBuckTarget = target;
-      }
-    }
-    assertThat(buildWithBuckTarget, is(notNullValue()));
-
-    assertHasConfigurations(buildWithBuckTarget, "Debug");
-    assertKeepsConfigurationsInMainGroup(
-        projectGenerator.getGeneratedProject(),
-        buildWithBuckTarget);
-
-    assertEquals(
-        "Should have exact number of build phases",
-        1,
-        buildWithBuckTarget.getBuildPhases().size());
-    PBXBuildPhase buildPhase = Iterables.getOnlyElement(buildWithBuckTarget.getBuildPhases());
-    assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
-
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        containsString(
-            "buck -- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
-                libraryTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
-  }
-
-  @Test
   public void cxxFlagsPropagatedToConfig() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node = AppleLibraryBuilder
@@ -4583,21 +4298,15 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
-        Optional.empty(),
-        ImmutableList.of(),
         false, /* isMainProject */
         Optional.of(lib1Target),
         ImmutableSet.of(lib1Target, lib4Target),
         FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
 
     projectGeneratorLib2.createXcodeProjects();
@@ -4631,21 +4340,15 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
-        Optional.empty(),
-        ImmutableList.of(),
         true, /* isMainProject */
         Optional.of(lib1Target),
         ImmutableSet.of(lib1Target, lib4Target),
         FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         getBuildRuleResolverNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
 
     projectGeneratorLib1.createXcodeProjects();
@@ -4735,21 +4438,15 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         projectGeneratorOptions,
-        Optional.empty(),
-        ImmutableList.of(),
         false,
         Optional.empty(),
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         buildRuleResolverForNode,
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
   }
 

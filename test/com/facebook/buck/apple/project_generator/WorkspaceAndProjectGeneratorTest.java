@@ -18,30 +18,24 @@ package com.facebook.buck.apple.project_generator;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -52,13 +46,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -74,8 +64,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -102,13 +90,11 @@ import java.util.concurrent.TimeUnit;
 
 public class WorkspaceAndProjectGeneratorTest {
 
-  private static final FlavorDomain<CxxPlatform> PLATFORMS = FlavorDomain.of("C/C++ platform");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
   private Cell rootCell;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
-  private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   private TargetGraph targetGraph;
@@ -127,7 +113,6 @@ public class WorkspaceAndProjectGeneratorTest {
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = CxxLibraryBuilder.createDefaultConfig();
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
-    appleConfig = fakeBuckConfig.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
   }
@@ -250,20 +235,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -326,20 +305,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         true /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -386,20 +359,14 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -452,20 +419,14 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -527,20 +488,14 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -584,20 +539,14 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(),
         true /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -607,124 +556,6 @@ public class WorkspaceAndProjectGeneratorTest {
     assertEquals(
         generator.getRequiredBuildTargets(),
         ImmutableSet.of(genruleTarget));
-  }
-
-  @Test
-  public void buildWithBuck() throws IOException, InterruptedException {
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.of());
-    assumeThat(buck.isPresent(), is(true));
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        rootCell,
-        targetGraph,
-        workspaceNode.getConstructorArg(),
-        workspaceNode.getBuildTarget(),
-        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
-            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
-        false /* combinedProject */,
-        true /* buildWithBuck */,
-        ImmutableList.of(),
-        FocusedModuleTargetMatcher.noFocus(),
-        false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        "BUCK",
-        getBuildRuleResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators,
-        MoreExecutors.newDirectExecutorService());
-
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    assertThat(fooProjectGenerator, is(notNullValue()));
-
-    PBXTarget buildWithBuckTarget = null;
-    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getProductName() != null && target.getProductName().endsWith("-Buck")) {
-        buildWithBuckTarget = target;
-        break;
-      }
-    }
-    assertThat(buildWithBuckTarget, is(notNullValue()));
-    assertThat(buildWithBuckTarget, is(instanceOf(PBXAggregateTarget.class)));
-
-    String gid = buildWithBuckTarget.getGlobalID();
-
-    Optional<XCScheme> scheme = Iterables
-        .getOnlyElement(generator.getSchemeGenerators().values())
-        .getOutputScheme();
-
-    assertThat(scheme.isPresent(), is(true));
-
-    XCScheme.BuildableReference buildWithBuckBuildableReference = null;
-    for (XCScheme.BuildActionEntry buildActionEntry :
-        scheme.get().getBuildAction().get().getBuildActionEntries()) {
-      XCScheme.BuildableReference buildableReference = buildActionEntry.getBuildableReference();
-      if (buildableReference.getBlueprintIdentifier().equals(gid)) {
-        buildWithBuckBuildableReference = buildableReference;
-      }
-    }
-    assertThat(buildWithBuckBuildableReference, is(notNullValue()));
-
-    assertThat(buildWithBuckBuildableReference.getBuildableName(), equalTo("//foo:bin-Buck"));
-  }
-
-  @Test
-  public void buildWithBuckFocused() throws IOException, InterruptedException {
-    final String fooLib = "//foo:lib";
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.of());
-    assumeThat(buck.isPresent(), is(true));
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        rootCell,
-        targetGraph,
-        workspaceNode.getConstructorArg(),
-        workspaceNode.getBuildTarget(),
-        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
-            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
-        false /* combinedProject */,
-        true /* buildWithBuck */,
-        ImmutableList.of(),
-        FocusedModuleTargetMatcher.focusedOn(ImmutableSet.of(
-            BuildTargetFactory.newInstance(fooLib).getUnflavoredBuildTarget())),
-        false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        "BUCK",
-        getBuildRuleResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators,
-        MoreExecutors.newDirectExecutorService());
-
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    assertThat(fooProjectGenerator, is(notNullValue()));
-
-    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getName() != null &&
-          !target.getName().equals(fooLib) &&
-          !target.getName().endsWith("-Buck")) {
-        // all non-lib and non-Buck targets should have 0 steps as they are not in focus
-        // (focus on .*lib.* only)
-        assertThat(target.getBuildPhases().size(), Matchers.equalTo(0));
-      }
-    }
   }
 
   private void setUpWorkspaceWithSchemeAndProjects() {
@@ -852,20 +683,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -1011,20 +836,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -1108,20 +927,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         true /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -1171,20 +984,14 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         true /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
         getBuildRuleResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig,
         swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(

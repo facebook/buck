@@ -1,5 +1,3 @@
-!TestBuildWithBuck
-!TestUUIDFix
 !com.facebook.buck.android.AaptPackageResourcesIntegrationTest
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
 !com.facebook.buck.cli.RunCommandIntegrationTest

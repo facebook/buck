@@ -156,7 +156,7 @@ public class ProjectCommand extends BuildCommand {
   @Option(
       name = "--build-with-buck",
       usage = "Use Buck to build the generated project instead of delegating the build to the IDE.")
-  private boolean buildWithBuck;
+  boolean buildWithBuck;
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
@@ -250,9 +250,8 @@ public class ProjectCommand extends BuildCommand {
 
   @Option(
       name = "--focus",
-      depends = "--build-with-buck",
       usage = "Space separated list of build target full qualified names that should be part of " +
-          "focused project. Must be used with --build-with-buck. " +
+          "focused project. " +
           "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib")
   @Nullable
   private String modulesToFocusOn = null;
@@ -347,10 +346,6 @@ public class ProjectCommand extends BuildCommand {
 
   private boolean getSkipBuildFromConfig(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue("project", "skip_build", false);
-  }
-
-  private boolean isBuildWithBuckDisabledWithFocus(BuckConfig buckConfig) {
-    return buckConfig.getBooleanValue("project", "xcode_focus_disable_build_with_buck", false);
   }
 
   private List<String> getInitialTargets(BuckConfig buckConfig) {
@@ -892,7 +887,7 @@ public class ProjectCommand extends BuildCommand {
   /**
    * Run xcode specific project generation actions.
    */
-  int runXcodeProjectGenerator(
+  private int runXcodeProjectGenerator(
       final CommandRunnerParams params,
       ListeningExecutorService executor,
       final TargetGraphAndTargets targetGraphAndTargets,
@@ -909,23 +904,14 @@ public class ProjectCommand extends BuildCommand {
         appleConfig.shouldMergeHeaderMapsInXcodeProject(),
         appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
 
-    boolean shouldBuildWithBuck = buildWithBuck ||
-        shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet);
-    if (modulesToFocusOn != null && buildWithBuck &&
-        isBuildWithBuckDisabledWithFocus(params.getBuckConfig())) {
-      shouldBuildWithBuck = false;
-    }
-
     ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
         params,
         targetGraphAndTargets,
         passedInTargetsSet,
         options,
-        super.getOptions(),
         getFocusModules(params, executor),
         new HashMap<>(),
-        getCombinedProject(),
-        shouldBuildWithBuck);
+        getCombinedProject());
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableMultimap<Path, String> cellPathToCellName =
           params.getCell().getCellPathResolver().getCellPaths().asMultimap().inverse();
@@ -959,28 +945,15 @@ public class ProjectCommand extends BuildCommand {
     return exitCode;
   }
 
-  private boolean shouldForceBuildingWithBuck(
-      BuckConfig buckConfig,
-      ImmutableSet<BuildTarget> passedInTargetsSet) {
-    if (passedInTargetsSet.size() == 0) {
-      return false;
-    }
-    ImmutableList<BuildTarget> forcedTargets =
-        buckConfig.getBuildTargetList("project", "force_build_with_buck_targets");
-    return forcedTargets.containsAll(passedInTargetsSet);
-  }
-
   @VisibleForTesting
   static ImmutableSet<BuildTarget> generateWorkspacesForTargets(
       final CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
-      ImmutableList<String> buildWithBuckFlags,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
-      boolean combinedProject,
-      boolean buildWithBuck)
+      boolean combinedProject)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
@@ -1023,13 +996,8 @@ public class ProjectCommand extends BuildCommand {
           inputTarget,
           options,
           combinedProject,
-          buildWithBuck,
-          buildWithBuckFlags,
           focusModules,
           !appleConfig.getXcodeDisableParallelizeBuild(),
-          new ExecutableFinder(),
-          params.getEnvironment(),
-          params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           defaultCxxPlatform,
           params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
           input ->
@@ -1039,7 +1007,6 @@ public class ProjectCommand extends BuildCommand {
           params.getBuckEventBus(),
           halideBuckConfig,
           cxxBuckConfig,
-          appleConfig,
           swiftBuckConfig);
       ListeningExecutorService executorService = params.getExecutors().get(
           ExecutorPool.PROJECT);

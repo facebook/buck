@@ -74,7 +74,6 @@ class SchemeGenerator {
   private final ImmutableSet<PBXTarget> orderedRunTestTargets;
   private final String schemeName;
   private final Path outputDirectory;
-  private final boolean primaryTargetIsBuildWithBuck;
   private final boolean parallelizeBuild;
   private final Optional<String> runnablePath;
   private final Optional<String> remoteRunnablePath;
@@ -86,32 +85,30 @@ class SchemeGenerator {
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
       Optional<PBXTarget> primaryTarget,
-      Iterable<PBXTarget> orderedBuildTargets,
-      Iterable<PBXTarget> orderedBuildTestTargets,
-      Iterable<PBXTarget> orderedRunTestTargets,
+      ImmutableSet<PBXTarget> orderedBuildTargets,
+      ImmutableSet<PBXTarget> orderedBuildTestTargets,
+      ImmutableSet<PBXTarget> orderedRunTestTargets,
       String schemeName,
       Path outputDirectory,
-      boolean primaryTargetIsBuildWithBuck,
       boolean parallelizeBuild,
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
-      Map<SchemeActionType, String> actionConfigNames,
-      Map<PBXTarget, Path> targetToProjectPathMap,
+      ImmutableMap<SchemeActionType, String> actionConfigNames,
+      ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       XCScheme.LaunchAction.LaunchStyle launchStyle) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.launchStyle = launchStyle;
-    this.orderedBuildTargets = ImmutableSet.copyOf(orderedBuildTargets);
-    this.orderedBuildTestTargets = ImmutableSet.copyOf(orderedBuildTestTargets);
-    this.orderedRunTestTargets = ImmutableSet.copyOf(orderedRunTestTargets);
+    this.orderedBuildTargets = orderedBuildTargets;
+    this.orderedBuildTestTargets = orderedBuildTestTargets;
+    this.orderedRunTestTargets = orderedRunTestTargets;
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
-    this.primaryTargetIsBuildWithBuck = primaryTargetIsBuildWithBuck;
     this.parallelizeBuild = parallelizeBuild;
     this.runnablePath = runnablePath;
     this.remoteRunnablePath = remoteRunnablePath;
-    this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
-    this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
+    this.actionConfigNames = actionConfigNames;
+    this.targetToProjectPathMap = targetToProjectPathMap;
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -160,11 +157,7 @@ class SchemeGenerator {
     for (PBXTarget target : orderedBuildTargets) {
       addBuildActionForBuildTarget(
           buildTargetToBuildableReferenceMap.get(target),
-          !primaryTargetIsBuildWithBuck ||
-              !primaryTarget.isPresent() ||
-              target.equals(primaryTarget.get())
-              ? XCScheme.BuildActionEntry.BuildFor.DEFAULT
-              : XCScheme.BuildActionEntry.BuildFor.INDEXING,
+          XCScheme.BuildActionEntry.BuildFor.DEFAULT,
           buildAction);
     }
 

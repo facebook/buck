@@ -61,7 +61,7 @@ public class ProjectCommandXcodeTest {
   private TargetNode<?, ?> workspaceExtraTestNode;
   private TargetNode<?, ?> smallWorkspaceNode;
 
-  TargetGraph targetGraph;
+  private TargetGraph targetGraph;
 
   @Before
   public void buildGraph() {
@@ -330,10 +330,7 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         passedInTargetsSet,
         isWithTests,
-        isWithDependenciesTests,
-        /* isReadonly = */ false,
-        /* isBuildWithBuck = */ false,
-        /* isCombinedProjects = */ false);
+        isWithDependenciesTests);
   }
 
   @Test

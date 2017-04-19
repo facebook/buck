@@ -926,27 +926,6 @@ public class BuildCommand extends AbstractCommand {
     return "builds the specified target";
   }
 
-  @Override
-  protected ImmutableList<String> getOptions() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(super.getOptions());
-    if (keepGoing) {
-      builder.add(KEEP_GOING_LONG_ARG);
-    }
-    if (buildReport != null) {
-      builder.add(BUILD_REPORT_LONG_ARG);
-      builder.add(buildReport.toString());
-    }
-    if (justBuildTarget != null) {
-      builder.add(JUST_BUILD_LONG_ARG);
-      builder.add(justBuildTarget);
-    }
-    if (shouldReportAbsolutePaths) {
-      builder.add(REPORT_ABSOLUTE_PATHS);
-    }
-    return builder.build();
-  }
-
   protected static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(
       TargetGraphAndBuildTargets unversionedTargetGraph,
       Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {

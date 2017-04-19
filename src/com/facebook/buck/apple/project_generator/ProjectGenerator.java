@@ -26,8 +26,6 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleDebugFormat;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
@@ -48,7 +46,6 @@ import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -62,7 +59,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -81,7 +77,6 @@ import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideCompile;
 import com.facebook.buck.halide.HalideLibraryDescription;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -91,8 +86,6 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
@@ -122,14 +115,12 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -147,10 +138,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
-import com.google.common.io.Resources;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
-import org.stringtemplate.v4.ST;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -174,26 +162,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
 public class ProjectGenerator {
-  public static final String BUILD_WITH_BUCK_POSTFIX = "-Buck";
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
-  private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
-  private static final String BUILD_WITH_BUCK_PY_TEMPLATE = "build_with_buck.py";
-  private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
-  private static final String CODESIGN_TEMPLATE = "codesign.st";
-  private static final String CODESIGN_PY_RESOURCE = "codesign.py";
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
-  public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
-  public static final String SHOW_OUTPUT = "--show-output";
-  public static final String PRODUCT_NAME = "PRODUCT_NAME";
+  private static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   private static final ImmutableSet<Class<? extends Description<?>>>
       APPLE_NATIVE_DESCRIPTION_CLASSES = ImmutableSet.of(
@@ -267,11 +246,6 @@ public class ProjectGenerator {
 
   private final String buildFileName;
   private final ImmutableSet<Option> options;
-  private final Optional<BuildTarget> targetToBuildWithBuck;
-  private final ImmutableList<String> buildWithBuckFlags;
-  private final ExecutableFinder executableFinder;
-  private final ImmutableMap<String, String> environment;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   // These fields are created/filled when creating the projects.
@@ -297,12 +271,11 @@ public class ProjectGenerator {
   private final Map<String, String> gidsToTargetNames;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final FocusedModuleTargetMatcher focusModules;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
-  ImmutableSet<BuildTarget> targetsInRequiredProjects;
+  private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -313,21 +286,15 @@ public class ProjectGenerator {
       String projectName,
       String buildFileName,
       Set<Option> options,
-      Optional<BuildTarget> targetToBuildWithBuck,
-      ImmutableList<String> buildWithBuckFlags,
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedModuleTargetMatcher focusModules,
-      ExecutableFinder executableFinder,
-      ImmutableMap<String, String> environment,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
-      AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
@@ -338,14 +305,9 @@ public class ProjectGenerator {
     this.projectName = projectName;
     this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
-    this.targetToBuildWithBuck = targetToBuildWithBuck;
-    this.buildWithBuckFlags = buildWithBuckFlags;
     this.isMainProject = isMainProject;
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
-    this.executableFinder = executableFinder;
-    this.environment = environment;
-    this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.defaultBuildRuleResolver = new BuildRuleResolver(
@@ -382,7 +344,6 @@ public class ProjectGenerator {
     gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
   }
@@ -395,31 +356,6 @@ public class ProjectGenerator {
   @VisibleForTesting
   List<Path> getGeneratedHeaderSymlinkTrees() {
     return headerSymlinkTrees;
-  }
-
-  static PackagedResource getPackagedResourceNamed(ProjectFilesystem filesystem, String name) {
-    return new PackagedResource(filesystem, ProjectGenerator.class, name);
-  }
-
-  static Path getPathToBuck(
-      ExecutableFinder executableFinder,
-      ImmutableMap<String, String> environment) {
-    return executableFinder.getExecutable(Paths.get("buck"), environment);
-  }
-
-  @VisibleForTesting
-  static Path getBuildWithBuckPythonScriptPath(ProjectFilesystem filesystem) {
-    return getPackagedResourceNamed(filesystem, BUILD_WITH_BUCK_PY_TEMPLATE).get();
-  }
-
-  @VisibleForTesting
-  static Path getFixUUIDScriptPath(ProjectFilesystem filesystem) {
-    return getPackagedResourceNamed(filesystem, FIX_UUID_PY_RESOURCE).get();
-  }
-
-  @VisibleForTesting
-  static Path getCodesignScriptPath(ProjectFilesystem filesystem) {
-    return getPackagedResourceNamed(filesystem, CODESIGN_PY_RESOURCE).get();
   }
 
   public Path getProjectPath() {
@@ -440,10 +376,10 @@ public class ProjectGenerator {
     return options.contains(Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
   }
 
-  public ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
+  public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
-    ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap =
-        ImmutableMultimap.builder();
+    ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap =
+        ImmutableMap.builder();
     for (Map.Entry<TargetNode<?, ?>, PBXTarget> entry :
         targetNodeToGeneratedProjectTargetBuilder.build().entries()) {
       buildTargetToPbxTargetMap.put(entry.getKey().getBuildTarget(), entry.getValue());
@@ -492,9 +428,6 @@ public class ProjectGenerator {
         return;
       }
 
-      targetToBuildWithBuck.ifPresent(buildTarget ->
-          generateBuildWithBuckTarget(targetGraph.get(buildTarget)));
-
       for (String configName : targetConfigNamesBuilder.build()) {
         XCBuildConfiguration outputConfig = project
             .getBuildConfigurationList()
@@ -523,177 +456,9 @@ public class ProjectGenerator {
     }
   }
 
-  private void generateBuildWithBuckTarget(TargetNode<?, ?> targetNode) {
-    final BuildTarget buildTarget = targetNode.getBuildTarget();
-
-    String buckTargetProductName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
-
-    PBXAggregateTarget buildWithBuckTarget = new PBXAggregateTarget(buckTargetProductName);
-    buildWithBuckTarget.setProductName(buckTargetProductName);
-
-    PBXShellScriptBuildPhase buildShellScriptBuildPhase = new PBXShellScriptBuildPhase();
-    buildShellScriptBuildPhase.setShellScript(getBuildWithBuckShellScript(targetNode));
-    buildWithBuckTarget.getBuildPhases().add(buildShellScriptBuildPhase);
-
-    // Only add a shell script for fixing UUIDs if it is an AppleBundle
-    if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      PBXShellScriptBuildPhase codesignPhase = new PBXShellScriptBuildPhase();
-      codesignPhase.setShellScript(getCodesignShellScript(targetNode));
-      buildWithBuckTarget.getBuildPhases().add(codesignPhase);
-    }
-
-    TargetNode<CxxLibraryDescription.Arg, ?> node =
-        getAppleNativeNode(targetGraph, targetNode).get();
-    ImmutableMap<String, ImmutableMap<String, String>> configs =
-        getXcodeBuildConfigurationsForTargetNode(node, ImmutableMap.of()).get();
-
-    XCConfigurationList configurationList = new XCConfigurationList();
-    PBXGroup group = project
-        .getMainGroup()
-        .getOrCreateDescendantGroupByPath(
-            RichStream.from(buildTarget.getBasePath())
-                .map(Object::toString)
-                .toImmutableList())
-        .getOrCreateChildGroupByName(getXcodeTargetName(buildTarget));
-    for (String configurationName : configs.keySet()) {
-      XCBuildConfiguration configuration = configurationList
-          .getBuildConfigurationsByName()
-          .getUnchecked(configurationName);
-      configuration.setBaseConfigurationReference(
-          getConfigurationFileReference(
-              group,
-              getConfigurationXcconfigPath(buildTarget, configurationName)));
-
-      NSDictionary inlineSettings = new NSDictionary();
-      inlineSettings.put("HEADER_SEARCH_PATHS", "");
-      inlineSettings.put("LIBRARY_SEARCH_PATHS", "");
-      inlineSettings.put("FRAMEWORK_SEARCH_PATHS", "");
-      configuration.setBuildSettings(inlineSettings);
-    }
-
-    buildWithBuckTarget.setBuildConfigurationList(configurationList);
-    project.getTargets().add(buildWithBuckTarget);
-
-    targetNodeToGeneratedProjectTargetBuilder.put(targetNode, buildWithBuckTarget);
-  }
-
   private static Optional<String> getProductNameForTargetNode(TargetNode<?, ?> targetNode) {
     return targetNode.castArg(AppleBundleDescription.Arg.class)
         .flatMap(node -> node.getConstructorArg().productName);
-  }
-
-  private String getBuildFlags() {
-    ArrayList<String> flags = new ArrayList<>(buildWithBuckFlags);
-    if (!flags.contains(REPORT_ABSOLUTE_PATHS)) {
-      flags.add(0, REPORT_ABSOLUTE_PATHS);
-    }
-    if (!flags.contains(SHOW_OUTPUT)) {
-      flags.add(0, SHOW_OUTPUT);
-    }
-    return flags.stream()
-        .map(Escaper.BASH_ESCAPER::apply)
-        .collect(Collectors.joining(" "));
-  }
-
-  private String getBuildWithBuckShellScript(TargetNode<?, ?> targetNode) {
-    ST template;
-    try {
-      template = new ST(Resources.toString(
-          Resources.getResource(ProjectGenerator.class, BUILD_WITH_BUCK_TEMPLATE),
-          Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "There was an error loading '" + BUILD_WITH_BUCK_TEMPLATE + "' template", e);
-    }
-
-    String buildFlags = getBuildFlags();
-    String escapedBuildTarget = Escaper.escapeAsBashString(
-        targetNode.getBuildTarget().getFullyQualifiedName());
-
-    Optional<String> productName = getProductNameForTargetNode(targetNode);
-    String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
-    Path bundleDestination =
-        getScratchPathForAppBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
-    Path dsymDestination =
-        getScratchPathForDsymBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
-    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
-    Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
-
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).orElse(defaultCxxPlatform);
-    String oldCompDir = cxxPlatform.getCompilerDebugPathSanitizer().getCompilationDirectory();
-    // Use the hostname for padding instead of the directory, this way the directory matches without
-    // having to resolve it.
-    String dsymPaddedCompDirWithHost = Strings.padStart(
-        ":" + projectFilesystem.getRootPath().toString(),
-        oldCompDir.length(),
-        'f');
-
-
-    template.add("path_to_build_with_buck_py", getBuildWithBuckPythonScriptPath(projectFilesystem));
-    template.add("path_to_fix_uuid_script", getFixUUIDScriptPath(projectFilesystem));
-    template.add("repo_root", projectFilesystem.getRootPath());
-    template.add("path_to_buck", getPathToBuck(executableFinder, environment));
-    template.add("build_flags", buildFlags);
-    template.add("escaped_build_target", escapedBuildTarget);
-    template.add(
-        "buck_dwarf_flavor",
-        (appleConfig.forceDsymModeInBuildWithBuck() ?
-            AppleDebugFormat.DWARF_AND_DSYM :
-            AppleDebugFormat.DWARF)
-            .getFlavor().getName());
-    template.add("buck_dsym_flavor", AppleDebugFormat.DWARF_AND_DSYM.getFlavor().getName());
-    template.add("binary_name", binaryName);
-    template.add("comp_dir", oldCompDir);
-    template.add("new_comp_dir", projectFilesystem.getRootPath().toString());
-    template.add("padded_source_dir", dsymPaddedCompDirWithHost);
-    template.add("resolved_bundle_destination", resolvedBundleDestination);
-    template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
-    template.add("resolved_dsym_destination", resolvedDsymDestination);
-    template.add("force_dsym", appleConfig.forceDsymModeInBuildWithBuck() ? "true" : "false");
-
-    return template.render();
-  }
-
-  private String getCodesignShellScript(TargetNode<?, ?> targetNode) {
-    ST template;
-    try {
-      template = new ST(Resources.toString(
-          Resources.getResource(ProjectGenerator.class, CODESIGN_TEMPLATE), Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "There was an error loading '" + CODESIGN_TEMPLATE + "' template", e);
-    }
-
-    Optional<String> productName = getProductNameForTargetNode(targetNode);
-    String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
-    Path bundleDestination =
-        getScratchPathForAppBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
-    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
-
-    template.add("root_path", projectFilesystem.getRootPath());
-    template.add("path_to_codesign_script", getCodesignScriptPath(projectFilesystem));
-    template.add("app_bundle_path", resolvedBundleDestination);
-
-    return template.render();
-  }
-
-  static Path getScratchPathForAppBundle(
-      ProjectFilesystem filesystem,
-      BuildTarget targetToBuildWithBuck,
-      String binaryName) {
-    return BuildTargets
-        .getScratchPath(filesystem, targetToBuildWithBuck, "%s-unsanitised")
-        .resolve(binaryName + ".app");
-  }
-
-  static Path getScratchPathForDsymBundle(
-      ProjectFilesystem filesystem,
-      BuildTarget targetToBuildWithBuck,
-      String binaryName) {
-    return BuildTargets
-        .getScratchPath(filesystem, targetToBuildWithBuck, "%s-unsanitised")
-        .resolve(binaryName + ".dSYM");
   }
 
   @SuppressWarnings("unchecked")
@@ -1591,7 +1356,7 @@ public class ProjectGenerator {
     return results.build();
   }
 
-  public static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {
+  private static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {
     return getProductNameForTargetNode(buildTargetNode).orElse(getProductNameForBuildTarget(
         buildTarget));
   }
@@ -1697,7 +1462,7 @@ public class ProjectGenerator {
 
   private void addEntitlementsPlistIntoTarget(
       TargetNode<? extends HasAppleBundleFields, ?> targetNode,
-      PBXGroup targetGroup) throws IOException {
+      PBXGroup targetGroup) {
     ImmutableMap<String, String> infoPlistSubstitutions =
         targetNode.getConstructorArg().getInfoPlistSubstitutions();
 
@@ -1734,7 +1499,7 @@ public class ProjectGenerator {
 
   private void addSceneKitAssetsIntoTarget(
       TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
-      PBXGroup targetGroup) throws IOException {
+      PBXGroup targetGroup) {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
             targetGraph,
@@ -1884,26 +1649,11 @@ public class ProjectGenerator {
    */
   private void addToMergedHeaderMap(
       TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
-      HeaderMap.Builder headerMapBuilder,
-      HeaderVisibility headerVisibility) {
+      HeaderMap.Builder headerMapBuilder) {
     CxxLibraryDescription.Arg arg = targetNode.getConstructorArg();
-    boolean shouldCreateHeadersSymlinks;
-    Map<Path, SourcePath> contents;
-    switch (headerVisibility) {
-      case PUBLIC:
-        shouldCreateHeadersSymlinks = arg.xcodePublicHeadersSymlinks.orElse(
-            cxxBuckConfig.getPublicHeadersSymlinksEnabled());
-        contents = getPublicCxxHeaders(targetNode);
-        break;
-      case PRIVATE:
-        shouldCreateHeadersSymlinks = arg.xcodePrivateHeadersSymlinks.orElse(
-            cxxBuckConfig.getPrivateHeadersSymlinksEnabled());
-        contents = getPrivateCxxHeaders(targetNode);
-        break;
-      default:
-        throw new IllegalStateException("unhandled header visibility type: " + headerVisibility);
-    }
-    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, headerVisibility);
+    boolean shouldCreateHeadersSymlinks = arg.xcodePublicHeadersSymlinks.orElse(
+        cxxBuckConfig.getPublicHeadersSymlinksEnabled());
+    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
 
     Path basePath;
     if (shouldCreateHeadersSymlinks) {
@@ -1914,7 +1664,7 @@ public class ProjectGenerator {
       basePath = projectFilesystem.getRootPath()
           .resolve(targetNode.getBuildTarget().getCellPath());
     }
-    for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
+    for (Map.Entry<Path, SourcePath> entry : getPublicCxxHeaders(targetNode).entrySet()) {
       Path path;
       if (shouldCreateHeadersSymlinks) {
         path = basePath.resolve(entry.getKey());
@@ -1943,10 +1693,7 @@ public class ProjectGenerator {
                   return;
                 }
                 if (headerVisibility == HeaderVisibility.PUBLIC) {
-                  addToMergedHeaderMap(
-                      depNativeNode,
-                      headerMapBuilder,
-                      HeaderVisibility.PUBLIC);
+                  addToMergedHeaderMap(depNativeNode, headerMapBuilder);
                   processedNodes.add(depNativeNode);
                 }
               }));
@@ -2273,7 +2020,7 @@ public class ProjectGenerator {
   /**
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
-  private Path writeProjectFile(PBXProject project) throws IOException {
+  private void writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(
         new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())),
         project);
@@ -2301,7 +2048,6 @@ public class ProjectGenerator {
     } else {
       LOG.debug("Not regenerating project at %s (contents have not changed)", serializedProject);
     }
-    return xcodeprojDir;
   }
 
   private static String getProductNameForBuildTarget(BuildTarget buildTarget) {
@@ -2755,7 +2501,7 @@ public class ProjectGenerator {
         : target.getFullyQualifiedName();
   }
 
-  ProductType bundleToTargetProductType(
+  private ProductType bundleToTargetProductType(
       TargetNode<? extends HasAppleBundleFields, ?> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode) {
     if (targetNode.getConstructorArg().getXcodeProductType().isPresent()) {
