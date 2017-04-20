@@ -17,6 +17,10 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 import org.objectweb.asm.AnnotationVisitor;
@@ -28,14 +32,16 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.tree.InnerClassNode;
 
 /**
  * A {@link ClassVisitor} that records references to other classes. This is intended to be driven by
  * another {@link ClassVisitor} which is filtering down to just the ABI of the class.
  */
 class ClassReferenceTracker extends ClassVisitor {
-  private final ImmutableSortedSet.Builder<String> referencedClassNames =
-      ImmutableSortedSet.naturalOrder();
+  private Set<String> referencedClassNames = new HashSet<>();
+
+  private final Map<String, InnerClassNode> innerClasses = new HashMap<>();
 
   public ClassReferenceTracker() {
     super(Opcodes.ASM5);
@@ -46,7 +52,13 @@ class ClassReferenceTracker extends ClassVisitor {
   }
 
   public SortedSet<String> getReferencedClassNames() {
-    return referencedClassNames.build();
+    return ImmutableSortedSet.copyOf(referencedClassNames);
+  }
+
+  @Override
+  public void visitInnerClass(String name, String outerName, String innerName, int access) {
+    innerClasses.put(name, new InnerClassNode(name, outerName, innerName, access));
+    super.visitInnerClass(name, outerName, innerName, access);
   }
 
   @Override
@@ -64,6 +76,22 @@ class ClassReferenceTracker extends ClassVisitor {
     visitSignature(signature);
 
     super.visit(version, access, name, signature, superName, interfaces);
+  }
+
+  @Override
+  public void visitEnd() {
+    // If we reference inner classes, we must also reference their outer class(es).
+    Set<String> newSet = new HashSet<>();
+    for (String referencedClassName : referencedClassNames) {
+      newSet.add(referencedClassName);
+      InnerClassNode innerClassNode = innerClasses.get(referencedClassName);
+      while (innerClassNode != null) {
+        newSet.add(innerClassNode.name);
+        innerClassNode = innerClasses.get(innerClassNode.outerName);
+      }
+    }
+    referencedClassNames = newSet;
+    super.visitEnd();
   }
 
   @Override

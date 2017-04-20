@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -28,6 +29,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
+  @Nullable private final Set<String> referencedClassNames;
   private final Path path;
   private final ClassNode stub;
   private boolean sourceAbiCompatible;
@@ -35,18 +37,24 @@ class StubJarClassEntry extends StubJarEntry {
   @Nullable
   public static StubJarClassEntry of(LibraryReader input, Path path) throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM5);
-    input.visitClass(path, new AbiFilteringClassVisitor(stub));
+
+    // As we read the class in, we create a partial stub that removes non-ABI methods and fields
+    // but leaves the entire InnerClasses table. We record all classes that are referenced from
+    // ABI methods and fields, and will use that information later to filter the InnerClasses table.
+    ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
+    input.visitClass(path, new AbiFilteringClassVisitor(referenceTracker));
 
     if (!isAnonymousOrLocalClass(stub)) {
-      return new StubJarClassEntry(path, stub);
+      return new StubJarClassEntry(path, stub, referenceTracker.getReferencedClassNames());
     }
 
     return null;
   }
 
-  private StubJarClassEntry(Path path, ClassNode stub) {
+  private StubJarClassEntry(Path path, ClassNode stub, Set<String> referencedClassNames) {
     this.path = path;
     this.stub = stub;
+    this.referencedClassNames = referencedClassNames;
   }
 
   /**
@@ -67,7 +75,7 @@ class StubJarClassEntry extends StubJarEntry {
     if (sourceAbiCompatible) {
       visitor = new SourceAbiCompatibleVisitor(visitor);
     }
-    visitor = new AbiFilteringClassVisitor(visitor);
+    visitor = new AbiFilteringClassVisitor(visitor, referencedClassNames);
     stub.accept(visitor);
 
     return new ByteArrayInputStream(writer.toByteArray());

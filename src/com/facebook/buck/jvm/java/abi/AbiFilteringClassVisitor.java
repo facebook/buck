@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -26,13 +27,20 @@ import org.objectweb.asm.Type;
 
 /** A {@link ClassVisitor} that only passes to its delegate events for the class's ABI. */
 class AbiFilteringClassVisitor extends ClassVisitor {
+  @Nullable private final Set<String> referencedClassNames;
+
   @Nullable private String name;
   @Nullable private String outerName = null;
   private int classAccess;
   private boolean hasVisibleConstructor = false;
 
   public AbiFilteringClassVisitor(ClassVisitor cv) {
+    this(cv, null);
+  }
+
+  public AbiFilteringClassVisitor(ClassVisitor cv, @Nullable Set<String> referencedClassNames) {
     super(Opcodes.ASM5, cv);
+    this.referencedClassNames = referencedClassNames;
   }
 
   @Override
@@ -50,13 +58,14 @@ class AbiFilteringClassVisitor extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
-    boolean isAnonymousOrLocalClass = (outerName == null);
-    String currentClassName = Preconditions.checkNotNull(this.name);
-    if (name.equals(currentClassName)) {
+    if (name.equals(this.name)) {
       this.outerName = outerName;
-    } else if (!shouldInclude(access) || isAnonymousOrLocalClass) {
+    }
+
+    if (!shouldIncludeInnerClass(access, name, outerName)) {
       return;
     }
+
     super.visitInnerClass(name, outerName, innerName, access);
   }
 
@@ -123,6 +132,39 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       super.visitMethod(Opcodes.ACC_PRIVATE, "<init>", desc, null, null);
     }
     super.visitEnd();
+  }
+
+  private boolean shouldIncludeInnerClass(int access, String name, @Nullable String outerName) {
+    String currentClassName = Preconditions.checkNotNull(this.name);
+    if (name.equals(currentClassName)) {
+      // Must always include the entry for our own class, since that's what makes it an inner class.
+      return true;
+    }
+
+    boolean isAnonymousOrLocalClass = (outerName == null);
+    if (isAnonymousOrLocalClass) {
+      // Anonymous and local classes are never part of the ABI.
+      return false;
+    }
+
+    if (referencedClassNames == null || referencedClassNames.contains(name)) {
+      // Either it's the first pass, and we're not filtering inner classes yet,
+      // or it's the second one, and this inner class is part of the ABI and should
+      // therefore be included
+      return true;
+    }
+
+    if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
+      // Don't include synthetic classes
+      return false;
+    }
+
+    if (currentClassName.equals(outerName)) {
+      // For now, always include our own inner classes, regardless of visibility
+      return true;
+    }
+
+    return false;
   }
 
   private boolean shouldInclude(int access) {
