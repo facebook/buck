@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,6 +50,10 @@ public class JsTestScenario {
     return new Builder();
   }
 
+  static Builder builder(JsTestScenario other) {
+    return new Builder(other);
+  }
+
   private JsTestScenario(
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
@@ -73,25 +78,48 @@ public class JsTestScenario {
     return new JsBundleBuilder(
         BuildTargetFactory.newInstance(target),
         workerTarget,
-        libs,
         entry,
-        filesystem
-    ).build(resolver, targetGraph);
+        filesystem)
+        .setLibs(libs)
+        .build(resolver, targetGraph);
   }
 
   static class Builder {
     private final Set<TargetNode<?, ?>> nodes = new LinkedHashSet<>();
-    private final BuildTarget workerTarget = BuildTargetFactory.newInstance("//worker:tool");
-    private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    private final BuildTarget workerTarget;
+    private final ProjectFilesystem filesystem;
 
     private Builder() {
+      workerTarget = BuildTargetFactory.newInstance("//worker:tool");
       nodes.add(new FakeWorkerBuilder(workerTarget).build());
+      filesystem = new FakeProjectFilesystem();
     }
 
-    Builder bundle(BuildTarget target, BuildTarget... libraryDependencies) {
+    private Builder(JsTestScenario other) {
+      nodes.addAll(other.targetGraph.getNodes());
+      workerTarget = other.workerTarget;
+      filesystem = other.filesystem;
+    }
+
+    Builder bundleWithDeps(BuildTarget target, BuildTarget... dependencies) {
+      return bundle(target, ImmutableSortedSet.of(), ImmutableSortedSet.copyOf(dependencies));
+    }
+
+    Builder bundleWithLibs(BuildTarget target, BuildTarget... libraryDeps) {
+      return bundle(target, ImmutableSortedSet.copyOf(libraryDeps), ImmutableSortedSet.of());
+    }
+
+    Builder bundle(
+        BuildTarget target,
+        ImmutableSortedSet<BuildTarget> libs,
+        ImmutableSortedSet<BuildTarget> deps) {
       final Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
-      final ImmutableSortedSet<BuildTarget> libs = ImmutableSortedSet.copyOf(libraryDependencies);
-      nodes.add(new JsBundleBuilder(target, workerTarget, libs, entry, filesystem).build());
+      nodes.add(
+          new JsBundleBuilder(target, workerTarget, entry, filesystem)
+              .setLibs(libs)
+              .setDeps(deps)
+              .build());
+
       return this;
     }
 
@@ -132,6 +160,14 @@ public class JsTestScenario {
 
     Builder arbitraryRule(BuildTarget target) {
       nodes.add(ExportFileBuilder.newExportFileBuilder(target).build());
+      return this;
+    }
+
+    Builder appleLibraryWithDeps(BuildTarget target, BuildTarget... deps) {
+      nodes.add(
+          AppleLibraryBuilder.createBuilder(target)
+            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .build());
       return this;
     }
 
