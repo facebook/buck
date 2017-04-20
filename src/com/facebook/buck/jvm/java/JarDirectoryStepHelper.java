@@ -196,14 +196,21 @@ public class JarDirectoryStepHelper {
           }
         } else {
           // Assume a zip or jar file.
-          try (ZipFile zipFile = new ZipFile(entry.toFile())) {
-            ZipEntry manifestEntry = zipFile.getEntry(JarFile.MANIFEST_NAME);
-            if (manifestEntry == null) {
-              continue;
+          try {
+            try (ZipFile zipFile = new ZipFile(entry.toFile())) {
+              ZipEntry manifestEntry = zipFile.getEntry(JarFile.MANIFEST_NAME);
+              if (manifestEntry == null) {
+                continue;
+              }
+              try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
+                readManifest = new Manifest(inputStream);
+              }
             }
-            try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
-              readManifest = new Manifest(inputStream);
+          } catch (IOException e) {
+            if (e.getMessage().contains(entry.toString())) {
+              throw e;
             }
+            throw new IOException("Failed to process ZipFile " + entry, e);
           }
         }
         merge(manifest, readManifest);

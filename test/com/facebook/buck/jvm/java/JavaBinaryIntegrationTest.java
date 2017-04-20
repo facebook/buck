@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
@@ -37,6 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
@@ -142,6 +145,31 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     assertEquals(
         ImmutableSet.builder().addAll(commonEntries).addAll(blacklistedEntries).build(),
         new ZipInspector(binaryJarWithoutBlacklist).getZipFileEntries());
+  }
+
+  @Test
+  public void testJarWithCorruptInput() throws IOException {
+    setUpProjectWorkspaceForScenerio("corruption");
+    workspace.runBuckBuild("//:simple-lib").assertSuccess();
+    String libJar = workspace.runBuckCommand("targets", "--show_output", "//:simple-lib")
+        .assertSuccess()
+        .getStdout().split(" ")[1].trim();
+
+    // Now corrupt the output jar.
+    Path jarPath = workspace.getPath(libJar);
+    byte[] bytes = Files.readAllBytes(jarPath);
+    for (int backOffset = 7; backOffset <= 10; backOffset++) {
+      bytes[bytes.length - backOffset] = 0x77;
+    }
+    Files.write(jarPath, bytes);
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
+    // Should show the rule that failed.
+    assertThat(result.getStderr(), containsString("//:broken_01"));
+    // Should show the jar we were operating on.
+    assertThat(result.getStderr(), containsString(libJar));
+    // Should show the original exception.
+    assertThat(result.getStderr(), containsString("ZipException"));
   }
 
   private ProjectWorkspace setUpProjectWorkspaceForScenerio(String scenerio) throws IOException {
