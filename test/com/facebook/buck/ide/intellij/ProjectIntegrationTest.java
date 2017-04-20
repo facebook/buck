@@ -58,7 +58,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectSourceMerging() throws IOException {
-    runBuckProjectAndVerify("project_with_source_merge");
+    runBuckProjectAndVerify("aggregation");
   }
 
   @Test
@@ -140,7 +140,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testAndroidResourcesAndLibraryInTheSameFolder() throws IOException {
-    runBuckProjectAndVerify("project_with_android_resources_in_the_same_folder");
+    runBuckProjectAndVerify("android_resources_in_the_same_folder");
   }
 
   @Test

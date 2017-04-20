@@ -6,6 +6,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//java/code/java_modules/modules_with_java_7/dep1/jni:jni",
+        "//java/code/java/modules_with_java_7/dep1/jni:jni",
     ],
 )
