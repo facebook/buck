@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
@@ -38,7 +37,6 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
@@ -63,7 +61,6 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -87,7 +84,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
@@ -111,14 +107,12 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -187,7 +181,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -232,8 +225,6 @@ public final class Main {
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
    */
-  private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
-      "buck.path_to_static_content", "webserver/static");
   private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
@@ -334,274 +325,6 @@ public final class Main {
     return ImmutableList.copyOf(cellsBuilder);
   }
 
-  /**
-   * Daemon used to monitor the file system and cache build rules between Main() method
-   * invocations is static so that it can outlive Main() objects and survive for the lifetime
-   * of the potentially long running Buck process.
-   */
-  private static final class Daemon implements Closeable {
-
-    private final Cell cell;
-    private final Parser parser;
-    private final ImmutableList<ProjectFileHashCache> hashCaches;
-    private final EventBus fileEventBus;
-    private final Optional<WebServer> webServer;
-    private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
-    private final VersionedTargetGraphCache versionedTargetGraphCache;
-    private final ActionGraphCache actionGraphCache;
-    private final BroadcastEventListener broadcastEventListener;
-    private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
-    private final ImmutableMap<Path, WatchmanCursor> cursor;
-
-    public Daemon(
-        Cell cell,
-        Optional<WebServer> webServerToReuse) {
-      this.cell = cell;
-      this.fileEventBus = new EventBus("file-change-events");
-
-      // Collect all transitive cells.
-      ImmutableCollection<Cell> cells = getTransitiveCells(cell);
-
-      // Setup the stacked file hash cache from all cells.
-      ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder = ImmutableList.builder();
-      cells.forEach(
-          (Cell subCell) -> {
-            WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
-            fileEventBus.register(watchedCache);
-            hashCachesBuilder.add(watchedCache);
-          });
-      hashCachesBuilder.add(
-          DefaultFileHashCache.createBuckOutFileHashCache(
-              cell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
-              cell.getFilesystem().getBuckPaths().getBuckOut()));
-      this.hashCaches = hashCachesBuilder.build();
-
-      this.broadcastEventListener = new BroadcastEventListener();
-      this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
-      this.versionedTargetGraphCache = new VersionedTargetGraphCache();
-
-      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-      this.parser = new Parser(
-          this.broadcastEventListener,
-          cell.getBuckConfig().getView(ParserConfig.class),
-          typeCoercerFactory,
-          new ConstructorArgMarshaller(typeCoercerFactory));
-      fileEventBus.register(parser);
-      fileEventBus.register(actionGraphCache);
-
-      // Build the the rule key cache recycler.
-      this.defaultRuleKeyFactoryCacheRecycler =
-          RuleKeyCacheRecycler.createAndRegister(
-              fileEventBus,
-              new DefaultRuleKeyCache<>(),
-              RichStream.from(cells)
-                  .map(Cell::getFilesystem)
-                  .toImmutableSet());
-
-      if (webServerToReuse.isPresent()) {
-        webServer = webServerToReuse;
-      } else {
-        webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem());
-      }
-      if (!initWebServer()) {
-        LOG.warn("Can't start web server");
-      }
-
-      if (cell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor() ==
-          WatchmanWatcher.CursorType.CLOCK_ID &&
-          !cell.getWatchman().getClockIds().isEmpty()) {
-        cursor = cell.getWatchman().buildClockWatchmanCursorMap();
-      } else {
-        LOG.debug("Falling back to named cursors: %s", cell.getWatchman().getProjectWatches());
-        cursor = cell.getWatchman().buildNamedWatchmanCursorMap();
-      }
-      LOG.debug("Using Watchman Cursor: %s", cursor);
-      persistentWorkerPools = new ConcurrentHashMap<>();
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
-    }
-
-    private Optional<WebServer> createWebServer(
-        BuckConfig config,
-        ProjectFilesystem filesystem) {
-      Optional<Integer> port = getValidWebServerPort(config);
-      if (port.isPresent()) {
-        WebServer webServer = new WebServer(
-            port.get(),
-            filesystem,
-            STATIC_CONTENT_DIRECTORY
-        );
-        return Optional.of(webServer);
-      } else {
-        return Optional.empty();
-      }
-    }
-
-    /**
-     * If the return value is not absent, then the port is a nonnegative integer. This means that
-     * specifying a port of -1 effectively disables the WebServer.
-     */
-    public static Optional<Integer> getValidWebServerPort(BuckConfig config) {
-      // Enable the web httpserver if it is given by command line parameter or specified in
-      // .buckconfig. The presence of a nonnegative port number is sufficient.
-      Optional<String> serverPort =
-          Optional.ofNullable(System.getProperty("buck.httpserver.port"));
-      if (!serverPort.isPresent()) {
-        serverPort = config.getValue("httpserver", "port");
-      }
-
-      if (!serverPort.isPresent() || serverPort.get().isEmpty()) {
-        return Optional.empty();
-      }
-
-      String rawPort = serverPort.get();
-      int port;
-      try {
-        port = Integer.parseInt(rawPort, 10);
-        LOG.debug("Starting up web server on port %d.", port);
-      } catch (NumberFormatException e) {
-        LOG.error("Could not parse port for httpserver: %s.", rawPort);
-        return Optional.empty();
-      }
-
-      return port >= 0 ? Optional.of(port) : Optional.empty();
-    }
-
-    public Optional<WebServer> getWebServer() {
-      return webServer;
-    }
-
-    private Parser getParser() {
-      return parser;
-    }
-
-    private VersionedTargetGraphCache getVersionedTargetGraphCache() {
-      return versionedTargetGraphCache;
-    }
-
-    private ActionGraphCache getActionGraphCache() {
-      return actionGraphCache;
-    }
-
-    private BroadcastEventListener getBroadcastEventListener() {
-      return broadcastEventListener;
-    }
-
-    private ImmutableList<ProjectFileHashCache> getFileHashCaches() {
-      return hashCaches;
-    }
-
-    private ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
-      return persistentWorkerPools;
-    }
-
-    public RuleKeyCacheRecycler<RuleKey> getDefaultRuleKeyFactoryCacheRecycler() {
-      return defaultRuleKeyFactoryCacheRecycler;
-    }
-
-    private void watchClient(final NGContext context) {
-      context.addClientListener(() -> {
-        if (isSessionLeader && commandSemaphoreNgClient.orElse(null) == context) {
-          LOG.info("killing background processes on client disconnection");
-          // Process no longer wants work done on its behalf.
-          BgProcessKiller.killBgProcesses();
-        }
-
-        // Synchronize on parser object so that the main command processing thread is not
-        // interrupted mid way through a Parser cache update by the Thread.interrupt() call
-        // triggered by System.exit(). The Parser cache will be reused by subsequent commands
-        // so needs to be left in a consistent state even if the current command is interrupted
-        // due to a client disconnection.
-        synchronized (parser) {
-          LOG.info("Client disconnected.");
-          // Client should no longer be connected, but printing helps detect false disconnections.
-          context.err.println("Client disconnected.");
-
-          throw new InterruptedException("Client disconnected.");
-        }
-      });
-    }
-
-    private void watchFileSystem(
-        CommandEvent commandEvent,
-        BuckEventBus eventBus,
-        WatchmanWatcher watchmanWatcher,
-        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
-        throws IOException, InterruptedException {
-
-      // Synchronize on parser object so that all outstanding watch events are processed
-      // as a single, atomic Parser cache update and are not interleaved with Parser cache
-      // invalidations triggered by requests to parse build files or interrupted by client
-      // disconnections.
-      synchronized (parser) {
-        parser.recordParseStartTime(eventBus);
-        fileEventBus.post(commandEvent);
-        // Track the file hash cache invalidation run time.
-        FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
-        eventBus.post(started);
-        try {
-          watchmanWatcher.postEvents(
-              eventBus,
-              watchmanFreshInstanceAction
-          );
-        } finally {
-          eventBus.post(FileHashCacheEvent.invalidationFinished(started));
-        }
-      }
-    }
-
-    /**
-     * @return true if the web server was started successfully.
-     */
-    private boolean initWebServer() {
-      if (webServer.isPresent()) {
-        Optional<ArtifactCache> servedCache = ArtifactCaches.newServedCache(
-            new ArtifactCacheBuckConfig(cell.getBuckConfig()),
-            cell.getFilesystem());
-        try {
-          webServer.get().updateAndStartIfNeeded(servedCache);
-          return true;
-        } catch (WebServer.WebServerException e) {
-          LOG.error(e);
-        }
-      }
-      return false;
-    }
-
-    public EventBus getFileEventBus() {
-      return fileEventBus;
-    }
-
-    public ImmutableMap<Path, WatchmanCursor> getWatchmanCursor() {
-      return cursor;
-    }
-
-    @Override
-    public void close() throws IOException {
-      shutdownPersistentWorkerPools();
-      shutdownWebServer();
-    }
-
-    private void shutdownPersistentWorkerPools() {
-      for (WorkerProcessPool pool : persistentWorkerPools.values()) {
-        try {
-          pool.close();
-        } catch (Exception e) {
-          LOG.error(e);
-        }
-      }
-    }
-
-    private void shutdownWebServer() {
-      if (webServer.isPresent()) {
-        try {
-          webServer.get().stop();
-        } catch (WebServer.WebServerException e) {
-          LOG.error(e);
-        }
-      }
-    }
-  }
-
   @Nullable
   private static volatile Daemon daemon;
 
@@ -611,10 +334,9 @@ public final class Main {
   @VisibleForTesting
   static Daemon getDaemon(Cell cell) throws IOException {
     Path rootPath = cell.getFilesystem().getRootPath();
-    Optional<WebServer> webServer = Optional.empty();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, webServer);
+      daemon = new Daemon(cell, getTransitiveCells(cell), Optional.empty());
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -629,18 +351,20 @@ public final class Main {
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.cell.equals(cell)) {
+      if (!daemon.getRootCell().equals(cell)) {
         LOG.warn(
             "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
-            daemon.cell,
+            daemon.getRootCell(),
             cell);
+        Optional<WebServer> webServer;
         if (shouldReuseWebServer(cell)) {
           webServer = daemon.getWebServer();
           LOG.info("Reusing web server");
         } else {
+          webServer = Optional.empty();
           daemon.close();
         }
-        daemon = new Daemon(cell, webServer);
+        daemon = new Daemon(cell, getTransitiveCells(cell), webServer);
       }
     }
     return daemon;
@@ -671,11 +395,11 @@ public final class Main {
   }
 
   private static boolean shouldReuseWebServer(Cell newCell) {
-    if (newCell == null || daemon == null || daemon.cell == null) {
+    if (newCell == null || daemon == null) {
       return false;
     }
     Optional<Integer> portFromOldConfig =
-        Daemon.getValidWebServerPort(daemon.cell.getBuckConfig());
+        Daemon.getValidWebServerPort(daemon.getRootCell().getBuckConfig());
     Optional<Integer> portFromUpdatedConfig =
         Daemon.getValidWebServerPort(newCell.getBuckConfig());
 
@@ -1246,7 +970,7 @@ public final class Main {
                       .build(),
                   watchman);
               parser = getParserFromDaemon(
-                  context,
+                  context.get(),
                   rootCell,
                   startedEvent,
                   buildEventBus,
@@ -1640,7 +1364,7 @@ public final class Main {
   }
 
   private Parser getParserFromDaemon(
-      Optional<NGContext> context,
+      NGContext context,
       Cell cell,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
@@ -1649,7 +1373,17 @@ public final class Main {
       throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
     Daemon daemonForParser = getDaemon(cell);
-    daemonForParser.watchClient(context.get());
+
+    context.addClientListener(() -> {
+      if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
+        LOG.info("killing background processes on client disconnection");
+        // Process no longer wants work done on its behalf.
+        BgProcessKiller.killBgProcesses();
+      }
+
+      daemonForParser.interruptOnClientExit(context.err);
+    });
+
     daemonForParser.watchFileSystem(
         commandEvent,
         eventBus,
