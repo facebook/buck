@@ -185,12 +185,10 @@ public class JavaLibraryDescription implements
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.build();
-
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-      return defaultJavaLibrary;
+      return defaultJavaLibraryBuilder.build();
     } else {
-      resolver.addToIndex(defaultJavaLibrary);
+      JavaLibrary defaultJavaLibrary = (JavaLibrary) resolver.requireRule(params.getBuildTarget());
       return MavenUberJar.create(
           defaultJavaLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
