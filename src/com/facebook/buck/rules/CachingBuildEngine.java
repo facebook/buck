@@ -679,6 +679,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Optional<String> metadataType = filesystem.readFileIfItExists(metadataTypePath);
     if (metadataType.isPresent()) {
       MetadataStorage old = MetadataStorage.valueOf(metadataType.get());
+      if (old == metadataStorage) {
+        // Our state is consistent, no need to write anything.
+        return;
+      }
       if (old == MetadataStorage.ROCKSDB && metadataStorage == MetadataStorage.FILESYSTEM) {
         LOG.error(
             "Can't downgrade build.metadata_storage from rocksdb to filesystem without cleaning. " +
@@ -694,6 +698,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // unrecoverable state, since we don't know how the existing metadata is stored.  Prevent this
     // from happening by writing to a temp file and then moving it into place.
     Path tempMetadataTypePath = filesystem.createTempFile("metadata", ".type");
+    filesystem.getPathForRelativePath(tempMetadataTypePath).toFile().setReadable(true, false);
     filesystem.writeContentsToPath(metadataStorage.toString(), tempMetadataTypePath);
     // Using {@link StandardCopyOption#ATOMIC_MOVE} would be ideal, but it's implementation-defined
     // whether overwrites can be done atomically.  Since overwriting is what we need, let's hope
