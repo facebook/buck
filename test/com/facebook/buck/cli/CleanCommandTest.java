@@ -138,7 +138,20 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams(AbstractCommand command)
       throws InterruptedException, IOException {
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+      .setSections(
+        command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+      .build();
+    Cell cell = new TestCellBuilder()
+      .setFilesystem(projectFilesystem)
+      .setBuckConfig(buckConfig)
+      .build();
+    return createCommandRunnerParams(buckConfig, cell);
+  }
+
+  private CommandRunnerParams createCommandRunnerParams(
+      BuckConfig buckConfig,
+      Cell cell) throws InterruptedException, IOException {
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     return CommandRunnerParams.builder()
@@ -155,11 +168,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setClock(new DefaultClock())
         .setProcessManager(Optional.empty())
         .setWebServer(Optional.empty())
-        .setBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
-                .build())
+        .setBuckConfig(buckConfig)
         .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(ImmutableMap.of())
         .setBuildEnvironmentDescription(

@@ -24,7 +24,9 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
@@ -65,6 +67,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -82,6 +85,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -710,6 +714,63 @@ public class InterCellIntegrationTest {
             "secondary//:lib",
             "secondary//:lib2"),
         sortLines(queryResult));
+  }
+
+  @Test
+  public void testCrossCellCleanCommand() throws IOException, InterruptedException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+
+    List<Path> primaryDirs = ImmutableList.of(
+        primary.getPath(primary.getBuckPaths().getScratchDir()),
+        primary.getPath(primary.getBuckPaths().getGenDir()),
+        primary.getPath(primary.getBuckPaths().getTrashDir()));
+    List<Path> secondaryDirs = ImmutableList.of(
+        secondary.getPath(secondary.getBuckPaths().getScratchDir()),
+        secondary.getPath(secondary.getBuckPaths().getGenDir()),
+        secondary.getPath(secondary.getBuckPaths().getTrashDir()));
+
+    // Set up the directories to be cleaned
+    for (Path dir : primaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+
+    primary.runBuckCommand("clean", "--root-cell-only").assertSuccess();
+
+    // We should only clean up the directories for the primary cell
+    for (Path dir : primaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      assertTrue(Files.exists(dir));
+    }
+
+    // Reset the directories
+    for (Path dir : primaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+
+    primary.runBuckCommand("clean").assertSuccess();
+
+    for (Path dir : primaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
   }
 
   private static String sortLines(String input) {
