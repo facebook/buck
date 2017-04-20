@@ -82,6 +82,10 @@ public class WorkerProcess {
     this.tmpPath = tmpPath;
   }
 
+  public boolean isAlive() {
+    return launchedProcess != null && launchedProcess.isAlive();
+  }
+
   public synchronized void ensureLaunchAndHandshake() throws IOException {
     if (handshakePerformed) {
       return;
@@ -162,18 +166,22 @@ public class WorkerProcess {
       }
       Files.deleteIfExists(stdErr);
     } catch (Exception e) {
-      LOG.debug(e, "Error closing worker process %s.", this.hashCode());
+      LOG.debug(e, "Error closing worker process %s.", processParams.getCommand());
 
       LOG.debug("Worker process stderr at %s", this.stdErr.toString());
 
-      String workerStderr = MoreStrings
-          .truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
-          .trim()
-          .replace("\n", "\nstderr: ");
-      LOG.error("stderr: %s", workerStderr);
+      try {
+        String workerStderr = MoreStrings
+            .truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
+            .trim()
+            .replace("\n", "\nstderr: ");
+        LOG.error("stderr: %s", workerStderr);
+      } catch (Throwable t) {
+        LOG.error(t, "Couldn't read stderr on failing close!");
+      }
 
       throw new HumanReadableException(e,
-          "Error while trying to close the process %s at the end of the build.",
+          "Error while trying to close the worker process %s.",
           Joiner.on(' ').join(processParams.getCommand()));
     }
   }
