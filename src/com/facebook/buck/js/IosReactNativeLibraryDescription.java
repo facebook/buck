@@ -16,6 +16,9 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.apple.AppleBundleResources;
+import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -24,9 +27,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
@@ -36,6 +41,7 @@ public class IosReactNativeLibraryDescription
     implements
     Description<ReactNativeLibraryArgs>,
     Flavored,
+    HasAppleBundleResourcesDescription<ReactNativeLibraryArgs>,
     ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
@@ -79,4 +85,19 @@ public class IosReactNativeLibraryDescription
         .forEach(extraDepsBuilder::add);
   }
 
+  @Override
+  public void addAppleBundleResources(
+      AppleBundleResources.Builder builder,
+      TargetNode<ReactNativeLibraryArgs, ?> targetNode,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    builder.addDirsContainingResourceDirs(
+        new ExplicitBuildTargetSourcePath(
+            buildTarget,
+            ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
+        new ExplicitBuildTargetSourcePath(
+            buildTarget,
+            ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
+  }
 }

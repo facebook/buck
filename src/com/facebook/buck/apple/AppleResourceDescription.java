@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,8 +37,10 @@ import java.util.Set;
 /**
  * Description for an apple_resource rule which copies resource files to the built bundle.
  */
-public class AppleResourceDescription implements Description<AppleResourceDescription.Arg>,
-    Flavored {
+public class AppleResourceDescription implements
+    Description<AppleResourceDescription.Arg>,
+    Flavored,
+    HasAppleBundleResourcesDescription<AppleResourceDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -56,6 +60,18 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return true;
+  }
+
+  @Override
+  public void addAppleBundleResources(
+      AppleBundleResources.Builder builder,
+      TargetNode<Arg, ?> targetNode,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver) {
+    Arg appleResource = targetNode.getConstructorArg();
+    builder.addAllResourceDirs(appleResource.dirs);
+    builder.addAllResourceFiles(appleResource.files);
+    builder.addAllResourceVariantFiles(appleResource.variants);
   }
 
   @SuppressFieldNotInitialized

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.AppleResources.APPLE_RESOURCE_DESCRIPTION_CLASSES;
+import static com.facebook.buck.apple.AppleResources.IS_APPLE_BUNDLE_RESOURCE_NODE;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -328,7 +328,7 @@ public class AppleBuildRulesTest {
           cache,
           AppleBuildRules.RecursiveDependenciesMode.COPYING,
           fooFrameworkNode,
-          Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
+          IS_APPLE_BUNDLE_RESOURCE_NODE);
 
       assertEquals(
           ImmutableSortedSet.of(sharedResourceNode),
@@ -339,7 +339,7 @@ public class AppleBuildRulesTest {
           cache,
           AppleBuildRules.RecursiveDependenciesMode.COPYING,
           barAppNode,
-          Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
+          IS_APPLE_BUNDLE_RESOURCE_NODE);
 
       assertEquals(
           ImmutableSortedSet.of(staticResourceNode),

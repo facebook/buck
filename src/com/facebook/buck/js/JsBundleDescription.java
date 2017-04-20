@@ -17,6 +17,9 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.AndroidResource;
+import com.facebook.buck.apple.AppleBundleResources;
+import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -29,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -45,7 +49,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class JsBundleDescription implements Description<JsBundleDescription.Arg>, Flavored {
+public class JsBundleDescription implements
+    Description<JsBundleDescription.Arg>,
+    Flavored,
+    HasAppleBundleResourcesDescription<JsBundleDescription.Arg> {
 
   private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS = ImmutableSet.of(
       JsFlavors.PLATFORM_DOMAIN,
@@ -160,6 +167,20 @@ public class JsBundleDescription implements Description<JsBundleDescription.Arg>
         ImmutableSortedMap.of(),
         null,
         false);
+  }
+
+  @Override
+  public void addAppleBundleResources(
+      AppleBundleResources.Builder builder,
+      TargetNode<Arg, ?> targetNode,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver) {
+    JsBundleOutputs bundle = resolver.getRuleWithType(
+        targetNode.getBuildTarget(),
+        JsBundleOutputs.class);
+    builder.addDirsContainingResourceDirs(
+        bundle.getSourcePathToOutput(),
+        bundle.getSourcePathToResources());
   }
 
   @SuppressFieldNotInitialized
