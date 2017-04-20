@@ -166,6 +166,11 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.openqa.selenium.buck.javascript.ClosureBinaryDescription;
+import org.openqa.selenium.buck.javascript.ClosureFragmentDescription;
+import org.openqa.selenium.buck.javascript.ClosureLibraryDescription;
+import org.openqa.selenium.buck.javascript.JavascriptConfig;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -425,6 +430,8 @@ public class KnownBuildRuleTypes {
 
     DxConfig dxConfig = new DxConfig(config);
 
+    JavascriptConfig jsConfig = new JavascriptConfig(config);
+
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
     ImmutableList<PythonPlatform> pythonPlatformsList =
         pyConfig.getPythonPlatforms(processExecutor);
@@ -621,6 +628,9 @@ public class KnownBuildRuleTypes {
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
     builder.register(new CoreDataModelDescription());
+    builder.register(new ClosureBinaryDescription(jsConfig));
+    builder.register(new ClosureFragmentDescription(jsConfig));
+    builder.register(new ClosureLibraryDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
