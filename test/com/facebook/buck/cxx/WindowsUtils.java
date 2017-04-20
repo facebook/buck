@@ -53,35 +53,40 @@ public class WindowsUtils {
   private WindowsUtils() {
   }
 
-  static void setUpWorkspace(ProjectWorkspace workspace) throws IOException {
+  static void setUpWorkspace(ProjectWorkspace workspace, String... cells) throws IOException {
     Escaper.Quoter quoter = Escaper.Quoter.DOUBLE_WINDOWS_JAVAC;
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$CL_EXE$",
-        quoter.quote(clExe)
-    );
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$LIB_EXE$",
-        quoter.quote(libExe)
-    );
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$LINK_EXE$",
-        quoter.quote(linkExe)
-    );
-    workspace.replaceFileContents(
-        "BUILD_DEFS",
-        "$WINDOWS_COMPILE_FLAGS$",
-        Arrays.stream(includeDirs).map(
-            s -> quoter.quote("/I" + s)).collect(Collectors.joining(", "))
-    );
-    workspace.replaceFileContents(
-        "BUILD_DEFS",
-        "$WINDOWS_LINK_FLAGS$",
-        Arrays.stream(libDirs).map(
-            s -> quoter.quote("/LIBPATH:" + s)).collect(Collectors.joining(", "))
-    );
+    for (int i = -1; i < cells.length; i++) {
+      String prefix = i == -1 ? "" : cells[i] + "/";
+      String buckconfig = prefix + ".buckconfig";
+      String buildDefs = prefix + "BUILD_DEFS";
+      workspace.replaceFileContents(
+          buckconfig,
+          "$CL_EXE$",
+          quoter.quote(clExe)
+      );
+      workspace.replaceFileContents(
+          buckconfig,
+          "$LIB_EXE$",
+          quoter.quote(libExe)
+      );
+      workspace.replaceFileContents(
+          buckconfig,
+          "$LINK_EXE$",
+          quoter.quote(linkExe)
+      );
+      workspace.replaceFileContents(
+          buildDefs,
+          "$WINDOWS_COMPILE_FLAGS$",
+          Arrays.stream(includeDirs).map(
+              s -> quoter.quote("/I" + s)).collect(Collectors.joining(", "))
+      );
+      workspace.replaceFileContents(
+          buildDefs,
+          "$WINDOWS_LINK_FLAGS$",
+          Arrays.stream(libDirs).map(
+              s -> quoter.quote("/LIBPATH:" + s)).collect(Collectors.joining(", "))
+      );
+    }
   }
 
   static void checkAssumptions() {

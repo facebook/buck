@@ -39,13 +39,14 @@ public class WindowsCxxIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.WINDOWS);
     WindowsUtils.checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_x64", tmp);
     workspace.setUp();
-    WindowsUtils.setUpWorkspace(workspace);
+    WindowsUtils.setUpWorkspace(workspace, "xplat");
   }
 
   @Test
@@ -87,5 +88,6 @@ public class WindowsCxxIntegrationTest {
         workspace.getFileContents(outputPath),
         Matchers.containsString("The process is 64bits"));
   }
+
 
 }

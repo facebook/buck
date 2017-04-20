@@ -21,6 +21,3 @@
   ar=$LIB_EXE$
   archiver_platform=windows
   ranlib=$LIB_EXE$
-
-[repositories]
-    x = xplat

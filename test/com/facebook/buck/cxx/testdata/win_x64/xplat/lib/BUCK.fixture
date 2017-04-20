@@ -15,13 +15,7 @@ cxx_library(
 )
 
 genrule(
-  name = 'lib-out',
+  name = 'out',
   cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,static)" %OUT%',
   out = 'lib.lib',
-)
-
-genrule(
-  name = 'dll-out',
-  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,shared)" %OUT%',
-  out = 'lib.dll',
 )
