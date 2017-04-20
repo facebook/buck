@@ -24,11 +24,13 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -40,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class Watchman implements AutoCloseable {
@@ -89,7 +92,7 @@ public class Watchman implements AutoCloseable {
   private final ImmutableSet<Capability> capabilities;
   private final Optional<Path> transportPath;
   private final Optional<WatchmanClient> watchmanClient;
-  private final ImmutableMap<Path, String> clockIds;
+  private final ImmutableMap<String, String> clockIds;
 
   public static Watchman build(
       ImmutableSet<Path> projectWatchList,
@@ -189,32 +192,40 @@ public class Watchman implements AutoCloseable {
       LOG.debug("Got Watchman capabilities: %s", capabilities);
 
       ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
-      ImmutableMap.Builder<Path, String> clockIdsBuilder = ImmutableMap.builder();
-      for (Path rootPath : projectWatchList) {
+      for (Path projectRoot : projectWatchList) {
         Optional<ProjectWatch> projectWatch = queryWatchProject(
             watchmanClient.get(),
-            rootPath,
+            projectRoot,
             clock,
             endTimeNanos - clock.nanoTime());
         if (!projectWatch.isPresent()) {
           watchmanClient.get().close();
           return NULL_WATCHMAN;
         }
-        projectWatchesBuilder.put(rootPath, projectWatch.get());
+        projectWatchesBuilder.put(projectRoot, projectWatch.get());
+      }
+      ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
+      Iterable<String> watchRoots = RichStream
+        .from(projectWatches.values())
+        .map(ProjectWatch::getWatchRoot)
+        .distinct()
+        .toOnceIterable();
 
+      ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
+      for (String watchRoot : watchRoots) {
         Optional<String> clockId = queryClock(
             watchmanClient.get(),
-            projectWatch.get().getWatchRoot(),
+            watchRoot,
             capabilities,
             clock,
             endTimeNanos - clock.nanoTime());
         if (clockId.isPresent()) {
-          clockIdsBuilder.put(rootPath, clockId.get());
+          clockIdsBuilder.put(watchRoot, clockId.get());
         }
       }
 
       return new Watchman(
-          projectWatchesBuilder.build(),
+          projectWatches,
           capabilities,
           clockIdsBuilder.build(),
           Optional.of(transportPath),
@@ -474,13 +485,36 @@ public class Watchman implements AutoCloseable {
     };
   }
 
+  public ImmutableMap<Path, WatchmanCursor> buildClockWatchmanCursorMap() {
+    ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
+    for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
+      String clockId = clockIds.get(entry.getValue().getWatchRoot());
+      Preconditions.checkNotNull(
+        clockId,
+        "No ClockId found for watch root %s", entry.getValue().getWatchRoot());
+      cursorBuilder.put(entry.getKey(), new WatchmanCursor(clockId));
+    }
+    return cursorBuilder.build();
+  }
+
+  public ImmutableMap<Path, WatchmanCursor> buildNamedWatchmanCursorMap() {
+    ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
+    for (Path cellPath : projectWatches.keySet()) {
+      cursorBuilder.put(
+          cellPath,
+          new WatchmanCursor(
+              new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
+    }
+    return cursorBuilder.build();
+  }
+
   // TODO(beng): Split the metadata out into an immutable value type and pass
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(
       ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
-      ImmutableMap<Path, String> clockIds,
+      ImmutableMap<String, String> clockIds,
       Optional<Path> transportPath,
       Optional<WatchmanClient> watchmanClient) {
     this.projectWatches = projectWatches;
@@ -498,7 +532,7 @@ public class Watchman implements AutoCloseable {
     return capabilities;
   }
 
-  public ImmutableMap<Path, String> getClockIds() {
+  public ImmutableMap<String, String> getClockIds() {
     return clockIds;
   }
 

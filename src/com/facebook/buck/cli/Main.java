@@ -187,7 +187,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -352,8 +351,7 @@ public final class Main {
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
     private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
-
-    private ImmutableMap<Path, WatchmanCursor> cursor;
+    private final ImmutableMap<Path, WatchmanCursor> cursor;
 
     public Daemon(
         Cell cell,
@@ -408,23 +406,15 @@ public final class Main {
       if (!initWebServer()) {
         LOG.warn("Can't start web server");
       }
-      ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
+
       if (cell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor() ==
           WatchmanWatcher.CursorType.CLOCK_ID &&
           !cell.getWatchman().getClockIds().isEmpty()) {
-        for (Map.Entry<Path, String> entry : cell.getWatchman().getClockIds().entrySet()) {
-          cursorBuilder.put(entry.getKey(), new WatchmanCursor(entry.getValue()));
-        }
+        cursor = cell.getWatchman().buildClockWatchmanCursorMap();
       } else {
         LOG.debug("Falling back to named cursors: %s", cell.getWatchman().getProjectWatches());
-        for (Path cellPath : cell.getWatchman().getProjectWatches().keySet()) {
-          cursorBuilder.put(
-              cellPath,
-              new WatchmanCursor(
-                  new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
-        }
+        cursor = cell.getWatchman().buildNamedWatchmanCursorMap();
       }
-      cursor = cursorBuilder.build();
       LOG.debug("Using Watchman Cursor: %s", cursor);
       persistentWorkerPools = new ConcurrentHashMap<>();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
