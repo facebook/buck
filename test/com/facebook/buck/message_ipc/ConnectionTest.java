@@ -51,6 +51,7 @@ public class ConnectionTest {
                 0,
                 Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":42}"),
                 Optional.empty())));
+    workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
     try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {
@@ -74,6 +75,7 @@ public class ConnectionTest {
                 0,
                 Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":false}"),
                 Optional.empty())));
+    workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
     try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {
@@ -94,6 +96,7 @@ public class ConnectionTest {
                 0,
                 Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":true}"),
                 Optional.empty())));
+    workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
     try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {

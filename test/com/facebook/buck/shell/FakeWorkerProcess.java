@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -27,6 +28,7 @@ import java.nio.file.Paths;
 public class FakeWorkerProcess extends WorkerProcess {
 
   private ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap;
+  private boolean isAlive;
 
   public FakeWorkerProcess(
       ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap) throws IOException {
@@ -38,11 +40,19 @@ public class FakeWorkerProcess extends WorkerProcess {
         new FakeProjectFilesystem(),
         Paths.get("tmp").toAbsolutePath().normalize());
     this.jobArgsToJobResultMap = jobArgsToJobResultMap;
+    this.isAlive = false;
     this.setProtocol(new FakeWorkerProcessProtocol());
   }
 
   @Override
-  public synchronized void ensureLaunchAndHandshake() throws IOException {}
+  public boolean isAlive() {
+    return isAlive;
+  }
+
+  @Override
+  public synchronized void ensureLaunchAndHandshake() throws IOException {
+    isAlive = true;
+  }
 
   @Override
   public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
@@ -56,5 +66,8 @@ public class FakeWorkerProcess extends WorkerProcess {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    Preconditions.checkState(isAlive, "Closing a dead process?");
+    isAlive = false;
+  }
 }

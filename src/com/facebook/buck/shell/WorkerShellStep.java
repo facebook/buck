@@ -70,6 +70,9 @@ public class WorkerShellStep implements Step {
       pool = factory.getWorkerProcessPool(context, paramsToUse);
       process = pool.borrowWorkerProcess();
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
+      pool.returnWorkerProcess(process);
+      process = null;  // to avoid finally below
+
       Verbosity verbosity = context.getVerbosity();
       if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
           verbosity.shouldPrintOutput()) {
@@ -88,7 +91,7 @@ public class WorkerShellStep implements Step {
       throw new HumanReadableException(e, "Error communicating with external process.");
     } finally {
       if (pool != null && process != null) {
-        pool.returnWorkerProcess(process);
+        pool.destroyWorkerProcess(process);
       }
     }
   }
