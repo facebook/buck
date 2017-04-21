@@ -212,12 +212,12 @@ public class Config {
     }
     String value = rawValue.get();
     if (value.isEmpty()) {
-      return Optional.empty();
+      return Optional.of(ImmutableList.of());
     }
 
     // Reject if the first nonspace character is an ini comment char (';' or '#')
     if (Pattern.compile("^\\s*[#;]").matcher(value).find()) {
-      return Optional.empty();
+      return Optional.of(ImmutableList.of());
     }
 
     return Optional.of(decodeQuotedParts(
