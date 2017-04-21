@@ -60,6 +60,7 @@ public class JsLibrary extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
     final String jobArgs = String.format(
