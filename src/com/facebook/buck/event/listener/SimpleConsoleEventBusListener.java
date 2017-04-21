@@ -113,7 +113,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
     logEventPair(
         "BUILDING",
-        /* suffix */ Optional.empty(),
+        getOptionalBuildLineSuffix(),
         currentMillis,
         offsetMs,
         buildStarted,

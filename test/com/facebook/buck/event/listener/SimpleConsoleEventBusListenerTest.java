@@ -71,24 +71,37 @@ public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
-  private FileSystem vfs;
-  private Path logPath;
   private BuildRuleDurationTracker durationTracker;
+
+  private BuckEventBus eventBus;
+  private TestConsole console;
 
   @Before
   public void setUp() {
-    vfs = Jimfs.newFileSystem(Configuration.unix());
-    logPath = vfs.getPath("log.txt");
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path logPath = vfs.getPath("log.txt");
     durationTracker = new BuildRuleDurationTracker();
+
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    console = new TestConsole();
+
+    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
+        console,
+        fakeClock,
+        TestResultSummaryVerbosity.of(false, false),
+        Locale.US,
+        logPath,
+        new DefaultExecutionEnvironment(
+            ImmutableMap.copyOf(System.getenv()),
+            System.getProperties())
+    );
+
+    eventBus.register(listener);
   }
 
   @Test
   public void testSimpleBuild() {
-    String expectedOutput = "";
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
-    TestConsole console = new TestConsole();
-
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
@@ -100,18 +113,6 @@ public class SimpleConsoleEventBusListenerTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         )),
         ImmutableSortedSet.of());
-
-    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
-        console,
-        fakeClock,
-        TestResultSummaryVerbosity.of(false, false),
-        Locale.US,
-        logPath,
-        new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()),
-            System.getProperties())
-        );
-    eventBus.register(listener);
 
     final long threadId = 0;
 
@@ -139,7 +140,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    String expectedOutput = "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -234,26 +235,40 @@ public class SimpleConsoleEventBusListenerTest {
   }
 
   @Test
-  public void testBuildTimeDoesNotDisplayNegativeOffset() {
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
-    TestConsole console = new TestConsole();
+  public void testJobSummaryIsDisplayed() {
+    BuildEvent.RuleCountCalculated ruleCountCalculated =
+        BuildEvent.ruleCountCalculated(ImmutableSet.of(), 10);
+    eventBus.post(ruleCountCalculated);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
 
-    SimpleConsoleEventBusListener listener =
-        new SimpleConsoleEventBusListener(console,
-            fakeClock,
-            TestResultSummaryVerbosity.of(false, false),
-            Locale.US,
-            logPath,
-            new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()),
-                System.getProperties())
-            );
-    eventBus.register(listener);
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            buildEventStarted,
+            200L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0),
+            1234L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    assertOutput(
+        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n",
+        console);
+  }
+
+  @Test
+  public void testBuildTimeDoesNotDisplayNegativeOffset() {
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
 
     // Do a full parse and action graph cycle before the build event starts
     // This sequencing occurs when running `buck project`

@@ -433,40 +433,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return lines.build();
   }
 
-  private Optional<String> getOptionalBuildLineSuffix() {
-    // Log build time, excluding time spent in parsing.
-    String jobSummary = null;
-    if (ruleCount.isPresent()) {
-      List<String> columns = new ArrayList<>();
-      columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
-      CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
-          cacheRateStatsKeeper.getStats();
-      columns.add(String.format(
-          locale,
-          "%d UPDATED",
-          cacheRateStats.getUpdatedRulesCount()));
-      if (ruleCount.orElse(0) > 0) {
-        columns.add(
-            String.format(
-                locale,
-                "%d [%.1f%%] CACHE MISS",
-                cacheRateStats.getCacheMissCount(),
-                cacheRateStats.getCacheMissRate()));
-        if (cacheRateStats.getCacheErrorCount() > 0) {
-          columns.add(
-              String.format(
-                  locale,
-                  "%d [%.1f%%] CACHE ERRORS",
-                  cacheRateStats.getCacheErrorCount(),
-                  cacheRateStats.getCacheErrorRate()));
-        }
-      }
-      jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
-    }
-
-    return Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
-  }
-
   private void getBuildTraceURLLine(ImmutableList.Builder<String> lines) {
     if (buildFinished != null && webServer.isPresent()) {
       Optional<Integer> port = webServer.get().getPort();
