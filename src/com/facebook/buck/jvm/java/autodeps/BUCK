@@ -53,6 +53,7 @@ java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:object_mapper",

@@ -50,6 +50,7 @@ standard_java_library(
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:worker_tool",
