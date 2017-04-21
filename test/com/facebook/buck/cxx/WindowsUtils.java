@@ -50,6 +50,9 @@ public class WindowsUtils {
       "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.10586.0\\um\\x64",
   };
 
+  public static String vcvarsallBat =
+      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat";
+
   private WindowsUtils() {
   }
 

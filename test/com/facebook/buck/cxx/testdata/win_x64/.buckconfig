@@ -23,4 +23,5 @@
   ranlib=$LIB_EXE$
 
 [repositories]
-    x = xplat
+  x = xplat
+  d = default
