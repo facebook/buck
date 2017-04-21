@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
-import com.facebook.buck.rules.coercer.ParamInfo;
-import com.facebook.buck.rules.coercer.ParamInfoException;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.VisibilityPattern;
+import com.facebook.buck.rules.VisibilityPatternParser;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 
@@ -32,7 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Used to derive information from the constructor args returned by {@link Description} instances.
+ * Used to derive information from the constructor args returned by
+ * {@link com.facebook.buck.rules.Description} instances.
  * There are two major uses this information is put to: populating the DTO object from the
  * deserialized JSON maps, which are outputted by the functions added to Buck's core build file
  * parsing script. The second function of this class is to generate those functions.
@@ -58,7 +58,8 @@ public class ConstructorArgMarshaller {
    *   <li>Boolean values are set to true or false.</li>
    *   <li>{@link BuildTarget}s are resolved and will be fully qualified.</li>
    *   <li>Numeric values are handled as if being cast from Long.</li>
-   *   <li>{@link SourcePath} instances will be set to the appropriate implementation.</li>
+   *   <li>{@link com.facebook.buck.rules.SourcePath} instances will be set to the appropriate
+   *       implementation.</li>
    *   <li>{@link Path} declarations will be set to be relative to the project root.</li>
    *   <li>Strings will be set "as is".</li>
    *   <li>{@link List}s and {@link Set}s will be populated with the expected generic type,
