@@ -811,8 +811,6 @@ public class StubJarTest {
 
   @Test
   public void stubsAbstractEnums() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -1574,6 +1572,62 @@ public class StubJarTest {
   }
 
   @Test
+  public void shouldNotIncludeSyntheticFields() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public class A {",
+            "  public void method() {",
+            "    assert false;",  // Using assert adds a synthetic field $assertionsDisabled
+            "  }",
+            "}"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void shouldNotIncludeSyntheticClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public class A {",
+            "  enum E { Value };",
+            "  public void method(E e) {",
+            "    switch (e) {",  // Switching on an enum introduces a synthetic helper class
+            "      case Value: break;",
+            "    }",
+            "  }",
+            "}"));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/A$E.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+  }
+
+  @Test
+  public void shouldNotIncludeSyntheticMethods() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public enum A {",
+            "  Value1 { }",  // Creating an enum subclass creates a synthetic constructor
+            "}"));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+  }
+
+  @Test
   public void shouldIncludeBridgeMethods() throws IOException {
     notYetImplementedForSource();
 
@@ -1874,8 +1928,17 @@ public class StubJarTest {
           if (m instanceof InnerClassNode) {
             return true;
           }
-          // Never stub things that are private
-          return (getAccess.apply(m) & Opcodes.ACC_PRIVATE) == 0;
+          int access = getAccess.apply(m);
+          if ((access & Opcodes.ACC_PRIVATE) != 0) {
+            // Never stub privates
+            return false;
+          }
+          if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
+            // Never stub things that are synthetic but not bridges
+            return false;
+          }
+
+          return true;
         })
         .collect(Collectors.toList());
 
