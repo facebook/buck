@@ -23,7 +23,6 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -92,25 +91,6 @@ public class ConstructorArgMarshaller {
     }
     populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, "visibility", buildTarget);
     populateVisibilityPatterns(cellRoots, withinViewPatterns, instance, "within_view", buildTarget);
-  }
-
-  /**
-   * Populate only the fields that have default values.
-   *
-   * Used for testing.
-   */
-  @VisibleForTesting
-  void populateDefaults(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      Object dto) throws ParamInfoException {
-    for (ParamInfo info :
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass())) {
-      if (info.isOptional()) {
-        info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
-      }
-    }
   }
 
   private void populateDeclaredDeps(
