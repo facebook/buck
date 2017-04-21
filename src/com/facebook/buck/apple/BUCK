@@ -11,14 +11,6 @@ PLATFORM_SRCS = [
 java_immutables_library(
     name = "platform",
     srcs = PLATFORM_SRCS,
-    immutable_types = [
-        "AppleCxxPlatform",
-        "ApplePlatform",
-        "AppleSdk",
-        "AppleSdkPaths",
-        "AppleToolchain",
-        "MultiarchFileInfo",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/cxx:platform",
@@ -35,14 +27,6 @@ java_immutables_library(
         ["*.java"],
         excludes = PLATFORM_SRCS,
     ),
-    immutable_types = [
-        "ApplePackageConfig",
-        "AppleBundleDestinations",
-        "CodeSignIdentity",
-        "FrameworkDependencies",
-        "GroupedSource",
-        "ProvisioningProfileMetadata",
-    ],
     tests = [
         "//test/com/facebook/buck/apple:apple",
         "//test/com/facebook/buck/apple:apple_test_integration",

@@ -39,11 +39,6 @@ SUPPORT_SRCS = [
 java_immutables_library(
     name = "support",
     srcs = SUPPORT_SRCS,
-    immutable_types = [
-        "NeededCoverageSpec",
-        "PythonPlatform",
-        "PythonVersion",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:model",
@@ -60,9 +55,6 @@ java_immutables_library(
         ["*.java"],
         excludes = CONFIG_SRCS + SUPPORT_SRCS,
     ),
-    immutable_types = [
-        "PythonPackageComponents",
-    ],
     resources = [
         "run_inplace.py.in",
     ],

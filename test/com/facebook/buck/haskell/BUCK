@@ -4,9 +4,6 @@ java_immutables_library(
         ["*.java"],
         excludes = ["*Test.java"],
     ),
-    immutable_types = [
-        "FakeHaskellConfig",
-    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",

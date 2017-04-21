@@ -1,8 +1,6 @@
 standard_java_library(
     name = "project_generator",
-    immutable_types = [
-        "GenerationResult",
-    ],
+    has_immutable_types = True,
     resources = [
         "rn-package.st",
     ],

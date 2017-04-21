@@ -1,11 +1,6 @@
 standard_java_library(
     name = "lua",
-    immutable_types = [
-        "LuaBinaryPackageComponents",
-        "LuaNativeExecutableStarter",
-        "LuaPackageComponents",
-        "LuaScriptStarter",
-    ],
+    has_immutable_types = True,
     resources = [
         "native-starter.cpp.in",
         "starter.lua.in",

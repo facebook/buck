@@ -4,11 +4,7 @@ standard_java_library(
         ["**/*.java"],
         excludes = ["deprecated/*.java"],
     ),
-    immutable_types = [
-        "IjLibrary",
-        "IjModule",
-        "IjModuleAndroidFacet",
-    ],
+    has_immutable_types = True,
     resources = [
         "GeneratedByIdeaClass.st",
         "ij-library.st",

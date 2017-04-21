@@ -27,14 +27,6 @@ java_immutables_library(
         ["*.java"],
         excludes = INTERFACE_SRCS,
     ),
-    immutable_types = [
-        "BuildConfigFields",
-        "FrameworkPath",
-        "ManifestEntries",
-        "OcamlSource",
-        "SourceList",
-        "SourceWithFlagsList",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         ":interface",

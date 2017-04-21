@@ -6,9 +6,6 @@ PLATFORM_SRCS = [
 java_immutables_library(
     name = "platform",
     srcs = PLATFORM_SRCS,
-    immutable_types = [
-        "SwiftPlatform",
-    ],
     visibility = ["PUBLIC"],
     deps = ["//src/com/facebook/buck/rules:build_rule"],
 )

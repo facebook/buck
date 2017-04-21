@@ -12,9 +12,6 @@ EVENT_INTERFACES = [
 java_immutables_library(
     name = "interfaces",
     srcs = EVENT_INTERFACES,
-    immutable_types = [
-        "EventKey",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
@@ -30,9 +27,7 @@ standard_java_library(
         ["*.java"],
         excludes = EVENT_INTERFACES,
     ),
-    immutable_types = [
-        "ScubaData",
-    ],
+    has_immutable_types = True,
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
         "//src/com/facebook/buck/event/api:api",

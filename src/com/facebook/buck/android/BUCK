@@ -7,9 +7,6 @@ PACKAGEABLE_SRCS = [
 java_immutables_library(
     name = "packageable",
     srcs = PACKAGEABLE_SRCS,
-    immutable_types = [
-        "AndroidPackageableCollection",
-    ],
     tests = [
         "//test/com/facebook/buck/android:aar-integration",
         "//test/com/facebook/buck/android:binary-integration",
@@ -116,11 +113,6 @@ RULES_SRCS = [
 java_immutables_library(
     name = "rules",
     srcs = RULES_SRCS,
-    immutable_types = [
-        "AndroidGraphEnhancementResult",
-        "AndroidInstrumentationTestJVMArgs",
-        "StrippedObjectDescription",
-    ],
     resources = [
         ":android-tools-common.jar",
         ":ddmlib.jar",
@@ -267,9 +259,6 @@ APKMODULE_SRCS = [
 java_immutables_library(
     name = "apkmodule",
     srcs = APKMODULE_SRCS,
-    immutable_types = [
-        "APKModule",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -296,9 +285,6 @@ HELPERS_SRCS = [
 java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
-    immutable_types = [
-        "ApkInfo",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -360,9 +346,6 @@ java_immutables_library(
         excludes = PACKAGEABLE_SRCS + RULES_SRCS + SPLIT_DEX_SRCS +
                    UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
     ),
-    immutable_types = [
-        "NdkCxxPlatform",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",

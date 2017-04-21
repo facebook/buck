@@ -1,9 +1,6 @@
 standard_java_library(
     name = "go",
-    immutable_types = [
-        "GoLinkable",
-        "GoPlatform",
-    ],
+    has_immutable_types = True,
     resources = [
         "LICENSE",
         "testmaingen.go",
