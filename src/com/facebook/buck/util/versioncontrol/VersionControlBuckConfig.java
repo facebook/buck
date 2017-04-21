@@ -66,7 +66,7 @@ public class VersionControlBuckConfig {
         VC_SECTION_KEY, GENERATE_STATISTICS_KEY, GENERATE_STATISTICS_DEFAULT);
   }
 
-  public Optional<PregeneratedVersionControlStats> getPregeneratedVersionControlStats() {
+  public Optional<FastVersionControlStats> getPregeneratedVersionControlStats() {
     ImmutableSet<Optional<?>> stats =
         ImmutableSet.of(
             getPregeneratedCurrentRevisionId(),
@@ -86,7 +86,7 @@ public class VersionControlBuckConfig {
                     .collect(Collectors.joining(", ")));
       }
       return Optional.of(
-          PregeneratedVersionControlStats.of(
+          FastVersionControlStats.of(
               getPregeneratedCurrentRevisionId().get(),
               getPregeneratedBaseBookmarks().get(),
               getPregeneratedBaseRevisionId().get(),

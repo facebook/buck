@@ -54,7 +54,7 @@ public class VersionControlStatsGenerator {
 
   private final VersionControlCmdLineInterface versionControlCmdLineInterface;
 
-  private final Optional<PregeneratedVersionControlStats> pregeneratedVersionControlStats;
+  private final Optional<FastVersionControlStats> pregeneratedVersionControlStats;
 
   @GuardedBy("this")
   @Nullable
@@ -82,7 +82,7 @@ public class VersionControlStatsGenerator {
 
   public VersionControlStatsGenerator(
       VersionControlCmdLineInterface versionControlCmdLineInterface,
-      Optional<PregeneratedVersionControlStats> pregeneratedVersionControlStats) {
+      Optional<FastVersionControlStats> pregeneratedVersionControlStats) {
     this.versionControlCmdLineInterface = versionControlCmdLineInterface;
     this.pregeneratedVersionControlStats = pregeneratedVersionControlStats;
     if (pregeneratedVersionControlStats.isPresent()) {
@@ -98,7 +98,7 @@ public class VersionControlStatsGenerator {
     executorService.submit(
         () -> {
           try {
-            Optional<VersionControlStats> versionControlStats;
+            Optional<FullVersionControlStats> versionControlStats;
             try (SimplePerfEvent.Scope ignored =
                 SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
               versionControlStats = generateStats(mode);
@@ -111,19 +111,20 @@ public class VersionControlStatsGenerator {
         });
   }
 
-  public synchronized Optional<VersionControlStats> generateStats(Mode mode)
+  public synchronized Optional<FullVersionControlStats> generateStats(Mode mode)
       throws InterruptedException {
     if (mode == Mode.PREGENERATED) {
       return pregeneratedVersionControlStats.map(
-          x -> VersionControlStats.builder().from(x).build());
+          x -> FullVersionControlStats.builder().from(x).build());
     }
 
-    VersionControlStats versionControlStats = null;
+    FullVersionControlStats versionControlStats = null;
     LOG.info("Starting generation of version control stats.");
     if (!versionControlCmdLineInterface.isSupportedVersionControlSystem()) {
       LOG.warn("Skipping generation of version control stats as unsupported repository type.");
     } else {
-      VersionControlStats.Builder versionControlStatsBuilder = VersionControlStats.builder();
+      FullVersionControlStats.Builder versionControlStatsBuilder =
+          FullVersionControlStats.builder();
       // Prepopulate as much as possible before trying to query the VCS: this way if it fails we
       // still have this information.
       if (currentRevisionId != null) {

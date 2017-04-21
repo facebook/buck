@@ -28,8 +28,8 @@ import org.junit.Test;
 
 public class VersionControlStatsGeneratorTest {
 
-  private final VersionControlStats expected =
-      VersionControlStats.builder()
+  private final FullVersionControlStats expected =
+      FullVersionControlStats.builder()
           .setCurrentRevisionId("f00")
           .setBranchedFromMasterRevisionId("b47")
           .setBranchedFromMasterTS(0L)
@@ -43,7 +43,7 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void fastModeGeneratesBasicStats() throws Exception {
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
             .generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.isPresent(), is(equalTo(true)));
@@ -58,7 +58,7 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void fastModeDoesNotGenerateChangedFilesAndDiff() throws Exception {
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
             .generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.isPresent(), is(equalTo(true)));
@@ -68,7 +68,7 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void fullModeGeneratesChangedFilesAndDiff() throws Exception {
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
     assertThat(actual.isPresent(), is(equalTo(true)));
@@ -83,7 +83,7 @@ public class VersionControlStatsGeneratorTest {
     VersionControlStatsGenerator versionControlStatsGenerator =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(actual.get().getPathsChangedInWorkingDirectory(), is(empty()));
@@ -92,7 +92,7 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void pregeneratedModeDoesNotGenerateStats() throws Exception {
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
             .generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
     assertThat(actual.isPresent(), is(equalTo(false)));
@@ -103,21 +103,21 @@ public class VersionControlStatsGeneratorTest {
     VersionControlStatsGenerator versionControlStatsGenerator =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
     assertThat(actual.isPresent(), is(equalTo(false)));
   }
 
   @Test
   public void pregeneratedModeReturnsStats() throws Exception {
-    PregeneratedVersionControlStats pregenerated =
-        PregeneratedVersionControlStats.of(
+    FastVersionControlStats pregenerated =
+        FastVersionControlStats.of(
             expected.getCurrentRevisionId(),
             expected.getBaseBookmarks(),
             expected.getBranchedFromMasterRevisionId(),
             expected.getBranchedFromMasterTS());
 
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
             .generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
     assertThat(actual.isPresent(), is(equalTo(true)));
@@ -132,10 +132,10 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void pregeneratedStatsHavePrecedence() throws Exception {
-    PregeneratedVersionControlStats pregenerated =
-        PregeneratedVersionControlStats.of(
+    FastVersionControlStats pregenerated =
+        FastVersionControlStats.of(
             "cafe", ImmutableSet.of("remote/master", "remote/another"), "babe", 1L);
-    Optional<VersionControlStats> actual =
+    Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
     assertThat(actual.isPresent(), is(equalTo(true)));

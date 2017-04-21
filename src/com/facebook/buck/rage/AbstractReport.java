@@ -27,7 +27,7 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.versioncontrol.VersionControlStats;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -80,12 +80,12 @@ public abstract class AbstractReport {
 
   protected Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException {
-    Optional<VersionControlStats> versionControlStatsOptional =
+    Optional<FullVersionControlStats> versionControlStatsOptional =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
     if (!versionControlStatsOptional.isPresent()) {
       return Optional.empty();
     }
-    VersionControlStats versionControlStats = versionControlStatsOptional.get();
+    FullVersionControlStats versionControlStats = versionControlStatsOptional.get();
     return Optional.of(
         SourceControlInfo.of(
             versionControlStats.getCurrentRevisionId(),

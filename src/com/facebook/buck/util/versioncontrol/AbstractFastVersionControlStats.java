@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,22 +16,9 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
-interface AbstractVersionControlStats extends CommonVersionControlStats {
-
-  @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getPathsChangedInWorkingDirectory();
-
-  /* The diff between base and current revision if it exists */
-  @JsonIgnore
-  Optional<String> getDiff();
-}
+@BuckStyleTuple
+interface AbstractFastVersionControlStats extends CommonVersionControlStats {}

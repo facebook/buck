@@ -23,9 +23,9 @@ import com.google.common.collect.ImmutableSet;
 
 public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
 
-  private final VersionControlStats versionControlStats;
+  private final FullVersionControlStats versionControlStats;
 
-  public FakeVersionControlCmdLineInterface(VersionControlStats versionControlStats) {
+  public FakeVersionControlCmdLineInterface(FullVersionControlStats versionControlStats) {
     this.versionControlStats = versionControlStats;
   }
 

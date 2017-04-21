@@ -3,8 +3,8 @@ CONFIG_SRCS = [
 ]
 
 VALUE_TYPES_SRCS = [
-    "AbstractVersionControlStats.java",
-    "AbstractPregeneratedVersionControlStats.java",
+    "AbstractFullVersionControlStats.java",
+    "AbstractFastVersionControlStats.java",
     "CommonVersionControlStats.java",
 ]
 
