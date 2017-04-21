@@ -91,8 +91,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.of());
   }
 
@@ -104,8 +102,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("string", "cheese"));
 
@@ -121,8 +117,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("value", true));
 
     assertTrue(dto.value);
@@ -136,8 +130,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "target", "//cake:walk",
@@ -161,8 +153,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("number", 42L));
 
     assertEquals(42, dto.number);
@@ -176,8 +166,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("somePath", "Fish.java"));
 
@@ -199,8 +187,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "filePath", "cheese.txt",
@@ -227,8 +213,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("deps", ImmutableList.of("//please/go:here", ":there")));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), dto.deps);
@@ -242,8 +226,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
 
@@ -260,8 +242,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
@@ -288,8 +268,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         declaredDeps,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         args);
 
     assertEquals(ImmutableSet.of(declaredDep), declaredDeps.build());
@@ -311,8 +289,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         declaredDeps,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         args);
 
     assertEquals(ImmutableSet.of(), declaredDeps.build());
@@ -331,8 +307,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         args);
 
     assertEquals(Optional.empty(), dto.strings);
@@ -348,8 +322,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
   }
 
@@ -361,8 +333,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
@@ -376,8 +346,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
   }
 
@@ -389,8 +357,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
 
@@ -410,8 +376,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         new Dto(),
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("nope", ImmutableList.of("//will/not:happen")));
   }
 
@@ -424,8 +388,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "single", "//com/example:cheese",
@@ -456,8 +418,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "yup",
             ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
@@ -474,8 +434,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("number", 0));
 
@@ -512,8 +470,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         args);
 
     assertEquals("cheese", dto.required);
@@ -541,8 +497,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         args);
 
     assertEquals(Optional.empty(), dto.noString);
@@ -564,8 +518,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         args);
 
@@ -589,8 +541,6 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         TARGET,
         dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableSet.builder(),
         args);
 
@@ -616,8 +566,6 @@ public class ConstructorArgMarshallerTest {
         TARGET,
         dto,
         ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "srcs",
             ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
@@ -633,38 +581,17 @@ public class ConstructorArgMarshallerTest {
         observedValues);
   }
 
-  @Test(expected = HumanReadableException.class)
-  public void bogusVisibilityGivesFriendlyError() throws Exception {
-    EmptyDto dto = new EmptyDto();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "visibility", ImmutableList.of(":marmosets")));
-  }
-
   @Test
-  public void bogusWithinViewGivesFriendlyError()
-      throws Exception {
+  public void bogusVisibilityGivesFriendlyError() throws Exception {
     mExpected.expect(HumanReadableException.class);
     mExpected.expectMessage(containsString(":marmosets"));
 
     EmptyDto dto = new EmptyDto();
-    marshaller.populate(
+    ConstructorArgMarshaller.populateVisibilityPatterns(
         createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "within_view", ImmutableList.of(":marmosets")));
+        "visibility",
+        ImmutableList.of(":marmosets"),
+        TARGET);
   }
 
   public static class DtoWithString {

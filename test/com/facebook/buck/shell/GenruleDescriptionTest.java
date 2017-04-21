@@ -72,8 +72,6 @@ public class GenruleDescriptionTest {
         buildTarget,
         constructorArg,
         declaredDeps,
-        visibilityPatterns,
-        withinViewPatterns,
         instance);
     TargetNode<GenruleDescription.Arg, ?> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory())

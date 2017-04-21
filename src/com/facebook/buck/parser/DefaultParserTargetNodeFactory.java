@@ -30,12 +30,12 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -151,10 +151,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
-          ImmutableSet.builder();
-      ImmutableSet.Builder<VisibilityPattern> withinViewPatterns =
-          ImmutableSet.builder();
+      ImmutableSet<VisibilityPattern> visibilityPatterns;
+      ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
@@ -163,9 +161,17 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             target,
             constructorArg,
             declaredDeps,
-            visibilityPatterns,
-            withinViewPatterns,
             rawNode);
+        visibilityPatterns = ConstructorArgMarshaller.populateVisibilityPatterns(
+            targetCell.getCellPathResolver(),
+            "visibility",
+            rawNode.get("visibility"),
+            target);
+        withinViewPatterns = ConstructorArgMarshaller.populateVisibilityPatterns(
+            targetCell.getCellPathResolver(),
+            "within_view",
+            rawNode.get("within_view"),
+            target);
       }
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
@@ -179,8 +185,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             targetCell.getFilesystem(),
             target,
             declaredDeps.build(),
-            visibilityPatterns.build(),
-            withinViewPatterns.build(),
+            visibilityPatterns,
+            withinViewPatterns,
             targetCell.getCellPathResolver());
         if (buildFileTrees.isPresent() &&
             cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {

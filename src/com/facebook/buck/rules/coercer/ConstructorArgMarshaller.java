@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Used to derive information from the constructor args returned by
  * {@link com.facebook.buck.rules.Description} instances.
@@ -72,7 +74,6 @@ public class ConstructorArgMarshaller {
    * @param params The parameters to be used to populate the {@code dto} instance.
    * @param dto The constructor dto to be populated.
    * @param declaredDeps A builder to be populated with the declared dependencies.
-   * @param visibilityPatterns A builder to be populated with the visibility patterns.
    */
   public void populate(
       CellPathResolver cellRoots,
@@ -80,8 +81,6 @@ public class ConstructorArgMarshaller {
       BuildTarget buildTarget,
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
-      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      ImmutableSet.Builder<VisibilityPattern> withinViewPatterns,
       Map<String, ?> instance) throws ParamInfoException {
     for (ParamInfo info :
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass())) {
@@ -90,8 +89,6 @@ public class ConstructorArgMarshaller {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
     }
-    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, "visibility", buildTarget);
-    populateVisibilityPatterns(cellRoots, withinViewPatterns, instance, "within_view", buildTarget);
   }
 
   private void populateDeclaredDeps(
@@ -113,36 +110,36 @@ public class ConstructorArgMarshaller {
   }
 
   @SuppressWarnings("unchecked")
-  private void populateVisibilityPatterns(
+  public static ImmutableSet<VisibilityPattern> populateVisibilityPatterns(
       CellPathResolver cellNames,
-      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      Map<String, ?> instance,
-      String param,
+      String paramName,
+      @Nullable Object value,
       BuildTarget target) {
-    Object value = instance.get(param);
-    if (value != null) {
-      if (!(value instanceof List)) {
-        throw new RuntimeException(
-            String.format("Expected an array for %s but was %s", param, value));
-      }
-
-      VisibilityPatternParser parser = new VisibilityPatternParser();
-      for (String visibility : (List<String>) value) {
-        try {
-          visibilityPatterns.add(parser.parse(cellNames, visibility));
-        } catch (IllegalArgumentException e) {
-          throw new HumanReadableException(
-              e,
-              "Bad visibility expression: %s listed %s in its %s argument, but only %s " +
-                  "or fully qualified target patterns are allowed (i.e. those starting with " +
-                  "// or a cell).",
-              target.getFullyQualifiedName(),
-              visibility,
-              param,
-              VisibilityPatternParser.VISIBILITY_PUBLIC
-          );
-        }
+    if (value == null) {
+      return ImmutableSet.of();
+    }
+    if (!(value instanceof List)) {
+      throw new RuntimeException(
+          String.format("Expected an array for %s but was %s", paramName, value));
+    }
+    ImmutableSet.Builder<VisibilityPattern> patterns = new ImmutableSet.Builder<>();
+    VisibilityPatternParser parser = new VisibilityPatternParser();
+    for (String visibility : (List<String>) value) {
+      try {
+        patterns.add(parser.parse(cellNames, visibility));
+      } catch (IllegalArgumentException e) {
+        throw new HumanReadableException(
+            e,
+            "Bad visibility expression: %s listed %s in its %s argument, but only %s " +
+                "or fully qualified target patterns are allowed (i.e. those starting with " +
+                "// or a cell).",
+            target.getFullyQualifiedName(),
+            visibility,
+            paramName,
+            VisibilityPatternParser.VISIBILITY_PUBLIC
+        );
       }
     }
+    return patterns.build();
   }
 }

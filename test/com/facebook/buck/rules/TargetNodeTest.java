@@ -194,8 +194,6 @@ public class TargetNodeTest {
           buildTarget,
           constructorArg,
           ImmutableSet.builder(),
-          ImmutableSet.builder(),
-          ImmutableSet.builder(),
           instance);
     } catch (ParamInfoException e) {
       throw new RuntimeException(e);

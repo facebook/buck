@@ -192,8 +192,6 @@ public class JvmLibraryArgInterpreterTest {
           BuildTargetFactory.newInstance("//example:target"),
           arg,
           ImmutableSet.builder(),
-          ImmutableSet.builder(),
-          ImmutableSet.builder(),
           ImmutableMap.of());
     } catch (ParamInfoException error) {
       Throwables.throwIfUnchecked(error);
