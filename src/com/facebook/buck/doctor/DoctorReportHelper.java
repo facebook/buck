@@ -36,16 +36,16 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -80,24 +80,17 @@ public class DoctorReportHelper {
   }
 
   public Optional<BuildLogEntry> promptForBuild(List<BuildLogEntry> buildLogs) throws IOException {
-    if (buildLogs.isEmpty()) {
-      return Optional.empty();
-    }
-
     // Remove commands with unknown args or invocations of buck rage.
-    buildLogs.removeIf(
-        entry -> !(entry.getCommandArgs().isPresent() &&
+    // Sort the remaining logs based on time, reverse order.
+    buildLogs = buildLogs.stream()
+        .filter(entry -> entry.getCommandArgs().isPresent() &&
             !entry.getCommandArgs().get().matches("rage|doctor|server"))
-    );
+        .sorted(Comparator.comparing(BuildLogEntry::getLastModifiedTime).reversed())
+        .collect(Collectors.toList());
 
     if (buildLogs.isEmpty()) {
       return Optional.empty();
     }
-
-    // Sort the remaining logs based on time, reverse order.
-    Collections.sort(
-        buildLogs,
-        Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
 
     return input.selectOne(
         "Which buck invocation would you like to report?",
@@ -194,8 +187,6 @@ public class DoctorReportHelper {
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
       return createErrorDoctorEndpointResponse("Request was not successful.");
-    } catch (JsonProcessingException e) {
-      return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     }
@@ -269,9 +260,7 @@ public class DoctorReportHelper {
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {
     console.printErrorText(errorMessage);
     LOG.error(errorMessage);
-    return DoctorEndpointResponse.of(
-        Optional.of(errorMessage),
-        ImmutableList.of());
+    return DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
   }
 
   @VisibleForTesting
