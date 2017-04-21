@@ -123,6 +123,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -2310,6 +2311,7 @@ public class CachingBuildEngineTest {
 
       // Seed the cache with an existing manifest with a dummy entry.
       Manifest manifest = Manifest.fromMap(
+          depFilefactory.buildManifestKey(rule).getRuleKey(),
           ImmutableMap.of(
               new RuleKey("abcd"),
               ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
@@ -2438,6 +2440,7 @@ public class CachingBuildEngineTest {
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
       // size.
       Manifest manifest = Manifest.fromMap(
+          depFilefactory.buildManifestKey(rule).getRuleKey(),
           ImmutableMap.of(
               new RuleKey("abcd"),
               ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
@@ -2554,7 +2557,7 @@ public class CachingBuildEngineTest {
               ImmutableList.of(DependencyFileEntry.fromSourcePath(input, pathResolver)));
 
       // Seed the cache with the manifest and a referenced artifact.
-      Manifest manifest = new Manifest();
+      Manifest manifest = new Manifest(depFilefactory.buildManifestKey(rule).getRuleKey());
       manifest.addEntry(
           fileHashCache,
           depFileKey.getRuleKey(),
@@ -2626,6 +2629,105 @@ public class CachingBuildEngineTest {
         Files.delete(fetchedArtifact.get());
       }
     }
+
+    @Test
+    public void staleExistingManifestIsIgnored() throws Exception {
+      DefaultDependencyFileRuleKeyFactory depFilefactory =
+          new DefaultDependencyFileRuleKeyFactory(
+              FIELD_LOADER,
+              fileHashCache,
+              pathResolver,
+              ruleFinder);
+
+      // Create a simple rule which just writes a file.
+      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(target)
+              .setProjectFilesystem(filesystem)
+              .build();
+      final SourcePath input =
+          new PathSourcePath(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
+      filesystem.touch(pathResolver.getRelativePath(input));
+      final Path output = Paths.get("output");
+      DepFileBuildRule rule =
+          new DepFileBuildRule(params) {
+            @AddToRuleKey
+            private final SourcePath path = input;
+
+            @Override
+            public ImmutableList<Step> getBuildSteps(
+                BuildContext context,
+                BuildableContext buildableContext) {
+              return ImmutableList.of(
+                  new WriteFileStep(filesystem, "", output, /* executable */ false));
+            }
+
+            @Override
+            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+              return (SourcePath path) -> true;
+            }
+
+            @Override
+            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+              return (SourcePath path) -> false;
+            }
+
+            @Override
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+              return ImmutableList.of(input);
+            }
+
+            @Override
+            public SourcePath getSourcePathToOutput() {
+              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+            }
+          };
+
+      // Create the build engine.
+      CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      defaultRuleKeyFactory,
+                      inputBasedRuleKeyFactory,
+                      depFilefactory))
+              .build();
+
+      // Write out a stale manifest to the disk.
+      RuleKey staleDepFileRuleKey = new RuleKey("dead");
+      Manifest manifest = new Manifest(new RuleKey("beef"));
+      manifest.addEntry(
+          fileHashCache,
+          staleDepFileRuleKey,
+          pathResolver,
+          ImmutableSet.of(input),
+          ImmutableSet.of(input));
+      try (OutputStream outputStream =
+               filesystem.newFileOutputStream(cachingBuildEngine.getManifestPath(rule))) {
+        manifest.serialize(outputStream);
+      }
+
+      // Run the build.
+      BuildResult result =
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
+      assertThat(
+          getSuccess(result),
+          equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+
+      // Verify there's no stale entry in the manifest.
+      LazyPath fetchedManifest = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
+      CacheResult cacheResult =
+          cache.fetch(
+              depFilefactory.buildManifestKey(rule).getRuleKey(),
+              fetchedManifest);
+      assertTrue(cacheResult.getType().isSuccess());
+      Manifest cachedManifest = loadManifest(fetchedManifest.get());
+      assertThat(
+          cachedManifest.toMap().keySet(),
+          Matchers.not(hasItem(staleDepFileRuleKey)));
+    }
+
   }
 
   public static class UncachableRuleTests extends CommonFixture {

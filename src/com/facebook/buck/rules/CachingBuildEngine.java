@@ -1747,13 +1747,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Preconditions.checkState(useManifestCaching(rule));
 
     final Path manifestPath = getManifestPath(rule);
-    Manifest manifest = new Manifest();
+    Manifest manifest = new Manifest(manifestKey.getRuleKey());
 
     // If we already have a manifest downloaded, use that.
     if (rule.getProjectFilesystem().exists(manifestPath)) {
       try (InputStream inputStream =
                rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-        manifest = new Manifest(inputStream);
+        Manifest existingManifest = new Manifest(inputStream);
+        if (existingManifest.getKey().equals(manifestKey.getRuleKey())) {
+          manifest = existingManifest;
+        }
       }
     } else {
       // Ensure the path to manifest exist
@@ -1764,7 +1767,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // some sort of LRU management here to avoid evicting everything, but it'll take some care to do
     // this efficiently and it's not clear how much benefit this will give us.
     if (manifest.size() >= maxDepFileCacheEntries) {
-      manifest = new Manifest();
+      manifest = new Manifest(manifestKey.getRuleKey());
     }
 
     // Update the manifest with the new output rule key.
@@ -1868,6 +1871,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
              rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
       manifest = new Manifest(input);
     }
+
+    // Verify the manifest.
+    Preconditions.checkState(
+        manifest.getKey().equals(manifestKey.getRuleKey()),
+        "%s: found incorrectly keyed manifest: %s != %s",
+        rule.getBuildTarget(),
+        manifestKey.getRuleKey(),
+        manifest.getKey());
 
     // Lookup the rule for the current state of our inputs.
     Optional<RuleKey> ruleKey =

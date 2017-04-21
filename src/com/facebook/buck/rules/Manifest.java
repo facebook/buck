@@ -46,6 +46,8 @@ public class Manifest {
 
   private static final int VERSION = 0;
 
+  private final RuleKey key;
+
   private final List<String> headers;
   private final Map<String, Integer> headerIndices;
 
@@ -57,7 +59,8 @@ public class Manifest {
   /**
    * Create an empty manifest.
    */
-  public Manifest() {
+  public Manifest(RuleKey key) {
+    this.key = key;
     headers = new ArrayList<>();
     headerIndices = new HashMap<>();
     hashes = new ArrayList<>();
@@ -71,7 +74,15 @@ public class Manifest {
   public Manifest(InputStream rawInput) throws IOException {
     DataInputStream input = new DataInputStream(rawInput);
 
-    Preconditions.checkState(input.readInt() == VERSION);
+    // Verify the manifest version.
+    int version = input.readInt();
+    Preconditions.checkState(
+        version == VERSION,
+        "invalid version: %s != %s",
+        version,
+        VERSION);
+
+    key = new RuleKey(input.readUTF());
 
     int numberOfHeaders = input.readInt();
     headers = new ArrayList<>(numberOfHeaders);
@@ -103,6 +114,10 @@ public class Manifest {
       RuleKey key = new RuleKey(input.readUTF());
       entries.add(new Pair<>(key, entryHashes));
     }
+  }
+
+  public RuleKey getKey() {
+    return key;
   }
 
   private Integer addHash(String header, HashCode hash) {
@@ -247,6 +262,8 @@ public class Manifest {
 
     output.writeInt(VERSION);
 
+    output.writeUTF(key.toString());
+
     output.writeInt(headers.size());
     for (String header : headers) {
       output.writeUTF(header);
@@ -289,8 +306,8 @@ public class Manifest {
   }
 
   @VisibleForTesting
-  static Manifest fromMap(ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> map) {
-    Manifest manifest = new Manifest();
+  static Manifest fromMap(RuleKey key, ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> map) {
+    Manifest manifest = new Manifest(key);
     for (Map.Entry<RuleKey, ImmutableMap<String, HashCode>> entry : map.entrySet()) {
       int entryHashIndex = 0;
       int[] entryHashIndices = new int[entry.getValue().size()];
