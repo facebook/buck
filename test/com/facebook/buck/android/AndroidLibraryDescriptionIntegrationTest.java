@@ -87,11 +87,6 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
     // Now, add lib_a to the 'top_level' library and build again
     workspace.replaceFileContents("BUCK", "#placeholder", "':lib_a',");
-
-    // Have the src for the 'top_level' rule actually use its dependency
-    workspace.replaceFileContents("TopLevel.java", "// placeholder", "public A a;");
-
-    // Build again
     workspace.runBuckCommand("build", "//:android_libraries");
 
     // Now we should rebuild top_level, re-run the query, and rebuild android_libraries

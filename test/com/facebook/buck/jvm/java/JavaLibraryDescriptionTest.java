@@ -18,66 +18,44 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeExportDependenciesRule;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.testutil.TargetGraphFactory;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Paths;
+public class JavaLibraryDescriptionTest {
 
-public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
-
-  private BuildRule exportingRule;
+  private FakeExportDependenciesRule exportingRule;
   private BuildRuleResolver resolver;
-  private BuildRule exportedRule;
-  private JavaBuckConfig javaBuckConfig;
+  private FakeBuildRule exportedRule;
 
   @Before
-  public void setUp() throws NoSuchBuildTargetException {
-    javaBuckConfig = getJavaBuckConfigWithCompilationMode();
-
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode);
-
+  public void setUp() {
     resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
-    exportingRule = resolver.requireRule(exportingNode.getBuildTarget());
+    exportedRule = resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
+    exportingRule = resolver.addToIndex(
+       new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
   }
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
-
-    // First order deps should become CalculateAbi rules if we're compiling against ABIs
-    if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
-    }
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
@@ -85,14 +63,9 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
-
-    // First order deps should become CalculateAbi rules if we're compiling against ABIs
-    if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
-    }
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }

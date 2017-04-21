@@ -21,7 +21,6 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 
@@ -32,10 +31,10 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
     RobolectricTestDescription,
     RobolectricTest> {
 
-  private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
+  private RobolectricTestBuilder(BuildTarget target) {
     super(
         new RobolectricTestDescription(
-            javaBuckConfig,
+            DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -56,13 +55,7 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
   }
 
   public static RobolectricTestBuilder createBuilder(BuildTarget target) {
-    return new RobolectricTestBuilder(target, DEFAULT_JAVA_CONFIG);
-  }
-
-  public static RobolectricTestBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig) {
-    return new RobolectricTestBuilder(target, javaBuckConfig);
+    return new RobolectricTestBuilder(target);
   }
 
   public static RobolectricTestBuilder createBuilder(

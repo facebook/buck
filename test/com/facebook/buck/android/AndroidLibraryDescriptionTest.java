@@ -25,12 +25,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -39,6 +36,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -50,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -59,61 +56,33 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
-
-  private JavaBuckConfig javaBuckConfig;
-
-  @Before
-  public void setUp() {
-    javaBuckConfig = getJavaBuckConfigWithCompilationMode();
-  }
+public class AndroidLibraryDescriptionTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> transitiveExportedNode = JavaLibraryBuilder
-        .createBuilder(
-            BuildTargetFactory.newInstance("//:transitive_exported_rule"),
-            javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/transitive/hi.java"))
-        .build();
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .addExportedDep(transitiveExportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> androidLibNode = AndroidLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addDep(exportingNode.getBuildTarget())
-        .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        transitiveExportedNode,
-        exportedNode,
-        exportingNode,
-        androidLibNode);
-
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
-    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
-    BuildRule transitiveExportedRule =
-        resolver.requireRule(transitiveExportedNode.getBuildTarget());
+    FakeBuildRule transitiveExportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:transitive_exported_rule", pathResolver));
+    FakeExportDependenciesRule exportedRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule(
+                "//:exported_rule",
+                pathResolver,
+                transitiveExportedRule));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
-    // First order deps should become CalculateAbi rules if we're compiling against ABIs
-    if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule =
-          resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
-      transitiveExportedRule =
-          resolver.getRule(((JavaLibrary) transitiveExportedRule).getAbiJar().get());
-    }
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target)
+        .addDep(exportingRule.getBuildTarget())
+        .build(resolver);
 
     assertThat(
-        androidLibRule.getBuildDeps(),
+        javaLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.hasItem(exportedRule),
             Matchers.hasItem(transitiveExportedRule)));
@@ -124,16 +93,16 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
     // Set up target graph: rule -> lib -> sublib -> bottom
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> bottomNode =
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:bottom"), javaBuckConfig)
+            BuildTargetFactory.newInstance("//:bottom"))
             .build();
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> sublibNode =
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:sublib"), javaBuckConfig)
+            BuildTargetFactory.newInstance("//:sublib"))
             .addDep(bottomNode.getBuildTarget())
             .build();
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> libNode =
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
+            BuildTargetFactory.newInstance("//:lib"))
             .addDep(sublibNode.getBuildTarget())
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
@@ -159,7 +128,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
 
-    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
+    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target)
         .addDep(libNode.getBuildTarget())
         .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
         .build(resolver, targetGraph);
@@ -175,50 +144,29 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> transitiveExportedNode = JavaLibraryBuilder
-        .createBuilder(
-            BuildTargetFactory.newInstance("//:transitive_exported_rule"),
-            javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/transitive/hi.java"))
-        .build();
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .addExportedDep(transitiveExportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> androidLibNode = AndroidLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addProvidedDep(exportingNode.getBuildTarget())
-        .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        transitiveExportedNode,
-        exportedNode,
-        exportingNode,
-        androidLibNode);
-
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
-    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
-    BuildRule transitiveExportedRule =
-        resolver.requireRule(transitiveExportedNode.getBuildTarget());
+    FakeBuildRule transitiveExportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:transitive_exported_rule", pathResolver));
+    FakeExportDependenciesRule exportedRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule(
+                "//:exported_rule",
+                pathResolver,
+                transitiveExportedRule));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
-    // First order deps should become CalculateAbi rules if we're compiling against ABIs
-    if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule =
-          resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
-      transitiveExportedRule =
-          resolver.getRule(((JavaLibrary) transitiveExportedRule).getAbiJar().get());
-    }
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target)
+        .addProvidedDep(exportingRule.getBuildTarget())
+        .build(resolver);
 
     assertThat(
-        androidLibRule.getBuildDeps(),
+        javaLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.hasItem(exportedRule),
             Matchers.hasItem(transitiveExportedRule)));

@@ -33,10 +33,10 @@ import javax.annotation.Nullable;
 
 public class JavaTestBuilder
     extends AbstractNodeBuilder<JavaTestDescription.Arg, JavaTestDescription, JavaTest> {
-  private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
+  private JavaTestBuilder(BuildTarget target) {
     super(
         new JavaTestDescription(
-            javaBuckConfig,
+            DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -45,11 +45,7 @@ public class JavaTestBuilder
   }
 
   public static JavaTestBuilder createBuilder(BuildTarget target) {
-    return new JavaTestBuilder(target, DEFAULT_JAVA_CONFIG);
-  }
-
-  public static JavaTestBuilder createBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
-    return new JavaTestBuilder(target, javaBuckConfig);
+    return new JavaTestBuilder(target);
   }
 
   public JavaTestBuilder addDep(BuildTarget rule) {

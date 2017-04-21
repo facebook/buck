@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -36,23 +35,17 @@ public class AndroidLibraryBuilder extends
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       language -> new JavaAndroidLibraryCompiler(DEFAULT_JAVA_CONFIG);
 
-  private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
+  private AndroidLibraryBuilder(BuildTarget target) {
     super(
         new AndroidLibraryDescription(
-            javaBuckConfig,
+            DEFAULT_JAVA_CONFIG,
             ANDROID_JAVAC_OPTIONS,
             JAVA_ONLY_COMPILER_FACTORY),
         target);
   }
 
   public static AndroidLibraryBuilder createBuilder(BuildTarget target) {
-    return new AndroidLibraryBuilder(target, DEFAULT_JAVA_CONFIG);
-  }
-
-  public static AndroidLibraryBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig) {
-    return new AndroidLibraryBuilder(target, javaBuckConfig);
+    return new AndroidLibraryBuilder(target);
   }
 
   public AndroidLibraryBuilder addProcessor(String processor) {

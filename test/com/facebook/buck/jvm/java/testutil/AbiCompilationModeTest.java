@@ -16,13 +16,10 @@
 
 package com.facebook.buck.jvm.java.testutil;
 
-import static org.junit.Assume.assumeThat;
-
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 
-import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -62,9 +59,5 @@ public abstract class AbiCompilationModeTest {
         JavaBuckConfig.SECTION,
         JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS,
         compileAgainstAbis);
-  }
-
-  protected void compileAgainstAbisOnly() {
-    assumeThat(compileAgainstAbis, Matchers.equalTo(TRUE));
   }
 }

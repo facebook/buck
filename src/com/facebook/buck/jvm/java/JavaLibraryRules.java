@@ -35,7 +35,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -223,14 +222,10 @@ public class JavaLibraryRules {
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
       Iterable<BuildRule> deps,
       final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
-    // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
-    // against ABI rules or full rules
-    Predicate<Object> traverse = r -> r instanceof JavaLibrary || r instanceof CalculateAbi;
     return NativeLinkables.getTransitiveSharedLibraries(
         cxxPlatform,
         deps,
-        traverse);
+        r -> r instanceof JavaLibrary);
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(
@@ -254,29 +249,5 @@ public class JavaLibraryRules {
         .stream()
         .map(BuildRule::getSourcePathToOutput)
         .collect(MoreCollectors.toImmutableSortedSet());
-  }
-
-  /**
-   * Iterates the input BuildRules and translates them to their ABI rules when possible.
-   * This is necessary when constructing a BuildRuleParams object, for example, where we want to
-   * translate rules to their ABI rules, but not skip over BuildRules such as GenAidl, CxxLibrary,
-   * NdkLibrary, AndroidResource, etc. These should still be returned from this method, but without
-   * translation.
-   */
-  public static ImmutableSortedSet<BuildRule> getAbiRulesWherePossible(
-      BuildRuleResolver resolver,
-      Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
-    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
-    for (BuildRule dep : inputs) {
-      if (dep instanceof HasJavaAbi) {
-        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) dep).getAbiJar();
-        if (abiJarTarget.isPresent()) {
-          abiRules.add(resolver.requireRule(abiJarTarget.get()));
-        }
-      } else {
-        abiRules.add(dep);
-      }
-    }
-    return abiRules.build();
   }
 }
