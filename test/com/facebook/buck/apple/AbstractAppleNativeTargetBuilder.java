@@ -101,6 +101,11 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setExtraXcodeFiles(ImmutableList<SourcePath> extraXcodeFiles) {
+    arg.extraXcodeFiles = extraXcodeFiles;
+    return getThis();
+  }
+
   public BUILDER setHeaders(SourceList headers) {
     arg.headers = headers;
     return getThis();

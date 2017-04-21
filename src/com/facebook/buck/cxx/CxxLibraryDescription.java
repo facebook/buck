@@ -1221,6 +1221,12 @@ public class CxxLibraryDescription implements
     public Optional<NativeLinkable.Linkage> preferredLinkage;
     public Optional<Boolean> xcodePublicHeadersSymlinks;
     public Optional<Boolean> xcodePrivateHeadersSymlinks;
+    // extra_xcode_sources will add the files to the list of files to be compiled
+    // in the Xcode target.
+    public ImmutableList<SourcePath> extraXcodeSources = ImmutableList.of();
+    // extra_xcode_sources will add the files to the list of files in the project and won't
+    // add them to an Xcode target.
+    public ImmutableList<SourcePath> extraXcodeFiles = ImmutableList.of();
 
     // These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not
     // used otherwise.

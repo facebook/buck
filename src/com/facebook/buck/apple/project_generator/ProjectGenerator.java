@@ -912,6 +912,7 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.headers));
     ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
         targetNode.getConstructorArg().langPreprocessorFlags;
+    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
 
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
@@ -919,10 +920,6 @@ public class ProjectGenerator {
             productType,
             buildTargetName,
             Paths.get(String.format(productOutputFormat, buildTargetName)));
-
-    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
-    Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
-        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
 
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
@@ -934,7 +931,9 @@ public class ProjectGenerator {
             .setPrivateHeaders(headers)
             .setRecursiveResources(recursiveResources)
             .setDirectResources(directResources)
-            .setWrapperResources(wrapperResources);
+            .setWrapperResources(wrapperResources)
+            .setExtraXcodeSources(ImmutableSet.copyOf(arg.extraXcodeSources))
+            .setExtraXcodeFiles(ImmutableSet.copyOf(arg.extraXcodeFiles));
       }
 
       if (bundle.isPresent() && isFocusedOnTarget) {
@@ -943,12 +942,6 @@ public class ProjectGenerator {
       }
 
       mutator.setBridgingHeader(arg.bridgingHeader);
-
-      if (appleTargetNode.isPresent() && isFocusedOnTarget) {
-        AppleNativeTargetDescriptionArg appleArg = appleTargetNode.get().getConstructorArg();
-        mutator = mutator
-            .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources));
-      }
 
       if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
         mutator.setTargetGroupPath(
@@ -1266,6 +1259,8 @@ public class ProjectGenerator {
       createMergedHeaderMap();
     }
 
+    Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
+        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent() &&
         isFocusedOnTarget &&
         !shouldGenerateHeaderSymlinkTreesOnly()) {

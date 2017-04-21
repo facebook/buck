@@ -111,6 +111,7 @@ class NewNativeTargetProjectMutator {
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
+  private ImmutableSet<SourcePath> extraXcodeFiles = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private Optional<SourcePath> prefixHeader = Optional.empty();
@@ -176,6 +177,12 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setExtraXcodeSources(
       Set<SourcePath> extraXcodeSources) {
     this.extraXcodeSources = ImmutableSet.copyOf(extraXcodeSources);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setExtraXcodeFiles(
+      Set<SourcePath> extraXcodeFiles) {
+    this.extraXcodeFiles = ImmutableSet.copyOf(extraXcodeFiles);
     return this;
   }
 
@@ -329,6 +336,7 @@ class NewNativeTargetProjectMutator {
             pathRelativizer::outputPathToSourcePath,
             sourcesWithFlags,
             extraXcodeSources,
+            extraXcodeFiles,
             publicHeaders,
             privateHeaders));
 
@@ -375,6 +383,13 @@ class NewNativeTargetProjectMutator {
             sourceWithFlags,
             sourcesGroup,
             sourcesBuildPhase);
+      }
+
+      @Override
+      public void visitIgnoredSource(SourcePath source) {
+        addSourcePathToSourceTree(
+            source,
+            sourcesGroup);
       }
 
       @Override
@@ -450,6 +465,16 @@ class NewNativeTargetProjectMutator {
         sourcesGroup.getName(),
         customFlags,
         fileReference);
+  }
+
+  private void addSourcePathToSourceTree(
+      SourcePath sourcePath,
+      PBXGroup sourcesGroup) {
+    sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(sourcePath),
+            Optional.empty()));
   }
 
   private void addSourcePathToHeadersBuildPhase(

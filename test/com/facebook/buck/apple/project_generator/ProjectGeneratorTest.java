@@ -315,6 +315,107 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testProjectStructureWithExtraXcodeFiles() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("foo.h")))
+        .setExtraXcodeFiles(
+            ImmutableList.of(
+              new FakeSourcePath("foo/foo.json"),
+              new FakeSourcePath("bar.json")))
+        .build();
+
+    TargetNode<?, ?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(libraryTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath(("Info.plist")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup bundleGroup =
+      project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
+
+    Iterable<String> childNames = Iterables.transform(
+        sourcesGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("bar.json"));
+
+    PBXGroup fooGroup = sourcesGroup.getOrCreateChildGroupByName("foo");
+    childNames = Iterables.transform(
+        fooGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("foo.json"));
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertSourcesNotInSourcesPhase(target, ImmutableSet.of("bar.json"));
+  }
+
+  @Test
+  public void testProjectStructureWithExtraXcodeSources() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.of(new FakeSourcePath("foo.h")))
+        .setExtraXcodeSources(
+            ImmutableList.of(
+              new FakeSourcePath("foo/foo.m"),
+              new FakeSourcePath("bar.m")))
+        .build();
+
+    TargetNode<?, ?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(libraryTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath(("Info.plist")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup bundleGroup =
+      project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
+
+    Iterable<String> childNames = Iterables.transform(
+        sourcesGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("bar.m"));
+
+    PBXGroup fooGroup = sourcesGroup.getOrCreateChildGroupByName("foo");
+    childNames = Iterables.transform(
+        fooGroup.getChildren(),
+        PBXReference::getName);
+    assertThat(childNames, hasItem("foo.m"));
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
+            "foo/foo.m", Optional.empty(),
+            "bar.m", Optional.empty()));
+  }
+
+  @Test
   public void testCreateDirectoryStructure() throws IOException {
     BuildTarget buildTarget1 = BuildTarget.builder(rootPath, "//foo/bar", "target1").build();
     TargetNode<?, ?> node1 = AppleLibraryBuilder.createBuilder(buildTarget1).build();
@@ -4672,6 +4773,33 @@ public class ProjectGeneratorTest {
         assertFalse(
             "Build file should not have settings dictionary", file.getSettings().isPresent());
       }
+    }
+  }
+
+  private void assertSourcesNotInSourcesPhase(
+      PBXTarget target,
+      ImmutableSet<String> sources) {
+    ImmutableSet.Builder<String> absoluteSourcesBuilder = ImmutableSet.builder();
+    for (String name : sources) {
+      absoluteSourcesBuilder.add(
+          projectFilesystem.getRootPath().resolve(name).toAbsolutePath()
+              .normalize().toString());
+    }
+
+    Iterable<PBXBuildPhase> buildPhases =
+        Iterables.filter(target.getBuildPhases(), PBXSourcesBuildPhase.class::isInstance);
+    if (Iterables.size(buildPhases) == 0) {
+      return;
+    }
+
+    ImmutableSet<String> absoluteSources = absoluteSourcesBuilder.build();
+    PBXSourcesBuildPhase sourcesBuildPhase =
+        (PBXSourcesBuildPhase) Iterables.getOnlyElement(buildPhases);
+    for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
+      String filePath = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
+      assertFalse(
+          "Build phase should not contain this file " + filePath,
+          absoluteSources.contains(filePath));
     }
   }
 
