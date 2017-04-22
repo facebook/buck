@@ -16,12 +16,6 @@
 
 package com.facebook.buck.util;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.capture;
-import static org.easymock.EasyMock.createStrictMock;
-import static org.easymock.EasyMock.newCapture;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -54,9 +48,9 @@ import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
-import org.easymock.Capture;
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -65,6 +59,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -82,6 +77,16 @@ public class WatchmanWatcherTest {
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
       WatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
 
+  private EventBus eventBus;
+  private EventBuffer eventBuffer;
+
+  @Before
+  public void setUp() {
+    eventBuffer = new EventBuffer();
+    eventBus = new EventBus();
+    eventBus.register(eventBuffer);
+  }
+
   @After
   public void cleanUp() {
     // Clear interrupted state so it doesn't affect any other test.
@@ -96,15 +101,13 @@ public class WatchmanWatcherTest {
         "clock", "c:1386170113:26390:5:50273",
         "is_fresh_instance", false,
         "files", ImmutableList.of());
-    EventBus eventBus = createStrictMock(EventBus.class);
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
+    assertTrue(eventBuffer.events.isEmpty());
   }
 
   @Test
@@ -112,23 +115,18 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of(
             ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
     assertEquals("Should be modify event.",
         StandardWatchEventKinds.ENTRY_MODIFY,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
     assertEquals("Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        eventCapture.getValue().context().toString());
+        eventBuffer.getOnlyEvent().context().toString());
   }
 
   @Test
@@ -138,20 +136,15 @@ public class WatchmanWatcherTest {
             ImmutableMap.<String, Object>of(
                 "name", "foo/bar/baz",
                 "new", true)));
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
     assertEquals("Should be create event.",
         StandardWatchEventKinds.ENTRY_CREATE,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -162,20 +155,15 @@ public class WatchmanWatcherTest {
             ImmutableMap.<String, Object>of(
                 "name", "foo/bar/baz",
                 "exists", false)));
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
     assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -187,20 +175,15 @@ public class WatchmanWatcherTest {
                 "name", "foo/bar/baz",
                 "new", true,
                 "exists", false)));
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
     assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -210,34 +193,23 @@ public class WatchmanWatcherTest {
         "files", ImmutableList.of(
             ImmutableMap.<String, Object>of("name", "foo/bar/baz"),
             ImmutableMap.<String, Object>of("name", "foo/bar/boz")));
-    EventBus eventBus = createStrictMock(EventBus.class);
-    Capture<WatchEvent<Path>> firstEvent = newCapture();
-    Capture<WatchEvent<Path>> secondEvent = newCapture();
-    eventBus.post(capture(firstEvent));
-    eventBus.post(capture(secondEvent));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
     assertEquals("Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        firstEvent.getValue().context().toString());
+        eventBuffer.events.get(0).context().toString());
     assertEquals("Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/boz"),
-        secondEvent.getValue().context().toString());
+        eventBuffer.events.get(1).context().toString());
   }
 
   @Test
   public void whenWatchmanFailsThenOverflowEventGenerated()
       throws IOException, InterruptedException {
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         new FakeWatchmanClient(
@@ -253,20 +225,15 @@ public class WatchmanWatcherTest {
     } catch (IOException e) {
       assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
     }
-    verify(eventBus);
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
   public void whenWatchmanInterruptedThenOverflowEventGenerated()
       throws IOException, InterruptedException {
     String message = "Boo!";
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         new FakeWatchmanClient(
@@ -281,11 +248,10 @@ public class WatchmanWatcherTest {
     } catch (InterruptedException e) {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
-    verify(eventBus);
     assertTrue(Thread.currentThread().isInterrupted());
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -295,12 +261,7 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "version", "2.9.2",
         "error", watchmanError);
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(anyObject());
-    replay(eventBus);
-    WatchmanWatcher watcher = createWatcher(
-        eventBus,
-        watchmanOutput);
+    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     try {
       watcher.postEvents(
           BuckEventBusFactory.newInstance(new FakeClock(0)),
@@ -319,10 +280,6 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "version", "2.9.2",
         "error", "Watch does not exist.");
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
@@ -333,12 +290,12 @@ public class WatchmanWatcherTest {
     } finally {
       assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
-        eventCapture.getValue().kind());
+        eventBuffer.getOnlyEvent().kind());
     }
   }
 
   @Test
-  public void whenWatchmanInstanceIsFreshAndActionIsPostThenAllCachesAreCleared()
+  public void whenWatchmanInstanceIsFreshAndActionIsPostThenOverflowEventIsPosted()
       throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "version", "2.9.2",
@@ -346,31 +303,21 @@ public class WatchmanWatcherTest {
         "is_fresh_instance", true,
         "files", ImmutableList.of());
 
-    final Set<WatchEvent<?>> events = Sets.newHashSet();
-    EventBus bus = new EventBus("watchman test");
-    bus.register(
-        new Object() {
-          @Subscribe
-          public void listen(WatchEvent<?> event) {
-            events.add(event);
-          }
-        });
     WatchmanWatcher watcher = createWatcher(
-        bus,
+        eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    boolean overflowSeen = false;
-    for (WatchEvent<?> event : events) {
-      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
-    }
-    assertTrue(overflowSeen);
+    assertEquals(
+        "should have overflow event",
+        StandardWatchEventKinds.OVERFLOW,
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
-  public void whenWatchmanInstanceIsFreshAndActionIsNoneThenCachesNotCleared()
+  public void whenWatchmanInstanceIsFreshAndActionIsNoneThenNoEventIsPosted()
       throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "version", "2.9.2",
@@ -378,27 +325,16 @@ public class WatchmanWatcherTest {
         "is_fresh_instance", true,
         "files", ImmutableList.of());
 
-    final Set<WatchEvent<?>> events = Sets.newHashSet();
-    EventBus bus = new EventBus("watchman test");
-    bus.register(
-        new Object() {
-          @Subscribe
-          public void listen(WatchEvent<?> event) {
-            events.add(event);
-          }
-        });
     WatchmanWatcher watcher = createWatcher(
-        bus,
+        eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
-    boolean overflowSeen = false;
-    for (WatchEvent<?> event : events) {
-      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
-    }
-    assertFalse(overflowSeen);
+    assertTrue(
+        "no events were posted",
+        eventBuffer.events.isEmpty());
   }
 
   @Test
@@ -410,17 +346,8 @@ public class WatchmanWatcherTest {
         "is_fresh_instance", true,
         "files", ImmutableList.of());
 
-    final Set<WatchEvent<?>> events = Sets.newHashSet();
-    EventBus bus = new EventBus("watchman test");
-    bus.register(
-        new Object() {
-          @Subscribe
-          public void listen(WatchEvent<?> event) {
-            events.add(event);
-          }
-        });
     WatchmanWatcher watcher = createWatcher(
-        bus,
+        eventBus,
         new FakeWatchmanClient(
             10000000000L /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
@@ -429,11 +356,10 @@ public class WatchmanWatcherTest {
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
-    boolean overflowSeen = false;
-    for (WatchEvent<?> event : events) {
-      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
-    }
-    assertTrue(overflowSeen);
+    assertEquals(
+        "should have overflow event",
+        StandardWatchEventKinds.OVERFLOW,
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -563,15 +489,13 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of(),
         "warning", "message");
-    EventBus eventBus = createStrictMock(EventBus.class);
-    replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
+    assertTrue(eventBuffer.events.isEmpty());
   }
 
   @Test
@@ -581,7 +505,6 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of(),
         "warning", message);
-    EventBus eventBus = new EventBus("watchman test");
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     buckEventBus.register(listener);
@@ -604,7 +527,6 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of(),
         "warning", message);
-    EventBus eventBus = new EventBus("watchman test");
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
@@ -630,7 +552,6 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
         "clock", "c:0:1",
         "files", ImmutableList.of());
-    EventBus eventBus = new EventBus("watchman test");
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         new FakeWatchmanClient(
@@ -656,15 +577,6 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
         "clock", "c:1:0",
         "is_fresh_instance", true);
-    final Set<WatchEvent<?>> events = Sets.newHashSet();
-    EventBus eventBus = new EventBus("watchman test");
-    eventBus.register(
-        new Object() {
-          @Subscribe
-          public void listen(WatchEvent<?> event) {
-            events.add(event);
-          }
-        });
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         new FakeWatchmanClient(
@@ -684,11 +596,10 @@ public class WatchmanWatcherTest {
       watcher.getWatchmanQuery(FAKE_ROOT),
       hasItem(hasEntry("since", "c:1:0")));
 
-    boolean overflowSeen = false;
-    for (WatchEvent<?> event : events) {
-      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
-    }
-    assertTrue(overflowSeen);
+    assertEquals(
+        "should have overflow event",
+        StandardWatchEventKinds.OVERFLOW,
+        eventBuffer.getOnlyEvent().kind());
   }
 
   @Test
@@ -697,9 +608,7 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
         "files", ImmutableList.of());
 
-    WatchmanWatcher watcher = createWatcher(
-        new EventBus("watchman test"),
-        watchmanOutput);
+    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     final Set<BuckEvent> events = Sets.newHashSet();
     BuckEventBus bus = BuckEventBusFactory.newInstance(new FakeClock(0));
     bus.register(
@@ -730,7 +639,7 @@ public class WatchmanWatcherTest {
         "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
 
     WatchmanWatcher watcher = new WatchmanWatcher(
-        new EventBus("watchman test"),
+        eventBus,
         new FakeWatchmanClient(
             0,
             ImmutableMap.of(
@@ -796,5 +705,22 @@ public class WatchmanWatcherTest {
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
         ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));
+  }
+
+  private static class EventBuffer {
+    public final List<WatchEvent<?>> events = new ArrayList<>();
+
+    @Subscribe
+    public void on(WatchEvent<?> event) {
+      events.add(event);
+    }
+
+    /**
+     * Helper to retrieve the only event that should be in the list.
+     */
+    public WatchEvent<?> getOnlyEvent() {
+      assertEquals("Should contain only one event", 1, events.size());
+      return events.get(0);
+    }
   }
 }
