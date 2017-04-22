@@ -130,7 +130,9 @@ public class GroovyTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
-        args.getUnbundledResourcesRoot());
+        args.getUnbundledResourcesRoot(),
+        args.getSplits(),
+        args.getPart());
   }
 
   @Override

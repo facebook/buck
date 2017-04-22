@@ -66,7 +66,6 @@ public class RobolectricTestDescription
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
-
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
@@ -208,7 +207,9 @@ public class RobolectricTestDescription
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
-        args.getRobolectricManifest());
+        args.getRobolectricManifest(),
+        args.getSplits(),
+        args.getPart());
   }
 
   @Override
@@ -246,6 +247,5 @@ public class RobolectricTestDescription
     default boolean isForceFinalResourceIds() {
       return true;
     }
-
   }
 }

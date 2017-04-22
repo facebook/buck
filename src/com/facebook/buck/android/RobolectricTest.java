@@ -94,7 +94,9 @@ public class RobolectricTest extends JavaTest {
       Optional<Level> stdErrLogLevel,
       Optional<SourcePath> unbundledResourcesRoot,
       Optional<String> robolectricRuntimeDependency,
-      Optional<SourcePath> robolectricManifest) {
+      Optional<SourcePath> robolectricManifest,
+      int splits,
+      int part) {
     super(
         buildTarget,
         projectFilesystem,
@@ -119,7 +121,9 @@ public class RobolectricTest extends JavaTest {
         forkMode,
         stdOutLogLevel,
         stdErrLogLevel,
-        unbundledResourcesRoot);
+        unbundledResourcesRoot,
+        splits,
+        part);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;

@@ -147,6 +147,10 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Optional<SourcePath> unbundledResourcesRoot;
 
+  @AddToRuleKey private final int splits;
+
+  @AddToRuleKey private final int part;
+
   public JavaTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -166,7 +170,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<SourcePath> unbundledResourcesRoot) {
+      Optional<SourcePath> unbundledResourcesRoot,
+      int splits,
+      int part) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
@@ -195,6 +201,13 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.stdErrLogLevel = stdErrLogLevel;
     this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
+
+    Preconditions.checkArgument(splits > 0);
+    Preconditions.checkArgument(part > 0);
+    Preconditions.checkArgument(splits >= part);
+
+    this.splits = splits;
+    this.part = part;
   }
 
   @Override
@@ -449,7 +462,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
     if (compiledClassFileFinder == null) {
-      compiledClassFileFinder = new CompiledClassFileFinder(this, pathResolver);
+      compiledClassFileFinder = new CompiledClassFileFinder(this, pathResolver, splits, part);
     }
     return compiledClassFileFinder.getClassNamesForSources();
   }
@@ -501,7 +514,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     private final Set<String> classNamesForSources;
 
-    CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver) {
+    CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver, int splits, int part) {
       Path outputPath;
       SourcePath outputSourcePath = rule.getSourcePathToOutput();
       if (outputSourcePath != null) {
@@ -514,7 +527,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               rule.compiledTestsLibrary.getJavaSrcs(),
               outputPath,
               rule.getProjectFilesystem(),
-              pathResolver);
+              pathResolver,
+              splits,
+              part);
     }
 
     public Set<String> getClassNamesForSources() {
@@ -543,7 +558,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Set<SourcePath> sources,
         @Nullable Path jarFilePath,
         ProjectFilesystem projectFilesystem,
-        SourcePathResolver resolver) {
+        SourcePathResolver resolver,
+        int splits,
+        int part) {
       if (jarFilePath == null) {
         return ImmutableSet.of();
       }
@@ -583,7 +600,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 String className =
                     fullyQualifiedNameWithDotClassSuffix.substring(
                         0, fullyQualifiedNameWithDotClassSuffix.length() - ".class".length());
-                testClassNames.add(className);
+                if (splits == 1 || Math.abs(className.hashCode()) % splits == part - 1) {
+                  testClassNames.add(className);
+                }
               }
             }
           };
@@ -667,7 +686,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 ImmutableSet.Builder<Path> builder = ImmutableSet.<Path>builder();
                 if (unbundledResourcesRoot.isPresent()) {
                   builder.add(
-                      buildContext.getSourcePathResolver().getAbsolutePath(unbundledResourcesRoot.get()));
+                      buildContext
+                          .getSourcePathResolver()
+                          .getAbsolutePath(unbundledResourcesRoot.get()));
                 }
                 ImmutableSet<Path> classpathEntries =
                     builder

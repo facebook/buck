@@ -155,7 +155,9 @@ public class JavaTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
-        args.getUnbundledResourcesRoot());
+        args.getUnbundledResourcesRoot(),
+        args.getSplits(),
+        args.getPart());
   }
 
   @Override
@@ -209,6 +211,16 @@ public class JavaTestDescription
     Optional<Long> getTestCaseTimeoutMs();
 
     ImmutableMap<String, String> getEnv();
+
+    @Value.Default
+    default int getSplits() {
+      return 1;
+    }
+
+    @Value.Default
+    default int getPart() {
+      return 1;
+    }
   }
 
   @BuckStyleImmutable
