@@ -30,6 +30,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -171,6 +172,19 @@ public class Cell {
       return Optional.of(getCell(target));
     }
     return Optional.empty();
+  }
+
+  /**
+   * Returns a list of all cells, including this cell.  If this cell is the root, getAllCells will
+   * necessarily return all possible cells that this build may interact with, since the root cell is
+   * required to declare a mapping for all cell names.
+   */
+  public ImmutableList<Cell> getAllCells() {
+    return RichStream.from(knownRoots)
+        .concat(RichStream.of(getRoot()))
+        .distinct()
+        .map(cellProvider::getCellByPath)
+        .toImmutableList();
   }
 
   /**

@@ -132,7 +132,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -174,12 +173,10 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -308,23 +305,6 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
-  private static void addTransitiveCells(
-      Set<Cell> cellsBuilder,
-      Cell cell) {
-    if (cellsBuilder.add(cell)) {
-      cell.getKnownRoots().stream()
-          .map(cell::getCell)
-          .forEach(c -> addTransitiveCells(cellsBuilder, c));
-    }
-  }
-
-  // Collect all transitive cells.
-  private static ImmutableCollection<Cell> getTransitiveCells(Cell root) {
-    HashSet<Cell> cellsBuilder = new HashSet<>();
-    addTransitiveCells(cellsBuilder, root);
-    return ImmutableList.copyOf(cellsBuilder);
-  }
-
   @Nullable
   private static volatile Daemon daemon;
 
@@ -336,7 +316,7 @@ public final class Main {
     Path rootPath = cell.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, getTransitiveCells(cell), Optional.empty());
+      daemon = new Daemon(cell, Optional.empty());
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -364,7 +344,7 @@ public final class Main {
           webServer = Optional.empty();
           daemon.close();
         }
-        daemon = new Daemon(cell, getTransitiveCells(cell), webServer);
+        daemon = new Daemon(cell, webServer);
       }
     }
     return daemon;
@@ -746,7 +726,7 @@ public final class Main {
         if (isDaemon) {
           allCaches.addAll(getFileHashCachesFromDaemon(rootCell));
         } else {
-          getTransitiveCells(rootCell).stream()
+          rootCell.getAllCells().stream()
               .map(cell -> DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()))
               .forEach(allCaches::add);
           allCaches.add(

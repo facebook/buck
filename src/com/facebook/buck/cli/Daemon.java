@@ -45,8 +45,6 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -85,11 +83,11 @@ final class Daemon implements Closeable {
 
   Daemon(
       Cell rootCell,
-      ImmutableCollection<Cell> allCells,
       Optional<WebServer> webServerToReuse) {
-    Preconditions.checkArgument(allCells.contains(rootCell));
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
+
+    ImmutableList<Cell> allCells = rootCell.getAllCells();
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder = ImmutableList.builder();
