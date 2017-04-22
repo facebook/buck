@@ -25,7 +25,6 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -42,6 +41,8 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -60,7 +61,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -628,11 +628,17 @@ public class Parser {
   }
 
   @Subscribe
-  public void onFileSystemChange(WatchEvent<?> event) {
+  public void onFileSystemChange(WatchmanOverflowEvent event) {
+    LOG.verbose("Parser watched event OVERFLOW %s", event.getReason());
+    permState.invalidateBasedOn(event);
+  }
+
+  @Subscribe
+  public void onFileSystemChange(WatchmanPathEvent event) {
     LOG.verbose(
         "Parser watched event %s %s",
-        event.kind(),
-        WatchEvents.createContextString(event));
+        event.getKind(),
+        event.getPath());
 
     permState.invalidateBasedOn(event);
   }

@@ -32,10 +32,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
-import com.facebook.buck.util.WatchmanWatcher;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
@@ -47,7 +47,6 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -240,7 +239,7 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(WatchmanWatcher.createOverflowEvent("testing"));
+    cache.invalidateBasedOn(WatchmanOverflowEvent.of("testing"));
     assertTrue(cache.isCacheEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
@@ -251,8 +250,7 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(
-        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
+    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.CREATE, file));
     assertTrue(cache.isCacheEmpty());
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
@@ -263,8 +261,7 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(
-        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
+    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.DELETE, file));
     assertTrue(cache.isCacheEmpty());
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
@@ -275,8 +272,7 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(
-        WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
+    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.MODIFY, file));
     cache.getActionGraph(
         eventBus,
         NOT_CHECK_GRAPHS,

@@ -432,6 +432,7 @@ java_library(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:watchman",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

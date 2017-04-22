@@ -22,7 +22,6 @@ import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
@@ -32,6 +31,8 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
@@ -48,8 +49,6 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -283,7 +282,8 @@ class DaemonicParserState {
 
   /**
    * The set of {@link Cell} instances that have been seen by this state. This information is used
-   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchEvent)} for example usage.
+   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchmanPathEvent)} for example
+   * usage.
    */
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
@@ -409,21 +409,20 @@ class DaemonicParserState {
     }
   }
 
-  public void invalidateBasedOn(WatchEvent<?> event) {
-    if (!WatchEvents.isPathChangeEvent(event)) {
-      // Non-path change event, likely an overflow due to many change events: invalidate everything.
-      LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);
+  public void invalidateBasedOn(WatchmanOverflowEvent event) {
+    // Non-path change event, likely an overflow due to many change events: invalidate everything.
+    LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);
 
-      if (invalidateAllCaches()) {
-        LOG.warn("Invalidated cache on watch event %s.", event);
-        cacheInvalidatedByWatchOverflowCounter.inc();
-      }
-      return;
+    if (invalidateAllCaches()) {
+      LOG.warn("Invalidated cache on watch event %s.", event);
+      cacheInvalidatedByWatchOverflowCounter.inc();
     }
+  }
 
+  public void invalidateBasedOn(WatchmanPathEvent event) {
     filesChangedCounter.inc();
 
-    Path path = (Path) event.context();
+    Path path = event.getPath();
 
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       for (DaemonicCellState state : cellPathToDaemonicState.values()) {
@@ -542,9 +541,9 @@ class DaemonicParserState {
     rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);
   }
 
-  public static boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
+  public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
+    return event.getKind() == WatchmanPathEvent.Kind.CREATE ||
+        event.getKind() == WatchmanPathEvent.Kind.DELETE;
   }
 
 

@@ -33,7 +33,6 @@ import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,17 +43,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Queries Watchman for changes to a path.
@@ -268,7 +263,8 @@ public class WatchmanWatcher {
               query,
               timeoutMillis);
           postWatchEvent(
-              createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
+              WatchmanOverflowEvent.of(
+                  "Query to Watchman timed out after " + timeoutMillis + "ms"));
           filesHaveChanged.set(true);
           return;
         }
@@ -281,7 +277,7 @@ public class WatchmanWatcher {
           LOG.error(
               e,
               "Error in Watchman output. Posting an overflow event to flush the caches");
-          postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
+          postWatchEvent(WatchmanOverflowEvent.of("Watchman Error occurred - " + e.getMessage()));
           throw e;
         }
 
@@ -310,7 +306,7 @@ public class WatchmanWatcher {
             case NONE:
               break;
             case POST_OVERFLOW_EVENT:
-              postWatchEvent(createOverflowEvent("New Buck instance"));
+              postWatchEvent(WatchmanOverflowEvent.of("New Buck instance"));
               break;
           }
           filesHaveChanged.set(true);
@@ -323,21 +319,20 @@ public class WatchmanWatcher {
             String fileName = (String) file.get("name");
             if (fileName == null) {
               LOG.warn("Filename missing from Watchman file response %s", file);
-              postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
+              postWatchEvent(WatchmanOverflowEvent.of("Filename missing from Watchman response"));
               filesHaveChanged.set(true);
               return;
             }
-            PathEventBuilder builder = new PathEventBuilder();
-            builder.setPath(Paths.get(fileName));
             Boolean fileNew = (Boolean) file.get("new");
+            WatchmanPathEvent.Kind kind = WatchmanPathEvent.Kind.MODIFY;
             if (fileNew != null && fileNew) {
-              builder.setCreationEvent();
+              kind = WatchmanPathEvent.Kind.CREATE;
             }
             Boolean fileExists = (Boolean) file.get("exists");
             if (fileExists != null && !fileExists) {
-              builder.setDeletionEvent();
+              kind = WatchmanPathEvent.Kind.DELETE;
             }
-            postWatchEvent(builder.build());
+            postWatchEvent(WatchmanPathEvent.of(kind, Paths.get(fileName)));
           }
 
           if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
@@ -355,97 +350,20 @@ public class WatchmanWatcher {
       String message = "Watchman communication interrupted";
       LOG.warn(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(createOverflowEvent(message));
+      postWatchEvent(WatchmanOverflowEvent.of(message));
       Thread.currentThread().interrupt();
       throw e;
     } catch (IOException e) {
       String message = "I/O error talking to Watchman";
       LOG.error(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(createOverflowEvent(message + " - " + e.getMessage()));
+      postWatchEvent(WatchmanOverflowEvent.of(message + " - " + e.getMessage()));
       throw e;
     }
   }
 
-  private void postWatchEvent(WatchEvent<?> event) {
+  private void postWatchEvent(WatchmanEvent event) {
     LOG.warn("Posting WatchEvent: %s", event);
     fileChangeEventBus.post(event);
-  }
-
-  @VisibleForTesting
-  public static WatchEvent<Object> createOverflowEvent(final String reason) {
-    return new WatchEvent<Object>() {
-
-      @Override
-      public Kind<Object> kind() {
-        return StandardWatchEventKinds.OVERFLOW;
-      }
-
-      @Override
-      public int count() {
-        return 1;
-      }
-
-      @Override
-      @Nullable
-      public Object context() {
-        return reason;
-      }
-
-      @Override
-      public String toString() {
-        return "Watchman Overflow WatchEvent " + kind();
-      }
-    };
-  }
-
-  private static class PathEventBuilder {
-
-    private WatchEvent.Kind<Path> kind;
-    @Nullable private Path path;
-
-    PathEventBuilder() {
-      this.kind = StandardWatchEventKinds.ENTRY_MODIFY;
-    }
-
-    public void setCreationEvent() {
-      if (kind != StandardWatchEventKinds.ENTRY_DELETE) {
-        kind = StandardWatchEventKinds.ENTRY_CREATE;
-      }
-    }
-
-    public void setDeletionEvent() {
-      kind = StandardWatchEventKinds.ENTRY_DELETE;
-    }
-
-    public void setPath(Path path) {
-      this.path = path;
-    }
-
-    public WatchEvent<Path> build() {
-      Preconditions.checkNotNull(path);
-      return new WatchEvent<Path>() {
-        @Override
-        public Kind<Path> kind() {
-          return kind;
-        }
-
-        @Override
-        public int count() {
-          return 1;
-        }
-
-        @Override
-        @Nullable
-        public Path context() {
-          return path;
-        }
-
-        @Override
-        public String toString() {
-          return "Watchman Path WatchEvent " + kind + " " + path;
-        }
-      };
-    }
   }
 }

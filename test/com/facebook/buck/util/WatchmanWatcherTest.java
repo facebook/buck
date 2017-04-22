@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -57,8 +58,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -121,12 +120,12 @@ public class WatchmanWatcherTest {
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertEquals("Should be modify event.",
-        StandardWatchEventKinds.ENTRY_MODIFY,
-        eventBuffer.getOnlyEvent().kind());
-    assertEquals("Path should match watchman output.",
+    WatchmanPathEvent pathEvent = (WatchmanPathEvent) eventBuffer.getOnlyEvent();
+    assertEquals(WatchmanPathEvent.Kind.MODIFY, pathEvent.getKind());
+    assertEquals(
+        "Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        eventBuffer.getOnlyEvent().context().toString());
+        pathEvent.getPath().toString());
   }
 
   @Test
@@ -142,9 +141,10 @@ public class WatchmanWatcherTest {
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertEquals("Should be create event.",
-        StandardWatchEventKinds.ENTRY_CREATE,
-        eventBuffer.getOnlyEvent().kind());
+    assertEquals(
+        "Should be create event.",
+        WatchmanPathEvent.Kind.CREATE,
+        ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 
   @Test
@@ -161,9 +161,10 @@ public class WatchmanWatcherTest {
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertEquals("Should be delete event.",
-        StandardWatchEventKinds.ENTRY_DELETE,
-        eventBuffer.getOnlyEvent().kind());
+    assertEquals(
+        "Should be delete event.",
+        WatchmanPathEvent.Kind.DELETE,
+        ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 
   @Test
@@ -181,9 +182,10 @@ public class WatchmanWatcherTest {
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertEquals("Should be delete event.",
-        StandardWatchEventKinds.ENTRY_DELETE,
-        eventBuffer.getOnlyEvent().kind());
+    assertEquals(
+        "Should be delete event.",
+        WatchmanPathEvent.Kind.DELETE,
+        ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 
   @Test
@@ -199,12 +201,14 @@ public class WatchmanWatcherTest {
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertEquals("Path should match watchman output.",
+    assertEquals(
+        "Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        eventBuffer.events.get(0).context().toString());
-    assertEquals("Path should match watchman output.",
+        ((WatchmanPathEvent) eventBuffer.events.get(0)).getPath().toString());
+    assertEquals(
+        "Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/boz"),
-        eventBuffer.events.get(1).context().toString());
+        ((WatchmanPathEvent) eventBuffer.events.get(1)).getPath().toString());
   }
 
   @Test
@@ -225,9 +229,9 @@ public class WatchmanWatcherTest {
     } catch (IOException e) {
       assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
     }
-    assertEquals("Should be overflow event.",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+    assertThat(
+        eventBuffer.getOnlyEvent(),
+        instanceOf(WatchmanOverflowEvent.class));
   }
 
   @Test
@@ -249,9 +253,9 @@ public class WatchmanWatcherTest {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
     assertTrue(Thread.currentThread().isInterrupted());
-    assertEquals("Should be overflow event.",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+    assertThat(
+        eventBuffer.getOnlyEvent(),
+        instanceOf(WatchmanOverflowEvent.class));
   }
 
   @Test
@@ -288,9 +292,9 @@ public class WatchmanWatcherTest {
           BuckEventBusFactory.newInstance(new FakeClock(0)),
           WatchmanWatcher.FreshInstanceAction.NONE);
     } finally {
-      assertEquals("Should be overflow event.",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+      assertThat(
+          eventBuffer.getOnlyEvent(),
+          instanceOf(WatchmanOverflowEvent.class));
     }
   }
 
@@ -310,10 +314,10 @@ public class WatchmanWatcherTest {
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    assertEquals(
+    assertThat(
         "should have overflow event",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+        eventBuffer.getOnlyEvent(),
+        instanceOf(WatchmanOverflowEvent.class));
   }
 
   @Test
@@ -356,10 +360,10 @@ public class WatchmanWatcherTest {
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
-    assertEquals(
+    assertThat(
         "should have overflow event",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+        eventBuffer.getOnlyEvent(),
+        instanceOf(WatchmanOverflowEvent.class));
   }
 
   @Test
@@ -585,21 +589,21 @@ public class WatchmanWatcherTest {
         10000 /* timeout */,
         "c:0:0" /* sinceParam */);
     assertThat(
-      watcher.getWatchmanQuery(FAKE_ROOT),
-      hasItem(hasEntry("since", "c:0:0")));
+        watcher.getWatchmanQuery(FAKE_ROOT),
+        hasItem(hasEntry("since", "c:0:0")));
 
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertThat(
-      watcher.getWatchmanQuery(FAKE_ROOT),
-      hasItem(hasEntry("since", "c:1:0")));
+        watcher.getWatchmanQuery(FAKE_ROOT),
+        hasItem(hasEntry("since", "c:1:0")));
 
-    assertEquals(
+    assertThat(
         "should have overflow event",
-        StandardWatchEventKinds.OVERFLOW,
-        eventBuffer.getOnlyEvent().kind());
+        eventBuffer.getOnlyEvent(),
+        instanceOf(WatchmanOverflowEvent.class));
   }
 
   @Test
@@ -708,17 +712,17 @@ public class WatchmanWatcherTest {
   }
 
   private static class EventBuffer {
-    public final List<WatchEvent<?>> events = new ArrayList<>();
+    public final List<WatchmanEvent> events = new ArrayList<>();
 
     @Subscribe
-    public void on(WatchEvent<?> event) {
+    public void on(WatchmanEvent event) {
       events.add(event);
     }
 
     /**
      * Helper to retrieve the only event that should be in the list.
      */
-    public WatchEvent<?> getOnlyEvent() {
+    public WatchmanEvent getOnlyEvent() {
       assertEquals("Should contain only one event", 1, events.size());
       return events.get(0);
     }
