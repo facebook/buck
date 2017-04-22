@@ -109,7 +109,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
-            /* forceFinalResourceIds */ true,
+            args.forceFinalResourceIds,
             /* resourceUnionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             args.useOldStyleableFormat);
@@ -182,5 +182,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     public Optional<String> robolectricRuntimeDependency;
     public Optional<SourcePath> robolectricManifest;
     public boolean useOldStyleableFormat = false;
+    public boolean forceFinalResourceIds = true;
   }
 }
