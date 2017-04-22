@@ -162,10 +162,12 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths = whitelistedStringDirs.stream()
-        .map(context.getSourcePathResolver()::getRelativePath)
+        .map(sourcePath -> getProjectFilesystem().relativize(
+            context.getSourcePathResolver().getAbsolutePath(sourcePath)))
         .collect(MoreCollectors.toImmutableSet());
     ImmutableList<Path> resPaths = resDirectories.stream()
-        .map(context.getSourcePathResolver()::getRelativePath)
+        .map(sourcePath -> getProjectFilesystem().relativize(
+            context.getSourcePathResolver().getAbsolutePath(sourcePath)))
         .collect(MoreCollectors.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap = createInResDirToOutResDirMap(
         resPaths,
