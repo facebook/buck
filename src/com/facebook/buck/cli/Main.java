@@ -59,7 +59,6 @@ import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -135,7 +134,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.martiansoftware.nailgun.NGContext;
@@ -235,6 +233,8 @@ public final class Main {
   private static final Semaphore commandSemaphore = new Semaphore(1);
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
+  private static final DaemonLifecycleManager daemonLifecycleManager = new DaemonLifecycleManager();
+
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
@@ -305,101 +305,6 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
-  @Nullable
-  private static volatile Daemon daemon;
-
-  /**
-   * Get or create Daemon.
-   */
-  @VisibleForTesting
-  static Daemon getDaemon(Cell cell) throws IOException {
-    Path rootPath = cell.getFilesystem().getRootPath();
-    if (daemon == null) {
-      LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, Optional.empty());
-    } else {
-      // Buck daemons cache build files within a single project root, changing to a different
-      // project root is not supported and will likely result in incorrect builds. The buck and
-      // buckd scripts attempt to enforce this, so a change in project root is an error that
-      // should be reported rather than silently worked around by invalidating the cache and
-      // creating a new daemon object.
-      Path parserRoot = cell.getFilesystem().getRootPath();
-      if (!rootPath.equals(parserRoot)) {
-        throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
-            rootPath, parserRoot));
-      }
-
-      // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
-      // create a new daemon.
-      if (!daemon.getRootCell().equals(cell)) {
-        LOG.warn(
-            "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
-            daemon.getRootCell(),
-            cell);
-        Optional<WebServer> webServer;
-        if (shouldReuseWebServer(cell)) {
-          webServer = daemon.getWebServer();
-          LOG.info("Reusing web server");
-        } else {
-          webServer = Optional.empty();
-          daemon.close();
-        }
-        daemon = new Daemon(cell, webServer);
-      }
-    }
-    return daemon;
-  }
-
-  private WatchmanWatcher createWatchmanWatcher(
-      Daemon daemon,
-      ImmutableMap<Path, ProjectWatch> projectWatch,
-      EventBus fileChangeEventBus,
-      ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Watchman watchman) {
-    return new WatchmanWatcher(
-        projectWatch,
-        fileChangeEventBus,
-        ignorePaths,
-        watchman,
-        daemon.getWatchmanCursor());
-  }
-
-  private static BroadcastEventListener getBroadcastEventListener(
-      boolean isDaemon,
-      Cell rootCell)
-      throws IOException {
-    if (isDaemon) {
-      return getDaemon(rootCell).getBroadcastEventListener();
-    }
-    return new BroadcastEventListener();
-  }
-
-  private static boolean shouldReuseWebServer(Cell newCell) {
-    if (newCell == null || daemon == null) {
-      return false;
-    }
-    Optional<Integer> portFromOldConfig =
-        Daemon.getValidWebServerPort(daemon.getRootCell().getBuckConfig());
-    Optional<Integer> portFromUpdatedConfig =
-        Daemon.getValidWebServerPort(newCell.getBuckConfig());
-
-    return portFromOldConfig.equals(portFromUpdatedConfig);
-  }
-
-  @VisibleForTesting
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  static void resetDaemon() {
-    if (daemon != null) {
-      try {
-        LOG.info("Closing daemon on reset request.");
-        daemon.close();
-      } catch (IOException e) {
-        // Swallow exceptions while closing daemon.
-      }
-    }
-    daemon = null;
-  }
-
   @VisibleForTesting
   public Main(
       PrintStream stdOut,
@@ -426,9 +331,9 @@ public final class Main {
     // Only post an overflow event if Watchman indicates a fresh instance event
     // after our initial query.
     WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
-        daemon == null
-            ? WatchmanWatcher.FreshInstanceAction.NONE
-            : WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT;
+        daemonLifecycleManager.hasDaemon()
+            ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
+            : WatchmanWatcher.FreshInstanceAction.NONE;
 
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
@@ -682,15 +587,6 @@ public final class Main {
                    clientEnvironment,
                    console,
                    clock)) {
-        final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
-
-        if (!isDaemon && shouldCleanUpTrash) {
-          // Clean up the trash on a background thread if this was a
-          // non-buckd read-write command. (We don't bother waiting
-          // for it to complete; the thread is a daemon thread which
-          // will just be terminated at shutdown time.)
-          TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
-        }
 
         KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
             processExecutor,
@@ -703,6 +599,18 @@ public final class Main {
             command.getConfigOverrides(),
             factory)
             .getCellByPath(filesystem.getRootPath());
+
+        Optional<Daemon> daemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN)
+            ? Optional.of(daemonLifecycleManager.getDaemon(rootCell))
+            : Optional.empty();
+
+        if (!daemon.isPresent() && shouldCleanUpTrash) {
+          // Clean up the trash on a background thread if this was a
+          // non-buckd read-write command. (We don't bother waiting
+          // for it to complete; the thread is a daemon thread which
+          // will just be terminated at shutdown time.)
+          TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
+        }
 
         int exitCode;
         ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
@@ -723,8 +631,8 @@ public final class Main {
         ProjectFilesystem rootCellProjectFilesystem =
             ProjectFilesystem.createNewOrThrowHumanReadableException(
                 rootCell.getFilesystem().getRootPath());
-        if (isDaemon) {
-          allCaches.addAll(getFileHashCachesFromDaemon(rootCell));
+        if (daemon.isPresent()) {
+          allCaches.addAll(getFileHashCachesFromDaemon(daemon.get()));
         } else {
           rootCell.getAllCells().stream()
               .map(cell -> DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()))
@@ -743,9 +651,9 @@ public final class Main {
 
         StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
-        Optional<WebServer> webServer = getWebServerIfDaemon(context, rootCell);
+        Optional<WebServer> webServer = daemon.flatMap(Daemon::getWebServer);
         Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools =
-            getPersistentWorkerPoolsIfDaemon(context, rootCell);
+            daemon.map(Daemon::getPersistentWorkerPools);
 
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
@@ -777,7 +685,7 @@ public final class Main {
         // Create and register the event buses that should listen to broadcast events.
         // If the build doesn't have a daemon create a new instance.
         BroadcastEventListener broadcastEventListener =
-            getBroadcastEventListener(isDaemon, rootCell);
+            daemon.map(Daemon::getBroadcastEventListener).orElseGet(BroadcastEventListener::new);
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
@@ -785,7 +693,7 @@ public final class Main {
         InvocationInfo invocationInfo = InvocationInfo.of(
             buildId,
             isSuperConsoleEnabled(console),
-            isDaemon,
+            daemon.isPresent(),
             command.getSubCommandNameForLogging(),
             filesystem.getBuckPaths().getLogDir());
         try (
@@ -829,7 +737,7 @@ public final class Main {
                     new ProcessTracker(
                         buildEventBus,
                         invocationInfo,
-                        isDaemon,
+                        daemon.isPresent(),
                         buckConfig.isProcessTrackerDeepEnabled()) : null;
         ) {
 
@@ -926,7 +834,7 @@ public final class Main {
           CommandEvent.Started startedEvent = CommandEvent.started(
               args.length > 0 ? args[0] : "",
               remainingArgs,
-              isDaemon,
+              daemon.isPresent(),
               getBuckPID());
           buildEventBus.post(startedEvent);
 
@@ -937,31 +845,30 @@ public final class Main {
           Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler =
               Optional.empty();
 
-          if (isDaemon) {
+          if (daemon.isPresent()) {
             try {
-              Daemon daemon = getDaemon(rootCell);
-              WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
-                  daemon,
+              WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
                   watchman.getProjectWatches(),
-                  daemon.getFileEventBus(),
+                  daemon.get().getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
                       .addAll(DEFAULT_IGNORE_GLOBS)
                       .build(),
-                  watchman);
+                  watchman,
+                  daemon.get().getWatchmanCursor());
               parser = getParserFromDaemon(
+                  daemon.get(),
                   context.get(),
-                  rootCell,
                   startedEvent,
                   buildEventBus,
                   watchmanWatcher,
                   watchmanFreshInstanceAction);
-              versionedTargetGraphCache = daemon.getVersionedTargetGraphCache();
-              actionGraphCache = daemon.getActionGraphCache();
+              versionedTargetGraphCache = daemon.get().getVersionedTargetGraphCache();
+              actionGraphCache = daemon.get().getActionGraphCache();
               if (buckConfig.getRuleKeyCaching()) {
                 LOG.debug("Using rule key calculation caching");
                 defaultRuleKeyFactoryCacheRecycler =
-                    Optional.of(daemon.getDefaultRuleKeyFactoryCacheRecycler());
+                    Optional.of(daemon.get().getDefaultRuleKeyFactoryCacheRecycler());
               }
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
@@ -1092,7 +999,7 @@ public final class Main {
             commandSemaphore.release(); // Allow another command to execute while outputting traces.
             commandSemaphoreAcquired = false;
           }
-          if (isDaemon && shouldCleanUpTrash) {
+          if (daemon.isPresent() && shouldCleanUpTrash) {
             // Clean up the trash in the background if this was a buckd
             // read-write command. (We don't bother waiting for it to
             // complete; the cleaner will ensure subsequent cleans are
@@ -1307,7 +1214,6 @@ public final class Main {
     };
   }
 
-
   private static ConsoleHandlerState.Writer createWriterForConsole(
       final AbstractConsoleEventBusListener console) {
     return new ConsoleHandlerState.Writer() {
@@ -1343,17 +1249,17 @@ public final class Main {
     }
   }
 
+  /**
+   * Wire up daemon to new client and get cached Parser.
+   */
   private Parser getParserFromDaemon(
+      Daemon daemonForParser,
       NGContext context,
-      Cell cell,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
       throws IOException, InterruptedException {
-    // Wire up daemon to new client and get cached Parser.
-    Daemon daemonForParser = getDaemon(cell);
-
     context.addClientListener(() -> {
       if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
         LOG.info("killing background processes on client disconnection");
@@ -1369,35 +1275,12 @@ public final class Main {
         eventBus,
         watchmanWatcher,
         watchmanFreshInstanceAction);
-    return daemon.getParser();
+    return daemonForParser.getParser();
   }
 
-  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Cell cell)
+  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon)
       throws IOException {
-    Daemon daemon = getDaemon(cell);
     return daemon.getFileHashCaches();
-  }
-
-  private Optional<WebServer> getWebServerIfDaemon(
-      Optional<NGContext> context,
-      Cell cell)
-      throws IOException {
-    if (context.isPresent()) {
-      Daemon daemon = getDaemon(cell);
-      return daemon.getWebServer();
-    }
-    return Optional.empty();
-  }
-
-  private Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPoolsIfDaemon(
-      Optional<NGContext> context,
-      Cell cell)
-      throws IOException {
-    if (context.isPresent()) {
-      Daemon daemon = getDaemon(cell);
-      return Optional.of(daemon.getPersistentWorkerPools());
-    }
-    return Optional.empty();
   }
 
   private void loadListenersFromBuckConfig(
@@ -1848,5 +1731,13 @@ public final class Main {
       // Reclaim memory after a command finishes.
       DaemonBootstrap.scheduleGC();
     }
+  }
+
+  /**
+   * Used to clean up the daemon after running integration tests that exercise it.
+   */
+  @VisibleForTesting
+  static void resetDaemon() {
+    daemonLifecycleManager.resetDaemon();
   }
 }

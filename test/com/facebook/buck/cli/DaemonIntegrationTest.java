@@ -22,15 +22,12 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -562,41 +559,6 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenBuckConfigChangesParserInvalidated()
-      throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
-
-    Object daemon = Main.getDaemon(
-        new TestCellBuilder().setBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
-            .setFilesystem(filesystem)
-            .build());
-
-    assertEquals(
-        "Daemon should not be replaced when config equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
-                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
-                    .build())
-                .setFilesystem(filesystem)
-                .build()));
-
-    assertNotEquals(
-        "Daemon should be replaced when config not equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder().setSections(
-                    ImmutableMap.of(
-                        "somesection",
-                        ImmutableMap.of("somename", "someothervalue"))).build())
-                .setFilesystem(filesystem)
-                .build()));
-  }
-
-  @Test
   public void whenBuckBuiltTwiceLogIsPresent()
       throws IOException, InterruptedException {
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -647,37 +609,5 @@ public class DaemonIntegrationTest {
     buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
     assertThat(Files.readAllLines(buildLogFile), not(hasItem(containsString("BUILT_LOCALLY"))));
-  }
-
-  @Test
-  public void whenAndroidNdkVersionChangesParserInvalidated()
-      throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
-
-    BuckConfig buckConfig1 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "something")))
-        .build();
-
-    BuckConfig buckConfig2 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "different")))
-        .build();
-
-    Object daemon = Main.getDaemon(
-        new TestCellBuilder()
-            .setBuckConfig(buckConfig1)
-            .setFilesystem(filesystem)
-            .build());
-
-    assertNotEquals(
-        "Daemon should be replaced when not equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder()
-                .setBuckConfig(buckConfig2)
-                .setFilesystem(filesystem)
-                .build()));
   }
 }
