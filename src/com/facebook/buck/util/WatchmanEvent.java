@@ -23,11 +23,18 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 
 public interface WatchmanEvent {
+  /**
+   * Cell path being watched.
+   */
+  Path getCellPath();
 }
 
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleTuple
 abstract class AbstractWatchmanOverflowEvent implements WatchmanEvent {
+  @Override
+  public abstract Path getCellPath();
+
   public abstract String getReason();
 }
 
@@ -40,13 +47,17 @@ abstract class AbstractWatchmanPathEvent implements WatchmanEvent {
     DELETE,
   }
 
+  @Override
+  public abstract Path getCellPath();
+
   /**
    * The kind of event that occurred.
    */
   public abstract Kind getKind();
 
   /**
-   * Relative path of the actual file the event is about. The path is relative to the watched path.
+   * Relative path of the actual file the event is about. The path is relative to the cell path
+   * returned by {@link #getCellPath()}.
    */
   public abstract Path getPath();
 }

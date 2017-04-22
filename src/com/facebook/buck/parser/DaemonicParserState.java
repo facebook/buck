@@ -423,6 +423,7 @@ class DaemonicParserState {
     filesChangedCounter.inc();
 
     Path path = event.getPath();
+    Path fullPath = event.getCellPath().resolve(event.getPath());
 
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       for (DaemonicCellState state : cellPathToDaemonicState.values()) {
@@ -433,10 +434,10 @@ class DaemonicParserState {
             Cell cell = state.getCell();
             BuildFileTree buildFiles = buildFileTrees.get(cell);
 
-            if (path.endsWith(cell.getBuildFileName())) {
+            if (fullPath.endsWith(cell.getBuildFileName())) {
               LOG.debug(
                   "Build file %s changed, invalidating build file tree for cell %s",
-                  path,
+                  fullPath,
                   cell);
               // If a build file has been added or removed, reconstruct the build file tree.
               buildFileTrees.invalidate(cell);
@@ -449,7 +450,7 @@ class DaemonicParserState {
             } else {
               LOG.debug(
                   "Not invalidating the owning build file of %s because it is a temporary file.",
-                  state.getCellRoot().resolve(path).toAbsolutePath().toString());
+                  fullPath);
             }
           }
         } catch (ExecutionException | UncheckedExecutionException e) {
@@ -464,7 +465,7 @@ class DaemonicParserState {
       }
     }
 
-    invalidatePath(path);
+    invalidatePath(fullPath);
   }
 
   public void invalidatePath(Path path) {
@@ -535,7 +536,7 @@ class DaemonicParserState {
   private void invalidatePath(DaemonicCellState state, Path path) {
     LOG.debug("Invalidating path %s for cell %s", path, state.getCellRoot());
 
-    // Paths from Watchman are not absolute.
+    // Paths passed in may not be absolute.
     path = state.getCellRoot().resolve(path);
     int invalidatedNodes = state.invalidatePath(path);
     rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);

@@ -90,6 +90,9 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+/**
+ * Cross-cell related integration tests that don't fit anywhere else.
+ */
 public class InterCellIntegrationTest {
 
   @Rule

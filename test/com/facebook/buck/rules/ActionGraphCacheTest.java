@@ -239,7 +239,7 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(WatchmanOverflowEvent.of("testing"));
+    cache.invalidateBasedOn(WatchmanOverflowEvent.of(tmpFilePath.getRoot(), "testing"));
     assertTrue(cache.isCacheEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
@@ -250,7 +250,8 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.CREATE, file));
+    cache.invalidateBasedOn(
+        WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.CREATE, file));
     assertTrue(cache.isCacheEmpty());
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
@@ -261,7 +262,8 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.DELETE, file));
+    cache.invalidateBasedOn(
+        WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.DELETE, file));
     assertTrue(cache.isCacheEmpty());
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
@@ -272,7 +274,8 @@ public class ActionGraphCacheTest {
         targetGraph,
         keySeed);
     assertFalse(cache.isCacheEmpty());
-    cache.invalidateBasedOn(WatchmanPathEvent.of(WatchmanPathEvent.Kind.MODIFY, file));
+    cache.invalidateBasedOn(
+        WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.MODIFY, file));
     cache.getActionGraph(
         eventBus,
         NOT_CHECK_GRAPHS,

@@ -610,4 +610,25 @@ public class DaemonIntegrationTest {
     assertTrue(Files.isRegularFile(buildLogFile));
     assertThat(Files.readAllLines(buildLogFile), not(hasItem(containsString("BUILT_LOCALLY"))));
   }
+
+  @Test
+  public void crossCellIncludeDefChangesInvalidateBuckTargets() throws Exception {
+    final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_include_defs/primary", tmp.newFolder("primary"));
+    primary.setUp();
+
+    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_include_defs/secondary", tmp.newFolder("secondary"));
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories", ImmutableMap.of(
+                "secondary",
+                secondary.getPath(".").normalize().toString())));
+
+    primary.runBuckdCommand("build", ":rule").assertSuccess();
+    Files.write(secondary.getPath("included_by_primary.py"), new byte[]{});
+    primary.runBuckdCommand("build", ":rule").assertFailure();
+  }
 }

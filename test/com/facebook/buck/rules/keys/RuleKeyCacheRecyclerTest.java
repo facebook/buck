@@ -62,7 +62,10 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<Void> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        WatchmanPathEvent.of(WatchmanPathEvent.Kind.MODIFY, input2.getPath()));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(),
+            WatchmanPathEvent.Kind.MODIFY,
+            input2.getPath()));
     assertTrue(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
@@ -78,7 +81,10 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<Void> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        WatchmanPathEvent.of(WatchmanPathEvent.Kind.MODIFY, input.getPath().resolve("subpath")));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(),
+            WatchmanPathEvent.Kind.MODIFY,
+            input.getPath().resolve("subpath")));
     assertFalse(cache.isCached(appendable));
   }
 
@@ -108,7 +114,7 @@ public class RuleKeyCacheRecyclerTest {
     assertTrue(cache.isCached(appendable2));
 
     // Send an overflow event and verify everything was invalidated.
-    recycler.onFilesystemChange(WatchmanOverflowEvent.of(""));
+    recycler.onFilesystemChange(WatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
     assertFalse(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
