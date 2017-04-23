@@ -386,8 +386,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
