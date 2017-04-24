@@ -194,6 +194,7 @@ public class CxxLibraryTest {
         Optional.empty(),
         ImmutableSortedSet.of(),
         /* isAsset */ false,
+        true,
         true);
 
     NativeLinkableInput expectedSharedNativeLinkableInput =

@@ -1004,7 +1004,8 @@ public class CxxLibraryDescription implements
         args.tests,
         args.canBeAsset.orElse(false),
         !params.getBuildTarget().getFlavors()
-            .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR));
+            .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+        args.reexportAllHeaderDependencies);
   }
 
   public static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {
@@ -1227,6 +1228,10 @@ public class CxxLibraryDescription implements
     // extra_xcode_sources will add the files to the list of files in the project and won't
     // add them to an Xcode target.
     public ImmutableList<SourcePath> extraXcodeFiles = ImmutableList.of();
+
+    // Controls whether the headers of dependencies in "deps" is re-exported for compiling targets
+    // that depend on this one.
+    public boolean reexportAllHeaderDependencies = true;
 
     // These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not
     // used otherwise.

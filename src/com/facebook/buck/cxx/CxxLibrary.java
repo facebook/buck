@@ -72,6 +72,7 @@ public class CxxLibrary
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
+  private final boolean reexportAllHeaderDependencies;
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
    * to link at link time. Setting this to false makes this library invisible to linking, so it and
@@ -104,7 +105,8 @@ public class CxxLibrary
       Optional<String> soname,
       ImmutableSortedSet<BuildTarget> tests,
       boolean canBeAsset,
-      boolean propagateLinkables) {
+      boolean propagateLinkables,
+      boolean reexportAllHeaderDependencies) {
     super(params);
     this.ruleResolver = ruleResolver;
     this.deps = deps;
@@ -121,6 +123,7 @@ public class CxxLibrary
     this.tests = tests;
     this.canBeAsset = canBeAsset;
     this.propagateLinkables = propagateLinkables;
+    this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -135,11 +138,11 @@ public class CxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return RichStream
-        .from(
-            Iterables.concat(
-                deps.get(ruleResolver, cxxPlatform),
-                exportedDeps.get(ruleResolver, cxxPlatform)))
+    return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
+        .concat(
+            this.reexportAllHeaderDependencies
+                ? RichStream.from(deps.get(ruleResolver, cxxPlatform))
+                : Stream.empty())
         .filter(CxxPreprocessorDep.class)
         .toImmutableList();
   }

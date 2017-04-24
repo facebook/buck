@@ -389,4 +389,16 @@ public class CxxLibraryIntegrationTest {
         "buck-out/gen/foobar#default,private-headers/foobar/private.h")));
   }
 
+  @Test
+  public void testExplicitReexportOfHeaderDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "reexport_header_deps", tmp);
+    workspace.setUp();
+    // auto-reexport is off, but reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-explicit-reexport").assertSuccess();
+    // auto-reexport is off, but not reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-explicit-noexport").assertFailure();
+    // auto-reexport is on, but not reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-auto-reexport").assertSuccess();
+  }
 }
