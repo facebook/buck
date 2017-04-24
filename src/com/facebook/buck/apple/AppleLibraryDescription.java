@@ -572,6 +572,7 @@ public class AppleLibraryDescription implements
   public static class Arg extends AppleNativeTargetDescriptionArg {
     public Optional<SourcePath> infoPlist;
     public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
+    public boolean modular = false;
   }
 
 }

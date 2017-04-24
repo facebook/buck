@@ -461,6 +461,238 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testModularFrameworkHeaderMapInclusionAsDependency() throws IOException {
+    BuildTarget frameworkBundleTarget = BuildTarget.builder(rootPath, "//foo", "framework").build();
+    BuildTarget frameworkLibTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget appBundleTarget = BuildTarget.builder(rootPath, "//product", "app").build();
+    BuildTarget appBinaryTarget = BuildTarget.builder(rootPath, "//product", "binary").build();
+
+    String configName = "Default";
+
+    TargetNode<?, ?> frameworkLibNode = AppleLibraryBuilder
+        .createBuilder(frameworkLibTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/foo.h"),
+                new FakeSourcePath("HeaderGroup2/baz.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/bar.h")))
+        .setConfigs(
+            ImmutableSortedMap.of(
+                configName,
+                ImmutableMap.of()
+            )
+        )
+        .setModular(true)
+        .build();
+
+    TargetNode<?, ?> frameworkBundleNode = AppleBundleBuilder
+        .createBuilder(frameworkBundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(frameworkLibTarget)
+        .build();
+
+    TargetNode<?, ?> appBinaryNode = AppleLibraryBuilder
+        .createBuilder(appBinaryTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setDeps(ImmutableSortedSet.of(frameworkBundleTarget))
+        .setConfigs(
+            ImmutableSortedMap.of(
+                configName,
+                ImmutableMap.of()
+            )
+        )
+        .build();
+
+    TargetNode<?, ?> appBundleNode = AppleBundleBuilder
+        .createBuilder(appBundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(appBinaryTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(
+            frameworkLibNode,
+            frameworkBundleNode,
+            appBinaryNode,
+            appBundleNode),
+        ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(8));
+
+    assertTrue(headerSymlinkTrees.contains(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub")));
+    assertThatHeaderMapWithoutSymLinksIsEmpty(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"));
+  }
+
+  @Test
+  public void testModularFrameworkHeaderMapInclusionInTargetItself() throws IOException {
+    BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+
+    TargetNode<?, ?> libNode = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/foo.h"),
+                new FakeSourcePath("HeaderGroup2/baz.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/bar.h")))
+        .setConfigs(
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()
+            )
+        )
+        .setModular(true)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libNode),
+        ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
+    assertThatHeaderMapWithoutSymLinksIsEmpty(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"));
+  }
+
+  @Test
+  public void testModularFrameworkBuildSettings() throws IOException {
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "framework").build();
+    BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+
+    String configName = "Default";
+
+    TargetNode<?, ?> libNode = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/foo.h"),
+                new FakeSourcePath("HeaderGroup2/baz.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/bar.h")))
+        .setConfigs(
+            ImmutableSortedMap.of(
+                configName,
+                ImmutableMap.of()
+            )
+        )
+        .setModular(true)
+        .build();
+
+    TargetNode<?, ?> frameworkNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(libTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(
+            libNode,
+            frameworkNode),
+        ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget libPBXTarget =  assertTargetExistsAndReturnTarget(project, "//foo:lib");
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(bundleTarget, libPBXTarget, configName);
+
+    assertEquals(
+        "USE_HEADERMAP must be turned on for modular framework targets " +
+            "so that Xcode generates VFS overlays",
+        "YES",
+        buildSettings.get("USE_HEADERMAP"));
+    assertEquals(
+        "CLANG_ENABLE_MODULES must be turned on for modular framework targets" +
+            "so that Xcode generates VFS overlays",
+        "YES",
+        buildSettings.get("CLANG_ENABLE_MODULES"));
+    assertEquals(
+        "DEFINES_MODULE must be turned on for modular framework targets",
+        "YES",
+        buildSettings.get("DEFINES_MODULE"));
+  }
+
+  @Test
+  public void testModularFrameworkHeadersInHeadersBuildPhase() throws IOException {
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "framework").build();
+    BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+
+    String exportedHeaderName = "bar.h";
+
+    TargetNode<?, ?> libNode = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .setHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/foo.h"),
+                new FakeSourcePath("HeaderGroup2/baz.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.of(
+                new FakeSourcePath("HeaderGroup1/" + exportedHeaderName)))
+        .setModular(true)
+        .build();
+
+    TargetNode<?, ?> frameworkNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(libTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(
+            libNode,
+            frameworkNode),
+        ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target =  assertTargetExistsAndReturnTarget(project, "//foo:framework");
+
+    List<PBXBuildPhase > headersPhases = target.getBuildPhases();
+
+    headersPhases.removeIf(input -> !(input instanceof PBXHeadersBuildPhase));
+    assertEquals(1, headersPhases.size());
+
+    PBXHeadersBuildPhase headersPhase = (PBXHeadersBuildPhase) headersPhases.get(0);
+    List<PBXBuildFile> headers = headersPhase.getFiles();
+    assertEquals(1, headers.size());
+
+    PBXFileReference headerReference = (PBXFileReference) headers.get(0).getFileRef();
+    assertNotNull(headerReference);
+    assertEquals(headerReference.getName(), exportedHeaderName);
+  }
+
+  @Test
   public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node = AppleLibraryBuilder
@@ -1219,6 +1451,20 @@ public class ProjectGeneratorTest {
               .resolve(projectCell.getRoot().getFileName())
               .resolve(link).toString()));
     }
+  }
+
+  private void assertThatHeaderMapWithoutSymLinksIsEmpty(
+      Path root)
+      throws IOException {
+    // Read the tree's header map.
+    byte[] headerMapBytes;
+    try (InputStream headerMapInputStream =
+             projectFilesystem.newFileInputStream(root.resolve(".hmap"))) {
+      headerMapBytes = ByteStreams.toByteArray(headerMapInputStream);
+    }
+    HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
+    assertNotNull(headerMap);
+    assertEquals(headerMap.getNumEntries(), 0);
   }
 
   private void assertThatHeaderMapWithoutSymLinksContains(

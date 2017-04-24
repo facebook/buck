@@ -39,4 +39,9 @@ public class AppleLibraryBuilder
   public static AppleLibraryBuilder createBuilder(BuildTarget target) {
     return new AppleLibraryBuilder(target);
   }
+
+  public AppleLibraryBuilder setModular(boolean modular) {
+    arg.modular = modular;
+    return this;
+  }
 }
