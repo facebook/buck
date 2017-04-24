@@ -30,10 +30,8 @@ import static com.facebook.buck.bser.BserConstants.BSER_STRING;
 import static com.facebook.buck.bser.BserConstants.BSER_TEMPLATE;
 import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 
-import com.facebook.buck.util.MapWrapperForNullValues;
+import com.facebook.buck.util.ImmutableMapWithNullValues;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
@@ -260,11 +258,11 @@ public class BserDeserializer {
     if (numItems == 0) {
       return Collections.emptyMap();
     }
-    ImmutableMap.Builder<String, Object> builder;
+    ImmutableMapWithNullValues.Builder<String, Object> builder;
     if (keyOrdering == KeyOrdering.UNSORTED) {
-      builder = ImmutableMap.builder();
+      builder = ImmutableMapWithNullValues.Builder.insertionOrder();
     } else {
-      builder = ImmutableSortedMap.naturalOrder();
+      builder = ImmutableMapWithNullValues.Builder.sorted();
     }
     for (int i = 0; i < numItems; i++) {
       byte stringType = buffer.get();
@@ -276,9 +274,9 @@ public class BserDeserializer {
       }
       String key = deserializeString(buffer);
       Object value = deserializeRecursive(buffer);
-      builder.put(key, value != null ? value : MapWrapperForNullValues.NULL);
+      builder.put(key, value);
     }
-    return new MapWrapperForNullValues<>(builder.build());
+    return builder.build();
   }
 
   private List<Map<String, Object>> deserializeTemplate(ByteBuffer buffer) throws IOException {

@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.DeserializationContext;
 
-import com.facebook.buck.util.MapWrapperForNullValues;
+import com.facebook.buck.util.ImmutableMapWithNullValues;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,12 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 /**
  * JSON deserializer specialized to parse the output of {@code buck.py}
  * into {@link BuildFilePythonResult}.
  *
  * Uses Guava {@link ImmutableMap} and {@link ImmutableList} to reduce
- * memory pressure, along with {@link MapWrapperForNullValues} to allow
+ * memory pressure, along with {@link ImmutableMapWithNullValues} to allow
  * {@code null} values in the maps.
  */
 final class BuildFilePythonResultDeserializer
@@ -99,7 +101,8 @@ final class BuildFilePythonResultDeserializer
   private static Map<String, Object> deserializeObject(
       JsonParser jp)
     throws IOException, JsonParseException {
-    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    ImmutableMapWithNullValues.Builder<String, Object> builder =
+        ImmutableMapWithNullValues.Builder.insertionOrder();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {
       builder.put(fieldName, deserializeRecursive(jp, jp.nextToken()));
@@ -107,7 +110,7 @@ final class BuildFilePythonResultDeserializer
     if (jp.getCurrentToken() != JsonToken.END_OBJECT) {
       throw new JsonParseException(jp, "Missing expected END_OBJECT");
     }
-    return new MapWrapperForNullValues<>(builder.build());
+    return builder.build();
   }
 
   private static List<Object> deserializeList(
@@ -124,6 +127,7 @@ final class BuildFilePythonResultDeserializer
     return builder.build();
   }
 
+  @Nullable
   private static Object deserializeRecursive(
       JsonParser jp,
       JsonToken token)
@@ -138,7 +142,7 @@ final class BuildFilePythonResultDeserializer
       case VALUE_FALSE:
         return false;
       case VALUE_NULL:
-        return MapWrapperForNullValues.NULL;
+        return null;
       case VALUE_NUMBER_FLOAT:
         return jp.getDoubleValue();
       case VALUE_NUMBER_INT:
