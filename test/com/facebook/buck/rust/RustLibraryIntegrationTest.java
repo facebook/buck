@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -49,9 +50,33 @@ public class RustLibraryIntegrationTest {
         this, "binary_with_library", tmp);
     workspace.setUp();
 
-      workspace
-          .runBuckBuild("//messenger:messenger#rlib")
-          .assertSuccess();
+    workspace
+        .runBuckBuild("//messenger:messenger#rlib")
+        .assertSuccess();
+  }
+
+  @Test
+  public void rustLibraryAmbigFail() throws IOException, InterruptedException {
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(Matchers.containsString("Can't find suitable top-level source file for"));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//messenger:messenger_ambig#rlib").assertFailure();
+  }
+
+  @Test
+  public void rustLibraryAmbigOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("//messenger:messenger_ambig_ovr#rlib")
+        .assertSuccess();
   }
 
   @Test
