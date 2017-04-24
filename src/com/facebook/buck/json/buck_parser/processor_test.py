@@ -13,12 +13,13 @@ from typing import Sequence
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 
 
-def foo_rule(name, srcs=[], visibility=[], build_env=None):
+def foo_rule(name, srcs=[], visibility=[], options={}, build_env=None):
     """A dummy build rule."""
     add_rule({
         'buck.type': 'foo',
         'name': name,
         'srcs': srcs,
+        'options': options,
         'visibility': visibility,
     }, build_env)
 
@@ -851,6 +852,141 @@ class BuckTest(unittest.TestCase):
                 NameError,
                 lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
 
+    def test_json_encoding_list_like_object(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+import collections
+
+class ListLike(collections.MutableSequence):
+  def __init__(self, list):
+    self.list = list
+  def __delitem__(self, key):
+    self.list.__delitems__(key)
+  def __getitem__(self, key):
+    return self.list.__getitem__(key)
+  def __setitem__(self, key, value):
+    self.list.__setitem__(key, value)
+  def __len__(self):
+    return self.list.__len__()
+  def insert(self, position, value):
+    self.list.insert(position, value)
+
+foo_rule(
+  name="foo",
+  srcs=ListLike(['Foo.java','Foo.c']),
+)
+'''
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        c_file = ProjectFile(self.project_root, path='Foo.c', contents=())
+        self.write_files(build_file, java_file, c_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertEqual(
+            [],
+            decoded_result.get('diagnostics', []))
+        self.assertEqual(
+            [u'Foo.java', u'Foo.c'],
+            decoded_result['values'][0].get('srcs', []))
+
+    def test_json_encoding_dict_like_object(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+import collections
+
+class DictLike(collections.MutableMapping):
+  def __init__(self, dict):
+    self.dict = dict
+  def __delitem__(self, key):
+    self.dict.__delitems__(key)
+  def __getitem__(self, key):
+    return self.dict.__getitem__(key)
+  def __setitem__(self, key, value):
+    self.dict.__setitem__(key, value)
+  def __len__(self):
+    return self.dict.__len__()
+  def __iter__(self):
+    return self.dict.__iter__()
+  def insert(self, position, value):
+    self.dict.insert(position, value)
+
+foo_rule(
+  name="foo",
+  srcs=[],
+  options=DictLike({'foo':'bar','baz':'blech'}),
+)
+'''
+            ))
+        self.write_file(build_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertEqual(
+            [],
+            decoded_result.get('diagnostics', []))
+        self.assertEqual(
+            {u'foo': u'bar', u'baz': u'blech'},
+            decoded_result['values'][0].get('options', {}))
+
+    def test_sort_keys(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+foo_rule(
+  name="foo",
+  srcs=[],
+  options={'foo':'bar','baz':'blech'},
+)
+'''
+            ))
+        self.write_file(build_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        self.assertEquals(
+            '{"values": [{"buck.base_path": "", "buck.type": "foo", "name": '
+            '"foo", "options": {"baz": "blech", "foo": "bar"}, "srcs": [], '
+            '"visibility": []}, {"__includes": ["BUCK"]}, {"__configs": {}}, '
+            '{"__env": {}}]}',
+            result)
 
 if __name__ == '__main__':
     unittest.main()

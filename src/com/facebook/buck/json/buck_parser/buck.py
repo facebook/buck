@@ -7,9 +7,9 @@ import __builtin__
 import __future__
 
 import contextlib
-import json
 from pathlib import Path, PurePath
 from pywatchman import WatchmanError
+from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
@@ -1135,6 +1135,7 @@ def format_exception_info(exception_info):
 
 def encode_result(values, diagnostics, profile):
     result = {'values': values}
+    json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
         for d in diagnostics:
@@ -1150,7 +1151,7 @@ def encode_result(values, diagnostics, profile):
     if profile is not None:
         result['profile'] = profile
     try:
-        return json.dumps(result, sort_keys=True)
+        return json_encoder.encode(result)
     except Exception as e:
         # Try again without the values
         result['values'] = []
@@ -1162,7 +1163,7 @@ def encode_result(values, diagnostics, profile):
             'source': 'parse',
             'exception': format_exception_info(sys.exc_info()),
         })
-        return json.dumps(result, sort_keys=True)
+        return json_encoder.encode(result)
 
 
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
