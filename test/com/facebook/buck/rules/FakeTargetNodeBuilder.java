@@ -38,7 +38,7 @@ public class FakeTargetNodeBuilder extends AbstractNodeBuilder<
     return newBuilder(rule).build();
   }
 
-  public static class Arg {}
+  public static class Arg extends AbstractDescriptionArg {}
 
   public static class FakeDescription implements Description<Arg> {
     private final BuildRule rule;
