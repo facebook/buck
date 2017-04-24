@@ -90,6 +90,7 @@ class BuckTest(unittest.TestCase):
     def setUp(self):
         self.project_root = tempfile.mkdtemp()
         self.allow_empty_globs = False
+        self.cell_name = ''
         self.build_file_name = 'BUCK'
         self.watchman_client = None
         self.project_import_whitelist = None
@@ -111,6 +112,7 @@ class BuckTest(unittest.TestCase):
         return BuildFileProcessor(
             self.project_root,
             cell_roots or {},
+            self.cell_name,
             self.build_file_name,
             self.allow_empty_globs,
             False,              # ignore_buck_autodeps_files

@@ -776,6 +776,39 @@ public class InterCellIntegrationTest {
     }
   }
 
+  @Test
+  public void testParserFunctionsWithCells() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/parser-functions/primary",
+        "inter-cell/parser-functions/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    // Set up the remaining cells
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+    registerCell(secondary, "secondary", secondary);
+
+    String expected = primary.getFileContents("one/.txt");
+    Path path = primary.buildAndReturnOutput("//one:one");
+    String actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = secondary.getFileContents("two/secondary.txt");
+    path = primary.buildAndReturnOutput("//one:two");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = primary.getFileContents("one/primary.txt");
+    path = secondary.buildAndReturnOutput("//two:one");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = secondary.getFileContents("two/.txt");
+    path = secondary.buildAndReturnOutput("//two:two");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+}
+
   private static String sortLines(String input) {
     return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
         .sorted()

@@ -310,6 +310,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--cell_root", entry.getKey() + "=" + entry.getValue());
     }
 
+    argBuilder.add("--cell_name", options.getCellName());
+
     argBuilder.add("--build_file_name", options.getBuildFileName());
 
     if (!options.getAutodepsFilesHaveSignatures()) {

@@ -266,6 +266,7 @@ public class Cell {
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
+            .setCellName(getCanonicalName().orElse(""))
             .setPythonInterpreter(pythonInterpreter)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())

@@ -52,6 +52,8 @@ except ImportError:
 # "dirname" - The directory containing the build file.
 #
 # "base_path" - The base path of the build file.
+#
+# "cell_name" - The cell name the build file is in.
 
 BUILD_FUNCTIONS = []
 
@@ -109,8 +111,8 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
-                 watchman_client, watchman_watch_root, watchman_project_prefix,
+    def __init__(self, project_root, base_path, dirname, cell_name, autodeps, allow_empty_globs,
+                 ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob):
         self.globals = {}
@@ -122,6 +124,7 @@ class BuildFileContext(AbstractContext):
 
         self.project_root = project_root
         self.base_path = base_path
+        self.cell_name = cell_name
         self.dirname = dirname
         self.autodeps = autodeps
         self.allow_empty_globs = allow_empty_globs
@@ -469,6 +472,25 @@ def get_base_path(build_env=None):
     return build_env.base_path
 
 
+@provide_for_build
+def get_cell_name(build_env=None):
+    """Get the cell name of the build file that was initially evaluated.
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "cell". The return value will be "" if
+             the build file does not have a cell
+             :rtype: str
+
+    """
+    assert isinstance(build_env, BuildFileContext), (
+        "Cannot use `get_cell_name()` at the top-level of an included file.")
+    return build_env.cell_name
+
+
 def flatten_list_of_dicts(list_of_dicts):
     """Flatten the given list of dictionaries by merging l[1:] onto
     l[0], one at a time. Key/Value pairs which appear in later list entries
@@ -512,7 +534,7 @@ class BuildFileProcessor(object):
         'pipes': ['quote'],
     }
 
-    def __init__(self, project_root, cell_roots, build_file_name,
+    def __init__(self, project_root, cell_roots, cell_name, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
                  watchman_client, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob,
@@ -537,6 +559,7 @@ class BuildFileProcessor(object):
 
         self._project_root = project_root
         self._cell_roots = cell_roots
+        self._cell_name = cell_name
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
@@ -989,6 +1012,7 @@ class BuildFileProcessor(object):
             self._project_root,
             base_path,
             dirname,
+            self._cell_name,
             autodeps or {},
             self._allow_empty_globs,
             self._ignore_paths,
@@ -1290,6 +1314,11 @@ def main():
         default={},
     )
     parser.add_option(
+        '--cell_name',
+        action='store',
+        type='string',
+        dest="cell_name")
+    parser.add_option(
         '--build_file_name',
         action='store',
         type='string',
@@ -1422,6 +1451,7 @@ def main():
     buildFileProcessor = BuildFileProcessor(
         project_root,
         cell_roots,
+        options.cell_name,
         options.build_file_name,
         options.allow_empty_globs,
         options.ignore_buck_autodeps_files,
