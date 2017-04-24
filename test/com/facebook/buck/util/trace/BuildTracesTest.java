@@ -218,6 +218,7 @@ public class BuildTracesTest {
         false,
         commandName,
         new String[0],
+        new String[0],
         fs.getBuckPaths().getLogDir())
         .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");

@@ -68,6 +68,10 @@ abstract class AbstractInvocationInfo {
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String[] getUnexpandedCommandArgs();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract Path getBuckLogDir();
 
   @Value.Default

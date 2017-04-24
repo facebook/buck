@@ -696,6 +696,7 @@ public final class Main {
             daemon.isPresent(),
             command.getSubCommandNameForLogging(),
             args,
+            unexpandedCommandLineArgs,
             filesystem.getBuckPaths().getLogDir());
         try (
             GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =

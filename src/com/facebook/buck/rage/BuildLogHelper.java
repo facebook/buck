@@ -55,6 +55,8 @@ public class BuildLogHelper {
 
   private final ProjectFilesystem projectFilesystem;
 
+  private static final String INFO_FIELD_UNEXPANDED_CMD_ARGS = "unexpandedCommandArgs";
+
   public BuildLogHelper(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
   }
@@ -92,10 +94,10 @@ public class BuildLogHelper {
       Map<String, Object> invocationInfo =
           ObjectMappers.readValue(invocationInfoLine, new TypeReference<Map<String, Object>>(){});
       Optional<String> commandArgs = Optional.empty();
-      if (invocationInfo.containsKey("commandArgs") &&
-          invocationInfo.get("commandArgs") instanceof List) {
+      if (invocationInfo.containsKey(INFO_FIELD_UNEXPANDED_CMD_ARGS) &&
+          invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS) instanceof List) {
         commandArgs = Optional.of(
-            String.join(" ", (List<String>) invocationInfo.get("commandArgs")));
+            String.join(" ", (List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS)));
       }
 
       builder.setBuildId(new BuildId((String) invocationInfo.get(("buildId"))));

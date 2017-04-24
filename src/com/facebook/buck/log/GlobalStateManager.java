@@ -77,6 +77,7 @@ public class GlobalStateManager {
             false,
             "launch",
             new String[0],
+            new String[0],
             LogConfigSetup.DEFAULT_SETUP.getLogDir())
             .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
