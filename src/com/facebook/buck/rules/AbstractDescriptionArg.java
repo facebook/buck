@@ -23,5 +23,5 @@ import com.google.common.collect.ImmutableSortedSet;
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg {
   public ImmutableSet<SourcePath> licenses = ImmutableSet.of();
-  public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
+  public ImmutableSortedSet<String> labels = ImmutableSortedSet.of();
 }

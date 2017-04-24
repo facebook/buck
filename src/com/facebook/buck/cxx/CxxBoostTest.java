@@ -23,7 +23,6 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -84,7 +83,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {

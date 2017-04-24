@@ -25,7 +25,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.macros.ClasspathMacro;
@@ -69,7 +68,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     this.pathExistenceVerificationMode = pathExistenceVerificationMode;
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
-    TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
@@ -110,7 +108,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             stringTypeCoercer);
     nonParameterizedTypeCoercers = new TypeCoercer<?>[] {
         // special classes
-        labelTypeCoercer,
         pathTypeCoercer,
         flavorTypeCoercer,
         sourcePathTypeCoercer,

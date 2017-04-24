@@ -33,7 +33,6 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -243,7 +242,7 @@ public class TestCommand extends BuildCommand {
     return targetDeviceOptions.getTargetDeviceOptions();
   }
 
-  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> labels) {
+  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<String> labels) {
     return testLabelOptions.isMatchedByLabelOptions(buckConfig, labels);
   }
 

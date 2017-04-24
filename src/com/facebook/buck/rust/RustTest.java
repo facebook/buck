@@ -29,7 +29,6 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -67,7 +66,7 @@ public class RustTest
     extends AbstractBuildRule
     implements BinaryBuildRule, TestRule, ExternalTestRunnerRule, HasRuntimeDeps {
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
 
   @AddToRuleKey
@@ -85,7 +84,7 @@ public class RustTest
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts) {
     super(params);
 
@@ -143,7 +142,7 @@ public class RustTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

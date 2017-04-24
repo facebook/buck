@@ -31,7 +31,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -119,7 +118,7 @@ public class RobolectricTest extends JavaTest {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       JavaLibrary compiledTestsLibrary,
-      Set<Label> labels,
+      Set<String> labels,
       Set<String> contacts,
       TestType testType,
       JavaOptions javaOptions,

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -62,7 +61,7 @@ public class DTest extends AbstractBuildRule implements
     HasRuntimeDeps,
     TestRule {
   private ImmutableSortedSet<String> contacts;
-  private ImmutableSortedSet<Label> labels;
+  private ImmutableSortedSet<String> labels;
   private final BuildRule testBinaryBuildRule;
   private final Optional<Long> testRuleTimeoutMs;
 
@@ -70,7 +69,7 @@ public class DTest extends AbstractBuildRule implements
       BuildRuleParams params,
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
-      ImmutableSortedSet<Label> labels,
+      ImmutableSortedSet<String> labels,
       Optional<Long> testRuleTimeoutMs) {
     super(params);
     this.contacts = contacts;
@@ -96,7 +95,7 @@ public class DTest extends AbstractBuildRule implements
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

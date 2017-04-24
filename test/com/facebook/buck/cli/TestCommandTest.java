@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -61,19 +60,19 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "linux", "windows");
 
     TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
+        ImmutableSet.of("windows", "linux"),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("android")),
+        ImmutableSet.of("android"),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
         ImmutableSortedSet.of());
 
     TestRule rule3 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.of());
@@ -95,13 +94,13 @@ public class TestCommandTest {
     TestCommand command = getCommand("--include", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
+        ImmutableSet.of("windows", "linux"),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.of());
@@ -123,13 +122,13 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
+        ImmutableSet.of("windows", "linux"),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.of());
@@ -149,9 +148,9 @@ public class TestCommandTest {
 
     TestRule rule = new FakeTestRule(
         ImmutableSet.of(
-            Label.of("a"),
-            Label.of("b"),
-            Label.of("c")),
+            "a",
+            "b",
+            "c"),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -175,9 +174,9 @@ public class TestCommandTest {
 
     TestRule rule = new FakeTestRule(
         ImmutableSet.of(
-            Label.of("a"),
-            Label.of("b"),
-            Label.of("c")),
+            "a",
+            "b",
+            "c"),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -203,19 +202,19 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude-transitive-tests", "//:wow");
 
     FakeTestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
+        ImmutableSet.of("windows", "linux"),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.of());
 
     FakeTestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.of(rule1));
 
     FakeTestRule rule3 = new FakeTestRule(
-        ImmutableSet.of(Label.of("linux")),
+        ImmutableSet.of("linux"),
         BuildTargetFactory.newInstance("//:wow"),
         pathResolver,
         ImmutableSortedSet.of(rule2));
@@ -239,13 +238,13 @@ public class TestCommandTest {
         "--exclude-transitive-tests", "//:for", "//:lulz");
 
     FakeTestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
+        ImmutableSet.of("windows", "linux"),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.of());
 
     FakeTestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.of(rule1));
@@ -272,7 +271,7 @@ public class TestCommandTest {
 
     new AdditionalOptionsCmdLineParser(command).parseArgument();
 
-    assertFalse(command.isMatchedByLabelOptions(config, ImmutableSet.of(Label.of("e2e"))));
+    assertFalse(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
 
   @Test
@@ -287,7 +286,7 @@ public class TestCommandTest {
 
     new AdditionalOptionsCmdLineParser(command).parseArgument("--include", "e2e");
 
-    assertTrue(command.isMatchedByLabelOptions(config, ImmutableSet.of(Label.of("e2e"))));
+    assertTrue(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
 
   @Test
@@ -303,7 +302,7 @@ public class TestCommandTest {
     new AdditionalOptionsCmdLineParser(command).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
-        /* labels */ ImmutableSet.of(Label.of(excludedLabel)),
+        /* labels */ ImmutableSet.of(excludedLabel),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
