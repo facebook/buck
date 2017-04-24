@@ -88,3 +88,12 @@ java_immutables_library(
         "//third-party/java/stringtemplate:stringtemplate",
     ],
 )
+
+java_library(
+    name = "config",
+    srcs = [
+        "MachineReadableLogConfig.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

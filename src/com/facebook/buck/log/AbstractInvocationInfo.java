@@ -28,17 +28,14 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.Optional;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Value.Immutable
 @BuckStyleImmutable
 @JsonDeserialize(as = InvocationInfo.class)
 abstract class AbstractInvocationInfo {
-  public static final SimpleDateFormat DIR_DATE_FORMAT;
-  public static final String DIR_NAME_REGEX = ".+_.+_.+";
+  static final SimpleDateFormat DIR_DATE_FORMAT;
+  static final String DIR_NAME_REGEX = ".+_.+_.+";
   private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
 
   static {
@@ -48,8 +45,6 @@ abstract class AbstractInvocationInfo {
 
   // TODO(#13704826): we should switch over to a machine-readable log format.
   private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
-  private static final Pattern LOG_MSG_PATTERN = Pattern.compile(
-      "InvocationInfo BuildId=\\[(?<buildid>.+)\\] Args=\\[(?<args>.+)\\]");
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -68,6 +63,11 @@ abstract class AbstractInvocationInfo {
   public abstract String getSubCommand();
 
   @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String[] getCommandArgs();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract Path getBuckLogDir();
 
   @Value.Default
@@ -81,35 +81,26 @@ abstract class AbstractInvocationInfo {
     return getBuildId().toString();
   }
 
-  public String getLogDirectoryName() {
+  public String toLogLine() {
     return String.format(
-        DIR_NAME_TEMPLATE,
-        DIR_DATE_FORMAT.format(getTimestampMillis()),
-        getSubCommand(),
-        getBuildId());
-  }
-
-  public String toLogLine(String[] args) {
-    return String.format(LOG_MSG_TEMPLATE, getBuildId().toString(), Joiner.on(", ").join(args));
-  }
-
-  public static Optional<ParsedLog> parseLogLine(String line) {
-    Matcher matcher = LOG_MSG_PATTERN.matcher(line);
-    if (matcher.find()) {
-      BuildId buildId = new BuildId(matcher.group("buildid"));
-      String args = matcher.group("args");
-      return Optional.of(new ParsedLog(buildId, args));
-    }
-
-    return Optional.empty();
+        LOG_MSG_TEMPLATE, getBuildId().toString(),
+        Joiner.on(", ").join(getCommandArgs()));
   }
 
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName() + "/");
   }
 
-  public Path getLogFilePath() {
+  Path getLogFilePath() {
     return getLogDirectoryPath().resolve(BuckConstant.BUCK_LOG_FILE_NAME);
+  }
+
+  private String getLogDirectoryName() {
+    return String.format(
+        DIR_NAME_TEMPLATE,
+        DIR_DATE_FORMAT.format(getTimestampMillis()),
+        getSubCommand(),
+        getBuildId());
   }
 
   @Override
@@ -120,21 +111,4 @@ abstract class AbstractInvocationInfo {
         getTimestampMillis());
   }
 
-  public static class ParsedLog {
-    private final BuildId buildId;
-    private final String args;
-
-    public ParsedLog(BuildId buildId, String args) {
-      this.buildId = buildId;
-      this.args = args;
-    }
-
-    public BuildId getBuildId() {
-      return buildId;
-    }
-
-    public String getArgs() {
-      return args;
-    }
-  }
 }

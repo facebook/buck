@@ -24,15 +24,11 @@ import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -75,28 +71,13 @@ public class InteractiveReport extends AbstractReport {
   @Override
   public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
-
-    // Commands with unknown args and buck rage should be excluded.
-    List<BuildLogEntry> interestingBuildLogs = new ArrayList<>();
-    buildLogs.forEach(entry -> {
-      if (entry.getCommandArgs().isPresent() &&
-          !entry.getCommandArgs().get().matches("rage|doctor|server")) {
-        interestingBuildLogs.add(entry);
-      }
-    });
-
-    if (interestingBuildLogs.isEmpty()) {
+    if (buildLogs.isEmpty()) {
       return ImmutableSet.of();
     }
 
-    // Sort the interesting builds based on time, reverse order so the most recent is first.
-    Collections.sort(
-        interestingBuildLogs,
-        Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
-
     return input.selectRange(
         "Which buck invocations would you like to report?",
-        interestingBuildLogs,
+        buildLogs,
         input1 -> {
           Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
               input1.getSize(),

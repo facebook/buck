@@ -64,6 +64,7 @@ public class RuleKeyLoggerListenerTest {
         false,
         false,
         "topspin",
+        new String[0],
         tempDirectory.getRoot().toPath());
     durationTracker = new BuildRuleDurationTracker();
   }

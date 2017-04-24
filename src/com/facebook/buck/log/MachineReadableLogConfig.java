@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,19 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.log;
 
-import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.model.BuildId;
+public final class MachineReadableLogConfig {
 
-import java.nio.file.Paths;
+  private MachineReadableLogConfig() {}
 
-public class FakeInvocationInfoFactory {
-  private FakeInvocationInfoFactory() {
-    // Utility class.
-  }
+  public static final String PREFIX_INVOCATION_INFO = "InvocationInfo";
+  public static final String PREFIX_EXIT_CODE = "ExitCode";
 
-  public static InvocationInfo create() {
-    return InvocationInfo.of(new BuildId(), false, false, "test", new String[0], Paths.get(""));
-  }
 }

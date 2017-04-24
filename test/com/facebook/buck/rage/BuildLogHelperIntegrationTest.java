@@ -24,16 +24,13 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.Map;
 
 public class BuildLogHelperIntegrationTest {
 
@@ -43,34 +40,24 @@ public class BuildLogHelperIntegrationTest {
   @Test
   public void findsLogFiles() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_log_helper", temporaryFolder);
+        this, "interactive_report", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();
     ProjectFilesystem filesystem = cell.getFilesystem();
-    BuildLogHelper buildLogHelper = new BuildLogHelper(
-        filesystem
-    );
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
-
-    ImmutableMap<BuildId, BuildLogEntry> idToLogMap = FluentIterable.from(
-        buildLogs)
-        .uniqueIndex(
-            input -> input.getBuildId().get());
-    Map<BuildId, String> buildIdToCommandMap = Maps.transformValues(
-        idToLogMap,
-        input -> input.getCommandArgs().get());
+    ImmutableMap<BuildId, String> buildIdToCommandMap = buildLogs.stream()
+        .collect(MoreCollectors.toImmutableMap(
+            e -> e.getBuildId().get(),
+            e -> e.getCommandArgs().get()));
 
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(
-            ImmutableMap.of(
-                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
-                "build, buck",
-
-                new BuildId("d09893d5-b11e-4e3f-a5bf-70c60a06896e"),
-                "autodeps")
+            ImmutableMap.of(new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"), "build buck",
+                new BuildId("3f874373-f040-448f-964d-e2eb459de37f"), "autodeps")
         ));
   }
 }

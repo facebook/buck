@@ -695,6 +695,7 @@ public final class Main {
             isSuperConsoleEnabled(console),
             daemon.isPresent(),
             command.getSubCommandNameForLogging(),
+            args,
             filesystem.getBuckPaths().getLogDir());
         try (
             GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
@@ -741,7 +742,7 @@ public final class Main {
                         buckConfig.isProcessTrackerDeepEnabled()) : null;
         ) {
 
-          LOG.debug(invocationInfo.toLogLine(args));
+          LOG.debug(invocationInfo.toLogLine());
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
 

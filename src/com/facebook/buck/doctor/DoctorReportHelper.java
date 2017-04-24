@@ -39,13 +39,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -80,14 +78,6 @@ public class DoctorReportHelper {
   }
 
   public Optional<BuildLogEntry> promptForBuild(List<BuildLogEntry> buildLogs) throws IOException {
-    // Remove commands with unknown args or invocations of buck rage.
-    // Sort the remaining logs based on time, reverse order.
-    buildLogs = buildLogs.stream()
-        .filter(entry -> entry.getCommandArgs().isPresent() &&
-            !entry.getCommandArgs().get().matches("rage|doctor|server"))
-        .sorted(Comparator.comparing(BuildLogEntry::getLastModifiedTime).reversed())
-        .collect(Collectors.toList());
-
     if (buildLogs.isEmpty()) {
       return Optional.empty();
     }
