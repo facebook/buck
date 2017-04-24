@@ -105,7 +105,7 @@ public class BuckCommand extends AbstractContainerCommand {
   }
 
   /**
-   * @return String'fied version of the SubCommand or "no_sub_command" is the SubCommand is null.
+   * @return String'fied version of the SubCommand or "no_sub_command" if the SubCommand is null.
    */
   public String getSubCommandNameForLogging() {
     if (subcommand == null) {
