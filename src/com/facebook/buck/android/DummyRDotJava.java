@@ -46,7 +46,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
@@ -260,10 +263,29 @@ public class DummyRDotJava extends AbstractBuildRule
         }
       }
 
+      // Gross copy-paste from above.  Expect this to be deleted shortly
+      // once we start compiling directly from RAM to JAR.
+      Path pathToSrcsList =
+          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+
+      StringBuilder sb = new StringBuilder();
+      getProjectFilesystem().walkRelativeFileTree(pathToSrcsList, new SimpleFileVisitor<Path>() {
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+          sb.append(file);
+          sb.append(' ');
+          sb.append(attrs.size());
+          sb.append('\n');
+          return super.visitFile(file, attrs);
+        }
+      });
+
       throw new RuntimeException(
           String.format(
-              "Dummy R.java JAR %s has no classes.  Possible corrupt output.  Is disk full?",
-              outputJar));
+              "Dummy R.java JAR %s has no classes.  Possible corrupt output.  Is disk full?  " +
+              "Source files:\n%s",
+              outputJar,
+              sb));
     }
 
     @Override
