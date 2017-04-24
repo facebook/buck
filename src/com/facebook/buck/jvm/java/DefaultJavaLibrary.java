@@ -85,10 +85,15 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
-    implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
-    SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey, JavaLibraryWithTests {
+public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver implements
+    AndroidPackageable,
+    ExportDependencies,
+    HasClasspathEntries,
+    InitializableFromDisk<JavaLibrary.Data>,
+    JavaLibrary,
+    JavaLibraryWithTests,
+    SupportsDependencyFileRuleKey,
+    SupportsInputBasedRuleKey {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private static final Path METADATA_DIR = Paths.get("META-INF");
