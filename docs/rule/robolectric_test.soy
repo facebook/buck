@@ -17,8 +17,7 @@
 {param overview}
 A <code>robolectric_test()</code> rule is used to define a set of
 {sp}<code>.java</code> files that contain tests to run via JUnit
-with Robolectric test runner. It extends from <code>java_test()</code>
-rule.
+with Robolectric test runner. It extends from <code>java_test()</code> rule.
 {/param}
 
 {param args}
@@ -32,10 +31,10 @@ rule.
 
 {call buck.arg}
   {param name: 'robolectric_runtime_dependency' /}
-  {param default : '[]' /}
+  {param default : 'None' /}
   {param desc}
-  Robolectric only runs in offline mode with buck. Specify the relative directory
-  containing all the jars Robolectric uses at runtime.
+  Robolectric only runs in offline mode with buck. Specify the relative
+  directory containing all the jars Robolectric uses at runtime.
   {/param}
 {/call}
 
@@ -43,7 +42,7 @@ rule.
   {param name: 'robolectric_manifest' /}
   {param default: 'None' /}
   {param desc}
-  An optional <a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android Manifest</a> for the {$type} to declare any permissions or intents it may need or want to handle.  May either be a file or a {call buck.android_manifest /} target.
+  An optional <a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android Manifest</a> for the rule to declare any permissions or intents it may need or want to handle.  May either be a file or a {call buck.android_manifest /} target.
   {/param}
 {/call}
 
