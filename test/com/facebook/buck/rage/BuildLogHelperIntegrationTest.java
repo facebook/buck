@@ -40,7 +40,7 @@ public class BuildLogHelperIntegrationTest {
   @Test
   public void findsLogFiles() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();

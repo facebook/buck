@@ -1,3 +1,0 @@
-[2016-06-21 17:18:51.538][debug][command:d09893d5-b11e-4e3f-a5bf-70c60a06896e][tid:01][com.facebook.buck.event.listener.SuperConsoleEventBusListener] Starting render scheduler (interval 100 ms)
-[2016-06-21 17:18:51.574][debug][command:d09893d5-b11e-4e3f-a5bf-70c60a06896e][tid:01][com.facebook.buck.cli.Main] InvocationInfo BuildId=[d09893d5-b11e-4e3f-a5bf-70c60a06896e] Args=[autodeps]
-[2016-06-21 17:18:51.620][debug][command:d09893d5-b11e-4e3f-a5bf-70c60a06896e][tid:01][com.facebook.buck.util.environment.MacWifiSsidFinder] Getting current SSID..

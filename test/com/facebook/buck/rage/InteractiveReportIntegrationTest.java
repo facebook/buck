@@ -74,7 +74,7 @@ public class InteractiveReportIntegrationTest {
     tracePath2 = DEPS_PATH + "file.trace";
     traceWorkspace  = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "interactive_report",
+        "report",
         temporaryFolder);
     traceWorkspace.setUp();
     traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
@@ -93,7 +93,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testReport() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     DefectSubmitResult report = createDefectReport(

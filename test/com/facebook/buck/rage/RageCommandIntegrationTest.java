@@ -79,7 +79,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testRageNonInteractiveReport() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     workspace.runBuckCommand("rage", "--non-interactive").assertSuccess();
@@ -88,7 +88,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testUpload() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     final AtomicReference<String> requestMethod = new AtomicReference<>();
@@ -170,7 +170,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testExtraInfo() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
     RageConfig rageConfig = createRageConfig(
         0,
@@ -200,7 +200,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testUploadFailure() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
@@ -251,7 +251,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testJsonUpload() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
