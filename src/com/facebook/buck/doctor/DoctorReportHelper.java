@@ -55,6 +55,8 @@ import okhttp3.Response;
 public class DoctorReportHelper {
 
   private static final Logger LOG = Logger.get(DoctorReportHelper.class);
+
+  private static final int ARGS_MAX_CHARS = 60;
   private static final String WARNING_FILE_TEMPLATE = "Command %s does not contain a %s. Some " +
       "information will not be available";
   private static final String DECODE_FAIL_TEMPLATE = "Decoding remote response failed. Reason: %s";
@@ -88,11 +90,13 @@ public class DoctorReportHelper {
         entry -> {
           Pair<Double, SizeUnit> humanReadableSize =
               SizeUnit.getHumanReadableSize(entry.getSize(), SizeUnit.BYTES);
+          String cmdArgs = entry.getCommandArgs().orElse("unknown command");
+          cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
 
           return String.format(
               "\t%s\tbuck [%s] %s (%.2f %s)",
               entry.getLastModifiedTime(),
-              entry.getCommandArgs().orElse("unknown command"),
+              cmdArgs,
               prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());

@@ -38,6 +38,8 @@ import java.util.OptionalInt;
  */
 public class InteractiveReport extends AbstractReport {
 
+  private static final int ARGS_MAX_CHARS = 60;
+
   private final BuildLogHelper buildLogHelper;
   private final Console console;
   private final UserInput input;
@@ -78,15 +80,18 @@ public class InteractiveReport extends AbstractReport {
     return input.selectRange(
         "Which buck invocations would you like to report?",
         buildLogs,
-        input1 -> {
+        entry -> {
           Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
-              input1.getSize(),
+              entry.getSize(),
               SizeUnit.BYTES);
+          String cmdArgs = entry.getCommandArgs().orElse("unknown command");
+          cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
+
           return String.format(
               "\t%s\tbuck [%s] %s (%.2f %s)",
-              input1.getLastModifiedTime(),
-              input1.getCommandArgs().orElse("unknown command"),
-              prettyPrintExitCode(input1.getExitCode()),
+              entry.getLastModifiedTime(),
+              cmdArgs,
+              prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
