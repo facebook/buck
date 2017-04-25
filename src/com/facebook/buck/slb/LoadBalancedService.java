@@ -18,11 +18,9 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -41,11 +39,10 @@ public class LoadBalancedService implements HttpService {
   }
 
   @Override
-  public HttpResponse makeRequest(
-      String path, Request.Builder requestBuilder) throws IOException {
+  public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
-    LoadBalancedServiceEventData.Builder data = LoadBalancedServiceEventData.builder()
-        .setServer(server);
+    LoadBalancedServiceEventData.Builder data =
+        LoadBalancedServiceEventData.builder().setServer(server);
     URL fullUrl = SingleUriService.getFullUrl(server, path);
     requestBuilder.url(fullUrl);
     Request request = requestBuilder.build();
@@ -55,8 +52,8 @@ public class LoadBalancedService implements HttpService {
     LOG.verbose("Making call to %s", fullUrl);
     Call call = client.newCall(request);
     try {
-      HttpResponse response = LoadBalancedHttpResponse.createLoadBalancedResponse(
-          server, slb, call);
+      HttpResponse response =
+          LoadBalancedHttpResponse.createLoadBalancedResponse(server, slb, call);
       if (response.contentLength() != -1) {
         data.setResponseSizeBytes(response.contentLength());
       }

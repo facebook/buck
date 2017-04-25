@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Dispatcher;
@@ -59,21 +57,24 @@ public class ClientSideSlb implements HttpLoadBalancer {
   private final BuckEventBus eventBus;
 
   public static boolean isSafeToCreate(ClientSideSlbConfig config) {
-    return config.getPingEndpoint() != null &&
-        config.getServerPool() != null &&
-        config.getServerPool().size() > 0 &&
-        config.getEventBus() != null;
+    return config.getPingEndpoint() != null
+        && config.getServerPool() != null
+        && config.getServerPool().size() > 0
+        && config.getEventBus() != null;
   }
 
   // Use the Builder.
   public ClientSideSlb(ClientSideSlbConfig config) {
-    this(config,
+    this(
+        config,
         Executors.newSingleThreadScheduledExecutor(
             new CommandThreadFactory("ClientSideSlb", Thread.MAX_PRIORITY)),
         new OkHttpClient.Builder()
-            .dispatcher(new Dispatcher(Executors.newCachedThreadPool(new CommandThreadFactory(
-                "ClientSideSlb/OkHttpClient",
-                Thread.MAX_PRIORITY))))
+            .dispatcher(
+                new Dispatcher(
+                    Executors.newCachedThreadPool(
+                        new CommandThreadFactory(
+                            "ClientSideSlb/OkHttpClient", Thread.MAX_PRIORITY))))
             .connectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
             .readTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
             .writeTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
@@ -82,30 +83,30 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
   @VisibleForTesting
   ClientSideSlb(
-      ClientSideSlbConfig config,
-      ScheduledExecutorService executor,
-      OkHttpClient pingClient) {
+      ClientSideSlbConfig config, ScheduledExecutorService executor, OkHttpClient pingClient) {
     this.clock = config.getClock();
     this.pingEndpoint = Preconditions.checkNotNull(config.getPingEndpoint());
     this.serverPool = Preconditions.checkNotNull(config.getServerPool());
     this.eventBus = Preconditions.checkNotNull(config.getEventBus());
     Preconditions.checkArgument(serverPool.size() > 0, "No server URLs passed.");
 
-    this.healthManager = new ServerHealthManager(
-        this.serverPool,
-        config.getErrorCheckTimeRangeMillis(),
-        config.getMaxErrorPercentage(),
-        config.getLatencyCheckTimeRangeMillis(),
-        config.getMaxAcceptableLatencyMillis(),
-        config.getEventBus(),
-        this.clock);
+    this.healthManager =
+        new ServerHealthManager(
+            this.serverPool,
+            config.getErrorCheckTimeRangeMillis(),
+            config.getMaxErrorPercentage(),
+            config.getLatencyCheckTimeRangeMillis(),
+            config.getMaxAcceptableLatencyMillis(),
+            config.getEventBus(),
+            this.clock);
     this.pingClient = pingClient;
     this.schedulerService = executor;
-    backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(
-        this::backgroundThreadCallForHealthCheck,
-        0,
-        config.getHealthCheckIntervalMillis(),
-        TimeUnit.MILLISECONDS);
+    backgroundHealthChecker =
+        this.schedulerService.scheduleWithFixedDelay(
+            this::backgroundThreadCallForHealthCheck,
+            0,
+            config.getHealthCheckIntervalMillis(),
+            TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -164,10 +165,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
     ServerPing(URI serverUri) {
       this.serverUri = serverUri;
-      Request request = new Request.Builder()
-          .url(serverUri.resolve(pingEndpoint).toString())
-          .get()
-          .build();
+      Request request =
+          new Request.Builder().url(serverUri.resolve(pingEndpoint).toString()).get().build();
       pingClient.newCall(request).enqueue(this);
     }
 
@@ -176,8 +175,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
     }
 
     /*
-      Process the success result of the ping
-     */
+     Process the success result of the ping
+    */
     @Override
     public void onResponse(Call call, Response response) throws IOException {
       PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
@@ -199,8 +198,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
     }
 
     /*
-      Process the failure result of the ping
-     */
+     Process the failure result of the ping
+    */
     @Override
     public void onFailure(Call call, IOException e) {
       healthManager.reportRequestError(serverUri);

@@ -17,18 +17,15 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.log.Logger;
-
-import org.apache.thrift.TBase;
-
 import java.io.IOException;
 import java.io.InputStream;
-
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.apache.thrift.TBase;
 
-public class ThriftOverHttpService
-    <ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>>
+public class ThriftOverHttpService<
+        ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>>
     implements ThriftService<ThriftRequest, ThriftResponse> {
 
   public static final MediaType THRIFT_CONTENT_TYPE = MediaType.parse("application/x-thrift");
@@ -51,28 +48,21 @@ public class ThriftOverHttpService
     }
 
     byte[] serializedBytes = ThriftUtil.serialize(config.getThriftProtocol(), thriftRequest);
-    RequestBody body = RequestBody.create(
-        THRIFT_CONTENT_TYPE,
-        serializedBytes,
-        0,
-        serializedBytes.length);
-    Request.Builder requestBuilder = new Request.Builder()
-        .addHeader(
-            THRIFT_PROTOCOL_HEADER,
-            config.getThriftProtocol().toString().toLowerCase())
-        .post(body);
-
+    RequestBody body =
+        RequestBody.create(THRIFT_CONTENT_TYPE, serializedBytes, 0, serializedBytes.length);
+    Request.Builder requestBuilder =
+        new Request.Builder()
+            .addHeader(THRIFT_PROTOCOL_HEADER, config.getThriftProtocol().toString().toLowerCase())
+            .post(body);
 
     // Make the HTTP request and handle the response status code.
-    try (HttpResponse response = config.getService().makeRequest(
-        config.getThriftPath(), requestBuilder)) {
+    try (HttpResponse response =
+        config.getService().makeRequest(config.getThriftPath(), requestBuilder)) {
       if (response.statusCode() != 200) {
         throw new IOException(
             String.format(
                 "HTTP response returned unexpected status [%s:%s] from URL [%s].",
-                response.statusCode(),
-                response.statusMessage(),
-                response.requestUrl()));
+                response.statusCode(), response.statusMessage(), response.requestUrl()));
       }
 
       // Deserialize the body payload into the thrift struct.

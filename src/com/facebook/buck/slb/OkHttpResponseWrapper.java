@@ -16,10 +16,9 @@
 
 package com.facebook.buck.slb;
 
-import okhttp3.Response;
-
 import java.io.IOException;
 import java.io.InputStream;
+import okhttp3.Response;
 
 public class OkHttpResponseWrapper implements HttpResponse {
   private final Response response;

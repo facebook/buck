@@ -16,9 +16,8 @@
 
 package com.facebook.buck.slb;
 
-import okhttp3.Request;
-
 import java.io.IOException;
+import okhttp3.Request;
 
 public interface HttpService extends AutoCloseable {
   HttpResponse makeRequest(String path, Request.Builder request) throws IOException;

@@ -17,7 +17,9 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.log.Logger;
-
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
@@ -30,10 +32,6 @@ import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.protocol.TSimpleJSONProtocol;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TTransport;
-
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
 public final class ThriftUtil {
   private static final Logger LOGGER = Logger.get(ThriftUtil.class);
@@ -56,9 +54,8 @@ public final class ThriftUtil {
         return new TBinaryProtocol.Factory();
 
       default:
-        throw new IllegalArgumentException(String.format(
-            "Unknown ThriftProtocol [%s].",
-            protocol.toString()));
+        throw new IllegalArgumentException(
+            String.format("Unknown ThriftProtocol [%s].", protocol.toString()));
     }
   }
 
@@ -66,10 +63,8 @@ public final class ThriftUtil {
     return getProtocolFactory(protocol).getProtocol(transport);
   }
 
-  public static void serialize(
-      ThriftProtocol protocol,
-      TBase<?, ?> source,
-      OutputStream stream) throws ThriftException {
+  public static void serialize(ThriftProtocol protocol, TBase<?, ?> source, OutputStream stream)
+      throws ThriftException {
     try (TTransport transport = new TIOStreamTransport(stream)) {
       TProtocol thriftProtocol = getProtocolFactory(protocol).getProtocol(transport);
       try {
@@ -80,9 +75,8 @@ public final class ThriftUtil {
     }
   }
 
-  public static byte[] serialize(
-      ThriftProtocol protocol,
-      TBase<?, ?> source) throws ThriftException {
+  public static byte[] serialize(ThriftProtocol protocol, TBase<?, ?> source)
+      throws ThriftException {
     TSerializer deserializer = new TSerializer(getProtocolFactory(protocol));
     try {
       return deserializer.serialize(source);
@@ -91,8 +85,8 @@ public final class ThriftUtil {
     }
   }
 
-  public static ByteBuffer serializeToByteBuffer(ThriftProtocol protocol,
-      TBase<?, ?> source) throws ThriftException {
+  public static ByteBuffer serializeToByteBuffer(ThriftProtocol protocol, TBase<?, ?> source)
+      throws ThriftException {
     TSerializer deserializer = new TSerializer(getProtocolFactory(protocol));
     try {
       return ByteBuffer.wrap(deserializer.serialize(source));

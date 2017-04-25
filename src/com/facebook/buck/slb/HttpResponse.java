@@ -21,14 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public interface HttpResponse extends Closeable {
-  /**
-   * @return HTTP Response code.
-   */
+  /** @return HTTP Response code. */
   int statusCode();
 
-  /**
-   * @return HTTP Response code message.
-   */
+  /** @return HTTP Response code message. */
   String statusMessage();
 
   /**
@@ -43,8 +39,6 @@ public interface HttpResponse extends Closeable {
    */
   InputStream getBody();
 
-  /**
-   * @return The full URL of the request that generated this response.
-   */
+  /** @return The full URL of the request that generated this response. */
   String requestUrl();
 }

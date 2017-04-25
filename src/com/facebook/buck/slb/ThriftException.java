@@ -16,9 +16,8 @@
 
 package com.facebook.buck.slb;
 
-import org.apache.thrift.TException;
-
 import java.io.IOException;
+import org.apache.thrift.TException;
 
 // Convenience wrapper of the TException that inherits from IOException so the rest of the code
 // remains agnostic of the underlying data protocols we use for network operations.

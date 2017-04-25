@@ -17,11 +17,9 @@
 package com.facebook.buck.slb;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-
 import okhttp3.Call;
 import okhttp3.Response;
 

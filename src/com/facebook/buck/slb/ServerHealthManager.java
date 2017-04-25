@@ -27,7 +27,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,14 +76,16 @@ public class ServerHealthManager {
       this.servers.put(server, new ServerHealthState(server));
     }
     this.eventBus = eventBus;
-    this.getBestServerCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(CACHE_TIME_MS, TimeUnit.MILLISECONDS)
-        .build(new CacheLoader<Object, Optional<URI>>() {
-          @Override
-          public Optional<URI> load(Object key) throws Exception {
-            return calculateBestServer();
-          }
-        });
+    this.getBestServerCache =
+        CacheBuilder.newBuilder()
+            .expireAfterWrite(CACHE_TIME_MS, TimeUnit.MILLISECONDS)
+            .build(
+                new CacheLoader<Object, Optional<URI>>() {
+                  @Override
+                  public Optional<URI> load(Object key) throws Exception {
+                    return calculateBestServer();
+                  }
+                });
   }
 
   public void reportPingLatency(URI server, long latencyMillis) {
@@ -113,14 +114,14 @@ public class ServerHealthManager {
       if (server.isPresent()) {
         return server.get();
       }
-      throw new NoHealthyServersException(String.format(
-          "No servers available. Too many errors reported by all servers in the pool: [%s]",
-          Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
-              Object::toString))));
-    }  catch (ExecutionException e) {
+      throw new NoHealthyServersException(
+          String.format(
+              "No servers available. Too many errors reported by all servers in the pool: [%s]",
+              Joiner.on(", ")
+                  .join(FluentIterable.from(servers.keySet()).transform(Object::toString))));
+    } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
-
   }
 
   private Optional<URI> calculateBestServer() throws NoHealthyServersException {
@@ -164,9 +165,9 @@ public class ServerHealthManager {
   public String toString() {
     StringBuilder builder = new StringBuilder("ServerHealthManager{\n");
     for (ServerHealthState server : servers.values()) {
-      builder.append(String.format(
-          "  %s\n",
-          server.toString(clock.currentTimeMillis(), latencyCheckTimeRangeMillis)));
+      builder.append(
+          String.format(
+              "  %s\n", server.toString(clock.currentTimeMillis(), latencyCheckTimeRangeMillis)));
     }
 
     builder.append("}");

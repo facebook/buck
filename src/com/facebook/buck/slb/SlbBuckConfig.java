@@ -22,7 +22,6 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
 import java.net.URI;
 import java.util.Optional;
 
@@ -48,12 +47,13 @@ public class SlbBuckConfig {
   }
 
   private ImmutableList<URI> getServerPool() {
-    ImmutableList<String> serverPool = buckConfig.getListWithoutComments(
-        parentSection, SERVER_POOL);
+    ImmutableList<String> serverPool =
+        buckConfig.getListWithoutComments(parentSection, SERVER_POOL);
     ImmutableList.Builder<URI> builder = ImmutableList.builder();
     for (String server : serverPool) {
       URI uri = URI.create(server);
-      Preconditions.checkState(!Strings.isNullOrEmpty(uri.getScheme()),
+      Preconditions.checkState(
+          !Strings.isNullOrEmpty(uri.getScheme()),
           "A scheme must be provided for server [%s] in config [%s::%s].",
           server,
           parentSection,
@@ -76,10 +76,11 @@ public class SlbBuckConfig {
   }
 
   private ClientSideSlbConfig createConfig(Clock clock, BuckEventBus eventBus) {
-    ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
-        .setClock(clock)
-        .setServerPool(getServerPool())
-        .setEventBus(eventBus);
+    ClientSideSlbConfig.Builder configBuilder =
+        ClientSideSlbConfig.builder()
+            .setClock(clock)
+            .setServerPool(getServerPool())
+            .setEventBus(eventBus);
 
     if (buckConfig.getValue(parentSection, PING_ENDPOINT).isPresent()) {
       configBuilder.setPingEndpoint(buckConfig.getValue(parentSection, PING_ENDPOINT).get());

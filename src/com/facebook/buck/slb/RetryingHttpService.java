@@ -21,11 +21,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import okhttp3.Request;
 
 public class RetryingHttpService implements HttpService {
@@ -42,8 +40,8 @@ public class RetryingHttpService implements HttpService {
   // Currently when there's a cache miss, all the children nodes get immediately retried without
   // any backoffs. We will do the same here for this initial implementation (and also to avoid
   // adding extra latency during the retry policy).
-  public RetryingHttpService(BuckEventBus eventBus, HttpService decoratedService,
-      int maxNumberOfRetries) {
+  public RetryingHttpService(
+      BuckEventBus eventBus, HttpService decoratedService, int maxNumberOfRetries) {
     Preconditions.checkArgument(
         maxNumberOfRetries >= 0,
         "The max number of retries needs to be non-negative instead of: %s",
@@ -51,25 +49,20 @@ public class RetryingHttpService implements HttpService {
     this.decoratedService = decoratedService;
     this.maxNumberOfAttempts = maxNumberOfRetries + 1;
 
-    failAfterAllRetriesCountCounter = new IntegerCounter(
-        COUNTER_CATEGORY,
-        "fail_after_all_retries_count",
-        ImmutableMap.of());
+    failAfterAllRetriesCountCounter =
+        new IntegerCounter(COUNTER_CATEGORY, "fail_after_all_retries_count", ImmutableMap.of());
 
-    successAfterRetryCountCounter = new IntegerCounter(
-        COUNTER_CATEGORY,
-        "success_after_retry_count",
-        ImmutableMap.of());
+    successAfterRetryCountCounter =
+        new IntegerCounter(COUNTER_CATEGORY, "success_after_retry_count", ImmutableMap.of());
 
-    retryCountCounter = new IntegerCounter(
-        COUNTER_CATEGORY,
-        "retry_count",
-        ImmutableMap.of());
+    retryCountCounter = new IntegerCounter(COUNTER_CATEGORY, "retry_count", ImmutableMap.of());
 
-    eventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(ImmutableList.of(
-        failAfterAllRetriesCountCounter,
-        successAfterRetryCountCounter,
-        retryCountCounter)));
+    eventBus.post(
+        new CounterRegistry.AsyncCounterRegistrationEvent(
+            ImmutableList.of(
+                failAfterAllRetriesCountCounter,
+                successAfterRetryCountCounter,
+                retryCountCounter)));
   }
 
   @Override
@@ -117,8 +110,8 @@ public class RetryingHttpService implements HttpService {
 
     private static String generateMessage(List<IOException> exceptions) {
       StringBuilder builder = new StringBuilder();
-      builder.append(String.format("Too many fails after %1$d retries. Exceptions:",
-          exceptions.size()));
+      builder.append(
+          String.format("Too many fails after %1$d retries. Exceptions:", exceptions.size()));
       for (int i = 0; i < exceptions.size(); ++i) {
         builder.append(String.format(" %d:[%s]", i, exceptions.get(i).toString()));
       }

@@ -20,11 +20,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -39,12 +37,13 @@ abstract class AbstractClientSideSlbConfig {
   public static final int ERROR_CHECK_TIME_RANGE_MILLIS = (int) TimeUnit.MINUTES.toMillis(5);
   public static final float MAX_ERROR_PERCENTAGE = 0.1f;
 
-  public static final int LATENCY_CHECK_TIME_RANGE_MILLIS =
-      ERROR_CHECK_TIME_RANGE_MILLIS;
+  public static final int LATENCY_CHECK_TIME_RANGE_MILLIS = ERROR_CHECK_TIME_RANGE_MILLIS;
   public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
   public abstract Clock getClock();
+
   public abstract ImmutableList<URI> getServerPool();
+
   public abstract BuckEventBus getEventBus();
 
   @Value.Default
