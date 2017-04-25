@@ -21,20 +21,17 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-
 public class ElfSymbolTableTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -80,5 +77,4 @@ public class ElfSymbolTableTest {
           elf.getSectionByName(".symtab").orElseThrow(RuntimeException::new).getSecond().body);
     }
   }
-
 }

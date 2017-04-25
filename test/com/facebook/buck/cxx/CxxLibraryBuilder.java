@@ -27,20 +27,15 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<
-    CxxLibraryDescription.Arg,
-    CxxLibraryDescription,
-    BuildRule,
-    CxxLibraryBuilder> {
+public class CxxLibraryBuilder
+    extends AbstractCxxSourceBuilder<
+        CxxLibraryDescription.Arg, CxxLibraryDescription, BuildRule, CxxLibraryBuilder> {
 
   public CxxLibraryBuilder(
-      BuildTarget target,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
@@ -58,17 +53,17 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<
     this(target, createDefaultConfig(), createDefaultPlatforms());
   }
 
-  public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers)  {
+  public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {
     arg.exportedHeaders = SourceList.ofUnnamedSources(headers);
     return this;
   }
 
-  public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
+  public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers) {
     arg.exportedHeaders = SourceList.ofNamedSources(headers);
     return this;
   }
 
-  public CxxLibraryBuilder setExportedHeaders(SourceList headers)  {
+  public CxxLibraryBuilder setExportedHeaders(SourceList headers) {
     arg.exportedHeaders = headers;
     return this;
   }
@@ -153,5 +148,4 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<
   protected CxxLibraryBuilder getThis() {
     return this;
   }
-
 }

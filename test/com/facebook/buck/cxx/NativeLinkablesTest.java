@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -59,16 +58,16 @@ public class NativeLinkablesTest {
         BuildRule... ruleDeps) {
       super(
           BuildTargetFactory.newInstance(target),
-          new SourcePathResolver(new SourcePathRuleFinder(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer()))),
+          new SourcePathResolver(
+              new SourcePathRuleFinder(
+                  new BuildRuleResolver(
+                      TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
           ImmutableSortedSet.copyOf(ruleDeps));
       this.deps = ImmutableList.copyOf(deps);
       this.exportedDeps = ImmutableList.copyOf(exportedDeps);
       this.preferredLinkage = preferredLinkage;
       this.nativeLinkableInput = nativeLinkableInput;
-      this.sharedLibraries =  sharedLibraries;
+      this.sharedLibraries = sharedLibraries;
     }
 
     @Override
@@ -83,8 +82,7 @@ public class NativeLinkablesTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform,
-        Linker.LinkableDepType type) {
+        CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
       return nativeLinkableInput;
     }
 
@@ -94,11 +92,9 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(
-        CxxPlatform cxxPlatform) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
       return sharedLibraries;
     }
-
   }
 
   @Test
@@ -109,9 +105,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("b"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
@@ -119,15 +113,14 @@ public class NativeLinkablesTest {
             ImmutableList.of(b),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("a"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.SHARED).keySet(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.SHARED)
+            .keySet(),
         Matchers.not(Matchers.hasItem(b.getBuildTarget())));
   }
 
@@ -139,9 +132,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("b"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
@@ -149,15 +140,14 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(b),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("a"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.SHARED).keySet(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.SHARED)
+            .keySet(),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -169,9 +159,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("b"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
@@ -179,15 +167,14 @@ public class NativeLinkablesTest {
             ImmutableList.of(b),
             ImmutableList.of(),
             NativeLinkable.Linkage.STATIC,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("a"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.SHARED).keySet(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.SHARED)
+            .keySet(),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -199,9 +186,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("b"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
@@ -209,15 +194,14 @@ public class NativeLinkablesTest {
             ImmutableList.of(b),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("a"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.STATIC).keySet(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.STATIC)
+            .keySet(),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -271,51 +255,38 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("c"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("c")).build(),
             ImmutableMap.of());
-    FakeBuildRule b =
-        new FakeBuildRule(
-            "//:b",
-            pathResolver,
-            c);
+    FakeBuildRule b = new FakeBuildRule("//:b", pathResolver, c);
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.of(),
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
-            NativeLinkableInput.builder()
-                .addAllArgs(StringArg.from("a"))
-                .build(),
+            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of(),
             b);
     assertThat(a.getBuildDeps(), Matchers.hasItem(b));
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.STATIC).keySet(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.STATIC)
+            .keySet(),
         Matchers.not(Matchers.hasItem(c.getBuildTarget())));
   }
 
   @Test
   public void getLinkStyle() {
     assertThat(
-        NativeLinkables.getLinkStyle(
-            NativeLinkable.Linkage.STATIC,
-            Linker.LinkableDepType.SHARED),
+        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.STATIC, Linker.LinkableDepType.SHARED),
         Matchers.equalTo(Linker.LinkableDepType.STATIC_PIC));
     assertThat(
-        NativeLinkables.getLinkStyle(
-            NativeLinkable.Linkage.SHARED,
-            Linker.LinkableDepType.STATIC),
+        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.SHARED, Linker.LinkableDepType.STATIC),
         Matchers.equalTo(Linker.LinkableDepType.SHARED));
     assertThat(
-        NativeLinkables.getLinkStyle(
-            NativeLinkable.Linkage.ANY,
-            Linker.LinkableDepType.STATIC),
+        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.ANY, Linker.LinkableDepType.STATIC),
         Matchers.equalTo(Linker.LinkableDepType.STATIC));
   }
 
@@ -368,8 +339,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(a, b),
             NativeLinkable.class::isInstance);
     assertThat(
-        sharedLibs,
-        Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
+        sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
 
   @Test
@@ -408,5 +378,4 @@ public class NativeLinkablesTest {
             a::equals),
         Matchers.equalTo(ImmutableMap.<BuildTarget, NativeLinkable>of(a.getBuildTarget(), a)));
   }
-
 }

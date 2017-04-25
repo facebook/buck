@@ -35,11 +35,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
 public class CxxPrecompiledHeaderTest {
 
@@ -56,47 +54,44 @@ public class CxxPrecompiledHeaderTest {
             return true;
           }
         };
-    Compiler compiler =
-        CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
+    Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
     SourcePathResolver sourcePathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
-        params,
-        Paths.get("dir/foo.hash1.hash2.gch"),
-        new PreprocessorDelegate(
-            sourcePathResolver,
+    CxxPrecompiledHeader precompiledHeader =
+        new CxxPrecompiledHeader(
+            params,
+            Paths.get("dir/foo.hash1.hash2.gch"),
+            new PreprocessorDelegate(
+                sourcePathResolver,
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
+                Paths.get("./"),
+                preprocessorSupportingPch,
+                PreprocessorFlags.builder().build(),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                    CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
+                Optional.empty(),
+                /* leadingIncludePaths */ Optional.empty()),
+            new CompilerDelegate(
+                sourcePathResolver,
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                compiler,
+                CxxToolFlags.of()),
+            CxxToolFlags.of(),
+            new FakeSourcePath("foo.h"),
+            CxxSource.Type.C,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
-            Paths.get("./"),
-            preprocessorSupportingPch,
-            PreprocessorFlags.builder().build(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                sourcePathResolver),
-            Optional.empty(),
-            /* leadingIncludePaths */ Optional.empty()),
-        new CompilerDelegate(
-            sourcePathResolver,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            compiler,
-            CxxToolFlags.of()
-        ),
-        CxxToolFlags.of(),
-        new FakeSourcePath("foo.h"),
-        CxxSource.Type.C,
-        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-        CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
     resolver.addToIndex(precompiledHeader);
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
-    ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
-        buildContext,
-        new FakeBuildableContext());
-    CxxPreprocessAndCompileStep step = Iterables.getOnlyElement(
-        Iterables.filter(postBuildSteps, CxxPreprocessAndCompileStep.class));
+    ImmutableList<Step> postBuildSteps =
+        precompiledHeader.getBuildSteps(buildContext, new FakeBuildableContext());
+    CxxPreprocessAndCompileStep step =
+        Iterables.getOnlyElement(
+            Iterables.filter(postBuildSteps, CxxPreprocessAndCompileStep.class));
     assertThat(
         "step that generates pch should have correct flags",
         step.getCommand(),
         hasItem(CxxSource.Type.C.getPrecompiledHeaderLanguage().get()));
   }
-
 }

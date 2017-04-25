@@ -21,20 +21,17 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-
 public class ElfVerDefTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -52,8 +49,7 @@ public class ElfVerDefTest {
       ElfSection stringTable = elf.getSectionByName(".dynstr").get().getSecond();
       ElfVerDef verDef =
           ElfVerDef.parse(
-              elf.header.ei_class,
-              elf.getSectionByName(".gnu.version_d").get().getSecond().body);
+              elf.header.ei_class, elf.getSectionByName(".gnu.version_d").get().getSecond().body);
       assertThat(verDef.entries, Matchers.hasSize(2));
       assertThat(
           stringTable.lookupString(verDef.entries.get(0).getSecond().get(0).vda_name),
@@ -63,5 +59,4 @@ public class ElfVerDefTest {
           Matchers.equalTo("VERS_1.0"));
     }
   }
-
 }

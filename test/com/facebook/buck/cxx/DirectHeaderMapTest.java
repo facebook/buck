@@ -48,20 +48,17 @@ import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DirectHeaderMapTest {
 
-  @Rule
-  public final TemporaryPaths tmpDir = new TemporaryPaths();
+  @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
@@ -93,34 +90,26 @@ public class DirectHeaderMapTest {
     Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
-    links = ImmutableMap.of(
-        link1,
-        new PathSourcePath(
-            projectFilesystem,
-            MorePaths.relativize(tmpDir.getRoot(), file1)),
-        link2,
-        new PathSourcePath(
-            projectFilesystem,
-            MorePaths.relativize(tmpDir.getRoot(), file2)));
+    links =
+        ImmutableMap.of(
+            link1,
+            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
+            link2,
+            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
-    ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = new SourcePathResolver(ruleFinder);
 
-    buildRule = new DirectHeaderMap(
-        buildTarget,
-        projectFilesystem,
-        symlinkTreeRoot,
-        links,
-        ruleFinder);
+    buildRule =
+        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
     ruleResolver.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -140,15 +129,14 @@ public class DirectHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())
+                    projectFilesystem
+                        .resolve(projectFilesystem.getBuckPaths().getBuckOut())
                         .relativize(file1),
                     Paths.get("directory/then/file"),
-                    projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())
+                    projectFilesystem
+                        .resolve(projectFilesystem.getBuckPaths().getBuckOut())
                         .relativize(file2))));
-    ImmutableList<Step> actualBuildSteps =
-        buildRule.getBuildSteps(
-            buildContext,
-            buildableContext);
+    ImmutableList<Step> actualBuildSteps = buildRule.getBuildSteps(buildContext, buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
   }
 
@@ -160,66 +148,65 @@ public class DirectHeaderMapTest {
     for (Path p : links.keySet()) {
       modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p.toString()), links.get(p));
     }
-    DirectHeaderMap modifiedBuildRule = new DirectHeaderMap(
-        buildTarget,
-        projectFilesystem,
-        symlinkTreeRoot,
-        modifiedLinksBuilder.build(),
-        ruleFinder);
+    DirectHeaderMap modifiedBuildRule =
+        new DirectHeaderMap(
+            buildTarget,
+            projectFilesystem,
+            symlinkTreeRoot,
+            modifiedLinksBuilder.build(),
+            ruleFinder);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
-    FileHashLoader hashCache = new StackedFileHashCache(ImmutableList.of(
-        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmpDir.getRoot()))
-    ));
-    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
-        buildRule);
-    RuleKey key2 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
-        modifiedBuildRule);
+    FileHashLoader hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new ProjectFilesystem(tmpDir.getRoot()))));
+    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    RuleKey key2 =
+        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
 
-    key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
-        buildRule);
-    key2 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
-        modifiedBuildRule);
+    key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    key2 =
+        new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
-
   }
 
   @Test
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(buildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     // Calculate their rule keys and verify they're different.
-    DefaultFileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(
-        new ProjectFilesystem(tmpDir.getRoot()));
+    DefaultFileHashCache hashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmpDir.getRoot()));
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
-    RuleKey defaultKey1 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
-        .build(buildRule);
-    RuleKey inputKey1 = new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
-        .build(buildRule);
+    RuleKey defaultKey1 =
+        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+    RuleKey inputKey1 =
+        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
 
     Files.write(file1, "hello other world".getBytes());
     hashCache.invalidateAll();
 
-    RuleKey defaultKey2 = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
-        .build(buildRule);
-    RuleKey inputKey2 = new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
-        .build(buildRule);
+    RuleKey defaultKey2 =
+        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+    RuleKey inputKey2 =
+        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
 
     // When the file content changes, the rulekey should change but the input rulekey should be
     // unchanged. This ensures that a dependent's rulekey changes correctly.
     assertNotEquals(defaultKey1, defaultKey2);
     assertEquals(inputKey1, inputKey2);
   }
-
 }

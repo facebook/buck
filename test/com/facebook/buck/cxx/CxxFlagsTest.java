@@ -30,24 +30,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.regex.Pattern;
 import org.junit.Test;
 
-import java.util.regex.Pattern;
-
-/**
- * Tests for {@link CxxConstructorArg}.
- */
+/** Tests for {@link CxxConstructorArg}. */
 public class CxxFlagsTest {
 
   @Test
   public void getLanguageFlagsMultimapIsEmpty() {
     assertThat(
         CxxFlags.getLanguageFlags(
-            ImmutableList.of(),
-            PatternMatchedCollection.of(),
-            ImmutableMap.of(),
-            CxxPlatformUtils.DEFAULT_PLATFORM).entries(),
+                ImmutableList.of(),
+                PatternMatchedCollection.of(),
+                ImmutableMap.of(),
+                CxxPlatformUtils.DEFAULT_PLATFORM)
+            .entries(),
         empty());
   }
 
@@ -59,9 +56,7 @@ public class CxxFlagsTest {
             PatternMatchedCollection.of(),
             ImmutableMap.of(),
             CxxPlatformUtils.DEFAULT_PLATFORM);
-    assertThat(
-        ImmutableSet.copyOf(CxxSource.Type.values()),
-        equalTo(flags.keySet()));
+    assertThat(ImmutableSet.copyOf(CxxSource.Type.values()), equalTo(flags.keySet()));
     assertThat(flags.values(), everyItem(equalTo("flag")));
   }
 
@@ -96,14 +91,11 @@ public class CxxFlagsTest {
                 CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
                 CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy")),
             CxxPlatformUtils.DEFAULT_PLATFORM);
-    assertThat(
-        ImmutableList.of("common", "foo", "bar"), equalTo(flags.get(CxxSource.Type.C)));
-    assertThat(
-        ImmutableList.of("common", "baz", "blech"), equalTo(flags.get(CxxSource.Type.CXX)));
+    assertThat(ImmutableList.of("common", "foo", "bar"), equalTo(flags.get(CxxSource.Type.C)));
+    assertThat(ImmutableList.of("common", "baz", "blech"), equalTo(flags.get(CxxSource.Type.CXX)));
     assertThat(
         ImmutableList.of("common", "quux", "xyzzy"), equalTo(flags.get(CxxSource.Type.OBJC)));
-    assertThat(
-        ImmutableList.of("common"), equalTo(flags.get(CxxSource.Type.OBJCXX)));
+    assertThat(ImmutableList.of("common"), equalTo(flags.get(CxxSource.Type.OBJCXX)));
   }
 
   @Test
@@ -116,11 +108,9 @@ public class CxxFlagsTest {
             new PatternMatchedCollection.Builder<ImmutableList<String>>()
                 .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
                 .build(),
-            CxxPlatformUtils.DEFAULT_PLATFORM
-                .withFlagMacros(ImmutableMap.of("MACRO", "expansion"))),
-        containsInAnyOrder(
-            "-Iexpansion",
-            "-Fexpansion"));
+            CxxPlatformUtils.DEFAULT_PLATFORM.withFlagMacros(
+                ImmutableMap.of("MACRO", "expansion"))),
+        containsInAnyOrder("-Iexpansion", "-Fexpansion"));
 
     // Test that platform macros are expanded via `getFlagsWithPlatformMacroExpansion`.
     ImmutableList<StringWithMacros> flags =
@@ -131,36 +121,31 @@ public class CxxFlagsTest {
                     Pattern.compile(".*"),
                     ImmutableList.of(StringWithMacrosUtils.format("-F$MACRO")))
                 .build(),
-            CxxPlatformUtils.DEFAULT_PLATFORM
-                .withFlagMacros(ImmutableMap.of("MACRO", "expansion")));
+            CxxPlatformUtils.DEFAULT_PLATFORM.withFlagMacros(
+                ImmutableMap.of("MACRO", "expansion")));
     assertThat(
         RichStream.from(flags)
             .map(
-                s -> s.format(
-                    m -> {
-                      throw new IllegalStateException();
-                    }))
+                s ->
+                    s.format(
+                        m -> {
+                          throw new IllegalStateException();
+                        }))
             .toImmutableList(),
-        containsInAnyOrder(
-            "-Iexpansion",
-            "-Fexpansion"));
+        containsInAnyOrder("-Iexpansion", "-Fexpansion"));
 
     // Test that platform macros are expanded via `getLanguageFlags`.
     assertThat(
         CxxFlags.getLanguageFlags(
-            ImmutableList.of("-I$MACRO"),
-            new PatternMatchedCollection.Builder<ImmutableList<String>>()
-                .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
-                .build(),
-            ImmutableMap.of(
-                CxxSource.Type.C, ImmutableList.of("-isystem$MACRO")),
-            CxxPlatformUtils.DEFAULT_PLATFORM
-                .withFlagMacros(ImmutableMap.of("MACRO", "expansion")))
+                ImmutableList.of("-I$MACRO"),
+                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                    .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
+                    .build(),
+                ImmutableMap.of(CxxSource.Type.C, ImmutableList.of("-isystem$MACRO")),
+                CxxPlatformUtils.DEFAULT_PLATFORM.withFlagMacros(
+                    ImmutableMap.of("MACRO", "expansion")))
             .get(CxxSource.Type.C),
-        containsInAnyOrder(
-            "-Iexpansion",
-            "-isystemexpansion",
-            "-Fexpansion"));
+        containsInAnyOrder("-Iexpansion", "-isystemexpansion", "-Fexpansion"));
   }
 
   @Test
@@ -173,12 +158,11 @@ public class CxxFlagsTest {
                     Pattern.compile(".*"),
                     ImmutableList.of(StringWithMacrosUtils.format("-F$MACRO")))
                 .build(),
-            CxxPlatformUtils.DEFAULT_PLATFORM
-                .withFlagMacros(ImmutableMap.of("MACRO", "expansion"))),
+            CxxPlatformUtils.DEFAULT_PLATFORM.withFlagMacros(
+                ImmutableMap.of("MACRO", "expansion"))),
         equalTo(
             ImmutableList.of(
                 StringWithMacrosUtils.format("-Iexpansion"),
                 StringWithMacrosUtils.format("-Fexpansion"))));
   }
-
 }

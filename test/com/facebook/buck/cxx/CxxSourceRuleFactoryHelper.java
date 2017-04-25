@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import java.nio.file.Path;
 
 public class CxxSourceRuleFactoryHelper {
@@ -32,29 +31,21 @@ public class CxxSourceRuleFactoryHelper {
   private CxxSourceRuleFactoryHelper() {}
 
   public static CxxSourceRuleFactory of(
-      Path cellRoot,
-      BuildTarget target,
-      CxxPlatform cxxPlatform) {
-    return of(
-        cellRoot,
-        target,
-        cxxPlatform,
-        CxxPlatformUtils.DEFAULT_CONFIG);
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform) {
+    return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public static CxxSourceRuleFactory of(
-      Path cellRoot,
-      BuildTarget target,
-      CxxPlatform cxxPlatform,
-      CxxBuckConfig cxxBuckConfig) {
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-            .build())
+        .setParams(
+            new FakeBuildRuleParamsBuilder(target)
+                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+                .build())
         .setResolver(resolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
@@ -69,12 +60,7 @@ public class CxxSourceRuleFactoryHelper {
       BuildTarget target,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType) {
-    return of(
-        cellRoot,
-        target,
-        cxxPlatform,
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        picType);
+    return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG, picType);
   }
 
   public static CxxSourceRuleFactory of(
@@ -88,9 +74,10 @@ public class CxxSourceRuleFactoryHelper {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-            .build())
+        .setParams(
+            new FakeBuildRuleParamsBuilder(target)
+                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+                .build())
         .setResolver(resolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
@@ -99,5 +86,4 @@ public class CxxSourceRuleFactoryHelper {
         .setPicType(picType)
         .build();
   }
-
 }

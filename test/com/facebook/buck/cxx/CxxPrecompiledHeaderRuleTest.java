@@ -61,8 +61,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -74,33 +74,23 @@ import org.junit.Test;
 public class CxxPrecompiledHeaderRuleTest {
 
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
-      new CxxBuckConfig(
-          FakeBuckConfig.builder()
-          .setSections("[cxx]", "pch_enabled=true")
-          .build());
+      new CxxBuckConfig(FakeBuckConfig.builder().setSections("[cxx]", "pch_enabled=true").build());
 
   private static final PreprocessorProvider PREPROCESSOR_SUPPORTING_PCH =
-      new PreprocessorProvider(
-          Paths.get("foopp"),
-          Optional.of(CxxToolProvider.Type.CLANG));
+      new PreprocessorProvider(Paths.get("foopp"), Optional.of(CxxToolProvider.Type.CLANG));
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      CxxPlatformUtils
-          .build(CXX_CONFIG_PCH_ENABLED)
-          .withCpp(PREPROCESSOR_SUPPORTING_PCH);
+      CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(PREPROCESSOR_SUPPORTING_PCH);
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "cxx_precompiled_header_rule",
-        tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
     workspace.setUp();
   }
 
@@ -112,8 +102,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
   public final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-  public final Compiler compiler =
-      CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(ruleResolver);
+  public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(ruleResolver);
 
   public BuildTarget newTarget(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName);
@@ -123,17 +112,11 @@ public class CxxPrecompiledHeaderRuleTest {
     return new FakeBuildRuleParamsBuilder(target).build();
   }
 
-  /**
-   * Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to ruleResolver index.
-   */
+  /** Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to ruleResolver index. */
   public CxxPrecompiledHeaderTemplate newPCH(
-      BuildTarget target,
-      SourcePath headerSourcePath,
-      ImmutableSortedSet<BuildRule> deps) {
+      BuildTarget target, SourcePath headerSourcePath, ImmutableSortedSet<BuildRule> deps) {
     return new CxxPrecompiledHeaderTemplate(
-        newParams(target).copyAppendingExtraDeps(deps),
-        ruleResolver,
-        headerSourcePath);
+        newParams(target).copyAppendingExtraDeps(deps), ruleResolver, headerSourcePath);
   }
 
   public CxxSource.Builder newCxxSourceBuilder() {
@@ -165,21 +148,15 @@ public class CxxPrecompiledHeaderRuleTest {
         .setCxxPreprocessorInput(
             ImmutableList.of(
                 CxxPreprocessorInput.builder()
-                    .setPreprocessorFlags(
-                        ImmutableMultimap.of(CxxSource.Type.C, flag))
+                    .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, flag))
                     .build()));
   }
 
   private CxxPrecompiledHeaderTemplate newPCH(BuildTarget pchTarget) {
-    return newPCH(
-        pchTarget,
-        new FakeSourcePath("header.h"),
-        /* deps */ ImmutableSortedSet.of());
+    return newPCH(pchTarget, new FakeSourcePath("header.h"), /* deps */ ImmutableSortedSet.of());
   }
 
-  /**
-   * Return the sublist, starting at {@code toFind}, or empty list if not found.
-   */
+  /** Return the sublist, starting at {@code toFind}, or empty list if not found. */
   List<String> seek(List<String> immList, String toFind) {
     ArrayList<String> list = new ArrayList<>(immList.size());
     list.addAll(immList);
@@ -196,24 +173,21 @@ public class CxxPrecompiledHeaderRuleTest {
     return Platform.detect() != Platform.WINDOWS;
   }
 
-  /**
-   * @return exit code from that process
-   */
+  /** @return exit code from that process */
   private int runBuiltBinary(String binaryTarget) throws Exception {
-    return workspace.runCommand(
-            workspace.resolve(
-                BuildTargets.getGenPath(
-                    filesystem,
-                    workspace.newBuildTarget(binaryTarget),
-                    "%s"))
-            .toString())
+    return workspace
+        .runCommand(
+            workspace
+                .resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, workspace.newBuildTarget(binaryTarget), "%s"))
+                .toString())
         .getExitCode();
   }
 
   /** Stolen from {@link PrecompiledHeaderIntegrationTest} */
   private static Matcher<BuckBuildLog> reportedTargetSuccessType(
-      final BuildTarget target,
-      final BuildRuleSuccessType successType) {
+      final BuildTarget target, final BuildRuleSuccessType successType) {
     return new CustomTypeSafeMatcher<BuckBuildLog>(
         "target: " + target.toString() + " with result: " + successType) {
 
@@ -247,36 +221,36 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib1Target = newTarget("//test:lib1");
     BuildRuleParams lib1Params = newParams(lib1Target);
-    CxxSourceRuleFactory factory1 = newFactoryBuilder(lib1Params, "-frtti")
-        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
-        .build();
-    CxxPreprocessAndCompile lib1 = factory1.createPreprocessAndCompileBuildRule(
-        "lib1.cpp",
-        newSource("lib1.cpp"));
+    CxxSourceRuleFactory factory1 =
+        newFactoryBuilder(lib1Params, "-frtti")
+            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .build();
+    CxxPreprocessAndCompile lib1 =
+        factory1.createPreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     ruleResolver.addToIndex(lib1);
     ImmutableList<String> cmd1 =
         lib1.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     BuildRuleParams lib2Params = newParams(lib2Target);
-    CxxSourceRuleFactory factory2 = newFactoryBuilder(lib2Params, "-frtti")
-        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
-        .build();
-    CxxPreprocessAndCompile lib2 = factory2.createPreprocessAndCompileBuildRule(
-        "lib2.cpp",
-        newSource("lib2.cpp"));
+    CxxSourceRuleFactory factory2 =
+        newFactoryBuilder(lib2Params, "-frtti")
+            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .build();
+    CxxPreprocessAndCompile lib2 =
+        factory2.createPreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     ruleResolver.addToIndex(lib2);
     ImmutableList<String> cmd2 =
         lib2.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
 
     BuildTarget lib3Target = newTarget("//test:lib3");
     BuildRuleParams lib3Params = newParams(lib3Target);
-    CxxSourceRuleFactory factory3 = newFactoryBuilder(lib3Params, "-fno-rtti")
-        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
-        .build();
-    CxxPreprocessAndCompile lib3 = factory3.createPreprocessAndCompileBuildRule(
-        "lib3.cpp",
-        newSource("lib3.cpp"));
+    CxxSourceRuleFactory factory3 =
+        newFactoryBuilder(lib3Params, "-fno-rtti")
+            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .build();
+    CxxPreprocessAndCompile lib3 =
+        factory3.createPreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
     ruleResolver.addToIndex(lib3);
     ImmutableList<String> cmd3 =
         lib3.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
@@ -315,15 +289,17 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget libTarget = newTarget("//test:lib");
     BuildRuleParams libParams = newParams(libTarget);
-    CxxSourceRuleFactory factory1 = newFactoryBuilder(libParams, "-flag-for-factory")
-        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
-        .build();
-    CxxPreprocessAndCompile lib = factory1.createPreprocessAndCompileBuildRule(
-        "lib.cpp",
-        newCxxSourceBuilder()
-            .setPath(new FakeSourcePath("lib.cpp"))
-            .setFlags(ImmutableList.of("-flag-for-source"))
-            .build());
+    CxxSourceRuleFactory factory1 =
+        newFactoryBuilder(libParams, "-flag-for-factory")
+            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .build();
+    CxxPreprocessAndCompile lib =
+        factory1.createPreprocessAndCompileBuildRule(
+            "lib.cpp",
+            newCxxSourceBuilder()
+                .setPath(new FakeSourcePath("lib.cpp"))
+                .setFlags(ImmutableList.of("-flag-for-source"))
+                .build());
     ruleResolver.addToIndex(lib);
     ImmutableList<String> libCmd =
         lib.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
@@ -357,18 +333,15 @@ public class CxxPrecompiledHeaderRuleTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxHeadersDir.of(
-                    CxxPreprocessables.IncludeType.SYSTEM,
-                    new FakeSourcePath("/tmp/sys")))
+                    CxxPreprocessables.IncludeType.SYSTEM, new FakeSourcePath("/tmp/sys")))
             .build();
 
     BuildTarget lib1Target = newTarget("//some/other/dir:lib1");
     BuildRuleParams lib1Params = newParams(lib1Target);
-    CxxSourceRuleFactory lib1Factory = newFactoryBuilder(lib1Params)
-        .addCxxPreprocessorInput(cxxPreprocessorInput)
-        .build();
-    CxxPreprocessAndCompile lib1 = lib1Factory.createPreprocessAndCompileBuildRule(
-        "lib1.cpp",
-        newSource("lib1.cpp"));
+    CxxSourceRuleFactory lib1Factory =
+        newFactoryBuilder(lib1Params).addCxxPreprocessorInput(cxxPreprocessorInput).build();
+    CxxPreprocessAndCompile lib1 =
+        lib1Factory.createPreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     ruleResolver.addToIndex(lib1);
 
     ImmutableList<String> lib1Cmd =
@@ -376,20 +349,17 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
-        newPCH(
-            pchTarget,
-            new FakeSourcePath("header.h"),
-            ImmutableSortedSet.of(lib1));
+        newPCH(pchTarget, new FakeSourcePath("header.h"), ImmutableSortedSet.of(lib1));
     ruleResolver.addToIndex(pch);
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     BuildRuleParams lib2Params = newParams(lib2Target);
-    CxxSourceRuleFactory lib2Factory = newFactoryBuilder(lib2Params)
-        .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
-        .build();
-    CxxPreprocessAndCompile lib2 = lib2Factory.createPreprocessAndCompileBuildRule(
-        "lib2.cpp",
-        newSource("lib2.cpp"));
+    CxxSourceRuleFactory lib2Factory =
+        newFactoryBuilder(lib2Params)
+            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .build();
+    CxxPreprocessAndCompile lib2 =
+        lib2Factory.createPreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     ruleResolver.addToIndex(lib2);
     ImmutableList<String> lib2Cmd =
         lib2.makeMainStep(pathResolver, Paths.get("/tmp/y"), false).getCommand();
@@ -441,13 +411,11 @@ public class CxxPrecompiledHeaderRuleTest {
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
-        "#define TESTVALUE 42\n",
-        "recompile_after_header_changed/header.h");
+        "#define TESTVALUE 42\n", "recompile_after_header_changed/header.h");
     workspace.runBuckBuild("//recompile_after_header_changed:main#default").assertSuccess();
     buildLog = workspace.getBuildLog();
     assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+        buildLog, reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
     assertThat(
         buildLog,
         reportedTargetSuccessType(
@@ -458,13 +426,11 @@ public class CxxPrecompiledHeaderRuleTest {
     workspace.resetBuildLogFile();
 
     workspace.writeContentsToPath(
-        "#define TESTVALUE 43\n",
-        "recompile_after_header_changed/header.h");
+        "#define TESTVALUE 43\n", "recompile_after_header_changed/header.h");
     workspace.runBuckBuild("//recompile_after_header_changed:main#default").assertSuccess();
     buildLog = workspace.getBuildLog();
     assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+        buildLog, reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
     assertThat(
         buildLog,
         reportedTargetSuccessType(
@@ -480,60 +446,60 @@ public class CxxPrecompiledHeaderRuleTest {
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
-        "#define TESTVALUE 50\n",
-        "recompile_after_include_changed/included_by_pch.h");
+        "#define TESTVALUE 50\n", "recompile_after_include_changed/included_by_pch.h");
     workspace.runBuckBuild("//recompile_after_include_changed:main#default").assertSuccess();
     buildLog = workspace.getBuildLog();
     assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+        buildLog, reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
     assertThat(
         buildLog,
         reportedTargetSuccessType(
             workspace.newBuildTarget("//recompile_after_include_changed:main#binary,default"),
             BuildRuleSuccessType.BUILT_LOCALLY));
     assertEquals(
-        workspace.runCommand(
-            workspace.resolve(
-                BuildTargets.getGenPath(
-                    filesystem,
-                    workspace.newBuildTarget("//recompile_after_include_changed:main#default"),
-                    "%s"))
-            .toString())
-        .getExitCode(),
+        workspace
+            .runCommand(
+                workspace
+                    .resolve(
+                        BuildTargets.getGenPath(
+                            filesystem,
+                            workspace.newBuildTarget(
+                                "//recompile_after_include_changed:main#default"),
+                            "%s"))
+                    .toString())
+            .getExitCode(),
         50);
 
     workspace.resetBuildLogFile();
 
     workspace.writeContentsToPath(
-        "#define TESTVALUE 51\n",
-        "recompile_after_include_changed/included_by_pch.h");
+        "#define TESTVALUE 51\n", "recompile_after_include_changed/included_by_pch.h");
     workspace.runBuckBuild("//recompile_after_include_changed:main#default").assertSuccess();
     buildLog = workspace.getBuildLog();
 
     assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
+        buildLog, reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
     assertThat(
         buildLog,
         reportedTargetSuccessType(
             workspace.newBuildTarget("//recompile_after_include_changed:main#binary,default"),
             BuildRuleSuccessType.BUILT_LOCALLY));
     assertEquals(
-        workspace.runCommand(
-            workspace.resolve(
-                BuildTargets.getGenPath(
-                    filesystem,
-                    workspace.newBuildTarget("//recompile_after_include_changed:main#default"),
-                    "%s"))
-            .toString())
-        .getExitCode(),
+        workspace
+            .runCommand(
+                workspace
+                    .resolve(
+                        BuildTargets.getGenPath(
+                            filesystem,
+                            workspace.newBuildTarget(
+                                "//recompile_after_include_changed:main#default"),
+                            "%s"))
+                    .toString())
+            .getExitCode(),
         51);
   }
 
-  private static void getAllFiles(
-      TreeMap<Path, byte[]> out,
-      Path dir) throws Exception {
+  private static void getAllFiles(TreeMap<Path, byte[]> out, Path dir) throws Exception {
     assertTrue(dir.toFile().isDirectory());
     for (Path relativeEntry : Files.list(dir).collect(Collectors.toList())) {
       if (relativeEntry.toFile().isDirectory()) {
@@ -583,5 +549,4 @@ public class CxxPrecompiledHeaderRuleTest {
     assertNotNull(pchHashC);
     assertNotEquals(pchHashA, pchHashC);
   }
-
 }

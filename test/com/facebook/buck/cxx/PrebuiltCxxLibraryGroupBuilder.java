@@ -23,17 +23,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-
 public class PrebuiltCxxLibraryGroupBuilder
-    extends
-    AbstractNodeBuilder<
-        PrebuiltCxxLibraryGroupDescription.Args,
-        PrebuiltCxxLibraryGroupDescription,
-        BuildRule> {
+    extends AbstractNodeBuilder<
+        PrebuiltCxxLibraryGroupDescription.Args, PrebuiltCxxLibraryGroupDescription, BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
     super(PrebuiltCxxLibraryGroupDescription.of(), target);
@@ -99,5 +94,4 @@ public class PrebuiltCxxLibraryGroupBuilder
     arg.supportedPlatformsRegex = Optional.of(pattern);
     return this;
   }
-
 }

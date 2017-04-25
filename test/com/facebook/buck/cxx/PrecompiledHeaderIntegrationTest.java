@@ -29,19 +29,16 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class PrecompiledHeaderIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
@@ -61,8 +58,9 @@ public class PrecompiledHeaderIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
-    String depFileContents = workspace.getFileContents(
-        "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch.dep");
+    String depFileContents =
+        workspace.getFileContents(
+            "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch.dep");
     assertThat(depFileContents, containsString("referenced_by_prefix_header.h"));
   }
 
@@ -72,11 +70,11 @@ public class PrecompiledHeaderIntegrationTest {
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
-        "#pragma once\n" +
-            "#include <stdio.h>\n" +
-            "#include \"referenced_by_prefix_header.h\"\n" +
-            "#include <referenced_by_prefix_header_from_dependency.h>\n" +
-            "#define FOO 100\n",
+        "#pragma once\n"
+            + "#include <stdio.h>\n"
+            + "#include \"referenced_by_prefix_header.h\"\n"
+            + "#include <referenced_by_prefix_header_from_dependency.h>\n"
+            + "#define FOO 100\n",
         "prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -90,8 +88,7 @@ public class PrecompiledHeaderIntegrationTest {
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
-        "#pragma once\n#define REFERENCED_BY_PREFIX_HEADER 3\n",
-        "referenced_by_prefix_header.h");
+        "#pragma once\n#define REFERENCED_BY_PREFIX_HEADER 3\n", "referenced_by_prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(findPchTarget().toString());
@@ -118,9 +115,7 @@ public class PrecompiledHeaderIntegrationTest {
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     // Change this file (not in the pch) to trigger recompile.
-    workspace.writeContentsToPath(
-        "int lib_func() { return 0; }",
-        "lib.c");
+    workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     // Touch this file that contributes to the PCH without changing its contents.
     workspace.writeContentsToPath(
         workspace.getFileContents("referenced_by_prefix_header_from_dependency.h"),
@@ -131,16 +126,13 @@ public class PrecompiledHeaderIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
-
   @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.runBuckCommand("clean");
-    workspace.writeContentsToPath(
-        "int lib_func() { return 0; }",
-        "lib.c");
+    workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(findPchTarget().toString());

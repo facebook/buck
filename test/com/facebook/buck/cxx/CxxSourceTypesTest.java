@@ -23,9 +23,7 @@ import static org.junit.Assert.assertTrue;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-/**
- * Unit tests for {@link CxxSourceTypes}.
- */
+/** Unit tests for {@link CxxSourceTypes}. */
 public class CxxSourceTypesTest {
 
   @Test
@@ -119,5 +117,4 @@ public class CxxSourceTypesTest {
         CxxSourceTypes.getCompiler(cxxPlatform, CxxSource.Type.ASM),
         Matchers.is(cxxPlatform.getAsm().get()));
   }
-
 }

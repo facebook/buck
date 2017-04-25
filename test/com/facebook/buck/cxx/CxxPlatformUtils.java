@@ -35,7 +35,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,28 +50,16 @@ public class CxxPlatformUtils {
   private static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
   private static final PreprocessorProvider DEFAULT_PREPROCESSOR_PROVIDER =
-      new PreprocessorProvider(
-          new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.GCC);
+      new PreprocessorProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
 
   private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
-      new CompilerProvider(
-          new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.GCC);
+      new CompilerProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
 
   static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(
-          250,
-          File.separatorChar,
-          Paths.get("."),
-          ImmutableBiMap.of());
+      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
   static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(
-          250,
-          File.separatorChar,
-          Paths.get("."),
-          ImmutableBiMap.of());
+      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
@@ -89,8 +76,7 @@ public class CxxPlatformUtils {
           .setAsmpp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setLd(
               new DefaultLinkerProvider(
-                  LinkerProvider.Type.GNU,
-                  new ConstantToolProvider(DEFAULT_TOOL)))
+                  LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL)))
           .setStrip(DEFAULT_TOOL)
           .setAr(new GnuArchiver(DEFAULT_TOOL))
           .setRanlib(DEFAULT_TOOL)
@@ -124,21 +110,16 @@ public class CxxPlatformUtils {
             ImmutableMap.of(),
             new DefaultCellPathResolver(root, rawConfig));
     return DefaultCxxPlatforms.build(
-        Platform.detect(),
-        new ProjectFilesystem(root),
-        new CxxBuckConfig(buckConfig));
+        Platform.detect(), new ProjectFilesystem(root), new CxxBuckConfig(buckConfig));
   }
 
   public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws IOException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
-    return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps() ?
-        CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP :
-        CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY;
+    return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
+        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+        : CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY;
   }
-
 }

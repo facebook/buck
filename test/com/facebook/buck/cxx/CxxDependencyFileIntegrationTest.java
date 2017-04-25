@@ -25,20 +25,17 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Optional;
-
 public class CxxDependencyFileIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
   private BuildTarget target;
@@ -49,11 +46,11 @@ public class CxxDependencyFileIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        "[cxx]\n" +
-        "  cppflags = -Wall -Werror\n" +
-        "  cxxppflags = -Wall -Werror\n" +
-        "  cflags = -Wall -Werror\n" +
-        "  cxxflags = -Wall -Werror\n",
+        "[cxx]\n"
+            + "  cppflags = -Wall -Werror\n"
+            + "  cxxppflags = -Wall -Werror\n"
+            + "  cflags = -Wall -Werror\n"
+            + "  cxxflags = -Wall -Werror\n",
         ".buckconfig");
 
     // Run a build and make sure it's successful.
@@ -61,12 +58,10 @@ public class CxxDependencyFileIntegrationTest {
 
     // Find the target used for preprocessing and verify it ran.
     target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:test");
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
-        new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        workspace.getDestPath(),
-        target,
-        cxxPlatform);
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform);
     String source = "test.cpp";
     preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
     workspace.getBuildLog().assertTargetBuiltLocally(preprocessTarget.toString());
@@ -109,5 +104,4 @@ public class CxxDependencyFileIntegrationTest {
         workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
-
 }

@@ -39,27 +39,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CxxGtestTestTest {
 
   private static final TypeReference<List<TestResultSummary>> SUMMARIES_REFERENCE =
       new TypeReference<List<TestResultSummary>>() {};
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testParseResults() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "gtest", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "gtest", tmp);
     workspace.setUp();
 
     ImmutableList<String> samples =
@@ -79,29 +76,28 @@ public class CxxGtestTestTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    CxxGtestTest test = new CxxGtestTest(
-        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
-        ruleFinder,
-        new CxxLink(
-            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
-            Paths.get("output"),
-            ImmutableList.of(),
-            Optional.empty(),
-            /* cacheable */ true,
-            /* thinLto */ false),
-        new CommandTool.Builder()
-            .addArg(StringArg.of(""))
-            .build(),
-        ImmutableMap.of(),
-        Suppliers.ofInstance(ImmutableList.of()),
-        ImmutableSortedSet.of(),
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        /* runTestSeparately */ false,
-        /* testRuleTimeoutMs */ Optional.empty(),
-        /* maxTestOutputSize */ 100L);
+    CxxGtestTest test =
+        new CxxGtestTest(
+            new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
+            ruleFinder,
+            new CxxLink(
+                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
+                CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
+                Paths.get("output"),
+                ImmutableList.of(),
+                Optional.empty(),
+                /* cacheable */ true,
+                /* thinLto */ false),
+            new CommandTool.Builder().addArg(StringArg.of("")).build(),
+            ImmutableMap.of(),
+            Suppliers.ofInstance(ImmutableList.of()),
+            ImmutableSortedSet.of(),
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            /* runTestSeparately */ false,
+            /* testRuleTimeoutMs */ Optional.empty(),
+            /* maxTestOutputSize */ 100L);
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");
@@ -114,7 +110,5 @@ public class CxxGtestTestTest {
           test.parseResults(exitCode, output, results);
       assertEquals(sample, expectedSummaries, actualSummaries);
     }
-
   }
-
 }

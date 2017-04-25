@@ -22,13 +22,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * Tests that errors and warnings issued by a compiler/linker are visible in buck logs and console.
@@ -36,8 +34,7 @@ import java.io.IOException;
  */
 public class CxxErrorsIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -56,30 +53,23 @@ public class CxxErrorsIntegrationTest {
   public void compilerError() throws IOException {
     ProjectWorkspace.ProcessResult runResult =
         workspace.runBuckCommand(
-            "build",
-            "//:not_compilable#static," + CxxPlatforms.getHostFlavor().getName());
+            "build", "//:not_compilable#static," + CxxPlatforms.getHostFlavor().getName());
     runResult.assertFailure();
-    assertThat(
-        runResult.getStderr(),
-        Matchers.containsString("foo.h"));
+    assertThat(runResult.getStderr(), Matchers.containsString("foo.h"));
   }
 
   @Test
   public void linkError() throws IOException {
     ProjectWorkspace.ProcessResult staticBuildResult =
         workspace.runBuckCommand(
-            "build",
-            "//:not_linkable#static," + CxxPlatforms.getHostFlavor().getName());
+            "build", "//:not_linkable#static," + CxxPlatforms.getHostFlavor().getName());
     staticBuildResult.assertSuccess();
 
     ProjectWorkspace.ProcessResult sharedBuildResult =
         workspace.runBuckCommand(
-            "build",
-            "//:not_linkable#shared," + CxxPlatforms.getHostFlavor().getName());
+            "build", "//:not_linkable#shared," + CxxPlatforms.getHostFlavor().getName());
     sharedBuildResult.assertFailure();
     assertThat(
-        sharedBuildResult.getStderr(),
-        Matchers.containsString("unresolvedExternalFunction"));
+        sharedBuildResult.getStderr(), Matchers.containsString("unresolvedExternalFunction"));
   }
-
 }

@@ -32,7 +32,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -45,8 +44,7 @@ public class FrameworkPathArgTest {
 
     @Override
     public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder,
-        SourcePathResolver pathResolver) {
+        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
       throw new UnsupportedOperationException();
     }
   }
@@ -54,24 +52,20 @@ public class FrameworkPathArgTest {
   @Test
   public void testGetDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
-    Genrule genrule = GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setOut("foo/bar.o")
-        .build(ruleResolver, filesystem);
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(genruleTarget)
+            .setOut("foo/bar.o")
+            .build(ruleResolver, filesystem);
 
-    FrameworkPath sourcePathFrameworkPath = FrameworkPath.ofSourcePath(
-        genrule.getSourcePathToOutput());
+    FrameworkPath sourcePathFrameworkPath =
+        FrameworkPath.ofSourcePath(genrule.getSourcePathToOutput());
 
-    FrameworkPathArg sourcePathFrameworkPathArg =
-        new TestFrameworkPathArg(sourcePathFrameworkPath);
-    assertThat(
-        sourcePathFrameworkPathArg.getDeps(ruleFinder),
-        Matchers.contains(genrule));
+    FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
+    assertThat(sourcePathFrameworkPathArg.getDeps(ruleFinder), Matchers.contains(genrule));
   }
 }

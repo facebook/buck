@@ -24,18 +24,14 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class PrebuiltCxxLibraryBuilder extends AbstractCxxBuilder<
-    PrebuiltCxxLibraryDescription.Arg,
-    PrebuiltCxxLibraryDescription,
-    BuildRule> {
+public class PrebuiltCxxLibraryBuilder
+    extends AbstractCxxBuilder<
+        PrebuiltCxxLibraryDescription.Arg, PrebuiltCxxLibraryDescription, BuildRule> {
 
-  public PrebuiltCxxLibraryBuilder(
-      BuildTarget target,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(new PrebuiltCxxLibraryDescription(CxxPlatformUtils.DEFAULT_CONFIG, cxxPlatforms), target);
   }
 
@@ -124,5 +120,4 @@ public class PrebuiltCxxLibraryBuilder extends AbstractCxxBuilder<
     arg.versionedSubDir = Optional.of(versionedSubDir);
     return this;
   }
-
 }

@@ -26,7 +26,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -44,10 +43,8 @@ public class CxxCompilationDatabaseUtils {
   private static class ArgsJsonDeserializer implements JsonDeserializer<ImmutableList<String>> {
     @Override
     public ImmutableList<String> deserialize(
-        JsonElement json,
-        Type type,
-        JsonDeserializationContext context) throws JsonParseException {
-      Type listType = new TypeToken<Collection<String>>(){}.getType();
+        JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
+      Type listType = new TypeToken<Collection<String>>() {}.getType();
       List<String> list = context.deserialize(json, listType);
       return ImmutableList.copyOf(list);
     }
@@ -55,14 +52,14 @@ public class CxxCompilationDatabaseUtils {
 
   public static Map<String, CxxCompilationDatabaseEntry> parseCompilationDatabaseJsonFile(
       Path compilationDatabase) throws IOException {
-    Gson gson = new GsonBuilder()
-        .registerTypeAdapter(ImmutableList.class, new ArgsJsonDeserializer())
-        .create();
+    Gson gson =
+        new GsonBuilder()
+            .registerTypeAdapter(ImmutableList.class, new ArgsJsonDeserializer())
+            .create();
     try (Reader fileReader = Files.newBufferedReader(compilationDatabase, defaultCharset())) {
-      List<CxxCompilationDatabaseEntry> entries = gson
-          .fromJson(
-              fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {
-              }.getType());
+      List<CxxCompilationDatabaseEntry> entries =
+          gson.fromJson(
+              fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {}.getType());
       Map<String, CxxCompilationDatabaseEntry> fileToEntry = new HashMap<>();
       for (CxxCompilationDatabaseEntry entry : entries) {
         fileToEntry.put(entry.getFile(), entry);
@@ -70,5 +67,4 @@ public class CxxCompilationDatabaseUtils {
       return fileToEntry;
     }
   }
-
 }

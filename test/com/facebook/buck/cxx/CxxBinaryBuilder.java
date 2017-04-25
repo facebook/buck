@@ -21,19 +21,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.query.Query;
-
 import java.util.Optional;
 
-public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<
-    CxxBinaryDescription.Arg,
-    CxxBinaryDescription,
-    CxxBinary,
-    CxxBinaryBuilder> {
+public class CxxBinaryBuilder
+    extends AbstractCxxSourceBuilder<
+        CxxBinaryDescription.Arg, CxxBinaryDescription, CxxBinary, CxxBinaryBuilder> {
 
   public CxxBinaryBuilder(
-      BuildTarget target,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxBinaryDescription(
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -84,5 +79,4 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<
     arg.defaultPlatform = Optional.of(flavor);
     return this;
   }
-
 }

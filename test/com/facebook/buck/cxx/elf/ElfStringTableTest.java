@@ -19,12 +19,10 @@ package com.facebook.buck.cxx.elf;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ElfStringTableTest {
 
@@ -32,9 +30,7 @@ public class ElfStringTableTest {
   public void multipleStrings() throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ImmutableList<Integer> indices =
-        ElfStringTable.writeStringTableFromStrings(
-            ImmutableList.of("hello", "world"),
-            output);
+        ElfStringTable.writeStringTableFromStrings(ImmutableList.of("hello", "world"), output);
     byte[] table = output.toByteArray();
     assertThat(table.length, Matchers.equalTo(13));
     assertThat(indices, Matchers.containsInAnyOrder(1, 7));
@@ -46,9 +42,7 @@ public class ElfStringTableTest {
   public void mergeSuffixString() throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ImmutableList<Integer> indices =
-        ElfStringTable.writeStringTableFromStrings(
-            ImmutableList.of("ello", "hello"),
-            output);
+        ElfStringTable.writeStringTableFromStrings(ImmutableList.of("ello", "hello"), output);
     byte[] table = output.toByteArray();
     assertThat(table.length, Matchers.equalTo(7));
     assertThat(indices, Matchers.contains(2, 1));
@@ -60,9 +54,7 @@ public class ElfStringTableTest {
   public void identicalStrings() throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ImmutableList<Integer> indices =
-        ElfStringTable.writeStringTableFromStrings(
-            ImmutableList.of("hello", "hello"),
-            output);
+        ElfStringTable.writeStringTableFromStrings(ImmutableList.of("hello", "hello"), output);
     byte[] table = output.toByteArray();
     assertThat(table.length, Matchers.equalTo(7));
     assertThat(indices, Matchers.contains(1, 1));
@@ -78,5 +70,4 @@ public class ElfStringTableTest {
     }
     return builder.toString();
   }
-
 }

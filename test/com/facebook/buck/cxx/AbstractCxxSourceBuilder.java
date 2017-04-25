@@ -28,33 +28,30 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public abstract class AbstractCxxSourceBuilder<
-    T extends CxxConstructorArg,
-    U extends Description<T>,
-    R extends BuildRule,
-    V extends AbstractCxxSourceBuilder<T, U, R, V>>
+        T extends CxxConstructorArg,
+        U extends Description<T>,
+        R extends BuildRule,
+        V extends AbstractCxxSourceBuilder<T, U, R, V>>
     extends AbstractCxxBuilder<T, U, R> {
 
-  public AbstractCxxSourceBuilder(
-      U description,
-      BuildTarget target) {
+  public AbstractCxxSourceBuilder(U description, BuildTarget target) {
     super(description, target);
   }
 
-  public V setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
+  public V setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
     arg.srcs = srcs;
     return getThis();
   }
 
-  public V setHeaders(ImmutableSortedSet<SourcePath> headers)  {
+  public V setHeaders(ImmutableSortedSet<SourcePath> headers) {
     arg.headers = SourceList.ofUnnamedSources(headers);
     return getThis();
   }
 
-  public V setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
+  public V setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
     arg.headers = SourceList.ofNamedSources(headers);
     return getThis();
   }
@@ -113,5 +110,4 @@ public abstract class AbstractCxxSourceBuilder<
   }
 
   protected abstract V getThis();
-
 }

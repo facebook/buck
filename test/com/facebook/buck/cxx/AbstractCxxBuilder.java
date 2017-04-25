@@ -44,5 +44,4 @@ public class AbstractCxxBuilder<T, U extends Description<T>, V extends BuildRule
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
     return FlavorDomain.of("C/C++ Platform", cxxPlatform);
   }
-
 }

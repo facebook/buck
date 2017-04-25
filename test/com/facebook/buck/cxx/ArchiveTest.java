@@ -51,11 +51,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class ArchiveTest {
 
@@ -66,106 +64,110 @@ public class ArchiveTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.of(
-          new FakeSourcePath("a.o"),
-          new FakeSourcePath("b.o"),
-          new FakeSourcePath("c.o"));
+          new FakeSourcePath("a.o"), new FakeSourcePath("b.o"), new FakeSourcePath("c.o"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.<String, String>builder()
-            .put(AR.toString(), Strings.repeat("0", 40))
-            .put(RANLIB.toString(), Strings.repeat("1", 40))
-            .put("a.o", Strings.repeat("a", 40))
-            .put("b.o", Strings.repeat("b", 40))
-            .put("c.o", Strings.repeat("c", 40))
-            .put(Paths.get("different").toString(), Strings.repeat("d", 40))
-            .build()
-    );
+    FakeFileHashCache hashCache =
+        FakeFileHashCache.createFromStrings(
+            ImmutableMap.<String, String>builder()
+                .put(AR.toString(), Strings.repeat("0", 40))
+                .put(RANLIB.toString(), Strings.repeat("1", 40))
+                .put("a.o", Strings.repeat("a", 40))
+                .put("b.o", Strings.repeat("b", 40))
+                .put("c.o", Strings.repeat("c", 40))
+                .put(Paths.get("different").toString(), Strings.repeat("d", 40))
+                .build());
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-            Archive.from(
-                target,
-                params,
-                ruleFinder,
-                DEFAULT_ARCHIVER,
-                ImmutableList.of(),
-                DEFAULT_RANLIB,
-                ImmutableList.of(),
-                Archive.Contents.NORMAL,
-                DEFAULT_OUTPUT,
-                DEFAULT_INPUTS));
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(
+                Archive.from(
+                    target,
+                    params,
+                    ruleFinder,
+                    DEFAULT_ARCHIVER,
+                    ImmutableList.of(),
+                    DEFAULT_RANLIB,
+                    ImmutableList.of(),
+                    Archive.Contents.NORMAL,
+                    DEFAULT_OUTPUT,
+                    DEFAULT_INPUTS));
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-            Archive.from(
-                target,
-                params,
-                ruleFinder,
-                new GnuArchiver(new HashedFileTool(Paths.get("different"))),
-                ImmutableList.of(),
-                DEFAULT_RANLIB,
-                ImmutableList.of(),
-                Archive.Contents.NORMAL,
-                DEFAULT_OUTPUT,
-                DEFAULT_INPUTS));
-        assertNotEquals(defaultRuleKey, archiverChange);
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(
+                Archive.from(
+                    target,
+                    params,
+                    ruleFinder,
+                    new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+                    ImmutableList.of(),
+                    DEFAULT_RANLIB,
+                    ImmutableList.of(),
+                    Archive.Contents.NORMAL,
+                    DEFAULT_OUTPUT,
+                    DEFAULT_INPUTS));
+    assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-            Archive.from(
-                target,
-                params,
-                ruleFinder,
-                DEFAULT_ARCHIVER,
-                ImmutableList.of(),
-                DEFAULT_RANLIB,
-                ImmutableList.of(),
-                Archive.Contents.NORMAL,
-                Paths.get("different"),
-                DEFAULT_INPUTS));
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(
+                Archive.from(
+                    target,
+                    params,
+                    ruleFinder,
+                    DEFAULT_ARCHIVER,
+                    ImmutableList.of(),
+                    DEFAULT_RANLIB,
+                    ImmutableList.of(),
+                    Archive.Contents.NORMAL,
+                    Paths.get("different"),
+                    DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-            Archive.from(
-                target,
-                params,
-                ruleFinder,
-                DEFAULT_ARCHIVER,
-                ImmutableList.of(),
-                DEFAULT_RANLIB,
-                ImmutableList.of(),
-                Archive.Contents.NORMAL,
-                DEFAULT_OUTPUT,
-                ImmutableList.of(new FakeSourcePath("different"))));
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(
+                Archive.from(
+                    target,
+                    params,
+                    ruleFinder,
+                    DEFAULT_ARCHIVER,
+                    ImmutableList.of(),
+                    DEFAULT_RANLIB,
+                    ImmutableList.of(),
+                    Archive.Contents.NORMAL,
+                    DEFAULT_OUTPUT,
+                    ImmutableList.of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-            Archive.from(
-                target,
-                params,
-                ruleFinder,
-                new BsdArchiver(new HashedFileTool(AR)),
-                ImmutableList.of(),
-                DEFAULT_RANLIB,
-                ImmutableList.of(),
-                Archive.Contents.NORMAL,
-                DEFAULT_OUTPUT,
-                DEFAULT_INPUTS));
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(
+                Archive.from(
+                    target,
+                    params,
+                    ruleFinder,
+                    new BsdArchiver(new HashedFileTool(AR)),
+                    ImmutableList.of(),
+                    DEFAULT_RANLIB,
+                    ImmutableList.of(),
+                    Archive.Contents.NORMAL,
+                    DEFAULT_OUTPUT,
+                    DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
   }
 
@@ -177,34 +179,33 @@ public class ArchiveTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    Archive archive = Archive.from(
-        target,
-        params,
-        ruleFinder,
-        DEFAULT_ARCHIVER,
-        ImmutableList.of("-foo"),
-        DEFAULT_RANLIB,
-        ImmutableList.of("-bar"),
-        Archive.Contents.NORMAL,
-        DEFAULT_OUTPUT,
-        ImmutableList.of(new FakeSourcePath("simple.o")));
+    Archive archive =
+        Archive.from(
+            target,
+            params,
+            ruleFinder,
+            DEFAULT_ARCHIVER,
+            ImmutableList.of("-foo"),
+            DEFAULT_RANLIB,
+            ImmutableList.of("-bar"),
+            Archive.Contents.NORMAL,
+            DEFAULT_OUTPUT,
+            ImmutableList.of(new FakeSourcePath("simple.o")));
 
-    BuildContext buildContext = BuildContext.builder()
-        .from(FakeBuildContext.NOOP_CONTEXT)
-        .setSourcePathResolver(pathResolver)
-        .build();
+    BuildContext buildContext =
+        BuildContext.builder()
+            .from(FakeBuildContext.NOOP_CONTEXT)
+            .setSourcePathResolver(pathResolver)
+            .build();
 
-    ImmutableList<Step> steps =
-        archive.getBuildSteps(buildContext, new FakeBuildableContext());
+    ImmutableList<Step> steps = archive.getBuildSteps(buildContext, new FakeBuildableContext());
     Step archiveStep = FluentIterable.from(steps).filter(ArchiveStep.class).first().get();
     assertThat(
-        archiveStep.getDescription(TestExecutionContext.newInstance()),
-        containsString("-foo"));
+        archiveStep.getDescription(TestExecutionContext.newInstance()), containsString("-foo"));
 
     Step ranlibStep = FluentIterable.from(steps).filter(RanlibStep.class).first().get();
     assertThat(
-        ranlibStep.getDescription(TestExecutionContext.newInstance()),
-        containsString("-bar"));
+        ranlibStep.getDescription(TestExecutionContext.newInstance()), containsString("-bar"));
   }
 
   @Test
@@ -215,14 +216,14 @@ public class ArchiveTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a couple of genrules to generate inputs for an archive rule.
-    Genrule genrule1 = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-        .setOut("foo/bar.o")
-        .build(resolver);
-    Genrule genrule2 = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
-        .setOut("foo/test.o")
-        .build(resolver);
+    Genrule genrule1 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+            .setOut("foo/bar.o")
+            .build(resolver);
+    Genrule genrule2 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
+            .setOut("foo/test.o")
+            .build(resolver);
 
     // Build the archive using a normal input the outputs of the genrules above.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -244,25 +245,23 @@ public class ArchiveTest {
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
-        archive.getBuildDeps());
+    assertEquals(ImmutableSortedSet.<BuildRule>of(genrule1, genrule2), archive.getBuildDeps());
   }
 
   @Test
   public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     // Create an `Archive` rule using build params with an existing dependency,
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
     // propagate to the `Archive` rule, since it only cares about dependencies generating
     // it's immediate inputs.
-    BuildRule dep = new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder("//:fake").build(),
-        pathResolver);
+    BuildRule dep =
+        new FakeBuildRule(new FakeBuildRuleParamsBuilder("//:fake").build(), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
@@ -284,5 +283,4 @@ public class ArchiveTest {
     // Verify that the archive rules dependencies are empty.
     assertEquals(archive.getBuildDeps(), ImmutableSortedSet.<BuildRule>of());
   }
-
 }

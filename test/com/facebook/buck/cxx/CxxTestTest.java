@@ -43,13 +43,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.junit.Test;
 
 public class CxxTestTest {
 
@@ -83,10 +81,7 @@ public class CxxTestTest {
 
     @Override
     protected ImmutableList<TestResultSummary> parseResults(
-        Path exitCode,
-        Path output,
-        Path results)
-        throws Exception {
+        Path exitCode, Path output, Path results) throws Exception {
       return ImmutableList.of();
     }
   }
@@ -105,8 +100,7 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<String> getShellCommand(
-              SourcePathResolver resolver,
-              Path output) {
+              SourcePathResolver resolver, Path output) {
             return command;
           }
 
@@ -116,19 +110,17 @@ public class CxxTestTest {
             command.forEach(builder::addArg);
             return builder.build();
           }
-
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
-        TestRunningOptions.builder()
-            .setTestSelectorList(TestSelectorList.empty())
-            .build();
-    ImmutableList<Step> actualSteps = cxxTest.runTests(
-        executionContext,
-        options,
-        createMock(SourcePathResolver.class),
-        FakeTestRule.NOOP_REPORTING_CALLBACK);
+        TestRunningOptions.builder().setTestSelectorList(TestSelectorList.empty()).build();
+    ImmutableList<Step> actualSteps =
+        cxxTest.runTests(
+            executionContext,
+            options,
+            createMock(SourcePathResolver.class),
+            FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =
         new CxxTestStep(
@@ -173,10 +165,7 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              Path exitCode,
-              Path output,
-              Path results)
-              throws Exception {
+              Path exitCode, Path output, Path results) throws Exception {
             assertEquals(expectedExitCode, exitCode);
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);
@@ -185,10 +174,8 @@ public class CxxTestTest {
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    Callable<TestResults> result = cxxTest.interpretTestResults(
-        executionContext,
-        /* isUsingTestSelectors */ false);
+    Callable<TestResults> result =
+        cxxTest.interpretTestResults(executionContext, /* isUsingTestSelectors */ false);
     result.call();
   }
-
 }

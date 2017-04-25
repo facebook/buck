@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -36,8 +35,7 @@ public class CxxLocationMacroExpanderTest {
   @Test
   public void expandCxxGenrule() throws Exception {
     CxxGenruleBuilder builder =
-        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setOut("out.txt");
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule")).setOut("out.txt");
     TargetNode<?, ?> node = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
     BuildRuleResolver resolver =
@@ -55,9 +53,8 @@ public class CxxLocationMacroExpanderTest {
     assertThat(
         expanded,
         Matchers.equalTo(
-            pathResolver.getAbsolutePath(cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
+            pathResolver
+                .getAbsolutePath(cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
                 .toString()));
-
   }
-
 }

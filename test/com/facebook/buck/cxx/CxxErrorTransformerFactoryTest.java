@@ -30,14 +30,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Tests that various error line path replacements happen (or doesn't happen) in both relative and
@@ -57,31 +55,25 @@ public class CxxErrorTransformerFactoryTest {
     Path original = filesystem.resolve("buck-out/foo#bar/world.h");
     Path replacement = filesystem.resolve("hello/world.h");
 
-    HeaderPathNormalizer.Builder normalizerBuilder =
-        new HeaderPathNormalizer.Builder(pathResolver);
+    HeaderPathNormalizer.Builder normalizerBuilder = new HeaderPathNormalizer.Builder(pathResolver);
     normalizerBuilder.addHeader(new FakeSourcePath(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
-    return ImmutableList.copyOf(new Object[][] {
-        {
+    return ImmutableList.copyOf(
+        new Object[][] {
+          {
             "relative paths",
-            new CxxErrorTransformerFactory(
-                filesystem,
-                false,
-                normalizer),
+            new CxxErrorTransformerFactory(filesystem, false, normalizer),
             filesystem.relativize(replacement),
             original
-        },
-        {
+          },
+          {
             "absolute paths",
-            new CxxErrorTransformerFactory(
-                filesystem,
-                true,
-                normalizer),
+            new CxxErrorTransformerFactory(filesystem, true, normalizer),
             replacement.toAbsolutePath(),
             original
-        }
-    });
+          }
+        });
   }
 
   @Parameterized.Parameter(value = 0)
@@ -165,14 +157,12 @@ public class CxxErrorTransformerFactoryTest {
         oneOf(
             // relative/absolute should still resolve, but otherwise the path should be unchanged.
             "In file included from test.h:",
-            String.format("In file included from %s:",
-                Paths.get("test.h").toAbsolutePath().toString())));
+            String.format(
+                "In file included from %s:", Paths.get("test.h").toAbsolutePath().toString())));
   }
 
   @Test
   public void shouldNotTransformLineWithoutLocations() {
-    assertThat(
-        transformer.transformLine(" error message!"),
-        equalTo(" error message!"));
+    assertThat(transformer.transformLine(" error message!"), equalTo(" error message!"));
   }
 }

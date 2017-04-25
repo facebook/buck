@@ -33,15 +33,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Fake implementation of {@link CxxLibrary} for testing.
- */
-public final class FakeCxxLibrary
-    extends NoopBuildRule
+/** Fake implementation of {@link CxxLibrary} for testing. */
+public final class FakeCxxLibrary extends NoopBuildRule
     implements AbstractCxxLibrary, NativeTestable {
 
   private final BuildTarget publicHeaderTarget;
@@ -56,9 +52,9 @@ public final class FakeCxxLibrary
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-        > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public FakeCxxLibrary(
       BuildRuleParams params,
@@ -85,71 +81,65 @@ public final class FakeCxxLibrary
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-    return FluentIterable.from(getBuildDeps())
-        .filter(CxxPreprocessorDep.class);
+    return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
   }
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
-      switch (headerVisibility) {
-        case PUBLIC:
-          return CxxPreprocessorInput.builder()
-              .addIncludes(
-                  CxxSymlinkTreeHeaders.builder()
-                      .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                      .putNameToPathMap(
-                          Paths.get("header.h"),
-                          new DefaultBuildTargetSourcePath(publicHeaderTarget))
-                      .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
-                      .build())
-              .build();
-        case PRIVATE:
-          return CxxPreprocessorInput.builder()
-              .addIncludes(
-                  CxxSymlinkTreeHeaders.builder()
-                      .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                      .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
-                      .putNameToPathMap(
-                          Paths.get("header.h"),
-                          new DefaultBuildTargetSourcePath(privateHeaderTarget))
-                      .build())
-              .build();
-      }
-      throw new RuntimeException("Invalid header visibility value: " + headerVisibility);
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
+      case PUBLIC:
+        return CxxPreprocessorInput.builder()
+            .addIncludes(
+                CxxSymlinkTreeHeaders.builder()
+                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                    .putNameToPathMap(
+                        Paths.get("header.h"), new DefaultBuildTargetSourcePath(publicHeaderTarget))
+                    .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                    .build())
+            .build();
+      case PRIVATE:
+        return CxxPreprocessorInput.builder()
+            .addIncludes(
+                CxxSymlinkTreeHeaders.builder()
+                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                    .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                    .putNameToPathMap(
+                        Paths.get("header.h"),
+                        new DefaultBuildTargetSourcePath(privateHeaderTarget))
+                    .build())
+            .build();
+    }
+    throw new RuntimeException("Invalid header visibility value: " + headerVisibility);
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     return transitiveCxxPreprocessorInputCache.getUnchecked(
         ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
-    return type == Linker.LinkableDepType.STATIC ?
-        NativeLinkableInput.of(
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+    return type == Linker.LinkableDepType.STATIC
+        ? NativeLinkableInput.of(
             ImmutableList.of(SourcePathArg.of(archive.getSourcePathToOutput())),
             ImmutableSet.of(),
-            ImmutableSet.of()) :
-        NativeLinkableInput.of(
+            ImmutableSet.of())
+        : NativeLinkableInput.of(
             ImmutableList.of(SourcePathArg.of(sharedLibrary.getSourcePathToOutput())),
             ImmutableSet.of(),
             ImmutableSet.of());
@@ -171,13 +161,11 @@ public final class FakeCxxLibrary
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of(
-        sharedLibrarySoname,
-        new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput));
+        sharedLibrarySoname, new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput));
   }
 
   @Override
   public boolean isTestedBy(BuildTarget testTarget) {
     return tests.contains(testTarget);
   }
-
 }

@@ -56,26 +56,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
 
 public class CxxLinkableEnhancerTest {
 
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
-          new FakeSourcePath("a.o"),
-          new FakeSourcePath("b.o"),
-          new FakeSourcePath("c.o"));
+          new FakeSourcePath("a.o"), new FakeSourcePath("b.o"), new FakeSourcePath("c.o"));
   private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
-  private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.build(
-      new CxxBuckConfig(FakeBuckConfig.builder().build()));
+  private static final CxxPlatform CXX_PLATFORM =
+      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
@@ -94,20 +90,17 @@ public class CxxLinkableEnhancerTest {
 
     @Override
     public Iterable<NativeLinkable> getNativeLinkableDeps() {
-      return FluentIterable.from(getDeclaredDeps())
-          .filter(NativeLinkable.class);
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
     public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
-      return FluentIterable.from(getDeclaredDeps())
-          .filter(NativeLinkable.class);
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform,
-        Linker.LinkableDepType type) {
+        CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 
@@ -117,11 +110,9 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(
-        CxxPlatform cxxPlatform) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
       return ImmutableMap.of();
     }
-
   }
 
   private static FakeNativeLinkable createNativeLinkable(
@@ -147,46 +138,46 @@ public class CxxLinkableEnhancerTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a couple of genrules to generate inputs for an archive rule.
-    Genrule genrule1 = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-        .setOut("foo/bar.o")
-        .build(resolver);
-    Genrule genrule2 = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
-        .setOut("foo/test.o")
-        .build(resolver);
+    Genrule genrule1 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+            .setOut("foo/bar.o")
+            .build(resolver);
+    Genrule genrule2 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
+            .setOut("foo/test.o")
+            .build(resolver);
 
     // Build the archive using a normal input the outputs of the genrules above.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        resolver,
-        new SourcePathResolver(ruleFinder),
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(SourcePathArg.from(
-                new FakeSourcePath("simple.o"),
-                genrule1.getSourcePathToOutput(),
-                genrule2.getSourcePathToOutput()))
-            .build());
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            resolver,
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder()
+                .setArgs(
+                    SourcePathArg.from(
+                        new FakeSourcePath("simple.o"),
+                        genrule1.getSourcePathToOutput(),
+                        genrule2.getSourcePathToOutput()))
+                .build());
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
-        cxxLink.getBuildDeps());
+    assertEquals(ImmutableSortedSet.<BuildRule>of(genrule1, genrule2), cxxLink.getBuildDeps());
   }
 
   @Test
@@ -200,34 +191,32 @@ public class CxxLinkableEnhancerTest {
     // as if coming from a `TargetNode` which had declared deps.  These should *not*
     // propagate to the `Archive` rule, since it only cares about dependencies generating
     // it's immediate inputs.
-    BuildRule dep = new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder("//:fake").build(),
-        pathResolver);
+    BuildRule dep =
+        new FakeBuildRule(new FakeBuildRuleParamsBuilder("//:fake").build(), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
-    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
 
     // Verify that the archive rules dependencies are empty.
     assertEquals(cxxLink.getBuildDeps(), ImmutableSortedSet.<BuildRule>of());
@@ -244,44 +233,41 @@ public class CxxLinkableEnhancerTest {
 
     // Create a dummy build rule and add it to the resolver.
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(), pathResolver);
+    FakeBuildRule fakeBuildRule =
+        new FakeBuildRule(new FakeBuildRuleParamsBuilder(fakeBuildTarget).build(), pathResolver);
     fakeBuildRule.setOutputFile("foo");
     resolver.addToIndex(fakeBuildRule);
 
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
-    NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.of(SourcePathArg.of(fakeBuildRule.getSourcePathToOutput())),
-        ImmutableSet.of(),
-        ImmutableSet.of());
-    FakeNativeLinkable nativeLinkable = createNativeLinkable(
-        "//:dep",
-        pathResolver,
-        nativeLinkableInput,
-        nativeLinkableInput);
+    NativeLinkableInput nativeLinkableInput =
+        NativeLinkableInput.of(
+            ImmutableList.of(SourcePathArg.of(fakeBuildRule.getSourcePathToOutput())),
+            ImmutableSet.of(),
+            ImmutableSet.of());
+    FakeNativeLinkable nativeLinkable =
+        createNativeLinkable("//:dep", pathResolver, nativeLinkableInput, nativeLinkableInput);
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
-    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        resolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            resolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getBuildDeps().contains(fakeBuildRule));
@@ -301,74 +287,71 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.copyOf(CXX_PLATFORM.getLd().resolve(ruleResolver).soname(soname));
 
     // Construct a CxxLink object which links as an executable.
-    CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink executable =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
     assertFalse(executable.getArgs().contains(StringArg.of("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib.
-    CxxLink shared = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.SHARED,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink shared =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.SHARED,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
     assertTrue(Arg.stringify(shared.getArgs(), pathResolver).contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
     // Construct a CxxLink object which links as a shared lib with a SONAME.
-    CxxLink sharedWithSoname = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.SHARED,
-        Optional.of("soname"),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink sharedWithSoname =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.SHARED,
+            Optional.of("soname"),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
     ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs(), pathResolver);
     assertTrue(args.contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(args, sonameArgs), -1);
@@ -378,9 +361,10 @@ public class CxxLinkableEnhancerTest {
   public void createCxxLinkableBuildRuleStaticVsSharedDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -388,73 +372,65 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency
     String staticArg = "static";
-    NativeLinkableInput staticInput = NativeLinkableInput.of(
-        ImmutableList.of(StringArg.of(staticArg)),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+    NativeLinkableInput staticInput =
+        NativeLinkableInput.of(
+            ImmutableList.of(StringArg.of(staticArg)), ImmutableSet.of(), ImmutableSet.of());
     String sharedArg = "shared";
-    NativeLinkableInput sharedInput = NativeLinkableInput.of(
-        ImmutableList.of(StringArg.of(sharedArg)),
-        ImmutableSet.of(),
-        ImmutableSet.of());
-    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
-        pathResolver,
-        staticInput, sharedInput);
+    NativeLinkableInput sharedInput =
+        NativeLinkableInput.of(
+            ImmutableList.of(StringArg.of(sharedArg)), ImmutableSet.of(), ImmutableSet.of());
+    FakeNativeLinkable nativeLinkable =
+        createNativeLinkable("//:dep", pathResolver, staticInput, sharedInput);
 
     // Construct a CxxLink object which links using static dependencies.
-    CxxLink staticLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink staticLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
     ImmutableList<String> args = Arg.stringify(staticLink.getArgs(), pathResolver);
-    assertTrue(args.contains(staticArg) ||
-        args.contains("-Wl," + staticArg));
+    assertTrue(args.contains(staticArg) || args.contains("-Wl," + staticArg));
     assertFalse(args.contains(sharedArg));
     assertFalse(args.contains("-Wl," + sharedArg));
 
     // Construct a CxxLink object which links using shared dependencies.
-    CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        target,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.SHARED,
-        /* thinLto */ false,
-        ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(DEFAULT_INPUTS)
-            .build());
+    CxxLink sharedLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.SHARED,
+            /* thinLto */ false,
+            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
     args = Arg.stringify(sharedLink.getArgs(), pathResolver);
     assertFalse(args.contains(staticArg));
     assertFalse(args.contains("-Wl," + staticArg));
-    assertTrue(
-        args.contains(sharedArg) ||
-            args.contains("-Wl," + sharedArg));
+    assertTrue(args.contains(sharedArg) || args.contains("-Wl," + sharedArg));
   }
 
   @Test
@@ -494,9 +470,7 @@ public class CxxLinkableEnhancerTest {
               Optional.empty(),
               Optional.empty(),
               ImmutableSet.of(),
-              NativeLinkableInput.builder()
-                  .setArgs(DEFAULT_INPUTS)
-                  .build());
+              NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
       assertThat(Arg.stringify(lib.getArgs(), pathResolver), hasItem(ent.getValue()));
     }
   }
@@ -504,18 +478,19 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
-        new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
-    NativeLinkableInput bottomInput = NativeLinkableInput.of(
-        ImmutableList.of(StringArg.of(sentinel)),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+    NativeLinkableInput bottomInput =
+        NativeLinkableInput.of(
+            ImmutableList.of(StringArg.of(sentinel)), ImmutableSet.of(), ImmutableSet.of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
@@ -523,10 +498,8 @@ public class CxxLinkableEnhancerTest {
     BuildRule middle = new FakeBuildRule("//:middle", pathResolver, bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
-    NativeLinkableInput topInput = NativeLinkableInput.of(
-        ImmutableList.of(),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+    NativeLinkableInput topInput =
+        NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
@@ -537,12 +510,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
             NativeLinkable.class::isInstance);
-    assertThat(
-        Arg.stringify(bottomInput.getArgs(), pathResolver),
-        hasItem(sentinel));
-    assertThat(
-        Arg.stringify(totalInput.getArgs(), pathResolver),
-        not(hasItem(sentinel)));
+    assertThat(Arg.stringify(bottomInput.getArgs(), pathResolver), hasItem(sentinel));
+    assertThat(Arg.stringify(totalInput.getArgs(), pathResolver), not(hasItem(sentinel)));
   }
 
   @Test
@@ -554,35 +523,32 @@ public class CxxLinkableEnhancerTest {
     ProjectFilesystem filesystem = params.getProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        params,
-        resolver,
-        new SourcePathResolver(ruleFinder),
-        ruleFinder,
-        target,
-        Linker.LinkType.MACH_O_BUNDLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(SourcePathArg.from(
-                new FakeSourcePath("simple.o")))
-            .build());
-    assertThat(
-        Arg.stringify(cxxLink.getArgs(), pathResolver),
-        hasItem("-bundle"));
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            params,
+            resolver,
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
+            target,
+            Linker.LinkType.MACH_O_BUNDLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder()
+                .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
+                .build());
+    assertThat(Arg.stringify(cxxLink.getArgs(), pathResolver), hasItem("-bundle"));
     assertThat(
         Arg.stringify(cxxLink.getArgs(), pathResolver),
         hasConsecutiveItems(
-            "-bundle_loader",
-            filesystem.resolve("path/to/MyBundleLoader").toString()));
+            "-bundle_loader", filesystem.resolve("path/to/MyBundleLoader").toString()));
   }
 
   @Test
@@ -593,75 +559,76 @@ public class CxxLinkableEnhancerTest {
     BuildTarget bundleLoaderTarget = BuildTargetFactory.newInstance("//foo:bundleLoader");
     BuildRuleParams bundleLoaderParams = new FakeBuildRuleParamsBuilder(bundleLoaderTarget).build();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        bundleLoaderParams,
-        resolver,
-        new SourcePathResolver(ruleFinder),
-        ruleFinder,
-        bundleLoaderTarget,
-        Linker.LinkType.EXECUTABLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(SourcePathArg.from(
-                new FakeSourcePath("simple.o")))
-            .build());
+    CxxLink bundleLoaderRule =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            bundleLoaderParams,
+            resolver,
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
+            bundleLoaderTarget,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder()
+                .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
+                .build());
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     BuildRuleParams bundleParams = new FakeBuildRuleParamsBuilder(bundleTarget).build();
-    CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CXX_PLATFORM,
-        bundleParams,
-        resolver,
-        new SourcePathResolver(ruleFinder),
-        ruleFinder,
-        bundleTarget,
-        Linker.LinkType.MACH_O_BUNDLE,
-        Optional.empty(),
-        DEFAULT_OUTPUT,
-        Linker.LinkableDepType.STATIC,
-        /* thinLto */ false,
-        EMPTY_DEPS,
-        Optional.empty(),
-        Optional.of(bundleLoaderRule.getSourcePathToOutput()),
-        ImmutableSet.of(),
-        NativeLinkableInput.builder()
-            .setArgs(SourcePathArg.from(
-                new FakeSourcePath("another.o")))
-            .build());
+    CxxLink bundleRule =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CXX_PLATFORM,
+            bundleParams,
+            resolver,
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
+            bundleTarget,
+            Linker.LinkType.MACH_O_BUNDLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            Linker.LinkableDepType.STATIC,
+            /* thinLto */ false,
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.of(bundleLoaderRule.getSourcePathToOutput()),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder()
+                .setArgs(SourcePathArg.from(new FakeSourcePath("another.o")))
+                .build());
 
     // Ensure the bundle depends on the bundle loader rule.
-    assertThat(
-        bundleRule.getBuildDeps(),
-        hasItem(bundleLoaderRule));
+    assertThat(bundleRule.getBuildDeps(), hasItem(bundleLoaderRule));
   }
 
   @Test
   public void frameworksToLinkerFlagsTransformer() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     ));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
-    Arg linkerFlags = CxxLinkableEnhancer.frameworksToLinkerArg(
-        ImmutableSortedSet.of(
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.DEVELOPER_DIR,
-                    Paths.get("Library/Frameworks/XCTest.framework"),
-                    Optional.empty())),
-            FrameworkPath.ofSourcePath(
-                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
+    Arg linkerFlags =
+        CxxLinkableEnhancer.frameworksToLinkerArg(
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.DEVELOPER_DIR,
+                        Paths.get("Library/Frameworks/XCTest.framework"),
+                        Optional.empty())),
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
 
     assertEquals(
         ImmutableList.of(

@@ -18,9 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileContentsScrubber;
 import com.facebook.buck.io.FileScrubber;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -30,6 +27,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Test;
 
 public class FileContentsScrubberOverflowTest {
 
@@ -54,22 +52,24 @@ public class FileContentsScrubberOverflowTest {
       }
 
       // None of these values matter except for size and magic.
-      byte[] filename = new byte [] {
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-      };
+      byte[] filename =
+          new byte[] {
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+          };
 
       byte[] mtime = Arrays.copyOf(filename, 12);
       byte[] owner = Arrays.copyOf(filename, 6);
       byte[] group = Arrays.copyOf(filename, 6);
-      byte[] mode  = Arrays.copyOf(filename, 8);
+      byte[] mode = Arrays.copyOf(filename, 8);
 
       // Half so scrubber thinks there are two entries.  That way it'll have to do math to update
       // its position (and we want to see if it overflows).
-      byte[] size  = new byte [] {
-        '3', '0', '0', '0', '0',
-        '0', '0', '0', '0', '0',
-      };
+      byte[] size =
+          new byte[] {
+            '3', '0', '0', '0', '0',
+            '0', '0', '0', '0', '0',
+          };
 
       byte[] magic = ObjectFileScrubbers.END_OF_FILE_HEADER_MARKER;
 
@@ -169,9 +169,8 @@ public class FileContentsScrubberOverflowTest {
 
   @Test
   public void thatFileSizesOver32BitsIsOkay() throws IOException, FileScrubber.ScrubException {
-    FileContentsScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber(
-        ObjectFileScrubbers.PaddingStyle.LEFT);
+    FileContentsScrubber scrubber =
+        ObjectFileScrubbers.createDateUidGidScrubber(ObjectFileScrubbers.PaddingStyle.LEFT);
     scrubber.scrubFile(new FakeFileChannel());
   }
-
 }

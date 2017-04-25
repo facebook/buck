@@ -28,16 +28,14 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CxxWriteArgsToFileStepTest {
 
@@ -45,8 +43,10 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
+    Path fileListPath =
+        projectFilesystem
+            .getRootPath()
+            .resolve("/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
 
     runTestForArgFilePathAndOutputPath(
         fileListPath,
@@ -60,8 +60,8 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "unexisting_parent_folder/filelist.txt");
+    Path fileListPath =
+        projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
 
     runTestForArgFilePathAndOutputPath(
         fileListPath,
@@ -80,16 +80,14 @@ public class CxxWriteArgsToFileStepTest {
       Optional<Function<String, String>> escaper,
       ImmutableList<Arg> inputArgs,
       ImmutableList<String> expectedArgFileContents,
-      Path currentCellPath) throws IOException, InterruptedException {
+      Path currentCellPath)
+      throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Create our CxxWriteArgsToFileStep to test.
-    CxxWriteArgsToFileStep step = CxxWriteArgsToFileStep.create(
-        argFilePath,
-        inputArgs,
-        escaper,
-        currentCellPath,
-        createMock(SourcePathResolver.class));
+    CxxWriteArgsToFileStep step =
+        CxxWriteArgsToFileStep.create(
+            argFilePath, inputArgs, escaper, currentCellPath, createMock(SourcePathResolver.class));
 
     step.execute(context);
 
@@ -103,5 +101,4 @@ public class CxxWriteArgsToFileStepTest {
     List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.equalTo(contents));
   }
-
 }

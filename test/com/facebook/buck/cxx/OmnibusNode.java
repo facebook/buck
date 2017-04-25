@@ -48,9 +48,7 @@ class OmnibusNode implements NativeLinkable {
     this(target, deps, exportedDeps, Linkage.ANY);
   }
 
-  public OmnibusNode(
-      String target,
-      Iterable<? extends NativeLinkable> deps) {
+  public OmnibusNode(String target, Iterable<? extends NativeLinkable> deps) {
     this(target, deps, ImmutableList.of());
   }
 
@@ -75,11 +73,8 @@ class OmnibusNode implements NativeLinkable {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
-    return NativeLinkableInput.builder()
-        .addArgs(StringArg.of(getBuildTarget().toString()))
-        .build();
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+    return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 
   @Override
@@ -90,8 +85,6 @@ class OmnibusNode implements NativeLinkable {
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of(
-        getBuildTarget().toString(),
-        new FakeSourcePath(getBuildTarget().toString()));
+        getBuildTarget().toString(), new FakeSourcePath(getBuildTarget().toString()));
   }
-
 }

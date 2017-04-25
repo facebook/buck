@@ -21,13 +21,12 @@ import com.facebook.buck.model.FlavorDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class CxxTestBuilder
-    extends
-    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestDescription, CxxTest, CxxTestBuilder> {
+    extends AbstractCxxSourceBuilder<
+        CxxTestDescription.Arg, CxxTestDescription, CxxTest, CxxTestBuilder> {
 
   public CxxTestBuilder(
       BuildTarget target,
@@ -43,9 +42,7 @@ public class CxxTestBuilder
         target);
   }
 
-  public CxxTestBuilder(
-      BuildTarget target,
-      CxxBuckConfig config) {
+  public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
     this(target, config, createDefaultPlatform(), createDefaultPlatforms());
   }
 
@@ -87,5 +84,4 @@ public class CxxTestBuilder
   protected CxxTestBuilder getThis() {
     return this;
   }
-
 }
