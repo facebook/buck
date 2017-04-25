@@ -28,15 +28,11 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Paths;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link PathHashing}.
- */
+/** Unit tests for {@link PathHashing}. */
 public class PathHashingTest {
 
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -65,22 +61,12 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/bar.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher1,
-        fileHashCache,
-        filesystem1,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher1, fileHashCache, filesystem1, Paths.get("foo"));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher2,
-        fileHashCache,
-        filesystem2,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher2, fileHashCache, filesystem2, Paths.get("foo"));
 
-    assertThat(
-        hasher1.hash(),
-        equalTo(hasher2.hash()));
+    assertThat(hasher1.hash(), equalTo(hasher2.hash()));
   }
 
   @Test
@@ -93,22 +79,12 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/baz.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher1,
-        fileHashCache,
-        filesystem1,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher1, fileHashCache, filesystem1, Paths.get("foo"));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher2,
-        fileHashCache,
-        filesystem2,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher2, fileHashCache, filesystem2, Paths.get("foo"));
 
-    assertThat(
-        hasher1.hash(),
-        not(equalTo(hasher2.hash())));
+    assertThat(hasher1.hash(), not(equalTo(hasher2.hash())));
   }
 
   @Test
@@ -121,22 +97,12 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/bar.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher1,
-        fileHashCache,
-        filesystem1,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher1, fileHashCache, filesystem1, Paths.get("foo"));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher2,
-        modifiedFileHashCache,
-        filesystem2,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher2, modifiedFileHashCache, filesystem2, Paths.get("foo"));
 
-    assertThat(
-        hasher1.hash(),
-        not(equalTo(hasher2.hash())));
+    assertThat(hasher1.hash(), not(equalTo(hasher2.hash())));
   }
 
   @Test
@@ -153,21 +119,11 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/foo.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher1,
-        fileHashCache,
-        filesystem1,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher1, fileHashCache, filesystem1, Paths.get("foo"));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPath(
-        hasher2,
-        fileHashCache,
-        filesystem2,
-        Paths.get("foo"));
+    PathHashing.hashPath(hasher2, fileHashCache, filesystem2, Paths.get("foo"));
 
-    assertThat(
-        hasher1.hash(),
-        equalTo(hasher2.hash()));
+    assertThat(hasher1.hash(), equalTo(hasher2.hash()));
   }
 }
