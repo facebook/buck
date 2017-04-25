@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,11 +36,9 @@ public class QueryParserTest {
 
   private QueryEnvironment queryEnvironment;
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void makeEnvironment() {
@@ -62,12 +59,11 @@ public class QueryParserTest {
 
   @Test
   public void testTestsOfDepsSet() throws Exception {
-    ImmutableList<TargetLiteral> args = ImmutableList.of(
-        new TargetLiteral("//foo:bar"),
-        new TargetLiteral("//other:lib"));
-    QueryExpression depsExpr = new FunctionExpression(
-        new DepsFunction(),
-        ImmutableList.of(Argument.of(new SetExpression(args))));
+    ImmutableList<TargetLiteral> args =
+        ImmutableList.of(new TargetLiteral("//foo:bar"), new TargetLiteral("//other:lib"));
+    QueryExpression depsExpr =
+        new FunctionExpression(
+            new DepsFunction(), ImmutableList.of(Argument.of(new SetExpression(args))));
     QueryExpression testsofExpr =
         new FunctionExpression(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
 
@@ -85,7 +81,7 @@ public class QueryParserTest {
   }
 
   @Test
-   public void shouldThrowExceptionWhenMissingParens() throws QueryException {
+  public void shouldThrowExceptionWhenMissingParens() throws QueryException {
     String query = "testsof(deps(set('//foo:bar' //other:lib))";
     thrown.expect(QueryException.class);
     thrown.expectMessage("premature end of input");

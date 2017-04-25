@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -44,16 +43,13 @@ public class DepsFunctionTest {
   private static final DepsFunction DEPS_FUNCTION = new DepsFunction();
   private static final QueryEnvironment.Argument FIRST_ORDER_DEPS =
       QueryEnvironment.Argument.of(
-          new FunctionExpression(
-              new DepsFunction.FirstOrderDepsFunction(),
-              ImmutableList.of()));
+          new FunctionExpression(new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
   private static final QueryEnvironment.Argument DEPTH = QueryEnvironment.Argument.of(10);
 
   @Test
   public void testFilterArgumentDoesNotLimitDeps() throws Exception {
     TargetNode<?, ?> b =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:b"))
-            .build();
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:b")).build();
     TargetNode<?, ?> a =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:a"))
             .addDep(b.getBuildTarget())
@@ -70,15 +66,13 @@ public class DepsFunctionTest {
                 FIRST_ORDER_DEPS),
             EXECUTOR),
         Matchers.containsInAnyOrder(
-            QueryBuildTarget.of(a.getBuildTarget()),
-            QueryBuildTarget.of(b.getBuildTarget())));
+            QueryBuildTarget.of(a.getBuildTarget()), QueryBuildTarget.of(b.getBuildTarget())));
   }
 
   @Test
   public void testFilterArgumentLimitsDeps() throws Exception {
     TargetNode<?, ?> c =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:c"))
-            .build();
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:c")).build();
     TargetNode<?, ?> b =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//bar:b"))
             .addDep(c.getBuildTarget())
@@ -100,8 +94,7 @@ public class DepsFunctionTest {
                     new FunctionExpression(
                         new FilterFunction(),
                         ImmutableList.of(
-                            QueryEnvironment.Argument.of("//foo.*"),
-                            FIRST_ORDER_DEPS)))),
+                            QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS)))),
             EXECUTOR),
         Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
   }
@@ -111,20 +104,24 @@ public class DepsFunctionTest {
 
     final Capture<String> stringCapture = Capture.newInstance();
     expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture), anyObject()))
-        .andStubAnswer(() -> ImmutableSet.of(
-            QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
+        .andStubAnswer(
+            () ->
+                ImmutableSet.of(
+                    QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
 
     final Capture<Iterable<QueryTarget>> targetsCapture = Capture.newInstance();
     expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))
-        .andStubAnswer(() -> RichStream.from(targetsCapture.getValue())
-            .map(QueryBuildTarget.class::cast)
-            .map(QueryBuildTarget::getBuildTarget)
-            .map(targetGraph::get)
-            .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
-            .map(TargetNode::getBuildTarget)
-            .map(QueryBuildTarget::of)
-            .map(QueryTarget.class::cast)
-            .toImmutableSet());
+        .andStubAnswer(
+            () ->
+                RichStream.from(targetsCapture.getValue())
+                    .map(QueryBuildTarget.class::cast)
+                    .map(QueryBuildTarget::getBuildTarget)
+                    .map(targetGraph::get)
+                    .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
+                    .map(TargetNode::getBuildTarget)
+                    .map(QueryBuildTarget::of)
+                    .map(QueryTarget.class::cast)
+                    .toImmutableSet());
 
     replay(env);
 
