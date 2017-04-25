@@ -22,11 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class CopyStepTest {
 
@@ -56,11 +54,9 @@ public class CopyStepTest {
   public void testGetShellCommandInternalWithRecurse() {
     Path source = Paths.get("path/to/source");
     Path destination = Paths.get("path/to/destination");
-    CopyStep copyCommand = CopyStep.forDirectory(
-        filesystem,
-        source,
-        destination,
-        CopyStep.DirectoryMode.CONTENTS_ONLY);
+    CopyStep copyCommand =
+        CopyStep.forDirectory(
+            filesystem, source, destination, CopyStep.DirectoryMode.CONTENTS_ONLY);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertTrue(copyCommand.isRecursive());
@@ -71,5 +67,4 @@ public class CopyStepTest {
     CopyStep copyCommand = CopyStep.forFile(filesystem, Paths.get("here"), Paths.get("there"));
     assertEquals("cp", copyCommand.getShortName());
   }
-
 }

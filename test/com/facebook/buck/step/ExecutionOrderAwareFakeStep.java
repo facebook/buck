@@ -17,13 +17,12 @@
 package com.facebook.buck.step;
 
 import com.google.common.base.Preconditions;
-
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Fake implementation of {@link Step} which remembers the order in which
- * it was executed (usually relative to other {@link Step}s).
+ * Fake implementation of {@link Step} which remembers the order in which it was executed (usually
+ * relative to other {@link Step}s).
  */
 public class ExecutionOrderAwareFakeStep implements Step {
   private final String shortName;
@@ -34,10 +33,7 @@ public class ExecutionOrderAwareFakeStep implements Step {
   private Optional<Integer> executionEndOrder;
 
   public ExecutionOrderAwareFakeStep(
-      String shortName,
-      String description,
-      int exitCode,
-      AtomicInteger atomicExecutionOrder) {
+      String shortName, String description, int exitCode, AtomicInteger atomicExecutionOrder) {
     this.shortName = shortName;
     this.description = description;
     this.exitCode = exitCode;

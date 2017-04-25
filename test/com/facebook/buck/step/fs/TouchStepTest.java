@@ -27,19 +27,16 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class TouchStepTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testGetShortName() {
@@ -52,10 +49,11 @@ public class TouchStepTest {
   public void testFileGetsCreated() throws IOException, InterruptedException {
     Path path = Paths.get("somefile");
     assertFalse(path.toFile().exists());
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
-        tmp.getRoot(),
-        ImmutableSet.of());
+    ProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(
+            new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
+            tmp.getRoot(),
+            ImmutableSet.of());
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
@@ -65,10 +63,11 @@ public class TouchStepTest {
   @Test
   public void testFileLastModifiedTimeUpdated() throws IOException, InterruptedException {
     Path path = Paths.get("somefile");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
-        tmp.getRoot(),
-        ImmutableSet.of(path));
+    ProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(
+            new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
+            tmp.getRoot(),
+            ImmutableSet.of(path));
     FileTime lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
