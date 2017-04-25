@@ -39,13 +39,12 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class DTestDescription implements
-    Description<DTestDescription.Arg>,
-    ImplicitDepsInferringDescription<DTestDescription.Arg>,
-    VersionRoot<DTestDescription.Arg> {
+public class DTestDescription
+    implements Description<DTestDescription.Arg>,
+        ImplicitDepsInferringDescription<DTestDescription.Arg>,
+        VersionRoot<DTestDescription.Arg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -95,10 +94,7 @@ public class DTestDescription implements
     // The rule needs its own target so that we can depend on it without creating cycles.
     BuildTarget binaryTarget =
         DDescriptionUtils.createBuildTargetForFile(
-            target,
-            "build-",
-            target.getFullyQualifiedName(),
-            cxxPlatform);
+            target, "build-", target.getFullyQualifiedName(), cxxPlatform);
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(

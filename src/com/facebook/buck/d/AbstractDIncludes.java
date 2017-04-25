@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -46,5 +45,4 @@ abstract class AbstractDIncludes implements RuleKeyAppendable {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("sources", getSources());
   }
-
 }

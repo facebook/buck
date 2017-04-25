@@ -30,25 +30,17 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
 import java.util.stream.Stream;
 
-/**
- * BinaryBuildRule implementation for D binaries.
- */
-public class DBinary extends AbstractBuildRule implements
-    BinaryBuildRule,
-    HasRuntimeDeps {
+/** BinaryBuildRule implementation for D binaries. */
+public class DBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
   private final Tool executable;
   private final SourcePath output;
 
   public DBinary(
-      BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
-      Tool executable,
-      SourcePath output) {
+      BuildRuleParams params, SourcePathRuleFinder ruleFinder, Tool executable, SourcePath output) {
     super(params);
     this.ruleFinder = ruleFinder;
     this.executable = executable;
@@ -57,8 +49,7 @@ public class DBinary extends AbstractBuildRule implements
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

@@ -49,21 +49,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-/**
- * Utility functions for use in D Descriptions.
- */
+/** Utility functions for use in D Descriptions. */
 abstract class DDescriptionUtils {
 
   public static final Flavor SOURCE_LINK_TREE = InternalFlavor.of("source-link-tree");
 
   /**
-   * Creates a BuildTarget, based on an existing build target, but flavored with a CxxPlatform
-   * and an additional flavor created by combining a prefix and an output file name.
+   * Creates a BuildTarget, based on an existing build target, but flavored with a CxxPlatform and
+   * an additional flavor created by combining a prefix and an output file name.
    *
    * @param existingTarget the existing target
    * @param flavorPrefix prefix to be used for added flavor
@@ -72,39 +69,31 @@ abstract class DDescriptionUtils {
    * @return the new BuildTarget
    */
   public static BuildTarget createBuildTargetForFile(
-      BuildTarget existingTarget,
-      String flavorPrefix,
-      String fileName,
-      CxxPlatform cxxPlatform) {
+      BuildTarget existingTarget, String flavorPrefix, String fileName, CxxPlatform cxxPlatform) {
     return BuildTarget.builder(existingTarget)
         .addFlavors(
             cxxPlatform.getFlavor(),
-            InternalFlavor.of(
-                flavorPrefix + Flavor.replaceInvalidCharacters(fileName)))
+            InternalFlavor.of(flavorPrefix + Flavor.replaceInvalidCharacters(fileName)))
         .build();
   }
 
   /**
    * Creates a new BuildTarget, based on an existing target, for a file to be compiled.
+   *
    * @param existingTarget the existing target
    * @param src the source file to be compiled
    * @param cxxPlatform the C++ platform to compile the file for
    * @return a BuildTarget to compile a D source file to an object file
    */
   public static BuildTarget createDCompileBuildTarget(
-      BuildTarget existingTarget,
-      String src,
-      CxxPlatform cxxPlatform) {
+      BuildTarget existingTarget, String src, CxxPlatform cxxPlatform) {
     return createBuildTargetForFile(
-        existingTarget,
-        "compile-",
-        DCompileStep.getObjectNameForSourceName(src),
-        cxxPlatform);
+        existingTarget, "compile-", DCompileStep.getObjectNameForSourceName(src), cxxPlatform);
   }
 
   /**
-   * Creates a {@link com.facebook.buck.cxx.NativeLinkable} using sources compiled by
-   * the D compiler.
+   * Creates a {@link com.facebook.buck.cxx.NativeLinkable} using sources compiled by the D
+   * compiler.
    *
    * @param params build parameters for the build target
    * @param sources source files to compile
@@ -155,13 +144,10 @@ abstract class DDescriptionUtils {
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
         BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            buildTarget,
-            "%s/" + buildTarget.getShortName()),
+            params.getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName()),
         Linker.LinkableDepType.STATIC,
         /* thinLto */ false,
-        FluentIterable.from(params.getBuildDeps())
-            .filter(NativeLinkable.class),
+        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),
@@ -173,9 +159,7 @@ abstract class DDescriptionUtils {
   }
 
   public static BuildTarget getSymlinkTreeTarget(BuildTarget baseTarget) {
-    return BuildTarget.builder(baseTarget)
-        .addFlavors(SOURCE_LINK_TREE)
-        .build();
+    return BuildTarget.builder(baseTarget).addFlavors(SOURCE_LINK_TREE).build();
   }
 
   public static SymlinkTree createSourceSymlinkTree(
@@ -189,14 +173,9 @@ abstract class DDescriptionUtils {
         target,
         baseParams.getProjectFilesystem(),
         BuildTargets.getGenPath(
-            baseParams.getProjectFilesystem(),
-            baseParams.getBuildTarget(),
-            "%s"),
+            baseParams.getProjectFilesystem(), baseParams.getBuildTarget(), "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(
-                baseParams.getBuildTarget(),
-                pathResolver,
-                "srcs"),
+            sources.toNameMap(baseParams.getBuildTarget(), pathResolver, "srcs"),
             MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())),
         ruleFinder);
   }
@@ -218,8 +197,9 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Ensures that a DCompileBuildRule exists for the given target, creating a DCompileBuildRule
-   * if neccesary.
+   * Ensures that a DCompileBuildRule exists for the given target, creating a DCompileBuildRule if
+   * neccesary.
+   *
    * @param baseParams build parameters for the rule
    * @param buildRuleResolver BuildRuleResolver the rule should be in
    * @param src the source file to be compiled
@@ -248,7 +228,7 @@ abstract class DDescriptionUtils {
       Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();
       transitiveIncludes.put(baseParams.getBuildTarget(), includes);
       for (Map.Entry<BuildTarget, DLibrary> library :
-           getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
+          getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
         transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
       }
 
@@ -265,8 +245,7 @@ abstract class DDescriptionUtils {
               baseParams
                   .withBuildTarget(compileTarget)
                   .copyReplacingDeclaredAndExtraDeps(
-                      Suppliers.ofInstance(deps),
-                      Suppliers.ofInstance(ImmutableSortedSet.of())),
+                      Suppliers.ofInstance(deps), Suppliers.ofInstance(ImmutableSortedSet.of())),
               compiler,
               ImmutableList.<String>builder()
                   .addAll(dBuckConfig.getBaseCompilerFlags())
@@ -279,8 +258,9 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Generates BuildTargets and BuildRules to compile D sources to object files, and
-   * returns a list of SourcePaths referring to the generated object files.
+   * Generates BuildTargets and BuildRules to compile D sources to object files, and returns a list
+   * of SourcePaths referring to the generated object files.
+   *
    * @param sources source files to compile
    * @param compilerFlags flags to pass to the compiler
    * @param baseParams build parameters for the compilation
@@ -303,25 +283,22 @@ abstract class DDescriptionUtils {
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
-         sources.toNameMap(baseParams.getBuildTarget(), sourcePathResolver, "srcs").entrySet()) {
+        sources.toNameMap(baseParams.getBuildTarget(), sourcePathResolver, "srcs").entrySet()) {
       BuildTarget compileTarget =
-          createDCompileBuildTarget(
-              baseParams.getBuildTarget(),
+          createDCompileBuildTarget(baseParams.getBuildTarget(), source.getKey(), cxxPlatform);
+      BuildRule rule =
+          requireBuildRule(
+              compileTarget,
+              baseParams,
+              buildRuleResolver,
+              ruleFinder,
+              dBuckConfig,
+              compilerFlags,
               source.getKey(),
-              cxxPlatform);
-      BuildRule rule = requireBuildRule(
-          compileTarget,
-          baseParams,
-          buildRuleResolver,
-          ruleFinder,
-          dBuckConfig,
-          compilerFlags,
-          source.getKey(),
-          source.getValue(),
-          includes);
+              source.getValue(),
+              includes);
       sourcePaths.add(rule.getSourcePathToOutput());
     }
     return sourcePaths.build();
   }
-
 }

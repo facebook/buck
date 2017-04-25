@@ -31,28 +31,20 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A build rule for invoking the D compiler.
- */
+/** A build rule for invoking the D compiler. */
 public class DCompileBuildRule extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool compiler;
+  @AddToRuleKey private final Tool compiler;
 
-  @AddToRuleKey
-  private final ImmutableList<String> compilerFlags;
+  @AddToRuleKey private final ImmutableList<String> compilerFlags;
 
-  @AddToRuleKey
-  private final String name;
+  @AddToRuleKey private final String name;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
 
-  @AddToRuleKey
-  private final ImmutableList<DIncludes> includes;
+  @AddToRuleKey private final ImmutableList<DIncludes> includes;
 
   public DCompileBuildRule(
       BuildRuleParams buildRuleParams,
@@ -71,10 +63,11 @@ public class DCompileBuildRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    Path output = context.getSourcePathResolver().getRelativePath(
-        Preconditions.checkNotNull(getSourcePathToOutput()));
+      BuildContext context, BuildableContext buildableContext) {
+    Path output =
+        context
+            .getSourcePathResolver()
+            .getRelativePath(Preconditions.checkNotNull(getSourcePathToOutput()));
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

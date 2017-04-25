@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,32 +44,24 @@ public class DBuckConfig {
     this.delegate = delegate;
   }
 
-  /**
-   * @return a Tool representing the D compiler to be used.
-   */
+  /** @return a Tool representing the D compiler to be used. */
   Tool getDCompiler() {
     return new HashedFileTool(getDCompilerPath());
   }
 
-  /**
-   * @return a list of flags that must be passed to the compiler.
-   */
+  /** @return a list of flags that must be passed to the compiler. */
   ImmutableList<String> getBaseCompilerFlags() {
     // If flags are configured in buckconfig, return those.
     // Else, return an empty list (no flags), as that should normally work.
-    return delegate.getOptionalListWithoutComments(
-        "d", "base_compiler_flags", ' ').orElse(ImmutableList.of());
+    return delegate
+        .getOptionalListWithoutComments("d", "base_compiler_flags", ' ')
+        .orElse(ImmutableList.of());
   }
 
-  /**
-   * @return a list of flags that must be passed to the linker to link D binaries.
-   */
+  /** @return a list of flags that must be passed to the linker to link D binaries. */
   public ImmutableList<String> getLinkerFlags() {
     Optional<ImmutableList<String>> configuredFlags =
-      delegate.getOptionalListWithoutComments(
-          "d",
-          "linker_flags",
-          ' ');
+        delegate.getOptionalListWithoutComments("d", "linker_flags", ' ');
     if (configuredFlags.isPresent()) {
       return configuredFlags.get();
     } else {
@@ -86,18 +77,15 @@ public class DBuckConfig {
   }
 
   /**
-   * @return a list of paths to be searched for libraries, in addition to paths that may
-   *   be introduced by rules.
+   * @return a list of paths to be searched for libraries, in addition to paths that may be
+   *     introduced by rules.
    */
   private Iterable<Path> getBaseLibraryPaths() {
     Optional<ImmutableList<String>> configuredPaths =
         delegate.getOptionalListWithoutComments("d", "library_path", ':');
 
     if (configuredPaths.isPresent()) {
-      return FluentIterable
-          .from(configuredPaths.get())
-          .transform(
-              input -> Paths.get(input));
+      return FluentIterable.from(configuredPaths.get()).transform(input -> Paths.get(input));
     }
 
     // No paths configured. Make an educated guess and return that.
@@ -112,53 +100,46 @@ public class DBuckConfig {
     try {
       compilerPath = compilerPath.toRealPath();
     } catch (IOException e) {
-      LOG.debug("Could not resolve " + compilerPath +
-              " to real path (likely cause: it does not exist)");
+      LOG.debug(
+          "Could not resolve " + compilerPath + " to real path (likely cause: it does not exist)");
     }
 
     Path usrLib = Paths.get("/usr", "lib");
     Path usrLocalLib = Paths.get("/usr", "local", "lib");
     Architecture architecture = delegate.getArchitecture();
-    String platformName = architecture.toString() + "-" +
-        delegate.getPlatform().getAutoconfName();
+    String platformName = architecture.toString() + "-" + delegate.getPlatform().getAutoconfName();
     String platformNameGnu = platformName + "-gnu";
 
-    ImmutableSet<Path> searchPath = ImmutableSet.<Path>builder()
-        .add(compilerPath.getParent().resolve(Paths.get("..", "lib")).normalize())
-        .add(usrLocalLib)
-        .add(usrLib)
-        .add(usrLocalLib.resolve(platformName))
-        .add(usrLocalLib.resolve(platformNameGnu))
-        .add(usrLib.resolve(platformName))
-        .add(usrLib.resolve(platformNameGnu))
-        .build();
+    ImmutableSet<Path> searchPath =
+        ImmutableSet.<Path>builder()
+            .add(compilerPath.getParent().resolve(Paths.get("..", "lib")).normalize())
+            .add(usrLocalLib)
+            .add(usrLib)
+            .add(usrLocalLib.resolve(platformName))
+            .add(usrLocalLib.resolve(platformNameGnu))
+            .add(usrLib.resolve(platformName))
+            .add(usrLib.resolve(platformNameGnu))
+            .build();
 
-    ImmutableSet<String> fileNames = FileFinder.combine(
-        ImmutableSet.of("lib"),
-        "phobos2",
-        ImmutableSet.of(".a", ".so"));
+    ImmutableSet<String> fileNames =
+        FileFinder.combine(ImmutableSet.of("lib"), "phobos2", ImmutableSet.of(".a", ".so"));
 
-    Optional<Path> phobosPath = FileFinder.getOptionalFile(
-        fileNames,
-        searchPath,
-        Files::isRegularFile);
+    Optional<Path> phobosPath =
+        FileFinder.getOptionalFile(fileNames, searchPath, Files::isRegularFile);
 
     if (phobosPath.isPresent()) {
       LOG.debug("Detected path to Phobos: " + phobosPath.get());
     } else {
-      throw new HumanReadableException(
-          "Phobos not found, and not configured using d.library_path");
+      throw new HumanReadableException("Phobos not found, and not configured using d.library_path");
     }
 
     return ImmutableList.of(phobosPath.get().getParent());
   }
 
-  /**
-   * @return the Path to the D compiler.
-   */
+  /** @return the Path to the D compiler. */
   private Path getDCompilerPath() {
-    Path compilerPath = delegate.getPath("d", "compiler", /*isCellRootRelative=*/false).orElse(
-        DEFAULT_D_COMPILER);
+    Path compilerPath =
+        delegate.getPath("d", "compiler", /*isCellRootRelative=*/ false).orElse(DEFAULT_D_COMPILER);
 
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }

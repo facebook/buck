@@ -44,7 +44,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -56,10 +55,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends AbstractBuildRule implements
-    ExternalTestRunnerRule,
-    HasRuntimeDeps,
-    TestRule {
+public class DTest extends AbstractBuildRule
+    implements ExternalTestRunnerRule, HasRuntimeDeps, TestRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<String> labels;
   private final BuildRule testBinaryBuildRule;
@@ -80,8 +77,7 @@ public class DTest extends AbstractBuildRule implements
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
@@ -99,26 +95,19 @@ public class DTest extends AbstractBuildRule implements
     return labels;
   }
 
-  /**
-   * @return the path to which the test commands output is written.
-   */
+  /** @return the path to which the test commands output is written. */
   protected Path getPathToTestExitCode() {
     return getPathToTestOutputDirectory().resolve("exitCode");
   }
 
-  /**
-   * @return the path to which the test commands output is written.
-   */
+  /** @return the path to which the test commands output is written. */
   protected Path getPathToTestOutput() {
     return getPathToTestOutputDirectory().resolve("output");
   }
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__test_%s_output__");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__test_%s_output__");
   }
 
   @Override
@@ -132,14 +121,15 @@ public class DTest extends AbstractBuildRule implements
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      final ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return () -> {
       ResultType resultType = ResultType.FAILURE;
 
       // Successful exit indicates success.
-      try (ObjectInputStream objectIn = new ObjectInputStream(new FileInputStream(
-              getProjectFilesystem().resolve(getPathToTestExitCode()).toFile()))) {
+      try (ObjectInputStream objectIn =
+          new ObjectInputStream(
+              new FileInputStream(
+                  getProjectFilesystem().resolve(getPathToTestExitCode()).toFile()))) {
         int exitCode = objectIn.readInt();
         if (exitCode == 0) {
           resultType = ResultType.SUCCESS;
@@ -149,8 +139,8 @@ public class DTest extends AbstractBuildRule implements
         resultType = ResultType.FAILURE;
       }
 
-      String testOutput = getProjectFilesystem().readFileIfItExists(
-          getPathToTestOutput()).orElse("");
+      String testOutput =
+          getProjectFilesystem().readFileIfItExists(getPathToTestOutput()).orElse("");
       String message = "";
       String stackTrace = "";
       String testName = "";
@@ -158,9 +148,7 @@ public class DTest extends AbstractBuildRule implements
         // We don't get any information on successful runs, but failures usually come with
         // some information. This code parses it.
         int firstNewline = testOutput.indexOf('\n');
-        String firstLine = firstNewline == -1
-              ? testOutput
-              : testOutput.substring(0, firstNewline);
+        String firstLine = firstNewline == -1 ? testOutput : testOutput.substring(0, firstNewline);
         // First line has format <Exception name>@<location>: <message>
         // Use <location> as test name, and <message> as message.
         Pattern firstLinePattern = Pattern.compile("^[^@]*@([^:]*): (.*)");
@@ -173,27 +161,22 @@ public class DTest extends AbstractBuildRule implements
         stackTrace = testOutput;
       }
 
-      TestResultSummary summary = new TestResultSummary(
-          getBuildTarget().getShortName(),
-          testName,
-          resultType,
-          /* time */ 0,
-          message,
-          stackTrace,
-          testOutput,
-          /* stderr */ "");
+      TestResultSummary summary =
+          new TestResultSummary(
+              getBuildTarget().getShortName(),
+              testName,
+              resultType,
+              /* time */ 0,
+              message,
+              stackTrace,
+              testOutput,
+              /* stderr */ "");
 
       return TestResults.of(
           getBuildTarget(),
-          ImmutableList.of(
-              new TestCaseSummary(
-                  "main",
-                  ImmutableList.of(summary))
-          ),
+          ImmutableList.of(new TestCaseSummary("main", ImmutableList.of(summary))),
           contacts,
-          labels.stream()
-              .map(Object::toString)
-              .collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
     };
   }
 
@@ -205,12 +188,13 @@ public class DTest extends AbstractBuildRule implements
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
-        .add(new DTestStep(
-            getProjectFilesystem(),
-            getShellCommand(pathResolver),
-            getPathToTestExitCode(),
-            testRuleTimeoutMs,
-            getPathToTestOutput()))
+        .add(
+            new DTestStep(
+                getProjectFilesystem(),
+                getShellCommand(pathResolver),
+                getPathToTestExitCode(),
+                testRuleTimeoutMs,
+                getPathToTestOutput()))
         .build();
   }
 
@@ -241,8 +225,7 @@ public class DTest extends AbstractBuildRule implements
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(),
-        Preconditions.checkNotNull(testBinaryBuildRule.getSourcePathToOutput()));
+        getBuildTarget(), Preconditions.checkNotNull(testBinaryBuildRule.getSourcePathToOutput()));
   }
 
   @Override

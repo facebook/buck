@@ -39,21 +39,17 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-public class DLibraryDescription implements
-    Description<DLibraryDescription.Arg>,
-    VersionPropagator<DLibraryDescription.Arg> {
+public class DLibraryDescription
+    implements Description<DLibraryDescription.Arg>, VersionPropagator<DLibraryDescription.Arg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
   public DLibraryDescription(
-      DBuckConfig dBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform) {
+      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
@@ -78,11 +74,7 @@ public class DLibraryDescription implements
 
     if (params.getBuildTarget().getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          params.getBuildTarget(),
-          params,
-          ruleFinder,
-          pathResolver,
-          args.srcs);
+          params.getBuildTarget(), params, ruleFinder, pathResolver, args.srcs);
     }
 
     BuildTarget sourceTreeTarget =
@@ -108,15 +100,10 @@ public class DLibraryDescription implements
           CxxSourceRuleFactory.PicType.PDC);
     }
 
-    return new DLibrary(
-        params,
-        buildRuleResolver,
-        dIncludes);
+    return new DLibrary(params, buildRuleResolver, dIncludes);
   }
 
-  /**
-   * @return a BuildRule that creates a static library.
-   */
+  /** @return a BuildRule that creates a static library. */
   private BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -145,9 +132,7 @@ public class DLibraryDescription implements
     // Write a build rule to create the archive for this library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            pic);
+            params.getBuildTarget(), cxxPlatform.getFlavor(), pic);
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(

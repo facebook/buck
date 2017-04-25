@@ -45,11 +45,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-
-public class DBinaryDescription implements
-    Description<DBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<DBinaryDescription.Arg>,
-    VersionRoot<DBinaryDescription.Arg> {
+public class DBinaryDescription
+    implements Description<DBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<DBinaryDescription.Arg>,
+        VersionRoot<DBinaryDescription.Arg> {
 
   public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
@@ -58,9 +57,7 @@ public class DBinaryDescription implements
   private final CxxPlatform cxxPlatform;
 
   public DBinaryDescription(
-      DBuckConfig dBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform) {
+      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
@@ -112,15 +109,12 @@ public class DBinaryDescription implements
 
     // Create a Tool for the executable.
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
-    executableBuilder.addArg(
-        SourcePathArg.of(
-            nativeLinkable.getSourcePathToOutput()));
+    executableBuilder.addArg(SourcePathArg.of(nativeLinkable.getSourcePathToOutput()));
 
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.copyReplacingExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
+        params.copyReplacingExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
         ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getSourcePathToOutput());
@@ -147,5 +141,4 @@ public class DBinaryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
   }
-
 }
