@@ -19,26 +19,22 @@ package com.facebook.buck.go;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-
 public class GoBinaryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void ensureGoIsAvailable() throws IOException, InterruptedException {
@@ -47,8 +43,8 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void simpleBinary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("//:xyzzy").assertSuccess();
@@ -56,8 +52,8 @@ public class GoBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:xyzzy");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
+    ProcessExecutor.Result result =
+        workspace.runCommand(workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -65,8 +61,7 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void binaryWithAsm() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "asm", tmp);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "asm", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
@@ -74,23 +69,22 @@ public class GoBinaryIntegrationTest {
     assertThat(result.getStdout(), Matchers.containsString("Sum is 6"));
   }
 
-    @Test
+  @Test
   public void buildAfterChangeWorks() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("//:xyzzy").assertSuccess();
     workspace.writeContentsToPath(
-        workspace.getFileContents("main.go") + "// this is a comment",
-        "main.go");
+        workspace.getFileContents("main.go") + "// this is a comment", "main.go");
     workspace.runBuckBuild("//:xyzzy").assertSuccess();
   }
 
   @Test
   public void binaryWithLibrary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -100,8 +94,8 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void vendoredLibrary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "vendored_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "vendored_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -111,8 +105,8 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void libraryWithPrefix() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "library_with_prefix", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "library_with_prefix", tmp);
     workspace.setUp();
 
     assertThat(
@@ -122,8 +116,8 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void libraryWithPrefixAfterChange() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "library_with_prefix", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "library_with_prefix", tmp);
     workspace.setUp();
 
     assertThat(
@@ -142,8 +136,8 @@ public class GoBinaryIntegrationTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("is not an instance of go_library"));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     workspace.runBuckCommand("run", "//:illegal_dep").assertFailure();
@@ -193,5 +187,4 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckBuild("//:main").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
   }
-
 }

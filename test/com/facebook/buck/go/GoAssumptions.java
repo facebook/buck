@@ -26,7 +26,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 
 abstract class GoAssumptions {
@@ -45,10 +44,8 @@ abstract class GoAssumptions {
         fs.mkdirs(fs.getPath(goRoot));
         baseConfig.setFilesystem(fs);
       }
-      new GoBuckConfig(
-          baseConfig.build(),
-          executor,
-          FlavorDomain.from("Cxx", ImmutableSet.of())).getCompiler();
+      new GoBuckConfig(baseConfig.build(), executor, FlavorDomain.from("Cxx", ImmutableSet.of()))
+          .getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }
