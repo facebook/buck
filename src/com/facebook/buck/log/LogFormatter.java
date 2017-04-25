@@ -16,10 +16,9 @@
 
 package com.facebook.buck.log;
 
+import com.google.common.base.Throwables;
 import com.google.common.annotations.VisibleForTesting;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -96,10 +95,7 @@ public class LogFormatter extends java.util.logging.Formatter {
     sb.append("\n");
     Throwable t = record.getThrown();
     if (t != null) {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      t.printStackTrace(pw);
-      sb.append(sw)
+      sb.append(Throwables.getStackTraceAsString(t))
         .append("\n");
     }
     return sb.toString();

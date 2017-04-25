@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -46,8 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -411,9 +410,7 @@ class XctoolRunTestsStep implements Step {
            BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
         stderr = CharStreams.toString(bufferedStderrReader).trim();
       } catch (IOException e) {
-        StringWriter stackTraceOut = new StringWriter();
-        e.printStackTrace(new PrintWriter(stackTraceOut));
-        stderr = stackTraceOut.getBuffer().toString();
+        stderr = Throwables.getStackTraceAsString(e);
       }
     }
 

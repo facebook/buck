@@ -16,11 +16,10 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.log.Logger;
+import com.google.common.base.Throwables;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,18 +63,12 @@ public abstract class LazyPath {
         } catch (IOException e) {
           exception = Optional.of(e);
           LOG.warn("Failed to initialize lazy path, exception: " + e.toString() + "\n" +
-          "StackTrace: " + stackTraceToString(e));
+          "StackTrace: " + Throwables.getStackTraceAsString(e));
           throw e;
         }
       }
       return result;
     }
-  }
-
-  private String stackTraceToString(Throwable exc) {
-    StringWriter writer = new StringWriter();
-    exc.printStackTrace(new PrintWriter(writer, true));
-    return writer.toString();
   }
 
   /**
@@ -105,7 +98,7 @@ public abstract class LazyPath {
           return "Lazy path uninitialized";
         } else {
           return "Lazy path failed to initialize: " + exception.get().toString() + "\n" +
-              "Stacktrace: \n" + stackTraceToString(exception.get());
+              "Stacktrace: \n" + Throwables.getStackTraceAsString(exception.get());
         }
       } else {
         return result.toString();

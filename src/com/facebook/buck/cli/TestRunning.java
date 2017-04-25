@@ -82,8 +82,6 @@ import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -497,13 +495,6 @@ public class TestRunning {
         return transformedTestResults;
       }
 
-      private String getStackTrace(Throwable throwable) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        throwable.printStackTrace(pw);
-        return sw.toString();
-      }
-
       @Override
       public void onSuccess(TestResults testResults) {
         LOG.debug("Transforming successful test results %s", testResults);
@@ -528,7 +519,7 @@ public class TestRunning {
                                 ResultType.FAILURE,
                                 0L,
                                 throwable.getMessage(),
-                                getStackTrace(throwable),
+                                Throwables.getStackTraceAsString(throwable),
                                 "",
                                 "")))),
                 testRule.getContacts(),
