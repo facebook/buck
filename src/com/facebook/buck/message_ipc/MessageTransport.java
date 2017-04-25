@@ -30,8 +30,7 @@ public class MessageTransport implements AutoCloseable {
     this.serializer = serializer;
   }
 
-  public ReturnResultMessage sendMessageAndWaitForResponse(
-      InvocationMessage message)
+  public ReturnResultMessage sendMessageAndWaitForResponse(InvocationMessage message)
       throws Exception {
     checkNotClose();
     String serializedMessage = serializer.serializeInvocation(message);
@@ -51,6 +50,7 @@ public class MessageTransport implements AutoCloseable {
     Preconditions.checkState(
         !isClosed,
         "%s <%d> is already closed",
-        this.getClass().getSimpleName(), System.identityHashCode(this));
+        this.getClass().getSimpleName(),
+        System.identityHashCode(this));
   }
 }

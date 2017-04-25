@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +41,12 @@ public class MessageSerializer {
 
   @SuppressWarnings("unchecked")
   public InvocationMessage deserializeInvocation(String data) throws IOException {
-    Map<String, Object> rep = ObjectMappers.readValue(
-        data,
-        new TypeReference<Map<String, Object>>() {});
+    Map<String, Object> rep =
+        ObjectMappers.readValue(data, new TypeReference<Map<String, Object>>() {});
     String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(InvocationMessage.class.getSimpleName()));
     return new InvocationMessage(
-        (String) checkHasField(rep, NAME, data),
-        (List<Object>) checkHasField(rep, ARGS, data));
+        (String) checkHasField(rep, NAME, data), (List<Object>) checkHasField(rep, ARGS, data));
   }
 
   public String serializeResult(ReturnResultMessage message) throws JsonProcessingException {
@@ -60,9 +57,8 @@ public class MessageSerializer {
   }
 
   public ReturnResultMessage deserializeResult(String data) throws IOException {
-    Map<String, Object> rep = ObjectMappers.readValue(
-        data,
-        new TypeReference<Map<String, Object>>() {});
+    Map<String, Object> rep =
+        ObjectMappers.readValue(data, new TypeReference<Map<String, Object>>() {});
     String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(ReturnResultMessage.class.getSimpleName()));
     return new ReturnResultMessage(checkHasField(rep, VALUE, data));
@@ -72,6 +68,8 @@ public class MessageSerializer {
     return Preconditions.checkNotNull(
         rep.get(field),
         "Unable to deserialize %s: no field %s in raw input (%s)",
-        InvocationMessage.class.getSimpleName(), field, rawInput);
+        InvocationMessage.class.getSimpleName(),
+        field,
+        rawInput);
   }
 }
