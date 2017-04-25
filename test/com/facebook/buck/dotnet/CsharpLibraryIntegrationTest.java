@@ -23,29 +23,23 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-
 public class CsharpLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void shouldCompileLibraryWithSystemProvidedDeps() throws IOException {
     assumeCscIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//src:simple");
@@ -58,10 +52,8 @@ public class CsharpLibraryIntegrationTest {
   public void shouldCompileLibraryWithAPrebuiltDependency() throws IOException {
     assumeCscIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//src:prebuilt");
@@ -73,10 +65,8 @@ public class CsharpLibraryIntegrationTest {
   public void shouldBeAbleToEmbedResourcesIntoTheBuiltDll() throws IOException {
     assumeCscIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//src:embed");
@@ -89,10 +79,8 @@ public class CsharpLibraryIntegrationTest {
   public void shouldBeAbleToDependOnAnotherCsharpLibrary() throws IOException {
     assumeCscIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//src:dependent");
