@@ -28,12 +28,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.util.concurrent.Callable;
-
-
-
 
 public class ThriftScribeLogger extends ScribeLogger {
   private static final Logger LOG = Logger.get(ThriftScribeLogger.class);
@@ -53,21 +49,23 @@ public class ThriftScribeLogger extends ScribeLogger {
   public ListenableFuture<Void> log(final String category, final Iterable<String> lines) {
     synchronized (executorService) {
       if (executorService.isShutdown()) {
-        String errorMessage = String.format(
-            "%s will not accept any more log calls because it has already been closed.",
-            getClass());
+        String errorMessage =
+            String.format(
+                "%s will not accept any more log calls because it has already been closed.",
+                getClass());
         LOG.warn(errorMessage);
         return Futures.immediateFailedCheckedFuture(new IllegalStateException(errorMessage));
       }
     }
 
-    return executorService.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        sendViaThrift(category, lines);
-        return null;
-      }
-    });
+    return executorService.submit(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            sendViaThrift(category, lines);
+            return null;
+          }
+        });
   }
 
   private void sendViaThrift(String category, Iterable<String> lines) throws IOException {
@@ -108,11 +106,10 @@ public class ThriftScribeLogger extends ScribeLogger {
     // TODO(ruibm): This way we get some signal where the null lines are coming from and still send
     // back as much non-corrupted data as we can.
     if (numberOfNullLines > 0) {
-      LOG.error(String.format(
-          "Out of [%d] log lines, [%d] were null for category [%s].",
-          totalLines,
-          numberOfNullLines,
-          scribeData.getCategory()));
+      LOG.error(
+          String.format(
+              "Out of [%d] log lines, [%d] were null for category [%s].",
+              totalLines, numberOfNullLines, scribeData.getCategory()));
     }
   }
 
