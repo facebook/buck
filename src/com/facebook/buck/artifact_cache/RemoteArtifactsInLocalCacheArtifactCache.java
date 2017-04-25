@@ -24,17 +24,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * A cache that wraps dir caches and remote caches. It allows to store only into remote cache,
- * and internally it stores artifacts fetched from remote cache into local cache. Thus, it never
- * stores locally built artifacts into local cache.
+ * A cache that wraps dir caches and remote caches. It allows to store only into remote cache, and
+ * internally it stores artifacts fetched from remote cache into local cache. Thus, it never stores
+ * locally built artifacts into local cache.
  */
 public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
   private final ArtifactCache localCache;
   private final ArtifactCache remoteCache;
 
   public RemoteArtifactsInLocalCacheArtifactCache(
-      ArtifactCache localCache,
-      ArtifactCache remoteCache) {
+      ArtifactCache localCache, ArtifactCache remoteCache) {
     this.localCache = localCache;
     this.remoteCache = remoteCache;
 
@@ -47,8 +46,8 @@ public class RemoteArtifactsInLocalCacheArtifactCache implements ArtifactCache {
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult localResult = localCache.fetch(ruleKey, output);
 
-    if (localResult.getType() == CacheResultType.ERROR ||
-        localResult.getType() == CacheResultType.HIT) {
+    if (localResult.getType() == CacheResultType.ERROR
+        || localResult.getType() == CacheResultType.HIT) {
       return localResult;
     }
 

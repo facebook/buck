@@ -18,7 +18,6 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.io.ByteStreams;
-
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;

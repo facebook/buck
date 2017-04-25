@@ -18,33 +18,30 @@ package com.facebook.buck.artifact_cache;
 
 public enum CacheResultType {
 
-    /** Artifact was successfully fetched from cache */
-    HIT(/* success */ true),
+  /** Artifact was successfully fetched from cache */
+  HIT(/* success */ true),
 
-    /** Artifact was missing from cache */
-    MISS(/* success */ false),
+  /** Artifact was missing from cache */
+  MISS(/* success */ false),
 
-    /** An error occurred when fetching artifact from cache*/
-    ERROR(/* success */ false),
+  /** An error occurred when fetching artifact from cache */
+  ERROR(/* success */ false),
 
-    /** The rule was uncachable */
-    IGNORED(/* success */ false),
+  /** The rule was uncachable */
+  IGNORED(/* success */ false),
 
-    /** Artifact cache not queried because the local cache key was unchanged. */
-    LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
+  /** Artifact cache not queried because the local cache key was unchanged. */
+  LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
+  ;
 
-    ;
+  private boolean success;
 
-    private boolean success;
+  CacheResultType(boolean success) {
+    this.success = success;
+  }
 
-    CacheResultType(boolean success) {
-        this.success = success;
-    }
-
-  /**
-   * Whether the artifact was successfully fetched.
-   */
+  /** Whether the artifact was successfully fetched. */
   public boolean isSuccess() {
-        return success;
-    }
+    return success;
+  }
 }

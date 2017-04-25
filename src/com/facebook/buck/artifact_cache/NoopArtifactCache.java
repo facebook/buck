@@ -31,9 +31,7 @@ public class NoopArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return Futures.immediateFuture(null);
   }
 

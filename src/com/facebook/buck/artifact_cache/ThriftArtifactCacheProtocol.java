@@ -29,7 +29,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -39,11 +38,9 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 /**
- * All messages generate by this Protocol will be in the following binary format:
- * - int32 Big Endian size bytes of thrift serialized thriftData.
- * - Thrift serialized thriftData.
- * - Remainder of the stream contains binary payload data. Information about it is available in
- * the Thrift thriftData.
+ * All messages generate by this Protocol will be in the following binary format: - int32 Big Endian
+ * size bytes of thrift serialized thriftData. - Thrift serialized thriftData. - Remainder of the
+ * stream contains binary payload data. Information about it is available in the Thrift thriftData.
  */
 public class ThriftArtifactCacheProtocol {
 
@@ -56,9 +53,7 @@ public class ThriftArtifactCacheProtocol {
   }
 
   public static Request createRequest(
-      ThriftProtocol protocol,
-      BuckCacheRequest request,
-      ByteSource... payloadByteSources)
+      ThriftProtocol protocol, BuckCacheRequest request, ByteSource... payloadByteSources)
       throws IOException {
     return new Request(protocol, request, payloadByteSources);
   }
@@ -75,13 +70,15 @@ public class ThriftArtifactCacheProtocol {
   private static String computeHash(ByteSource source, HashFunction hashFunction)
       throws IOException {
     try (InputStream inputStream = source.openStream();
-         HashingOutputStream outputStream =
-             new HashingOutputStream(hashFunction, new OutputStream() {
-               @Override
-               public void write(int b) throws IOException {
-                 // Do nothing.
-               }
-             })) {
+        HashingOutputStream outputStream =
+            new HashingOutputStream(
+                hashFunction,
+                new OutputStream() {
+                  @Override
+                  public void write(int b) throws IOException {
+                    // Do nothing.
+                  }
+                })) {
       ByteStreams.copy(inputStream, outputStream);
       return outputStream.hash().toString();
     }
@@ -95,18 +92,17 @@ public class ThriftArtifactCacheProtocol {
     private final ByteSource[] payloadByteSources;
 
     private Request(
-        ThriftProtocol protocol,
-        BuckCacheRequest thriftData,
-        ByteSource... payloadByteSources)
+        ThriftProtocol protocol, BuckCacheRequest thriftData, ByteSource... payloadByteSources)
         throws IOException {
-      this.payloads = thriftData.isSetPayloads() ?
-          ImmutableList.copyOf(thriftData.getPayloads()) :
-          ImmutableList.of();
+      this.payloads =
+          thriftData.isSetPayloads()
+              ? ImmutableList.copyOf(thriftData.getPayloads())
+              : ImmutableList.of();
 
       Preconditions.checkArgument(
           payloadByteSources.length == this.payloads.size(),
-          "Number of payloadStreams provided [%s] does not match number of payloads " +
-              "in the thriftData [%d].",
+          "Number of payloadStreams provided [%s] does not match number of payloads "
+              + "in the thriftData [%d].",
           payloadByteSources.length,
           payloads.size());
 
@@ -125,8 +121,7 @@ public class ThriftArtifactCacheProtocol {
       return (Integer.SIZE / Byte.SIZE) + serializedThriftData.length + totalPayloadBytes;
     }
 
-    public void writeAndClose(OutputStream rawStream)
-        throws IOException {
+    public void writeAndClose(OutputStream rawStream) throws IOException {
 
       try (DataOutputStream outStream = new DataOutputStream(rawStream)) {
         outStream.writeInt(serializedThriftData.length);
@@ -142,12 +137,16 @@ public class ThriftArtifactCacheProtocol {
 
     @Override
     public String toString() {
-      return "Request{" +
-          "serializedThriftData=" + Arrays.toString(serializedThriftData) +
-          ", payloads=" + payloads +
-          ", totalPayloadBytes=" + totalPayloadBytes +
-          ", payloadByteSources=" + Arrays.toString(payloadByteSources) +
-          '}';
+      return "Request{"
+          + "serializedThriftData="
+          + Arrays.toString(serializedThriftData)
+          + ", payloads="
+          + payloads
+          + ", totalPayloadBytes="
+          + totalPayloadBytes
+          + ", payloadByteSources="
+          + Arrays.toString(payloadByteSources)
+          + '}';
     }
   }
 
@@ -169,9 +168,9 @@ public class ThriftArtifactCacheProtocol {
       try {
         ThriftUtil.deserialize(protocol, thriftData, this.thriftData);
       } catch (IOException e) {
-        String message = String.format(
-            "Failed to deserialize [%d] bytes of BuckCacheFetchResponse.",
-            thriftByteSize);
+        String message =
+            String.format(
+                "Failed to deserialize [%d] bytes of BuckCacheFetchResponse.", thriftByteSize);
         LOG.error(message);
         throw new IOException(message);
       }
@@ -188,10 +187,12 @@ public class ThriftArtifactCacheProtocol {
           nextPayloadToBeRead,
           thriftData.getPayloadsSize());
 
-      long payloadSizeBytes = Preconditions.checkNotNull(thriftData.getPayloads())
-          .get(nextPayloadToBeRead).getSizeBytes();
+      long payloadSizeBytes =
+          Preconditions.checkNotNull(thriftData.getPayloads())
+              .get(nextPayloadToBeRead)
+              .getSizeBytes();
       try (HashingOutputStream wrappedOutputStream =
-               new HashingOutputStream(MD5_HASH_FUNCTION, outStream)) {
+          new HashingOutputStream(MD5_HASH_FUNCTION, outStream)) {
         copyExactly(responseStream, wrappedOutputStream, payloadSizeBytes);
         ++nextPayloadToBeRead;
         return new ReadPayloadInfo(payloadSizeBytes, wrappedOutputStream.hash().toString());
@@ -231,19 +232,17 @@ public class ThriftArtifactCacheProtocol {
    * @param destination Stream to copy to.
    * @param bytesToRead Number of bytes to copy.
    * @throws IOException if an I/O error occcurs, or the source stream has fewer bytes than
-   * requested.
+   *     requested.
    */
   @VisibleForTesting
   static void copyExactly(InputStream source, OutputStream destination, long bytesToRead)
       throws IOException {
-    long bytesCopied = ByteStreams.copy(
-        ByteStreams.limit(source, bytesToRead),
-        destination);
+    long bytesCopied = ByteStreams.copy(ByteStreams.limit(source, bytesToRead), destination);
     if (bytesCopied < bytesToRead) {
-      String msg = String.format(
-          "InputStream was missing [%d] bytes. Expected to read a total of [%d] bytes.",
-          bytesToRead - bytesCopied,
-          bytesToRead);
+      String msg =
+          String.format(
+              "InputStream was missing [%d] bytes. Expected to read a total of [%d] bytes.",
+              bytesToRead - bytesCopied, bytesToRead);
       LOG.error(msg);
       throw new IOException(msg);
     }

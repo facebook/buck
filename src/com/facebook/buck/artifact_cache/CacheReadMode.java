@@ -16,9 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-/**
- * Describes whether the cache allows stores.
- */
+/** Describes whether the cache allows stores. */
 public enum CacheReadMode {
   // No stores allowed.
   READONLY(false),

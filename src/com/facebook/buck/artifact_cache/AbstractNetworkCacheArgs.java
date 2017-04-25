@@ -21,25 +21,35 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractNetworkCacheArgs {
   String getCacheName();
+
   String getRepository();
+
   String getScheduleType();
+
   HttpService getFetchClient();
+
   HttpService getStoreClient();
+
   CacheReadMode getCacheReadMode();
+
   ProjectFilesystem getProjectFilesystem();
+
   BuckEventBus getBuckEventBus();
+
   ListeningExecutorService getHttpWriteExecutorService();
+
   String getErrorTextTemplate();
+
   Optional<Long> getMaxStoreSizeBytes();
+
   Optional<String> getThriftEndpointPath();
+
   boolean distributedBuildModeEnabled();
 }

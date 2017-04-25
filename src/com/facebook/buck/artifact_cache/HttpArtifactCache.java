@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.google.common.io.ByteSource;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +29,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -54,20 +52,15 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected CacheResult fetchImpl(
-      RuleKey ruleKey,
-      LazyPath output,
-      final Finished.Builder eventBuilder) throws IOException {
+      RuleKey ruleKey, LazyPath output, final Finished.Builder eventBuilder) throws IOException {
 
-    Request.Builder requestBuilder =
-        new Request.Builder()
-            .get();
-    try (HttpResponse response = fetchClient.makeRequest(
-        "/artifacts/key/" + ruleKey.toString(),
-        requestBuilder)) {
+    Request.Builder requestBuilder = new Request.Builder().get();
+    try (HttpResponse response =
+        fetchClient.makeRequest("/artifacts/key/" + ruleKey.toString(), requestBuilder)) {
       eventBuilder.getFetchBuilder().setResponseSizeBytes(response.contentLength());
 
       try (DataInputStream input =
-               new DataInputStream(new FullyReadOnCloseInputStream(response.getBody()))) {
+          new DataInputStream(new FullyReadOnCloseInputStream(response.getBody()))) {
 
         if (response.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
           LOG.info("fetch(%s, %s): cache miss", response.requestUrl(), ruleKey);
@@ -75,10 +68,10 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         }
 
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
-          String msg = String.format(
-              "unexpected server response: [%d:%s]",
-              response.statusCode(),
-              response.statusMessage());
+          String msg =
+              String.format(
+                  "unexpected server response: [%d:%s]",
+                  response.statusCode(), response.statusMessage());
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           eventBuilder.getFetchBuilder().setErrorMessage(msg);
           return CacheResult.error(name, msg);
@@ -88,16 +81,14 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         // make sure all parent dirs exist.
         Path file = output.get();
         projectFilesystem.createParentDirs(file);
-        Path temp = projectFilesystem.createTempFile(
-            file.getParent(),
-            file.getFileName().toString(),
-            ".tmp");
+        Path temp =
+            projectFilesystem.createTempFile(
+                file.getParent(), file.getFileName().toString(), ".tmp");
 
         FetchResponseReadResult fetchedData;
         try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
-          fetchedData = HttpArtifactCacheBinaryProtocol.readFetchResponse(
-              input,
-              tempFileOutputStream);
+          fetchedData =
+              HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
         }
 
         eventBuilder
@@ -134,10 +125,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected void storeImpl(
-      ArtifactInfo info,
-      final Path file,
-      final Finished.Builder eventBuilder)
+  protected void storeImpl(ArtifactInfo info, final Path file, final Finished.Builder eventBuilder)
       throws IOException {
 
     // Build the request, hitting the multi-key endpoint.

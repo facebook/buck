@@ -28,7 +28,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -68,9 +67,8 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   }
 
   protected abstract CacheResult fetchImpl(
-      RuleKey ruleKey,
-      LazyPath output,
-      final HttpArtifactCacheEvent.Finished.Builder eventBuilder) throws IOException;
+      RuleKey ruleKey, LazyPath output, final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
+      throws IOException;
 
   protected abstract void storeImpl(
       ArtifactInfo info,
@@ -80,13 +78,12 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ruleKey);
+    HttpArtifactCacheEvent.Started startedEvent =
+        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
     buckEventBus.post(startedEvent);
     HttpArtifactCacheEvent.Finished.Builder eventBuilder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    eventBuilder.getFetchBuilder()
-        .setRequestedRuleKey(ruleKey);
+    eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
 
     try {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
@@ -97,19 +94,14 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
       reportFailure(e, "fetch(%s): %s", ruleKey, msg);
       CacheResult cacheResult = CacheResult.error(name, msg);
-      eventBuilder
-          .getFetchBuilder()
-          .setFetchResult(cacheResult)
-          .setErrorMessage(msg);
+      eventBuilder.getFetchBuilder().setFetchResult(cacheResult).setErrorMessage(msg);
       buckEventBus.post(eventBuilder.build());
       return cacheResult;
     }
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      final ArtifactInfo info,
-      final BorrowablePath output) {
+  public ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
@@ -135,34 +127,28 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
           buckEventBus.post(startedEvent);
           HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
               HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-          finishedEventBuilder
-              .getStoreBuilder()
-              .setRuleKeys(info.getRuleKeys());
+          finishedEventBuilder.getStoreBuilder().setRuleKeys(info.getRuleKeys());
 
           try {
 
             long artifactSizeBytes = projectFilesystem.getFileSize(tmp);
-            finishedEventBuilder.getStoreBuilder()
+            finishedEventBuilder
+                .getStoreBuilder()
                 .setArtifactSizeBytes(artifactSizeBytes)
                 .setRuleKeys(info.getRuleKeys());
             if (!isArtefactTooBigToBeStored(artifactSizeBytes, maxStoreSize)) {
               storeImpl(info, tmp, finishedEventBuilder);
             } else {
               LOG.info(
-                  "Artifact too big so not storing it in the distributed cache. " +
-                      "file=[%s] buildTarget=[%s]",
-                  tmp,
-                  info.getBuildTarget());
+                  "Artifact too big so not storing it in the distributed cache. "
+                      + "file=[%s] buildTarget=[%s]",
+                  tmp, info.getBuildTarget());
             }
             buckEventBus.post(finishedEventBuilder.build());
 
           } catch (IOException e) {
             reportFailure(
-                e,
-                "store(%s): %s: %s",
-                info.getRuleKeys(),
-                e.getClass().getName(),
-                e.getMessage());
+                e, "store(%s): %s: %s", info.getRuleKeys(), e.getClass().getName(), e.getMessage());
             finishedEventBuilder
                 .getStoreBuilder()
                 .setWasStoreSuccessful(false)
@@ -175,8 +161,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
             LOG.warn(e, "Failed to delete file %s", tmp);
           }
         },
-        /* result */ null
-    );
+        /* result */ null);
   }
 
   @Override
@@ -215,26 +200,19 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   private void reportFailureToEvenBus(String format, Object... args) {
     if (seenErrors.add(format)) {
-      buckEventBus.post(ConsoleEvent.warning(
-          errorTextTemplate
-              .replaceAll(
-                  "\\{cache_name}",
-                  Matcher.quoteReplacement(name))
-              .replaceAll(
-                  "\\\\t",
-                  Matcher.quoteReplacement("\t"))
-              .replaceAll(
-                  "\\\\n",
-                  Matcher.quoteReplacement("\n"))
-              .replaceAll(
-                  "\\{error_message}",
-                  Matcher.quoteReplacement(String.format(format, args)))));
+      buckEventBus.post(
+          ConsoleEvent.warning(
+              errorTextTemplate
+                  .replaceAll("\\{cache_name}", Matcher.quoteReplacement(name))
+                  .replaceAll("\\\\t", Matcher.quoteReplacement("\t"))
+                  .replaceAll("\\\\n", Matcher.quoteReplacement("\n"))
+                  .replaceAll(
+                      "\\{error_message}", Matcher.quoteReplacement(String.format(format, args)))));
     }
   }
 
   private static boolean isArtefactTooBigToBeStored(
-      long artifactSizeBytes,
-      Optional<Long> maxStoreSize) {
+      long artifactSizeBytes, Optional<Long> maxStoreSize) {
     return maxStoreSize.isPresent() && artifactSizeBytes > maxStoreSize.get();
   }
 }

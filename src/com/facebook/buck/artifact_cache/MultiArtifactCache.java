@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -43,9 +42,11 @@ public class MultiArtifactCache implements ArtifactCache {
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
-    this.writableArtifactCaches = artifactCaches.stream()
-        .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
-        .collect(MoreCollectors.toImmutableList());
+    this.writableArtifactCaches =
+        artifactCaches
+            .stream()
+            .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
+            .collect(MoreCollectors.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 
@@ -82,40 +83,29 @@ public class MultiArtifactCache implements ArtifactCache {
   }
 
   private static ListenableFuture<Void> storeToCaches(
-      ImmutableList<ArtifactCache> caches,
-      ArtifactInfo info,
-      BorrowablePath output) {
+      ImmutableList<ArtifactCache> caches, ArtifactInfo info, BorrowablePath output) {
     // TODO(cjhopman): support BorrowablePath with multiple writable caches.
     if (caches.size() != 1) {
       output = BorrowablePath.notBorrowablePath(output.getPath());
     }
-    List<ListenableFuture<Void>> storeFutures =
-        Lists.newArrayListWithExpectedSize(caches.size());
+    List<ListenableFuture<Void>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
     for (ArtifactCache artifactCache : caches) {
       storeFutures.add(artifactCache.store(info, output));
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(
-        Futures.allAsList(storeFutures),
-        Functions.<Void>constant(null));
+    return Futures.transform(Futures.allAsList(storeFutures), Functions.<Void>constant(null));
   }
 
-  /**
-   * Store the artifact to all encapsulated ArtifactCaches.
-   */
+  /** Store the artifact to all encapsulated ArtifactCaches. */
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
   }
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return isStoreSupported ?
-        CacheReadMode.READWRITE :
-        CacheReadMode.READONLY;
+    return isStoreSupported ? CacheReadMode.READWRITE : CacheReadMode.READONLY;
   }
 
   @Override

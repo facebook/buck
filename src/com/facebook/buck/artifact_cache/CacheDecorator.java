@@ -16,12 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
-/**
- * A Cache that wraps another cache and performs additional things, e.g. logging.
- */
+/** A Cache that wraps another cache and performs additional things, e.g. logging. */
 public interface CacheDecorator {
-  /**
-   * @return Cache that is wrapped by a decorator.
-   */
+  /** @return Cache that is wrapped by a decorator. */
   ArtifactCache getDelegate();
 }

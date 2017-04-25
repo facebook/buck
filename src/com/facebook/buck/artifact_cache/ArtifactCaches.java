@@ -36,14 +36,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.MediaType;
@@ -57,9 +55,7 @@ import okio.ForwardingSource;
 import okio.Okio;
 import okio.Source;
 
-/**
- * Creates instances of the {@link ArtifactCache}.
- */
+/** Creates instances of the {@link ArtifactCache}. */
 public class ArtifactCaches implements ArtifactCacheFactory {
 
   private static final Logger LOG = Logger.get(ArtifactCaches.class);
@@ -81,10 +77,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   /**
    * Creates a new instance of the cache factory for use during a build.
    *
-   * @param buckConfig        describes what kind of cache to create
-   * @param buckEventBus      event bus
+   * @param buckConfig describes what kind of cache to create
+   * @param buckEventBus event bus
    * @param projectFilesystem filesystem to store files on
-   * @param wifiSsid          current WiFi ssid to decide if we want the http cache or not
+   * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
    * @param asyncCloseable
    */
   public ArtifactCaches(
@@ -120,22 +116,22 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   /**
    * Creates a new instance of the cache for use during a build.
    *
-   * @param distributedBuildModeEnabled  true if this is a distributed build
+   * @param distributedBuildModeEnabled true if this is a distributed build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(
-      boolean distributedBuildModeEnabled) {
+  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
-    ArtifactCache artifactCache = newInstanceInternal(
-        buckConfig,
-        buckEventBus,
-        projectFilesystem,
-        wifiSsid,
-        httpWriteExecutorService,
-        distributedBuildModeEnabled);
+    ArtifactCache artifactCache =
+        newInstanceInternal(
+            buckConfig,
+            buckEventBus,
+            projectFilesystem,
+            wifiSsid,
+            httpWriteExecutorService,
+            distributedBuildModeEnabled);
 
     if (asyncCloseable.isPresent()) {
       artifactCache = asyncCloseable.get().closeAsync(artifactCache);
@@ -159,17 +155,15 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   /**
    * Creates a new instance of the cache to be used to serve the dircache from the WebServer.
    *
-   * @param buckConfig        describes how to configure te cache
+   * @param buckConfig describes how to configure te cache
    * @param projectFilesystem filesystem to store files on
    * @return a cache
    */
   public static Optional<ArtifactCache> newServedCache(
-      ArtifactCacheBuckConfig buckConfig,
-      final ProjectFilesystem projectFilesystem) {
-    return buckConfig.getServedLocalCache().map(input -> createDirArtifactCache(
-        Optional.empty(),
-        input,
-        projectFilesystem));
+      ArtifactCacheBuckConfig buckConfig, final ProjectFilesystem projectFilesystem) {
+    return buckConfig
+        .getServedLocalCache()
+        .map(input -> createDirArtifactCache(Optional.empty(), input, projectFilesystem));
   }
 
   private static ArtifactCache newInstanceInternal(
@@ -225,21 +219,20 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       // Don't bother wrapping a single artifact cache
       result = artifactCaches.get(0);
     } else {
-      result = getDecoratedArtifactCache(
-          buckConfig,
-          buckEventBus,
-          artifactCaches,
-          distributedBuildModeEnabled);
+      result =
+          getDecoratedArtifactCache(
+              buckConfig, buckEventBus, artifactCaches, distributedBuildModeEnabled);
     }
 
     // Always support reading two-level cache stores (in case we performed any in the past).
-    result = new TwoLevelArtifactCacheDecorator(
-        result,
-        projectFilesystem,
-        buckEventBus,
-        buckConfig.getTwoLevelCachingEnabled(),
-        buckConfig.getTwoLevelCachingMinimumSize(),
-        buckConfig.getTwoLevelCachingMaximumSize());
+    result =
+        new TwoLevelArtifactCacheDecorator(
+            result,
+            projectFilesystem,
+            buckEventBus,
+            buckConfig.getTwoLevelCachingEnabled(),
+            buckConfig.getTwoLevelCachingMinimumSize(),
+            buckConfig.getTwoLevelCachingMaximumSize());
 
     return result;
   }
@@ -250,20 +243,23 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ImmutableList<ArtifactCache> artifactCaches,
       boolean distributedBuildModeEnabled) {
     if (!distributedBuildModeEnabled && buckConfig.getDirCacheRunsPropagationExperiment()) {
-      ImmutableList<ArtifactCache> dirCaches = ImmutableList.copyOf(
-          artifactCaches.stream()
-              .filter(cache -> checkArtifactCacheClass(cache, DirArtifactCache.class))
-              .iterator());
-      ImmutableList<ArtifactCache> remoteCaches = ImmutableList.copyOf(
-          artifactCaches.stream()
-              .filter(cache -> checkArtifactCacheClass(cache, AbstractNetworkCache.class))
-              .iterator());
+      ImmutableList<ArtifactCache> dirCaches =
+          ImmutableList.copyOf(
+              artifactCaches
+                  .stream()
+                  .filter(cache -> checkArtifactCacheClass(cache, DirArtifactCache.class))
+                  .iterator());
+      ImmutableList<ArtifactCache> remoteCaches =
+          ImmutableList.copyOf(
+              artifactCaches
+                  .stream()
+                  .filter(cache -> checkArtifactCacheClass(cache, AbstractNetworkCache.class))
+                  .iterator());
 
-      if (buckConfig.getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() ||
-          RandomizedTrial.getGroup(
-              "dirCacheOnlyForPropagation",
-              CommonGroups.class,
-              CommonGroups.CONTROL) == CommonGroups.TEST) {
+      if (buckConfig.getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup()
+          || RandomizedTrial.getGroup(
+                  "dirCacheOnlyForPropagation", CommonGroups.class, CommonGroups.CONTROL)
+              == CommonGroups.TEST) {
         MultiArtifactCache multiDirCache = new MultiArtifactCache(dirCaches);
         MultiArtifactCache multiRemoteCache = new MultiArtifactCache(remoteCaches);
         if (!multiDirCache.getCacheReadMode().isWritable()) {
@@ -286,10 +282,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ImmutableList.Builder<ArtifactCache> builder) {
     for (DirCacheEntry cacheEntry : artifactCacheEntries.getDirCacheEntries()) {
       builder.add(
-          createDirArtifactCache(
-              Optional.ofNullable(buckEventBus),
-              cacheEntry,
-              projectFilesystem));
+          createDirArtifactCache(Optional.ofNullable(buckEventBus), cacheEntry, projectFilesystem));
     }
   }
 
@@ -309,15 +302,16 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         continue;
       }
 
-      builder.add(createHttpArtifactCache(
-          cacheEntry,
-          buckConfig.getHostToReportToRemoteCacheServer(),
-          buckEventBus,
-          projectFilesystem,
-          httpWriteExecutorService,
-          buckConfig,
-          factory,
-          distributedBuildModeEnabled));
+      builder.add(
+          createHttpArtifactCache(
+              cacheEntry,
+              buckConfig.getHostToReportToRemoteCacheServer(),
+              buckEventBus,
+              projectFilesystem,
+              httpWriteExecutorService,
+              buckConfig,
+              factory,
+              distributedBuildModeEnabled));
     }
   }
 
@@ -327,12 +321,13 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = dirCacheConfig.getCacheDir();
     try {
-      DirArtifactCache dirArtifactCache = new DirArtifactCache(
-          "dir",
-          projectFilesystem,
-          cacheDir,
-          dirCacheConfig.getCacheReadMode(),
-          dirCacheConfig.getMaxSizeBytes());
+      DirArtifactCache dirArtifactCache =
+          new DirArtifactCache(
+              "dir",
+              projectFilesystem,
+              cacheDir,
+              dirCacheConfig.getCacheReadMode(),
+              dirCacheConfig.getMaxSizeBytes());
 
       if (!buckEventBus.isPresent()) {
         return dirArtifactCache;
@@ -345,9 +340,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     } catch (IOException e) {
       throw new HumanReadableException(
-          e,
-          "Failure initializing artifact cache directory: %s",
-          cacheDir);
+          e, "Failure initializing artifact cache directory: %s", cacheDir);
     }
   }
 
@@ -363,21 +356,26 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     // Setup the default client to use.
     OkHttpClient.Builder storeClientBuilder = new OkHttpClient.Builder();
-    storeClientBuilder.networkInterceptors().add(
-        chain -> chain.proceed(
-            chain.request().newBuilder()
-                .addHeader("X-BuckCache-User",
-                    stripNonAscii(System.getProperty("user.name", "<unknown>")))
-                .addHeader("X-BuckCache-Host", stripNonAscii(hostToReportToRemote))
-                .build()));
+    storeClientBuilder
+        .networkInterceptors()
+        .add(
+            chain ->
+                chain.proceed(
+                    chain
+                        .request()
+                        .newBuilder()
+                        .addHeader(
+                            "X-BuckCache-User",
+                            stripNonAscii(System.getProperty("user.name", "<unknown>")))
+                        .addHeader("X-BuckCache-Host", stripNonAscii(hostToReportToRemote))
+                        .build()));
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
     setTimeouts(storeClientBuilder, timeoutSeconds);
     storeClientBuilder.connectionPool(
         new ConnectionPool(
             /* maxIdleConnections */ (int) config.getThreadPoolSize(),
             /* keepAliveDurationMs */ config.getThreadPoolKeepAliveDurationMillis(),
-            TimeUnit.MILLISECONDS)
-    );
+            TimeUnit.MILLISECONDS));
 
     // The artifact cache effectively only connects to a single host at a time. We should allow as
     // many concurrent connections to that host as we allow threads.
@@ -390,10 +388,12 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     // If write headers are specified, add them to every default client request.
     if (!writeHeaders.isEmpty()) {
-      storeClientBuilder.networkInterceptors().add(
-          chain -> chain.proceed(
-              addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()
-          ));
+      storeClientBuilder
+          .networkInterceptors()
+          .add(
+              chain ->
+                  chain.proceed(
+                      addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()));
     }
 
     OkHttpClient storeClient = storeClientBuilder.build();
@@ -404,27 +404,32 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     // If read headers are specified, add them to every read client request.
     if (!readHeaders.isEmpty()) {
-      fetchClientBuilder.networkInterceptors().add(
-          chain -> chain.proceed(
-              addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()
-          ));
+      fetchClientBuilder
+          .networkInterceptors()
+          .add(
+              chain ->
+                  chain.proceed(
+                      addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()));
     }
 
-    fetchClientBuilder.networkInterceptors().add((chain -> {
-      Response originalResponse = chain.proceed(chain.request());
-      return originalResponse.newBuilder()
-          .body(new ProgressResponseBody(originalResponse.body(), buckEventBus))
-          .build();
-    }));
+    fetchClientBuilder
+        .networkInterceptors()
+        .add(
+            (chain -> {
+              Response originalResponse = chain.proceed(chain.request());
+              return originalResponse
+                  .newBuilder()
+                  .body(new ProgressResponseBody(originalResponse.body(), buckEventBus))
+                  .build();
+            }));
     OkHttpClient fetchClient = fetchClientBuilder.build();
 
     HttpService fetchService;
     HttpService storeService;
     switch (config.getLoadBalancingType()) {
       case CLIENT_SLB:
-        HttpLoadBalancer clientSideSlb = config.getSlbConfig().createClientSideSlb(
-            new DefaultClock(),
-            buckEventBus);
+        HttpLoadBalancer clientSideSlb =
+            config.getSlbConfig().createClientSideSlb(new DefaultClock(), buckEventBus);
         fetchService =
             new RetryingHttpService(
                 buckEventBus,
@@ -440,8 +445,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         break;
 
       default:
-        throw new IllegalArgumentException("Unknown HttpLoadBalancer type: " +
-            config.getLoadBalancingType());
+        throw new IllegalArgumentException(
+            "Unknown HttpLoadBalancer type: " + config.getLoadBalancingType());
     }
 
     String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
@@ -463,11 +468,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static boolean checkArtifactCacheClass(
-      ArtifactCache artifactCache,
-      Class<?> expectedClass) {
-    return expectedClass.isInstance(artifactCache) ||
-        artifactCache instanceof CacheDecorator &&
-            expectedClass.isInstance(((CacheDecorator) artifactCache).getDelegate());
+      ArtifactCache artifactCache, Class<?> expectedClass) {
+    return expectedClass.isInstance(artifactCache)
+        || artifactCache instanceof CacheDecorator
+            && expectedClass.isInstance(((CacheDecorator) artifactCache).getDelegate());
   }
 
   private static String stripNonAscii(String str) {
@@ -482,8 +486,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static OkHttpClient.Builder setTimeouts(
-      OkHttpClient.Builder builder,
-      int timeoutSeconds) {
+      OkHttpClient.Builder builder, int timeoutSeconds) {
     return builder
         .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
         .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
@@ -496,9 +499,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     private BuckEventBus buckEventBus;
     private BufferedSource bufferedSource;
 
-    public ProgressResponseBody(
-        ResponseBody responseBody,
-        BuckEventBus buckEventBus) {
+    public ProgressResponseBody(ResponseBody responseBody, BuckEventBus buckEventBus) {
       this.responseBody = responseBody;
       this.buckEventBus = buckEventBus;
       this.bufferedSource = Okio.buffer(source(responseBody.source()));

@@ -27,32 +27,30 @@ public interface ArtifactCache extends AutoCloseable {
    * return true on success.
    *
    * @param ruleKey cache fetch key
-   * @param output Path to store artifact to. Path should not be accessed unless
-   *               store operation is guaranteed by the cache, to avoid potential extra disk I/O.
-   * @return whether it was a {@link CacheResultType#MISS} (indicating a failure) or some
-   *     type of hit.
+   * @param output Path to store artifact to. Path should not be accessed unless store operation is
+   *     guaranteed by the cache, to avoid potential extra disk I/O.
+   * @return whether it was a {@link CacheResultType#MISS} (indicating a failure) or some type of
+   *     hit.
    */
   CacheResult fetch(RuleKey ruleKey, LazyPath output);
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
-   * using ruleKey as the lookup key.  If any internal errors occur, fail silently and continue
-   * execution.
-   * Store may be performed synchronously or asynchronously.
-   * <p>
-   * This is a noop if {@link #getCacheReadMode()}} returns {@code READONLY}.
+   * using ruleKey as the lookup key. If any internal errors occur, fail silently and continue
+   * execution. Store may be performed synchronously or asynchronously.
+   *
+   * <p>This is a noop if {@link #getCacheReadMode()}} returns {@code READONLY}.
    *
    * @param info information to store with the artifact
    * @param output path to read artifact from. If its borrowable, you may freely move the file into
-   *               cache without obtaining a copy of the file.
+   *     cache without obtaining a copy of the file.
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
-  ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output);
+  ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output);
 
   /**
    * This method must return the same value over the lifetime of this object.
+   *
    * @return whether this{@link ArtifactCache} supports storing artifacts.
    */
   CacheReadMode getCacheReadMode();

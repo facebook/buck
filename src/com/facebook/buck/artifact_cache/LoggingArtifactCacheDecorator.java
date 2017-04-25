@@ -24,8 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
- * and finish of each event.
- * The underlying cache must only provide synchronous operations.
+ * and finish of each event. The underlying cache must only provide synchronous operations.
  */
 public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecorator {
   private final BuckEventBus eventBus;
@@ -33,9 +32,7 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   private final ArtifactCacheEventFactory eventFactory;
 
   public LoggingArtifactCacheDecorator(
-      BuckEventBus eventBus,
-      ArtifactCache delegate,
-      ArtifactCacheEventFactory eventFactory) {
+      BuckEventBus eventBus, ArtifactCache delegate, ArtifactCacheEventFactory eventFactory) {
     this.eventBus = eventBus;
     this.delegate = delegate;
     this.eventFactory = eventFactory;
@@ -47,18 +44,14 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
     CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    eventBus.post(eventFactory.newFetchFinishedEvent(
-            started,
-            fetchResult));
+    eventBus.post(eventFactory.newFetchFinishedEvent(started, fetchResult));
     return fetchResult;
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
-    ArtifactCacheEvent.Started started = eventFactory.newStoreStartedEvent(
-        info.getRuleKeys(), info.getMetadata());
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+    ArtifactCacheEvent.Started started =
+        eventFactory.newStoreStartedEvent(info.getRuleKeys(), info.getMetadata());
     eventBus.post(started);
     ListenableFuture<Void> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
