@@ -18,7 +18,6 @@ package com.facebook.buck.zip;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,15 +25,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
 /**
- * An implementation of an {@link OutputStream} that will zip output. Note that, just as with
- * {@link java.util.zip.ZipOutputStream}, no implementation of this is thread-safe.
+ * An implementation of an {@link OutputStream} that will zip output. Note that, just as with {@link
+ * java.util.zip.ZipOutputStream}, no implementation of this is thread-safe.
  */
 public class CustomZipOutputStream extends OutputStream {
 
   protected static interface Impl {
     /**
-     * Called by {@link CustomZipOutputStream#putNextEntry(ZipEntry)} and used by impls to put
-     * the next entry into the zip file. It is guaranteed that the {@code entry} won't be null and the
+     * Called by {@link CustomZipOutputStream#putNextEntry(ZipEntry)} and used by impls to put the
+     * next entry into the zip file. It is guaranteed that the {@code entry} won't be null and the
      * stream will be open. It is also guaranteed that there's no current entry open.
      *
      * @param entry The {@link ZipEntry} to write.
@@ -42,15 +41,16 @@ public class CustomZipOutputStream extends OutputStream {
     void actuallyPutNextEntry(ZipEntry entry) throws IOException;
 
     /**
-     * Called by {@link CustomZipOutputStream#close()} and used by impls to close the delegate stream.
-     * This method will be called at most once in the lifecycle of the CustomZipOutputStream.
+     * Called by {@link CustomZipOutputStream#close()} and used by impls to close the delegate
+     * stream. This method will be called at most once in the lifecycle of the
+     * CustomZipOutputStream.
      */
     void actuallyCloseEntry() throws IOException;
 
     /**
-     * Called by {@link CustomZipOutputStream#write(byte[], int, int)} only once it is known that the
-     * stream has not been closed, and that a {@link ZipEntry} has already been put on the stream and
-     * not closed.
+     * Called by {@link CustomZipOutputStream#write(byte[], int, int)} only once it is known that
+     * the stream has not been closed, and that a {@link ZipEntry} has already been put on the
+     * stream and not closed.
      */
     void actuallyWrite(byte b[], int off, int len) throws IOException;
 
@@ -88,7 +88,7 @@ public class CustomZipOutputStream extends OutputStream {
   public final void closeEntry() throws IOException {
     Preconditions.checkState(state != State.CLOSED, "Stream has been closed");
     if (!entryOpen) {
-      return;  // As ZipOutputStream does.
+      return; // As ZipOutputStream does.
     }
 
     entryOpen = false;
@@ -108,14 +108,13 @@ public class CustomZipOutputStream extends OutputStream {
 
   // javadocs taken from OutputStream and amended to make it clear what we're doing here.
   /**
-   * Writes the specified byte to this output stream. Specifically one byte is written to the
-   * output stream. The byte to be written is the eight low-order bits of the argument
-   * <code>b</code>. The 24 high-order bits of <code>b</code> are ignored.
+   * Writes the specified byte to this output stream. Specifically one byte is written to the output
+   * stream. The byte to be written is the eight low-order bits of the argument <code>b</code>. The
+   * 24 high-order bits of <code>b</code> are ignored.
    *
-   * @param      b   the <code>byte</code>.
-   * @exception  IOException  if an I/O error occurs. In particular,
-   *             an <code>IOException</code> may be thrown if the
-   *             output stream has been closed.
+   * @param b the <code>byte</code>.
+   * @exception IOException if an I/O error occurs. In particular, an <code>IOException</code> may
+   *     be thrown if the output stream has been closed.
    */
   @Override
   public void write(int b) throws IOException {
@@ -153,8 +152,8 @@ public class CustomZipOutputStream extends OutputStream {
    * available when the stream is in a particular state.
    */
   private static enum State {
-    CLEAN,    // Open but no data written.
-    OPEN,     // Open and data written.
-    CLOSED,   // Just as it says on the tin.
+    CLEAN, // Open but no data written.
+    OPEN, // Open and data written.
+    CLOSED, // Just as it says on the tin.
   }
 }

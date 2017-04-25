@@ -70,9 +70,8 @@ public class DeterministicManifest extends Manifest {
   public void write(OutputStream out) throws IOException {
     writeAttributes(getMainAttributes(), out);
 
-    List<String> sortedEntryNames = getEntries().keySet().stream()
-        .sorted()
-        .collect(Collectors.toList());
+    List<String> sortedEntryNames =
+        getEntries().keySet().stream().sorted().collect(Collectors.toList());
 
     for (String entryName : sortedEntryNames) {
       writeEntry(entryName, out);
@@ -86,10 +85,13 @@ public class DeterministicManifest extends Manifest {
   }
 
   private void writeAttributes(Attributes attributes, OutputStream out) throws IOException {
-    List<Attributes.Name> sortedNames = attributes.keySet().stream()
-        .map(a -> (Attributes.Name) a)
-        .sorted(Comparator.comparing(Attributes.Name::toString))
-        .collect(Collectors.toList());
+    List<Attributes.Name> sortedNames =
+        attributes
+            .keySet()
+            .stream()
+            .map(a -> (Attributes.Name) a)
+            .sorted(Comparator.comparing(Attributes.Name::toString))
+            .collect(Collectors.toList());
 
     for (Attributes.Name name : sortedNames) {
       writeKeyValue(name.toString(), attributes.getValue(name), out);

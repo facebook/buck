@@ -19,7 +19,6 @@ package com.facebook.buck.zip;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,9 +47,9 @@ public class ZipOutputStreams {
   }
 
   /**
-   * Create a new {@link CustomZipOutputStream} that will by default act in the same way as
-   * {@link java.util.zip.ZipOutputStream}, notably by throwing an exception if duplicate entries
-   * are added.
+   * Create a new {@link CustomZipOutputStream} that will by default act in the same way as {@link
+   * java.util.zip.ZipOutputStream}, notably by throwing an exception if duplicate entries are
+   * added.
    *
    * @param out The output stream to write to.
    */
@@ -97,31 +96,23 @@ public class ZipOutputStreams {
   }
 
   public static CustomZipOutputStream newOutputStream(
-      OutputStream out,
-      HandleDuplicates mode,
-      Clock clock) {
+      OutputStream out, HandleDuplicates mode, Clock clock) {
     return new CustomZipOutputStream(newImpl(out, mode, clock));
   }
 
   public static CustomJarOutputStream newJarOutputStream(
-      OutputStream out,
-      HandleDuplicates mode,
-      Clock clock) {
+      OutputStream out, HandleDuplicates mode, Clock clock) {
     return new CustomJarOutputStream(newImpl(out, mode, clock));
   }
 
   protected static CustomZipOutputStream.Impl newImpl(
-      OutputStream out,
-      HandleDuplicates mode,
-      Clock clock) {
+      OutputStream out, HandleDuplicates mode, Clock clock) {
     CustomZipOutputStream.Impl impl;
     switch (mode) {
       case APPEND_TO_ZIP:
       case THROW_EXCEPTION:
-        impl = new AppendingZipOutputStreamImpl(
-            clock,
-            out,
-            mode == HandleDuplicates.THROW_EXCEPTION);
+        impl =
+            new AppendingZipOutputStreamImpl(clock, out, mode == HandleDuplicates.THROW_EXCEPTION);
         break;
       case OVERWRITE_EXISTING:
         impl = new OverwritingZipOutputStreamImpl(clock, out);

@@ -27,12 +27,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class ZipFileDescription implements
-    Description<ZipFileDescription.Arg>,
-    VersionPropagator<ZipFileDescription.Arg> {
+public class ZipFileDescription
+    implements Description<ZipFileDescription.Arg>, VersionPropagator<ZipFileDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -47,9 +45,7 @@ public class ZipFileDescription implements
       CellPathResolver cellRoots,
       A args) {
     return new Zip(
-        params,
-        args.out.orElse(params.getBuildTarget().getShortName() + ".zip"),
-        args.srcs);
+        params, args.out.orElse(params.getBuildTarget().getShortName() + ".zip"), args.srcs);
   }
 
   @SuppressFieldNotInitialized

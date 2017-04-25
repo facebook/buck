@@ -17,7 +17,6 @@
 package com.facebook.buck.zip;
 
 import com.google.common.base.Charsets;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.ZipEntry;
@@ -25,9 +24,9 @@ import java.util.zip.ZipEntry;
 /**
  * Each zip file has a "central directory" at the end of the archive, which provides the indexes
  * required for fast random access to the contents of the zip. This class models that.
- * <p>
- * The central directory consists of a series of "file headers", describing each entry in the zip,
- * and a "end of central directory" signature containing book keeping information.
+ *
+ * <p>The central directory consists of a series of "file headers", describing each entry in the
+ * zip, and a "end of central directory" signature containing book keeping information.
  */
 class CentralDirectory {
 
@@ -41,9 +40,7 @@ class CentralDirectory {
    * @throws IOException Should something go awry.
    */
   public void writeCentralDirectory(
-      OutputStream out,
-      long startOffset,
-      Iterable<EntryAccounting> entries) throws IOException {
+      OutputStream out, long startOffset, Iterable<EntryAccounting> entries) throws IOException {
 
     int entryCount = 0;
     long size = 0;
@@ -56,41 +53,38 @@ class CentralDirectory {
 
     ByteIo.writeInt(out, ZipEntry.ENDSIG);
 
-    ByteIo.writeShort(out, 0);  // Number of this disk (with end of central directory)
-    ByteIo.writeShort(out, 0);  // Number of disk on which central directory starts.
-    ByteIo.writeShort(out, entryCount);  // Number of central directory entries in this disk.
-    ByteIo.writeShort(out, entryCount);  // Number of central directory entries.
-    ByteIo.writeInt(out, size);  // Size of the central directory in bytes.
-    ByteIo.writeInt(out, startOffset);    // Offset of the start of the central directory.
-    ByteIo.writeShort(out, 0);  // Size of the comment (we don't have one)
+    ByteIo.writeShort(out, 0); // Number of this disk (with end of central directory)
+    ByteIo.writeShort(out, 0); // Number of disk on which central directory starts.
+    ByteIo.writeShort(out, entryCount); // Number of central directory entries in this disk.
+    ByteIo.writeShort(out, entryCount); // Number of central directory entries.
+    ByteIo.writeInt(out, size); // Size of the central directory in bytes.
+    ByteIo.writeInt(out, startOffset); // Offset of the start of the central directory.
+    ByteIo.writeShort(out, 0); // Size of the comment (we don't have one)
   }
 
-  /**
-   * Each entry requires a description of that entry to be contained in the central directory.
-   */
-  private long writeCentralDirectoryFileHeader(
-      OutputStream out,
-      EntryAccounting entry) throws IOException {
+  /** Each entry requires a description of that entry to be contained in the central directory. */
+  private long writeCentralDirectoryFileHeader(OutputStream out, EntryAccounting entry)
+      throws IOException {
     long size = 0;
     size += ByteIo.writeInt(out, ZipEntry.CENSIG);
-    size += ByteIo.writeShort(out, entry.getRequiredExtractVersion());  // version made by.
-    size += ByteIo.writeShort(out, entry.getRequiredExtractVersion());  // version to extract with.
+    size += ByteIo.writeShort(out, entry.getRequiredExtractVersion()); // version made by.
+    size += ByteIo.writeShort(out, entry.getRequiredExtractVersion()); // version to extract with.
     size += ByteIo.writeShort(out, entry.getFlags());
-    size += ByteIo.writeShort(out, entry.getCompressionMethod());  // Compression.
-    size += ByteIo.writeInt(out, entry.getTime());      // Modification time.
+    size += ByteIo.writeShort(out, entry.getCompressionMethod()); // Compression.
+    size += ByteIo.writeInt(out, entry.getTime()); // Modification time.
     size += ByteIo.writeInt(out, entry.getCrc());
     size += ByteIo.writeInt(out, entry.getCompressedSize());
     size += ByteIo.writeInt(out, entry.getSize());
 
     byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
     long externalAttributes = entry.getExternalAttributes();
-    size += ByteIo.writeShort(out, nameBytes.length);  // Length of name.
-    size += ByteIo.writeShort(out, 0);                 // Length of extra data.
-    size += ByteIo.writeShort(out, 0);                 // Length of file comment.
-    size += ByteIo.writeShort(out, 0);                 // Disk on which file starts.
-    size += ByteIo.writeShort(out, 0);                 // internal file attributes (unknown)
-    size += ByteIo.writeInt(out, externalAttributes);  // external file attributes
-    size += ByteIo.writeInt(out, entry.getOffset());   // Offset of local file header.
+    size += ByteIo.writeShort(out, nameBytes.length); // Length of name.
+    size += ByteIo.writeShort(out, 0); // Length of extra data.
+    size += ByteIo.writeShort(out, 0); // Length of file comment.
+    size += ByteIo.writeShort(out, 0); // Disk on which file starts.
+    size += ByteIo.writeShort(out, 0); // internal file attributes (unknown)
+    size += ByteIo.writeInt(out, externalAttributes); // external file attributes
+    size += ByteIo.writeInt(out, entry.getOffset()); // Offset of local file header.
     out.write(nameBytes);
     size += nameBytes.length;
 

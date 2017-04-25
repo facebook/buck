@@ -26,9 +26,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 
-/**
- * Tool to eliminate non-deterministic or problematic bits of zip files.
- */
+/** Tool to eliminate non-deterministic or problematic bits of zip files. */
 class ZipScrubber {
   private ZipScrubber() {}
 
@@ -43,7 +41,7 @@ class ZipScrubber {
 
   static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
-             FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
       map.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -74,10 +72,10 @@ class ZipScrubber {
         }
 
         cdOffset +=
-            ZipEntry.CENHDR +
-            entry.getShort(ZipEntry.CENNAM) +
-            entry.getShort(ZipEntry.CENEXT) +
-            entry.getShort(ZipEntry.CENCOM);
+            ZipEntry.CENHDR
+                + entry.getShort(ZipEntry.CENNAM)
+                + entry.getShort(ZipEntry.CENEXT)
+                + entry.getShort(ZipEntry.CENCOM);
       }
     }
   }
@@ -124,28 +122,24 @@ class ZipScrubber {
   }
 
   /**
-   * Android's libziparchive produces zip files that only store the file size in
-   * the central directory and data descriptor, not in the local file header.
-   * ZipInputStream doesn't tolerate this for STORED files, so this step will
-   * (1) identify whether the file is STORED with a data descriptor,
-   * (2) validate the DD against the central directory entry,
-   * (3) copy those values to the local file header,
-   * (4) clear the DD bit.
+   * Android's libziparchive produces zip files that only store the file size in the central
+   * directory and data descriptor, not in the local file header. ZipInputStream doesn't tolerate
+   * this for STORED files, so this step will (1) identify whether the file is STORED with a data
+   * descriptor, (2) validate the DD against the central directory entry, (3) copy those values to
+   * the local file header, (4) clear the DD bit.
    *
-   * We leave the data descriptor as garbage data between entries,
-   * WHICH IS A PROBLEM for ZipInputStream, which can't tolerate that garbage
-   * (it views it as end-of-file).  Therefore, we only call this on
-   * the last file in the zip (which is the only time it is needed for aapt2 output).
+   * <p>We leave the data descriptor as garbage data between entries, WHICH IS A PROBLEM for
+   * ZipInputStream, which can't tolerate that garbage (it views it as end-of-file). Therefore, we
+   * only call this on the last file in the zip (which is the only time it is needed for aapt2
+   * output).
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  private static void populateLocalEntryIfNecessary(
-      ByteBuffer centralEntry,
-      ByteBuffer localEntry)
+  private static void populateLocalEntryIfNecessary(ByteBuffer centralEntry, ByteBuffer localEntry)
       throws IOException {
 
     // Check to see if we even need to do anything.
-    if (localEntry.getShort(ZipEntry.LOCHOW) != ZipEntry.STORED ||
-        (localEntry.getShort(ZipEntry.LOCFLG) & DATA_DESCRIPTOR_BIT_FLAG) == 0) {
+    if (localEntry.getShort(ZipEntry.LOCHOW) != ZipEntry.STORED
+        || (localEntry.getShort(ZipEntry.LOCFLG) & DATA_DESCRIPTOR_BIT_FLAG) == 0) {
       return;
     }
 
@@ -158,10 +152,11 @@ class ZipScrubber {
     }
 
     // Load the data from the data descriptor as a double-check.
-    int dataDescriptorOffset = ZipEntry.LOCHDR +
-        localEntry.getShort(ZipEntry.LOCNAM) +
-        localEntry.getShort(ZipEntry.LOCEXT) +
-        csize;
+    int dataDescriptorOffset =
+        ZipEntry.LOCHDR
+            + localEntry.getShort(ZipEntry.LOCNAM)
+            + localEntry.getShort(ZipEntry.LOCEXT)
+            + csize;
     ByteBuffer extBuffer = slice(localEntry, dataDescriptorOffset);
     int extsig = extBuffer.getInt(0);
     if (extsig != ZipEntry.EXTSIG) {
@@ -184,13 +179,12 @@ class ZipScrubber {
     localEntry.putInt(ZipEntry.LOCCRC, crc);
     localEntry.putInt(ZipEntry.LOCSIZ, csize);
     localEntry.putInt(ZipEntry.LOCLEN, usize);
-    localEntry.putShort(ZipEntry.LOCFLG,
+    localEntry.putShort(
+        ZipEntry.LOCFLG,
         (short) (localEntry.getShort(ZipEntry.LOCFLG) & ~DATA_DESCRIPTOR_BIT_FLAG));
   }
 
-  /**
-   * Read the name of a zip file from a local entry.  Useful for debugging.
-   */
+  /** Read the name of a zip file from a local entry. Useful for debugging. */
   @SuppressWarnings("unused")
   private static String localEntryName(ByteBuffer entry) {
     byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];

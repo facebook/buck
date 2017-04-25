@@ -26,8 +26,8 @@ public class ZipConstants {
   private ZipConstants() {}
 
   /**
-   * {@link java.util.zip.ZipEntry#setTime(long)} is timezone-sensitive. Use this value instead
-   * of a hardcoded constant to produce timzeone-agnostic .zip files.
+   * {@link java.util.zip.ZipEntry#setTime(long)} is timezone-sensitive. Use this value instead of a
+   * hardcoded constant to produce timzeone-agnostic .zip files.
    *
    * @return time in milliseconds that represents a fixed date in the current timezone.
    */

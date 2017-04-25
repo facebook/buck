@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,9 +44,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 
-/**
- * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
- */
+/** A {@link com.facebook.buck.step.Step} that creates a ZIP archive.. */
 @SuppressWarnings("PMD.AvoidUsingOctalValues")
 public class ZipStep implements Step {
 
@@ -60,20 +57,19 @@ public class ZipStep implements Step {
   private final ZipCompressionLevel compressionLevel;
   private final Path baseDir;
 
-
   /**
    * Create a {@link ZipStep} to create or update a zip archive.
    *
-   * Note that paths added to the archive are always relative to the working directory.<br>
-   * For example, if you're in {@code /dir} and you add {@code file.txt}, you get
-   * an archive containing just the file. If you were in {@code /} and added
-   * {@code dir/file.txt}, you would get an archive containing the file within a directory.
+   * <p>Note that paths added to the archive are always relative to the working directory.<br>
+   * For example, if you're in {@code /dir} and you add {@code file.txt}, you get an archive
+   * containing just the file. If you were in {@code /} and added {@code dir/file.txt}, you would
+   * get an archive containing the file within a directory.
    *
    * @param pathToZipFile path to archive to create, relative to project root.
-   * @param paths a set of files to work on. The entire working directory is assumed if this set
-   *    is empty.
+   * @param paths a set of files to work on. The entire working directory is assumed if this set is
+   *     empty.
    * @param junkPaths if {@code true}, the relative paths of added archive entries are discarded,
-   *    i.e. they are all placed in the root of the archive.
+   *     i.e. they are all placed in the root of the archive.
    * @param compressionLevel between 0 (store) and 9.
    * @param baseDir working directory for {@code zip} command.
    */
@@ -104,78 +100,75 @@ public class ZipStep implements Step {
     // a tree map before writing them out.
     final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
-    FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
-      private boolean isSkipFile(Path file) {
-        return !paths.isEmpty() && !paths.contains(file);
-      }
+    FileVisitor<Path> pathFileVisitor =
+        new SimpleFileVisitor<Path>() {
+          private boolean isSkipFile(Path file) {
+            return !paths.isEmpty() && !paths.contains(file);
+          }
 
-      private String getEntryName(Path path) {
-        Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
-        return MorePaths.pathWithUnixSeparators(relativePath);
-      }
+          private String getEntryName(Path path) {
+            Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
+            return MorePaths.pathWithUnixSeparators(relativePath);
+          }
 
-      private CustomZipEntry getZipEntry(
-          String entryName,
-          final Path path,
-          BasicFileAttributes attr) throws IOException {
-        boolean isDirectory = filesystem.isDirectory(path);
-        if (isDirectory) {
-          entryName += "/";
-        }
+          private CustomZipEntry getZipEntry(
+              String entryName, final Path path, BasicFileAttributes attr) throws IOException {
+            boolean isDirectory = filesystem.isDirectory(path);
+            if (isDirectory) {
+              entryName += "/";
+            }
 
-        CustomZipEntry entry = new CustomZipEntry(entryName);
-        // We want deterministic ZIPs, so avoid mtimes.
-        entry.setFakeTime();
-        entry.setCompressionLevel(
-            isDirectory ?
-                ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue() :
-                compressionLevel.getValue());
-        // If we're using STORED files, we must manually set the CRC, size, and compressed size.
-        if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
-          entry.setSize(attr.size());
-          entry.setCompressedSize(attr.size());
-          entry.setCrc(
-              new ByteSource() {
-                @Override
-                public InputStream openStream() throws IOException {
-                  return filesystem.newFileInputStream(path);
-                }
-              }.hash(Hashing.crc32()).padToLong());
-        }
+            CustomZipEntry entry = new CustomZipEntry(entryName);
+            // We want deterministic ZIPs, so avoid mtimes.
+            entry.setFakeTime();
+            entry.setCompressionLevel(
+                isDirectory
+                    ? ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue()
+                    : compressionLevel.getValue());
+            // If we're using STORED files, we must manually set the CRC, size, and compressed size.
+            if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
+              entry.setSize(attr.size());
+              entry.setCompressedSize(attr.size());
+              entry.setCrc(
+                  new ByteSource() {
+                    @Override
+                    public InputStream openStream() throws IOException {
+                      return filesystem.newFileInputStream(path);
+                    }
+                  }.hash(Hashing.crc32()).padToLong());
+            }
 
-        long externalAttributes = filesystem.getFileAttributesForZipEntry(path);
-        LOG.verbose(
-            "Setting mode for entry %s path %s to 0x%08X",
-            entryName, path, externalAttributes);
-        entry.setExternalAttributes(externalAttributes);
-        return entry;
-      }
+            long externalAttributes = filesystem.getFileAttributesForZipEntry(path);
+            LOG.verbose(
+                "Setting mode for entry %s path %s to 0x%08X", entryName, path, externalAttributes);
+            entry.setExternalAttributes(externalAttributes);
+            return entry;
+          }
 
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-          throws IOException {
-        if (!isSkipFile(file)) {
-          CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
-          entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
-        }
-        return FileVisitResult.CONTINUE;
-      }
-      @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-          throws IOException {
-        if (!dir.equals(baseDir) && !isSkipFile(dir)) {
-          CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
-          entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
-        }
-        return FileVisitResult.CONTINUE;
-      }
-    };
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            if (!isSkipFile(file)) {
+              CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
+              entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
+            }
+            return FileVisitResult.CONTINUE;
+          }
 
-    try (
-      BufferedOutputStream baseOut =
-          new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
-      CustomZipOutputStream out =
-          ZipOutputStreams.newOutputStream(baseOut, THROW_EXCEPTION)) {
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            if (!dir.equals(baseDir) && !isSkipFile(dir)) {
+              CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
+              entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        };
+
+    try (BufferedOutputStream baseOut =
+            new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, THROW_EXCEPTION)) {
 
       filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
 
@@ -238,5 +231,4 @@ public class ZipStep implements Step {
   public String getShortName() {
     return "zip";
   }
-
 }

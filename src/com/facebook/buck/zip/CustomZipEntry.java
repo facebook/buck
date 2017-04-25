@@ -20,7 +20,6 @@ import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.NO_COMPRESSION;
 
 import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.zip.Deflater;
@@ -42,8 +41,7 @@ public class CustomZipEntry extends ZipEntry {
   }
 
   public CustomZipEntry(Path path, boolean isDirectory) {
-    this(path.toString().replace(File.separatorChar, '/') +
-        (isDirectory ? "/" : ""));
+    this(path.toString().replace(File.separatorChar, '/') + (isDirectory ? "/" : ""));
   }
 
   public CustomZipEntry(Path path) {
@@ -88,5 +86,4 @@ public class CustomZipEntry extends ZipEntry {
   public void setExternalAttributes(long externalAttributes) {
     this.externalAttributes = externalAttributes;
   }
-
 }

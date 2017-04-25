@@ -21,11 +21,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleStep
@@ -37,8 +35,7 @@ abstract class AbstractZipScrubberStep implements Step {
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        getZipAbsolutePath().isAbsolute(),
-        "ZipScrubberStep must take an absolute path");
+        getZipAbsolutePath().isAbsolute(), "ZipScrubberStep must take an absolute path");
   }
 
   @Override
@@ -57,15 +54,11 @@ abstract class AbstractZipScrubberStep implements Step {
       ZipScrubber.scrubZip(getZipAbsolutePath());
     } catch (RuntimeException e) {
       context.logError(
-          e,
-          "Error scrubbing non-deterministic metadata from %s",
-          getZipAbsolutePath());
+          e, "Error scrubbing non-deterministic metadata from %s", getZipAbsolutePath());
       throw e;
     } catch (IOException e) {
       context.logError(
-          e,
-          "Error scrubbing non-deterministic metadata from %s",
-          getZipAbsolutePath());
+          e, "Error scrubbing non-deterministic metadata from %s", getZipAbsolutePath());
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;

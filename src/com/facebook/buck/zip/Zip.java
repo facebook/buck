@@ -31,20 +31,14 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class Zip extends AbstractBuildRule implements HasOutputName {
 
-  @AddToRuleKey
-  private final String name;
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final String name;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
 
-  public Zip(
-      BuildRuleParams params,
-      String outputName,
-      ImmutableSortedSet<SourcePath> sources) {
+  public Zip(BuildRuleParams params, String outputName, ImmutableSortedSet<SourcePath> sources) {
     super(params);
     this.name = outputName;
     this.sources = sources;
@@ -57,8 +51,7 @@ public class Zip extends AbstractBuildRule implements HasOutputName {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     Path output = getOutput();
     Path scratchDir =

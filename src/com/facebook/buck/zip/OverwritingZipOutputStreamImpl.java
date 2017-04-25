@@ -20,7 +20,6 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,15 +33,14 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
-
 import javax.annotation.Nullable;
 
 /**
  * An implementation of an {@link OutputStream} for zip files that allows newer entries to overwrite
  * or refresh previously written entries.
- * <p>
- * This class works by spooling the bytes of each entry to a temporary holding file named after the
- * name of the {@link ZipEntry} being stored. Once the stream is closed, these files are spooled
+ *
+ * <p>This class works by spooling the bytes of each entry to a temporary holding file named after
+ * the name of the {@link ZipEntry} being stored. Once the stream is closed, these files are spooled
  * off disk and written to the OutputStream given to the constructor.
  */
 public class OverwritingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
@@ -126,22 +124,24 @@ public class OverwritingZipOutputStreamImpl implements CustomZipOutputStream.Imp
     // we'll do this the tedious way by hand.
     // MoreFiles.deleteRecursively(scratchDir.toPath());
 
-    SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        Files.delete(file);
-        return FileVisitResult.CONTINUE;
-      }
+    SimpleFileVisitor<Path> visitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+          }
 
-      @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        if (exc == null) {
-          Files.delete(dir);
-          return FileVisitResult.CONTINUE;
-        }
-        throw exc;
-      }
-    };
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            if (exc == null) {
+              Files.delete(dir);
+              return FileVisitResult.CONTINUE;
+            }
+            throw exc;
+          }
+        };
     Files.walkFileTree(scratchDir.toPath(), visitor);
   }
 }

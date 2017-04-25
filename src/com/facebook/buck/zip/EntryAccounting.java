@@ -21,7 +21,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,19 +36,20 @@ import java.util.zip.ZipEntry;
  */
 class EntryAccounting {
 
-  private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
-      @Override
-      protected Calendar initialValue() {
-        // We explicitly use the US locale to get a Gregorian calendar (zip file timestamps
-        // are encoded using the year, month, date, etc. in the Gregorian calendar).
-        return Calendar.getInstance(Locale.US);
-      }
-  };
+  private static final ThreadLocal<Calendar> CALENDAR =
+      new ThreadLocal<Calendar>() {
+        @Override
+        protected Calendar initialValue() {
+          // We explicitly use the US locale to get a Gregorian calendar (zip file timestamps
+          // are encoded using the year, month, date, etc. in the Gregorian calendar).
+          return Calendar.getInstance(Locale.US);
+        }
+      };
 
   private static final int DATA_DESCRIPTOR_FLAG = 1 << 3;
   private static final int UTF8_NAMES_FLAG = 1 << 11;
   private static final int ARBITRARY_SIZE = 1024;
-  private static final byte[] emptyBytes = new byte[]{};
+  private static final byte[] emptyBytes = new byte[] {};
 
   private final ZipEntry entry;
   private final Method method;
@@ -59,22 +59,13 @@ class EntryAccounting {
   private long externalAttributes = 0;
 
   /**
-   * General purpose bit flag:
-   *  Bit 00: encrypted file
-   *  Bit 01: compression option
-   *  Bit 02: compression option
-   *  Bit 03: data descriptor
-   *  Bit 04: enhanced deflation
-   *  Bit 05: compressed patched data
-   *  Bit 06: strong encryption
-   *  Bit 07-10: unused
-   *  Bit 11: language encoding
-   *  Bit 12: reserved
-   *  Bit 13: mask header values
-   *  Bit 14-15: reserved
+   * General purpose bit flag: Bit 00: encrypted file Bit 01: compression option Bit 02: compression
+   * option Bit 03: data descriptor Bit 04: enhanced deflation Bit 05: compressed patched data Bit
+   * 06: strong encryption Bit 07-10: unused Bit 11: language encoding Bit 12: reserved Bit 13: mask
+   * header values Bit 14-15: reserved
    *
-   *  The important one is bit 3: the data descriptor.
-   *  Defaults to indicate that names are stored as UTF8.
+   * <p>The important one is bit 3: the data descriptor. Defaults to indicate that names are stored
+   * as UTF8.
    */
   private int flags = UTF8_NAMES_FLAG;
 
@@ -96,9 +87,7 @@ class EntryAccounting {
     }
   }
 
-  /**
-   * @return The time of the entry in DOS format.
-   */
+  /** @return The time of the entry in DOS format. */
   public long getTime() {
     // Calendar objects aren't thread-safe, but they're quite expensive to create, so we'll re-use
     // them per thread.
@@ -112,12 +101,12 @@ class EntryAccounting {
     if (year < 1980) {
       return ZipConstants.DOS_FAKE_TIME;
     }
-    return (year - 1980) << 25 |
-        (instance.get(Calendar.MONTH) + 1) << 21 |
-        instance.get(Calendar.DAY_OF_MONTH) << 16 |
-        instance.get(Calendar.HOUR_OF_DAY) << 11 |
-        instance.get(Calendar.MINUTE) << 5 |
-        instance.get(Calendar.SECOND) >> 1;
+    return (year - 1980) << 25
+        | (instance.get(Calendar.MONTH) + 1) << 21
+        | instance.get(Calendar.DAY_OF_MONTH) << 16
+        | instance.get(Calendar.HOUR_OF_DAY) << 11
+        | instance.get(Calendar.MINUTE) << 5
+        | instance.get(Calendar.SECOND) >> 1;
   }
 
   public String getName() {
@@ -269,9 +258,8 @@ class EntryAccounting {
   }
 
   /**
-   * Finish the entry and return the total number of compressed bytes written
-   * (not counting the local file header, but counting the data descriptor if present).
-   * Must be called exactly once.
+   * Finish the entry and return the total number of compressed bytes written (not counting the
+   * local file header, but counting the data descriptor if present). Must be called exactly once.
    */
   public long finish(OutputStream out) throws IOException {
     if (method == Method.STORE) {
@@ -339,5 +327,4 @@ class EntryAccounting {
       }
     }
   }
-
 }
