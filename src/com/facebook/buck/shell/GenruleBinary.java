@@ -23,13 +23,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Same as a Genrule, but marked as a binary.
- */
+/** Same as a Genrule, but marked as a binary. */
 public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
       BuildRuleParams params,
@@ -44,9 +41,6 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(getSourcePathToOutput()))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
-
 }

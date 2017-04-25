@@ -29,7 +29,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class ShBinaryDescription implements Description<ShBinaryDescription.Arg> {
 
   @Override

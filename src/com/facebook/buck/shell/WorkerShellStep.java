@@ -28,7 +28,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -42,12 +41,13 @@ public class WorkerShellStep implements Step {
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
    * are present they are used in favor of universal params.
+   *
    * @param cmdParams Universal, platform independent params, something that would work for both
-   *                  Linux/macOS and Windows platforms.
+   *     Linux/macOS and Windows platforms.
    * @param bashParams Used in Linux/macOS environment, specifies the arguments that are passed into
-   *                     bash shell.
+   *     bash shell.
    * @param cmdExeParams Used in Windows environment, specifies the arguments that are passed into
-   *                     cmd.exe (Windows shell).
+   *     cmd.exe (Windows shell).
    */
   public WorkerShellStep(
       Optional<WorkerJobParams> cmdParams,
@@ -71,15 +71,17 @@ public class WorkerShellStep implements Step {
       process = pool.borrowWorkerProcess();
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       pool.returnWorkerProcess(process);
-      process = null;  // to avoid finally below
+      process = null; // to avoid finally below
 
       Verbosity verbosity = context.getVerbosity();
-      if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
-          verbosity.shouldPrintOutput()) {
+      if (result.getStdout().isPresent()
+          && !result.getStdout().get().isEmpty()
+          && verbosity.shouldPrintOutput()) {
         context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
       }
-      if (result.getStderr().isPresent() && !result.getStderr().get().isEmpty() &&
-          verbosity.shouldPrintStandardInformation()) {
+      if (result.getStderr().isPresent()
+          && !result.getStderr().get().isEmpty()
+          && verbosity.shouldPrintStandardInformation()) {
         if (result.getExitCode() == 0) {
           context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
         } else {
@@ -104,13 +106,12 @@ public class WorkerShellStep implements Step {
   }
 
   @VisibleForTesting
-  String expandEnvironmentVariables(
-      String string,
-      ImmutableMap<String, String> variablesToExpand) {
+  String expandEnvironmentVariables(String string, ImmutableMap<String, String> variablesToExpand) {
     for (Map.Entry<String, String> variable : variablesToExpand.entrySet()) {
-      string = string
-          .replace("$" + variable.getKey(), variable.getValue())
-          .replace("${" + variable.getKey() + "}", variable.getValue());
+      string =
+          string
+              .replace("$" + variable.getKey(), variable.getValue())
+              .replace("${" + variable.getKey() + "}", variable.getValue());
     }
     return string;
   }
@@ -123,8 +124,8 @@ public class WorkerShellStep implements Step {
       } else if (cmdParams.isPresent()) {
         return cmdParams.get();
       } else {
-        throw new HumanReadableException("You must specify either \"cmd_exe\" or \"cmd\" for " +
-            "this build rule.");
+        throw new HumanReadableException(
+            "You must specify either \"cmd_exe\" or \"cmd\" for " + "this build rule.");
       }
     } else {
       if (bashParams.isPresent()) {
@@ -132,17 +133,18 @@ public class WorkerShellStep implements Step {
       } else if (cmdParams.isPresent()) {
         return cmdParams.get();
       } else {
-        throw new HumanReadableException("You must specify either \"bash\" or \"cmd\" for " +
-            "this build rule.");
+        throw new HumanReadableException(
+            "You must specify either \"bash\" or \"cmd\" for " + "this build rule.");
       }
     }
   }
 
   /**
-   * Returns the environment variables to use when expanding the job arguments that get
-   * sent to the process.
-   * <p>
-   * By default, this method returns an empty map.
+   * Returns the environment variables to use when expanding the job arguments that get sent to the
+   * process.
+   *
+   * <p>By default, this method returns an empty map.
+   *
    * @param context that may be useful when determining environment variables to include.
    */
   protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -161,12 +163,12 @@ public class WorkerShellStep implements Step {
 
   @Override
   public final String getDescription(ExecutionContext context) {
-    return String.format("Sending job with args \'%s\' to the process started with \'%s\'",
+    return String.format(
+        "Sending job with args \'%s\' to the process started with \'%s\'",
         getExpandedJobArgs(context),
         FluentIterable.from(
-            factory.getCommand(
-                context.getPlatform(),
-                getWorkerJobParamsToUse(context.getPlatform())))
+                factory.getCommand(
+                    context.getPlatform(), getWorkerJobParamsToUse(context.getPlatform())))
             .transform(Escaper.SHELL_ESCAPER)
             .join(Joiner.on(' ')));
   }

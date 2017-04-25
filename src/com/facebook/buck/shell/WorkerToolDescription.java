@@ -45,22 +45,23 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 import java.util.Optional;
 
-public class WorkerToolDescription implements Description<WorkerToolDescription.Arg>,
-    ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
+public class WorkerToolDescription
+    implements Description<WorkerToolDescription.Arg>,
+        ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
 
   private static final String CONFIG_SECTION = "worker";
   private static final String CONFIG_PERSISTENT_KEY = "persistent";
 
-  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>builder()
-          .put("location", new LocationMacroExpander())
-          .put("classpath", new ClasspathMacroExpander())
-          .put("exe", new ExecutableMacroExpander())
-          .build());
+  public static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>builder()
+              .put("location", new LocationMacroExpander())
+              .put("classpath", new ClasspathMacroExpander())
+              .put("exe", new ExecutableMacroExpander())
+              .build());
 
   private final BuckConfig buckConfig;
 
@@ -79,43 +80,37 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
     BuildRule rule = resolver.requireRule(args.exe);
     if (!(rule instanceof BinaryBuildRule)) {
-      throw new HumanReadableException("The 'exe' argument of %s, %s, needs to correspond to a " +
-          "binary rule, such as sh_binary().",
-          params.getBuildTarget(),
-          args.exe.getFullyQualifiedName());
+      throw new HumanReadableException(
+          "The 'exe' argument of %s, %s, needs to correspond to a "
+              + "binary rule, such as sh_binary().",
+          params.getBuildTarget(), args.exe.getFullyQualifiedName());
     }
 
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
-        MacroArg.toMacroArgFunction(
-            MACRO_HANDLER,
-            params.getBuildTarget(),
-            cellRoots,
-            resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> workerToolArgs =
-        args.getStartupArgs().stream()
-            .map(toArg::apply)
-            .collect(MoreCollectors.toImmutableList());
+        args.getStartupArgs().stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
 
-    ImmutableMap<String, String> expandedEnv = ImmutableMap.copyOf(
-        FluentIterable.from(args.env.entrySet())
-            .transform(input -> {
-              try {
-                return Maps.immutableEntry(
-                    input.getKey(),
-                    MACRO_HANDLER.expand(
-                        params.getBuildTarget(),
-                        cellRoots,
-                        resolver,
-                        input.getValue()));
-              } catch (MacroException e) {
-                throw new HumanReadableException(
-                    e, "%s: %s", params.getBuildTarget(), e.getMessage());
-              }
-            }));
+    ImmutableMap<String, String> expandedEnv =
+        ImmutableMap.copyOf(
+            FluentIterable.from(args.env.entrySet())
+                .transform(
+                    input -> {
+                      try {
+                        return Maps.immutableEntry(
+                            input.getKey(),
+                            MACRO_HANDLER.expand(
+                                params.getBuildTarget(), cellRoots, resolver, input.getValue()));
+                      } catch (MacroException e) {
+                        throw new HumanReadableException(
+                            e, "%s: %s", params.getBuildTarget(), e.getMessage());
+                      }
+                    }));
 
     int maxWorkers;
     if (args.maxWorkers.isPresent()) {

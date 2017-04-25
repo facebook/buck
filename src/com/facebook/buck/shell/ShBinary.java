@@ -41,7 +41,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -49,16 +48,14 @@ import java.util.stream.Stream;
 
 public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
-  private static final Path TEMPLATE = Paths.get(
-      System.getProperty(
-          "buck.path_to_sh_binary_template",
-          "src/com/facebook/buck/shell/sh_binary_template"));
+  private static final Path TEMPLATE =
+      Paths.get(
+          System.getProperty(
+              "buck.path_to_sh_binary_template", "src/com/facebook/buck/shell/sh_binary_template"));
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final SourcePath main;
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> resources;
+  @AddToRuleKey private final SourcePath main;
+  @AddToRuleKey private final ImmutableSet<SourcePath> resources;
 
   /** The path where the output will be written. */
   private final Path output;
@@ -74,50 +71,50 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
     this.resources = resources;
 
     BuildTarget target = params.getBuildTarget();
-    this.output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        target,
-        String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
+    this.output =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            target,
+            String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
-        .add(new StringTemplateStep(
-            TEMPLATE,
-            getProjectFilesystem(),
-            output,
-            input -> {
-              // Generate an .sh file that builds up an environment and invokes the user's script.
-              // This generated .sh file will be returned by getExecutableCommand().
-              // This script can be cached and used on machines other than the one where it was
-              // created. That means it can't contain any absolute filepaths. Expose the absolute
-              // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
-              int levelsBelowRoot = output.getNameCount() - 1;
-              String pathBackToRoot = Joiner
-                  .on("/")
-                  .join(Collections.nCopies(levelsBelowRoot, ".."));
+        .add(
+            new StringTemplateStep(
+                TEMPLATE,
+                getProjectFilesystem(),
+                output,
+                input -> {
+                  // Generate an .sh file that builds up an environment and invokes the user's script.
+                  // This generated .sh file will be returned by getExecutableCommand().
+                  // This script can be cached and used on machines other than the one where it was
+                  // created. That means it can't contain any absolute filepaths. Expose the absolute
+                  // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
+                  int levelsBelowRoot = output.getNameCount() - 1;
+                  String pathBackToRoot =
+                      Joiner.on("/").join(Collections.nCopies(levelsBelowRoot, ".."));
 
-              ImmutableList<String> resourceStrings = FluentIterable
-                  .from(resources)
-                  .transform(context.getSourcePathResolver()::getRelativePath)
-                  .transform(Object::toString)
-                  .transform(Escaper.BASH_ESCAPER)
-                  .toList();
+                  ImmutableList<String> resourceStrings =
+                      FluentIterable.from(resources)
+                          .transform(context.getSourcePathResolver()::getRelativePath)
+                          .transform(Object::toString)
+                          .transform(Escaper.BASH_ESCAPER)
+                          .toList();
 
-              return input
-                  .add("path_back_to_root", pathBackToRoot)
-                  .add(
-                      "script_to_run",
-                      Escaper.escapeAsBashString(
-                          context.getSourcePathResolver().getRelativePath(main)))
-                  .add("resources", resourceStrings);
-            }))
+                  return input
+                      .add("path_back_to_root", pathBackToRoot)
+                      .add(
+                          "script_to_run",
+                          Escaper.escapeAsBashString(
+                              context.getSourcePathResolver().getRelativePath(main)))
+                      .add("resources", resourceStrings);
+                }))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
   }

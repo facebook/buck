@@ -20,18 +20,14 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerJobParams {
-  /**
-   * Temp folder location.
-   */
+  /** Temp folder location. */
   Path getTempDir();
 
   /**
@@ -43,14 +39,12 @@ interface AbstractWorkerJobParams {
 
   /**
    * All args combined into single string and separated with a white space, e.g. if tool is expected
-   * to compute hashes on the fly you may pass something like "--compute-hashes".
-   * This string will be escaped for you using Escaper#SHELL_ESCAPER.
+   * to compute hashes on the fly you may pass something like "--compute-hashes". This string will
+   * be escaped for you using Escaper#SHELL_ESCAPER.
    */
   String getStartupArgs();
 
-  /**
-   * Environment that will be used to start the worker tool.
-   */
+  /** Environment that will be used to start the worker tool. */
   ImmutableMap<String, String> getStartupEnvironment();
 
   /**
@@ -59,27 +53,23 @@ interface AbstractWorkerJobParams {
    */
   String getJobArgs();
 
-  /**
-   * Maximum number of tools that pool can have.
-   */
+  /** Maximum number of tools that pool can have. */
   int getMaxWorkers();
 
   /**
-   * If this value is set and if the current invocation allows to have persisted worker pools
-   * (buck is running as daemon), it will be used to obtain the instance of the persisted worker
-   * process pool.
-   * If this value is absent, then key will be automatically computed based on the startup command
-   * and startup arguments.
+   * If this value is set and if the current invocation allows to have persisted worker pools (buck
+   * is running as daemon), it will be used to obtain the instance of the persisted worker process
+   * pool. If this value is absent, then key will be automatically computed based on the startup
+   * command and startup arguments.
    *
-   * Note: If you set this value then you must set worker hash value below as well.
+   * <p>Note: If you set this value then you must set worker hash value below as well.
    */
   Optional<String> getPersistentWorkerKey();
 
   /**
    * Hash to identify the specific worker pool and kind of a mechanism for invalidating existing
-   * pools.
-   * If this value for the given persistent worker key changes, old pool will be destroyed and
-   * the new pool will be recreated.
+   * pools. If this value for the given persistent worker key changes, old pool will be destroyed
+   * and the new pool will be recreated.
    */
   Optional<HashCode> getWorkerHash();
 }

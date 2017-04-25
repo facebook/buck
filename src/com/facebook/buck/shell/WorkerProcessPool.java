@@ -21,13 +21,11 @@ import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -36,8 +34,10 @@ public abstract class WorkerProcessPool {
 
   private final int capacity;
   private final BlockingQueue<WorkerProcess> availableWorkers;
+
   @GuardedBy("createdWorkers")
   private final List<WorkerProcess> createdWorkers;
+
   private final HashCode poolHash;
 
   public WorkerProcessPool(int maxWorkers, HashCode poolHash) {
@@ -52,8 +52,7 @@ public abstract class WorkerProcessPool {
    * returns it. You must free worker process by calling {@link #returnWorkerProcess(WorkerProcess)}
    * or {@link #destroyWorkerProcess(WorkerProcess)} methods after you finish using it.
    */
-  public WorkerProcess borrowWorkerProcess()
-      throws IOException, InterruptedException {
+  public WorkerProcess borrowWorkerProcess() throws IOException, InterruptedException {
     WorkerProcess workerProcess;
     while ((workerProcess = availableWorkers.poll(0, TimeUnit.SECONDS)) != null) {
       if (workerProcess.isAlive()) {
@@ -102,9 +101,7 @@ public abstract class WorkerProcessPool {
   public void destroyWorkerProcess(WorkerProcess workerProcess) {
     synchronized (createdWorkers) {
       boolean removed = createdWorkers.remove(workerProcess);
-      Preconditions.checkArgument(
-          removed,
-          "Trying to return a foreign WorkerProcess to the pool");
+      Preconditions.checkArgument(removed, "Trying to return a foreign WorkerProcess to the pool");
     }
     workerProcess.close();
   }

@@ -19,14 +19,18 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 
 public interface WorkerTool {
   Tool getTool();
+
   String getArgs(SourcePathResolver pathResolver);
+
   Path getTempDir();
+
   int getMaxWorkers();
+
   boolean isPersistent();
+
   HashCode getInstanceKey();
 }

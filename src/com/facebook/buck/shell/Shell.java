@@ -22,21 +22,17 @@ import com.google.common.collect.FluentIterable;
 
 public class Shell {
 
-  private Shell() {
-  }
+  private Shell() {}
 
   /**
    * Quotes all strings using Escaper.escapeAsBashString and joins them using sep. Should be used
    * for constructing bash command lines, for example in bash scripts.
    *
    * @param items to join
-   * @param sep   separator to use for joining
-   * @return      joined quoted items as String
+   * @param sep separator to use for joining
+   * @return joined quoted items as String
    */
   public static String shellQuoteJoin(Iterable<String> items, String sep) {
-    return Joiner.on(sep).join(
-        FluentIterable.from(items)
-          .transform(Escaper::escapeAsBashString));
+    return Joiner.on(sep).join(FluentIterable.from(items).transform(Escaper::escapeAsBashString));
   }
-
 }

@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +44,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
@@ -54,10 +52,9 @@ public abstract class ShellStep implements Step {
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
-  @Nullable
-  private ImmutableList<String> shellCommandArgs;
+  @Nullable private ImmutableList<String> shellCommandArgs;
 
-  /** If specified, working directory will be different from project root. **/
+  /** If specified, working directory will be different from project root. * */
   protected final Path workingDirectory;
 
   /**
@@ -109,8 +106,8 @@ public abstract class ShellStep implements Step {
     double endLoad = OS_JMX.getSystemLoadAverage();
 
     LOG.debug(
-        "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d." +
-            "\nstdout:\n%s\nstderr:\n%s\n",
+        "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d."
+            + "\nstdout:\n%s\nstderr:\n%s\n",
         shellCommandArgs,
         exitCode,
         initialLoad,
@@ -124,9 +121,7 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   void setProcessEnvironment(
-      ExecutionContext context,
-      Map<String, String> environment,
-      File workDir) {
+      ExecutionContext context, Map<String, String> environment, File workDir) {
 
     // Replace environment with client environment.
     environment.clear();
@@ -142,9 +137,7 @@ public abstract class ShellStep implements Step {
     }
   }
 
-  /**
-   * @return the exit code interpreted from the {@code result}.
-   */
+  /** @return the exit code interpreted from the {@code result}. */
   @SuppressWarnings("unused")
   protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
     return result.getExitCode();
@@ -158,31 +151,28 @@ public abstract class ShellStep implements Step {
     addOptions(context, options);
 
     ProcessExecutor executor = context.getProcessExecutor();
-    ProcessExecutor.Result result = executor.launchAndExecute(
-        params,
-        options.build(),
-        getStdin(context),
-        getTimeout(),
-        getTimeoutHandler(context));
+    ProcessExecutor.Result result =
+        executor.launchAndExecute(
+            params, options.build(), getStdin(context), getTimeout(), getTimeoutHandler(context));
     stdout = result.getStdout();
     stderr = result.getStderr();
 
     Verbosity verbosity = context.getVerbosity();
-    if (stdout.isPresent() && !stdout.get().isEmpty() &&
-        (result.getExitCode() != 0 || shouldPrintStdout(verbosity))) {
+    if (stdout.isPresent()
+        && !stdout.get().isEmpty()
+        && (result.getExitCode() != 0 || shouldPrintStdout(verbosity))) {
       context.postEvent(ConsoleEvent.info("%s", stdout.get()));
     }
-    if (stderr.isPresent() && !stderr.get().isEmpty() &&
-        (result.getExitCode() != 0 || shouldPrintStderr(verbosity))) {
+    if (stderr.isPresent()
+        && !stderr.get().isEmpty()
+        && (result.getExitCode() != 0 || shouldPrintStderr(verbosity))) {
       context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
     }
 
     return getExitCodeFromResult(context, result);
   }
 
-  protected void addOptions(
-      ExecutionContext context,
-      ImmutableSet.Builder<Option> options) {
+  protected void addOptions(ExecutionContext context, ImmutableSet.Builder<Option> options) {
     if (shouldFlushStdOutErrAsProgressIsMade(context.getVerbosity())) {
       options.add(Option.PRINT_STD_OUT);
       options.add(Option.PRINT_STD_ERR);
@@ -198,6 +188,7 @@ public abstract class ShellStep implements Step {
 
   /**
    * This method is idempotent.
+   *
    * @return the shell command arguments
    */
   public final ImmutableList<String> getShellCommand(ExecutionContext context) {
@@ -213,9 +204,7 @@ public abstract class ShellStep implements Step {
     return Optional.empty();
   }
 
-  /**
-   * Implementations of this method should not have any observable side-effects.
-   */
+  /** Implementations of this method should not have any observable side-effects. */
   @VisibleForTesting
   protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
 
@@ -223,8 +212,10 @@ public abstract class ShellStep implements Step {
   public final String getDescription(ExecutionContext context) {
     // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
     // quoted as necessary.
-    Iterable<String> env = Iterables.transform(getEnvironmentVariables(context).entrySet(),
-        e -> String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue())));
+    Iterable<String> env =
+        Iterables.transform(
+            getEnvironmentVariables(context).entrySet(),
+            e -> String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue())));
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).
@@ -236,15 +227,15 @@ public abstract class ShellStep implements Step {
     // Note that we shouldn't add a special case for workingDirectory==null, because we always
     // resolve symbolic links in this case, and the default PWD might leave symbolic links
     // unresolved.  We try to make PWD match, and cd sets PWD.
-    return String.format("(cd %s && %s)",
-        Escaper.escapeAsBashString(workingDirectory),
-        shellCommand);
+    return String.format(
+        "(cd %s && %s)", Escaper.escapeAsBashString(workingDirectory), shellCommand);
   }
 
   /**
    * Returns the environment variables to include when running this {@link ShellStep}.
-   * <p>
-   * By default, this method returns an empty map.
+   *
+   * <p>By default, this method returns an empty map.
+   *
    * @param context that may be useful when determining environment variables to include.
    */
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -267,8 +258,8 @@ public abstract class ShellStep implements Step {
   public final String getStdout() {
     Preconditions.checkState(
         this.stdout.isPresent(),
-        "stdout was not set: shouldPrintStdout() must return false and execute() must " +
-        "have been invoked");
+        "stdout was not set: shouldPrintStdout() must return false and execute() must "
+            + "have been invoked");
     return this.stdout.get();
   }
 
@@ -287,18 +278,17 @@ public abstract class ShellStep implements Step {
   public final String getStderr() {
     Preconditions.checkState(
         this.stderr.isPresent(),
-        "stderr was not set: shouldPrintStdErr() must return false and execute() must " +
-        "have been invoked");
+        "stderr was not set: shouldPrintStdErr() must return false and execute() must "
+            + "have been invoked");
     return this.stderr.get();
   }
 
   /**
-   * By default, the output written to stdout and stderr will be buffered into individual
-   * {@link ByteArrayOutputStream}s and then converted into strings for easier consumption. This
-   * means that output from both streams that would normally be interleaved will now be displayed
-   * separately.
-   * <p>
-   * To disable this behavior and print to stdout and stderr directly, this method should be
+   * By default, the output written to stdout and stderr will be buffered into individual {@link
+   * ByteArrayOutputStream}s and then converted into strings for easier consumption. This means that
+   * output from both streams that would normally be interleaved will now be displayed separately.
+   *
+   * <p>To disable this behavior and print to stdout and stderr directly, this method should be
    * overridden to return {@code true}.
    */
   @SuppressWarnings("unused")
@@ -306,16 +296,14 @@ public abstract class ShellStep implements Step {
     return false;
   }
 
-  /**
-   * @return an optional timeout to apply to the step.
-   */
+  /** @return an optional timeout to apply to the step. */
   protected Optional<Long> getTimeout() {
     return Optional.empty();
   }
 
   /**
    * @return an optional timeout handler {@link Function} to do something before the process is
-   * killed.
+   *     killed.
    */
   @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {

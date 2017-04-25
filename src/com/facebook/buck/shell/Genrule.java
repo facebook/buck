@@ -25,8 +25,8 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -45,15 +45,14 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
  * AndroidManifest.xml from the wakizashi AndroidManifest.xml, such a rule could be defined as:
+ *
  * <pre>
  * genrule(
  *   name = 'katana_manifest',
@@ -65,7 +64,9 @@ import java.util.Optional;
  *   out = 'AndroidManifest.xml',
  * )
  * </pre>
+ *
  * The output of this rule would likely be used as follows:
+ *
  * <pre>
  * android_binary(
  *   name = 'katana',
@@ -75,48 +76,47 @@ import java.util.Optional;
  *   ],
  * )
  * </pre>
+ *
  * A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
  * the following environment variable substitutions:
+ *
  * <ul>
  *   <li><code>SRCS</code> will be a space-delimited string expansion of the <code>srcs</code>
  *       attribute where each element of <code>srcs</code> will be translated into an absolute path.
- *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.</li>
+ *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.
  *   <li><code>OUT</code> is the output file for the <code>genrule()</code>. The file specified by
  *       this variable must always be written by this command. If not, the execution of this rule
  *       will be considered a failure, halting the build process.
  * </ul>
- * In the above example, if the {@code katana_manifest} rule were defined in the
- * {@code src/com/facebook/wakizashi} directory, then the command that would be executed would be:
+ *
+ * In the above example, if the {@code katana_manifest} rule were defined in the {@code
+ * src/com/facebook/wakizashi} directory, then the command that would be executed would be:
+ *
  * <pre>
  * python convert_to_katana.py src/com/facebook/wakizashi/AndroidManifest.xml &gt; \
  *     buck-out/gen/src/com/facebook/wakizashi/AndroidManifest.xml
  * </pre>
+ *
  * Note that {@code cmd} could be run on either Mac or Linux, so it should contain logic that works
  * on either platform. If this becomes an issue in the future (or we want to support building on
  * different platforms), then we could introduce a new attribute that is a map of target platforms
  * to the appropriate build command for that platform.
- * <p>
- * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
+ *
+ * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
 public class Genrule extends AbstractBuildRule implements HasOutputName, SupportsInputBasedRuleKey {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  @AddToRuleKey
-  protected final ImmutableList<SourcePath> srcs;
+  @AddToRuleKey protected final ImmutableList<SourcePath> srcs;
 
-  @AddToRuleKey
-  protected final Optional<Arg> cmd;
-  @AddToRuleKey
-  protected final Optional<Arg> bash;
-  @AddToRuleKey
-  protected final Optional<Arg> cmdExe;
+  @AddToRuleKey protected final Optional<Arg> cmd;
+  @AddToRuleKey protected final Optional<Arg> bash;
+  @AddToRuleKey protected final Optional<Arg> cmdExe;
 
-  @AddToRuleKey
-  private final String out;
-  @AddToRuleKey
-  private final String type;
+  @AddToRuleKey private final String out;
+  @AddToRuleKey private final String type;
 
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
@@ -147,8 +147,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
-          params.getBuildTarget(),
-          out);
+          params.getBuildTarget(), out);
     }
 
     this.pathToTmpDirectory =
@@ -184,15 +183,17 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
-        Joiner.on(' ').join(
-            FluentIterable.from(srcs)
-                .transform(pathResolver::getAbsolutePath)
-                .transform(Object::toString)));
+        Joiner.on(' ')
+            .join(
+                FluentIterable.from(srcs)
+                    .transform(pathResolver::getAbsolutePath)
+                    .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
 
     environmentVariablesBuilder.put(
         "GEN_DIR",
-        getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getGenDir())
+        getProjectFilesystem()
+            .resolve(getProjectFilesystem().getBuckPaths().getGenDir())
             .toString());
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
@@ -225,10 +226,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   }
 
   private static Optional<String> flattenToSpaceSeparatedString(
-      Optional<Arg> arg,
-      SourcePathResolver pathResolver) {
-    return arg
-        .map((input1) -> Arg.stringifyList(input1, pathResolver))
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map((input1) -> Arg.stringifyList(input1, pathResolver))
         .map(input -> Joiner.on(' ').join(input));
   }
 
@@ -237,14 +236,15 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     Arg cmdArg = cmd.orElse(null);
     Arg bashArg = bash.orElse(null);
     Arg cmdExeArg = cmdExe.orElse(null);
-    if ((cmdArg instanceof WorkerMacroArg) ||
-        (bashArg instanceof WorkerMacroArg) ||
-        (cmdExeArg instanceof WorkerMacroArg)) {
-      if ((cmdArg != null && !(cmdArg instanceof WorkerMacroArg)) ||
-          (bashArg != null && !(bashArg instanceof WorkerMacroArg)) ||
-          (cmdExeArg != null && !(cmdExeArg instanceof WorkerMacroArg))) {
-        throw new HumanReadableException("You cannot use a worker macro in one of the cmd, bash, " +
-            "or cmd_exe properties and not in the others for genrule %s.",
+    if ((cmdArg instanceof WorkerMacroArg)
+        || (bashArg instanceof WorkerMacroArg)
+        || (cmdExeArg instanceof WorkerMacroArg)) {
+      if ((cmdArg != null && !(cmdArg instanceof WorkerMacroArg))
+          || (bashArg != null && !(bashArg instanceof WorkerMacroArg))
+          || (cmdExeArg != null && !(cmdExeArg instanceof WorkerMacroArg))) {
+        throw new HumanReadableException(
+            "You cannot use a worker macro in one of the cmd, bash, "
+                + "or cmd_exe properties and not in the others for genrule %s.",
             getBuildTarget().getFullyQualifiedName());
       }
       return true;
@@ -275,9 +275,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
           ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
         Genrule.this.addEnvironmentVariables(
-            context.getSourcePathResolver(),
-            executionContext,
-            environmentVariablesBuilder);
+            context.getSourcePathResolver(), executionContext, environmentVariablesBuilder);
       }
     };
   }
@@ -300,27 +298,26 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(
-      Optional<Arg> arg,
-      SourcePathResolver pathResolver) {
-    return arg.map(arg1 -> {
-      WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
-      return WorkerJobParams.of(
-          workerMacroArg.getTempDir(),
-          workerMacroArg.getStartupCommand(),
-          workerMacroArg.getStartupArgs(pathResolver),
-          workerMacroArg.getEnvironment(),
-          workerMacroArg.getJobArgs(),
-          workerMacroArg.getMaxWorkers(),
-          workerMacroArg.getPersistentWorkerKey(),
-          Optional.of(workerMacroArg.getWorkerHash()));
-    });
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map(
+        arg1 -> {
+          WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
+          return WorkerJobParams.of(
+              workerMacroArg.getTempDir(),
+              workerMacroArg.getStartupCommand(),
+              workerMacroArg.getStartupArgs(pathResolver),
+              workerMacroArg.getEnvironment(),
+              workerMacroArg.getJobArgs(),
+              workerMacroArg.getMaxWorkers(),
+              workerMacroArg.getPersistentWorkerKey(),
+              Optional.of(workerMacroArg.getWorkerHash()));
+        });
   }
 
   @Override
   @VisibleForTesting
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
@@ -387,9 +384,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     }
   }
 
-  /**
-   * Get the output name of the generated file, as listed in the BUCK file.
-   */
+  /** Get the output name of the generated file, as listed in the BUCK file. */
   @Override
   public String getOutputName() {
     return out;
@@ -399,5 +394,4 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   public Optional<Arg> getCmd() {
     return cmd;
   }
-
 }

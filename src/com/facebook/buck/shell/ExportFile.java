@@ -36,46 +36,55 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Export a file so that it can be easily referenced by other
- * {@link com.facebook.buck.rules.BuildRule}s. There are several valid ways of using export_file
- * (all examples in a build file located at "path/to/buck/BUCK").
+ * Export a file so that it can be easily referenced by other {@link
+ * com.facebook.buck.rules.BuildRule}s. There are several valid ways of using export_file (all
+ * examples in a build file located at "path/to/buck/BUCK").
  *
- * The most common usage of export_file is:
+ * <p>The most common usage of export_file is:
+ *
  * <pre>
  *   export_file(name = 'some-file.html')
  * </pre>
+ *
  * This is equivalent to:
+ *
  * <pre>
  *   export_file(name = 'some-file.html',
  *     src = 'some-file.html',
  *     out = 'some-file.html')
  * </pre>
+ *
  * This results in "//path/to/buck:some-file.html" as the rule, and will export the file
  * "some-file.html" as "some-file.html".
+ *
  * <pre>
  *   export_file(
  *     name = 'foobar.html',
  *     src = 'some-file.html',
  *   )
  * </pre>
+ *
  * Is equivalent to:
+ *
  * <pre>
  *    export_file(name = 'foobar.html', src = 'some-file.html', out = 'foobar.html')
  * </pre>
+ *
  * Finally, it's possible to refer to the exported file with a logical name, while controlling the
  * actual file name. For example:
+ *
  * <pre>
  *   export_file(name = 'ie-exports',
  *     src = 'some-file.js',
  *     out = 'some-file-ie.js',
  *   )
  * </pre>
+ *
  * As a rule of thumb, if the "out" parameter is missing, the "name" parameter is used as the name
  * of the file to be saved.
  */
@@ -84,12 +93,9 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     implements HasOutputName, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final String name;
-  @AddToRuleKey
-  private final ExportFileDescription.Mode mode;
-  @AddToRuleKey
-  private final SourcePath src;
+  @AddToRuleKey private final String name;
+  @AddToRuleKey private final ExportFileDescription.Mode mode;
+  @AddToRuleKey private final SourcePath src;
 
   ExportFile(
       BuildRuleParams buildRuleParams,
@@ -112,14 +118,16 @@ public class ExportFile extends AbstractBuildRuleWithResolver
 
   private Path getCopiedPath() {
     Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
-    return getProjectFilesystem().getBuckPaths().getGenDir()
-        .resolve(getBuildTarget().getBasePath()).resolve(name);
+    return getProjectFilesystem()
+        .getBuckPaths()
+        .getGenDir()
+        .resolve(getBuildTarget().getBasePath())
+        .resolve(name);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     SourcePathResolver resolver = context.getSourcePathResolver();
 
     // This file is copied rather than symlinked so that when it is included in an archive zip and
@@ -137,11 +145,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
                 out,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       } else {
-        builder.add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                resolver.getAbsolutePath(src),
-                out));
+        builder.add(CopyStep.forFile(getProjectFilesystem(), resolver.getAbsolutePath(src), out));
       }
       buildableContext.recordArtifact(out);
     }
@@ -154,8 +158,9 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     // In reference mode, we just return the relative path to the source, as we've already verified
     // that our filesystem matches that of the source.  In copy mode, we return the path we've
     // allocated for the copy.
-    return mode == ExportFileDescription.Mode.REFERENCE ?
-        src : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
+    return mode == ExportFileDescription.Mode.REFERENCE
+        ? src
+        : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
   }
 
   @Override
@@ -168,7 +173,8 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
     Optional<BuildRule> rule = ruleFinder.getRule(src);
-    return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent() ?
-        Stream.of(rule.get().getBuildTarget()) : Stream.empty();
+    return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent()
+        ? Stream.of(rule.get().getBuildTarget())
+        : Stream.empty();
   }
 }

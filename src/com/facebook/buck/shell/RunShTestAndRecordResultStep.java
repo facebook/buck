@@ -28,7 +28,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -78,89 +77,93 @@ public class RunShTestAndRecordResultStep implements Step {
     TestResultSummary summary;
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.
-      summary = new TestResultSummary(
-          getShortName(),
-          "sh_test",
-          /* type */ ResultType.SUCCESS,
-          /* duration*/ 0,
-          /* message */ "sh_test ignored on Windows",
-          /* stacktrace */ null,
-          /* stdout */ null,
-          /* stderr */ null);
+      summary =
+          new TestResultSummary(
+              getShortName(),
+              "sh_test",
+              /* type */ ResultType.SUCCESS,
+              /* duration*/ 0,
+              /* message */ "sh_test ignored on Windows",
+              /* stacktrace */ null,
+              /* stdout */ null,
+              /* stderr */ null);
     } else {
-      ShellStep test = new ShellStep(filesystem.getRootPath()) {
-        boolean timedOut = false;
+      ShellStep test =
+          new ShellStep(filesystem.getRootPath()) {
+            boolean timedOut = false;
 
-        @Override
-        public String getShortName() {
-          return pathToShellScript.toString();
-        }
+            @Override
+            public String getShortName() {
+              return pathToShellScript.toString();
+            }
 
-        @Override
-        protected ImmutableList<String> getShellCommandInternal(
-            ExecutionContext context) {
-          return ImmutableList.<String>builder()
-              .add(pathToShellScript.toString())
-              .addAll(args)
-              .build();
-        }
+            @Override
+            protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+              return ImmutableList.<String>builder()
+                  .add(pathToShellScript.toString())
+                  .addAll(args)
+                  .build();
+            }
 
-        @Override
-        public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-          return ImmutableMap.<String, String>builder()
-              .put("NO_BUCKD", "1")
-              .putAll(env)
-              .build();
-        }
+            @Override
+            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+              return ImmutableMap.<String, String>builder()
+                  .put("NO_BUCKD", "1")
+                  .putAll(env)
+                  .build();
+            }
 
-        @Override
-        protected boolean shouldPrintStderr(Verbosity verbosity) {
-          // Do not stream this output because we want to capture it.
-          return false;
-        }
+            @Override
+            protected boolean shouldPrintStderr(Verbosity verbosity) {
+              // Do not stream this output because we want to capture it.
+              return false;
+            }
 
-        @Override
-        public StepExecutionResult execute(ExecutionContext context)
-            throws IOException, InterruptedException {
-          StepExecutionResult executionResult = super.execute(context);
-          if (timedOut) {
-            throw new HumanReadableException(
-                "Timed out running test: " + testCaseName + ", with exitCode: " +
-                executionResult.getExitCode());
-          }
-          return executionResult;
-        }
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              StepExecutionResult executionResult = super.execute(context);
+              if (timedOut) {
+                throw new HumanReadableException(
+                    "Timed out running test: "
+                        + testCaseName
+                        + ", with exitCode: "
+                        + executionResult.getExitCode());
+              }
+              return executionResult;
+            }
 
-        @Override
-        protected Optional<Consumer<Process>> getTimeoutHandler(
-            final ExecutionContext context) {
-          return Optional.of(process -> timedOut = true);
-        }
+            @Override
+            protected Optional<Consumer<Process>> getTimeoutHandler(
+                final ExecutionContext context) {
+              return Optional.of(process -> timedOut = true);
+            }
 
-        @Override
-        protected Optional<Long> getTimeout() {
-          return testRuleTimeoutMs;
-        }
+            @Override
+            protected Optional<Long> getTimeout() {
+              return testRuleTimeoutMs;
+            }
 
-        @Override
-        protected boolean shouldPrintStdout(Verbosity verbosity) {
-          // Do not stream this output because we want to capture it.
-          return false;
-        }
-      };
+            @Override
+            protected boolean shouldPrintStdout(Verbosity verbosity) {
+              // Do not stream this output because we want to capture it.
+              return false;
+            }
+          };
       StepExecutionResult executionResult = test.execute(context);
 
       // Write test result.
       boolean isSuccess = executionResult.isSuccess();
-      summary = new TestResultSummary(
-          getShortName(),
-          "sh_test",
-          /* type */ isSuccess ? ResultType.SUCCESS : ResultType.FAILURE,
-          test.getDuration(),
-          /* message */ null,
-          /* stacktrace */ null,
-          test.getStdout(),
-          test.getStderr());
+      summary =
+          new TestResultSummary(
+              getShortName(),
+              "sh_test",
+              /* type */ isSuccess ? ResultType.SUCCESS : ResultType.FAILURE,
+              test.getDuration(),
+              /* message */ null,
+              /* stacktrace */ null,
+              test.getStdout(),
+              test.getStderr());
     }
 
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
@@ -171,5 +174,4 @@ public class RunShTestAndRecordResultStep implements Step {
     // should be zero.
     return StepExecutionResult.SUCCESS;
   }
-
 }

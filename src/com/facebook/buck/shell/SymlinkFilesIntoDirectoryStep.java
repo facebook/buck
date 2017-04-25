@@ -22,7 +22,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,10 +43,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
    * @param outDir relative to the project root where the symlinks will be created.
    */
   public SymlinkFilesIntoDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path srcDir,
-      Iterable<Path> entries,
-      Path outDir) {
+      ProjectFilesystem filesystem, Path srcDir, Iterable<Path> entries, Path outDir) {
     super("symlinking files into " + outDir);
 
     this.filesystem = filesystem;
@@ -76,5 +72,4 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
     }
     return StepExecutionResult.SUCCESS;
   }
-
 }

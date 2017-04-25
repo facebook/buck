@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
 import java.util.Optional;
 
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
@@ -39,23 +38,9 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     if (!args.executable.orElse(false)) {
-      return new Genrule(
-          params,
-          args.srcs,
-          cmd,
-          bash,
-          cmdExe,
-          args.type,
-          args.out);
+      return new Genrule(params, args.srcs, cmd, bash, cmdExe, args.type, args.out);
     } else {
-      return new GenruleBinary(
-          params,
-          args.srcs,
-          cmd,
-          bash,
-          cmdExe,
-          args.type,
-          args.out);
+      return new GenruleBinary(params, args.srcs, cmd, bash, cmdExe, args.type, args.out);
     }
   }
 
@@ -63,5 +48,4 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   public static class Arg extends AbstractGenruleDescription.Arg {
     public Optional<Boolean> executable;
   }
-
 }

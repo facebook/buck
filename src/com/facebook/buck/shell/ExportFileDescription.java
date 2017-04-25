@@ -32,13 +32,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ExportFileDescription implements
-    Description<ExportFileDescription.Arg>,
-    ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
+public class ExportFileDescription
+    implements Description<ExportFileDescription.Arg>,
+        ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -72,12 +71,11 @@ public class ExportFileDescription implements
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (args.src.isPresent()) {
-      if (mode == ExportFileDescription.Mode.REFERENCE &&
-          !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
+      if (mode == ExportFileDescription.Mode.REFERENCE
+          && !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
-            target,
-            args.src.get());
+            target, args.src.get());
       }
       src = args.src.get();
     } else {
@@ -90,13 +88,10 @@ public class ExportFileDescription implements
     return new ExportFile(params, ruleFinder, pathResolver, name, mode, src);
   }
 
-  /**
-   * If the src field is absent, add the name field to the list of inputs.
-   */
+  /** If the src field is absent, add the name field to the list of inputs. */
   @Override
   public Iterable<Path> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget,
-      ExportFileDescription.Arg constructorArg) {
+      UnflavoredBuildTarget buildTarget, ExportFileDescription.Arg constructorArg) {
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
     if (!constructorArg.src.isPresent()) {
       inputs.add(buildTarget.getBasePath().resolve(buildTarget.getShortName()));
@@ -104,9 +99,7 @@ public class ExportFileDescription implements
     return inputs.build();
   }
 
-  /**
-   * Controls how `export_file` exports it's wrapped source.
-   */
+  /** Controls how `export_file` exports it's wrapped source. */
   public enum Mode {
 
     /**
@@ -120,7 +113,6 @@ public class ExportFileDescription implements
      * caching this copy at build time).
      */
     COPY,
-
   }
 
   @SuppressFieldNotInitialized
@@ -129,5 +121,4 @@ public class ExportFileDescription implements
     public Optional<String> out;
     public Optional<Mode> mode;
   }
-
 }

@@ -46,13 +46,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ShTestDescription implements
-    Description<ShTestDescription.Arg>,
-    ImplicitDepsInferringDescription<ShTestDescription.Arg> {
+public class ShTestDescription
+    implements Description<ShTestDescription.Arg>,
+        ImplicitDepsInferringDescription<ShTestDescription.Arg> {
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
@@ -63,8 +62,7 @@ public class ShTestDescription implements
 
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
-  public ShTestDescription(
-      Optional<Long> defaultTestRuleTimeoutMs) {
+  public ShTestDescription(Optional<Long> defaultTestRuleTimeoutMs) {
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
@@ -82,25 +80,17 @@ public class ShTestDescription implements
       A args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
-        MacroArg.toMacroArgFunction(
-            MACRO_HANDLER,
-            params.getBuildTarget(),
-            cellRoots,
-            resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        args.args.stream()
-            .map(toArg::apply)
-            .collect(MoreCollectors.toImmutableList());
+        args.args.stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
-        ImmutableMap.copyOf(
-            Maps.transformValues(
-                args.env,
-                toArg));
+        ImmutableMap.copyOf(Maps.transformValues(args.env, toArg));
     return new ShTest(
         params.copyAppendingExtraDeps(
-            () -> FluentIterable.from(testArgs)
-                .append(testEnv.values())
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
+            () ->
+                FluentIterable.from(testArgs)
+                    .append(testEnv.values())
+                    .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
         ruleFinder,
         args.test,
         testArgs,
@@ -122,17 +112,10 @@ public class ShTestDescription implements
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add parse time deps for any macros.
-    for (String blob :
-         Iterables.concat(
-             constructorArg.args,
-             constructorArg.env.values())) {
+    for (String blob : Iterables.concat(constructorArg.args, constructorArg.env.values())) {
       try {
         MACRO_HANDLER.extractParseTimeDeps(
-            buildTarget,
-            cellRoots,
-            blob,
-            extraDepsBuilder,
-            targetGraphOnlyDepsBuilder);
+            buildTarget, cellRoots, blob, extraDepsBuilder, targetGraphOnlyDepsBuilder);
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
@@ -150,5 +133,4 @@ public class ShTestDescription implements
     public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
     public ImmutableMap<String, String> env = ImmutableMap.of();
   }
-
 }
