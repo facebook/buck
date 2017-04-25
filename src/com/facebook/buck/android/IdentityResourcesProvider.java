@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 

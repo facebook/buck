@@ -25,7 +25,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -101,5 +100,4 @@ public class AidlStep extends ShellStep {
   public String getShortName() {
     return "aidl";
   }
-
 }

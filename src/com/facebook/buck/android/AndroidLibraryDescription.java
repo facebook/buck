@@ -54,12 +54,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-
 import java.util.Optional;
 
 public class AndroidLibraryDescription
-    implements Description<AndroidLibraryDescription.Arg>, Flavored,
-    ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
+    implements Description<AndroidLibraryDescription.Arg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
@@ -95,48 +95,51 @@ public class AndroidLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(params, args.srcs, args.mavenCoords);
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(
-        defaultOptions,
-        params,
-        resolver,
-        args
-    );
+    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
-    final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = args.depsQuery.isPresent() ?
-        Suppliers.memoize(() -> QueryUtils.resolveDepQuery(
+    final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier =
+        args.depsQuery.isPresent()
+            ? Suppliers.memoize(
+                () ->
+                    QueryUtils.resolveDepQuery(
+                            params.getBuildTarget(),
+                            args.depsQuery.get(),
+                            resolver,
+                            cellRoots,
+                            targetGraph,
+                            args.deps)
+                        .collect(MoreCollectors.toImmutableList()))
+            : ImmutableList::of;
+
+    final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                resolver
+                    .getAllRulesStream(args.exportedDeps)
+                    .collect(MoreCollectors.toImmutableList()));
+
+    AndroidLibraryGraphEnhancer graphEnhancer =
+        new AndroidLibraryGraphEnhancer(
             params.getBuildTarget(),
-            args.depsQuery.get(),
-            resolver,
-            cellRoots,
-            targetGraph,
-            args.deps)
-            .collect(MoreCollectors.toImmutableList()))
-        : ImmutableList::of;
-
-    final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier = Suppliers.memoize(
-        () -> resolver.getAllRulesStream(args.exportedDeps)
-            .collect(MoreCollectors.toImmutableList()));
-
-    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
-        params.getBuildTarget(),
-        params.copyReplacingExtraDeps(
-            () -> ImmutableSortedSet.copyOf(Iterables.concat(
-                queriedDepsSupplier.get(),
-                exportedDepsSupplier.get()))),
-        JavacFactory.create(ruleFinder, javaBuckConfig, args),
-        javacOptions,
-        DependencyMode.FIRST_ORDER,
-        /* forceFinalResourceIds */ false,
-        args.resourceUnionPackage,
-        args.finalRName,
-        false);
+            params.copyReplacingExtraDeps(
+                () ->
+                    ImmutableSortedSet.copyOf(
+                        Iterables.concat(queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
+            JavacFactory.create(ruleFinder, javaBuckConfig, args),
+            javacOptions,
+            DependencyMode.FIRST_ORDER,
+            /* forceFinalResourceIds */ false,
+            args.resourceUnionPackage,
+            args.finalRName,
+            false);
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
@@ -152,46 +155,39 @@ public class AndroidLibraryDescription
           params,
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
     }
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
-        resolver,
-        /* createBuildableIfEmpty */ hasDummyRDotJavaFlavor);
+    Optional<DummyRDotJava> dummyRDotJava =
+        graphEnhancer.getBuildableForAndroidResources(
+            resolver, /* createBuildableIfEmpty */ hasDummyRDotJavaFlavor);
 
     if (hasDummyRDotJavaFlavor) {
       return dummyRDotJava.get();
     } else {
-      ImmutableSortedSet<BuildRule> declaredDeps = RichStream
-          .fromSupplierOfIterable(params.getDeclaredDeps())
-          .concat(RichStream.from(dummyRDotJava))
-          .concat(RichStream.fromSupplierOfIterable(queriedDepsSupplier))
-          .toImmutableSortedSet(Ordering.natural());
+      ImmutableSortedSet<BuildRule> declaredDeps =
+          RichStream.fromSupplierOfIterable(params.getDeclaredDeps())
+              .concat(RichStream.from(dummyRDotJava))
+              .concat(RichStream.fromSupplierOfIterable(queriedDepsSupplier))
+              .toImmutableSortedSet(Ordering.natural());
 
       BuildRuleParams androidLibraryParams =
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(declaredDeps),
-              params.getExtraDeps());
+              Suppliers.ofInstance(declaredDeps), params.getExtraDeps());
 
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
-          ImmutableSortedSet.<BuildTarget>naturalOrder()
-              .addAll(args.providedDeps);
+          ImmutableSortedSet.<BuildTarget>naturalOrder().addAll(args.providedDeps);
       if (args.providedDepsQuery.isPresent()) {
         QueryUtils.resolveDepQuery(
-            params.getBuildTarget(),
-            args.providedDepsQuery.get(),
-            resolver,
-            cellRoots,
-            targetGraph,
-            args.providedDeps)
+                params.getBuildTarget(),
+                args.providedDepsQuery.get(),
+                resolver,
+                cellRoots,
+                targetGraph,
+                args.providedDeps)
             .map(BuildRule::getBuildTarget)
             .forEach(providedDepsTargetsBuilder::add);
       }
 
       return AndroidLibrary.builder(
-          androidLibraryParams,
-          resolver,
-          javaBuckConfig,
-          javacOptions,
-          args,
-          compilerFactory)
+              androidLibraryParams, resolver, javaBuckConfig, javacOptions, args, compilerFactory)
           .setArgs(args)
           .setJavacOptions(javacOptions)
           .setProvidedDeps(providedDepsTargetsBuilder.build())
@@ -202,9 +198,9 @@ public class AndroidLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavors.isEmpty() ||
-        flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR)) ||
-        flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR));
+    return flavors.isEmpty()
+        || flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR))
+        || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR));
   }
 
   @Override
@@ -214,13 +210,10 @@ public class AndroidLibraryDescription
       Arg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
+    compilerFactory
+        .getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
         .findDepsForTargetFromConstructorArgs(
-            buildTarget,
-            cellRoots,
-            constructorArg,
-            extraDepsBuilder,
-            targetGraphOnlyDepsBuilder);
+            buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   @SuppressFieldNotInitialized
@@ -233,4 +226,3 @@ public class AndroidLibraryDescription
     public Optional<Query> providedDepsQuery;
   }
 }
-

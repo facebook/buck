@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Preconditions;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

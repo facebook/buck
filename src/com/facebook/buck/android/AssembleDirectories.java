@@ -29,29 +29,25 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class AssembleDirectories extends AbstractBuildRule {
 
   private final Path destinationDirectory;
-  @AddToRuleKey
-  private final ImmutableCollection<SourcePath> originalDirectories;
+  @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
-      BuildRuleParams buildRuleParams,
-      ImmutableCollection<SourcePath> directories) {
+      BuildRuleParams buildRuleParams, ImmutableCollection<SourcePath> directories) {
     super(buildRuleParams);
     this.originalDirectories = directories;
-    this.destinationDirectory = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        buildRuleParams.getBuildTarget(),
-        "__assembled_%s__");
+    this.destinationDirectory =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__assembled_%s__");
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), destinationDirectory));
     for (SourcePath directory : originalDirectories) {

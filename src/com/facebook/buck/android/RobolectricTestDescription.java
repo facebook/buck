@@ -45,7 +45,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
@@ -81,31 +80,30 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            templateOptions,
-            params,
-            resolver,
-            args);
+    JavacOptions javacOptions = JavacOptionsFactory.create(templateOptions, params, resolver, args);
 
-    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
-        params.getBuildTarget(),
-        params.copyReplacingExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
-        JavacFactory.create(ruleFinder, javaBuckConfig, args),
-        javacOptions,
-        DependencyMode.TRANSITIVE,
-        /* forceFinalResourceIds */ true,
-        /* resourceUnionPackage */ Optional.empty(),
-        /* rName */ Optional.empty(),
-        args.useOldStyleableFormat);
+    AndroidLibraryGraphEnhancer graphEnhancer =
+        new AndroidLibraryGraphEnhancer(
+            params.getBuildTarget(),
+            params.copyReplacingExtraDeps(
+                Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
+            JavacFactory.create(ruleFinder, javaBuckConfig, args),
+            javacOptions,
+            DependencyMode.TRANSITIVE,
+            /* forceFinalResourceIds */ true,
+            /* resourceUnionPackage */ Optional.empty(),
+            /* rName */ Optional.empty(),
+            args.useOldStyleableFormat);
 
     if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      if (params.getBuildTarget().getFlavors().contains(
-          AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
+      if (params
+          .getBuildTarget()
+          .getFlavors()
+          .contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
         return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
       }
       BuildTarget testTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
@@ -119,18 +117,18 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     ImmutableList<String> vmArgs = args.vmArgs;
 
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
-        resolver,
-        /* createBuildableIfEmpty */ true);
+    Optional<DummyRDotJava> dummyRDotJava =
+        graphEnhancer.getBuildableForAndroidResources(resolver, /* createBuildableIfEmpty */ true);
 
     if (dummyRDotJava.isPresent()) {
-      ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getDeclaredDeps().get())
-          .add(dummyRDotJava.get())
-          .build();
-      params = params.copyReplacingDeclaredAndExtraDeps(
-          Suppliers.ofInstance(newDeclaredDeps),
-          params.getExtraDeps());
+      ImmutableSortedSet<BuildRule> newDeclaredDeps =
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(params.getDeclaredDeps().get())
+              .add(dummyRDotJava.get())
+              .build();
+      params =
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(newDeclaredDeps), params.getExtraDeps());
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -143,20 +141,18 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams = params
-        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildRuleParams testsLibraryParams =
+        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary
-                .builder(testsLibraryParams, resolver, javaBuckConfig)
+            DefaultJavaLibrary.builder(testsLibraryParams, resolver, javaBuckConfig)
                 .setArgs(args)
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
                 .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());
-
 
     return new RobolectricTest(
         params.copyReplacingDeclaredAndExtraDeps(

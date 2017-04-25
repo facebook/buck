@@ -26,7 +26,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closer;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,16 +34,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 @VisibleForTesting
 class RealExopackageDevice implements ExopackageDevice {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
-  /**
-   * Maximum length of commands that can be passed to "adb shell".
-   */
+  /** Maximum length of commands that can be passed to "adb shell". */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
 
   private IDevice device;
@@ -56,9 +52,9 @@ class RealExopackageDevice implements ExopackageDevice {
   }
 
   /**
-   * Breaks a list of strings into groups whose total size is within some limit.
-   * Kind of like the xargs command that groups arguments to avoid maximum argument length limits.
-   * Except that the limit in adb is about 1k instead of 512k or 2M on Linux.
+   * Breaks a list of strings into groups whose total size is within some limit. Kind of like the
+   * xargs command that groups arguments to avoid maximum argument length limits. Except that the
+   * limit in adb is about 1k instead of 512k or 2M on Linux.
    */
   @VisibleForTesting
   static ImmutableList<ImmutableList<String>> chunkArgs(Iterable<String> args, int sizeLimit) {
@@ -98,24 +94,24 @@ class RealExopackageDevice implements ExopackageDevice {
       throws Exception {
     /* "dumpsys package <package>" produces output that looks like
 
-        Package [com.facebook.katana] (4229ce68):
-          userId=10145 gids=[1028, 1015, 3003]
-          pkg=Package{42690b80 com.facebook.katana}
-          codePath=/data/app/com.facebook.katana-1.apk
-          resourcePath=/data/app/com.facebook.katana-1.apk
-          nativeLibraryPath=/data/app-lib/com.facebook.katana-1
-          versionCode=1640376 targetSdk=14
-          versionName=8.0.0.0.23
+     Package [com.facebook.katana] (4229ce68):
+       userId=10145 gids=[1028, 1015, 3003]
+       pkg=Package{42690b80 com.facebook.katana}
+       codePath=/data/app/com.facebook.katana-1.apk
+       resourcePath=/data/app/com.facebook.katana-1.apk
+       nativeLibraryPath=/data/app-lib/com.facebook.katana-1
+       versionCode=1640376 targetSdk=14
+       versionName=8.0.0.0.23
 
-          ...
+       ...
 
-       */
+    */
     // We call "pm path" because "dumpsys package" returns valid output if an app has been
     // uninstalled using the "--keepdata" option. "pm path", on the other hand, returns an empty
     // output in that case.
-    String lines = AdbHelper.executeCommandWithErrorChecking(
-        device,
-        String.format("pm path %s; dumpsys package %s", packageName, packageName));
+    String lines =
+        AdbHelper.executeCommandWithErrorChecking(
+            device, String.format("pm path %s; dumpsys package %s", packageName, packageName));
 
     return ExopackageInstaller.parsePathAndPackageInfo(packageName, lines);
   }
@@ -134,9 +130,7 @@ class RealExopackageDevice implements ExopackageDevice {
 
   @Override
   public String listDir(String dirPath) throws Exception {
-    return AdbHelper.executeCommandWithErrorChecking(
-        device,
-        "ls " + dirPath + " | cat");
+    return AdbHelper.executeCommandWithErrorChecking(device, "ls " + dirPath + " | cat");
   }
 
   @Override
@@ -144,8 +138,7 @@ class RealExopackageDevice implements ExopackageDevice {
     String commandPrefix = "cd " + dirPath + " && rm ";
     // Add a fudge factor for separators and error checking.
     final int overhead = commandPrefix.length() + 100;
-    for (List<String> rmArgs :
-        chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
+    for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
       String command = commandPrefix + Joiner.on(' ').join(rmArgs);
       LOG.debug("Executing %s", command);
       AdbHelper.executeCommandWithErrorChecking(device, command);
@@ -164,66 +157,66 @@ class RealExopackageDevice implements ExopackageDevice {
 
   @Override
   public void installFile(
-      final String agentCommand,
-      final int port,
-      final Path targetDevicePath,
-      final Path source) throws Exception {
+      final String agentCommand, final int port, final Path targetDevicePath, final Path source)
+      throws Exception {
     Preconditions.checkArgument(source.isAbsolute());
     Preconditions.checkArgument(targetDevicePath.isAbsolute());
     Closer closer = Closer.create();
-    CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
+    CollectingOutputReceiver receiver =
+        new CollectingOutputReceiver() {
 
-      private boolean startedPayload = false;
-      private boolean wrotePayload = false;
-      @Nullable
-      private OutputStream outToDevice;
+          private boolean startedPayload = false;
+          private boolean wrotePayload = false;
+          @Nullable private OutputStream outToDevice;
 
-      @Override
-      public void addOutput(byte[] data, int offset, int length) {
-        super.addOutput(data, offset, length);
-        try {
-          if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-            LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
-            startedPayload = true;
-            Socket clientSocket = new Socket("localhost", port);
-            closer.register(clientSocket);
-            LOG.verbose("Connected");
-            outToDevice = clientSocket.getOutputStream();
-            closer.register(outToDevice);
-            // Need to wait for client to acknowledge that we've connected.
-          }
-          if (outToDevice == null) {
-            throw new NullPointerException();
-          }
-          if (!wrotePayload && getOutput().contains("z1")) {
-            if (outToDevice == null) {
-              throw new NullPointerException(
-                  "outToDevice was null when protocol says it cannot be");
+          @Override
+          public void addOutput(byte[] data, int offset, int length) {
+            super.addOutput(data, offset, length);
+            try {
+              if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
+                LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
+                startedPayload = true;
+                Socket clientSocket = new Socket("localhost", port);
+                closer.register(clientSocket);
+                LOG.verbose("Connected");
+                outToDevice = clientSocket.getOutputStream();
+                closer.register(outToDevice);
+                // Need to wait for client to acknowledge that we've connected.
+              }
+              if (outToDevice == null) {
+                throw new NullPointerException();
+              }
+              if (!wrotePayload && getOutput().contains("z1")) {
+                if (outToDevice == null) {
+                  throw new NullPointerException(
+                      "outToDevice was null when protocol says it cannot be");
+                }
+                LOG.verbose("Got z1");
+                wrotePayload = true;
+                outToDevice.write(
+                    getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
+                LOG.verbose("Wrote key");
+                com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
+                outToDevice.flush();
+                LOG.verbose("Wrote file");
+              }
+            } catch (IOException e) {
+              throw new RuntimeException(e);
             }
-            LOG.verbose("Got z1");
-            wrotePayload = true;
-            outToDevice.write(
-                getOutput().substring(
-                    0,
-                    AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-            LOG.verbose("Wrote key");
-            com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-            outToDevice.flush();
-            LOG.verbose("Wrote file");
           }
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
+        };
 
     String targetFileName = targetDevicePath.toString();
     String command =
-        "umask 022 && " +
-            agentCommand +
-            "receive-file " + port + " " + Files.size(source) + " " +
-            targetFileName +
-            " ; echo -n :$?";
+        "umask 022 && "
+            + agentCommand
+            + "receive-file "
+            + port
+            + " "
+            + Files.size(source)
+            + " "
+            + targetFileName
+            + " ; echo -n :$?";
     LOG.debug("Executing %s", command);
 
     // If we fail to execute the command, stash the exception.  My experience during development

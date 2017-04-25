@@ -17,43 +17,26 @@
 package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
-
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 
 /**
- * ResTableType is a ResChunk holding the resource values for a given type and configuration.
- * It consists of:
- *   ResChunk_header
- *      u32 chunk_type
- *      u32 header_size
- *      u32 chunk_size
- *   u8  id
- *   u32 entry_count
- *   u32 entry_start
- *   Config
- *      u32 config_size
- *      u8[config_size - 4] data
+ * ResTableType is a ResChunk holding the resource values for a given type and configuration. It
+ * consists of: ResChunk_header u32 chunk_type u32 header_size u32 chunk_size u8 id u32 entry_count
+ * u32 entry_start Config u32 config_size u8[config_size - 4] data
  *
- * This is followed by entry_count u32s containing offsets from entry_start to the data for each
+ * <p>This is followed by entry_count u32s containing offsets from entry_start to the data for each
  * entry. If the offset for a resource is -1, that resource has no value in this configuration.
  *
- * After the offsets comes the entry data. Each entry is of the form:
- *   u16       size
- *   u16       flags
- *   StringRef key
+ * <p>After the offsets comes the entry data. Each entry is of the form: u16 size u16 flags
+ * StringRef key
  *
- * If `(flags & FLAG_COMPLEX) == 0` this data is then followed by:
- *   ResValue value
+ * <p>If `(flags & FLAG_COMPLEX) == 0` this data is then followed by: ResValue value
  *
- * Else it's followed by a map header:
- *   ResRef parent
- *   u32    count
+ * <p>Else it's followed by a map header: ResRef parent u32 count
  *
- * and `count` map entries of the form:
- *   ResRef   name
- *   ResValue value
+ * <p>and `count` map entries of the form: ResRef name ResValue value
  */
 public class ResTableType extends ResChunk {
   private static final int CONFIG_OFFSET = 20;
@@ -80,7 +63,6 @@ public class ResTableType extends ResChunk {
     output.put(slice(entryData, 0));
     Preconditions.checkState(output.position() == start + getChunkSize());
   }
-
 
   public static ResTableType get(ByteBuffer buf) {
     int type = buf.getShort();
@@ -123,10 +105,7 @@ public class ResTableType extends ResChunk {
     this.entryData = entryData;
   }
 
-  public void dump(
-      StringPool strings,
-      ResTablePackage resPackage,
-      PrintStream out) {
+  public void dump(StringPool strings, ResTablePackage resPackage, PrintStream out) {
     out.format("      config (unknown):\n");
     for (int entryIdx = 0; entryIdx < entryCount; entryIdx++) {
       int offset = getEntryValueOffset(entryIdx);
@@ -149,9 +128,7 @@ public class ResTableType extends ResChunk {
           int count = entryData.getInt(offset + 12);
           out.format(
               "          Parent=0x%08x(Resolved=0x%08x), Count=%d\n",
-              parent,
-              parent == 0 ? 0x7F000000 : parent,
-              count);
+              parent, parent == 0 ? 0x7F000000 : parent, count);
           int entryOffset = offset;
           for (int attrIdx = 0; attrIdx < count; attrIdx++) {
             int name = entryData.getInt(entryOffset + 16);
@@ -159,12 +136,7 @@ public class ResTableType extends ResChunk {
             int type = entryData.get(entryOffset + 23);
             int data = entryData.getInt(entryOffset + 24);
             String dataString = formatTypeForDump(strings, type, data);
-            out.format(
-                "          #%d (Key=0x%08x): %s\n",
-                attrIdx,
-                name,
-                dataString
-            );
+            out.format("          #%d (Key=0x%08x): %s\n", attrIdx, name, dataString);
             entryOffset += 4 + vsize;
           }
         } else {
@@ -172,11 +144,7 @@ public class ResTableType extends ResChunk {
           // empty(offset + 10)
           int type = entryData.get(offset + 11);
           int data = entryData.getInt(offset + 12);
-          out.format(
-              " t=0x%02x d=0x%08x (s=0x%04x r=0x00)\n",
-              type,
-              data,
-              vsize);
+          out.format(" t=0x%02x d=0x%08x (s=0x%04x r=0x00)\n", type, data, vsize);
           String dataString = formatTypeForDump(strings, type, data);
           out.format("          %s\n", dataString);
         }
@@ -237,12 +205,7 @@ public class ResTableType extends ResChunk {
   private static final int RADIX_MASK = 0x3;
   private static final int MANTISSA_SHIFT = 8;
   private static final int MANTISSA_MASK = 0xFFFFFF;
-  private static final int[] RADIX_MULTS = {
-      0,
-      7,
-      15,
-      23
-  };
+  private static final int[] RADIX_MULTS = {0, 7, 15, 23};
 
   private static final int UNIT_MASK = 0xF;
 

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   @Override
@@ -42,10 +41,7 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) {
-    return new GenAidl(
-        params,
-        args.aidl,
-        args.importPath);
+    return new GenAidl(params, args.aidl, args.importPath);
   }
 
   @SuppressFieldNotInitialized

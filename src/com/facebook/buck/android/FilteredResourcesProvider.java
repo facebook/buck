@@ -18,20 +18,17 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public interface FilteredResourcesProvider {
 
-  /**
-   * @return The set of res/ directories that should be used to calculate the final R.java file.
-   */
+  /** @return The set of res/ directories that should be used to calculate the final R.java file. */
   ImmutableList<Path> getResDirectories();
 
   /**
-   * @return The list of {@code strings.xml} files excluding whitelisted strings.
-   *     Empty unless {@code ResourceCompressionMode.isStoreStringsAsAssets} is true.
+   * @return The list of {@code strings.xml} files excluding whitelisted strings. Empty unless
+   *     {@code ResourceCompressionMode.isStoreStringsAsAssets} is true.
    */
   ImmutableList<Path> getStringFiles();
 

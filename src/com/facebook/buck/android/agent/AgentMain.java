@@ -17,7 +17,6 @@
 package com.facebook.buck.android.agent;
 
 import com.facebook.buck.android.agent.util.AgentUtil;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,10 +36,10 @@ import java.util.logging.Logger; // NOPMD
 /**
  * Main class for an agent that runs on an Android device to aid app installation.
  *
- * <p>This does not run as a normal Android app.  It is packaged into an APK and installed
- * as a convenient way to get it on the device, but it is run from the "adb shell" command line
- * using the "dalvikvm" command.  Therefore, we do not have an Android Context and therefore
- * cannot interact with any system services.
+ * <p>This does not run as a normal Android app. It is packaged into an APK and installed as a
+ * convenient way to get it on the device, but it is run from the "adb shell" command line using the
+ * "dalvikvm" command. Therefore, we do not have an Android Context and therefore cannot interact
+ * with any system services.
  */
 public class AgentMain {
 
@@ -79,8 +78,8 @@ public class AgentMain {
   }
 
   /**
-   * Print the signature of an APK to stdout.  The APK path is passed as
-   * the only command line argument.
+   * Print the signature of an APK to stdout. The APK path is passed as the only command line
+   * argument.
    */
   private static void doGetSignature(List<String> userArgs) throws IOException {
     if (userArgs.size() != 1) {
@@ -94,8 +93,8 @@ public class AgentMain {
   /**
    * Roughly equivalent to the shell command "mkdir -p".
    *
-   * Note that some (all?) versions of Android will force restrictive permissions
-   * on the created directories.
+   * <p>Note that some (all?) versions of Android will force restrictive permissions on the created
+   * directories.
    */
   private static void doMkdirP(List<String> userArgs) throws IOException {
     if (userArgs.size() != 1) {
@@ -113,15 +112,16 @@ public class AgentMain {
    * Receive a file over the network and write it to disk.
    *
    * <p>Arguments are
-   *   <ol>
-   *     <li>The port to listen on.
-   *     <li>The size of the file to receive.
-   *     <li>The path to write it to.
-   *   </ol>
    *
-   * <p>At startup, the agent will print a textual secret key to stdout.  It consists of exactly
-   * {@link AgentUtil#TEXT_SECRET_KEY_SIZE} bytes.  The caller must prepend those bytes to the
-   * file being transmitted, in order to prevent another process from sending a malicious payload.
+   * <ol>
+   *   <li>The port to listen on.
+   *   <li>The size of the file to receive.
+   *   <li>The path to write it to.
+   * </ol>
+   *
+   * <p>At startup, the agent will print a textual secret key to stdout. It consists of exactly
+   * {@link AgentUtil#TEXT_SECRET_KEY_SIZE} bytes. The caller must prepend those bytes to the file
+   * being transmitted, in order to prevent another process from sending a malicious payload.
    */
   private static void doReceiveFile(List<String> userArgs) throws IOException {
     if (userArgs.size() != 3) {
@@ -146,7 +146,7 @@ public class AgentMain {
       InputStream input = connectionSocket.getInputStream();
 
       // Report that the socket has been opened.
-      System.out.write(new byte[]{'z', '1', '\n'});
+      System.out.write(new byte[] {'z', '1', '\n'});
       System.out.flush();
 
       receiveAndValidateSessionKey(secretKey, input);
@@ -190,9 +190,8 @@ public class AgentMain {
     return secretKey;
   }
 
-  private static void receiveAndValidateSessionKey(
-      byte[] secretKey,
-      InputStream clientInput) throws IOException {
+  private static void receiveAndValidateSessionKey(byte[] secretKey, InputStream clientInput)
+      throws IOException {
     byte[] receivedKey = new byte[secretKey.length];
     int receivedKeySize = clientInput.read(receivedKey);
     if (receivedKeySize != receivedKey.length) {
@@ -207,10 +206,9 @@ public class AgentMain {
       throws IOException {
     // Create a temp file to receive the payload, so we don't need to worry about
     // partially-received files.  The host takes care of deleting temp files.
-    File tempfile = File.createTempFile(
-        AgentUtil.TEMP_PREFIX + path.getName() + "-",
-        ".tmp",
-        path.getParentFile());
+    File tempfile =
+        File.createTempFile(
+            AgentUtil.TEMP_PREFIX + path.getName() + "-", ".tmp", path.getParentFile());
     FileOutputStream output = new FileOutputStream(tempfile);
 
     // Keep track of our starting time so we can enforce a timeout on slow but steady uploads.

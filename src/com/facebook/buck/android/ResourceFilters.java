@@ -29,7 +29,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -41,21 +40,22 @@ public class ResourceFilters {
   private ResourceFilters() {}
 
   /**
-   * The set of supported directories in resource folders.  This is defined in
+   * The set of supported directories in resource folders. This is defined in
    * http://developer.android.com/guide/topics/resources/providing-resources.html#table1
    */
   @VisibleForTesting
-  public static final ImmutableSet<String> SUPPORTED_RESOURCE_DIRECTORIES = ImmutableSet.of(
-      "animator",
-      "anim",
-      "color",
-      "drawable",
-      "mipmap",
-      "layout",
-      "menu",
-      "raw",
-      "values",
-      "xml");
+  public static final ImmutableSet<String> SUPPORTED_RESOURCE_DIRECTORIES =
+      ImmutableSet.of(
+          "animator",
+          "anim",
+          "color",
+          "drawable",
+          "mipmap",
+          "layout",
+          "menu",
+          "raw",
+          "values",
+          "xml");
 
   /**
    * Represents the names and values of valid densities for resources as defined in
@@ -139,13 +139,15 @@ public class ResourceFilters {
   }
 
   /**
-   * Takes a list of image files (as paths), and a target density (mdpi, hdpi, xhdpi), and
-   * returns a list of files which can be safely left out when building an APK for phones with that
-   * screen density. That APK will run on other screens as well but look worse due to scaling.
-   * <p>
-   * Each combination of non-density qualifiers is processed separately. For example, if we have
+   * Takes a list of image files (as paths), and a target density (mdpi, hdpi, xhdpi), and returns a
+   * list of files which can be safely left out when building an APK for phones with that screen
+   * density. That APK will run on other screens as well but look worse due to scaling.
+   *
+   * <p>Each combination of non-density qualifiers is processed separately. For example, if we have
    * {@code drawable-hdpi, drawable-mdpi, drawable-xhdpi, drawable-hdpi-ro}, for a target of {@code
    * mdpi}, we'll be keeping {@code drawable-mdpi, drawable-hdpi-ro}.
+   *
+   *
    * @param candidates list of paths to image files
    * @param targetDensities densities we want to keep
    * @param canDownscale do we have access to an image scaler
@@ -184,8 +186,11 @@ public class ResourceFilters {
       // This is to make sure we preserve the existing structure of drawable/ files.
       Set<Density> targets = targetDensities;
       if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI)) {
-        targets = Sets.newHashSet(Iterables.transform(targetDensities,
-            input -> (input == Density.MDPI) ? Density.NO_QUALIFIER : input));
+        targets =
+            Sets.newHashSet(
+                Iterables.transform(
+                    targetDensities,
+                    input -> (input == Density.MDPI) ? Density.NO_QUALIFIER : input));
       }
 
       // We intend to keep all available targeted densities.
@@ -221,9 +226,10 @@ public class ResourceFilters {
   }
 
   /**
-   * Given a list of paths of available drawables, and a target screen density, returns a
-   * {@link com.google.common.base.Predicate} that fails for drawables of a different
-   * density, whenever they can be safely removed.
+   * Given a list of paths of available drawables, and a target screen density, returns a {@link
+   * com.google.common.base.Predicate} that fails for drawables of a different density, whenever
+   * they can be safely removed.
+   *
    * @param candidates list of available drawables
    * @param targetDensities set of e.g. {@code "mdpi"}, {@code "ldpi"} etc.
    * @param canDownscale if no exact match is available, retain the highest quality
@@ -250,20 +256,19 @@ public class ResourceFilters {
       }
     }
     throw new HumanReadableException(
-        "Resource file at %s is not in a valid resource folder.  See " +
-            "http://developer.android.com/guide/topics/resources/providing-resources.html#table1 " +
-            "for a list of valid resource folders.",
+        "Resource file at %s is not in a valid resource folder.  See "
+            + "http://developer.android.com/guide/topics/resources/providing-resources.html#table1 "
+            + "for a list of valid resource folders.",
         resourceFile);
   }
 
   /**
    * Given a set of target densities, returns a {@link Predicate} that fails for any non-drawable
-   * resource of a different density.  Special consideration exists for the default density
-   * ({@link Density#NO_QUALIFIER} when the target does not exists.
+   * resource of a different density. Special consideration exists for the default density ({@link
+   * Density#NO_QUALIFIER} when the target does not exists.
    */
   public static Predicate<Path> createDensityFilter(
-      final ProjectFilesystem filesystem,
-      final Set<Density> targetDensities) {
+      final ProjectFilesystem filesystem, final Set<Density> targetDensities) {
     return resourceFile -> {
       final Path resourceFolder = getResourceFolder(resourceFile);
       if (resourceFolder.getFileName().toString().startsWith("drawable")) {
@@ -283,13 +288,16 @@ public class ResourceFilters {
 
       if (density.equals(Density.NO_QUALIFIER)) {
         final String resourceType = getResourceType(resourceFolder);
-        return resourceType.equals("values") ||
-            FluentIterable.from(targetDensities).anyMatch(target -> {
-              Path targetResourceFile = resourceFolder
-                  .resolveSibling(String.format("%s-%s", resourceType, target))
-                  .resolve(resourceFolder.relativize(resourceFile));
-              return !filesystem.exists(targetResourceFile);
-            });
+        return resourceType.equals("values")
+            || FluentIterable.from(targetDensities)
+                .anyMatch(
+                    target -> {
+                      Path targetResourceFile =
+                          resourceFolder
+                              .resolveSibling(String.format("%s-%s", resourceType, target))
+                              .resolve(resourceFolder.relativize(resourceFile));
+                      return !filesystem.exists(targetResourceFile);
+                    });
       }
       return false;
     };

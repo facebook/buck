@@ -23,16 +23,16 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractRedexOptions implements RuleKeyAppendable {
   public abstract Tool getRedex();
+
   public abstract Optional<SourcePath> getRedexConfig();
+
   public abstract ImmutableList<Arg> getRedexExtraArgs();
 
   @Override

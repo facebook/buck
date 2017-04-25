@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class AndroidLibraryGraphEnhancer {
@@ -68,9 +67,10 @@ public class AndroidLibraryGraphEnhancer {
     this.originalBuildRuleParams = buildRuleParams;
     this.javac = javac;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
-    this.javacOptions = JavacOptions.builder(javacOptions)
-        .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
-        .build();
+    this.javacOptions =
+        JavacOptions.builder(javacOptions)
+            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+            .build();
     this.resourceDependencyMode = resourceDependencyMode;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.resourceUnionPackage = resourceUnionPackage;
@@ -79,14 +79,11 @@ public class AndroidLibraryGraphEnhancer {
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
-    return BuildTarget.builder(buildTarget)
-        .addFlavors(DUMMY_R_DOT_JAVA_FLAVOR)
-        .build();
+    return BuildTarget.builder(buildTarget).addFlavors(DUMMY_R_DOT_JAVA_FLAVOR).build();
   }
 
   public Optional<DummyRDotJava> getBuildableForAndroidResources(
-      BuildRuleResolver ruleResolver,
-      boolean createBuildableIfEmptyDeps) {
+      BuildRuleResolver ruleResolver, boolean createBuildableIfEmptyDeps) {
     Preconditions.checkState(!HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
@@ -97,16 +94,16 @@ public class AndroidLibraryGraphEnhancer {
 
     switch (resourceDependencyMode) {
       case FIRST_ORDER:
-        androidResourceDeps = FluentIterable.from(originalDeps)
-            .filter(HasAndroidResourceDeps.class)
-            .filter(input -> input.getRes() != null)
-            .toSet();
+        androidResourceDeps =
+            FluentIterable.from(originalDeps)
+                .filter(HasAndroidResourceDeps.class)
+                .filter(input -> input.getRes() != null)
+                .toSet();
         break;
       case TRANSITIVE:
-        androidResourceDeps = UnsortedAndroidResourceDeps.createFrom(
-            originalDeps,
-            Optional.empty())
-            .getResourceDeps();
+        androidResourceDeps =
+            UnsortedAndroidResourceDeps.createFrom(originalDeps, Optional.empty())
+                .getResourceDeps();
         break;
       default:
         throw new IllegalStateException(
@@ -121,33 +118,34 @@ public class AndroidLibraryGraphEnhancer {
 
     CompileToJarStepFactory compileToJarStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
-    BuildRuleParams dummyRDotJavaParams = compileToJarStepFactory
-        .addInputs(
-            // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
-            // that is used to build it
-            originalBuildRuleParams.copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet::of,
-                ImmutableSortedSet::of),
-            ruleFinder)
-        .withBuildTarget(dummyRDotJavaBuildTarget);
+    BuildRuleParams dummyRDotJavaParams =
+        compileToJarStepFactory
+            .addInputs(
+                // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
+                // that is used to build it
+                originalBuildRuleParams.copyReplacingDeclaredAndExtraDeps(
+                    ImmutableSortedSet::of, ImmutableSortedSet::of),
+                ruleFinder)
+            .withBuildTarget(dummyRDotJavaBuildTarget);
 
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        dummyRDotJavaParams,
-        ruleFinder,
-        androidResourceDeps,
-        compileToJarStepFactory,
-        forceFinalResourceIds,
-        resourceUnionPackage,
-        finalRName,
-        useOldStyleableFormat);
+    DummyRDotJava dummyRDotJava =
+        new DummyRDotJava(
+            dummyRDotJavaParams,
+            ruleFinder,
+            androidResourceDeps,
+            compileToJarStepFactory,
+            forceFinalResourceIds,
+            resourceUnionPackage,
+            finalRName,
+            useOldStyleableFormat);
     ruleResolver.addToIndex(dummyRDotJava);
 
     return Optional.of(dummyRDotJava);
   }
 
   public CalculateAbiFromClasses getBuildableForAndroidResourcesAbi(
-      BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, SourcePathRuleFinder ruleFinder)
+      throws NoSuchBuildTargetException {
     Preconditions.checkState(HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     BuildTarget resourcesTarget = HasJavaAbi.getLibraryTarget(dummyRDotJavaBuildTarget);
     BuildRule resourcesRule = resolver.requireRule(resourcesTarget);

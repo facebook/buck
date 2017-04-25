@@ -20,9 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 public class AndroidResourceHelper {
@@ -32,21 +30,22 @@ public class AndroidResourceHelper {
    * Filters out the set of {@code android_resource()} dependencies from {@code deps}. As a special
    * case, if an {@code android_prebuilt_aar()} appears in the deps, the {@code android_resource()}
    * that corresponds to the AAR will also be included in the output.
+   *
    * <p>
    */
   public static ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
-    return FluentIterable
-        .from(deps)
-        .transform(new Function<BuildRule, BuildRule>() {
-          @Override
-          @Nullable
-          public BuildRule apply(BuildRule buildRule) {
-            if (buildRule instanceof HasAndroidResourceDeps) {
-              return buildRule;
-            }
-           return null;
-         }
-        })
+    return FluentIterable.from(deps)
+        .transform(
+            new Function<BuildRule, BuildRule>() {
+              @Override
+              @Nullable
+              public BuildRule apply(BuildRule buildRule) {
+                if (buildRule instanceof HasAndroidResourceDeps) {
+                  return buildRule;
+                }
+                return null;
+              }
+            })
         .filter(Objects::nonNull)
         .toSortedSet(deps.comparator());
   }

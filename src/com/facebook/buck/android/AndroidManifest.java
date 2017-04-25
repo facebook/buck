@@ -31,13 +31,13 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Set;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
  * skeleton manifest and the library manifests from its dependencies.
+ *
  * <pre>
  * android_manifest(
  *   name = 'my_manifest',
@@ -49,8 +49,10 @@ import java.util.Set;
  *   ],
  * )
  * </pre>
- * This will produce a file under buck-out/gen that will be parameterized by the name of the
- * {@code android_manifest} rule. This can be used as follows:
+ *
+ * This will produce a file under buck-out/gen that will be parameterized by the name of the {@code
+ * android_manifest} rule. This can be used as follows:
+ *
  * <pre>
  * android_binary(
  *   name = 'my_app',
@@ -61,19 +63,15 @@ import java.util.Set;
  */
 public class AndroidManifest extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final SourcePath skeletonFile;
+  @AddToRuleKey private final SourcePath skeletonFile;
 
   /** These must be sorted so the rule key is stable. */
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> manifestFiles;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
-      BuildRuleParams params,
-      SourcePath skeletonFile,
-      Set<SourcePath> manifestFiles) {
+      BuildRuleParams params, SourcePath skeletonFile, Set<SourcePath> manifestFiles) {
     super(params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
@@ -84,8 +82,7 @@ public class AndroidManifest extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 

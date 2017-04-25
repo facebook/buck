@@ -26,7 +26,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableCollection;
-
 import javax.annotation.Nullable;
 
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
@@ -52,9 +51,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg arg,
-      JavacOptions javacOptions,
-      BuildRuleResolver resolver) {
+      AndroidLibraryDescription.Arg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 
     return new ScalacToJarStepFactory(
         getScalac(resolver),

@@ -31,15 +31,15 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
 import java.util.Optional;
 
 /**
- * A specialization of a genrule that specifically allows the modification of apks.  This is
- * useful for processes that modify an APK, such as zipaligning it or signing it.
- * <p>
- * The generated APK will be at <code><em>rule_name</em>.apk</code>.
+ * A specialization of a genrule that specifically allows the modification of apks. This is useful
+ * for processes that modify an APK, such as zipaligning it or signing it.
+ *
+ * <p>The generated APK will be at <code><em>rule_name</em>.apk</code>.
+ *
  * <pre>
  * apk_genrule(
  *   name = 'fb4a_signed',
@@ -54,8 +54,7 @@ import java.util.Optional;
 public class ApkGenrule extends Genrule implements HasInstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
-  @AddToRuleKey
-  private final BuildTargetSourcePath<?> apk;
+  @AddToRuleKey private final BuildTargetSourcePath<?> apk;
   private final HasInstallableApk hasInstallableApk;
 
   ApkGenrule(

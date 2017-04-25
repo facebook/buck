@@ -43,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -87,8 +86,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
@@ -108,17 +106,21 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(
-                Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
+            context
+                .getSourcePathResolver()
+                .getAbsolutePath(
+                    Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
-    commands.add(CopyStep.forDirectory(
+    commands.add(
+        CopyStep.forDirectory(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(assembledResourceDirectory),
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
-    commands.add(CopyStep.forDirectory(
+    commands.add(
+        CopyStep.forDirectory(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(assembledAssetsDirectory),
             temp.resolve("assets"),
@@ -163,7 +165,6 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             false,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));
-
 
     buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();

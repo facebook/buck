@@ -33,7 +33,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -41,10 +40,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Runs a user supplied reordering tool on all dexes.
- * Deals with both jar-ed and non-jar-ed dexes. Jar-ed
- * dexes get unzipped to a temp directory first and re-zipped
- * to the output location after the reorder tool is run.
+ * Runs a user supplied reordering tool on all dexes. Deals with both jar-ed and non-jar-ed dexes.
+ * Jar-ed dexes get unzipped to a temp directory first and re-zipped to the output location after
+ * the reorder tool is run.
  */
 public class IntraDexReorderStep implements Step {
 
@@ -107,9 +105,7 @@ public class IntraDexReorderStep implements Step {
   }
 
   private int reorderEntry(
-      Path inputPath,
-      boolean isPrimaryDex,
-      ImmutableList.Builder<Step> steps) {
+      Path inputPath, boolean isPrimaryDex, ImmutableList.Builder<Step> steps) {
 
     if (!isPrimaryDex) {
       String tmpname = "dex-tmp-" + inputPath.getFileName().toString() + "-%s";
@@ -135,9 +131,7 @@ public class IntraDexReorderStep implements Step {
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
               ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
-              temp
-          )
-      );
+              temp));
     } else {
       // copy dex
       // apply reorder directly on dex
@@ -151,15 +145,15 @@ public class IntraDexReorderStep implements Step {
                   outputPrimaryDexPath.toString())));
     }
     return 0;
-       }
-
-  @Override
-    public String getShortName() {
-      return "intradex reorder";
-    }
-
-  @Override
-    public String getDescription(ExecutionContext context) {
-      return String.format("%s --- intradex reorder using %s", buildTarget, reorderTool);
-    }
   }
+
+  @Override
+  public String getShortName() {
+    return "intradex reorder";
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("%s --- intradex reorder using %s", buildTarget, reorderTool);
+  }
+}

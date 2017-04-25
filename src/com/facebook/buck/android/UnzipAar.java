@@ -43,7 +43,6 @@ import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -53,8 +52,7 @@ public class UnzipAar extends AbstractBuildRule
 
   private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
 
-  @AddToRuleKey
-  private final SourcePath aarFile;
+  @AddToRuleKey private final SourcePath aarFile;
   private final Path unpackDirectory;
   private final Path uberClassesJar;
   private final Path pathToTextSymbolsDir;
@@ -62,18 +60,15 @@ public class UnzipAar extends AbstractBuildRule
   private final Path pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
-  UnzipAar(
-      BuildRuleParams buildRuleParams,
-      SourcePath aarFile) {
+  UnzipAar(BuildRuleParams buildRuleParams, SourcePath aarFile) {
     super(buildRuleParams);
     this.aarFile = aarFile;
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.unpackDirectory =
         BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__unpack_%s__");
-    this.uberClassesJar = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        buildTarget,
-        "__uber_classes_%s__/classes.jar");
+    this.uberClassesJar =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(), buildTarget, "__uber_classes_%s__/classes.jar");
     pathToTextSymbolsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
     pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
@@ -83,8 +78,7 @@ public class UnzipAar extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), unpackDirectory));
     steps.add(
@@ -107,81 +101,78 @@ public class UnzipAar extends AbstractBuildRule
     // android_library that depends on an android_prebuilt_aar can compile against anything in the
     // .aar's classes.jar or libs/.
     steps.add(MkdirStep.of(getProjectFilesystem(), uberClassesJar.getParent()));
-    steps.add(new AbstractExecutionStep("create_uber_classes_jar") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) {
-        Path libsDirectory = unpackDirectory.resolve("libs");
-        boolean dirDoesNotExistOrIsEmpty;
-        if (!getProjectFilesystem().exists(libsDirectory)) {
-          dirDoesNotExistOrIsEmpty = true;
-        } else {
-          try {
-            dirDoesNotExistOrIsEmpty =
-                getProjectFilesystem().getDirectoryContents(libsDirectory).isEmpty();
-          } catch (IOException e) {
-            context.logError(e, "Failed to get directory contents of %s", libsDirectory);
-            return StepExecutionResult.ERROR;
-          }
-        }
+    steps.add(
+        new AbstractExecutionStep("create_uber_classes_jar") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) {
+            Path libsDirectory = unpackDirectory.resolve("libs");
+            boolean dirDoesNotExistOrIsEmpty;
+            if (!getProjectFilesystem().exists(libsDirectory)) {
+              dirDoesNotExistOrIsEmpty = true;
+            } else {
+              try {
+                dirDoesNotExistOrIsEmpty =
+                    getProjectFilesystem().getDirectoryContents(libsDirectory).isEmpty();
+              } catch (IOException e) {
+                context.logError(e, "Failed to get directory contents of %s", libsDirectory);
+                return StepExecutionResult.ERROR;
+              }
+            }
 
-        Path classesJar = unpackDirectory.resolve("classes.jar");
-        JavacEventSinkToBuckEventBusBridge eventSink = new JavacEventSinkToBuckEventBusBridge(
-            context.getBuckEventBus());
-        if (!getProjectFilesystem().exists(classesJar)) {
-          try {
-            JarDirectoryStepHelper.createEmptyJarFile(
-                getProjectFilesystem(),
-                classesJar,
-                eventSink,
-                context.getStdErr());
-          } catch (IOException e) {
-            context.logError(e, "Failed to create empty jar %s", classesJar);
-            return StepExecutionResult.ERROR;
-          }
-        }
+            Path classesJar = unpackDirectory.resolve("classes.jar");
+            JavacEventSinkToBuckEventBusBridge eventSink =
+                new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
+            if (!getProjectFilesystem().exists(classesJar)) {
+              try {
+                JarDirectoryStepHelper.createEmptyJarFile(
+                    getProjectFilesystem(), classesJar, eventSink, context.getStdErr());
+              } catch (IOException e) {
+                context.logError(e, "Failed to create empty jar %s", classesJar);
+                return StepExecutionResult.ERROR;
+              }
+            }
 
-        if (dirDoesNotExistOrIsEmpty) {
-          try {
-            getProjectFilesystem().copy(
-                classesJar,
-                uberClassesJar,
-                ProjectFilesystem.CopySourceMode.FILE);
-          } catch (IOException e) {
-            context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
-            return StepExecutionResult.ERROR;
-          }
-        } else {
-          // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
-          ImmutableSortedSet.Builder<Path> entriesToJarBuilder = ImmutableSortedSet.naturalOrder();
-          entriesToJarBuilder.add(classesJar);
-          try {
-            entriesToJarBuilder.addAll(
-                getProjectFilesystem().getDirectoryContents(libsDirectory));
-          } catch (IOException e) {
-            context.logError(e, "Failed to get directory contents of %s", libsDirectory);
-            return StepExecutionResult.ERROR;
-          }
+            if (dirDoesNotExistOrIsEmpty) {
+              try {
+                getProjectFilesystem()
+                    .copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
+              } catch (IOException e) {
+                context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
+                return StepExecutionResult.ERROR;
+              }
+            } else {
+              // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
+              ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
+                  ImmutableSortedSet.naturalOrder();
+              entriesToJarBuilder.add(classesJar);
+              try {
+                entriesToJarBuilder.addAll(
+                    getProjectFilesystem().getDirectoryContents(libsDirectory));
+              } catch (IOException e) {
+                context.logError(e, "Failed to get directory contents of %s", libsDirectory);
+                return StepExecutionResult.ERROR;
+              }
 
-          ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
-          try {
-            JarDirectoryStepHelper.createJarFile(
-                getProjectFilesystem(),
-                uberClassesJar,
-                entriesToJar,
-                /* mainClass */ Optional.empty(),
-                /* manifestFile */ Optional.empty(),
-                /* mergeManifests */ true,
-                /* blacklist */ ImmutableSet.of(),
-                eventSink,
-                context.getStdErr());
-          } catch (IOException e) {
-            context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
-            return StepExecutionResult.ERROR;
+              ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
+              try {
+                JarDirectoryStepHelper.createJarFile(
+                    getProjectFilesystem(),
+                    uberClassesJar,
+                    entriesToJar,
+                    /* mainClass */ Optional.empty(),
+                    /* manifestFile */ Optional.empty(),
+                    /* mergeManifests */ true,
+                    /* blacklist */ ImmutableSet.of(),
+                    eventSink,
+                    context.getStdErr());
+              } catch (IOException e) {
+                context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
+                return StepExecutionResult.ERROR;
+              }
+            }
+            return StepExecutionResult.SUCCESS;
           }
-        }
-        return StepExecutionResult.SUCCESS;
-      }
-    });
+        });
 
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTextSymbolsDir));
     steps.add(

@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -58,37 +57,33 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
-/**
- * ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true.
- */
+/** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
 public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
-  /**
-   * Prefix of the path to the agent apk on the device.
-   */
+  /** Prefix of the path to the agent apk on the device. */
   private static final String AGENT_DEVICE_PATH = "/data/app/" + AgentUtil.AGENT_PACKAGE_NAME;
 
-  /**
-   * Command line to invoke the agent on the device.
-   */
+  /** Command line to invoke the agent on the device. */
   private static final String JAVA_AGENT_COMMAND =
-      "dalvikvm -classpath " +
-      AGENT_DEVICE_PATH + "-1.apk:" + AGENT_DEVICE_PATH + "-2.apk:" +
-      AGENT_DEVICE_PATH + "-1/base.apk:" + AGENT_DEVICE_PATH + "-2/base.apk " +
-      "com.facebook.buck.android.agent.AgentMain ";
+      "dalvikvm -classpath "
+          + AGENT_DEVICE_PATH
+          + "-1.apk:"
+          + AGENT_DEVICE_PATH
+          + "-2.apk:"
+          + AGENT_DEVICE_PATH
+          + "-1/base.apk:"
+          + AGENT_DEVICE_PATH
+          + "-2/base.apk "
+          + "com.facebook.buck.android.agent.AgentMain ";
 
-  @VisibleForTesting
-  static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
+  @VisibleForTesting static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
-  @VisibleForTesting
-  static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
+  @VisibleForTesting static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
 
-  @VisibleForTesting
-  static final Path RESOURCES_DIR = Paths.get("resources");
+  @VisibleForTesting static final Path RESOURCES_DIR = Paths.get("resources");
 
   @VisibleForTesting
   static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
@@ -114,10 +109,10 @@ public class ExopackageInstaller {
   private final ExopackageInfo exopackageInfo;
 
   /**
-   * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather
-   * than IDevices).
+   * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather than
+   * IDevices).
    *
-   * All of ExopackageInstaller's interaction with devices and adb goes through this class and
+   * <p>All of ExopackageInstaller's interaction with devices and adb goes through this class and
    * ExopackageDevice making it easy to provide different implementations in tests.
    */
   @VisibleForTesting
@@ -155,9 +150,9 @@ public class ExopackageInstaller {
   }
 
   /**
-   * The next port number to use for communicating with the agent on a device.
-   * This resets for every instance of ExopackageInstaller,
-   * but is incremented for every device we are installing on when using "-x".
+   * The next port number to use for communicating with the agent on a device. This resets for every
+   * instance of ExopackageInstaller, but is incremented for every device we are installing on when
+   * using "-x".
    */
   private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
@@ -166,6 +161,7 @@ public class ExopackageInstaller {
     final String apkPath;
     final String nativeLibPath;
     final String versionCode;
+
     PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
       this.nativeLibPath = nativeLibPath;
       this.apkPath = apkPath;
@@ -206,9 +202,8 @@ public class ExopackageInstaller {
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
-    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(
-        pathResolver,
-        apkRule.getApkInfo());
+    this.packageName =
+        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apkRule.getApkInfo());
     this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
@@ -218,59 +213,45 @@ public class ExopackageInstaller {
     this.exopackageInfo = exopackageInfo.get();
   }
 
-  /**
-   * Installs the app specified in the constructor.  This object should be discarded afterward.
-   */
+  /** Installs the app specified in the constructor. This object should be discarded afterward. */
   public synchronized boolean install(boolean quiet) throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(apkRule.getBuildTarget());
     eventBus.post(started);
 
-    boolean success = adbHelper.adbCall(
-        "install exopackage apk",
-        device -> new SingleDeviceInstaller(
-            device,
-            nextAgentPort.getAndIncrement()).doInstall(),
-        quiet);
+    boolean success =
+        adbHelper.adbCall(
+            "install exopackage apk",
+            device ->
+                new SingleDeviceInstaller(device, nextAgentPort.getAndIncrement()).doInstall(),
+            quiet);
 
-    eventBus.post(InstallEvent.finished(
+    eventBus.post(
+        InstallEvent.finished(
             started,
             success,
             Optional.empty(),
-            Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(
-                pathResolver,
-                apkRule.getApkInfo()))));
+            Optional.of(
+                AdbHelper.tryToExtractPackageNameFromManifest(
+                    pathResolver, apkRule.getApkInfo()))));
     return success;
   }
 
-  /**
-   * Helper class to manage the state required to install on a single device.
-   */
+  /** Helper class to manage the state required to install on a single device. */
   private class SingleDeviceInstaller {
 
-    /**
-     * Device that we are installing onto.
-     */
+    /** Device that we are installing onto. */
     private final ExopackageDevice device;
 
-    /**
-     * Port to use for sending files to the agent.
-     */
+    /** Port to use for sending files to the agent. */
     private final int agentPort;
 
-    /**
-     * True iff we should use the native agent.
-     */
+    /** True iff we should use the native agent. */
     private boolean useNativeAgent = true;
 
-    /**
-     * Set after the agent is installed.
-     */
-    @Nullable
-    private String nativeAgentPath;
+    /** Set after the agent is installed. */
+    @Nullable private String nativeAgentPath;
 
-    private SingleDeviceInstaller(
-        ExopackageDevice device,
-        int agentPort) {
+    private SingleDeviceInstaller(ExopackageDevice device, int agentPort) {
       this.device = device;
       this.agentPort = agentPort;
     }
@@ -336,12 +317,14 @@ public class ExopackageInstaller {
       // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
-      String metadataContents = com.google.common.io.Files.toString(
-          projectFilesystem.resolve(exopackageInfo.getDexInfo().get().getMetadata()).toFile(),
-          Charsets.UTF_8)
-          .replaceAll(
-              "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
-              "secondary-$2.dex.jar $2 ");
+      String metadataContents =
+          com.google.common.io.Files.toString(
+                  projectFilesystem
+                      .resolve(exopackageInfo.getDexInfo().get().getMetadata())
+                      .toFile(),
+                  Charsets.UTF_8)
+              .replaceAll(
+                  "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
 
       installFiles(
           "secondary_dex",
@@ -421,15 +404,18 @@ public class ExopackageInstaller {
         return;
       }
 
-      String metadataContents = Joiner.on('\n').join(
-          FluentIterable.from(libraries.entrySet()).transform(
-              input -> {
-                String hash = input.getKey();
-                String filename = input.getValue().getFileName().toString();
-                int index = filename.indexOf('.');
-                String libname = index == -1 ? filename : filename.substring(0, index);
-                return String.format("%s native-%s.so", libname, hash);
-              }));
+      String metadataContents =
+          Joiner.on('\n')
+              .join(
+                  FluentIterable.from(libraries.entrySet())
+                      .transform(
+                          input -> {
+                            String hash = input.getKey();
+                            String filename = input.getValue().getFileName().toString();
+                            int index = filename.indexOf('.');
+                            String libname = index == -1 ? filename : filename.substring(0, index);
+                            return String.format("%s native-%s.so", libname, hash);
+                          }));
 
       ImmutableSet<String> requiredHashes = libraries.keySet();
       ImmutableSet<String> presentHashes = prepareNativeLibsDir(abi, requiredHashes);
@@ -447,7 +433,7 @@ public class ExopackageInstaller {
 
     /**
      * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
-     * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
+     * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
      */
     private void determineBestAgent() throws Exception {
       String value = device.getProperty("ro.build.version.sdk");
@@ -469,17 +455,14 @@ public class ExopackageInstaller {
     }
 
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("get_package_info"),
-          "package", packageName)) {
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(
+              eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
         return device.getPackageInfo(packageName);
       }
     }
 
-    /**
-     * @return PackageInfo for the agent, or absent if installation failed.
-     */
+    /** @return PackageInfo for the agent, or absent if installation failed. */
     private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
       Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       if (!agentInfo.isPresent()) {
@@ -505,10 +488,8 @@ public class ExopackageInstaller {
     private Optional<PackageInfo> installAgentApk() throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
         File apkPath = agentApkPath.toFile();
-        boolean success = device.installApkOnDevice(
-            apkPath,
-            /* installViaSd */ false,
-            /* quiet */ false);
+        boolean success =
+            device.installApkOnDevice(apkPath, /* installViaSd */ false, /* quiet */ false);
         if (!success) {
           return Optional.empty();
         }
@@ -525,8 +506,9 @@ public class ExopackageInstaller {
 
       LOG.debug("App path: %s", appPackageInfo.get().apkPath);
       String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-      String localAppSignature = AgentUtil.getJarSignature(
-          pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
+      String localAppSignature =
+          AgentUtil.getJarSignature(
+              pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 
@@ -554,10 +536,9 @@ public class ExopackageInstaller {
 
     private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
       ExopackageInfo.DexInfo dexInfo = exopackageInfo.getDexInfo().get();
-      ImmutableMultimap<String, Path> multimap = parseExopackageInfoMetadata(
-          dexInfo.getMetadata(),
-          dexInfo.getDirectory(),
-          projectFilesystem);
+      ImmutableMultimap<String, Path> multimap =
+          parseExopackageInfoMetadata(
+              dexInfo.getMetadata(), dexInfo.getDirectory(), projectFilesystem);
       // Convert multimap to a map, because every key should have only one value.
       ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
       for (Map.Entry<String, Path> entry : multimap.entries()) {
@@ -572,8 +553,7 @@ public class ExopackageInstaller {
     }
 
     private ImmutableSet<String> prepareNativeLibsDir(
-        String abi,
-        ImmutableSet<String> requiredHashes) throws Exception {
+        String abi, ImmutableSet<String> requiredHashes) throws Exception {
       return prepareDirectory(NATIVE_LIBS_DIR.resolve(abi), NATIVE_LIB_PATTERN, requiredHashes);
     }
 
@@ -583,9 +563,7 @@ public class ExopackageInstaller {
     }
 
     private ImmutableSet<String> prepareDirectory(
-        Path dirname,
-        Pattern filePattern,
-        ImmutableSet<String> requiredHashes) throws Exception {
+        Path dirname, Pattern filePattern, ImmutableSet<String> requiredHashes) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
         String dirPath = dataRoot.resolve(dirname).toString();
         // Kind of a hack here.  The java agent can't force the proper permissions on the
@@ -611,37 +589,31 @@ public class ExopackageInstaller {
         ImmutableMap<String, Path> filesToInstallByHash,
         String metadataFileContents,
         String filenameFormat,
-        Path destinationDirRelativeToDataRoot) throws Exception {
+        Path destinationDirRelativeToDataRoot)
+        throws Exception {
       try (SimplePerfEvent.Scope ignored1 =
-               SimplePerfEvent.scope(eventBus, "multi_install_" + filesType)) {
+          SimplePerfEvent.scope(eventBus, "multi_install_" + filesType)) {
         device.createForward(agentPort, agentPort);
         Path destinationDir = dataRoot.resolve(destinationDirRelativeToDataRoot);
         try {
           for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
-            Path destination = destinationDir.resolve(
-                String.format(filenameFormat, entry.getKey()));
+            Path destination =
+                destinationDir.resolve(String.format(filenameFormat, entry.getKey()));
             Path source = entry.getValue();
 
             try (SimplePerfEvent.Scope ignored2 =
-                     SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+                SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
               device.installFile(
-                  getAgentCommand(),
-                  agentPort,
-                  destination,
-                  projectFilesystem.resolve(source));
+                  getAgentCommand(), agentPort, destination, projectFilesystem.resolve(source));
             }
           }
           try (SimplePerfEvent.Scope ignored3 =
-                   SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
+              SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
             try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
               com.google.common.io.Files.write(
-                  metadataFileContents.getBytes(Charsets.UTF_8),
-                  temp.get().toFile());
+                  metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
               device.installFile(
-                  getAgentCommand(),
-                  agentPort,
-                  destinationDir.resolve("metadata.txt"),
-                  temp.get());
+                  getAgentCommand(), agentPort, destinationDir.resolve("metadata.txt"), temp.get());
             }
           }
         } finally {
@@ -651,9 +623,9 @@ public class ExopackageInstaller {
             LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
             eventBus.post(
                 ConsoleEvent.warning(
-                    "Failed to remove adb forward %d. This is not necessarily a problem\n" +
-                        "because it will be recreated during the next exopackage installation.\n" +
-                        "See the log for the full exception.",
+                    "Failed to remove adb forward %d. This is not necessarily a problem\n"
+                        + "because it will be recreated during the next exopackage installation.\n"
+                        + "See the log for the full exception.",
                     agentPort));
           }
         }
@@ -664,9 +636,7 @@ public class ExopackageInstaller {
   private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
     ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.getNativeLibsInfo().get();
     return parseExopackageInfoMetadata(
-        nativeLibsInfo.getMetadata(),
-        nativeLibsInfo.getDirectory(),
-        projectFilesystem);
+        nativeLibsInfo.getMetadata(), nativeLibsInfo.getDirectory(), projectFilesystem);
   }
 
   private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
@@ -692,8 +662,8 @@ public class ExopackageInstaller {
       // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
       Preconditions.checkState(relativePath.getNameCount() == 3);
       Preconditions.checkState(
-          relativePath.getName(0).toString().equals("libs") ||
-              relativePath.getName(0).toString().equals("assetLibs"));
+          relativePath.getName(0).toString().equals("libs")
+              || relativePath.getName(0).toString().equals("assetLibs"));
       String libAbi = relativePath.getParent().getFileName().toString();
       String libName = relativePath.getFileName().toString();
       if (libAbi.equals(abi) && !ignoreLibraries.contains(libName)) {
@@ -704,18 +674,15 @@ public class ExopackageInstaller {
   }
 
   /**
-   * Parses a text file which is supposed to be in the following format:
-   * "file_path_without_spaces file_hash ...." i.e. it parses the first two columns of each line
-   * and ignores the rest of it.
+   * Parses a text file which is supposed to be in the following format: "file_path_without_spaces
+   * file_hash ...." i.e. it parses the first two columns of each line and ignores the rest of it.
    *
-   * @return  A multi map from the file hash to its path, which equals the raw path resolved against
+   * @return A multi map from the file hash to its path, which equals the raw path resolved against
    *     {@code resolvePathAgainst}.
    */
   @VisibleForTesting
   static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
-      Path metadataTxt,
-      Path resolvePathAgainst,
-      ProjectFilesystem filesystem) throws IOException {
+      Path metadataTxt, Path resolvePathAgainst, ProjectFilesystem filesystem) throws IOException {
     ImmutableMultimap.Builder<String, Path> builder = ImmutableMultimap.builder();
     for (String line : filesystem.readLines(metadataTxt)) {
       // ignore lines that start with '.'
@@ -789,9 +756,9 @@ public class ExopackageInstaller {
         case "nativeLibraryPath":
           nativeLibPath = parts.get(1);
           break;
-        // Lollipop uses this name.  Not sure what's "legacy" about it yet.
-        // Maybe something to do with 64-bit?
-        // Might need to update if people report failures.
+          // Lollipop uses this name.  Not sure what's "legacy" about it yet.
+          // Maybe something to do with 64-bit?
+          // Might need to update if people report failures.
         case "legacyNativeLibraryDir":
           nativeLibPath = parts.get(1);
           break;
@@ -825,12 +792,12 @@ public class ExopackageInstaller {
   }
 
   /**
-   * @param output  Output of "ls" command.
-   * @param filePattern  A {@link Pattern} that is used to check if a file is valid, and if it
+   * @param output Output of "ls" command.
+   * @param filePattern A {@link Pattern} that is used to check if a file is valid, and if it
    *     matches, {@code filePattern.group(1)} should return the hash in the file name.
-   * @param requiredHashes  Hashes of dex files required for this apk.
-   * @param foundHashes  Builder to receive hashes that we need and were found.
-   * @param toDelete  Builder to receive files that we need to delete.
+   * @param requiredHashes Hashes of dex files required for this apk.
+   * @param foundHashes Builder to receive hashes that we need and were found.
+   * @param toDelete Builder to receive files that we need to delete.
    */
   @VisibleForTesting
   static void processLsOutput(
@@ -856,5 +823,4 @@ public class ExopackageInstaller {
       }
     }
   }
-
 }

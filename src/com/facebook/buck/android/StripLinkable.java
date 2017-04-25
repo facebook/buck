@@ -29,19 +29,15 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class StripLinkable extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool stripTool;
+  @AddToRuleKey private final Tool stripTool;
 
-  @AddToRuleKey
-  private final SourcePath sourcePathToStrip;
+  @AddToRuleKey private final SourcePath sourcePathToStrip;
 
-  @AddToRuleKey
-  private final String strippedObjectName;
+  @AddToRuleKey private final String strippedObjectName;
 
   private final Path resultDir;
 
@@ -83,7 +79,6 @@ public class StripLinkable extends AbstractBuildRule {
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        resultDir.resolve(strippedObjectName));
+        getBuildTarget(), resultDir.resolve(strippedObjectName));
   }
 }

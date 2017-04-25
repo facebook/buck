@@ -17,13 +17,10 @@
 package com.facebook.buck.android;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Parser for ProGuard-generated mapping files.  Currently only handles class mapping.
- */
+/** Parser for ProGuard-generated mapping files. Currently only handles class mapping. */
 public class ProguardMapping {
 
   /** Utility class: do not instantiate. */

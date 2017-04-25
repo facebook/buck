@@ -43,19 +43,18 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
  * An object that represents a collection of Android NDK source code.
- * <p>
- * Suppose this were a rule defined in <code>src/com/facebook/feed/jni/BUCK</code>:
+ *
+ * <p>Suppose this were a rule defined in <code>src/com/facebook/feed/jni/BUCK</code>:
+ *
  * <pre>
  * ndk_library(
  *   name = 'feed-jni',
@@ -70,11 +69,11 @@ public class NdkLibrary extends AbstractBuildRule
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** @see NativeLibraryBuildRule#isAsset() */
-  @AddToRuleKey
-  private final boolean isAsset;
+  @AddToRuleKey private final boolean isAsset;
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final Path root;
+
   private final Path makefile;
   private final String makefileContents;
   private final Path buildArtifactsDirectory;
@@ -83,11 +82,13 @@ public class NdkLibrary extends AbstractBuildRule
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
-  @AddToRuleKey
-  private final ImmutableList<String> flags;
+
+  @AddToRuleKey private final ImmutableList<String> flags;
+
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final Optional<String> ndkVersion;
+
   private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
@@ -110,8 +111,7 @@ public class NdkLibrary extends AbstractBuildRule
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
 
     Preconditions.checkArgument(
-        !sources.isEmpty(),
-        "Must include at least one file (Android.mk?) in ndk_library rule");
+        !sources.isEmpty(), "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
     this.flags = ImmutableList.copyOf(flags);
 
@@ -138,8 +138,7 @@ public class NdkLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // .so files are written to the libs/ subdirectory of the output directory.
@@ -170,24 +169,26 @@ public class NdkLibrary extends AbstractBuildRule
     // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
     // However, the intermediate object files are huge and we have no interest in them, so filter
     // them out.
-    steps.add(new AbstractExecutionStep("cache_unstripped_so") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) {
-        try {
-          Set<Path> unstrippedSharedObjs = getProjectFilesystem()
-              .getFilesUnderPath(
-                  buildArtifactsDirectory,
-                  input -> input.toString().endsWith(".so"));
-          for (Path path : unstrippedSharedObjs) {
-            buildableContext.recordArtifact(path);
+    steps.add(
+        new AbstractExecutionStep("cache_unstripped_so") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) {
+            try {
+              Set<Path> unstrippedSharedObjs =
+                  getProjectFilesystem()
+                      .getFilesUnderPath(
+                          buildArtifactsDirectory, input -> input.toString().endsWith(".so"));
+              for (Path path : unstrippedSharedObjs) {
+                buildableContext.recordArtifact(path);
+              }
+            } catch (IOException e) {
+              context.logError(
+                  e, "Failed to cache intermediate artifacts of %s.", getBuildTarget());
+              return StepExecutionResult.ERROR;
+            }
+            return StepExecutionResult.SUCCESS;
           }
-        } catch (IOException e) {
-          context.logError(e, "Failed to cache intermediate artifacts of %s.", getBuildTarget());
-          return StepExecutionResult.ERROR;
-        }
-        return StepExecutionResult.SUCCESS;
-      }
-    });
+        });
 
     return steps.build();
   }
@@ -218,12 +219,10 @@ public class NdkLibrary extends AbstractBuildRule
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
-          getBuildTarget(),
-          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
-          getBuildTarget(),
-          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     }
   }
 }

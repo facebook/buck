@@ -30,17 +30,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * Perform the "aapt2 compile" step of a single Android resource.
- */
+/** Perform the "aapt2 compile" step of a single Android resource. */
 public class Aapt2Compile extends AbstractBuildRule {
-  @AddToRuleKey
-  private final SourcePath resDir;
+  @AddToRuleKey private final SourcePath resDir;
 
   public Aapt2Compile(BuildRuleParams buildRuleParams, SourcePath resDir) {
     super(buildRuleParams);
@@ -49,15 +44,15 @@ public class Aapt2Compile extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputPath().getParent()));
-    steps.add(new Aapt2CompileStep(
-        getProjectFilesystem().getRootPath(),
-        context.getSourcePathResolver().getRelativePath(resDir),
-        getOutputPath()));
+    steps.add(
+        new Aapt2CompileStep(
+            getProjectFilesystem().getRootPath(),
+            context.getSourcePathResolver().getRelativePath(resDir),
+            getOutputPath()));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getOutputPath())));
     buildableContext.recordArtifact(getOutputPath());
 
@@ -96,7 +91,7 @@ public class Aapt2Compile extends AbstractBuildRule {
 
       builder.add(androidPlatformTarget.getAapt2Executable().toString());
       builder.add("compile");
-      builder.add("--legacy");  // TODO(dreiss): Maybe make this an option?
+      builder.add("--legacy"); // TODO(dreiss): Maybe make this an option?
       builder.add("-o");
       builder.add(outputPath.toString());
       builder.add("--dir");

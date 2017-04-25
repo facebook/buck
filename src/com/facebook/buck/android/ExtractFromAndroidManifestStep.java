@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
-
 import java.io.IOException;
 import java.nio.file.Path;
 

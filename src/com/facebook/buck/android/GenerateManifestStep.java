@@ -30,7 +30,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -103,17 +102,16 @@ public class GenerateManifestStep implements Step {
   }
 
   private MergingReport mergeManifests(
-      File mainManifestFile, List<File> libraryManifestFiles,
-      BuckEventAndroidLogger logger) {
+      File mainManifestFile, List<File> libraryManifestFiles, BuckEventAndroidLogger logger) {
     try {
-      MergingReport mergingReport = ManifestMerger2
-          .newMerger(mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION)
-          .withFeatures(
-              ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
-              ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
-              ManifestMerger2.Invoker.Feature.SKIP_BLAME)
-          .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
-          .merge();
+      MergingReport mergingReport =
+          ManifestMerger2.newMerger(mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION)
+              .withFeatures(
+                  ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
+                  ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
+                  ManifestMerger2.Invoker.Feature.SKIP_BLAME)
+              .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
+              .merge();
       if (mergingReport.getResult().isError()) {
         for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
           logger.error(null, record.toString());
@@ -143,17 +141,14 @@ public class GenerateManifestStep implements Step {
     }
 
     GenerateManifestStep that = (GenerateManifestStep) obj;
-    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath) &&
-        Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths) &&
-        Objects.equal(this.outManifestPath, that.outManifestPath);
+    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath)
+        && Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths)
+        && Objects.equal(this.outManifestPath, that.outManifestPath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
-        skeletonManifestPath,
-        libraryManifestPaths,
-        outManifestPath);
+    return Objects.hashCode(skeletonManifestPath, libraryManifestPaths, outManifestPath);
   }
 
   private static class ManifestMergerLogger extends BuckEventAndroidLogger implements ILogger {

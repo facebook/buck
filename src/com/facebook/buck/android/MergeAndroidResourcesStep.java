@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -72,10 +71,10 @@ public class MergeAndroidResourcesStep implements Step {
   private final boolean useOldStyleableFormat;
 
   /**
-   * Merges text symbols files from {@code aapt} for each of the input {@code android_resource}
-   * into a set of resources per R.java package and writes an {@code R.java} file per package under
-   * the output directory. Also, if {@code uberRDotTxt} is present, the IDs in the output
-   * {@code R.java} file will be taken from the {@code R.txt} file.
+   * Merges text symbols files from {@code aapt} for each of the input {@code android_resource} into
+   * a set of resources per R.java package and writes an {@code R.java} file per package under the
+   * output directory. Also, if {@code uberRDotTxt} is present, the IDs in the output {@code R.java}
+   * file will be taken from the {@code R.txt} file.
    */
   @VisibleForTesting
   MergeAndroidResourcesStep(
@@ -147,9 +146,7 @@ public class MergeAndroidResourcesStep implements Step {
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
     return FluentIterable.from(androidResourceDeps)
         .transform(HasAndroidResourceDeps::getRDotJavaPackage)
-        .append(unionPackage
-            .map(Collections::singletonList)
-            .orElse(Collections.emptyList()))
+        .append(unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()))
         .transform(this::getPathToRDotJava)
         .toSortedSet(natural());
   }
@@ -187,31 +184,30 @@ public class MergeAndroidResourcesStep implements Step {
     for (HasAndroidResourceDeps res : androidResourceDeps) {
       Path rDotTxtPath =
           filesystem.relativize(pathResolver.getAbsolutePath(res.getPathToTextSymbolsFile()));
-      rDotTxtToPackage.put(
-          rDotTxtPath,
-          res.getRDotJavaPackage());
+      rDotTxtToPackage.put(rDotTxtPath, res.getRDotJavaPackage());
       symbolsFileToResourceDeps.put(rDotTxtPath, res);
     }
     Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
     if (uberRDotTxt.isPresent()) {
       // re-assign Ids
-      uberRDotTxtIds = Optional.of(FluentIterable.from(
-          RDotTxtEntry.readResources(filesystem, uberRDotTxt.get()))
-          .toMap(
-              input -> input.idValue));
+      uberRDotTxtIds =
+          Optional.of(
+              FluentIterable.from(RDotTxtEntry.readResources(filesystem, uberRDotTxt.get()))
+                  .toMap(input -> input.idValue));
     } else {
       uberRDotTxtIds = Optional.empty();
     }
 
     ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
 
-    SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
-        symbolsFileToRDotJavaPackage,
-        uberRDotTxtIds,
-        symbolsFileToResourceDeps.build(),
-        bannedDuplicateResourceTypes,
-        filesystem,
-        useOldStyleableFormat);
+    SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources =
+        sortSymbols(
+            symbolsFileToRDotJavaPackage,
+            uberRDotTxtIds,
+            symbolsFileToResourceDeps.build(),
+            bannedDuplicateResourceTypes,
+            filesystem,
+            useOldStyleableFormat);
 
     // If a resource_union_package was specified, copy all resource into that package,
     // unless they are already present.
@@ -228,9 +224,10 @@ public class MergeAndroidResourcesStep implements Step {
     }
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
-    Set<String> emptyPackages = Sets.difference(
-        ImmutableSet.copyOf(symbolsFileToRDotJavaPackage.values()),
-        rDotJavaPackageToResources.keySet());
+    Set<String> emptyPackages =
+        Sets.difference(
+            ImmutableSet.copyOf(symbolsFileToRDotJavaPackage.values()),
+            rDotJavaPackageToResources.keySet());
 
     if (!emptyPackages.isEmpty()) {
       writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
@@ -238,8 +235,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private void writeEmptyRDotJavaForPackages(
-      Set<String> rDotJavaPackages,
-      ProjectFilesystem filesystem) throws IOException {
+      Set<String> rDotJavaPackages, ProjectFilesystem filesystem) throws IOException {
     for (String rDotJavaPackage : rDotJavaPackages) {
       Path outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
@@ -250,8 +246,8 @@ public class MergeAndroidResourcesStep implements Step {
 
   @VisibleForTesting
   void writePerPackageRDotJava(
-      SortedSetMultimap<String, RDotTxtEntry> packageToResources,
-      ProjectFilesystem filesystem) throws IOException {
+      SortedSetMultimap<String, RDotTxtEntry> packageToResources, ProjectFilesystem filesystem)
+      throws IOException {
     for (String rDotJavaPackage : packageToResources.keySet()) {
       Path outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
@@ -280,16 +276,12 @@ public class MergeAndroidResourcesStep implements Step {
           // Write as an int.
           writer.format(
               "    public static%s%s %s=%s;\n",
-              forceFinalResourceIds ? " final " : " ",
-              res.idType,
-              res.name,
-              res.idValue);
+              forceFinalResourceIds ? " final " : " ", res.idType, res.name, res.idValue);
 
-          if (type == RType.DRAWABLE &&
-              res.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
+          if (type == RType.DRAWABLE && res.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
             customDrawablesBuilder.add(res.idValue);
-          } else if (type == RType.DRAWABLE &&
-              res.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
+          } else if (type == RType.DRAWABLE
+              && res.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
             grayscaleImagesBuilder.add(res.idValue);
           }
         }
@@ -329,7 +321,8 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableMap<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ProjectFilesystem filesystem,
-      boolean useOldStyleableFormat) throws DuplicateResourceException {
+      boolean useOldStyleableFormat)
+      throws DuplicateResourceException {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
     // other values in styleable which can be enumerated integers starting at 0.
@@ -353,7 +346,8 @@ public class MergeAndroidResourcesStep implements Step {
       List<String> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            filesystem.readLines(symbolsFile)
+            filesystem
+                .readLines(symbolsFile)
                 .stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
                 .collect(Collectors.toList());
@@ -378,16 +372,15 @@ public class MergeAndroidResourcesStep implements Step {
           Preconditions.checkNotNull(enumerator);
           resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
 
-        } else if (useOldStyleableFormat) {  // NOPMD  more readable this way, IMO.
+        } else if (useOldStyleableFormat) { // NOPMD  more readable this way, IMO.
           // Nothing extra to do in this case.
 
         } else if (resourceToIdValuesMap.get(resource) != null) {
           resource = resource.copyWithNewIdValue(resourceToIdValuesMap.get(resource));
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
-          Map<RDotTxtEntry, String> styleableResourcesMap = getStyleableResources(
-              resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1
-          );
+          Map<RDotTxtEntry, String> styleableResourcesMap =
+              getStyleableResources(resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
 
           for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
             resourceToIdValuesMap.put(styleableResource, styleableResource.idValue);
@@ -395,9 +388,12 @@ public class MergeAndroidResourcesStep implements Step {
 
           // int[] styleable entry is not added to the cache as
           // the number of child can differ in dependent libraries
-          resource = resource.copyWithNewIdValue(String.format("{ %s }",
-              Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR)
-                  .join(styleableResourcesMap.values())));
+          resource =
+              resource.copyWithNewIdValue(
+                  String.format(
+                      "{ %s }",
+                      Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR)
+                          .join(styleableResourcesMap.values())));
         } else {
 
           Preconditions.checkNotNull(enumerator);
@@ -420,10 +416,9 @@ public class MergeAndroidResourcesStep implements Step {
       Collection<Path> paths = resourceAndSymbolsFiles.getValue();
       if (paths.size() > 1) {
         RDotTxtEntry resource = resourceAndSymbolsFiles.getKey();
-        duplicateResourcesMessage.append(String.format(
-            "Resource '%s' (%s) is duplicated across: ",
-            resource.name,
-            resource.type));
+        duplicateResourcesMessage.append(
+            String.format(
+                "Resource '%s' (%s) is duplicated across: ", resource.name, resource.type));
         List<SourcePath> resourceDirs = new ArrayList<>(paths.size());
         for (Path path : paths) {
           SourcePath res = symbolsFileToResourceDeps.get(path).getRes();
@@ -453,17 +448,17 @@ public class MergeAndroidResourcesStep implements Step {
     List<String> givenResourceIds = null;
 
     for (int styleableIndex = 0;
-         styleableIndex + index < linesInSymbolsFile.size(); styleableIndex++) {
+        styleableIndex + index < linesInSymbolsFile.size();
+        styleableIndex++) {
 
-      RDotTxtEntry styleableResource = getResourceAtIndex(
-          linesInSymbolsFile, styleableIndex + index
-      );
+      RDotTxtEntry styleableResource =
+          getResourceAtIndex(linesInSymbolsFile, styleableIndex + index);
 
       String styleablePrefix = resource.name + "_";
 
-      if (styleableResource.idType == IdType.INT &&
-          styleableResource.type == RType.STYLEABLE &&
-          styleableResource.name.startsWith(styleablePrefix)) {
+      if (styleableResource.idType == IdType.INT
+          && styleableResource.type == RType.STYLEABLE
+          && styleableResource.name.startsWith(styleablePrefix)) {
 
         String attrName = styleableResource.name.substring(styleablePrefix.length());
         RDotTxtEntry attrResource = new RDotTxtEntry(IdType.INT, RType.ATTR, attrName, "");
@@ -472,15 +467,16 @@ public class MergeAndroidResourcesStep implements Step {
         if (attrIdValue == null) {
 
           if (givenResourceIds == null) {
-            if (resource.idValue.startsWith("{") &&
-                resource.idValue.endsWith("}")) {
-              givenResourceIds = Arrays.stream(
-                  resource.idValue
-                      .substring(1, resource.idValue.length() - 1)
-                      .split(RDotTxtEntry.INT_ARRAY_SEPARATOR))
-                  .map(String::trim)
-                  .filter(s -> s.length() > 0)
-                  .collect(Collectors.toList());
+            if (resource.idValue.startsWith("{") && resource.idValue.endsWith("}")) {
+              givenResourceIds =
+                  Arrays.stream(
+                          resource
+                              .idValue
+                              .substring(1, resource.idValue.length() - 1)
+                              .split(RDotTxtEntry.INT_ARRAY_SEPARATOR))
+                      .map(String::trim)
+                      .filter(s -> s.length() > 0)
+                      .collect(Collectors.toList());
             } else {
               givenResourceIds = new ArrayList<>();
             }
@@ -502,8 +498,7 @@ public class MergeAndroidResourcesStep implements Step {
         }
 
         styleableResourceMap.put(
-            styleableResource.copyWithNewIdValue(String.valueOf(styleableIndex)), attrIdValue
-        );
+            styleableResource.copyWithNewIdValue(String.valueOf(styleableIndex)), attrIdValue);
 
       } else {
         break;
@@ -539,8 +534,9 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private Path getPathToRDotJava(String rDotJavaPackage) {
-    return outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve(
-        String.format("%s.java", rName));
+    return outputDir
+        .resolve(rDotJavaPackage.replace('.', '/'))
+        .resolve(String.format("%s.java", rName));
   }
 
   private static class IntEnumerator {

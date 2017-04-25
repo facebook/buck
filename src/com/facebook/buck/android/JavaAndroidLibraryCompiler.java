@@ -34,14 +34,10 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg arg,
-      JavacOptions javacOptions,
-      BuildRuleResolver resolver) {
+      AndroidLibraryDescription.Arg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 
     return new JavacToJarStepFactory(
-        getJavac(resolver, arg),
-        javacOptions,
-        new BootClasspathAppender());
+        getJavac(resolver, arg), javacOptions, new BootClasspathAppender());
   }
 
   private Javac getJavac(BuildRuleResolver resolver, AndroidLibraryDescription.Arg arg) {

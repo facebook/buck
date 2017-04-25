@@ -18,13 +18,9 @@ package com.facebook.buck.android;
 
 import java.nio.file.Path;
 
-/**
- * Specifies how secondary .dex files should be stored in the .apk.
- */
+/** Specifies how secondary .dex files should be stored in the .apk. */
 enum DexStore {
-  /**
-   * Secondary dexes should be raw dex files for inclusion in the APK.
-   */
+  /** Secondary dexes should be raw dex files for inclusion in the APK. */
   RAW {
     @Override
     public String fileNameForSecondary(int index) {
@@ -44,9 +40,7 @@ enum DexStore {
     }
   },
 
-  /**
-   * Secondary dexes should be compressed using JAR's deflate.
-   */
+  /** Secondary dexes should be compressed using JAR's deflate. */
   JAR {
     @Override
     public String fileNameForSecondary(int index) {
@@ -65,9 +59,7 @@ enum DexStore {
     }
   },
 
-  /**
-   * Secondary dexes should be stored uncompressed in jars that will be XZ-compressed.
-   */
+  /** Secondary dexes should be stored uncompressed in jars that will be XZ-compressed. */
   XZ {
     @Override
     public String fileNameForSecondary(int index) {
@@ -86,9 +78,7 @@ enum DexStore {
     }
   },
 
-  /**
-   * Secondary dexes will be solid compressed into a single XZS file.
-   */
+  /** Secondary dexes will be solid compressed into a single XZS file. */
   XZS {
     // Since secondary dexes are created in parallel, we add a .tmp~
     // extension to indicate that this process is not yet complete.
@@ -107,7 +97,6 @@ enum DexStore {
     public String fileNameForSecondary(String prefix, int index) {
       return String.format("%s-%s.dex.jar.xzs.tmp~", prefix, index + 1);
     }
-
 
     @Override
     public boolean matchesPath(Path path) {

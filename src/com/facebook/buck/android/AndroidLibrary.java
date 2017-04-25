@@ -40,13 +40,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
-
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
@@ -56,8 +53,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
    * generation logic.
    */
-  @AddToRuleKey
-  private final Optional<SourcePath> manifestFile;
+  @AddToRuleKey private final Optional<SourcePath> manifestFile;
 
   public static Builder builder(
       BuildRuleParams params,
@@ -67,12 +63,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       AndroidLibraryDescription.Arg args,
       AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
-        params,
-        buildRuleResolver,
-        javaBuckConfig,
-        javacOptions,
-        args,
-        compilerFactory);
+        params, buildRuleResolver, javaBuckConfig, javacOptions, args, compilerFactory);
   }
 
   @VisibleForTesting
@@ -177,8 +168,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable
-      private AndroidLibraryCompiler androidCompiler;
+      @Nullable private AndroidLibraryCompiler androidCompiler;
 
       @Override
       protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {

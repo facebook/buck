@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -51,8 +50,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A build rule that hashes all of the files that go into an exopackage APK.
- * This is used by AndroidBinaryRule to compute the ABI hash of its deps.
+ * A build rule that hashes all of the files that go into an exopackage APK. This is used by
+ * AndroidBinaryRule to compute the ABI hash of its deps.
  */
 public class ComputeExopackageDepsAbi extends AbstractBuildRule {
   private static final Logger LOG = Logger.get(ComputeExopackageDepsAbi.class);
@@ -75,8 +74,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
     this.packageableCollection = packageableCollection;
     this.copyNativeLibraries = copyNativeLibraries;
     this.preDexMerge = preDexMerge;
-    this.abiPath = BuildTargets.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/exopackage.abi");
+    this.abiPath =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/exopackage.abi");
   }
 
   public SourcePath getAbiPath() {
@@ -100,8 +99,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               final Hasher hasher = Hashing.sha1().newHasher();
 
               // The primary dex is always added.
-              Sha1HashCode primaryDexHash = Preconditions.checkNotNull(
-                  preDexMerge.get().getPrimaryDexHash());
+              Sha1HashCode primaryDexHash =
+                  Preconditions.checkNotNull(preDexMerge.get().getPrimaryDexHash());
               LOG.verbose("primary dex = %s", primaryDexHash);
               primaryDexHash.update(hasher);
 
@@ -116,8 +115,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               // If exopackage is disabled for secondary dexes, we need to hash the secondary dex
               // files that end up in the APK. PreDexMerge already hashes those files, so we can
               // just hash the summary of those hashes.
-              if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes) &&
-                  preDexMerge.isPresent()) {
+              if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)
+                  && preDexMerge.isPresent()) {
                 addToHash(hasher, "secondary_dexes", preDexMerge.get().getMetadataTxtPath());
               }
 
@@ -125,8 +124,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
               // need to include their hashes. AndroidTransitiveDependencies doesn't provide
               // BuildRules, only paths. We could augment it, but our current native libraries are
               // small enough that we can just hash them all without too much of a perf hit.
-              if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
-                  copyNativeLibraries.isPresent()) {
+              if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
+                  && copyNativeLibraries.isPresent()) {
                 for (Map.Entry<APKModule, CopyNativeLibraries> entry :
                     copyNativeLibraries.get().entrySet()) {
                   addToHash(
@@ -144,14 +143,11 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
                     System.getProperty("buck.native_exopackage_fake_path");
 
                 Preconditions.checkNotNull(
-                    fakeNativeLibraryBundle,
-                    "fake native bundle not specified in properties.");
+                    fakeNativeLibraryBundle, "fake native bundle not specified in properties.");
 
                 Path fakePath = Paths.get(fakeNativeLibraryBundle);
                 Preconditions.checkState(
-                    fakePath.isAbsolute(),
-                    "Expected fake path to be absolute: %s",
-                    fakePath);
+                    fakePath.isAbsolute(), "Expected fake path to be absolute: %s", fakePath);
 
                 addToHash(hasher, "fake_native_libs", fakePath, fakePath.getFileName());
               }
@@ -172,8 +168,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
                     root,
                     new SimpleFileVisitor<Path>() {
                       @Override
-                      public FileVisitResult visitFile(
-                          Path file, BasicFileAttributes attrs) throws IOException {
+                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                          throws IOException {
                         allNativeFiles.put(file, root.relativize(file));
                         return FileVisitResult.CONTINUE;
                       }
@@ -203,17 +199,9 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
         });
   }
 
-  private void addToHash(
-      SourcePathResolver resolver,
-      Hasher hasher,
-      String role,
-      SourcePath path)
+  private void addToHash(SourcePathResolver resolver, Hasher hasher, String role, SourcePath path)
       throws IOException {
-    addToHash(
-        hasher,
-        role,
-        resolver.getAbsolutePath(path),
-        resolver.getRelativePath(path));
+    addToHash(hasher, role, resolver.getAbsolutePath(path), resolver.getRelativePath(path));
   }
 
   private void addToHash(Hasher hasher, String role, Path path) throws IOException {
@@ -225,9 +213,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule {
       throws IOException {
     // No need to check relative path. That's already been done for us.
     Preconditions.checkState(
-        absolutePath.isAbsolute(),
-        "Expected absolute path to be absolute: %s",
-        absolutePath);
+        absolutePath.isAbsolute(), "Expected absolute path to be absolute: %s", absolutePath);
 
     hasher.putUnencodedChars(relativePath.toString());
     hasher.putByte((byte) 0);

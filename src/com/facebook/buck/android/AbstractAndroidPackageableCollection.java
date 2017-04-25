@@ -27,14 +27,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
+import java.util.Set;
 import org.immutables.value.Value;
 
-import java.util.Set;
-
-/**
- * A collection of Android content that should be included in an Android package (apk or aar).
- */
+/** A collection of Android content that should be included in an Android package (apk or aar). */
 @Value.Immutable
 @Value.Enclosing
 @BuckStyleImmutable
@@ -57,14 +53,12 @@ interface AbstractAndroidPackageableCollection {
 
     /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
-     * non-empty "res" directory, sorted topologically. Note that these are {@link BuildTarget}s
-     * to avoid introducing a circular dependency.
+     * non-empty "res" directory, sorted topologically. Note that these are {@link BuildTarget}s to
+     * avoid introducing a circular dependency.
      */
     public abstract ImmutableList<BuildTarget> getResourcesWithNonEmptyResDir();
 
-    /**
-     * Unlike {@link #getResourcesWithNonEmptyResDir}, these resources only contain "assets".
-     */
+    /** Unlike {@link #getResourcesWithNonEmptyResDir}, these resources only contain "assets". */
     public abstract Set<BuildTarget> getResourcesWithEmptyResButNonEmptyAssetsDir();
 
     @Value.Derived
@@ -75,64 +69,47 @@ interface AbstractAndroidPackageableCollection {
 
   AndroidPackageableCollection.ResourceDetails getResourceDetails();
 
-  /**
-   * A set of build targets that produce native libraries.
-   */
+  /** A set of build targets that produce native libraries. */
   ImmutableMultimap<APKModule, BuildTarget> getNativeLibsTargets();
 
-  /**
-   * Native libraries mapped from modules.
-   */
+  /** Native libraries mapped from modules. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
 
-  /**
-   * Native libraries to be packaged as assets.
-   */
+  /** Native libraries to be packaged as assets. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkablesAssets();
 
-  /**
-   * Directories containing native libraries.
-   */
+  /** Directories containing native libraries. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibsDirectories();
 
-  /**
-   * Directories containing native libraries to be used as assets.
-   */
+  /** Directories containing native libraries to be used as assets. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibAssetsDirectories();
 
   /**
-   * Directories containing assets to be included directly in the apk,
-   * under the "assets" directory.
+   * Directories containing assets to be included directly in the apk, under the "assets" directory.
    */
   ImmutableSet<SourcePath> getAssetsDirectories();
 
-  /**
-   * Proguard configurations to include when running release builds.
-   */
+  /** Proguard configurations to include when running release builds. */
   ImmutableSet<SourcePath> getProguardConfigs();
 
-  /**
-   * Java classes (jars) to include in the package.
-   */
+  /** Java classes (jars) to include in the package. */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
-  /**
-   * Java classes to include in the package sorted into modules
-   */
+  /** Java classes to include in the package sorted into modules */
   ImmutableMultimap<APKModule, SourcePath> getModuleMappedClasspathEntriesToDex();
 
   /**
-   * Java classes that were used during compilation, but don't got into the package.
-   * This is only used by "buck project".  (It's existence is kind of contrary to
-   * the purpose of this class, but we make exceptions for "buck project".)
+   * Java classes that were used during compilation, but don't got into the package. This is only
+   * used by "buck project". (It's existence is kind of contrary to the purpose of this class, but
+   * we make exceptions for "buck project".)
    */
   ImmutableSet<SourcePath> getNoDxClasspathEntries();
 
   ImmutableMap<String, BuildConfigFields> getBuildConfigs();
 
   /**
-   * Prebuilt/third-party jars to be included in the package.  For apks, their resources will
-   * be placed directly in the apk.
+   * Prebuilt/third-party jars to be included in the package. For apks, their resources will be
+   * placed directly in the apk.
    */
   ImmutableSet<SourcePath> getPathsToThirdPartyJars();
 
@@ -142,8 +119,6 @@ interface AbstractAndroidPackageableCollection {
    */
   Set<BuildTarget> getJavaLibrariesToDex();
 
-  /**
-   * See {@link com.facebook.buck.jvm.java.JavaLibrary#getClassNamesToHashes()}
-   */
+  /** See {@link com.facebook.buck.jvm.java.JavaLibrary#getClassNamesToHashes()} */
   Supplier<ImmutableMap<String, HashCode>> getClassNamesToHashesSupplier();
 }

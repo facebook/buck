@@ -31,7 +31,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.util.Collections;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
@@ -62,16 +61,16 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     // The skeleton does not appear to be in either params.getDeclaredDeps() or
     // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
     // TODO(simons): t4744625 This should happen automagically.
-    ImmutableSortedSet<BuildRule> newDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(
-            ruleFinder.filterBuildRuleInputs(
-                Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
-        .build();
+    ImmutableSortedSet<BuildRule> newDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(
+                ruleFinder.filterBuildRuleInputs(
+                    Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
+            .build();
 
     return new AndroidManifest(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(newDeps),
-            params.getExtraDeps()),
+            Suppliers.ofInstance(newDeps), params.getExtraDeps()),
         args.skeleton,
         manifestFiles);
   }
@@ -82,8 +81,8 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
 
     /**
      * A collection of dependencies that includes android_library rules. The manifest files of the
-     * android_library rules will be filtered out to become dependent source files for the
-     * {@link AndroidManifest}.
+     * android_library rules will be filtered out to become dependent source files for the {@link
+     * AndroidManifest}.
      */
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }

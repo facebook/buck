@@ -15,10 +15,9 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-import com.facebook.buck.model.BuildTarget;
-
 import org.immutables.value.Value;
 
 @Value.Immutable

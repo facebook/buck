@@ -27,8 +27,8 @@ import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
@@ -49,30 +49,21 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
-  @AddToRuleKey
-  private final NdkCxxPlatforms.TargetCpuType cpuType;
-  @AddToRuleKey
-  private final SourcePath baseLibSourcePath;
-  @AddToRuleKey
-  private final Tool objdump;
-  @AddToRuleKey
-  private final ImmutableList<Arg> linkerArgs;
-  @AddToRuleKey
-  @Nullable
-  private final Linker linker;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
+  @AddToRuleKey private final NdkCxxPlatforms.TargetCpuType cpuType;
+  @AddToRuleKey private final SourcePath baseLibSourcePath;
+  @AddToRuleKey private final Tool objdump;
+  @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
+  @AddToRuleKey @Nullable private final Linker linker;
 
   private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
@@ -102,28 +93,28 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   }
 
   private static BuildRuleParams withDepsFromArgs(
-      BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
-      ImmutableList<Arg> args) {
+      BuildRuleParams params, SourcePathRuleFinder ruleFinder, ImmutableList<Arg> args) {
     return params.copyAppendingExtraDeps(
         Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
   }
 
   private static String getVersionScript(Set<String> needed, Set<String> provided) {
-    Set<String> keep = new ImmutableSet.Builder<String>()
-        .addAll(Sets.intersection(needed, provided))
-        .addAll(
-            Sets.filter(
-                provided, s -> {
-                  if (s.contains("JNI_OnLoad")) {
-                    return true;
-                  }
-                  if (s.contains("Java_")) {
-                    return true;
-                  }
-                  return false;
-                }))
-        .build();
+    Set<String> keep =
+        new ImmutableSet.Builder<String>()
+            .addAll(Sets.intersection(needed, provided))
+            .addAll(
+                Sets.filter(
+                    provided,
+                    s -> {
+                      if (s.contains("JNI_OnLoad")) {
+                        return true;
+                      }
+                      if (s.contains("Java_")) {
+                        return true;
+                      }
+                      return false;
+                    }))
+            .build();
     String res = "{\n";
     if (!keep.isEmpty()) {
       res += "global:\n";
@@ -141,35 +132,32 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
   public SourcePath getSymbolsNeededPath() {
     return new ExplicitBuildTargetSourcePath(
-        buildRuleParams.getBuildTarget(),
-        getSymbolsNeededOutPath());
+        buildRuleParams.getBuildTarget(), getSymbolsNeededOutPath());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildContext context, final BuildableContext buildableContext) {
 
     final ImmutableList.Builder<Step> relinkerSteps = ImmutableList.builder();
     if (linker != null) {
-      ImmutableList<Arg> args = ImmutableList.<Arg>builder()
-          .addAll(linkerArgs)
-          .add(
-              StringArg.of(
-                  "-Wl,--version-script=" + getRelativeVersionFilePath().toString()))
-          .build();
+      ImmutableList<Arg> args =
+          ImmutableList.<Arg>builder()
+              .addAll(linkerArgs)
+              .add(StringArg.of("-Wl,--version-script=" + getRelativeVersionFilePath().toString()))
+              .build();
 
       relinkerSteps.addAll(
           new CxxLink(
-              buildRuleParams
-                  .withAppendedFlavor(InternalFlavor.of("cxx-link"))
-                  .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
-              linker,
-              getLibFilePath(),
-              args,
-              cxxBuckConfig.getLinkScheduleInfo(),
-              cxxBuckConfig.shouldCacheLinks(),
-              /* thinLto */ false)
+                  buildRuleParams
+                      .withAppendedFlavor(InternalFlavor.of("cxx-link"))
+                      .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                  linker,
+                  getLibFilePath(),
+                  args,
+                  cxxBuckConfig.getLinkScheduleInfo(),
+                  cxxBuckConfig.shouldCacheLinks(),
+                  /* thinLto */ false)
               .getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
     }
@@ -178,31 +166,32 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchDirPath()))
-        .add(new AbstractExecutionStep("xdso-dce relinker") {
-          @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
-            ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
-            if (linker == null) {
-              getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
-              buildableContext.recordArtifact(getLibFilePath());
-            } else {
-              writeVersionScript(context.getProcessExecutor(), symbolsNeeded);
-              for (Step s : relinkerSteps.build()) {
-                StepExecutionResult executionResult = s.execute(context);
-                if (!executionResult.isSuccess()) {
-                  return StepExecutionResult.ERROR;
+        .add(
+            new AbstractExecutionStep("xdso-dce relinker") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws IOException, InterruptedException {
+                ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
+                if (linker == null) {
+                  getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
+                  buildableContext.recordArtifact(getLibFilePath());
+                } else {
+                  writeVersionScript(context.getProcessExecutor(), symbolsNeeded);
+                  for (Step s : relinkerSteps.build()) {
+                    StepExecutionResult executionResult = s.execute(context);
+                    if (!executionResult.isSuccess()) {
+                      return StepExecutionResult.ERROR;
+                    }
+                  }
                 }
+                writeSymbols(
+                    getSymbolsNeededOutPath(),
+                    Sets.union(
+                        symbolsNeeded,
+                        getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
+                return StepExecutionResult.SUCCESS;
               }
-            }
-            writeSymbols(
-                getSymbolsNeededOutPath(),
-                Sets.union(
-                    symbolsNeeded,
-                    getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
-            return StepExecutionResult.SUCCESS;
-          }
-        })
+            })
         .build();
   }
 
@@ -223,7 +212,6 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
     return path.getParent().resolve(dirname);
   }
 
-
   private Path getBaseLibPath() {
     return pathResolver.getAbsolutePath(baseLibSourcePath);
   }
@@ -233,8 +221,8 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   }
 
   private Path getScratchFilePath(String suffix) {
-    return getScratchDirPath().resolve(
-        MorePaths.getNameWithoutExtension(getBaseLibPath()) + suffix);
+    return getScratchDirPath()
+        .resolve(MorePaths.getNameWithoutExtension(getBaseLibPath()) + suffix);
   }
 
   private Path getLibFilePath() {
@@ -243,11 +231,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
   private Symbols getSymbols(ProcessExecutor executor, Path path)
       throws IOException, InterruptedException {
-    return Symbols.getSymbols(
-        executor,
-        objdump,
-        pathResolver,
-        absolutify(path));
+    return Symbols.getSymbols(executor, objdump, pathResolver, absolutify(path));
   }
 
   private Path getRelativeVersionFilePath() {

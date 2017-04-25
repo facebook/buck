@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -107,5 +106,4 @@ public class AndroidBuckConfig {
     Path pathToTool = Paths.get(pathString.get(), platformDir, tool);
     return delegate.checkPathExists(pathToTool.toString(), "Overridden path not found: ");
   }
-
 }

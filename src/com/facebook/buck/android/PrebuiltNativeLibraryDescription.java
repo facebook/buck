@@ -30,7 +30,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -54,18 +53,14 @@ public class PrebuiltNativeLibraryDescription
     try {
       librarySources =
           FluentIterable.from(params.getProjectFilesystem().getFilesUnderPath(args.nativeLibs))
-          .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
-          .toSortedSet(Ordering.natural());
+              .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
+              .toSortedSet(Ordering.natural());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory %s.", args.nativeLibs);
     }
 
     return new PrebuiltNativeLibrary(
-        params,
-        args.nativeLibs,
-        args.isAsset.orElse(false),
-        librarySources
-    );
+        params, args.nativeLibs, args.isAsset.orElse(false), librarySources);
   }
 
   @SuppressFieldNotInitialized

@@ -24,15 +24,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
 /**
- * Takes in a list of files and outputs a
- * concatenation of them in the same directory. Used for solid compression
- * into a single .xz. Does NOT delete source files after concatenating.
+ * Takes in a list of files and outputs a concatenation of them in the same directory. Used for
+ * solid compression into a single .xz. Does NOT delete source files after concatenating.
  */
 public class ConcatStep implements Step {
 
@@ -44,6 +42,7 @@ public class ConcatStep implements Step {
 
   /**
    * Use this constructor if the files to concatenate are known at the time of step creation.
+   *
    * @param inputs The files to be concatenated
    * @param outputPath The desired output path.
    */
@@ -55,6 +54,7 @@ public class ConcatStep implements Step {
 
   /**
    * Use this constructor if the files to concatenate are not known at the time of step creation.
+   *
    * @param inputsBuilder The files to be concatenated, in builder form
    * @param outputPath The desired output path.
    */
@@ -70,9 +70,7 @@ public class ConcatStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     ImmutableList<Path> list = inputs.get();
-    try (
-        OutputStream out = filesystem.newFileOutputStream(output);
-    ) {
+    try (OutputStream out = filesystem.newFileOutputStream(output); ) {
       for (Path p : list) {
         filesystem.copyToOutputStream(p, out);
       }
@@ -100,6 +98,5 @@ public class ConcatStep implements Step {
     desc.add(">");
     desc.add(output.toString());
     return Joiner.on(" ").join(desc.build());
-
   }
 }

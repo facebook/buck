@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -66,7 +65,8 @@ public class AndroidPackageableCollector {
 
   @VisibleForTesting
   AndroidPackageableCollector(BuildTarget collectionRoot) {
-    this(collectionRoot,
+    this(
+        collectionRoot,
         ImmutableSet.of(),
         ImmutableSet.of(),
         new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.empty()));
@@ -74,8 +74,8 @@ public class AndroidPackageableCollector {
 
   /**
    * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
-   *     remove resources that are already included in the
-   *     {@link AndroidInstrumentationApkDescription.Arg#apk}
+   *     remove resources that are already included in the {@link
+   *     AndroidInstrumentationApkDescription.Arg#apk}
    */
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
@@ -96,9 +96,7 @@ public class AndroidPackageableCollector {
     }
   }
 
-  private void postOrderTraverse(
-      AndroidPackageable packageable,
-      Set<AndroidPackageable> explored) {
+  private void postOrderTraverse(AndroidPackageable packageable, Set<AndroidPackageable> explored) {
     if (explored.contains(packageable)) {
       return;
     }
@@ -111,19 +109,16 @@ public class AndroidPackageableCollector {
   }
 
   /**
-   * Returns all {@link BuildRule}s of the given rules that are {@link AndroidPackageable}.
-   * Helper for implementations of AndroidPackageable that just want to return all of their
-   * packagable dependencies.
+   * Returns all {@link BuildRule}s of the given rules that are {@link AndroidPackageable}. Helper
+   * for implementations of AndroidPackageable that just want to return all of their packagable
+   * dependencies.
    */
   public static Iterable<AndroidPackageable> getPackageableRules(Iterable<BuildRule> rules) {
-    return FluentIterable.from(rules)
-        .filter(AndroidPackageable.class)
-        .toList();
+    return FluentIterable.from(rules).filter(AndroidPackageable.class).toList();
   }
 
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
-      BuildTarget owner,
-      SourcePath resourceDir) {
+      BuildTarget owner, SourcePath resourceDir) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -134,8 +129,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addResourceDirectory(
-      BuildTarget owner,
-      SourcePath resourceDir) {
+      BuildTarget owner, SourcePath resourceDir) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -150,8 +144,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addNativeLibsDirectory(
-      BuildTarget owner,
-      SourcePath nativeLibDir) {
+      BuildTarget owner, SourcePath nativeLibDir) {
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
     collectionBuilder.putNativeLibsTargets(module, owner);
     if (module.isRootModule()) {
@@ -179,8 +172,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addNativeLibAssetsDirectory(
-      BuildTarget owner,
-      SourcePath assetsDir) {
+      BuildTarget owner, SourcePath assetsDir) {
     // We need to build the native target in order to have the assets available still.
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
     collectionBuilder.putNativeLibsTargets(module, owner);
@@ -189,8 +181,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addAssetsDirectory(
-      BuildTarget owner,
-      SourcePath assetsDirectory) {
+      BuildTarget owner, SourcePath assetsDirectory) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -201,8 +192,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addProguardConfig(
-      BuildTarget owner,
-      SourcePath proguardConfig) {
+      BuildTarget owner, SourcePath proguardConfig) {
     if (!buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addProguardConfigs(proguardConfig);
     }
@@ -210,8 +200,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addClasspathEntry(
-      HasJavaClassHashes hasJavaClassHashes,
-      SourcePath classpathEntry) {
+      HasJavaClassHashes hasJavaClassHashes, SourcePath classpathEntry) {
     BuildTarget target = hasJavaClassHashes.getBuildTarget();
     if (buildTargetsToExcludeFromDex.contains(target)) {
       collectionBuilder.addNoDxClasspathEntries(classpathEntry);
@@ -225,8 +214,7 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addPathToThirdPartyJar(
-      BuildTarget owner,
-      SourcePath pathToThirdPartyJar) {
+      BuildTarget owner, SourcePath pathToThirdPartyJar) {
     if (buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addNoDxClasspathEntries(pathToThirdPartyJar);
     } else {
@@ -238,10 +226,9 @@ public class AndroidPackageableCollector {
   public void addBuildConfig(String javaPackage, BuildConfigFields constants) {
     if (buildConfigs.containsKey(javaPackage)) {
       throw new HumanReadableException(
-          "Multiple android_build_config() rules with the same package %s in the " +
-              "transitive deps of %s.",
-          javaPackage,
-          collectionRoot);
+          "Multiple android_build_config() rules with the same package %s in the "
+              + "transitive deps of %s.",
+          javaPackage, collectionRoot);
     }
     buildConfigs.put(javaPackage, constants);
   }
@@ -250,18 +237,19 @@ public class AndroidPackageableCollector {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
-        javaClassProviders.stream()
+        javaClassProviders
+            .stream()
             .map(HasJavaClassHashes::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
-    collectionBuilder.setClassNamesToHashesSupplier(Suppliers.memoize(
-        () -> {
-
-          ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
-          for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
-            builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
-          }
-          return builder.build();
-        }));
+    collectionBuilder.setClassNamesToHashesSupplier(
+        Suppliers.memoize(
+            () -> {
+              ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
+              for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
+                builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
+              }
+              return builder.build();
+            }));
 
     ImmutableSet<BuildTarget> resources = ImmutableSet.copyOf(resourcesWithNonEmptyResDir.build());
     for (BuildTarget buildTarget : resourcesWithAssets.build()) {
@@ -274,11 +262,7 @@ public class AndroidPackageableCollector {
     // traversal of the action graph, and we need to return these collections topologically
     // sorted.
     resourceDetailsBuilder.setResourceDirectories(
-            resourceDirectories.build()
-                .reverse()
-                .stream()
-                .distinct()
-                .collect(Collectors.toList()));
+        resourceDirectories.build().reverse().stream().distinct().collect(Collectors.toList()));
     resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
         resourcesWithNonEmptyResDir.build().reverse());
 

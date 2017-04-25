@@ -20,10 +20,8 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-
 import java.nio.file.Path;
 import java.util.Comparator;
-
 import javax.annotation.Nullable;
 
 /**
@@ -38,7 +36,7 @@ public interface DexWithClasses {
   /** @return the names of the {@code .class} files that went into the DEX file. */
   ImmutableSet<String> getClassNames();
 
-  /** @return a hash of the {@code .class} files that went into the DEX file.*/
+  /** @return a hash of the {@code .class} files that went into the DEX file. */
   Sha1HashCode getClassesHash();
 
   /**
@@ -51,43 +49,42 @@ public interface DexWithClasses {
 
   Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
       new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
-    @Override
-    @Nullable
-    public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {
-      if (!preDex.hasOutput()) {
-        return null;
-      }
-
-      final Path pathToDex = preDex.getPathToDex();
-      final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
-      final Sha1HashCode classesHash = Sha1HashCode.fromHashCode(
-          Hashing.combineOrdered(preDex.getClassNames().values()));
-      final int weightEstimate = preDex.getWeightEstimate();
-      return new DexWithClasses() {
         @Override
-        public Path getPathToDexFile() {
-          return pathToDex;
-        }
+        @Nullable
+        public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {
+          if (!preDex.hasOutput()) {
+            return null;
+          }
 
-        @Override
-        public ImmutableSet<String> getClassNames() {
-          return classNames;
-        }
+          final Path pathToDex = preDex.getPathToDex();
+          final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
+          final Sha1HashCode classesHash =
+              Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
+          final int weightEstimate = preDex.getWeightEstimate();
+          return new DexWithClasses() {
+            @Override
+            public Path getPathToDexFile() {
+              return pathToDex;
+            }
 
-        @Override
-        public Sha1HashCode getClassesHash() {
-          return classesHash;
-        }
+            @Override
+            public ImmutableSet<String> getClassNames() {
+              return classNames;
+            }
 
-        @Override
-        public int getWeightEstimate() {
-          return weightEstimate;
+            @Override
+            public Sha1HashCode getClassesHash() {
+              return classesHash;
+            }
+
+            @Override
+            public int getWeightEstimate() {
+              return weightEstimate;
+            }
+          };
         }
       };
-    }
-  };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
       (o1, o2) -> o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
-
 }

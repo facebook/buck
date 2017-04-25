@@ -37,11 +37,11 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 /**
  * Buildable for generating a .java file from an .aidl file. Example:
+ *
  * <pre>
  * # This will generate IOrcaService.java in the buck-out/gen directory.
  * gen_aidl(
@@ -64,24 +64,20 @@ public class GenAidl extends AbstractBuildRule {
 
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
-  @AddToRuleKey
-  private final SourcePath aidlFilePath;
-  @AddToRuleKey
-  private final String importPath;
+  @AddToRuleKey private final SourcePath aidlFilePath;
+  @AddToRuleKey private final String importPath;
   private final Path output;
   private final Path genPath;
 
-  GenAidl(
-      BuildRuleParams params,
-      SourcePath aidlFilePath,
-      String importPath) {
+  GenAidl(BuildRuleParams params, SourcePath aidlFilePath, String importPath) {
     super(params);
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     BuildTarget buildTarget = params.getBuildTarget();
     this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
-    this.output = genPath.resolve(
-        String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
+    this.output =
+        genPath.resolve(
+            String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
   }
 
   @Override
@@ -96,8 +92,7 @@ public class GenAidl extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
@@ -107,12 +102,13 @@ public class GenAidl extends AbstractBuildRule {
     Path outputDirectory = BuildTargets.getScratchPath(getProjectFilesystem(), target, "__%s.aidl");
     commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory));
 
-    AidlStep command = new AidlStep(
-        getProjectFilesystem(),
-        target,
-        context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
-        ImmutableSet.of(importPath),
-        outputDirectory);
+    AidlStep command =
+        new AidlStep(
+            getProjectFilesystem(),
+            target,
+            context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
+            ImmutableSet.of(importPath),
+            outputDirectory);
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.
@@ -121,12 +117,12 @@ public class GenAidl extends AbstractBuildRule {
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {
       // TODO(simons): Make this fatal. Give people some time to clean up their rules.
-      context.getEventBus().post(
-          ConsoleEvent.warning(
-              "%s, gen_aidl import path (%s) should be a child of %s",
-              target,
-              importPath,
-              target.getBasePath()));
+      context
+          .getEventBus()
+          .post(
+              ConsoleEvent.warning(
+                  "%s, gen_aidl import path (%s) should be a child of %s",
+                  target, importPath, target.getBasePath()));
     }
 
     commands.add(MkdirStep.of(getProjectFilesystem(), genDirectory));

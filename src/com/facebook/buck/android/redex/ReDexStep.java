@@ -29,15 +29,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Runs <a href="https://github.com/facebook/redex">ReDex</a> on an APK.
- */
+/** Runs <a href="https://github.com/facebook/redex">ReDex</a> on an APK. */
 public class ReDexStep extends ShellStep {
   private final ImmutableList<String> redexBinaryArgs;
   private final ImmutableMap<String, String> redexEnvironmentVariables;
@@ -91,19 +88,20 @@ public class ReDexStep extends ShellStep {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Tool redexBinary = redexOptions.getRedex();
-    ReDexStep redexStep = new ReDexStep(
-        filesystem.getRootPath(),
-        redexBinary.getCommandPrefix(resolver),
-        redexBinary.getEnvironment(resolver),
-        inputApkPath,
-        outputApkPath,
-        keystorePropertiesSupplier,
-        redexOptions.getRedexConfig().map(resolver::getAbsolutePath),
-        redexOptions.getRedexExtraArgs(),
-        proguardConfigDir.resolve("mapping.txt"),
-        proguardConfigDir.resolve("command-line.txt"),
-        proguardConfigDir.resolve("seeds.txt"),
-        resolver);
+    ReDexStep redexStep =
+        new ReDexStep(
+            filesystem.getRootPath(),
+            redexBinary.getCommandPrefix(resolver),
+            redexBinary.getEnvironment(resolver),
+            inputApkPath,
+            outputApkPath,
+            keystorePropertiesSupplier,
+            redexOptions.getRedexConfig().map(resolver::getAbsolutePath),
+            redexOptions.getRedexExtraArgs(),
+            proguardConfigDir.resolve("mapping.txt"),
+            proguardConfigDir.resolve("command-line.txt"),
+            proguardConfigDir.resolve("seeds.txt"),
+            resolver);
     steps.add(redexStep);
 
     Path outputDir = outputApkPath.getParent();
@@ -136,8 +134,7 @@ public class ReDexStep extends ShellStep {
     args.add(
         "--keystore", keystoreProperties.getKeystore().toString(),
         "--keyalias", keystoreProperties.getAlias(),
-        "--keypass", keystoreProperties.getKeypass()
-    );
+        "--keypass", keystoreProperties.getKeypass());
 
     // Proguard args.
     args.add("--proguard-map", proguardMap.toString());

@@ -27,7 +27,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +36,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 public class DxStep extends ShellStep {
@@ -56,15 +54,10 @@ public class DxStep extends ShellStep {
      */
     USE_CUSTOM_DX_IF_AVAILABLE,
 
-    /**
-     * Execute DX in-process instead of fork/execing.
-     * This only works with custom dx.
-     */
+    /** Execute DX in-process instead of fork/execing. This only works with custom dx. */
     RUN_IN_PROCESS,
 
-    /**
-     * Run DX with the --no-locals flag.
-     */
+    /** Run DX with the --no-locals flag. */
     NO_LOCALS,
     ;
   }
@@ -75,8 +68,7 @@ public class DxStep extends ShellStep {
   private final Set<Option> options;
   private final Optional<String> maxHeapSize;
 
-  @Nullable
-  private Collection<String> resourcesReferencedInCode;
+  @Nullable private Collection<String> resourcesReferencedInCode;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
@@ -122,8 +114,8 @@ public class DxStep extends ShellStep {
     this.maxHeapSize = maxHeapSize;
 
     Preconditions.checkArgument(
-        !options.contains(Option.RUN_IN_PROCESS) ||
-            options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        !options.contains(Option.RUN_IN_PROCESS)
+            || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         "In-process dexing is only supported with custom DX");
   }
 
@@ -240,11 +232,9 @@ public class DxStep extends ShellStep {
   }
 
   /**
-   * Return the names of resources referenced in the code that was dexed.
-   * This is only valid after the step executes successfully and
-   * only when in-process dexing is used.
-   * It only returns resources referenced in java classes being dexed,
-   * not merged dex files.
+   * Return the names of resources referenced in the code that was dexed. This is only valid after
+   * the step executes successfully and only when in-process dexing is used. It only returns
+   * resources referenced in java classes being dexed, not merged dex files.
    */
   @Nullable
   Collection<String> getResourcesReferencedInCode() {

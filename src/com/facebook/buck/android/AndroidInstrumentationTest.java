@@ -49,7 +49,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,11 +69,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   private static final Path TESTRUNNER_CLASSES =
       Paths.get(
           System.getProperty(
-              "buck.testrunner_classes",
-              new File("build/testrunner/classes").getAbsolutePath()));
+              "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
 
-  @AddToRuleKey
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
 
   private final ImmutableSet<String> labels;
 
@@ -133,9 +130,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
     steps.add(new ApkInstallStep(pathResolver, apk));
     if (apk instanceof AndroidInstrumentationApk) {
-      steps.add(new ApkInstallStep(
-          pathResolver,
-          ((AndroidInstrumentationApk) apk).getApkUnderTest()));
+      steps.add(
+          new ApkInstallStep(pathResolver, ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
 
     AdbHelper adb = AdbHelper.get(executionContext, true);
@@ -169,13 +165,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   }
 
   /**
-   * Buck adds some regex support to TestSelectors. Instrumentation
-   * tests don't support that so let's strip that and make it a plan
-   * Class#method string filter.
+   * Buck adds some regex support to TestSelectors. Instrumentation tests don't support that so
+   * let's strip that and make it a plan Class#method string filter.
    */
   private static String stripRegexs(String selector) {
-    return selector.replaceAll("[$]", "")
-        .replaceAll("#$", "");
+    return selector.replaceAll("[$]", "").replaceAll("#$", "");
   }
 
   private InstrumentationStep getInstrumentationStep(
@@ -196,21 +190,22 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     String guava = getPathForResourceJar("guava.jar");
     String toolsCommon = getPathForResourceJar("android-tools-common.jar");
 
-    AndroidInstrumentationTestJVMArgs jvmArgs = AndroidInstrumentationTestJVMArgs.builder()
-        .setApkUnderTestPath(apkUnderTestPath)
-        .setPathToAdbExecutable(pathToAdbExecutable)
-        .setDeviceSerial(deviceSerial)
-        .setDirectoryForTestResults(directoryForTestResults)
-        .setInstrumentationApkPath(instrumentationApkPath)
-        .setTestPackage(packageName)
-        .setTestRunner(testRunner)
-        .setTestRunnerClasspath(TESTRUNNER_CLASSES)
-        .setDdmlibJarPath(ddmlib)
-        .setTestFilter(classFilterArg)
-        .setKxmlJarPath(kxml2)
-        .setGuavaJarPath(guava)
-        .setAndroidToolsCommonJarPath(toolsCommon)
-        .build();
+    AndroidInstrumentationTestJVMArgs jvmArgs =
+        AndroidInstrumentationTestJVMArgs.builder()
+            .setApkUnderTestPath(apkUnderTestPath)
+            .setPathToAdbExecutable(pathToAdbExecutable)
+            .setDeviceSerial(deviceSerial)
+            .setDirectoryForTestResults(directoryForTestResults)
+            .setInstrumentationApkPath(instrumentationApkPath)
+            .setTestPackage(packageName)
+            .setTestRunner(testRunner)
+            .setTestRunnerClasspath(TESTRUNNER_CLASSES)
+            .setDdmlibJarPath(ddmlib)
+            .setTestFilter(classFilterArg)
+            .setKxmlJarPath(kxml2)
+            .setGuavaJarPath(guava)
+            .setAndroidToolsCommonJarPath(toolsCommon)
+            .build();
 
     return new InstrumentationStep(
         getProjectFilesystem(), javaRuntimeLauncher, jvmArgs, testRuleTimeoutMs);
@@ -218,20 +213,18 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   private String getPathForResourceJar(String jarName) {
     return new PathSourcePath(
-          this.getProjectFilesystem(),
-          AndroidInstrumentationTest.class + "/" + jarName,
-          new PackagedResource(
-              this.getProjectFilesystem(),
-              AndroidInstrumentationTest.class,
-              jarName)).getRelativePath().toString();
+            this.getProjectFilesystem(),
+            AndroidInstrumentationTest.class + "/" + jarName,
+            new PackagedResource(
+                this.getProjectFilesystem(), AndroidInstrumentationTest.class, jarName))
+        .getRelativePath()
+        .toString();
   }
 
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__android_instrumentation_test_%s_output__");
+        getProjectFilesystem(), getBuildTarget(), "__android_instrumentation_test_%s_output__");
   }
 
   private TestCaseSummary getTestClassAssumedSummary() {
@@ -251,8 +244,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context,
-      final boolean isUsingTestSelectors) {
+      final ExecutionContext context, final boolean isUsingTestSelectors) {
     return () -> {
       final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       IDevice device;
@@ -265,8 +257,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       if (device == null) {
         summaries.add(getTestClassAssumedSummary());
       } else {
-        Path testResultPath = getProjectFilesystem().resolve(
-            getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
+        Path testResultPath =
+            getProjectFilesystem()
+                .resolve(getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
         summaries.addAll(
             XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
       }
@@ -274,9 +267,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
           getBuildTarget(),
           summaries.build(),
           contacts,
-          labels.stream()
-              .map(Object::toString)
-              .collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
     };
   }
 
@@ -287,8 +278,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public final ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     return steps.build();
   }
@@ -305,18 +295,20 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       SourcePathResolver pathResolver) {
     Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
-      apkUnderTestPath = Optional.of(
-          pathResolver.getAbsolutePath(
-              ((AndroidInstrumentationApk) apk).getApkUnderTest().getApkInfo().getApkPath()));
+      apkUnderTestPath =
+          Optional.of(
+              pathResolver.getAbsolutePath(
+                  ((AndroidInstrumentationApk) apk).getApkUnderTest().getApkInfo().getApkPath()));
     }
-    InstrumentationStep step = getInstrumentationStep(
-        pathResolver,
-        executionContext.getPathToAdbExecutable(),
-        Optional.empty(),
-        Optional.empty(),
-        Optional.of(pathResolver.getAbsolutePath(apk.getApkInfo().getApkPath())),
-        Optional.empty(),
-        apkUnderTestPath);
+    InstrumentationStep step =
+        getInstrumentationStep(
+            pathResolver,
+            executionContext.getPathToAdbExecutable(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(pathResolver.getAbsolutePath(apk.getApkInfo().getApkPath())),
+            Optional.empty(),
+            apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())

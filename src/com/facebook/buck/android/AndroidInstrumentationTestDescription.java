@@ -29,7 +29,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class AndroidInstrumentationTestDescription
@@ -39,8 +38,7 @@ public class AndroidInstrumentationTestDescription
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public AndroidInstrumentationTestDescription(
-      JavaOptions javaOptions,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      JavaOptions javaOptions, Optional<Long> defaultTestRuleTimeoutMs) {
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
@@ -60,17 +58,13 @@ public class AndroidInstrumentationTestDescription
     BuildRule apk = resolver.getRule(args.apk);
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
-          "In %s, instrumentation_apk='%s' must be an android_binary(), apk_genrule() or " +
-          "android_instrumentation_apk(), but was %s().",
-          params.getBuildTarget(),
-          apk.getFullyQualifiedName(),
-          apk.getType());
+          "In %s, instrumentation_apk='%s' must be an android_binary(), apk_genrule() or "
+              + "android_instrumentation_apk(), but was %s().",
+          params.getBuildTarget(), apk.getFullyQualifiedName(), apk.getType());
     }
 
     return new AndroidInstrumentationTest(
-        params.copyAppendingExtraDeps(
-            BuildRules.getExportedRules(
-                params.getDeclaredDeps().get())),
+        params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.labels,
         args.contacts,
@@ -84,5 +78,4 @@ public class AndroidInstrumentationTestDescription
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
   }
-
 }

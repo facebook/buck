@@ -69,5 +69,4 @@ public class ApkInstallStep implements Step {
     }
     return builder.toString();
   }
-
 }

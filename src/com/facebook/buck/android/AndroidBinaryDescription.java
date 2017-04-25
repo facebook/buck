@@ -50,7 +50,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -58,6 +57,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -75,7 +75,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -86,10 +85,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class AndroidBinaryDescription implements
-    Description<AndroidBinaryDescription.Arg>,
-    Flavored,
-    ImplicitDepsInferringDescription<AndroidBinaryDescription.Arg> {
+public class AndroidBinaryDescription
+    implements Description<AndroidBinaryDescription.Arg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AndroidBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
@@ -97,8 +96,8 @@ public class AndroidBinaryDescription implements
   private static final String CONFIG_PARAM_REDEX = "redex";
 
   /**
-   * By default, assume we have 5MB of linear alloc,
-   * 1MB of which is taken up by the framework, so that leaves 4MB.
+   * By default, assume we have 5MB of linear alloc, 1MB of which is taken up by the framework, so
+   * that leaves 4MB.
    */
   private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
@@ -110,8 +109,7 @@ public class AndroidBinaryDescription implements
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 
-  private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(
-      PACKAGE_STRING_ASSETS_FLAVOR);
+  private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(PACKAGE_STRING_ASSETS_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -155,19 +153,22 @@ public class AndroidBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-        Optional.ofNullable(resolver.getEventBus()),
-        PerfEventId.of("AndroidBinaryDescription"),
-        "target", params.getBuildTarget().toString())) {
+      A args)
+      throws NoSuchBuildTargetException {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(
+            Optional.ofNullable(resolver.getEventBus()),
+            PerfEventId.of("AndroidBinaryDescription"),
+            "target",
+            params.getBuildTarget().toString())) {
 
       ResourceCompressionMode compressionMode = getCompressionMode(args);
 
       BuildTarget target = params.getBuildTarget();
       boolean isFlavored = target.isFlavored();
       if (isFlavored) {
-        if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR) &&
-            !compressionMode.isStoreStringsAsAssets()) {
+        if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)
+            && !compressionMode.isStoreStringsAsAssets()) {
           throw new HumanReadableException(
               "'package_string_assets' flavor does not exist for %s.",
               target.getUnflavoredBuildTarget());
@@ -179,22 +180,16 @@ public class AndroidBinaryDescription implements
       if (!(keystore instanceof Keystore)) {
         throw new HumanReadableException(
             "In %s, keystore='%s' must be a keystore() but was %s().",
-            params.getBuildTarget(),
-            keystore.getFullyQualifiedName(),
-            keystore.getType());
+            params.getBuildTarget(), keystore.getFullyQualifiedName(), keystore.getType());
       }
 
       APKModuleGraph apkModuleGraph = null;
       if (!args.applicationModuleConfigs.isEmpty()) {
-        apkModuleGraph = new APKModuleGraph(
-          Optional.of(args.applicationModuleConfigs),
-          targetGraph,
-          target);
+        apkModuleGraph =
+            new APKModuleGraph(Optional.of(args.applicationModuleConfigs), targetGraph, target);
       } else {
-        apkModuleGraph = new APKModuleGraph(
-          targetGraph,
-          target,
-          Optional.of(args.applicationModuleTargets));
+        apkModuleGraph =
+            new APKModuleGraph(targetGraph, target, Optional.of(args.applicationModuleTargets));
       }
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
@@ -205,15 +200,16 @@ public class AndroidBinaryDescription implements
       if (args.useAndroidProguardConfigWithOptimizations.isPresent()) {
         Preconditions.checkArgument(
             !args.androidSdkProguardConfig.isPresent(),
-            "The deprecated use_android_proguard_config_with_optimizations parameter" +
-                " cannot be used with android_sdk_proguard_config.");
+            "The deprecated use_android_proguard_config_with_optimizations parameter"
+                + " cannot be used with android_sdk_proguard_config.");
         LOG.error(
-            "Target %s specified use_android_proguard_config_with_optimizations, " +
-                "which is deprecated. Use android_sdk_proguard_config.",
+            "Target %s specified use_android_proguard_config_with_optimizations, "
+                + "which is deprecated. Use android_sdk_proguard_config.",
             params.getBuildTarget());
-        androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.orElse(false)
-            ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
-            : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
+        androidSdkProguardConfig =
+            args.useAndroidProguardConfigWithOptimizations.orElse(false)
+                ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
+                : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
       }
 
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
@@ -229,55 +225,57 @@ public class AndroidBinaryDescription implements
       DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
       PackageType packageType = getPackageType(args);
-      boolean shouldPreDex = !args.disablePreDex &&
-          PackageType.DEBUG.equals(packageType) &&
-          !args.preprocessJavaClassesBash.isPresent();
+      boolean shouldPreDex =
+          !args.disablePreDex
+              && PackageType.DEBUG.equals(packageType)
+              && !args.preprocessJavaClassesBash.isPresent();
 
-      ResourceFilter resourceFilter =
-        new ResourceFilter(args.resourceFilter);
+      ResourceFilter resourceFilter = new ResourceFilter(args.resourceFilter);
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-          params,
-          resolver,
-          args.aaptMode,
-          compressionMode,
-          resourceFilter,
-          args.getBannedDuplicateResourceTypes(),
-          args.resourceUnionPackage,
-          addFallbackLocales(args.locales),
-          args.manifest,
-          packageType,
-          ImmutableSet.copyOf(args.cpuFilters),
-          args.buildStringSourceMap,
-          shouldPreDex,
-          AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem()),
-          dexSplitMode,
-          ImmutableSet.copyOf(args.noDx.orElse(ImmutableSet.of())),
-          /* resourcesToExclude */ ImmutableSet.of(),
-          args.skipCrunchPngs,
-          args.includesVectorDrawables,
-          javaBuckConfig,
-          JavacFactory.create(ruleFinder, javaBuckConfig, null),
-          javacOptions,
-          exopackageModes,
-          args.buildConfigValues,
-          args.buildConfigValuesFile,
-          Optional.empty(),
-          args.trimResourceIds,
-          args.keepResourcePattern,
-          nativePlatforms,
-          Optional.of(args.nativeLibraryMergeMap),
-          args.nativeLibraryMergeGlue,
-          args.nativeLibraryMergeCodeGenerator,
-          args.nativeLibraryProguardConfigGenerator,
-          args.enableRelinker ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
-          dxExecutorService,
-          args.manifestEntries,
-          cxxBuckConfig,
-          apkModuleGraph,
-          dxConfig,
-          getPostFilterResourcesArgs(args, params, resolver, cellRoots));
+      AndroidBinaryGraphEnhancer graphEnhancer =
+          new AndroidBinaryGraphEnhancer(
+              params,
+              resolver,
+              args.aaptMode,
+              compressionMode,
+              resourceFilter,
+              args.getBannedDuplicateResourceTypes(),
+              args.resourceUnionPackage,
+              addFallbackLocales(args.locales),
+              args.manifest,
+              packageType,
+              ImmutableSet.copyOf(args.cpuFilters),
+              args.buildStringSourceMap,
+              shouldPreDex,
+              AndroidBinary.getPrimaryDexPath(
+                  params.getBuildTarget(), params.getProjectFilesystem()),
+              dexSplitMode,
+              ImmutableSet.copyOf(args.noDx.orElse(ImmutableSet.of())),
+              /* resourcesToExclude */ ImmutableSet.of(),
+              args.skipCrunchPngs,
+              args.includesVectorDrawables,
+              javaBuckConfig,
+              JavacFactory.create(ruleFinder, javaBuckConfig, null),
+              javacOptions,
+              exopackageModes,
+              args.buildConfigValues,
+              args.buildConfigValuesFile,
+              Optional.empty(),
+              args.trimResourceIds,
+              args.keepResourcePattern,
+              nativePlatforms,
+              Optional.of(args.nativeLibraryMergeMap),
+              args.nativeLibraryMergeGlue,
+              args.nativeLibraryMergeCodeGenerator,
+              args.nativeLibraryProguardConfigGenerator,
+              args.enableRelinker ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
+              dxExecutorService,
+              args.manifestEntries,
+              cxxBuckConfig,
+              apkModuleGraph,
+              dxConfig,
+              getPostFilterResourcesArgs(args, params, resolver, cellRoots));
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
       if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -306,12 +304,15 @@ public class AndroidBinaryDescription implements
 
       Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, cellRoots, args);
 
-      ImmutableSortedSet<BuildRule> redexExtraDeps = redexOptions
-          .map(a -> a.getRedexExtraArgs()
-              .stream()
-              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()))
-          ).orElse(ImmutableSortedSet.of());
+      ImmutableSortedSet<BuildRule> redexExtraDeps =
+          redexOptions
+              .map(
+                  a ->
+                      a.getRedexExtraArgs()
+                          .stream()
+                          .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())))
+              .orElse(ImmutableSortedSet.of());
 
       return new AndroidBinary(
           params
@@ -339,10 +340,7 @@ public class AndroidBinaryDescription implements
           args.cpuFilters,
           resourceFilter,
           exopackageModes,
-          MACRO_HANDLER.getExpander(
-              params.getBuildTarget(),
-              cellRoots,
-              resolver),
+          MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver),
           args.preprocessJavaClassesBash,
           rulesToExcludeFromDex,
           result,
@@ -361,12 +359,12 @@ public class AndroidBinaryDescription implements
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {
     // Exopackage builds default to JAR, otherwise, default to RAW.
-    DexStore defaultDexStore = ExopackageMode.enabledForSecondaryDexes(exopackageModes)
-        ? DexStore.JAR
-        : DexStore.RAW;
-    DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize
-        ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-        : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+    DexStore defaultDexStore =
+        ExopackageMode.enabledForSecondaryDexes(exopackageModes) ? DexStore.JAR : DexStore.RAW;
+    DexSplitStrategy dexSplitStrategy =
+        args.minimizePrimaryDexSize
+            ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
+            : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
     return new DexSplitMode(
         args.useSplitDex,
         dexSplitStrategy,
@@ -425,16 +423,16 @@ public class AndroidBinaryDescription implements
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.redex.orElse(false)) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget = buckConfig.getMaybeBuildTarget(
-          SECTION,
-          CONFIG_PARAM_REDEX);
+      Optional<BuildTarget> redexTarget =
+          buckConfig.getMaybeBuildTarget(SECTION, CONFIG_PARAM_REDEX);
       if (redexTarget.isPresent()) {
         extraDepsBuilder.add(redexTarget.get());
       }
 
-      constructorArg.redexExtraArgs.forEach(a ->
-        addDepsFromParam(buildTarget, cellRoots, a, extraDepsBuilder, targetGraphOnlyDepsBuilder)
-      );
+      constructorArg.redexExtraArgs.forEach(
+          a ->
+              addDepsFromParam(
+                  buildTarget, cellRoots, a, extraDepsBuilder, targetGraphOnlyDepsBuilder));
     }
   }
 
@@ -446,63 +444,46 @@ public class AndroidBinaryDescription implements
       ImmutableCollection.Builder<BuildTarget> nonBuildDefsBuilder) {
     try {
       MACRO_HANDLER.extractParseTimeDeps(
-          target,
-          cellNames,
-          paramValue,
-          buildDefsBuilder,
-          nonBuildDefsBuilder);
+          target, cellNames, paramValue, buildDefsBuilder, nonBuildDefsBuilder);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
   }
 
   private Optional<com.facebook.buck.rules.args.Arg> getPostFilterResourcesArgs(
-      Arg arg,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots) {
-    return arg.postFilterResourcesCmd.map(MacroArg.toMacroArgFunction(
-        MACRO_HANDLER,
-        params.getBuildTarget(),
-        cellRoots,
-        resolver)::apply);
+      Arg arg, BuildRuleParams params, BuildRuleResolver resolver, CellPathResolver cellRoots) {
+    return arg.postFilterResourcesCmd.map(
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
+            ::apply);
   }
 
   private Optional<RedexOptions> getRedexOptions(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
-      Arg arg) {
+      BuildRuleParams params, BuildRuleResolver resolver, CellPathResolver cellRoots, Arg arg) {
     boolean redexRequested = arg.redex.orElse(false);
     if (!redexRequested) {
       return Optional.empty();
     }
 
-    Optional<Tool> redexBinary =
-        buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
+    Optional<Tool> redexBinary = buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
     if (!redexBinary.isPresent()) {
-      throw new HumanReadableException("Requested running ReDex for %s but the path to the tool" +
-          "has not been specified in the %s.%s .buckconfig section.",
-          params.getBuildTarget(),
-          SECTION,
-          CONFIG_PARAM_REDEX);
+      throw new HumanReadableException(
+          "Requested running ReDex for %s but the path to the tool"
+              + "has not been specified in the %s.%s .buckconfig section.",
+          params.getBuildTarget(), SECTION, CONFIG_PARAM_REDEX);
     }
 
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(
-            MACRO_HANDLER,
-            params.getBuildTarget(),
-            cellRoots,
-            resolver)::apply;
-    List<com.facebook.buck.rules.args.Arg> redexExtraArgs = arg.redexExtraArgs.stream()
-        .map(macroArgFunction)
-        .collect(Collectors.toList());
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
+            ::apply;
+    List<com.facebook.buck.rules.args.Arg> redexExtraArgs =
+        arg.redexExtraArgs.stream().map(macroArgFunction).collect(Collectors.toList());
 
-    return Optional.of(RedexOptions.builder()
-        .setRedex(redexBinary.get())
-        .setRedexConfig(arg.redexConfig)
-        .setRedexExtraArgs(redexExtraArgs)
-        .build());
+    return Optional.of(
+        RedexOptions.builder()
+            .setRedex(redexBinary.get())
+            .setRedexConfig(arg.redexConfig)
+            .setRedexExtraArgs(redexExtraArgs)
+            .build());
   }
 
   @SuppressFieldNotInitialized
@@ -510,7 +491,10 @@ public class AndroidBinaryDescription implements
     public SourcePath manifest;
     public BuildTarget keystore;
     public Optional<String> packageType;
-    @Hint(isDep = false) public Optional<Set<BuildTarget>> noDx = Optional.of(ImmutableSet.of());
+
+    @Hint(isDep = false)
+    public Optional<Set<BuildTarget>> noDx = Optional.of(ImmutableSet.of());
+
     public Boolean useSplitDex = false;
     public Boolean minimizePrimaryDexSize = false;
     public Boolean disablePreDex = false;
@@ -581,7 +565,9 @@ public class AndroidBinaryDescription implements
     public Optional<SourcePath> buildConfigValuesFile;
     public boolean skipProguard = false;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
@@ -591,8 +577,9 @@ public class AndroidBinaryDescription implements
     public EnumSet<RType> getBannedDuplicateResourceTypes() {
       if (duplicateResourceBehavior == Arg.DuplicateResourceBehaviour.ALLOW_BY_DEFAULT) {
         if (!allowedDuplicateResourceTypes.isEmpty()) {
-          throw new IllegalArgumentException("Cannot set allowed_duplicate_resource_types if " +
-              "duplicate_resource_behaviour is allow_by_default");
+          throw new IllegalArgumentException(
+              "Cannot set allowed_duplicate_resource_types if "
+                  + "duplicate_resource_behaviour is allow_by_default");
         }
         if (!bannedDuplicateResourceTypes.isEmpty()) {
           return EnumSet.copyOf(bannedDuplicateResourceTypes);
@@ -601,8 +588,9 @@ public class AndroidBinaryDescription implements
         }
       } else if (duplicateResourceBehavior == Arg.DuplicateResourceBehaviour.BAN_BY_DEFAULT) {
         if (!bannedDuplicateResourceTypes.isEmpty()) {
-          throw new IllegalArgumentException("Cannot set banned_duplicate_resource_types if " +
-              "duplicate_resource_behaviour is ban_by_default");
+          throw new IllegalArgumentException(
+              "Cannot set banned_duplicate_resource_types if "
+                  + "duplicate_resource_behaviour is ban_by_default");
         }
         if (!allowedDuplicateResourceTypes.isEmpty()) {
           return EnumSet.complementOf(EnumSet.copyOf(allowedDuplicateResourceTypes));

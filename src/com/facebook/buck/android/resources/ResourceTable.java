@@ -16,23 +16,17 @@
 
 package com.facebook.buck.android.resources;
 
-
 import com.google.common.base.Preconditions;
-
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 /**
  * A ResourceTable is the top-level representation of resources.arsc. It consists of a header:
- *   ResTable_header
- *       u32 chunk_type
- *       u32 header_size
- *       u32 chunk_size
- *   u32 package_count
+ * ResTable_header u32 chunk_type u32 header_size u32 chunk_size u32 package_count
  *
- * The header is followed by a StringPool and then package_count packages.
+ * <p>The header is followed by a StringPool and then package_count packages.
  *
- * In practice, aapt always generates .arsc files with package_count == 1.
+ * <p>In practice, aapt always generates .arsc files with package_count == 1.
  */
 public class ResourceTable extends ResChunk {
   public static final int HEADER_SIZE = 12;
@@ -40,9 +34,7 @@ public class ResourceTable extends ResChunk {
   private final StringPool strings;
   private final ResTablePackage resPackage;
 
-  public ResourceTable(
-      StringPool strings,
-      ResTablePackage resPackage) {
+  public ResourceTable(StringPool strings, ResTablePackage resPackage) {
     super(
         CHUNK_RESOURCE_TABLE,
         HEADER_SIZE,
@@ -62,8 +54,8 @@ public class ResourceTable extends ResChunk {
     Preconditions.checkState(packageCount == 1);
 
     StringPool strings = StringPool.get(slice(buf, buf.position()));
-    ResTablePackage resPackage = ResTablePackage.get(
-        slice(buf, HEADER_SIZE + strings.getChunkSize()));
+    ResTablePackage resPackage =
+        ResTablePackage.get(slice(buf, HEADER_SIZE + strings.getChunkSize()));
 
     Preconditions.checkState(
         chunkSize == HEADER_SIZE + strings.getChunkSize() + resPackage.getChunkSize());

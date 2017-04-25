@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -107,9 +106,16 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   private static final Pattern INT_ARRAY_VALUES = Pattern.compile("\\s*\\{\\s*(\\S+)?\\s*\\}\\s*");
   private static final Pattern TEXT_SYMBOLS_LINE =
       Pattern.compile(
-          "(\\S+) (\\S+) (\\S+) ([^(" + CUSTOM_DRAWABLE_IDENTIFIER + "|" +
-              GRAYSCALE_IMAGE_IDENTIFIER + ")]+)" +
-          "( (" + CUSTOM_DRAWABLE_IDENTIFIER + "|" + GRAYSCALE_IMAGE_IDENTIFIER + "))?");
+          "(\\S+) (\\S+) (\\S+) ([^("
+              + CUSTOM_DRAWABLE_IDENTIFIER
+              + "|"
+              + GRAYSCALE_IMAGE_IDENTIFIER
+              + ")]+)"
+              + "( ("
+              + CUSTOM_DRAWABLE_IDENTIFIER
+              + "|"
+              + GRAYSCALE_IMAGE_IDENTIFIER
+              + "))?");
 
   // A symbols file may look like:
   //
@@ -135,20 +141,12 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   public final String idValue;
   public final CustomDrawableType customType;
 
-  public RDotTxtEntry(
-      IdType idType,
-      RType type,
-      String name,
-      String idValue) {
+  public RDotTxtEntry(IdType idType, RType type, String name, String idValue) {
     this(idType, type, name, idValue, CustomDrawableType.NONE);
   }
 
   public RDotTxtEntry(
-      IdType idType,
-      RType type,
-      String name,
-      String idValue,
-      CustomDrawableType customType) {
+      IdType idType, RType type, String name, String idValue, CustomDrawableType customType) {
     this.idType = idType;
     this.type = type;
     this.name = name;
@@ -198,9 +196,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   }
 
   public static Iterable<RDotTxtEntry> readResources(
-      ProjectFilesystem owningFilesystem,
-      Path rDotTxt)
-      throws IOException {
+      ProjectFilesystem owningFilesystem, Path rDotTxt) throws IOException {
     return FluentIterable.from(owningFilesystem.readLines(rDotTxt))
         .filter(input -> !Strings.isNullOrEmpty(input))
         .transform(RDotTxtEntry.TO_ENTRY);
@@ -218,8 +214,8 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
 
     ComparisonChain comparisonChain = ComparisonChain.start().compare(this.type, that.type);
 
-    String [] thisNameParts = this.name.split("_");
-    String [] thatNameParts = that.name.split("_");
+    String[] thisNameParts = this.name.split("_");
+    String[] thatNameParts = that.name.split("_");
 
     int index = 0;
     while (index < thisNameParts.length && index < thatNameParts.length) {

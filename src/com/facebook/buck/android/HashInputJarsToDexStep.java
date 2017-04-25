@@ -32,7 +32,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -84,18 +83,19 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
     for (Path path : allInputs.build()) {
       try {
         final Hasher hasher = Hashing.sha1().newHasher();
-        new DefaultClasspathTraverser().traverse(
-            new ClasspathTraversal(Collections.singleton(path), filesystem) {
-              @Override
-              public void visit(FileLike fileLike) throws IOException {
-                String className = fileLike.getRelativePath().replaceAll("\\.class$", "");
-                if (classNamesToHashes.containsKey(className)) {
-                  HashCode classHash =
-                      Preconditions.checkNotNull(classNamesToHashes.get(className));
-                  hasher.putBytes(classHash.asBytes());
-                }
-              }
-            });
+        new DefaultClasspathTraverser()
+            .traverse(
+                new ClasspathTraversal(Collections.singleton(path), filesystem) {
+                  @Override
+                  public void visit(FileLike fileLike) throws IOException {
+                    String className = fileLike.getRelativePath().replaceAll("\\.class$", "");
+                    if (classNamesToHashes.containsKey(className)) {
+                      HashCode classHash =
+                          Preconditions.checkNotNull(classNamesToHashes.get(className));
+                      hasher.putBytes(classHash.asBytes());
+                    }
+                  }
+                });
         dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
       } catch (IOException e) {
         context.logError(e, "Error hashing smart dex input: %s", path);
@@ -108,9 +108,10 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
 
   @Override
   public ImmutableMap<Path, Sha1HashCode> getDexInputHashes() {
-    Preconditions.checkState(stepFinished,
-        "Either the step did not complete successfully or getDexInputHashes() was called before " +
-            "it could finish its execution.");
+    Preconditions.checkState(
+        stepFinished,
+        "Either the step did not complete successfully or getDexInputHashes() was called before "
+            + "it could finish its execution.");
     return dexInputsToHashes.build();
   }
 }

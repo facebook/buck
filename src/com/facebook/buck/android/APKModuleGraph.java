@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -48,7 +47,7 @@ import java.util.Set;
 
 /**
  * Utility class for grouping sets of targets and their dependencies into APK Modules containing
- * their exclusive dependencies.  Targets that are dependencies of the root target are included in
+ * their exclusive dependencies. Targets that are dependencies of the root target are included in
  * the root. Targets that are dependencies of two or more groups but not dependencies of the root
  * are added to their own group.
  */
@@ -62,23 +61,26 @@ public class APKModuleGraph {
   private final Optional<Set<BuildTarget>> seedTargets;
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
-      Suppliers.memoize(new Supplier<ImmutableMap<BuildTarget, APKModule>>() {
-        @Override
-        public ImmutableMap<BuildTarget, APKModule> get() {
-          final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
-          new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
+      Suppliers.memoize(
+          new Supplier<ImmutableMap<BuildTarget, APKModule>>() {
             @Override
-            public ImmutableSet<APKModule> visit(final APKModule node) {
-              if (node.equals(rootAPKModuleSupplier.get())) {
-                return ImmutableSet.of();
-              }
-              node.getBuildTargets().forEach(input -> mapBuilder.put(input, node));
-              return getGraph().getOutgoingNodesFor(node);
+            public ImmutableMap<BuildTarget, APKModule> get() {
+              final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder =
+                  ImmutableMap.builder();
+              new AbstractBreadthFirstTraversal<APKModule>(
+                  getGraph().getNodesWithNoIncomingEdges()) {
+                @Override
+                public ImmutableSet<APKModule> visit(final APKModule node) {
+                  if (node.equals(rootAPKModuleSupplier.get())) {
+                    return ImmutableSet.of();
+                  }
+                  node.getBuildTargets().forEach(input -> mapBuilder.put(input, node));
+                  return getGraph().getOutgoingNodesFor(node);
+                }
+              }.start();
+              return mapBuilder.build();
             }
-          }.start();
-          return mapBuilder.build();
-        }
-      });
+          });
 
   private final Supplier<APKModule> rootAPKModuleSupplier =
       Suppliers.memoize(this::generateRootModule);
@@ -87,17 +89,18 @@ public class APKModuleGraph {
       Suppliers.memoize(this::generateGraph);
 
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
-      Suppliers.memoize(() -> {
-        final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
-        new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
-          @Override
-          public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
-            moduleBuilder.add(apkModule);
-            return getGraph().getIncomingNodesFor(apkModule);
-          }
-        }.start();
-        return moduleBuilder.build();
-      });
+      Suppliers.memoize(
+          () -> {
+            final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
+            new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
+              @Override
+              public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
+                moduleBuilder.add(apkModule);
+                return getGraph().getIncomingNodesFor(apkModule);
+              }
+            }.start();
+            return moduleBuilder.build();
+          });
 
   private final Supplier<Optional<Map<String, List<BuildTarget>>>> configMapSupplier =
       Suppliers.memoize(this::generateSeedConfigMap);
@@ -105,10 +108,9 @@ public class APKModuleGraph {
   /**
    * Constructor for the {@code APKModule} graph generator object
    *
-   * @param seedConfigMap   A map of names to seed targets to use for creating
-   *     {@code APKModule}.
-   * @param targetGraph     The full target graph of the build
-   * @param target          The root target to use to traverse the graph
+   * @param seedConfigMap A map of names to seed targets to use for creating {@code APKModule}.
+   * @param targetGraph The full target graph of the build
+   * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
       final Optional<Map<String, List<BuildTarget>>> seedConfigMap,
@@ -123,9 +125,9 @@ public class APKModuleGraph {
   /**
    * Constructor for the {@code APKModule} graph generator object
    *
-   * @param targetGraph     The full target graph of the build
-   * @param target          The root target to use to traverse the graph
-   * @param seedTargets     The set of seed targets to use for creating {@code APKModule}.
+   * @param targetGraph The full target graph of the build
+   * @param target The root target to use to traverse the graph
+   * @param seedTargets The set of seed targets to use for creating {@code APKModule}.
    */
   public APKModuleGraph(
       final TargetGraph targetGraph,
@@ -139,7 +141,7 @@ public class APKModuleGraph {
 
   private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
     if (suppliedSeedConfigMap.isPresent()) {
-       return suppliedSeedConfigMap;
+      return suppliedSeedConfigMap;
     }
     if (!seedTargets.isPresent()) {
       return Optional.empty();
@@ -182,6 +184,7 @@ public class APKModuleGraph {
 
   /**
    * Get the Module that contains the given target
+   *
    * @param target target to serach for in modules
    * @return the module that contains the target
    */
@@ -202,9 +205,9 @@ public class APKModuleGraph {
   public static ImmutableMultimap<APKModule, String> getAPKModuleToClassesMap(
       final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       final Function<String, String> translatorFunction,
-      final ProjectFilesystem filesystem) throws IOException {
-    final ImmutableMultimap.Builder<APKModule, String> builder =
-        ImmutableMultimap.builder();
+      final ProjectFilesystem filesystem)
+      throws IOException {
+    final ImmutableMultimap.Builder<APKModule, String> builder = ImmutableMultimap.builder();
     if (!apkModuleToJarPathMap.isEmpty()) {
       for (final APKModule dexStore : apkModuleToJarPathMap.keySet()) {
         for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {
@@ -220,9 +223,7 @@ public class APKModuleGraph {
 
                   String classpath = entry.getRelativePath().replaceAll("\\.class$", "");
 
-                  builder.put(
-                      dexStore,
-                      translatorFunction.apply(classpath));
+                  builder.put(dexStore, translatorFunction.apply(classpath));
                 }
               });
         }
@@ -233,8 +234,7 @@ public class APKModuleGraph {
 
   /**
    * Generate the graph by identifying root targets, then marking targets with the seeds they are
-   * reachable with, then consolidating the targets reachable by multiple seeds into shared
-   * modules
+   * reachable with, then consolidating the targets reachable by multiple seeds into shared modules
    *
    * @return The graph of APKModules with edges representing dependencies between modules
    */
@@ -276,10 +276,7 @@ public class APKModuleGraph {
         }
       }.start();
     }
-    return APKModule.builder()
-        .setName(ROOT_APKMODULE_NAME)
-        .setBuildTargets(rootTargets)
-        .build();
+    return APKModule.builder().setName(ROOT_APKMODULE_NAME).setBuildTargets(rootTargets).build();
   }
 
   /**
@@ -301,8 +298,7 @@ public class APKModuleGraph {
 
             ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
             for (BuildTarget depTarget : node.getBuildDeps()) {
-              if (!isInRootModule(depTarget) &&
-                  !isSeedTarget(depTarget)) {
+              if (!isInRootModule(depTarget) && !isSeedTarget(depTarget)) {
                 depsBuilder.add(targetGraph.get(depTarget));
                 targetToContainingApkModuleNameMap.put(depTarget, seedModuleName);
               }
@@ -316,13 +312,13 @@ public class APKModuleGraph {
   }
 
   /**
-   * Loop through each of the targets we visited while generating seed modules:
-   * If the are exclusive to that module, add them to that module.  If they are not exclusive to
-   * that module, find or create an appropriate shared module and fill out its dependencies
+   * Loop through each of the targets we visited while generating seed modules: If the are exclusive
+   * to that module, add them to that module. If they are not exclusive to that module, find or
+   * create an appropriate shared module and fill out its dependencies
    *
    * @param apkModuleGraph the current graph we're building
    * @param targetToContainingApkModulesMap the targets mapped to the seed targets they are
-   *                                        reachable from
+   *     reachable from
    */
   private void generateSharedModules(
       MutableDirectedGraph<APKModule> apkModuleGraph,
@@ -345,14 +341,12 @@ public class APKModuleGraph {
       }
 
       if (!exists) {
-        String name = containingModuleSet.size() == 1 ?
-            containingModuleSet.iterator().next() :
-            generateNameFromTarget(entry.getKey());
+        String name =
+            containingModuleSet.size() == 1
+                ? containingModuleSet.iterator().next()
+                : generateNameFromTarget(entry.getKey());
         combinedModuleHashToModuleMap.put(
-            containingModuleSet,
-            APKModule.builder()
-                .setName(name)
-                .addBuildTargets(entry.getKey()));
+            containingModuleSet, APKModule.builder().setName(name).addBuildTargets(entry.getKey()));
       }
     }
 
@@ -363,9 +357,7 @@ public class APKModuleGraph {
       if (entry.getKey().size() == 1) {
         APKModule seed = entry.getValue().build();
         apkModuleGraph.addNode(seed);
-        seedModules.put(
-            entry.getKey().iterator().next(),
-            seed);
+        seedModules.put(entry.getKey().iterator().next(), seed);
         apkModuleGraph.addEdge(seed, rootAPKModuleSupplier.get());
       }
     }
@@ -376,13 +368,9 @@ public class APKModuleGraph {
       if (entry.getKey().size() > 1) {
         APKModule shared = entry.getValue().build();
         apkModuleGraph.addNode(shared);
-        apkModuleGraph.addEdge(
-            shared,
-            rootAPKModuleSupplier.get());
+        apkModuleGraph.addEdge(shared, rootAPKModuleSupplier.get());
         for (String seedName : entry.getKey()) {
-          apkModuleGraph.addEdge(
-              seedModules.get(seedName),
-              shared);
+          apkModuleGraph.addEdge(seedModules.get(seedName), shared);
         }
       }
     }
@@ -407,9 +395,8 @@ public class APKModuleGraph {
 
   private static String generateNameFromTarget(BuildTarget androidModuleTarget) {
     String replacementPattern = "[/\\\\#-]";
-    String shortName = androidModuleTarget
-        .getShortNameAndFlavorPostfix()
-        .replaceAll(replacementPattern, ".");
+    String shortName =
+        androidModuleTarget.getShortNameAndFlavorPostfix().replaceAll(replacementPattern, ".");
     String name = androidModuleTarget.getBasePath().toString().replaceAll(replacementPattern, ".");
     if (name.endsWith(shortName)) {
       // return just the base path, ignoring the target name that is the same as its parent

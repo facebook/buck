@@ -43,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,8 +61,8 @@ public class RobolectricTest extends JavaTest {
 
   private static final Logger LOG = Logger.get(RobolectricTest.class);
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(
-      ANDROID, LIBRARY, TEST);
+  private static final BuildableProperties PROPERTIES =
+      new BuildableProperties(ANDROID, LIBRARY, TEST);
 
   private final SourcePathRuleFinder ruleFinder;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
@@ -71,8 +70,7 @@ public class RobolectricTest extends JavaTest {
   private final Optional<String> robolectricRuntimeDependency;
 
   /**
-   * Used by robolectric test runner to get list of resource directories that
-   * can be used for tests.
+   * Used by robolectric test runner to get list of resource directories that can be used for tests.
    */
   static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
@@ -80,17 +78,14 @@ public class RobolectricTest extends JavaTest {
   static final String LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_assets_directories";
 
-  private static final String ROBOLECTRIC_MANIFEST =
-      "buck.robolectric_manifest";
+  private static final String ROBOLECTRIC_MANIFEST = "buck.robolectric_manifest";
 
-  private static final String ROBOLECTRIC_DEPENDENCY_DIR =
-      "robolectric.dependency.dir";
+  private static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
       input -> {
         ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
-        for (HasAndroidResourceDeps hasAndroidResourceDeps :
-            input.getAndroidResourceDeps()) {
+        for (HasAndroidResourceDeps hasAndroidResourceDeps : input.getAndroidResourceDeps()) {
           SourcePath resSourcePath = hasAndroidResourceDeps.getRes();
           if (resSourcePath == null) {
             continue;
@@ -103,8 +98,7 @@ public class RobolectricTest extends JavaTest {
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> assetsRulesFunction =
       input -> {
         ImmutableSet.Builder<BuildRule> assetsDeps = ImmutableSet.builder();
-        for (HasAndroidResourceDeps hasAndroidResourceDeps :
-            input.getAndroidResourceDeps()) {
+        for (HasAndroidResourceDeps hasAndroidResourceDeps : input.getAndroidResourceDeps()) {
           SourcePath assetsSourcePath = hasAndroidResourceDeps.getAssets();
           if (assetsSourcePath == null) {
             continue;
@@ -139,8 +133,10 @@ public class RobolectricTest extends JavaTest {
         new SourcePathResolver(ruleFinder),
         compiledTestsLibrary,
         optionalDummyRDotJava
-            .map(r ->
-                ImmutableSet.<Either<SourcePath, Path>>of(Either.ofLeft(r.getSourcePathToOutput())))
+            .map(
+                r ->
+                    ImmutableSet.<Either<SourcePath, Path>>of(
+                        Either.ofLeft(r.getSourcePathToOutput())))
             .orElse(ImmutableSet.of()),
         labels,
         contacts,
@@ -177,76 +173,66 @@ public class RobolectricTest extends JavaTest {
       SourcePathResolver pathResolver,
       Optional<TargetDevice> targetDevice) {
     super.onAmendVmArgs(vmArgsBuilder, pathResolver, targetDevice);
-    Preconditions.checkState(optionalDummyRDotJava.isPresent(),
-        "DummyRDotJava must have been created!");
-    vmArgsBuilder.add(getRobolectricResourceDirectories(
-        pathResolver,
-        optionalDummyRDotJava.get().getAndroidResourceDeps()));
-    vmArgsBuilder.add(getRobolectricAssetsDirectories(
-        pathResolver,
-        optionalDummyRDotJava.get().getAndroidResourceDeps()));
+    Preconditions.checkState(
+        optionalDummyRDotJava.isPresent(), "DummyRDotJava must have been created!");
+    vmArgsBuilder.add(
+        getRobolectricResourceDirectories(
+            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
+    vmArgsBuilder.add(
+        getRobolectricAssetsDirectories(
+            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
 
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
-    robolectricManifest.ifPresent(s -> vmArgsBuilder.add(String.format(
-        "-D%s=%s", ROBOLECTRIC_MANIFEST, pathResolver.getAbsolutePath(s))));
-    robolectricRuntimeDependency.ifPresent(s -> vmArgsBuilder.add(String.format(
-        "-D%s=%s", ROBOLECTRIC_DEPENDENCY_DIR, s)));
+    robolectricManifest.ifPresent(
+        s ->
+            vmArgsBuilder.add(
+                String.format("-D%s=%s", ROBOLECTRIC_MANIFEST, pathResolver.getAbsolutePath(s))));
+    robolectricRuntimeDependency.ifPresent(
+        s -> vmArgsBuilder.add(String.format("-D%s=%s", ROBOLECTRIC_DEPENDENCY_DIR, s)));
   }
 
   @VisibleForTesting
   String getRobolectricResourceDirectories(
-      SourcePathResolver pathResolver,
-      List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
 
-    String resourceDirectories = getDirs(
-        resourceDeps
-            .stream()
-            .map(HasAndroidResourceDeps::getRes),
-        pathResolver);
+    String resourceDirectories =
+        getDirs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes), pathResolver);
 
-    return String.format("-D%s=%s",
-        LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME,
-        resourceDirectories);
+    return String.format(
+        "-D%s=%s", LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME, resourceDirectories);
   }
 
   @VisibleForTesting
   String getRobolectricAssetsDirectories(
-      SourcePathResolver pathResolver,
-      List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
 
-    String assetsDirectories = getDirs(
-        resourceDeps
-            .stream()
-            .map(HasAndroidResourceDeps::getAssets),
-        pathResolver);
+    String assetsDirectories =
+        getDirs(resourceDeps.stream().map(HasAndroidResourceDeps::getAssets), pathResolver);
 
-    return String.format("-D%s=%s",
-        LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME,
-        assetsDirectories);
+    return String.format("-D%s=%s", LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME, assetsDirectories);
   }
 
-  private String getDirs(
-      Stream<SourcePath> sourcePathStream,
-      SourcePathResolver pathResolver) {
+  private String getDirs(Stream<SourcePath> sourcePathStream, SourcePathResolver pathResolver) {
 
     return sourcePathStream
         .filter(Objects::nonNull)
         .map(pathResolver::getRelativePath)
-        .filter(input -> {
-          try {
-            if (!getProjectFilesystem().isDirectory(input)) {
-              throw new RuntimeException(String.format(
-                  "Path %s is needed to run robolectric test %s, but was not found.",
-                  input,
-                  getBuildTarget()));
-            }
-            return !getProjectFilesystem().getDirectoryContents(input).isEmpty();
-          } catch (IOException e) {
-            LOG.warn(e, "Error filtering path for Robolectric res/assets.");
-            return true;
-          }
-        })
+        .filter(
+            input -> {
+              try {
+                if (!getProjectFilesystem().isDirectory(input)) {
+                  throw new RuntimeException(
+                      String.format(
+                          "Path %s is needed to run robolectric test %s, but was not found.",
+                          input, getBuildTarget()));
+                }
+                return !getProjectFilesystem().getDirectoryContents(input).isEmpty();
+              } catch (IOException e) {
+                LOG.warn(e, "Error filtering path for Robolectric res/assets.");
+                return true;
+              }
+            })
         .map(Object::toString)
         .collect(Collectors.joining(File.pathSeparator));
   }
@@ -256,8 +242,7 @@ public class RobolectricTest extends JavaTest {
     return Stream.concat(
         // Inherit any runtime deps from `JavaTest`.
         super.getRuntimeDeps(),
-        Stream
-            .of(
+        Stream.of(
                 // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
                 // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
                 // to run this test.

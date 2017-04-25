@@ -30,12 +30,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class AndroidPrebuiltAar
-    extends AndroidLibrary
+public class AndroidPrebuiltAar extends AndroidLibrary
     implements HasAndroidResourceDeps, HasRuntimeDeps {
 
   private final UnzipAar unzipAar;
@@ -78,8 +76,7 @@ public class AndroidPrebuiltAar
         /* mavenCoords */ Optional.empty(),
         Optional.of(
             new ExplicitBuildTargetSourcePath(
-                unzipAar.getBuildTarget(),
-                unzipAar.getAndroidManifest())),
+                unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
         /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
@@ -94,8 +91,7 @@ public class AndroidPrebuiltAar
   @Override
   public SourcePath getPathToTextSymbolsFile() {
     return new ExplicitBuildTargetSourcePath(
-        unzipAar.getBuildTarget(),
-        unzipAar.getTextSymbolsFile());
+        unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
   }
 
   @Override
@@ -138,5 +134,4 @@ public class AndroidPrebuiltAar
   public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.of(unzipAar.getBuildTarget());
   }
-
 }

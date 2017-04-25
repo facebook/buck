@@ -37,41 +37,36 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-/**
- * This provides a way for android_binary rules to generate proguard config based on the
- */
+/** This provides a way for android_binary rules to generate proguard config based on the */
 public class NativeLibraryProguardGenerator extends AbstractBuildRule {
   public static final String OUTPUT_FORMAT = "%s/native-libs.pro";
-  @AddToRuleKey
-  private final ImmutableList<SourcePath> nativeLibsDirs;
-  @AddToRuleKey
-  private final BuildRule codeGenerator;
+  @AddToRuleKey private final ImmutableList<SourcePath> nativeLibsDirs;
+  @AddToRuleKey private final BuildRule codeGenerator;
+
   @AddToRuleKey(stringify = true)
   private final Path outputPath;
-
 
   NativeLibraryProguardGenerator(
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> nativeLibsDirs,
       BuildRule codeGenerator) {
-    super(buildRuleParams.copyAppendingExtraDeps(
-        RichStream.from(ruleFinder.filterBuildRuleInputs(nativeLibsDirs))
-            .concat(RichStream.of(codeGenerator))
-            .toImmutableList()));
+    super(
+        buildRuleParams.copyAppendingExtraDeps(
+            RichStream.from(ruleFinder.filterBuildRuleInputs(nativeLibsDirs))
+                .concat(RichStream.of(codeGenerator))
+                .toImmutableList()));
     this.nativeLibsDirs = nativeLibsDirs;
     this.codeGenerator = codeGenerator;
-    this.outputPath = BuildTargets.getGenPath(
-        buildRuleParams.getProjectFilesystem(),
-        getBuildTarget(),
-        OUTPUT_FORMAT);
+    this.outputPath =
+        BuildTargets.getGenPath(
+            buildRuleParams.getProjectFilesystem(), getBuildTarget(), OUTPUT_FORMAT);
   }
 
   @Override
@@ -109,12 +104,10 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRule {
               pathResolver.getRelativePath(path),
               new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult visitFile(
-                    Path file,
-                    BasicFileAttributes attrs) throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
                   libPaths.add(
-                      rootFilesystem.relativize(
-                          pathFilesystem.getPathForRelativePath(file)));
+                      rootFilesystem.relativize(pathFilesystem.getPathForRelativePath(file)));
                   return super.visitFile(file, attrs);
                 }
               });
@@ -125,8 +118,7 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRule {
 
       String executableCommand;
       try {
-        executableCommand = new ExecutableMacroExpander()
-            .expand(pathResolver, codeGenerator);
+        executableCommand = new ExecutableMacroExpander().expand(pathResolver, codeGenerator);
       } catch (MacroException e) {
         throw new RuntimeException(e);
       }

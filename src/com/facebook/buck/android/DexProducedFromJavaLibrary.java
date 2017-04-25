@@ -51,7 +51,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -59,16 +58,15 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
- * {@link DexProducedFromJavaLibrary} is a {@link BuildRule} that serves a
- * very specific purpose: it takes a {@link JavaLibrary} and dexes the output of the
- * {@link JavaLibrary} if its list of classes is non-empty. Because it is expected to be used with
- * pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx} in this buildable.
- * <p>
- * Most {@link BuildRule}s can determine the (possibly null) path to their output file from their
+ * {@link DexProducedFromJavaLibrary} is a {@link BuildRule} that serves a very specific purpose: it
+ * takes a {@link JavaLibrary} and dexes the output of the {@link JavaLibrary} if its list of
+ * classes is non-empty. Because it is expected to be used with pre-dexing, we always pass the
+ * {@code --force-jumbo} flag to {@code dx} in this buildable.
+ *
+ * <p>Most {@link BuildRule}s can determine the (possibly null) path to their output file from their
  * definition. This is an anomaly because we do not know whether this will write a {@code .dex} file
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
@@ -76,21 +74,15 @@ import javax.annotation.Nullable;
 public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, InitializableFromDisk<BuildOutput> {
 
-  @VisibleForTesting
-  static final String WEIGHT_ESTIMATE = "weight_estimate";
-  @VisibleForTesting
-  static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
-  @VisibleForTesting
-  static final String REFERENCED_RESOURCES = "referenced_resources";
+  @VisibleForTesting static final String WEIGHT_ESTIMATE = "weight_estimate";
+  @VisibleForTesting static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
+  @VisibleForTesting static final String REFERENCED_RESOURCES = "referenced_resources";
 
-  @AddToRuleKey
-  private final SourcePath javaLibrarySourcePath;
+  @AddToRuleKey private final SourcePath javaLibrarySourcePath;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
-  DexProducedFromJavaLibrary(
-      BuildRuleParams params,
-      JavaLibrary javaLibrary) {
+  DexProducedFromJavaLibrary(BuildRuleParams params, JavaLibrary javaLibrary) {
     super(params);
     this.javaLibrary = javaLibrary;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
@@ -99,8 +91,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(RmStep.of(getProjectFilesystem(), getPathToDex()));
@@ -114,29 +105,28 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     final boolean hasClassesToDx = !classNamesToHashes.isEmpty();
     final Supplier<Integer> weightEstimate;
 
-    @Nullable
-    final DxStep dx;
+    @Nullable final DxStep dx;
 
     if (hasClassesToDx) {
       Path pathToOutputFile =
           context.getSourcePathResolver().getAbsolutePath(javaLibrarySourcePath);
-      EstimateDexWeightStep estimate = new EstimateDexWeightStep(
-          getProjectFilesystem(),
-          pathToOutputFile);
+      EstimateDexWeightStep estimate =
+          new EstimateDexWeightStep(getProjectFilesystem(), pathToOutputFile);
       steps.add(estimate);
       weightEstimate = estimate;
 
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
-      dx = new DxStep(
-          getProjectFilesystem(),
-          getPathToDex(),
-          Collections.singleton(pathToOutputFile),
-          EnumSet.of(
-              DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
-              DxStep.Option.RUN_IN_PROCESS,
-              DxStep.Option.NO_OPTIMIZE,
-              DxStep.Option.FORCE_JUMBO));
+      dx =
+          new DxStep(
+              getProjectFilesystem(),
+              getPathToDex(),
+              Collections.singleton(pathToOutputFile),
+              EnumSet.of(
+                  DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
+                  DxStep.Option.RUN_IN_PROCESS,
+                  DxStep.Option.NO_OPTIMIZE,
+                  DxStep.Option.FORCE_JUMBO));
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -151,34 +141,32 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
     // run.
     String stepName = hasClassesToDx ? "record_dx_success" : "record_empty_dx";
-    AbstractExecutionStep recordArtifactAndMetadataStep = new AbstractExecutionStep(stepName) {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
-        if (hasClassesToDx) {
-          buildableContext.recordArtifact(getPathToDex());
+    AbstractExecutionStep recordArtifactAndMetadataStep =
+        new AbstractExecutionStep(stepName) {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            if (hasClassesToDx) {
+              buildableContext.recordArtifact(getPathToDex());
 
-          @Nullable
-          Collection<String> referencedResources = dx.getResourcesReferencedInCode();
-          if (referencedResources != null) {
+              @Nullable Collection<String> referencedResources = dx.getResourcesReferencedInCode();
+              if (referencedResources != null) {
+                buildableContext.addMetadata(
+                    REFERENCED_RESOURCES,
+                    Ordering.natural().immutableSortedCopy(referencedResources));
+              }
+            }
+
+            buildableContext.addMetadata(WEIGHT_ESTIMATE, String.valueOf(weightEstimate.get()));
+
+            // Record the classnames to hashes map.
             buildableContext.addMetadata(
-                REFERENCED_RESOURCES,
-                Ordering.natural().immutableSortedCopy(referencedResources));
+                CLASSNAMES_TO_HASHES,
+                ObjectMappers.WRITER.writeValueAsString(
+                    Maps.transformValues(classNamesToHashes, Object::toString)));
+
+            return StepExecutionResult.SUCCESS;
           }
-        }
-
-        buildableContext.addMetadata(
-            WEIGHT_ESTIMATE,
-            String.valueOf(weightEstimate.get()));
-
-        // Record the classnames to hashes map.
-        buildableContext.addMetadata(
-            CLASSNAMES_TO_HASHES,
-            ObjectMappers.WRITER.writeValueAsString(
-                Maps.transformValues(classNamesToHashes, Object::toString)));
-
-        return StepExecutionResult.SUCCESS;
-      }
-    };
+        };
     steps.add(recordArtifactAndMetadataStep);
 
     return steps.build();
@@ -186,20 +174,16 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    int weightEstimate = Integer.parseInt(
-        onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
+    int weightEstimate = Integer.parseInt(onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
     Map<String, String> map =
         ObjectMappers.readValue(
             onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
-            new TypeReference<Map<String, String>>() {
-            });
+            new TypeReference<Map<String, String>>() {});
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
     Optional<ImmutableList<String>> referencedResources =
         onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
     return new BuildOutput(
-        weightEstimate,
-        ImmutableSortedMap.copyOf(classnamesToHashes),
-        referencedResources);
+        weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
   }
 
   @Override

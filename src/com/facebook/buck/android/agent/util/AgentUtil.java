@@ -25,8 +25,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * Non-instantiable class for holding functionality that runs both on the host
- * and in the android agent.
+ * Non-instantiable class for holding functionality that runs both on the host and in the android
+ * agent.
  */
 public final class AgentUtil {
   private AgentUtil() {}
@@ -35,14 +35,10 @@ public final class AgentUtil {
   public static final String AGENT_PACKAGE_NAME = "com.facebook.buck.android.agent";
   public static final String AGENT_VERSION_CODE = "4";
 
-  /**
-   * Size in bytes of the binary data use to generate the secret key for receive-file.
-   */
+  /** Size in bytes of the binary data use to generate the secret key for receive-file. */
   public static final int BINARY_SECRET_KEY_SIZE = 16;
 
-  /**
-   * Size of the text version of the receive-file secret key.
-   */
+  /** Size of the text version of the receive-file secret key. */
   public static final int TEXT_SECRET_KEY_SIZE = 32;
 
   public static final String TEMP_PREFIX = "exopackage_temp-";
@@ -62,10 +58,7 @@ public final class AgentUtil {
 
         BufferedReader sigContents = null;
         try {
-          sigContents =
-              new BufferedReader(
-                  new InputStreamReader(
-                      packageZip.getInputStream(entry)));
+          sigContents = new BufferedReader(new InputStreamReader(packageZip.getInputStream(entry)));
           // For each line in the signature file.
           while (true) {
             String line = sigContents.readLine();

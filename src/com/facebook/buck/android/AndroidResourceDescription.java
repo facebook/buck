@@ -33,13 +33,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -53,7 +53,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -67,29 +66,19 @@ import java.util.Optional;
 public class AndroidResourceDescription
     implements Description<AndroidResourceDescription.Arg>, Flavored {
 
-  private static final ImmutableSet<String> NON_ASSET_FILENAMES = ImmutableSet.of(
-      ".gitkeep",
-      ".svn",
-      ".git",
-      ".ds_store",
-      ".scc",
-      "cvs",
-      "thumbs.db",
-      "picasa.ini");
+  private static final ImmutableSet<String> NON_ASSET_FILENAMES =
+      ImmutableSet.of(
+          ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
   private final boolean isGrayscaleImageProcessingEnabled;
 
   @VisibleForTesting
-  static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
-      InternalFlavor.of("resources-symlink-tree");
+  static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
 
   @VisibleForTesting
-  static final Flavor ASSETS_SYMLINK_TREE_FLAVOR =
-      InternalFlavor.of("assets-symlink-tree");
+  static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
 
-  public static final Flavor AAPT2_COMPILE_FLAVOR =
-      InternalFlavor.of("aapt2_compile");
-
+  public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
   public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
     isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
@@ -117,14 +106,21 @@ public class AndroidResourceDescription
     }
 
     // Only allow android resource and library rules as dependencies.
-    Optional<BuildRule> invalidDep = params.getDeclaredDeps().get().stream()
-        .filter(rule -> !(rule instanceof AndroidResource || rule instanceof AndroidLibrary))
-        .findFirst();
+    Optional<BuildRule> invalidDep =
+        params
+            .getDeclaredDeps()
+            .get()
+            .stream()
+            .filter(rule -> !(rule instanceof AndroidResource || rule instanceof AndroidLibrary))
+            .findFirst();
     if (invalidDep.isPresent()) {
       throw new HumanReadableException(
-          params.getBuildTarget() + " (android_resource): dependency " +
-              invalidDep.get().getBuildTarget() + " (" + invalidDep.get().getType() +
-              ") is not of type android_resource or android_library.");
+          params.getBuildTarget()
+              + " (android_resource): dependency "
+              + invalidDep.get().getBuildTarget()
+              + " ("
+              + invalidDep.get().getType()
+              + ") is not of type android_resource or android_library.");
     }
 
     // We don't handle the resources parameter well in `AndroidResource` rules, as instead of
@@ -133,16 +129,10 @@ public class AndroidResourceDescription
     // we have to resort to some hackery to make sure things work correctly.
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> resInputs =
         collectInputSourcePaths(
-            resolver,
-            params.getBuildTarget(),
-            RESOURCES_SYMLINK_TREE_FLAVOR,
-            args.res);
+            resolver, params.getBuildTarget(), RESOURCES_SYMLINK_TREE_FLAVOR, args.res);
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> assetsInputs =
         collectInputSourcePaths(
-            resolver,
-            params.getBuildTarget(),
-            ASSETS_SYMLINK_TREE_FLAVOR,
-            args.assets);
+            resolver, params.getBuildTarget(), ASSETS_SYMLINK_TREE_FLAVOR, args.assets);
 
     if (flavors.contains(AAPT2_COMPILE_FLAVOR)) {
       Optional<SourcePath> resDir = resInputs.getSecond();
@@ -150,21 +140,25 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           params.getBuildTarget());
-      params = params.copyReplacingDeclaredAndExtraDeps(
-          Suppliers.ofInstance(
-              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get()))),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
-      return new Aapt2Compile(
-          params,
-          resDir.get());
+      params =
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get()))),
+              Suppliers.ofInstance(ImmutableSortedSet.of()));
+      return new Aapt2Compile(params, resDir.get());
     }
 
-    params = params.copyAppendingExtraDeps(
-        Iterables.concat(
-            resInputs.getSecond().map(ruleFinder::filterBuildRuleInputs)
-                .orElse(ImmutableSet.of()),
-            assetsInputs.getSecond().map(ruleFinder::filterBuildRuleInputs)
-                .orElse(ImmutableSet.of())));
+    params =
+        params.copyAppendingExtraDeps(
+            Iterables.concat(
+                resInputs
+                    .getSecond()
+                    .map(ruleFinder::filterBuildRuleInputs)
+                    .orElse(ImmutableSet.of()),
+                assetsInputs
+                    .getSecond()
+                    .map(ruleFinder::filterBuildRuleInputs)
+                    .orElse(ImmutableSet.of())));
 
     return new AndroidResource(
         // We only propagate other AndroidResource rule dependencies, as these are
@@ -207,31 +201,25 @@ public class AndroidResourceDescription
         PathSourcePath path = (PathSourcePath) symlinkAttribute.get().getLeft();
         links = collectInputFiles(path.getFilesystem(), path.getRelativePath());
       } else {
-        links = RichStream.from(symlinkAttribute.get().getRight().entrySet())
-            .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
-            .filter(e -> isPossibleResourcePath(e.getKey()))
-            .collect(MoreCollectors.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+        links =
+            RichStream.from(symlinkAttribute.get().getRight().entrySet())
+                .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
+                .filter(e -> isPossibleResourcePath(e.getKey()))
+                .collect(MoreCollectors.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
       }
     }
     Path symlinkTreeRoot =
-        BuildTargets
-            .getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
+        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
             .resolve(outputDirName);
     return new SymlinkTree(
-        params.getBuildTarget(),
-        params.getProjectFilesystem(),
-        symlinkTreeRoot,
-        links,
-        ruleFinder);
+        params.getBuildTarget(), params.getProjectFilesystem(), symlinkTreeRoot, links, ruleFinder);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(
-      BuildRuleResolver ruleResolver,
-      TargetNode<Arg, ?> node) {
+      BuildRuleResolver ruleResolver, TargetNode<Arg, ?> node) {
     Arg arg = node.getConstructorArg();
     if (arg.projectRes.isPresent()) {
-      return Optional.of(
-          new PathSourcePath(node.getFilesystem(), arg.projectRes.get()));
+      return Optional.of(new PathSourcePath(node.getFilesystem(), arg.projectRes.get()));
     }
     if (!arg.res.isPresent()) {
       return Optional.empty();
@@ -244,12 +232,10 @@ public class AndroidResourceDescription
   }
 
   public static Optional<SourcePath> getAssetsDirectoryForProject(
-      BuildRuleResolver ruleResolver,
-      TargetNode<Arg, ?> node) {
+      BuildRuleResolver ruleResolver, TargetNode<Arg, ?> node) {
     Arg arg = node.getConstructorArg();
     if (arg.projectAssets.isPresent()) {
-      return Optional.of(
-          new PathSourcePath(node.getFilesystem(), arg.projectAssets.get()));
+      return Optional.of(new PathSourcePath(node.getFilesystem(), arg.projectAssets.get()));
     }
     if (!arg.assets.isPresent()) {
       return Optional.empty();
@@ -262,24 +248,22 @@ public class AndroidResourceDescription
   }
 
   private static Optional<SourcePath> getResDirectory(
-      BuildRuleResolver ruleResolver,
-      TargetNode<Arg, ?> node) {
+      BuildRuleResolver ruleResolver, TargetNode<Arg, ?> node) {
     return collectInputSourcePaths(
-        ruleResolver,
-        node.getBuildTarget(),
-        RESOURCES_SYMLINK_TREE_FLAVOR,
-        node.getConstructorArg().res)
+            ruleResolver,
+            node.getBuildTarget(),
+            RESOURCES_SYMLINK_TREE_FLAVOR,
+            node.getConstructorArg().res)
         .getSecond();
   }
 
   private static Optional<SourcePath> getAssetsDirectory(
-      BuildRuleResolver ruleResolver,
-      TargetNode<Arg, ?> node) {
+      BuildRuleResolver ruleResolver, TargetNode<Arg, ?> node) {
     return collectInputSourcePaths(
-        ruleResolver,
-        node.getBuildTarget(),
-        ASSETS_SYMLINK_TREE_FLAVOR,
-        node.getConstructorArg().assets)
+            ruleResolver,
+            node.getBuildTarget(),
+            ASSETS_SYMLINK_TREE_FLAVOR,
+            node.getConstructorArg().assets)
         .getSecond();
   }
 
@@ -311,42 +295,38 @@ public class AndroidResourceDescription
 
   @VisibleForTesting
   ImmutableSortedMap<Path, SourcePath> collectInputFiles(
-      final ProjectFilesystem filesystem,
-      Path inputDir) {
+      final ProjectFilesystem filesystem, Path inputDir) {
     final ImmutableSortedMap.Builder<Path, SourcePath> paths = ImmutableSortedMap.naturalOrder();
 
     // We ignore the same files that mini-aapt and aapt ignore.
-    FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult preVisitDirectory(
-          Path dir,
-          BasicFileAttributes attr) throws IOException {
-        String dirName = dir.getFileName().toString();
-        // Special case: directory starting with '_' as per aapt.
-        if (dirName.charAt(0) == '_' || !isPossibleResourceName(dirName)) {
-          return FileVisitResult.SKIP_SUBTREE;
-        }
-        return FileVisitResult.CONTINUE;
-      }
+    FileVisitor<Path> fileVisitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr)
+              throws IOException {
+            String dirName = dir.getFileName().toString();
+            // Special case: directory starting with '_' as per aapt.
+            if (dirName.charAt(0) == '_' || !isPossibleResourceName(dirName)) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            return FileVisitResult.CONTINUE;
+          }
 
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
-        String filename = file.getFileName().toString();
-        if (isPossibleResourceName(filename)) {
-          paths.put(MorePaths.relativize(inputDir, file), new PathSourcePath(filesystem, file));
-        }
-        return FileVisitResult.CONTINUE;
-      }
-
-    };
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
+            String filename = file.getFileName().toString();
+            if (isPossibleResourceName(filename)) {
+              paths.put(MorePaths.relativize(inputDir, file), new PathSourcePath(filesystem, file));
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        };
 
     try {
       filesystem.walkRelativeFileTree(inputDir, fileVisitor);
     } catch (IOException e) {
       throw new HumanReadableException(
-          e,
-          "Error while searching for android resources in directory %s.",
-          inputDir);
+          e, "Error while searching for android resources in directory %s.", inputDir);
     }
     return paths.build();
   }
@@ -390,9 +370,9 @@ public class AndroidResourceDescription
 
     if (flavors.size() == 1) {
       Flavor flavor = flavors.iterator().next();
-      if (flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR) ||
-          flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR) ||
-          flavor.equals(AAPT2_COMPILE_FLAVOR)) {
+      if (flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR)
+          || flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR)
+          || flavor.equals(AAPT2_COMPILE_FLAVOR)) {
         return true;
       }
     }
@@ -407,8 +387,10 @@ public class AndroidResourceDescription
     public Optional<Path> projectRes;
     public Optional<Path> projectAssets;
     public Optional<Boolean> hasWhitelistedStrings;
+
     @Hint(name = "package")
     public Optional<String> rDotJavaPackage;
+
     public Optional<SourcePath> manifest;
 
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();

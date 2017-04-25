@@ -18,29 +18,21 @@ package com.facebook.buck.android;
 
 import java.util.List;
 
-/**
- * Allows querying an Android manifest file for various types of information.
- */
+/** Allows querying an Android manifest file for various types of information. */
 public interface AndroidManifestReader {
 
   /**
    * @return list of names (as they appear in the manifest) of activities that should appear in the
-   * Android app drawer.
+   *     Android app drawer.
    */
   public List<String> getLauncherActivities();
 
-  /**
-   * @return the value of the package attribute to the manifest element.
-   */
+  /** @return the value of the package attribute to the manifest element. */
   public String getPackage();
 
-  /**
-   * @return the value of the versionCode attribute to the manifest element.
-   */
+  /** @return the value of the versionCode attribute to the manifest element. */
   public String getVersionCode();
 
-  /**
-   * @return the name of the instrumentation test runner.
-   */
+  /** @return the name of the instrumentation test runner. */
   public String getInstrumentationTestRunner();
 }

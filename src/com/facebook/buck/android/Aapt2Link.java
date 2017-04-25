@@ -42,7 +42,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,26 +53,16 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
 
-/**
- * Perform the "aapt2 link" step of building an Android app.
- */
+/** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRule {
-  @AddToRuleKey
-  private final ImmutableList<Aapt2Compile> compileRules;
-  @AddToRuleKey
-  private final ImmutableList<HasAndroidResourceDeps> resourceRules;
-  @AddToRuleKey
-  private final SourcePath manifest;
-  @AddToRuleKey
-  private final ManifestEntries manifestEntries;
-  @AddToRuleKey
-  private final Optional<String> resourceUnionPackage;
-  @AddToRuleKey
-  private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
-
+  @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
+  @AddToRuleKey private final ImmutableList<HasAndroidResourceDeps> resourceRules;
+  @AddToRuleKey private final SourcePath manifest;
+  @AddToRuleKey private final ManifestEntries manifestEntries;
+  @AddToRuleKey private final Optional<String> resourceUnionPackage;
+  @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
 
   Aapt2Link(
       BuildRuleParams buildRuleParams,
@@ -86,11 +75,12 @@ public class Aapt2Link extends AbstractBuildRule {
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes) {
     super(
         buildRuleParams.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(compileRules)
-                .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
-                .addAll(ruleFinder.filterBuildRuleInputs(manifest))
-                .build()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compileRules)
+                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
+                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
+                    .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())));
 
     this.compileRules = compileRules;
@@ -103,43 +93,40 @@ public class Aapt2Link extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.addAll(MakeCleanDirectoryStep.of(
-        getProjectFilesystem(),
-        getResourceApkPath().getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
 
     AaptPackageResources.prepareManifestForAapt(
         steps,
         getProjectFilesystem(),
         getFinalManifestPath(),
         context.getSourcePathResolver().getAbsolutePath(manifest),
-        manifestEntries
-    );
+        manifestEntries);
 
-    steps.add(new Aapt2LinkStep(
-        getProjectFilesystem().getRootPath(),
-        compileRules.stream()
-            .map(Aapt2Compile::getSourcePathToOutput)
-            .map(context.getSourcePathResolver()::getRelativePath)
-        ));
+    steps.add(
+        new Aapt2LinkStep(
+            getProjectFilesystem().getRootPath(),
+            compileRules
+                .stream()
+                .map(Aapt2Compile::getSourcePathToOutput)
+                .map(context.getSourcePathResolver()::getRelativePath)));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
-    steps.add(new MakeRDotTxtStep(
-        getProjectFilesystem(),
-        getInitialRDotJavaDir(),
-        getRDotTxtPath()));
+    steps.add(
+        new MakeRDotTxtStep(getProjectFilesystem(), getInitialRDotJavaDir(), getRDotTxtPath()));
 
-    steps.add(MergeAndroidResourcesStep.createStepForUberRDotJava(
-        getProjectFilesystem(),
-        context.getSourcePathResolver(),
-        resourceRules,
-        getRDotTxtPath(),
-        getFinalRDotJavaDir(),
-        bannedDuplicateResourceTypes,
-        resourceUnionPackage));
+    steps.add(
+        MergeAndroidResourcesStep.createStepForUberRDotJava(
+            getProjectFilesystem(),
+            context.getSourcePathResolver(),
+            resourceRules,
+            getRDotTxtPath(),
+            getFinalRDotJavaDir(),
+            bannedDuplicateResourceTypes,
+            resourceUnionPackage));
 
     buildableContext.recordArtifact(getFinalManifestPath());
     buildableContext.recordArtifact(getResourceApkPath());
@@ -160,58 +147,36 @@ public class Aapt2Link extends AbstractBuildRule {
 
   private Path getFinalManifestPath() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/AndroidManifest.xml");
+        getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/resource-apk.ap_");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/resource-apk.ap_");
   }
 
   private Path getProguardConfigPath() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/proguard-for-resources.pro");
+        getProjectFilesystem(), getBuildTarget(), "%s/proguard-for-resources.pro");
   }
 
   private Path getRDotTxtPath() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/R.txt");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.txt");
   }
 
-  /**
-   * Directory containing R.java files produced by aapt2 link.
-   */
+  /** Directory containing R.java files produced by aapt2 link. */
   private Path getInitialRDotJavaDir() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/initial-rdotjava");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
   }
 
-  /**
-   * Directory containing R.java files produced our processing.
-   */
+  /** Directory containing R.java files produced our processing. */
   private Path getFinalRDotJavaDir() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/rdotjava");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/rdotjava");
   }
 
   public AaptOutputInfo getAaptOutputInfo() {
     return AaptOutputInfo.builder()
-        .setPathToRDotTxt(
-            new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotTxtPath()))
-        .setRDotJavaDir(
-            new ExplicitBuildTargetSourcePath(getBuildTarget(), getFinalRDotJavaDir()))
+        .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotTxtPath()))
+        .setRDotJavaDir(new ExplicitBuildTargetSourcePath(getBuildTarget(), getFinalRDotJavaDir()))
         .setPrimaryResourcesApkPath(
             new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath()))
         .setAndroidManifestXml(
@@ -265,32 +230,28 @@ public class Aapt2Link extends AbstractBuildRule {
 
   @VisibleForTesting
   static class MakeRDotTxtStep implements Step {
-    private static final Pattern NO_OP_LINE = Pattern.compile(
-        "^package |" +  // Don't care about package.
-        "^public final class R \\{|" +  // Don't care about top-level class.
-        "^[/*]"  // Comment.
-    );
-    private static final Pattern CLASS_LINE = Pattern.compile(
-        "public static final class (\\w+) \\{"
-    );
-    private static final Pattern INT_LINE = Pattern.compile(
-        "public static final int (\\w+)=(\\w+);"
-    );
-    private static final Pattern ARRAY_LINE = Pattern.compile(
-        "public static final int\\[\\] (\\w+)=\\{"
-    );
-    private static final Pattern VALUES_LINE = Pattern.compile(
-        "[x0-9a-f, ]*"
-    );
+    private static final Pattern NO_OP_LINE =
+        Pattern.compile(
+            "^package |"
+                + // Don't care about package.
+                "^public final class R \\{|"
+                + // Don't care about top-level class.
+                "^[/*]" // Comment.
+            );
+    private static final Pattern CLASS_LINE =
+        Pattern.compile("public static final class (\\w+) \\{");
+    private static final Pattern INT_LINE =
+        Pattern.compile("public static final int (\\w+)=(\\w+);");
+    private static final Pattern ARRAY_LINE =
+        Pattern.compile("public static final int\\[\\] (\\w+)=\\{");
+    private static final Pattern VALUES_LINE = Pattern.compile("[x0-9a-f, ]*");
 
     private final ProjectFilesystem projectFilesystem;
     private final Path initialRDotJavaDir;
     private final Path rDotTxtPath;
 
     public MakeRDotTxtStep(
-        ProjectFilesystem projectFilesystem,
-        Path initialRDotJavaDir,
-        Path rDotTxtPath) {
+        ProjectFilesystem projectFilesystem, Path initialRDotJavaDir, Path rDotTxtPath) {
       this.projectFilesystem = projectFilesystem;
       this.initialRDotJavaDir = initialRDotJavaDir;
       this.rDotTxtPath = rDotTxtPath;
@@ -299,8 +260,8 @@ public class Aapt2Link extends AbstractBuildRule {
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      List<String> javaLines = projectFilesystem.readLines(
-          initialRDotJavaDir.resolve("make/r/txt/R.java"));
+      List<String> javaLines =
+          projectFilesystem.readLines(initialRDotJavaDir.resolve("make/r/txt/R.java"));
       List<String> txtLines = convertLines(javaLines);
       projectFilesystem.writeLinesToPath(txtLines, rDotTxtPath);
       return StepExecutionResult.SUCCESS;
@@ -324,11 +285,10 @@ public class Aapt2Link extends AbstractBuildRule {
         if (currentArrayName != null) {
 
           if (line.equals("};")) {
-            txtLines.add(String.format(
-                "int[] %s %s { %s }",
-                inClass,
-                currentArrayName,
-                Joiner.on(',').join(currentArrayValues)));
+            txtLines.add(
+                String.format(
+                    "int[] %s %s { %s }",
+                    inClass, currentArrayName, Joiner.on(',').join(currentArrayValues)));
             currentArrayName = null;
             currentArrayValues = null;
             continue;
@@ -362,11 +322,8 @@ public class Aapt2Link extends AbstractBuildRule {
 
         Matcher intMatch = INT_LINE.matcher(line);
         if (intMatch.matches()) {
-          txtLines.add(String.format(
-              "int %s %s %s",
-              inClass,
-              intMatch.group(1),
-              intMatch.group(2)));
+          txtLines.add(
+              String.format("int %s %s %s", inClass, intMatch.group(1), intMatch.group(2)));
           continue;
         }
 

@@ -24,7 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,9 +31,7 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Replaces placeholders in the android manifest.
- */
+/** Replaces placeholders in the android manifest. */
 public class ReplaceManifestPlaceholdersStep implements Step {
 
   private final ProjectFilesystem projectFilesystem;
@@ -56,8 +53,10 @@ public class ReplaceManifestPlaceholdersStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
-      String content = new String(
-          Files.readAllBytes(projectFilesystem.resolve(androidManifest)), StandardCharsets.UTF_8);
+      String content =
+          new String(
+              Files.readAllBytes(projectFilesystem.resolve(androidManifest)),
+              StandardCharsets.UTF_8);
       String replaced = replacePlaceholders(content, manifestEntries);
       projectFilesystem.writeContentsToPath(replaced, replacedManifest);
     } catch (IOException e) {
@@ -79,12 +78,11 @@ public class ReplaceManifestPlaceholdersStep implements Step {
 
   @VisibleForTesting
   static String replacePlaceholders(String content, ImmutableMap<String, String> placeholders) {
-    Iterable<String> escaped = Iterables.transform(
-        placeholders.keySet(), Pattern::quote);
+    Iterable<String> escaped = Iterables.transform(placeholders.keySet(), Pattern::quote);
 
     Joiner joiner = Joiner.on("|");
-    String patternString = Pattern.quote("${") + "(" + joiner.join(escaped) + ")" +
-        Pattern.quote("}");
+    String patternString =
+        Pattern.quote("${") + "(" + joiner.join(escaped) + ")" + Pattern.quote("}");
     Pattern pattern = Pattern.compile(patternString);
     Matcher matcher = pattern.matcher(content);
 

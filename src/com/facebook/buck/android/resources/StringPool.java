@@ -19,35 +19,28 @@ package com.facebook.buck.android.resources;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * A StringPool consists of a header:
- *   ResChunk_header
- *       u32 chunk_type
- *       u32 header_size
- *       u32 chunk_size
- *   u32 string_count
- *   u32 style_count
- *   u32 flags - 0x1 sorted, 0x100 utf-8 encoded
- *   u32 strings_start - byte offset from the beginning to the style data
- *   u32 styles_start - byte offset from the beginning to the style data
+ * A StringPool consists of a header: ResChunk_header u32 chunk_type u32 header_size u32 chunk_size
+ * u32 string_count u32 style_count u32 flags - 0x1 sorted, 0x100 utf-8 encoded u32 strings_start -
+ * byte offset from the beginning to the style data u32 styles_start - byte offset from the
+ * beginning to the style data
  *
- * The header is followed by an u32[string_count] array of strings offsets (relative to
+ * <p>The header is followed by an u32[string_count] array of strings offsets (relative to
  * strings_start) where the strings reside. This is then followed by a similar array for styles.
  *
- * In a utf-8 encoded string pool, a string data consists of: utf-16 length, utf-8 length, string
+ * <p>In a utf-8 encoded string pool, a string data consists of: utf-16 length, utf-8 length, string
  * bytes, \0.
  *
- * In a utf-16 encoded string pool, a string data consists of: utf-16 length, string bytes, \0\0.
+ * <p>In a utf-16 encoded string pool, a string data consists of: utf-16 length, string bytes, \0\0.
  *
- * A style is an array of tuples (u32 stringref, u32 start, u32 end). A stringref of
- * 0xFFFFFFFF indicates the end of a style array (note that the next array may start at the
- * immediately following word).
+ * <p>A style is an array of tuples (u32 stringref, u32 start, u32 end). A stringref of 0xFFFFFFFF
+ * indicates the end of a style array (note that the next array may start at the immediately
+ * following word).
  */
 public class StringPool extends ResChunk {
   private static final short HEADER_SIZE = 28;
@@ -75,9 +68,11 @@ public class StringPool extends ResChunk {
     super(
         CHUNK_STRING_POOL,
         HEADER_SIZE,
-        HEADER_SIZE +
-            stringOffsets.limit() + styleOffsets.limit() +
-            stringData.limit() + styleData.limit());
+        HEADER_SIZE
+            + stringOffsets.limit()
+            + styleOffsets.limit()
+            + stringData.limit()
+            + styleData.limit());
     this.stringCount = stringCount;
     this.styleCount = styleCount;
     this.utf8 = utf8;
@@ -257,9 +252,6 @@ public class StringPool extends ResChunk {
   }
 
   public String getOutputNormalizedString(int data) {
-    return getString(data)
-        .replace("\\", "\\\\")
-        .replace("\n", "\\n")
-        .replace("\"", "\\\"");
+    return getString(data).replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"");
   }
 }

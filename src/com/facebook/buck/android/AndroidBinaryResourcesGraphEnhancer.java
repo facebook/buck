@@ -39,21 +39,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.immutables.value.Value;
-
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
   private static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
-  static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
-      InternalFlavor.of("package_string_assets");
-  private static final Flavor MERGE_ASSETS_FLAVOR =
-      InternalFlavor.of("merge_assets");
+  static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = InternalFlavor.of("package_string_assets");
+  private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
 
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
@@ -112,13 +108,21 @@ class AndroidBinaryResourcesGraphEnhancer {
   @BuckStyleImmutable
   interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
     SourcePath getPathToRDotTxt();
+
     Optional<SourcePath> getRDotJavaDir();
+
     SourcePath getPrimaryResourcesApkPath();
+
     SourcePath getAndroidManifestXml();
+
     SourcePath getAaptGeneratedProguardConfigFile();
+
     Optional<PackageStringAssets> getPackageStringAssets();
+
     ImmutableList<BuildRule> getEnhancedDeps();
+
     ImmutableList<SourcePath> getPrimaryApkAssetZips();
+
     ImmutableList<SourcePath> getExoResources();
   }
 
@@ -135,48 +139,53 @@ class AndroidBinaryResourcesGraphEnhancer {
         ruleFinder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
 
     FilteredResourcesProvider filteredResourcesProvider;
-    boolean needsResourceFiltering = resourceFilter.isEnabled() ||
-        resourceCompressionMode.isStoreStringsAsAssets() ||
-        !locales.isEmpty();
+    boolean needsResourceFiltering =
+        resourceFilter.isEnabled()
+            || resourceCompressionMode.isStoreStringsAsAssets()
+            || !locales.isEmpty();
 
     if (needsResourceFiltering) {
-      ResourcesFilter resourcesFilter = createResourcesFilter(
-          resourceDetails,
-          resourceRules,
-          rulesWithResourceDirectories);
+      ResourcesFilter resourcesFilter =
+          createResourcesFilter(resourceDetails, resourceRules, rulesWithResourceDirectories);
       ruleResolver.addToIndex(resourcesFilter);
       filteredResourcesProvider = resourcesFilter;
       enhancedDeps.add(resourcesFilter);
       resourceRules = ImmutableSortedSet.of(resourcesFilter);
     } else {
-      filteredResourcesProvider = new IdentityResourcesProvider(
-          resourceDetails.getResourceDirectories().stream()
-              .map(sourcePath ->
-                  buildRuleParams.getProjectFilesystem()
-                      .relativize(pathResolver.getAbsolutePath(sourcePath)))
-              .collect(MoreCollectors.toImmutableList()));
+      filteredResourcesProvider =
+          new IdentityResourcesProvider(
+              resourceDetails
+                  .getResourceDirectories()
+                  .stream()
+                  .map(
+                      sourcePath ->
+                          buildRuleParams
+                              .getProjectFilesystem()
+                              .relativize(pathResolver.getAbsolutePath(sourcePath)))
+                  .collect(MoreCollectors.toImmutableList()));
     }
 
     AaptOutputInfo aaptOutputInfo;
     switch (aaptMode) {
-      case AAPT1: {
-        // Create the AaptPackageResourcesBuildable.
-        AaptPackageResources aaptPackageResources = createAaptPackageResources(
-            resourceDetails,
-            filteredResourcesProvider);
-        ruleResolver.addToIndex(aaptPackageResources);
-        enhancedDeps.add(aaptPackageResources);
-        aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
-      }
-      break;
+      case AAPT1:
+        {
+          // Create the AaptPackageResourcesBuildable.
+          AaptPackageResources aaptPackageResources =
+              createAaptPackageResources(resourceDetails, filteredResourcesProvider);
+          ruleResolver.addToIndex(aaptPackageResources);
+          enhancedDeps.add(aaptPackageResources);
+          aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+        }
+        break;
 
-      case AAPT2: {
-        Aapt2Link aapt2Link = createAapt2Link(resourceDetails);
-        ruleResolver.addToIndex(aapt2Link);
-        enhancedDeps.add(aapt2Link);
-        aaptOutputInfo = aapt2Link.getAaptOutputInfo();
-      }
-      break;
+      case AAPT2:
+        {
+          Aapt2Link aapt2Link = createAapt2Link(resourceDetails);
+          ruleResolver.addToIndex(aapt2Link);
+          enhancedDeps.add(aapt2Link);
+          aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+        }
+        break;
 
       default:
         throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
@@ -185,11 +194,13 @@ class AndroidBinaryResourcesGraphEnhancer {
     Optional<PackageStringAssets> packageStringAssets = Optional.empty();
     ImmutableList.Builder<SourcePath> primaryApkAssetZips = ImmutableList.builder();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
-      packageStringAssets = Optional.of(createPackageStringAssets(
-          resourceRules,
-          rulesWithResourceDirectories,
-          filteredResourcesProvider,
-          aaptOutputInfo));
+      packageStringAssets =
+          Optional.of(
+              createPackageStringAssets(
+                  resourceRules,
+                  rulesWithResourceDirectories,
+                  filteredResourcesProvider,
+                  aaptOutputInfo));
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
       primaryApkAssetZips.add(packageStringAssets.get().getSourcePathToStringAssetsZip());
@@ -219,8 +230,10 @@ class AndroidBinaryResourcesGraphEnhancer {
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
-      compileListBuilder.add((Aapt2Compile) ruleResolver.requireRule(
-          resTarget.withAppendedFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+      compileListBuilder.add(
+          (Aapt2Compile)
+              ruleResolver.requireRule(
+                  resTarget.withAppendedFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
     }
     return new Aapt2Link(
         buildRuleParams
@@ -284,7 +297,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private PackageStringAssets createPackageStringAssets(
       ImmutableSortedSet<BuildRule> resourceRules,
       ImmutableCollection<BuildRule> rulesWithResourceDirectories,
-      FilteredResourcesProvider filteredResourcesProvider, AaptOutputInfo aaptOutputInfo) {
+      FilteredResourcesProvider filteredResourcesProvider,
+      AaptOutputInfo aaptOutputInfo) {
     return new PackageStringAssets(
         buildRuleParams
             .withAppendedFlavor(PACKAGE_STRING_ASSETS_FLAVOR)
@@ -298,8 +312,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                         // case of resource filtering, is cached by the `ResourcesFilter` rule.
                         .addAll(
                             Iterables.filter(
-                                ImmutableList.of(filteredResourcesProvider),
-                                BuildRule.class))
+                                ImmutableList.of(filteredResourcesProvider), BuildRule.class))
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
         locales,
@@ -308,36 +321,34 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private MergeAssets createMergeAssetsRule(
-      ImmutableSet<SourcePath> assetsDirectories,
-      SourcePath aaptOutputApk) {
-    MergeAssets mergeAssets = new MergeAssets(
-        buildRuleParams
-            .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-        ruleFinder,
-        aaptOutputApk,
-        ImmutableSortedSet.copyOf(assetsDirectories));
+      ImmutableSet<SourcePath> assetsDirectories, SourcePath aaptOutputApk) {
+    MergeAssets mergeAssets =
+        new MergeAssets(
+            buildRuleParams
+                .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ruleFinder,
+            aaptOutputApk,
+            ImmutableSortedSet.copyOf(assetsDirectories));
     ruleResolver.addToIndex(mergeAssets);
     return mergeAssets;
   }
 
   private ImmutableSortedSet<BuildRule> getTargetsAsRules(Collection<BuildTarget> buildTargets) {
-    return BuildRules.toBuildRulesFor(
-        originalBuildTarget,
-        ruleResolver,
-        buildTargets);
+    return BuildRules.toBuildRulesFor(originalBuildTarget, ruleResolver, buildTargets);
   }
-
 
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
       Collection<BuildTarget> targets) {
-    return getTargetsAsRules(targets).stream()
-        .map(input -> {
-          Preconditions.checkState(input instanceof HasAndroidResourceDeps);
-          return (HasAndroidResourceDeps) input;
-        })
+    return getTargetsAsRules(targets)
+        .stream()
+        .map(
+            input -> {
+              Preconditions.checkState(input instanceof HasAndroidResourceDeps);
+              return (HasAndroidResourceDeps) input;
+            })
         .collect(MoreCollectors.toImmutableList());
   }
 }

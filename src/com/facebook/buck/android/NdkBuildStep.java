@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,9 +73,10 @@ public class NdkBuildStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    Optional<Path> ndkBuild = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("ndk-build"),
-        context.getAndroidPlatformTarget().checkNdkDirectory());
+    Optional<Path> ndkBuild =
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("ndk-build"), context.getAndroidPlatformTarget().checkNdkDirectory());
     if (!ndkBuild.isPresent()) {
       throw new HumanReadableException("Unable to find ndk-build");
     }
@@ -101,8 +101,7 @@ public class NdkBuildStep extends ShellStep {
     // ndk_library.  Absolute paths are machine-specific, but relative ones should be the
     // same everywhere.
 
-    Path relativePathToProject = filesystem.resolve(root)
-        .relativize(filesystem.getRootPath());
+    Path relativePathToProject = filesystem.resolve(root).relativize(filesystem.getRootPath());
     builder.add(
         "APP_PROJECT_PATH=" + filesystem.resolve(buildArtifactsDirectory) + File.separatorChar,
         "APP_BUILD_SCRIPT=" + filesystem.resolve(makefile),
@@ -120,7 +119,7 @@ public class NdkBuildStep extends ShellStep {
     // If we're running verbosely, force all the subcommands from the ndk build to be printed out.
     if (context.getVerbosity().shouldPrintCommand()) {
       builder.add("V=1");
-    // Otherwise, suppress everything, including the "make: entering directory..." messages.
+      // Otherwise, suppress everything, including the "make: entering directory..." messages.
     } else {
       builder.add("--silent");
     }
@@ -134,5 +133,4 @@ public class NdkBuildStep extends ShellStep {
   protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
     return verbosity.shouldPrintCommand();
   }
-
 }

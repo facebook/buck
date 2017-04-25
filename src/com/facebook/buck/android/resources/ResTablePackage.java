@@ -21,28 +21,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * A Package consists of a header:
- *   ResTable_header
- *       u16 chunk_type
- *       u16 header_size
- *       u32 chunk_size
- *   u32      package_id
- *   u16[128] name
- *   u32      typeStringOffset
- *   u32      lastPublicTypeOffset
- *   u32      keyStringOffset
- *   u32      lastPublicKeyOffset
- *   u32      typeIdOffset
+ * A Package consists of a header: ResTable_header u16 chunk_type u16 header_size u32 chunk_size u32
+ * package_id u16[128] name u32 typeStringOffset u32 lastPublicTypeOffset u32 keyStringOffset u32
+ * lastPublicKeyOffset u32 typeIdOffset
  *
- * The header is followed by a types string pool (containing types like "id", "attr", "drawable",
- * ...) and a keys string pool (containing the names of resources). Then follows a TypeSpec for
- * each type (# of types can be derived from the size of the types stringpool).
+ * <p>The header is followed by a types string pool (containing types like "id", "attr", "drawable",
+ * ...) and a keys string pool (containing the names of resources). Then follows a TypeSpec for each
+ * type (# of types can be derived from the size of the types stringpool).
  */
 public class ResTablePackage extends ResChunk {
   public static final int HEADER_SIZE = 288;
@@ -132,23 +122,19 @@ public class ResTablePackage extends ResChunk {
     this.keys = keys;
     this.typeSpecs = typeSpecs;
 
-    name = Suppliers.<String>memoize(() -> {
-      // Construct a string from the full name data. This will end with a bunch of \0.
-      String fullData = new String(nameData, Charsets.UTF_16LE);
-      return fullData.substring(0, fullData.indexOf(0));
-    });
+    name =
+        Suppliers.<String>memoize(
+            () -> {
+              // Construct a string from the full name data. This will end with a bunch of \0.
+              String fullData = new String(nameData, Charsets.UTF_16LE);
+              return fullData.substring(0, fullData.indexOf(0));
+            });
     Preconditions.checkState(this.packageId == APP_PACKAGE_ID);
   }
 
   public void dump(StringPool strings, PrintStream out) {
-    out.format(
-        "Package Group 0 id=0x%02x packageCount=1 name=%s\n",
-        packageId,
-        getPackageName());
-    out.format(
-        "  Package 0 id=0x%02x name=%s\n",
-        packageId,
-        getPackageName());
+    out.format("Package Group 0 id=0x%02x packageCount=1 name=%s\n", packageId, getPackageName());
+    out.format("  Package 0 id=0x%02x name=%s\n", packageId, getPackageName());
     for (ResTableTypeSpec spec : typeSpecs) {
       spec.dump(strings, this, out);
     }

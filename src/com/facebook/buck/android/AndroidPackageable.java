@@ -17,23 +17,23 @@
 package com.facebook.buck.android;
 
 /**
- * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in
- * an Android package (android_binary or (hopefully soon) aar).
+ * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in an
+ * Android package (android_binary or (hopefully soon) aar).
  */
 public interface AndroidPackageable {
 
   /**
    * Get the set of packagables that need to be included in any package that includes this object.
    *
-   * <p>For example, an android_library will need all of its Java deps (except provided_deps),
-   * its resource deps, and its native library deps (even though it doesn't need the native
-   * library as a build-time dependency).  An android_resource might need an android_library
-   * that declares a custom view that it references, as well as other android_resource rules
-   * that it references directly.
+   * <p>For example, an android_library will need all of its Java deps (except provided_deps), its
+   * resource deps, and its native library deps (even though it doesn't need the native library as a
+   * build-time dependency). An android_resource might need an android_library that declares a
+   * custom view that it references, as well as other android_resource rules that it references
+   * directly.
    *
-   * TODO(natthu): Once build rules and buildables are merged, replace this method with another
-   * interface that lets an {@link AndroidPackageable} override the default set which is all deps
-   * of the type {@link AndroidPackageable}.
+   * <p>TODO(natthu): Once build rules and buildables are merged, replace this method with another
+   * interface that lets an {@link AndroidPackageable} override the default set which is all deps of
+   * the type {@link AndroidPackageable}.
    *
    * @return All {@link AndroidPackageable}s that must be included along with this one.
    */
@@ -42,10 +42,10 @@ public interface AndroidPackageable {
   /**
    * Add concrete resources to the given collector.
    *
-   * <p>Implementations should call methods on the collector specify what concrete content
-   * must be included in an Android package that includes this object.  For example, an
-   * android_library will add Java classes, an ndk_library will add native libraries, and
-   * android_resource will add resource directories.
+   * <p>Implementations should call methods on the collector specify what concrete content must be
+   * included in an Android package that includes this object. For example, an android_library will
+   * add Java classes, an ndk_library will add native libraries, and android_resource will add
+   * resource directories.
    *
    * @param collector The {@link AndroidPackageableCollector} that will receive the content.
    */

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.android.ddmlib.InstallException;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -41,11 +40,8 @@ public interface ExopackageDevice {
 
   void removeForward(int localPort, int remotePort) throws Exception;
 
-  void installFile(
-      String agentCommand,
-      int port,
-      Path targetDevicePath,
-      Path source) throws Exception;
+  void installFile(String agentCommand, int port, Path targetDevicePath, Path source)
+      throws Exception;
 
   void mkDirP(String mkdirCommand, String dirpath) throws Exception;
 

@@ -63,5 +63,4 @@ public class AndroidTransitiveDependencyGraph {
 
     return manifestFiles.build();
   }
-
 }

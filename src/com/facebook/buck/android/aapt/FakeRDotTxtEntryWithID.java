@@ -19,9 +19,9 @@ package com.facebook.buck.android.aapt;
 import com.google.common.base.Objects;
 
 /**
- * An {@link RDotTxtEntry} with given {@link #idValue}, useful for comparing two resource entries for
- * equality, since {@link RDotTxtEntry#compareTo(RDotTxtEntry)} and {@link RDotTxtEntry#equals(Object)}
- * ignores the id value.
+ * An {@link RDotTxtEntry} with given {@link #idValue}, useful for comparing two resource entries
+ * for equality, since {@link RDotTxtEntry#compareTo(RDotTxtEntry)} and {@link
+ * RDotTxtEntry#equals(Object)} ignores the id value.
  */
 public class FakeRDotTxtEntryWithID extends RDotTxtEntry {
 
@@ -36,9 +36,9 @@ public class FakeRDotTxtEntryWithID extends RDotTxtEntry {
     }
 
     RDotTxtEntry that = (RDotTxtEntry) obj;
-    return Objects.equal(this.type, that.type) &&
-        Objects.equal(this.name, that.name) &&
-        Objects.equal(this.idValue, that.idValue);
+    return Objects.equal(this.type, that.type)
+        && Objects.equal(this.name, that.name)
+        && Objects.equal(this.idValue, that.idValue);
   }
 
   @Override

@@ -36,9 +36,12 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   @Override
   public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.JvmLanguage language) {
     switch (language) {
-      case JAVA: return new JavaAndroidLibraryCompiler(javaConfig);
-      case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);
-      case KOTLIN: return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
+      case JAVA:
+        return new JavaAndroidLibraryCompiler(javaConfig);
+      case SCALA:
+        return new ScalaAndroidLibraryCompiler(scalaConfig);
+      case KOTLIN:
+        return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

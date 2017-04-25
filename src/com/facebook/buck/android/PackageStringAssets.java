@@ -34,7 +34,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-
 import java.nio.file.Path;
 
 /**
@@ -43,16 +42,15 @@ import java.nio.file.Path;
  * parameter set to {@link com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode
  * #ENABLED_WITH_STRINGS_AS_ASSETS}.
  *
- * Produces an all_locales_string_assets.zip containing .fbstr files for all locales the app has
- * strings for, and a string_assets.zip file that contains the .fbstr files filtered by the set
- * of locales provided. The contents of string_assets.zip is built into the assets of the APK.
+ * <p>Produces an all_locales_string_assets.zip containing .fbstr files for all locales the app has
+ * strings for, and a string_assets.zip file that contains the .fbstr files filtered by the set of
+ * locales provided. The contents of string_assets.zip is built into the assets of the APK.
  * all_locales_string_assets.zip is used for debugging purposes.
  */
 public class PackageStringAssets extends AbstractBuildRule {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
-  @VisibleForTesting
-  static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
+  @VisibleForTesting static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
   public static final String STRING_ASSETS_DIR_FORMAT = "__strings_%s__";
 
   private final FilteredResourcesProvider filteredResourcesProvider;
@@ -73,14 +71,11 @@ public class PackageStringAssets extends AbstractBuildRule {
   // TODO(russell): Add an integration test for packaging string assets
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     if (filteredResourcesProvider.getResDirectories().isEmpty()) {
       // There is no zip file, but we still need to provide a consistent hash to
       // ComputeExopackageDepsAbi in this case.
-      buildableContext.addMetadata(
-          STRING_ASSETS_ZIP_HASH,
-          Hashing.sha1().hashInt(0).toString());
+      buildableContext.addMetadata(STRING_ASSETS_ZIP_HASH, Hashing.sha1().hashInt(0).toString());
       return ImmutableList.of();
     }
 
@@ -97,27 +92,28 @@ public class PackageStringAssets extends AbstractBuildRule {
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToStrings));
-    steps.add(new CompileStringsStep(
+    steps.add(
+        new CompileStringsStep(
             getProjectFilesystem(),
             filteredResourcesProvider.getStringFiles(),
             context.getSourcePathResolver().getIdeallyRelativePath(rDotTxtPath),
             assetPathBuilder));
-    steps.add(new ZipStep(
+    steps.add(
+        new ZipStep(
             getProjectFilesystem(),
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.of(),
             false,
-        ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
-    steps.add(new ZipStep(
-        getProjectFilesystem(),
-        pathToStringAssetsZip,
-        locales.stream()
-            .map(assetPathBuilder::apply)
-            .collect(MoreCollectors.toImmutableSet()),
-        false,
-        ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
-        pathToDirContainingAssetsDir));
+    steps.add(
+        new ZipStep(
+            getProjectFilesystem(),
+            pathToStringAssetsZip,
+            locales.stream().map(assetPathBuilder::apply).collect(MoreCollectors.toImmutableSet()),
+            false,
+            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            pathToDirContainingAssetsDir));
     steps.add(
         new RecordFileSha1Step(
             getProjectFilesystem(),
@@ -145,9 +141,7 @@ public class PackageStringAssets extends AbstractBuildRule {
 
   private Path getPathToStringAssetsDir() {
     return BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        STRING_ASSETS_DIR_FORMAT);
+        getProjectFilesystem(), getBuildTarget(), STRING_ASSETS_DIR_FORMAT);
   }
 
   public SourcePath getSourcePathToStringAssetsZip() {

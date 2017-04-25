@@ -32,15 +32,11 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/**
- * Merges multiple directories containing Android resource sources into one directory.
- */
+/** Merges multiple directories containing Android resource sources into one directory. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
@@ -49,8 +45,10 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
 
   @Value.Parameter
   protected abstract ImmutableList<Path> getResPaths();
+
   @Value.Parameter
   protected abstract Path getOutFolderPath();
+
   @Value.Parameter
   protected abstract Path getTmpFolderPath();
 
@@ -66,9 +64,7 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
         getOutFolderPath());
     for (Path resPath : getResPaths()) {
       Preconditions.checkArgument(
-          resPath.isAbsolute(),
-          "Android merge resource path must be absolute but was %s",
-          resPath);
+          resPath.isAbsolute(), "Android merge resource path must be absolute but was %s", resPath);
     }
   }
 
@@ -84,12 +80,13 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
         set.loadFromFiles(new ResourcesSetLoadLogger(context.getBuckEventBus()));
         merger.addDataSet(set);
       }
-      MergedResourceWriter writer = MergedResourceWriter.createWriterWithoutPngCruncher(
-          getOutFolderPath().toFile(),
-          null /*publicFile*/,
-          null /*blameLogFolder*/,
-          new NoOpResourcePreprocessor(),
-          getTmpFolderPath().toFile());
+      MergedResourceWriter writer =
+          MergedResourceWriter.createWriterWithoutPngCruncher(
+              getOutFolderPath().toFile(),
+              null /*publicFile*/,
+              null /*blameLogFolder*/,
+              new NoOpResourcePreprocessor(),
+              getTmpFolderPath().toFile());
       merger.mergeData(writer, /* cleanUp */ false);
     } catch (MergingException e) {
       LOG.error(e, "Failed merging resources.");

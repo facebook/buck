@@ -37,25 +37,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
  * {@link BuildRule} that can generate a {@code BuildConfig.java} file and compile it so it can be
  * used as a Java library.
- * <p>
- * This rule functions as a {@code java_library} that can be used as a dependency of an
- * {@code android_library}, but whose implementation may be swapped out by the
- * {@code android_binary} that transitively includes the {@code android_build_config}. Specifically,
- * its compile-time implementation will use non-constant-expression (see JLS 15.28), placeholder
- * values (because they cannot be inlined) for the purposes of compilation that will be swapped out
- * with final, production values (that can be inlined) when building the final APK. Consider the
- * following example:
+ *
+ * <p>This rule functions as a {@code java_library} that can be used as a dependency of an {@code
+ * android_library}, but whose implementation may be swapped out by the {@code android_binary} that
+ * transitively includes the {@code android_build_config}. Specifically, its compile-time
+ * implementation will use non-constant-expression (see JLS 15.28), placeholder values (because they
+ * cannot be inlined) for the purposes of compilation that will be swapped out with final,
+ * production values (that can be inlined) when building the final APK. Consider the following
+ * example:
+ *
  * <pre>
  * android_build_config(
  *   name = 'build_config',
@@ -94,8 +93,10 @@ import javax.annotation.Nullable;
  *   ],
  * )
  * </pre>
+ *
  * The {@code :mylib} rule will be compiled against a version of {@code BuildConfig.java} whose
  * contents are:
+ *
  * <pre>
  * package com.example.pkg;
  * public class BuildConfig {
@@ -103,13 +104,14 @@ import javax.annotation.Nullable;
  *   public static final boolean DEBUG = !Boolean.parseBoolean(null);
  * }
  * </pre>
+ *
  * Note that the value is not a constant expression, so it cannot be inlined by {@code javac}. When
- * building {@code :debug} and {@code :release}, the {@code BuildConfig.class} file that
- * {@code :mylib} was compiled against will not be included in the APK as the other transitive Java
- * deps of the {@code android_binary} will. The {@code BuildConfig.class} will be replaced with one
- * that corresponds to the value of the {@code package_type} argument to the {@code android_binary}
- * rule. For example, {@code :debug} will include a {@code BuildConfig.class} file that is compiled
- * from:
+ * building {@code :debug} and {@code :release}, the {@code BuildConfig.class} file that {@code
+ * :mylib} was compiled against will not be included in the APK as the other transitive Java deps of
+ * the {@code android_binary} will. The {@code BuildConfig.class} will be replaced with one that
+ * corresponds to the value of the {@code package_type} argument to the {@code android_binary} rule.
+ * For example, {@code :debug} will include a {@code BuildConfig.class} file that is compiled from:
+ *
  * <pre>
  * package com.example.pkg;
  * public class BuildConfig {
@@ -117,7 +119,9 @@ import javax.annotation.Nullable;
  *   public static final boolean DEBUG = true;
  * }
  * </pre>
+ *
  * whereas {@code :release} will include a {@code BuildConfig.class} file that is compiled from:
+ *
  * <pre>
  * package com.example.pkg;
  * public class BuildConfig {
@@ -125,20 +129,20 @@ import javax.annotation.Nullable;
  *   public static final boolean DEBUG = false;
  * }
  * </pre>
+ *
  * This swap happens before ProGuard is run as part of building the APK, so it will be able to
  * exploit the "final-ness" of the {@code DEBUG} constant in any whole-program optimization that it
  * performs.
  */
 public class AndroidBuildConfig extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final String javaPackage;
+  @AddToRuleKey private final String javaPackage;
+
   @AddToRuleKey(stringify = true)
   private final BuildConfigFields defaultValues;
-  @AddToRuleKey
-  private final Optional<SourcePath> valuesFile;
-  @AddToRuleKey
-  private final boolean useConstantExpressions;
+
+  @AddToRuleKey private final Optional<SourcePath> valuesFile;
+  @AddToRuleKey private final boolean useConstantExpressions;
   private final Path pathToOutputFile;
 
   protected AndroidBuildConfig(
@@ -152,25 +156,23 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
-    this.pathToOutputFile = BuildTargets
-        .getGenPath(
-            buildRuleParams.getProjectFilesystem(),
-            buildRuleParams.getBuildTarget(),
-            "__%s__")
-        .resolve("BuildConfig.java");
+    this.pathToOutputFile =
+        BuildTargets.getGenPath(
+                buildRuleParams.getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__%s__")
+            .resolve("BuildConfig.java");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Supplier<BuildConfigFields> totalFields;
     if (valuesFile.isPresent()) {
-      final ReadValuesStep readValuesStep = new ReadValuesStep(
-          getProjectFilesystem(),
-          context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
+      final ReadValuesStep readValuesStep =
+          new ReadValuesStep(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
       steps.add(readValuesStep);
       totalFields = Suppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
     } else {
@@ -209,14 +211,12 @@ public class AndroidBuildConfig extends AbstractBuildRule {
   }
 
   @VisibleForTesting
-  static class ReadValuesStep extends AbstractExecutionStep
-      implements Supplier<BuildConfigFields> {
+  static class ReadValuesStep extends AbstractExecutionStep implements Supplier<BuildConfigFields> {
 
     private final ProjectFilesystem filesystem;
     private final Path valuesFile;
 
-    @Nullable
-    private BuildConfigFields values;
+    @Nullable private BuildConfigFields values;
 
     public ReadValuesStep(ProjectFilesystem filesystem, Path valuesFile) {
       super("read values from " + valuesFile.toString());
@@ -241,6 +241,5 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     public BuildConfigFields get() {
       return Preconditions.checkNotNull(values);
     }
-
   }
 }

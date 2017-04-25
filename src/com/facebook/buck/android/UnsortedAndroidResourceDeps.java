@@ -21,21 +21,21 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Collection;
 import java.util.Optional;
 
 public class UnsortedAndroidResourceDeps {
 
-  private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES = ImmutableSet.of(
-      AndroidBinary.class,
-      AndroidInstrumentationApk.class,
-      AndroidLibrary.class,
-      AndroidResource.class,
-      ApkGenrule.class,
-      JavaLibrary.class,
-      JavaTest.class,
-      RobolectricTest.class);
+  private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES =
+      ImmutableSet.of(
+          AndroidBinary.class,
+          AndroidInstrumentationApk.class,
+          AndroidLibrary.class,
+          AndroidResource.class,
+          ApkGenrule.class,
+          JavaLibrary.class,
+          JavaTest.class,
+          RobolectricTest.class);
 
   public interface Callback {
     public void onRuleVisited(BuildRule rule, ImmutableSet<BuildRule> depsToVisit);
@@ -58,8 +58,7 @@ public class UnsortedAndroidResourceDeps {
    * order the execution of those buildables.
    */
   public static UnsortedAndroidResourceDeps createFrom(
-      Collection<BuildRule> rules,
-      final Optional<Callback> callback) {
+      Collection<BuildRule> rules, final Optional<Callback> callback) {
 
     final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
 
@@ -86,16 +85,16 @@ public class UnsortedAndroidResourceDeps {
             if (rule instanceof JavaLibrary) {
               depsToVisit = ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries();
             } else {
-              depsToVisit = TRAVERSABLE_TYPES.contains(rule.getClass()) ?
-                  rule.getBuildDeps() :
-                  ImmutableSet.of();
+              depsToVisit =
+                  TRAVERSABLE_TYPES.contains(rule.getClass())
+                      ? rule.getBuildDeps()
+                      : ImmutableSet.of();
             }
             if (callback.isPresent()) {
               callback.get().onRuleVisited(rule, depsToVisit);
             }
             return depsToVisit;
           }
-
         };
     visitor.start();
 

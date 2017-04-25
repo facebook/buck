@@ -18,29 +18,21 @@ package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Shorts;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
- * ResChunk is the base of most structures in Android's .arsc and compiled .xml files.
- * It consists of:
- *   u16 chunkType
- *   u16 headerSize
- *   u32 chunkSize
+ * ResChunk is the base of most structures in Android's .arsc and compiled .xml files. It consists
+ * of: u16 chunkType u16 headerSize u32 chunkSize
  *
- * Some common types used by different chunks:
+ * <p>Some common types used by different chunks:
  *
- *   StringRef is a u32 string id
- *   ResRef is a u32 resource id
- *   ResValue is a chunk of:
- *     u16 size
- *     u8  0x00
- *     u8  dataType (one of ResChunk.RES_XXXXXXX)
- *     u32 data
+ * <p>StringRef is a u32 string id ResRef is a u32 resource id ResValue is a chunk of: u16 size u8
+ * 0x00 u8 dataType (one of ResChunk.RES_XXXXXXX) u32 data
  *
- * See https://android.googlesource.com/platform/frameworks/base/+/kitkat-release/include/androidfw/ResourceTypes.h
+ * <p>See
+ * https://android.googlesource.com/platform/frameworks/base/+/kitkat-release/include/androidfw/ResourceTypes.h
  * for full specification.
  */
 public abstract class ResChunk {
@@ -124,10 +116,8 @@ public abstract class ResChunk {
 
   // These are some utilities used widely by subclasses for dealing with ByteBuffers.
   static ByteBuffer copy(ByteBuffer buf) {
-    return wrap(Arrays.copyOfRange(
-        buf.array(),
-        buf.arrayOffset(),
-        buf.arrayOffset() + buf.limit()));
+    return wrap(
+        Arrays.copyOfRange(buf.array(), buf.arrayOffset(), buf.arrayOffset() + buf.limit()));
   }
 
   public static ByteBuffer wrap(byte[] data) {

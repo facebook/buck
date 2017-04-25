@@ -39,7 +39,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -48,14 +47,12 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * Rule to write the results of library merging to disk
- * and run a user-supplied code generator on it.
+ * Rule to write the results of library merging to disk and run a user-supplied code generator on
+ * it.
  */
 class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
-  @AddToRuleKey
-  private final ImmutableSortedMap<String, String> mergeResult;
-  @AddToRuleKey
-  private final BuildRule codeGenerator;
+  @AddToRuleKey private final ImmutableSortedMap<String, String> mergeResult;
+  @AddToRuleKey private final BuildRule codeGenerator;
 
   GenerateCodeForMergedLibraryMap(
       BuildRuleParams buildRuleParams,
@@ -66,11 +63,10 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     this.codeGenerator = codeGenerator;
 
     if (!(codeGenerator instanceof BinaryBuildRule)) {
-      throw new HumanReadableException(String.format(
-          "For build rule %s, code generator %s is not executable but must be",
-          getBuildTarget(),
-          codeGenerator.getBuildTarget()
-      ));
+      throw new HumanReadableException(
+          String.format(
+              "For build rule %s, code generator %s is not executable but must be",
+              getBuildTarget(), codeGenerator.getBuildTarget()));
     }
   }
 
@@ -92,16 +88,12 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
         BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            getBuildTarget(),
-            "%s/MergedLibraryMapping.java"));
+            getProjectFilesystem(), getBuildTarget(), "%s/MergedLibraryMapping.java"));
   }
 
   private Path getMappingPath() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/merged_library_map.txt");
+        getProjectFilesystem(), getBuildTarget(), "%s/merged_library_map.txt");
   }
 
   private class WriteMapDataStep implements Step {
@@ -109,10 +101,9 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      try (Writer out = new BufferedWriter(
-          new OutputStreamWriter(
-              projectFilesystem.newFileOutputStream(
-                  getMappingPath())))) {
+      try (Writer out =
+          new BufferedWriter(
+              new OutputStreamWriter(projectFilesystem.newFileOutputStream(getMappingPath())))) {
         for (Map.Entry<String, String> entry : mergeResult.entrySet()) {
           out.write(entry.getKey());
           out.write(' ');
@@ -131,10 +122,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
 
     @Override
     public String getDescription(ExecutionContext context) {
-      return String.format(
-          "%s > %s",
-          getShortName(),
-          getMappingPath());
+      return String.format("%s > %s", getShortName(), getMappingPath());
     }
   }
 
@@ -150,8 +138,9 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       String executableCommand;
       try {
-        executableCommand = new ExecutableMacroExpander()
-            .expand(pathResolver, GenerateCodeForMergedLibraryMap.this.codeGenerator);
+        executableCommand =
+            new ExecutableMacroExpander()
+                .expand(pathResolver, GenerateCodeForMergedLibraryMap.this.codeGenerator);
       } catch (MacroException e) {
         // Should not be possible, as check was performed in constructor.
         throw new RuntimeException(e);
