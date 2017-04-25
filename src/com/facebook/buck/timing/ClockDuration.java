@@ -16,32 +16,21 @@
 
 package com.facebook.buck.timing;
 
-/**
- * Represents a difference between two time points obtained by {@link Clock}.
- */
+/** Represents a difference between two time points obtained by {@link Clock}. */
 public class ClockDuration {
 
   public static final ClockDuration ZERO = new ClockDuration(0, 0, 0);
 
-  /**
-   * @see Clock#currentTimeMillis()
-   */
+  /** @see Clock#currentTimeMillis() */
   private final long wallMillisDuration;
 
-  /**
-   * @see Clock#nanoTime()
-   */
+  /** @see Clock#nanoTime() */
   private final long nanoDuration;
 
-  /**
-   * @see Clock#threadUserNanoTime(long)
-   */
+  /** @see Clock#threadUserNanoTime(long) */
   private final long threadUserNanoDuration;
 
-  public ClockDuration(
-      long wallMillisDuration,
-      long nanoDuration,
-      long threadUserNanoDuration) {
+  public ClockDuration(long wallMillisDuration, long nanoDuration, long threadUserNanoDuration) {
     this.wallMillisDuration = wallMillisDuration;
     this.nanoDuration = nanoDuration;
     this.threadUserNanoDuration = threadUserNanoDuration;
@@ -76,16 +65,15 @@ public class ClockDuration {
       return false;
     }
     ClockDuration that = (ClockDuration) obj;
-    return this.wallMillisDuration == that.wallMillisDuration &&
-        this.nanoDuration == that.nanoDuration &&
-        this.threadUserNanoDuration == that.threadUserNanoDuration;
+    return this.wallMillisDuration == that.wallMillisDuration
+        && this.nanoDuration == that.nanoDuration
+        && this.threadUserNanoDuration == that.threadUserNanoDuration;
   }
 
   @Override
   public String toString() {
-    return String.format("{wall: %d, nano: %d, thread: %d}",
-        wallMillisDuration,
-        nanoDuration,
-        threadUserNanoDuration);
+    return String.format(
+        "{wall: %d, nano: %d, thread: %d}",
+        wallMillisDuration, nanoDuration, threadUserNanoDuration);
   }
 }

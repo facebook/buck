@@ -17,8 +17,8 @@
 package com.facebook.buck.timing;
 
 /**
- * {@link Clock} implementation that invokes the {@link System} calls,
- * adjusted to use the given nanos epoch.
+ * {@link Clock} implementation that invokes the {@link System} calls, adjusted to use the given
+ * nanos epoch.
  */
 public class NanosAdjustedClock extends DefaultClock {
   private final long nanosEpoch;

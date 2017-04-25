@@ -19,9 +19,7 @@ package com.facebook.buck.timing;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 
-/**
- * {@link Clock} implementation that invokes the {@link System} calls.
- */
+/** {@link Clock} implementation that invokes the {@link System} calls. */
 public class DefaultClock implements Clock {
 
   private final ThreadMXBean threadMXBean;
