@@ -26,11 +26,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,15 +35,16 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ClasspathTraversalTest {
-  @Rule
-  public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   private Map<FileLike, String> traverse(Collection<File> files) throws IOException {
-    Collection<Path> paths = files.stream()
-        .map(File::toPath)
-        .collect(MoreCollectors.toImmutableList());
+    Collection<Path> paths =
+        files.stream().map(File::toPath).collect(MoreCollectors.toImmutableList());
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.getRoot().toPath());
@@ -89,17 +85,19 @@ public class ClasspathTraversalTest {
     Files.write("bar.txt", new File(yesADir, "bar.txt"), Charsets.UTF_8);
     File aSubDir = new File(yesADir, "fizzbuzz");
     assertTrue("Failed to create dir: " + aSubDir, aSubDir.mkdir());
-    Files.write(MorePaths.pathWithPlatformSeparators("fizzbuzz/whatever.txt"),
-        new File(aSubDir, "whatever.txt"), Charsets.UTF_8);
+    Files.write(
+        MorePaths.pathWithPlatformSeparators("fizzbuzz/whatever.txt"),
+        new File(aSubDir, "whatever.txt"),
+        Charsets.UTF_8);
     verifyFileLike(4, notADirectory, yesADir);
   }
 
   @Test
   public void testZip() throws IOException {
-    String[] files = { "test/foo.txt", "bar.txt", "test/baz.txt" };
+    String[] files = {"test/foo.txt", "bar.txt", "test/baz.txt"};
     File file = tempDir.newFile("test.zip");
-    try (ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(file)))) {
+    try (ZipOutputStream zipOut =
+        new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
       for (String filename : files) {
         ZipEntry entry = new ZipEntry(filename);
         zipOut.putNextEntry(entry);

@@ -21,7 +21,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import java.nio.file.Path;
 
 public class PrebuiltJarBuilder
@@ -48,5 +47,4 @@ public class PrebuiltJarBuilder
     arg.deps = amend(arg.deps, dep);
     return this;
   }
-
 }

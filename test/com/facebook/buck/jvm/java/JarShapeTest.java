@@ -30,7 +30,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -38,14 +37,16 @@ public class JarShapeTest {
 
   @Test
   public void shouldOnlyIncludeGivenJarInASingleJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build();
+    TargetNode<?, ?> depNode =
+        JavaLibraryBuilder.createBuilder("//:dep")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .build();
 
-    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
-        .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(depNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libNode =
+        JavaLibraryBuilder.createBuilder("//:lib")
+            .addSrc(new FakeSourcePath("Library.java"))
+            .addDep(depNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
     BuildRuleResolver resolver =
@@ -63,14 +64,16 @@ public class JarShapeTest {
 
   @Test
   public void aMavenJarWithoutMavenTransitiveDepsIsAnUberJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build();
+    TargetNode<?, ?> depNode =
+        JavaLibraryBuilder.createBuilder("//:dep")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .build();
 
-    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
-        .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(depNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libNode =
+        JavaLibraryBuilder.createBuilder("//:lib")
+            .addSrc(new FakeSourcePath("Library.java"))
+            .addDep(depNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
     BuildRuleResolver resolver =
@@ -88,20 +91,23 @@ public class JarShapeTest {
 
   @Test
   public void shouldBeAbleToCreateAMavenJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build();
+    TargetNode<?, ?> depNode =
+        JavaLibraryBuilder.createBuilder("//:dep")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .build();
 
-    TargetNode<?, ?> mavenDepNode = JavaLibraryBuilder.createBuilder("//:maven-dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .setMavenCoords("com.example:somelib:1.0")
-        .build();
+    TargetNode<?, ?> mavenDepNode =
+        JavaLibraryBuilder.createBuilder("//:maven-dep")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .setMavenCoords("com.example:somelib:1.0")
+            .build();
 
-    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
-        .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(depNode.getBuildTarget())
-        .addDep(mavenDepNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libNode =
+        JavaLibraryBuilder.createBuilder("//:lib")
+            .addSrc(new FakeSourcePath("Library.java"))
+            .addDep(depNode.getBuildTarget())
+            .addDep(mavenDepNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, mavenDepNode, libNode);
     BuildRuleResolver resolver =
@@ -121,22 +127,25 @@ public class JarShapeTest {
   @Test
   public void shouldCorrectlyExcludeMavenDepsWhichAreDepsOfSelf()
       throws NoSuchBuildTargetException {
-    TargetNode<?, ?> deepMavenDepNode = JavaLibraryBuilder.createBuilder("//:deep-maven")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .setMavenCoords("com.example:cheese:2.0")
-        .build();
+    TargetNode<?, ?> deepMavenDepNode =
+        JavaLibraryBuilder.createBuilder("//:deep-maven")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .setMavenCoords("com.example:cheese:2.0")
+            .build();
 
-    TargetNode<?, ?> mavenDepNode = JavaLibraryBuilder.createBuilder("//:maven-dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .setMavenCoords("com.example:somelib:1.0")
-        .addDep(deepMavenDepNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> mavenDepNode =
+        JavaLibraryBuilder.createBuilder("//:maven-dep")
+            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .setMavenCoords("com.example:somelib:1.0")
+            .addDep(deepMavenDepNode.getBuildTarget())
+            .build();
 
-    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
-        .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(deepMavenDepNode.getBuildTarget())
-        .addDep(mavenDepNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libNode =
+        JavaLibraryBuilder.createBuilder("//:lib")
+            .addSrc(new FakeSourcePath("Library.java"))
+            .addDep(deepMavenDepNode.getBuildTarget())
+            .addDep(mavenDepNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(deepMavenDepNode, mavenDepNode, libNode);

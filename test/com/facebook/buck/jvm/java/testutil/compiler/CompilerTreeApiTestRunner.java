@@ -16,18 +16,16 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import javax.tools.ToolProvider;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import javax.tools.ToolProvider;
-
 /**
- * Test runner that enables tests to work with the Compiler Tree API implementation corresponding
- * to the compiler returned by {@link ToolProvider#getSystemJavaCompiler()}. These are public APIs
- * that are not provided in rt.jar and thus are not usually on the classpath.
+ * Test runner that enables tests to work with the Compiler Tree API implementation corresponding to
+ * the compiler returned by {@link ToolProvider#getSystemJavaCompiler()}. These are public APIs that
+ * are not provided in rt.jar and thus are not usually on the classpath.
  */
 public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
   private static final TestClassLoader TEST_CLASS_LOADER = new TestClassLoader();

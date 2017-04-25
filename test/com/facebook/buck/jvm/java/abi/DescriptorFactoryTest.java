@@ -20,12 +20,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class DescriptorFactoryTest extends DescriptorAndSignatureFactoryTestBase {
@@ -40,11 +38,12 @@ public class DescriptorFactoryTest extends DescriptorAndSignatureFactoryTestBase
 
   @Test
   public void testAllTheThings() throws IOException {
-    List<String> errors = getTestErrors(
-        field -> field.desc,
-        method -> method.desc,
-        (t) -> null,
-        descriptorFactory::getDescriptor);
+    List<String> errors =
+        getTestErrors(
+            field -> field.desc,
+            method -> method.desc,
+            (t) -> null,
+            descriptorFactory::getDescriptor);
 
     assertTrue("Descriptor mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
   }

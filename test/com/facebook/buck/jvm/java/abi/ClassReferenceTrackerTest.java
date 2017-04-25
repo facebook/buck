@@ -19,9 +19,10 @@ package com.facebook.buck.jvm.java.abi;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.compiler.Classes;
-import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
-
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
+import java.io.IOException;
+import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,15 +30,10 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.objectweb.asm.ClassReader;
 
-import java.io.IOException;
-import java.util.SortedSet;
-
 @RunWith(CompilerTreeApiTestRunner.class)
 public class ClassReferenceTrackerTest {
-  @Rule
-  public TestCompiler testCompiler = new TestCompiler();
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TestCompiler testCompiler = new TestCompiler();
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
   public void testRecordsSuperclassesAndInterfaces() throws IOException {
@@ -46,68 +42,42 @@ public class ClassReferenceTrackerTest {
             "abstract class Foo extends java.util.ArrayList implements CharSequence, Runnable {",
             "}"),
         Matchers.containsInAnyOrder(
-            "java/util/ArrayList",
-            "java/lang/Runnable",
-            "java/lang/CharSequence"));
+            "java/util/ArrayList", "java/lang/Runnable", "java/lang/CharSequence"));
   }
 
   @Test
   public void testRecordsMethodReturnTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  String foo() { return null; }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/String",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  String foo() { return null; }", "}"),
+        Matchers.containsInAnyOrder("java/lang/String", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsMethodParameterTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  void foo(String s) { }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/String",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  void foo(String s) { }", "}"),
+        Matchers.containsInAnyOrder("java/lang/String", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsMethodThrowsTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  void foo() throws Exception { }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Exception",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  void foo() throws Exception { }", "}"),
+        Matchers.containsInAnyOrder("java/lang/Exception", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsFieldTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  String s;",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/String",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  String s;", "}"),
+        Matchers.containsInAnyOrder("java/lang/String", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsAnnotationsOnClasses() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "@Deprecated",
-            "class Foo { }"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Deprecated",
-            "java/lang/Object"));
+        getReferencedClassNames("@Deprecated", "class Foo { }"),
+        Matchers.containsInAnyOrder("java/lang/Deprecated", "java/lang/Object"));
   }
 
   @Test
@@ -118,35 +88,21 @@ public class ClassReferenceTrackerTest {
             "abstract class Foo implements @Bar CharSequence { }",
             "@Target(ElementType.TYPE_USE)",
             "@interface Bar { }"),
-        Matchers.containsInAnyOrder(
-            "Bar",
-            "java/lang/CharSequence",
-            "java/lang/Object"));
+        Matchers.containsInAnyOrder("Bar", "java/lang/CharSequence", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsAnnotationsOnMethods() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  @Deprecated",
-            "  void foo() { }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Deprecated",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  @Deprecated", "  void foo() { }", "}"),
+        Matchers.containsInAnyOrder("java/lang/Deprecated", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsAnnotationsOnMethodParameters() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  void foo(@Deprecated Object parameter) { }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Deprecated",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  void foo(@Deprecated Object parameter) { }", "}"),
+        Matchers.containsInAnyOrder("java/lang/Deprecated", "java/lang/Object"));
   }
 
   @Test
@@ -159,23 +115,14 @@ public class ClassReferenceTrackerTest {
             "}",
             "@Target(ElementType.TYPE_USE)",
             "@interface Bar { }"),
-        Matchers.containsInAnyOrder(
-            "Bar",
-            "java/lang/CharSequence",
-            "java/lang/Object"));
+        Matchers.containsInAnyOrder("Bar", "java/lang/CharSequence", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsAnnotationsOnFields() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  @Deprecated",
-            "  Object field;",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Deprecated",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  @Deprecated", "  Object field;", "}"),
+        Matchers.containsInAnyOrder("java/lang/Deprecated", "java/lang/Object"));
   }
 
   @Test
@@ -188,132 +135,84 @@ public class ClassReferenceTrackerTest {
             "}",
             "@Target(ElementType.TYPE_USE)",
             "@interface Bar { }"),
-        Matchers.containsInAnyOrder(
-            "Bar",
-            "java/lang/CharSequence",
-            "java/lang/Object"));
+        Matchers.containsInAnyOrder("Bar", "java/lang/CharSequence", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsGenericSuperclassTypeArguments() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo extends java.util.HashMap<String, Integer> {",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/util/HashMap",
-            "java/lang/String",
-            "java/lang/Integer"));
+        getReferencedClassNames("class Foo extends java.util.HashMap<String, Integer> {", "}"),
+        Matchers.containsInAnyOrder("java/util/HashMap", "java/lang/String", "java/lang/Integer"));
   }
 
   @Test
   public void testRecordsGenericInterfaceTypeArguments() throws IOException {
     assertThat(
         getReferencedClassNames(
-            "abstract class Foo implements java.util.Map<String, Integer> {",
-            "}"),
+            "abstract class Foo implements java.util.Map<String, Integer> {", "}"),
         Matchers.containsInAnyOrder(
-            "java/util/Map",
-            "java/lang/String",
-            "java/lang/Integer",
-            "java/lang/Object"));
+            "java/util/Map", "java/lang/String", "java/lang/Integer", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsGenericFieldTypeArguments() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  java.util.HashMap<String, Integer> field;",
-            "}"),
+        getReferencedClassNames("class Foo {", "  java.util.HashMap<String, Integer> field;", "}"),
         Matchers.containsInAnyOrder(
-            "java/util/HashMap",
-            "java/lang/String",
-            "java/lang/Integer",
-            "java/lang/Object"));
+            "java/util/HashMap", "java/lang/String", "java/lang/Integer", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsGenericReturnTypeTypeArguments() throws IOException {
     assertThat(
         getReferencedClassNames(
-            "class Foo {" +
-                "  java.util.HashMap<String, Integer> foo() { return null; }",
-            "}"),
+            "class Foo {" + "  java.util.HashMap<String, Integer> foo() { return null; }", "}"),
         Matchers.containsInAnyOrder(
-            "java/util/HashMap",
-            "java/lang/String",
-            "java/lang/Integer",
-            "java/lang/Object"));
+            "java/util/HashMap", "java/lang/String", "java/lang/Integer", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsGenericParameterTypeArguments() throws IOException {
     assertThat(
         getReferencedClassNames(
-            "class Foo {" +
-                "  void foo(java.util.HashMap<String, Integer> m) { }",
-            "}"),
+            "class Foo {" + "  void foo(java.util.HashMap<String, Integer> m) { }", "}"),
         Matchers.containsInAnyOrder(
-            "java/util/HashMap",
-            "java/lang/String",
-            "java/lang/Integer",
-            "java/lang/Object"));
+            "java/util/HashMap", "java/lang/String", "java/lang/Integer", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsArrayElementTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  String[] s;",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/String",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  String[] s;", "}"),
+        Matchers.containsInAnyOrder("java/lang/String", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsGenericArrayElementTypeArgumentTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo {",
-            "  java.util.List<String>[] s;",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/util/List",
-            "java/lang/String",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo {", "  java.util.List<String>[] s;", "}"),
+        Matchers.containsInAnyOrder("java/util/List", "java/lang/String", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsClassTypeBoundTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "class Foo<T extends java.util.ArrayList> {",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/util/ArrayList",
-            "java/lang/Object"));
+        getReferencedClassNames("class Foo<T extends java.util.ArrayList> {", "}"),
+        Matchers.containsInAnyOrder("java/util/ArrayList", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsInterfaceTypeBoundTypes() throws IOException {
     assertThat(
-        getReferencedClassNames(
-            "abstract class Foo<T extends CharSequence> {",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/CharSequence",
-            "java/lang/Object"));
+        getReferencedClassNames("abstract class Foo<T extends CharSequence> {", "}"),
+        Matchers.containsInAnyOrder("java/lang/CharSequence", "java/lang/Object"));
   }
 
   @Test
   public void testRecordsWildcardBoundTypes() throws IOException {
     assertThat(
         getReferencedClassNames(
-            "class Foo {" +
-                "  java.util.HashMap<? extends CharSequence, ? super Integer> field;",
+            "class Foo {" + "  java.util.HashMap<? extends CharSequence, ? super Integer> field;",
             "}"),
         Matchers.containsInAnyOrder(
             "java/util/HashMap",
@@ -364,22 +263,15 @@ public class ClassReferenceTrackerTest {
             "}",
             "@interface Baz {",
             "}"),
-        Matchers.containsInAnyOrder(
-            "Bar",
-            "Baz",
-            "java/lang/Object"));
+        Matchers.containsInAnyOrder("Bar", "Baz", "java/lang/Object"));
   }
 
   @Test
   public void testDoesNotRecordTypeVariables() throws IOException {
     assertThat(
         getReferencedClassNames(
-            "class Foo {",
-            "  <T extends Exception, U> void foo() throws T { }",
-            "}"),
-        Matchers.containsInAnyOrder(
-            "java/lang/Exception",
-            "java/lang/Object"));
+            "class Foo {", "  <T extends Exception, U> void foo() throws T { }", "}"),
+        Matchers.containsInAnyOrder("java/lang/Exception", "java/lang/Object"));
   }
 
   private SortedSet<String> getReferencedClassNames(String... sourceLines) throws IOException {
@@ -389,9 +281,7 @@ public class ClassReferenceTrackerTest {
     Classes classes = testCompiler.getClasses();
     ClassReferenceTracker tracker = new ClassReferenceTracker();
     classes.acceptClassVisitor(
-        "Foo",
-        ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES,
-        tracker);
+        "Foo", ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, tracker);
 
     return tracker.getReferencedClassNames();
   }

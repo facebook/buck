@@ -24,16 +24,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -48,6 +41,10 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleElementVisitor8;
+import org.hamcrest.Matchers;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest {
@@ -71,9 +68,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetQualifiedNameNamedPackage() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.buck;",
-        "public class Foo {}"));
+    compile(Joiner.on('\n').join("package com.facebook.buck;", "public class Foo {}"));
 
     TypeElement element = elements.getTypeElement("com.facebook.buck.Foo");
 
@@ -114,27 +109,28 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     TypeElement expectedType = elements.getTypeElement("Foo");
     Object expectedResult = new Object();
-    Object actualResult = expectedType.accept(new SimpleElementVisitor8<Object, Object>() {
-      @Override
-      protected Object defaultAction(Element e, Object o) {
-        return null;
-      }
+    Object actualResult =
+        expectedType.accept(
+            new SimpleElementVisitor8<Object, Object>() {
+              @Override
+              protected Object defaultAction(Element e, Object o) {
+                return null;
+              }
 
-      @Override
-      public Object visitType(TypeElement actualType, Object o) {
-        assertSame(expectedType, actualType);
-        return o;
-      }
-    }, expectedResult);
+              @Override
+              public Object visitType(TypeElement actualType, Object o) {
+                assertSame(expectedType, actualType);
+                return o;
+              }
+            },
+            expectedResult);
 
     assertSame(expectedResult, actualResult);
   }
 
   @Test
   public void testToString() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.buck;",
-        "public class Foo<T> {}"));
+    compile(Joiner.on('\n').join("package com.facebook.buck;", "public class Foo<T> {}"));
 
     TypeElement element = elements.getTypeElement("com.facebook.buck.Foo");
 
@@ -143,11 +139,10 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetQualifiedNameInnerClass() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.buck;",
-        "public class Foo {",
-        "  public class Bar { }",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.buck;", "public class Foo {", "  public class Bar { }", "}"));
 
     TypeElement element = elements.getTypeElement("com.facebook.buck.Foo.Bar");
 
@@ -156,13 +151,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetQualifiedNameEnumAnonymousMember() throws IOException {
-    compile(Joiner.on('\n').join(
-        "public enum Foo {",
-        "  BAR,",
-        "  BAZ() {",
-        "  }",
-        "}"
-    ));
+    compile(Joiner.on('\n').join("public enum Foo {", "  BAR,", "  BAZ() {", "  }", "}"));
 
     // Expect no crash. Enum anonymous members don't have qualified names, but at one point during
     // development we would crash trying to make one for them.
@@ -177,10 +166,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetNestingKindMember() throws IOException {
-    compile(Joiner.on('\n').join(
-        "public class Foo {",
-        "  class Bar { }",
-        "}"));
+    compile(Joiner.on('\n').join("public class Foo {", "  class Bar { }", "}"));
 
     assertSame(NestingKind.MEMBER, elements.getTypeElement("Foo.Bar").getNestingKind());
   }
@@ -265,21 +251,17 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     assertSameType(expectedSuperclass, superclass);
   }
 
-
   @Test
   public void testGetSuperclassOtherSuperclass() throws IOException {
-    compile(ImmutableMap.of(
-        "Foo.java",
-        Joiner.on('\n').join(
-            "package com.facebook.foo;",
-            "public class Foo extends com.facebook.bar.Bar { }"
-        ),
-        "Bar.java",
-        Joiner.on('\n').join(
-            "package com.facebook.bar;",
-            "public class Bar { }"
-        )
-    ));
+    compile(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "public class Foo extends com.facebook.bar.Bar { }"),
+            "Bar.java",
+            Joiner.on('\n').join("package com.facebook.bar;", "public class Bar { }")));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     TypeElement barElement = elements.getTypeElement("com.facebook.bar.Bar");
@@ -290,9 +272,11 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesOnClass() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public abstract class Foo implements Runnable, java.io.Closeable { }"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "public abstract class Foo implements Runnable, java.io.Closeable { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
@@ -306,9 +290,11 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesOnInterface() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public interface Foo extends Runnable, java.io.Closeable { }"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "public interface Foo extends Runnable, java.io.Closeable { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     TypeMirror runnableType = elements.getTypeElement("java.lang.Runnable").asType();
@@ -322,9 +308,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesDefaultsEmptyForClass() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public class Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "public class Foo { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     assertThat(fooElement.getInterfaces(), Matchers.empty());
@@ -332,9 +316,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesDefaultsEmptyForInterface() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public interface Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "public interface Foo { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     assertThat(fooElement.getInterfaces(), Matchers.empty());
@@ -342,9 +324,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesDefaultsEmptyForEnum() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public enum Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "public enum Foo { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     assertThat(fooElement.getInterfaces(), Matchers.empty());
@@ -352,13 +332,10 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testGetInterfacesDefaultsAnnotationForAnnotation() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "public @interface Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "public @interface Foo { }"));
 
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
-    TypeMirror annotationType =
-        elements.getTypeElement("java.lang.annotation.Annotation").asType();
+    TypeMirror annotationType = elements.getTypeElement("java.lang.annotation.Annotation").asType();
 
     List<? extends TypeMirror> interfaces = fooElement.getInterfaces();
     assertSameType(annotationType, interfaces.get(0));
@@ -367,11 +344,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testEnclosedClasses() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo {",
-        "  class Bar { }",
-        "}"
-    ));
+    compile(Joiner.on('\n').join("class Foo {", "  class Bar { }", "}"));
 
     TypeElement fooElement = elements.getTypeElement("Foo");
     TypeElement barElement = elements.getTypeElement("Foo.Bar");
@@ -392,8 +365,9 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     assertTrue(unnamedPackage.getEnclosedElements().contains(fooElement));
   }
 
-  @Ignore("TODO(jkeljo): Need to wrap elements coming out of javac to ensure callers always get" +
-      "our PackageElement impl instead of javac's.")
+  @Ignore(
+      "TODO(jkeljo): Need to wrap elements coming out of javac to ensure callers always get"
+          + "our PackageElement impl instead of javac's.")
   @Test
   public void testGetEnclosingElementForBuiltInTopLevelClasses() throws IOException {
     initCompiler();
@@ -439,8 +413,7 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     assertSameType(fooElement.asType(), valueOfMethod.getReturnType());
     List<? extends VariableElement> parameters = valueOfMethod.getParameters();
     assertSameType(
-        elements.getTypeElement("java.lang.String").asType(),
-        parameters.get(0).asType());
+        elements.getTypeElement("java.lang.String").asType(), parameters.get(0).asType());
     assertEquals(1, parameters.size());
     assertThat(valuesMethod.getTypeParameters(), Matchers.empty());
     assertThat(valuesMethod.getThrownTypes(), Matchers.empty());

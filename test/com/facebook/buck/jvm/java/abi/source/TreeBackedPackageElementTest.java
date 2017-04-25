@@ -24,21 +24,18 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.SimpleElementVisitor8;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTest {
@@ -51,9 +48,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testToStringSimpleNamedPackage() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package foo;",
-        "class Foo { }"));
+    compile(Joiner.on('\n').join("package foo;", "class Foo { }"));
 
     assertEquals("foo", elements.getPackageElement("foo").toString());
   }
@@ -92,23 +87,27 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
     PackageElement expectedPackage = elements.getPackageElement("java.lang");
     Object expectedResult = new Object();
-    Object actualResult = expectedPackage.accept(new SimpleElementVisitor8<Object, Object>() {
-      @Override
-      protected Object defaultAction(Element e, Object o) {
-        return null;
-      }
+    Object actualResult =
+        expectedPackage.accept(
+            new SimpleElementVisitor8<Object, Object>() {
+              @Override
+              protected Object defaultAction(Element e, Object o) {
+                return null;
+              }
 
-      @Override
-      public Object visitPackage(PackageElement actualPackage, Object o) {
-        assertSame(expectedPackage, actualPackage);
-        return o;
-      }
-    }, expectedResult);
+              @Override
+              public Object visitPackage(PackageElement actualPackage, Object o) {
+                assertSame(expectedPackage, actualPackage);
+                return o;
+              }
+            },
+            expectedResult);
 
     assertSame(expectedResult, actualResult);
   }
 
-  @Test  public void testUnnamedPackageHasEmptyNames() throws IOException {
+  @Test
+  public void testUnnamedPackageHasEmptyNames() throws IOException {
     initCompiler();
 
     PackageElement unnamedPackage = elements.getPackageElement("");
@@ -131,10 +130,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testCanExtendPackageFromDependencies() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package java.util;",
-        "class Foo { }"
-    ));
+    compile(Joiner.on('\n').join("package java.util;", "class Foo { }"));
 
     PackageElement javaUtilPackage = elements.getPackageElement("java.util");
     TypeElement listType = elements.getTypeElement("java.util.List");
@@ -146,22 +142,19 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testGetAnnotationMirrorsNoAnnotations() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package foo;",
-        "class Foo { }"
-    ));
+    compile(Joiner.on('\n').join("package foo;", "class Foo { }"));
 
     PackageElement fooPackage = elements.getPackageElement("foo");
-    assertThat(
-        fooPackage.getAnnotationMirrors(),
-        Matchers.empty());
+    assertThat(fooPackage.getAnnotationMirrors(), Matchers.empty());
   }
 
   private void assertPackageContains(PackageElement packageElement, TypeElement typeElement) {
     // We compare strings because there's some funkiness around built-in types, and they can
     // end up having multiple Elements for them depending on how you arrive at them.
     Set<String> enclosedElements =
-        packageElement.getEnclosedElements().stream()
+        packageElement
+            .getEnclosedElements()
+            .stream()
             .map(Object::toString)
             .collect(Collectors.toSet());
 

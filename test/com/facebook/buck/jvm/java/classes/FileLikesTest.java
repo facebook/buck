@@ -21,12 +21,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class FileLikesTest {
 
@@ -43,9 +41,11 @@ public class FileLikesTest {
 
   @Test
   public void testGetFileNameWithoutClassSuffix() {
-    assertEquals("com/example/Bar",
+    assertEquals(
+        "com/example/Bar",
         FileLikes.getFileNameWithoutClassSuffix(new FakeFileLike("com/example/Bar.class")));
-    assertEquals("com/example/Foo$1",
+    assertEquals(
+        "com/example/Foo$1",
         FileLikes.getFileNameWithoutClassSuffix(new FakeFileLike("com/example/Foo$1.class")));
   }
 

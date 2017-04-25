@@ -20,18 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandaloneTypeVariableTest extends CompilerTreeApiParameterizedTest {

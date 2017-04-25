@@ -19,28 +19,26 @@ package com.facebook.buck.jvm.java;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CachedTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * This is a regression test. We had a situation where we did the following with the build cache
    * enabled:
+   *
    * <ul>
    *   <li>Ran a correct test, which passed (as expected).
    *   <li>Edited the test such that it was incorrect, ran it, and it failed (as expected).
@@ -49,14 +47,16 @@ public class CachedTestIntegrationTest {
    *   <li>Edited the test such that it was incorrect [in the same way it was incorrect before], ran
    *       it, and it <em>passed</em> when it should have <em>failed</em>.
    * </ul>
+   *
    * Note that this behavior was not observed when the build cache was disabled, so this was
    * evidence of a bad interaction between the test runner and the build cache. This integration
    * test reproduces that situation to ensure it does not happen again.
+   *
    */
   @Test
   public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cached_test", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cached_test", tmp);
     workspace.setUp();
     CachedTestUtil testUtil = new CachedTestUtil(workspace);
 
@@ -68,7 +68,8 @@ public class CachedTestIntegrationTest {
     testUtil.makeTestFail();
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
     result2.assertTestFailure();
-    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+    assertThat(
+        "`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE com.example.LameTest testBasicAssertion"));
 
@@ -81,7 +82,8 @@ public class CachedTestIntegrationTest {
     testUtil.makeTestFail();
     ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
     result4.assertTestFailure();
-    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+    assertThat(
+        "`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
         containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
@@ -93,8 +95,8 @@ public class CachedTestIntegrationTest {
    */
   @Test
   public void testRunningTestAfterBuildingWithCacheHitDoesNotReportStaleTests() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cached_test", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cached_test", tmp);
     workspace.setUp();
     CachedTestUtil testUtil = new CachedTestUtil(workspace);
 
@@ -104,28 +106,33 @@ public class CachedTestIntegrationTest {
 
     // Edit the test so it should fail and then make sure that it fails.
     testUtil.makeTestFail();
-    workspace.runBuckCommand("build", "//:test")
+    workspace
+        .runBuckCommand("build", "//:test")
         .assertSuccess("The test should build successfully, but will fail when executed.");
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
     result2.assertTestFailure();
-    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+    assertThat(
+        "`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE com.example.LameTest testBasicAssertion"));
 
     // Restore the file to its previous state.
     testUtil.makeTestSucceed();
-    workspace.runBuckCommand("build", "//:test")
+    workspace
+        .runBuckCommand("build", "//:test")
         .assertSuccess("The test should build successfully.");
     ProcessResult result3 = workspace.runBuckCommand("test", "//:test");
     result3.assertSuccess();
 
     // Put the file back in the broken state and make sure the test fails.
     testUtil.makeTestFail();
-    workspace.runBuckCommand("build", "//:test")
+    workspace
+        .runBuckCommand("build", "//:test")
         .assertSuccess("The test should build successfully, but will fail when executed.");
     ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
     result4.assertTestFailure();
-    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+    assertThat(
+        "`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
         containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
@@ -141,8 +148,8 @@ public class CachedTestIntegrationTest {
     CachedTestUtil(ProjectWorkspace workspace) throws IOException {
       this.testFile = workspace.getPath(TEST_FILE);
       this.originalJavaCode = new String(Files.readAllBytes(testFile), CHARSET);
-      this.failingJavaCode = originalJavaCode.replace("String str = \"I am not null.\";",
-          "String str = null;");
+      this.failingJavaCode =
+          originalJavaCode.replace("String str = \"I am not null.\";", "String str = null;");
     }
 
     public void makeTestFail() throws IOException {

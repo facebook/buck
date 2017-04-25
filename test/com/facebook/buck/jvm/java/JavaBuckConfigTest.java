@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-
 import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
 import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,22 +41,19 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JavaBuckConfigTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
 
   @Before
@@ -83,8 +79,7 @@ public class JavaBuckConfigTest {
     String javaCommand = java.toString();
     String javaForTestsCommand = javaForTests.toString();
     JavaBuckConfig config =
-        FakeBuckConfig
-            .builder()
+        FakeBuckConfig.builder()
             .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
@@ -108,12 +103,12 @@ public class JavaBuckConfigTest {
   public void whenJavaExistsAndIsRelativePathThenItsAbsolutePathIsReturned() throws IOException {
     Path java = temporaryFolder.newExecutableFile();
     String javaFilename = java.getFileName().toString();
-    JavaBuckConfig config = FakeBuckConfig
-        .builder()
-        .setFilesystem(defaultFilesystem)
-        .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaFilename)))
-        .build()
-        .getView(JavaBuckConfig.class);
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaFilename)))
+            .build()
+            .getView(JavaBuckConfig.class);
 
     JavaOptions options = config.getDefaultJavaOptions();
     assertEquals(Optional.of(java), options.getJavaPath());
@@ -125,8 +120,7 @@ public class JavaBuckConfigTest {
     Path java = temporaryFolder.newExecutableFile();
     String javaCommand = java.toString();
     JavaBuckConfig config =
-        FakeBuckConfig
-            .builder()
+        FakeBuckConfig.builder()
             .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaCommand)))
             .build()
@@ -147,10 +141,10 @@ public class JavaBuckConfigTest {
   public void whenJavacExistsAndIsExecutableThenCorrectPathIsReturned() throws IOException {
     Path javac = temporaryFolder.newExecutableFile();
 
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[tools]",
-            "    javac = " + javac.toString().replace("\\", "\\\\")));
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join("[tools]", "    javac = " + javac.toString().replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
     assertEquals(Optional.of(javac), config.getJavacPath());
@@ -159,9 +153,9 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    javac = " + invalidPath.replace("\\", "\\\\")));
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[tools]", "    javac = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config.getJavacPath();
@@ -181,9 +175,8 @@ public class JavaBuckConfigTest {
         is(not(Platform.WINDOWS)));
     Path javac = temporaryFolder.newFile();
 
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[tools]",
-        "    javac = " + javac.toString()));
+    Reader reader =
+        new StringReader(Joiner.on('\n').join("[tools]", "    javac = " + javac.toString()));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config.getJavacPath();
@@ -196,9 +189,10 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacJarDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
-    Reader reader = new StringReader(Joiner.on('\n').join(
-            "[tools]",
-            "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join("[tools]", "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config.getJavacSpec().getJavacJarPath();
@@ -216,10 +210,8 @@ public class JavaBuckConfigTest {
     String sourceLevel = "source-level";
     String targetLevel = "target-level";
 
-    String localConfig = String.format(
-        "[java]\nsource_level = %s\ntarget_level = %s",
-        sourceLevel,
-        targetLevel);
+    String localConfig =
+        String.format("[java]\nsource_level = %s\ntarget_level = %s", sourceLevel, targetLevel);
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
@@ -272,28 +264,21 @@ public class JavaBuckConfigTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     final String javac = temporaryFolder.newExecutableFile().toString();
 
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "tools", ImmutableMap.of("javac", javac));
-    BuckConfig buckConfig = FakeBuckConfig
-        .builder()
-        .setFilesystem(defaultFilesystem)
-        .setSections(sections)
-        .build();
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("tools", ImmutableMap.of("javac", javac));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setFilesystem(defaultFilesystem).setSections(sections).build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
     assertEquals(
-        javac,
-        ((ExternalJavac) JavacFactory.create(null, javaConfig, null)).getShortName());
+        javac, ((ExternalJavac) JavacFactory.create(null, javaConfig, null)).getShortName());
   }
 
   @Test
   public void trackClassUsageCanBeDisabled() {
     JavaBuckConfig config =
-        FakeBuckConfig
-            .builder()
-            .setSections(ImmutableMap.of(
-                "java",
-                ImmutableMap.of("track_class_usage", "false")))
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("java", ImmutableMap.of("track_class_usage", "false")))
             .build()
             .getView(JavaBuckConfig.class);
 
@@ -303,12 +288,15 @@ public class JavaBuckConfigTest {
 
   @Test
   public void doNotTrackClassUsageByDefaultForExternJavac() throws IOException {
-    JavaBuckConfig config = FakeBuckConfig.builder()
-        .setFilesystem(defaultFilesystem)
-        .setSections(ImmutableMap.of("tools",
-            ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString())))
-        .build()
-        .getView(JavaBuckConfig.class);
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of(
+                    "tools",
+                    ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString())))
+            .build()
+            .getView(JavaBuckConfig.class);
 
     assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
 
@@ -318,14 +306,14 @@ public class JavaBuckConfigTest {
   @Test
   public void doNotTrackClassUsageEvenIfAskedForExternJavac() throws IOException {
     JavaBuckConfig config =
-        FakeBuckConfig
-            .builder()
+        FakeBuckConfig.builder()
             .setFilesystem(defaultFilesystem)
-            .setSections(ImmutableMap.of(
-                "tools",
-                ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString()),
-                "java",
-                ImmutableMap.of("track_class_usage", "true")))
+            .setSections(
+                ImmutableMap.of(
+                    "tools",
+                    ImmutableMap.of("javac", temporaryFolder.newExecutableFile().toString()),
+                    "java",
+                    ImmutableMap.of("track_class_usage", "true")))
             .build()
             .getView(JavaBuckConfig.class);
 
@@ -335,12 +323,15 @@ public class JavaBuckConfigTest {
 
   @Test
   public void trackClassUsageByDefaultForJavacFromJar() throws IOException {
-    JavaBuckConfig config = FakeBuckConfig.builder()
-        .setFilesystem(defaultFilesystem)
-        .setSections(ImmutableMap.of("tools",
-            ImmutableMap.of("javac_jar", temporaryFolder.newExecutableFile().toString())))
-        .build()
-        .getView(JavaBuckConfig.class);
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of(
+                    "tools",
+                    ImmutableMap.of("javac_jar", temporaryFolder.newExecutableFile().toString())))
+            .build()
+            .getView(JavaBuckConfig.class);
 
     assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JAR));
 
@@ -349,9 +340,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void trackClassUsageByDefaultForJavacFromJDK() {
-    JavaBuckConfig config = FakeBuckConfig.builder()
-        .build()
-        .getView(JavaBuckConfig.class);
+    JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
 
     assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
 
@@ -361,13 +350,10 @@ public class JavaBuckConfigTest {
   @Test
   public void testJavaLocationOutOfProcess()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String content = Joiner.on('\n').join(
-        "[java]",
-        "    location = OUT_OF_PROCESS");
+    String content = Joiner.on('\n').join("[java]", "    location = OUT_OF_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     assertThat(
-        config.getJavacSpec().getJavacLocation(),
-        Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
+        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
   }
 
   @Test
@@ -375,48 +361,37 @@ public class JavaBuckConfigTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     assertThat(
-        config.getJavacSpec().getJavacLocation(),
-        Matchers.equalTo(Javac.Location.IN_PROCESS));
+        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
   @Test
   public void testJavaLocationInProcess()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String content = Joiner.on('\n').join(
-        "[java]",
-        "    location = IN_PROCESS");
+    String content = Joiner.on('\n').join("[java]", "    location = IN_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     assertThat(
-        config.getJavacSpec().getJavacLocation(),
-        Matchers.equalTo(Javac.Location.IN_PROCESS));
+        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
   @Test
   public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(
-        options.getCompilationMode(),
-        Matchers.equalTo(Javac.CompilationMode.FULL));
+    assertThat(options.getCompilationMode(), Matchers.equalTo(Javac.CompilationMode.FULL));
   }
 
   @Test
   public void testSourceWithDepsABI() throws IOException {
-    String content = Joiner.on('\n').join(
-        "[java]",
-        "    abi_generation_mode = source_with_deps");
+    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source_with_deps");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(
-        options.getCompilationMode(),
-        Matchers.equalTo(Javac.CompilationMode.FULL));
+    assertThat(options.getCompilationMode(), Matchers.equalTo(Javac.CompilationMode.FULL));
   }
 
   @Test
   public void testMigratingToSourceABI() throws IOException {
-    String content = Joiner.on('\n').join(
-        "[java]",
-        "    abi_generation_mode = migrating_to_source");
+    String content =
+        Joiner.on('\n').join("[java]", "    abi_generation_mode = migrating_to_source");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
@@ -426,9 +401,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void testSourceABINoDeps() throws IOException {
-    String content = Joiner.on('\n').join(
-        "[java]",
-        "    abi_generation_mode = source");
+    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
@@ -441,10 +414,7 @@ public class JavaBuckConfigTest {
     assertThat(optionsConsumer.keyVals, not(hasKey(key)));
   }
 
-  private void assertOptionsContains(
-      JavacOptions options,
-      String key,
-      String value) {
+  private void assertOptionsContains(JavacOptions options, String key, String value) {
     OptionAccumulator optionsConsumer = visitOptions(options);
     assertThat(optionsConsumer.keyVals, hasEntry(key, value));
   }
@@ -452,22 +422,18 @@ public class JavaBuckConfigTest {
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
-        optionsConsumer,
-        createMock(SourcePathResolver.class),
-        defaultFilesystem);
+        optionsConsumer, createMock(SourcePathResolver.class), defaultFilesystem);
     return optionsConsumer;
   }
 
-
-
-  private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
-      throws IOException {
-    BuckConfig raw = BuckConfigTestUtils.createFromReader(
-        reader,
-        defaultFilesystem,
-        Architecture.detect(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+  private JavaBuckConfig createWithDefaultFilesystem(Reader reader) throws IOException {
+    BuckConfig raw =
+        BuckConfigTestUtils.createFromReader(
+            reader,
+            defaultFilesystem,
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()));
     return raw.getView(JavaBuckConfig.class);
   }
 }

@@ -21,15 +21,12 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.FluentIterable;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.junit.Test;
 
 public class DefaultClassUsageFileWriterTest {
 
@@ -39,7 +36,6 @@ public class DefaultClassUsageFileWriterTest {
 
   private static final String[] FILE_NAMES = {"A", "B", "C", "D", "E", "F"};
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
-
 
   @Test
   public void fileReadOrderDoesntAffectClassesUsedOutput() throws IOException {
@@ -62,7 +58,6 @@ public class DefaultClassUsageFileWriterTest {
       fakeFileManager.addFile(testTwoJarPath, fileName, JavaFileObject.Kind.CLASS);
     }
 
-
     DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter(outputOne);
     {
       StandardJavaFileManager wrappedFileManager = writerOne.wrapFileManager(fakeFileManager);
@@ -71,7 +66,6 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     writerOne.writeFile(filesystem);
-
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(outputTwo);
     {
@@ -84,7 +78,6 @@ public class DefaultClassUsageFileWriterTest {
     writerTwo.writeFile(filesystem);
 
     assertEquals(
-        new String(Files.readAllBytes(outputOne)),
-        new String(Files.readAllBytes(outputTwo)));
+        new String(Files.readAllBytes(outputOne)), new String(Files.readAllBytes(outputTwo)));
   }
 }

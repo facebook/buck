@@ -22,25 +22,20 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.Map;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testGetBinaryNameTopLevelClass() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "class Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "class Foo { }"));
 
     assertEquals(
         "com.facebook.foo.Foo",
@@ -49,11 +44,8 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testGetBinaryNameInnerClass() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "class Foo {",
-        "  class Inner {}",
-        "}"));
+    compile(
+        Joiner.on('\n').join("package com.facebook.foo;", "class Foo {", "  class Inner {}", "}"));
 
     assertEquals(
         "com.facebook.foo.Foo$Inner",
@@ -62,10 +54,9 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testGetDocComment() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "/** I am a doc comment. */",
-        "class Foo { }"));
+    compile(
+        Joiner.on('\n')
+            .join("package com.facebook.foo;", "/** I am a doc comment. */", "class Foo { }"));
 
     assertEquals(
         "I am a doc comment. ",
@@ -74,21 +65,14 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsDeprecated() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "@Deprecated",
-        "class Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "@Deprecated", "class Foo { }"));
 
-    assertTrue(
-        elements.isDeprecated(elements.getTypeElement("com.facebook.foo.Foo")));
+    assertTrue(elements.isDeprecated(elements.getTypeElement("com.facebook.foo.Foo")));
   }
 
   @Test
   public void testGetPackageOf() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "@Deprecated",
-        "class Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "@Deprecated", "class Foo { }"));
 
     assertSame(
         elements.getPackageElement("com.facebook.foo"),
@@ -97,14 +81,16 @@ public class TreeBackedElementsTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testGetElementValuesWithDefaults() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "@Anno(a=4)",
-        "class Foo { }",
-        "@interface Anno {",
-        "  int a() default 1;",
-        "  int b() default 2;",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "@Anno(a=4)",
+                "class Foo { }",
+                "@interface Anno {",
+                "  int a() default 1;",
+                "  int b() default 2;",
+                "}"));
 
     TypeElement fooType = elements.getTypeElement("com.facebook.foo.Foo");
     TypeElement annotationType = elements.getTypeElement("com.facebook.foo.Anno");

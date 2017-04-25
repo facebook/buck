@@ -24,12 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -40,6 +35,8 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
@@ -92,11 +89,7 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeStaticNoGenerics() throws IOException {
-    compile(ImmutableMap.of(
-        "Foo.java",
-        "class Foo { }",
-        "Bar.java",
-        "class Bar { }"));
+    compile(ImmutableMap.of("Foo.java", "class Foo { }", "Bar.java", "class Bar { }"));
 
     TypeMirror fooType = elements.getTypeElement("Foo").asType();
     TypeMirror barType = elements.getTypeElement("Bar").asType();
@@ -192,9 +185,7 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeArrayType() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo { }",
-        "class Bar { }"));
+    compile(Joiner.on('\n').join("class Foo { }", "class Bar { }"));
 
     TypeMirror fooType = elements.getTypeElement("Foo").asType();
     TypeMirror barType = elements.getTypeElement("Bar").asType();
@@ -258,10 +249,7 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeUnboundedTypeVariable() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T> { }",
-        "class Bar<T> { }"
-    ));
+    compile(Joiner.on('\n').join("class Foo<T> { }", "class Bar<T> { }"));
 
     TypeMirror fooT = elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
     TypeMirror barT = elements.getTypeElement("Bar").getTypeParameters().get(0).asType();
@@ -271,9 +259,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsSameTypeBoundedTypeVariable() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable>",
-        "    extends java.util.ArrayList<T>{ }"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable>",
+                "    extends java.util.ArrayList<T>{ }"));
 
     TypeElement fooElement = elements.getTypeElement("Foo");
     TypeMirror t1 = fooElement.getTypeParameters().get(0).asType();
@@ -284,10 +274,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsSameTypeIntersectionType() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
-        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"
-    ));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+                "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"));
 
     IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
@@ -297,10 +288,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeIntersectionTypeDifferentSize() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
-        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }"
-    ));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+                "class Bar<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }"));
 
     IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
@@ -310,10 +302,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeIntersectionTypeDifferentSizeReversed() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }",
-        "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"
-    ));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable & java.io.Closeable> { }",
+                "class Bar<T extends java.lang.CharSequence & java.lang.Runnable> { }"));
 
     IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
@@ -322,19 +315,20 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
   }
 
   /**
-   * We're not exactly sure why intersection types with the same bounds but in a different order
-   * are considered the same type; after all, they can have different erasures. However, the javac
+   * We're not exactly sure why intersection types with the same bounds but in a different order are
+   * considered the same type; after all, they can have different erasures. However, the javac
    * implementation behaves that way, so we must as well.
    *
-   * The relevant JLS8 sections are 4.4 and 4.9, if any future person wants to go see if they
-   * can grok why this behavior is correct.
+   * <p>The relevant JLS8 sections are 4.4 and 4.9, if any future person wants to go see if they can
+   * grok why this behavior is correct.
    */
   @Test
   public void testIsSameTypeIntersectionTypeDifferentOrder() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
-        "class Bar<T extends java.lang.Runnable & java.lang.CharSequence> { }"
-    ));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+                "class Bar<T extends java.lang.Runnable & java.lang.CharSequence> { }"));
 
     IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
@@ -344,10 +338,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testIsNotSameTypeIntersectionTypeDifferentContents() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
-        "class Bar<T extends java.lang.CharSequence & java.io.Closeable> { }"
-    ));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T extends java.lang.CharSequence & java.lang.Runnable> { }",
+                "class Bar<T extends java.lang.CharSequence & java.io.Closeable> { }"));
 
     IntersectionType fooType = (IntersectionType) getTypeParameterUpperBound("Foo", 0);
     IntersectionType barType = (IntersectionType) getTypeParameterUpperBound("Bar", 0);
@@ -402,12 +397,14 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testErasureOfInnerType() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo<T> {",
-        "  static Foo<String>.Inner<Integer> field;",
-        "  class Inner<U> {",
-        "  }",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "class Foo<T> {",
+                "  static Foo<String>.Inner<Integer> field;",
+                "  class Inner<U> {",
+                "  }",
+                "}"));
 
     TypeElement fooElement = elements.getTypeElement("Foo");
     TypeElement innerElement = elements.getTypeElement("Foo.Inner");

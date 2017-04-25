@@ -24,7 +24,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 
 public class KotlinLibraryBuilder
@@ -33,14 +32,8 @@ public class KotlinLibraryBuilder
   private final ProjectFilesystem projectFilesystem;
 
   protected KotlinLibraryBuilder(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
-    super(
-        new KotlinLibraryDescription(null),
-        target,
-        projectFilesystem,
-        hashCode);
+      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
+    super(new KotlinLibraryDescription(null), target, projectFilesystem, hashCode);
     this.projectFilesystem = projectFilesystem;
   }
 
@@ -56,5 +49,4 @@ public class KotlinLibraryBuilder
   public KotlinLibraryBuilder addSrc(Path path) {
     return addSrc(new PathSourcePath(projectFilesystem, path));
   }
-
 }

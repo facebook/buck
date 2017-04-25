@@ -30,28 +30,23 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.easymock.EasyMockSupport;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.easymock.EasyMockSupport;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ExternalJavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
   public static final ImmutableSortedSet<Path> SOURCE_PATHS =
       ImmutableSortedSet.of(Paths.get("foobar.java"));
 
-  @Rule
-  public TemporaryPaths root = new TemporaryPaths();
+  @Rule public TemporaryPaths root = new TemporaryPaths();
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
-
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
   public void testJavacCommand() {
@@ -59,18 +54,18 @@ public class ExternalJavacTest extends EasyMockSupport {
     ExternalJavac warn = createTestStep();
     ExternalJavac transitive = createTestStep();
 
-    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+    assertEquals(
+        "fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(
-            getArgs().add("foo.jar").build(),
-            SOURCE_PATHS,
-            PATH_TO_SRCS_LIST));
-    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
-        warn.getDescription(
-            getArgs().add("foo.jar").build(),
-            SOURCE_PATHS,
-            PATH_TO_SRCS_LIST));
-    assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar" + File.pathSeparator +
-        "foo.jar @" + PATH_TO_SRCS_LIST,
+            getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
+    assertEquals(
+        "fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+        warn.getDescription(getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
+    assertEquals(
+        "fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar"
+            + File.pathSeparator
+            + "foo.jar @"
+            + PATH_TO_SRCS_LIST,
         transitive.getDescription(
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
             SOURCE_PATHS,
@@ -82,18 +77,20 @@ public class ExternalJavacTest extends EasyMockSupport {
       throws IOException {
     Path javac = Files.createTempFile("fake", "javac");
     javac.toFile().deleteOnExit();
-    ProcessExecutorParams javacExe = ProcessExecutorParams.builder().addCommand(
-        javac.toAbsolutePath().toString(),
-        "-version").build();
+    ProcessExecutorParams javacExe =
+        ProcessExecutorParams.builder()
+            .addCommand(javac.toAbsolutePath().toString(), "-version")
+            .build();
     FakeProcess javacProc = new FakeProcess(0, "", "");
-    final FakeProcessExecutor executor = new FakeProcessExecutor(
-        ImmutableMap.of(javacExe, javacProc));
-    ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
-      @Override
-      ProcessExecutor createProcessExecutor() {
-        return executor;
-      }
-    };
+    final FakeProcessExecutor executor =
+        new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
+    ExternalJavac compiler =
+        new ExternalJavac(Either.ofLeft(javac)) {
+          @Override
+          ProcessExecutor createProcessExecutor() {
+            return executor;
+          }
+        };
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     expect(sink.setReflectively("javac", javac.toString())).andReturn(sink);
@@ -102,40 +99,36 @@ public class ExternalJavacTest extends EasyMockSupport {
   }
 
   @Test
-  public void externalJavacWillHashTheJavacVersionIfPresent()
-      throws IOException {
+  public void externalJavacWillHashTheJavacVersionIfPresent() throws IOException {
     Path javac = Files.createTempFile("fake", "javac");
     javac.toFile().deleteOnExit();
     String reportedJavacVersion = "mozzarella";
 
     JavacVersion javacVersion = JavacVersion.of(reportedJavacVersion);
-    ProcessExecutorParams javacExe = ProcessExecutorParams.builder().addCommand(
-        javac.toAbsolutePath().toString(),
-        "-version").build();
+    ProcessExecutorParams javacExe =
+        ProcessExecutorParams.builder()
+            .addCommand(javac.toAbsolutePath().toString(), "-version")
+            .build();
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
-    final FakeProcessExecutor executor = new FakeProcessExecutor(
-        ImmutableMap.of(javacExe, javacProc));
-    ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
-      @Override
-      ProcessExecutor createProcessExecutor() {
-        return executor;
-      }
-    };
+    final FakeProcessExecutor executor =
+        new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
+    ExternalJavac compiler =
+        new ExternalJavac(Either.ofLeft(javac)) {
+          @Override
+          ProcessExecutor createProcessExecutor() {
+            return executor;
+          }
+        };
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     expect(sink.setReflectively("javac.version", javacVersion.toString())).andReturn(sink);
     replay(sink);
     compiler.appendToRuleKey(sink);
-
   }
 
   private ImmutableList.Builder<String> getArgs() {
-    return ImmutableList.<String>builder().add(
-          "-source", "6",
-          "-target", "6",
-          "-g",
-          "-d", ".",
-          "-classpath");
+    return ImmutableList.<String>builder()
+        .add("-source", "6", "-target", "6", "-g", "-d", ".", "-classpath");
   }
 
   private ExternalJavac createTestStep() {

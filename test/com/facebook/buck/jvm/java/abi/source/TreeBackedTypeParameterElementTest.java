@@ -21,19 +21,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor8;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameterizedTest {
@@ -79,18 +76,21 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     TypeParameterElement expectedTypeParameter =
         elements.getTypeElement("Foo").getTypeParameters().get(0);
     Object expectedResult = new Object();
-    Object actualResult = expectedTypeParameter.accept(new SimpleElementVisitor8<Object, Object>() {
-      @Override
-      protected Object defaultAction(Element e, Object o) {
-        return null;
-      }
+    Object actualResult =
+        expectedTypeParameter.accept(
+            new SimpleElementVisitor8<Object, Object>() {
+              @Override
+              protected Object defaultAction(Element e, Object o) {
+                return null;
+              }
 
-      @Override
-      public Object visitTypeParameter(TypeParameterElement actualTypeParameter, Object o) {
-        assertSame(expectedTypeParameter, actualTypeParameter);
-        return o;
-      }
-    }, expectedResult);
+              @Override
+              public Object visitTypeParameter(TypeParameterElement actualTypeParameter, Object o) {
+                assertSame(expectedTypeParameter, actualTypeParameter);
+                return o;
+              }
+            },
+            expectedResult);
 
     assertSame(expectedResult, actualResult);
   }

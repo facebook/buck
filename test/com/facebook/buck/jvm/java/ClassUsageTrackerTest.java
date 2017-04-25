@@ -26,31 +26,28 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ClassUsageTrackerTest {
 
   private static final FileSystem WINDOWS_FILE_SYSTEM =
       Jimfs.newFileSystem(Configuration.windows());
-  private static final FileSystem UNIX_FILE_SYSTEM =
-      Jimfs.newFileSystem(Configuration.unix());
+  private static final FileSystem UNIX_FILE_SYSTEM = Jimfs.newFileSystem(Configuration.unix());
 
   private static final String WINDOWS_FILE_NAME = "Windows";
 
   private static final String[] FILE_NAMES = {
-      "A", "B", "C", "D", "E", "F", "NonJava", "OTHER", "SOURCE", "HTML" };
+    "A", "B", "C", "D", "E", "F", "NonJava", "OTHER", "SOURCE", "HTML"
+  };
   private static final String SINGLE_FILE_NAME = "C";
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
   private static final File SINGLE_FILE = new File("C");
@@ -67,10 +64,7 @@ public class ClassUsageTrackerTest {
     fakeFileManager = new FakeStandardJavaFileManager();
     fileManager = tracker.wrapFileManager(fakeFileManager);
 
-    fakeFileManager.addFile(
-        WINDOWS_JAR_PATH,
-        WINDOWS_FILE_NAME,
-        JavaFileObject.Kind.CLASS);
+    fakeFileManager.addFile(WINDOWS_JAR_PATH, WINDOWS_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     for (String fileName : FILE_NAMES) {
       fakeFileManager.addFile(TEST_JAR_PATH, fileName, JavaFileObject.Kind.CLASS);
@@ -79,10 +73,8 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void testWindowsPathsDontBlowUp() throws IOException {
-    final JavaFileObject javaFileObject = fileManager.getJavaFileForInput(
-        null,
-        WINDOWS_FILE_NAME,
-        JavaFileObject.Kind.CLASS);
+    final JavaFileObject javaFileObject =
+        fileManager.getJavaFileForInput(null, WINDOWS_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
     assertFilesRead(WINDOWS_JAR_PATH, WINDOWS_FILE_NAME);
@@ -117,8 +109,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingJavaFileFromGetFileForInputShouldBeTracked() throws IOException {
-    final FileObject fileObject =
-        fileManager.getFileForInput(null, null, SINGLE_FILE_NAME);
+    final FileObject fileObject = fileManager.getFileForInput(null, null, SINGLE_FILE_NAME);
 
     fileObject.openInputStream();
     assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
@@ -126,8 +117,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingJavaFileFromGetFileForOutputShouldBeTracked() throws IOException {
-    final FileObject fileObject =
-        fileManager.getFileForOutput(null, null, SINGLE_FILE_NAME, null);
+    final FileObject fileObject = fileManager.getFileForOutput(null, null, SINGLE_FILE_NAME, null);
 
     fileObject.openInputStream();
     assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
@@ -165,11 +155,8 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingAnnotationProcessorFilesFromListShouldNotBeTracked() throws IOException {
-    Iterable<JavaFileObject> listIterator = fileManager.list(
-        ANNOTATION_PROCESSOR_PATH,
-        null,
-        null,
-        false);
+    Iterable<JavaFileObject> listIterator =
+        fileManager.list(ANNOTATION_PROCESSOR_PATH, null, null, false);
     for (JavaFileObject javaFileObject : listIterator) {
       javaFileObject.openInputStream();
     }
@@ -182,10 +169,7 @@ public class ClassUsageTrackerTest {
       throws IOException {
     final JavaFileObject javaFileObject =
         fileManager.getJavaFileForOutput(
-            ANNOTATION_PROCESSOR_PATH,
-            SINGLE_FILE_NAME,
-            JavaFileObject.Kind.CLASS,
-            null);
+            ANNOTATION_PROCESSOR_PATH, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null);
 
     javaFileObject.openInputStream();
     assertNoFilesRead();
@@ -196,9 +180,7 @@ public class ClassUsageTrackerTest {
       throws IOException {
     final JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(
-            ANNOTATION_PROCESSOR_PATH,
-            SINGLE_FILE_NAME,
-            JavaFileObject.Kind.CLASS);
+            ANNOTATION_PROCESSOR_PATH, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
     assertNoFilesRead();
@@ -239,10 +221,7 @@ public class ClassUsageTrackerTest {
       throws IOException {
     final FileObject fileObject =
         fileManager.getFileForOutput(
-            ANNOTATION_PROCESSOR_PATH,
-            null,
-            SINGLE_NON_JAVA_FILE_NAME,
-            null);
+            ANNOTATION_PROCESSOR_PATH, null, SINGLE_NON_JAVA_FILE_NAME, null);
 
     fileObject.openInputStream();
     assertNoFilesRead();
@@ -332,10 +311,9 @@ public class ClassUsageTrackerTest {
     String anonymousClassName = "Foo$3.class";
     fakeFileManager.addFile(TEST_JAR_PATH, anonymousClassName, JavaFileObject.Kind.CLASS);
 
-    fileManager.getJavaFileForInput(
-        null,
-        anonymousClassName,
-        JavaFileObject.Kind.CLASS).getCharContent(false);
+    fileManager
+        .getJavaFileForInput(null, anonymousClassName, JavaFileObject.Kind.CLASS)
+        .getCharContent(false);
 
     assertNoFilesRead();
   }
@@ -345,10 +323,9 @@ public class ClassUsageTrackerTest {
     String localClassName = "Foo$3SomeLocalCLass.class";
     fakeFileManager.addFile(TEST_JAR_PATH, localClassName, JavaFileObject.Kind.CLASS);
 
-    fileManager.getJavaFileForInput(
-        null,
-        localClassName,
-        JavaFileObject.Kind.CLASS).getCharContent(false);
+    fileManager
+        .getJavaFileForInput(null, localClassName, JavaFileObject.Kind.CLASS)
+        .getCharContent(false);
 
     assertNoFilesRead();
   }
@@ -384,6 +361,4 @@ public class ClassUsageTrackerTest {
   private void assertNoFilesRead() {
     assertEquals(0, tracker.getClassUsageMap().size());
   }
-
-
 }

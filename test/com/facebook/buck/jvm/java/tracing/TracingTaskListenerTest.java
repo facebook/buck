@@ -20,13 +20,11 @@ import static org.easymock.EasyMock.createMock;
 
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
-
+import javax.tools.JavaFileObject;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.tools.JavaFileObject;
 
 public class TracingTaskListenerTest {
   private IMocksControl mockControl;
@@ -49,12 +47,9 @@ public class TracingTaskListenerTest {
    */
   @Test
   public void testTracesAfterChainingOnStart() {
-    TaskEventMirror enterEvent = new TaskEventMirror(
-        null,
-        TaskEventMirror.Kind.ENTER,
-        createMock(JavaFileObject.class),
-        null,
-        null);
+    TaskEventMirror enterEvent =
+        new TaskEventMirror(
+            null, TaskEventMirror.Kind.ENTER, createMock(JavaFileObject.class), null, null);
     mockControl.checkOrder(true);
     mockNextListener.started(enterEvent);
     mockTracer.beginEnter();
@@ -70,12 +65,9 @@ public class TracingTaskListenerTest {
    */
   @Test
   public void testTracesBeforeChainingOnFinish() {
-    TaskEventMirror parseEvent = new TaskEventMirror(
-        null,
-        TaskEventMirror.Kind.PARSE,
-        createMock(JavaFileObject.class),
-        null,
-        null);
+    TaskEventMirror parseEvent =
+        new TaskEventMirror(
+            null, TaskEventMirror.Kind.PARSE, createMock(JavaFileObject.class), null, null);
 
     mockControl.checkOrder(true);
     mockTracer.endParse();

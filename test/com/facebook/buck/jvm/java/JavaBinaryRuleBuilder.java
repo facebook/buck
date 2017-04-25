@@ -25,7 +25,6 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class JavaBinaryRuleBuilder
@@ -56,4 +55,3 @@ public class JavaBinaryRuleBuilder
     return this;
   }
 }
-

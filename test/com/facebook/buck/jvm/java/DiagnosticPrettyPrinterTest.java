@@ -19,17 +19,15 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Locale;
-
 import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
+import org.junit.Test;
 
 public class DiagnosticPrettyPrinterTest {
 
@@ -37,8 +35,9 @@ public class DiagnosticPrettyPrinterTest {
   public void ifThereAreNoLineNumbersOnlyTheFormattedMessageIsReturned() throws Exception {
     String message = "Something has gone wrong.";
 
-    String formatted = DiagnosticPrettyPrinter.format(
-        createDiagnostic(message, "Example.java", "package foo", -1, -1));
+    String formatted =
+        DiagnosticPrettyPrinter.format(
+            createDiagnostic(message, "Example.java", "package foo", -1, -1));
 
     // Paths should be absolute.
     assertEquals(
@@ -51,8 +50,9 @@ public class DiagnosticPrettyPrinterTest {
     String summary = "Something has gone wrong";
     String remainder = "Very, very wrong";
 
-    String formatted = DiagnosticPrettyPrinter.format(
-        createDiagnostic(summary + "\n" + remainder, "Example.java", "package foo", -1, -1));
+    String formatted =
+        DiagnosticPrettyPrinter.format(
+            createDiagnostic(summary + "\n" + remainder, "Example.java", "package foo", -1, -1));
 
     assertTrue(formatted, formatted.contains(summary));
     assertTrue(formatted, formatted.contains(remainder));
@@ -62,8 +62,8 @@ public class DiagnosticPrettyPrinterTest {
   public void ifThereAreLineNumbersErrorContextIsDisplayed() throws Exception {
     String code = "some line of\ncode with an\nerror";
     //                           123
-    String formatted = DiagnosticPrettyPrinter.format(
-        createDiagnostic("EOL", "Example.java", code, 2, 3));
+    String formatted =
+        DiagnosticPrettyPrinter.format(createDiagnostic("EOL", "Example.java", code, 2, 3));
 
     assertTrue(formatted, formatted.contains("code with an\n  ^"));
   }
@@ -73,18 +73,20 @@ public class DiagnosticPrettyPrinterTest {
       throws Exception {
     String code = "some line of\ncode with an\nerror";
     //                           123
-    String formatted = DiagnosticPrettyPrinter.format(createDiagnostic(
-            "Oh noes!\nAll your build\nAre Belong to Fail", "Example.java", code, 2, 3));
+    String formatted =
+        DiagnosticPrettyPrinter.format(
+            createDiagnostic(
+                "Oh noes!\nAll your build\nAre Belong to Fail", "Example.java", code, 2, 3));
 
     // The path is actually prefixed with the cwd. This is close enough to the full report to do.
     assertTrue(
         formatted,
         formatted.contains(
-            "Example.java:2: error: Oh noes!\n" +
-            "code with an\n" +
-            "  ^\n" +
-            "All your build\n" +
-            "Are Belong to Fail"));
+            "Example.java:2: error: Oh noes!\n"
+                + "code with an\n"
+                + "  ^\n"
+                + "All your build\n"
+                + "Are Belong to Fail"));
   }
 
   /**
@@ -99,7 +101,8 @@ public class DiagnosticPrettyPrinterTest {
       String pathToSource,
       String sourceContents,
       final long row,
-      final long column) throws Exception {
+      final long column)
+      throws Exception {
     final JavaFileObject fileObject = new StringJavaFileObject(pathToSource, sourceContents);
 
     // Calculate the position, because we're all bad at counting things

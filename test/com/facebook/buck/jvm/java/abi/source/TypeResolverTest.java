@@ -20,31 +20,28 @@ import static org.junit.Assert.assertNotSame;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TypeResolverTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testParameterizedTypeResolves() throws IOException {
-    compile(Joiner.on('\n').join(
-        "abstract class Foo extends java.util.ArrayList<java.lang.String> { }",
-        "abstract class Bar extends java.util.ArrayList<java.lang.String> { }"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "abstract class Foo extends java.util.ArrayList<java.lang.String> { }",
+                "abstract class Bar extends java.util.ArrayList<java.lang.String> { }"));
 
     TypeElement listElement = elements.getTypeElement("java.util.ArrayList");
     TypeElement stringElement = elements.getTypeElement("java.lang.String");
-    DeclaredType expectedSuperclass = types.getDeclaredType(
-        listElement,
-        stringElement.asType());
+    DeclaredType expectedSuperclass = types.getDeclaredType(listElement, stringElement.asType());
 
     TypeElement fooElement = elements.getTypeElement("Foo");
     TypeElement barElement = elements.getTypeElement("Bar");
@@ -58,11 +55,13 @@ public class TypeResolverTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testDeeplyParameterizedTypeResolves() throws IOException {
-    compile(Joiner.on('\n').join(
-        "abstract class Foo",
-        "    extends java.util.HashMap<",
-        "        java.util.ArrayList<java.lang.String>, ",
-        "        java.util.HashSet<java.lang.Integer>> { }"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "abstract class Foo",
+                "    extends java.util.HashMap<",
+                "        java.util.ArrayList<java.lang.String>, ",
+                "        java.util.HashSet<java.lang.Integer>> { }"));
 
     TypeElement mapElement = elements.getTypeElement("java.util.HashMap");
     TypeElement listElement = elements.getTypeElement("java.util.ArrayList");

@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 
 public class JavacPhaseEventTest {
@@ -34,16 +33,10 @@ public class JavacPhaseEventTest {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.ENTER;
 
-    JavacPhaseEvent startedEventOne = configureTestEvent(
-        JavacPhaseEvent.started(
-            target,
-            phase,
-            ImmutableMap.of()));
-    JavacPhaseEvent startedEventTwo = configureTestEvent(
-        JavacPhaseEvent.started(
-            target,
-            phase,
-            ImmutableMap.of()));
+    JavacPhaseEvent startedEventOne =
+        configureTestEvent(JavacPhaseEvent.started(target, phase, ImmutableMap.of()));
+    JavacPhaseEvent startedEventTwo =
+        configureTestEvent(JavacPhaseEvent.started(target, phase, ImmutableMap.of()));
 
     assertEquals(startedEventOne, startedEventOne);
     assertNotEquals(startedEventOne, startedEventTwo);
@@ -54,20 +47,12 @@ public class JavacPhaseEventTest {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.ANALYZE;
 
-    JavacPhaseEvent.Started startedEventOne = configureTestEvent(
-        JavacPhaseEvent.started(
-            target,
-            phase,
-            ImmutableMap.of()));
-    JavacPhaseEvent.Started startedEventTwo = configureTestEvent(
-        JavacPhaseEvent.started(
-            target,
-            phase,
-            ImmutableMap.of()));
-    JavacPhaseEvent finishedEventOne = configureTestEvent(
-        JavacPhaseEvent.finished(
-            startedEventOne,
-            ImmutableMap.of()));
+    JavacPhaseEvent.Started startedEventOne =
+        configureTestEvent(JavacPhaseEvent.started(target, phase, ImmutableMap.of()));
+    JavacPhaseEvent.Started startedEventTwo =
+        configureTestEvent(JavacPhaseEvent.started(target, phase, ImmutableMap.of()));
+    JavacPhaseEvent finishedEventOne =
+        configureTestEvent(JavacPhaseEvent.finished(startedEventOne, ImmutableMap.of()));
 
     assertTrue(startedEventOne.isRelatedTo(finishedEventOne));
     assertTrue(finishedEventOne.isRelatedTo(startedEventOne));

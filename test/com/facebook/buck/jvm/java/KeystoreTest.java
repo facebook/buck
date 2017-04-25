@@ -30,18 +30,15 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.util.List;
+import org.junit.Test;
 
 public class KeystoreTest {
 
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    return KeystoreBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//keystores:debug"))
+    return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(new FakeSourcePath("keystores/debug.keystore"))
         .setProperties(new FakeSourcePath("keystores/debug.keystore.properties"))
         .build(ruleResolver);
@@ -53,7 +50,8 @@ public class KeystoreTest {
     assertEquals("keystore", keystore.getType());
 
     assertEquals(new FakeSourcePath("keystores/debug.keystore"), keystore.getPathToStore());
-    assertEquals(new FakeSourcePath("keystores/debug.keystore.properties"),
+    assertEquals(
+        new FakeSourcePath("keystores/debug.keystore.properties"),
         keystore.getPathToPropertiesFile());
   }
 
@@ -62,8 +60,7 @@ public class KeystoreTest {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
     BuildRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.getBuildSteps(buildContext,
-        new FakeBuildableContext());
+    List<Step> buildSteps = keystore.getBuildSteps(buildContext, new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
   }
 }

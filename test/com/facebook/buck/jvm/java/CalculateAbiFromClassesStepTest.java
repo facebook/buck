@@ -25,18 +25,15 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CalculateAbiFromClassesStepTest {
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void shouldCalculateAbiFromAStubJar() throws IOException {

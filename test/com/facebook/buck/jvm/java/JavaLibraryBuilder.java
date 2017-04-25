@@ -30,23 +30,19 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class JavaLibraryBuilder extends
-    AbstractNodeBuilder<JavaLibraryDescription.Arg, JavaLibraryDescription, DefaultJavaLibrary> {
+public class JavaLibraryBuilder
+    extends AbstractNodeBuilder<
+        JavaLibraryDescription.Arg, JavaLibraryDescription, DefaultJavaLibrary> {
 
   private final ProjectFilesystem projectFilesystem;
 
   protected JavaLibraryBuilder(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
+      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new JavaLibraryDescription(
-            DEFAULT_JAVA_CONFIG,
-            DEFAULT_JAVAC_OPTIONS),
+        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG, DEFAULT_JAVAC_OPTIONS),
         target,
         projectFilesystem,
         hashCode);
@@ -59,9 +55,7 @@ public class JavaLibraryBuilder extends
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(
-            javaBuckConfig,
-            DEFAULT_JAVAC_OPTIONS),
+        new JavaLibraryDescription(javaBuckConfig, DEFAULT_JAVAC_OPTIONS),
         target,
         projectFilesystem,
         hashCode);
@@ -77,21 +71,17 @@ public class JavaLibraryBuilder extends
   }
 
   public static JavaLibraryBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig) {
     return new JavaLibraryBuilder(target, javaBuckConfig, new FakeProjectFilesystem(), null);
   }
 
   public static JavaLibraryBuilder createBuilder(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem) {
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
     return new JavaLibraryBuilder(target, projectFilesystem, null);
   }
 
   public static JavaLibraryBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig,
-      ProjectFilesystem projectFilesystem) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig, ProjectFilesystem projectFilesystem) {
     return new JavaLibraryBuilder(target, javaBuckConfig, projectFilesystem, null);
   }
 

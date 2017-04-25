@@ -20,22 +20,17 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.io.IOException;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandalonePackageTypeTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testToString() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "class Foo { }"));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "class Foo { }"));
 
     assertEquals(
-        "com.facebook.foo",
-        elements.getPackageElement("com.facebook.foo").asType().toString());
+        "com.facebook.foo", elements.getPackageElement("com.facebook.foo").asType().toString());
   }
 }

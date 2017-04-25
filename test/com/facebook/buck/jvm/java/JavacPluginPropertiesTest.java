@@ -18,14 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -47,12 +46,13 @@ public class JavacPluginPropertiesTest {
                 pathResolver,
                 ImmutableSortedSet.of(dep)));
 
-    JavacPluginProperties props = JavacPluginProperties.builder()
-        .setCanReuseClassLoader(false)
-        .setDoesNotAffectAbi(false)
-        .setSupportsAbiGenerationFromSource(false)
-        .addDep(processor)
-        .build();
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(false)
+            .setDoesNotAffectAbi(false)
+            .setSupportsAbiGenerationFromSource(false)
+            .addDep(processor)
+            .build();
 
     assertThat(
         ruleFinder.filterBuildRuleInputs(props.getInputs()),

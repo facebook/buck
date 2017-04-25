@@ -22,7 +22,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-
 import java.io.IOException;
 
 public abstract class KotlinTestAssumptions {

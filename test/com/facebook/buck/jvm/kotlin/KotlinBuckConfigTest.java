@@ -28,20 +28,17 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class KotlinBuckConfigTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -49,8 +46,7 @@ public class KotlinBuckConfigTest {
   public void setUp() throws InterruptedException, IOException {
     KotlinTestAssumptions.assumeUnixLike();
 
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "kotlin_compiler_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_compiler_test", tmp);
     workspace.setUp();
   }
 
@@ -61,12 +57,12 @@ public class KotlinBuckConfigTest {
     Path kotlinCompiler = kotlinPath.resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-      .setEnvironment(
-        ImmutableMap.of("PATH",
-            kotlinPath.toString() + pathSeparator +
-            System.getenv("PATH")))
-      .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.of(
+                    "PATH", kotlinPath.toString() + pathSeparator + System.getenv("PATH")))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
@@ -79,10 +75,11 @@ public class KotlinBuckConfigTest {
     Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setEnvironment(
-          ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
@@ -96,11 +93,11 @@ public class KotlinBuckConfigTest {
     Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "kotlin",
-            ImmutableMap.of("compiler", kotlinCompiler.toString())))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("kotlin", ImmutableMap.of("compiler", kotlinCompiler.toString())))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
@@ -115,10 +112,11 @@ public class KotlinBuckConfigTest {
     MoreFiles.makeExecutable(kotlinCompiler);
 
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("compiler", "bin/kotlinc")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("compiler", "bin/kotlinc")))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
@@ -132,17 +130,18 @@ public class KotlinBuckConfigTest {
     Path kotlinCompiler = kotlinPath.resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-      .setEnvironment(
-        ImmutableMap.of("PATH",
-            kotlinPath.toString() + pathSeparator +
-            System.getenv("PATH")))
-      .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.of(
+                    "PATH", kotlinPath.toString() + pathSeparator + System.getenv("PATH")))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
-    Assert.assertThat(runtimeJar.toString(),
-                      Matchers.containsString(workspace.getPath(".").normalize().toString()));
+    Assert.assertThat(
+        runtimeJar.toString(),
+        Matchers.containsString(workspace.getPath(".").normalize().toString()));
   }
 
   @Test
@@ -151,13 +150,13 @@ public class KotlinBuckConfigTest {
 
     Path kotlinRuntime = workspace.resolve("lib").resolve("kotlin-runtime.jar");
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "kotlin",
-            ImmutableMap.of("runtime_jar", kotlinRuntime.toString())))
-        .setEnvironment(
-            ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("kotlin", ImmutableMap.of("runtime_jar", kotlinRuntime.toString())))
+            .setEnvironment(
+                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
@@ -169,14 +168,14 @@ public class KotlinBuckConfigTest {
       throws HumanReadableException, IOException {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setSections(ImmutableMap.of(
-            "kotlin",
-            ImmutableMap.of("runtime_jar", "lib/kotlin-runtime.jar")))
-        .setEnvironment(
-            ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections(
+                ImmutableMap.of("kotlin", ImmutableMap.of("runtime_jar", "lib/kotlin-runtime.jar")))
+            .setEnvironment(
+                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
+            .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     PathSourcePath runtimeJar = (PathSourcePath) kotlinBuckConfig.getPathToRuntimeJar().getLeft();

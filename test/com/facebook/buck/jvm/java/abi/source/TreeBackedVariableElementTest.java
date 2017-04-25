@@ -20,22 +20,18 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
+import javax.lang.model.element.VariableElement;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.io.IOException;
-
-import javax.lang.model.element.VariableElement;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testGetConstantValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "public class Foo {",
-        "  public static final int CONSTANT = 42;",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join("public class Foo {", "  public static final int CONSTANT = 42;", "}"));
 
     VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
 
@@ -44,16 +40,17 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
 
   @Test
   public void testGetConstantValueComplexValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "public class Foo {",
-        "  private static final int A = 40;",
-        "  private static final int B = 2;",
-        "  public static final int CONSTANT = A + B;",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "public class Foo {",
+                "  private static final int A = 40;",
+                "  private static final int B = 2;",
+                "  public static final int CONSTANT = A + B;",
+                "}"));
 
     VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
 
     assertEquals(42, variable.getConstantValue());
   }
 }
-

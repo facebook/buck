@@ -26,18 +26,15 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePath;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApiTest {
@@ -47,52 +44,39 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  String s;",
-        "}");
+    findTypeReferences("class Foo {", "  String s;", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 2, 3)));
   }
 
   @Test
   public void testFindsTypeReferencesInNestedTypes() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  class Bar {",
-        "    String s;",
-        "  }",
-        "}");
+    findTypeReferences("class Foo {", "  class Bar {", "    String s;", "  }", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 3, 5)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 3, 5)));
   }
 
   @Test
   public void testIgnoresPrivateNestedTypes() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  private class Bar {",
-        "    String s;",
-        "  }",
-        "}");
+    findTypeReferences("class Foo {", "  private class Bar {", "    String s;", "  }", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
 
   @Test
   public void testFindsTypeArgTypeReference() throws IOException {
-    findTypeReferences(
-        "import java.util.Map;",
-        "class Foo {",
-        "  Map<String, Integer> s;",
-        "}");
+    findTypeReferences("import java.util.Map;", "class Foo {", "  Map<String, Integer> s;", "}");
 
-    assertThat(typeReferences, Matchers.contains(
-        createSymbolicReference("java.util.Map", 3, 3),
-        createSymbolicReference("java.lang.String", 3, 7),
-        createSymbolicReference("java.lang.Integer", 3, 15)));
+    assertThat(
+        typeReferences,
+        Matchers.contains(
+            createSymbolicReference("java.util.Map", 3, 3),
+            createSymbolicReference("java.lang.String", 3, 7),
+            createSymbolicReference("java.lang.Integer", 3, 15)));
   }
 
   @Test
@@ -103,61 +87,57 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  Map<? extends CharSequence, ? super Integer> s;",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.util.Map", 3, 3),
-        createSymbolicReference("java.lang.CharSequence", 3, 17),
-        createSymbolicReference("java.lang.Integer", 3, 39)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.util.Map", 3, 3),
+            createSymbolicReference("java.lang.CharSequence", 3, 17),
+            createSymbolicReference("java.lang.Integer", 3, 39)));
   }
 
   @Test
   public void testFindsArrayElementTypeReference() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  String[][] s;",
-        "}");
+    findTypeReferences("class Foo {", "  String[][] s;", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 2, 3)));
   }
 
   @Test
   public void testFindsFullyQualifiedTypeReference() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  java.lang.String s;",
-        "}");
+    findTypeReferences("class Foo {", "  java.lang.String s;", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 2, 3)));
   }
 
   @Test
   public void testFindsTypeParameterBoundTypeReferences() throws IOException {
     findTypeReferences("class Foo<T extends Runnable & CharSequence> { }");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.Runnable", 1, 21),
-        createSymbolicReference("java.lang.CharSequence", 1, 32)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Runnable", 1, 21),
+            createSymbolicReference("java.lang.CharSequence", 1, 32)));
   }
 
   @Test
   public void testIgnoresTypeVariableTypeReferences() throws IOException {
-    findTypeReferences(
-        "class Foo<T extends Runnable & CharSequence> {",
-        "  T t;",
-        "}");
+    findTypeReferences("class Foo<T extends Runnable & CharSequence> {", "  T t;", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.Runnable", 1, 21),
-        createSymbolicReference("java.lang.CharSequence", 1, 32)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Runnable", 1, 21),
+            createSymbolicReference("java.lang.CharSequence", 1, 32)));
   }
 
   @Test
   public void testIgnoresPrimitiveTypeReferences() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  int i;",
-        "}");
+    findTypeReferences("class Foo {", "  int i;", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
@@ -171,89 +151,81 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
 
   @Test
   public void testIgnoresVoidTypeReferences() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  void method() {  };",
-        "}");
+    findTypeReferences("class Foo {", "  void method() {  };", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
 
   @Test
   public void testFindsReturnTypeReference() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  String method() { return null; }",
-        "}");
+    findTypeReferences("class Foo {", "  String method() { return null; }", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 2, 3)));
   }
 
   @Test
   public void testFindsMethodParameterTypeReferences() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  void method(String s, Integer i) { }",
-        "}");
+    findTypeReferences("class Foo {", "  void method(String s, Integer i) { }", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 15),
-        createSymbolicReference("java.lang.Integer", 2, 25)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.String", 2, 15),
+            createSymbolicReference("java.lang.Integer", 2, 25)));
   }
 
   @Test
   public void testFindsMethodTypeParameterTypeReferences() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  <T extends CharSequence> void method() { }",
-        "}");
+    findTypeReferences("class Foo {", "  <T extends CharSequence> void method() { }", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.CharSequence", 2, 14)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.CharSequence", 2, 14)));
   }
 
   @Test
   public void testFindsSuperclassTypeReferences() throws IOException {
     findTypeReferences("abstract class Foo extends java.util.ArrayList { } ");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.util.ArrayList", 1, 28)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.util.ArrayList", 1, 28)));
   }
 
   @Test
   public void testFindsInterfaceTypeReferences() throws IOException {
     findTypeReferences("abstract class Foo implements Runnable, CharSequence { } ");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.Runnable", 1, 31),
-        createSymbolicReference("java.lang.CharSequence", 1, 41)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Runnable", 1, 31),
+            createSymbolicReference("java.lang.CharSequence", 1, 41)));
   }
 
   @Test
   public void testFindsAnnotationTypeReferencesOnMethods() throws IOException {
     findTypeReferences(
-        "class Foo implements Runnable {",
-        "  @Override",
-        "  public void run() { }",
-        "}");
+        "class Foo implements Runnable {", "  @Override", "  public void run() { }", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.Runnable", 1, 22),
-        createSymbolicReference("java.lang.Override", 2, 4)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Runnable", 1, 22),
+            createSymbolicReference("java.lang.Override", 2, 4)));
   }
 
   @Test
   public void testFindsAnnotationTypeReferencesOnFields() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  @SuppressWarnings(\"foo\")",
-        "  String s;",
-        "}");
+    findTypeReferences("class Foo {", "  @SuppressWarnings(\"foo\")", "  String s;", "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.SuppressWarnings", 2, 4),
-        createSymbolicReference("java.lang.String", 3, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.SuppressWarnings", 2, 4),
+            createSymbolicReference("java.lang.String", 3, 3)));
   }
 
   @Test
@@ -264,13 +236,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "@Target(ElementType.TYPE_PARAMETER)",
         "@interface Anno { }");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("Anno", 2, 12),
-        createSymbolicReference("java.lang.annotation.Target", 3, 2),
-        createSymbolicReference(
-            "java.lang.annotation.ElementType",
-            3,
-            9)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Anno", 2, 12),
+            createSymbolicReference("java.lang.annotation.Target", 3, 2),
+            createSymbolicReference("java.lang.annotation.ElementType", 3, 9)));
   }
 
   @Test
@@ -281,38 +252,28 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "@Target(ElementType.TYPE_USE)",
         "@interface Anno { }");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("Anno", 2, 32),
-        createSymbolicReference("java.lang.CharSequence", 2, 37),
-        createSymbolicReference("java.lang.annotation.Target", 3, 2),
-        createSymbolicReference(
-            "java.lang.annotation.ElementType",
-            3,
-            9)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Anno", 2, 32),
+            createSymbolicReference("java.lang.CharSequence", 2, 37),
+            createSymbolicReference("java.lang.annotation.Target", 3, 2),
+            createSymbolicReference("java.lang.annotation.ElementType", 3, 9)));
   }
 
   @Test
   public void testFindsAnnotationTypeReferencesOnClasses() throws IOException {
-    findTypeReferences(
-        "import java.lang.annotation.*;",
-        "@Documented",
-        "@interface Foo { }");
+    findTypeReferences("import java.lang.annotation.*;", "@Documented", "@interface Foo { }");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference(
-            "java.lang.annotation.Documented",
-            2,
-            2)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.annotation.Documented", 2, 2)));
   }
 
   @Test
   public void testIgnoresMethodBodies() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  void method() {",
-        "    String s;",
-        "  }",
-        "}");
+    findTypeReferences("class Foo {", "  void method() {", "    String s;", "  }", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
@@ -327,38 +288,28 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  };",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.Runnable", 2, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.Runnable", 2, 3)));
   }
 
   @Test
   public void testIgnoresPrivateMethods() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  private String method() { return null; }",
-        "}");
+    findTypeReferences("class Foo {", "  private String method() { return null; }", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
 
   @Test
   public void testIgnoresPrivateFields() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  private String s;",
-        "}");
+    findTypeReferences("class Foo {", "  private String s;", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
 
   @Test
   public void testIgnoresPrivateTypes() throws IOException {
-    findTypeReferences(
-        "class Foo {",
-        "  private class Bar {",
-        "    public String s;",
-        "  }",
-        "}");
+    findTypeReferences("class Foo {", "  private class Bar {", "    public String s;", "  }", "}");
 
     assertThat(typeReferences, Matchers.empty());
   }
@@ -373,10 +324,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  public static final String CONSTANT = \"Hello\";",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 23),
-        createSymbolicReference("Constants", 2, 34),
-        createSymbolicReference("java.lang.String", 5, 23)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.String", 2, 23),
+            createSymbolicReference("Constants", 2, 34),
+            createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
@@ -387,9 +340,11 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  public static final String s = CONSTANT;",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 3, 23),
-        createSymbolicReference("java.lang.String", 2, 23)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.String", 3, 23),
+            createSymbolicReference("java.lang.String", 2, 23)));
   }
 
   @Test
@@ -402,9 +357,11 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  public static final String CONSTANT = \"Hello\";",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 16),
-        createSymbolicReference("java.lang.String", 5, 23)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.String", 2, 16),
+            createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
@@ -417,10 +374,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  public static final String CONSTANT = \"Hello\";",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.String", 2, 3),
-        createSymbolicReference("Constants", 2, 26),
-        createSymbolicReference("java.lang.String", 5, 23)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.String", 2, 3),
+            createSymbolicReference("Constants", 2, 26),
+            createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
@@ -433,10 +392,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "  public static final String CONSTANT = \"Hello\";",
         "}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("java.lang.SuppressWarnings", 1, 2),
-        createSymbolicReference("Constants", 1, 19),
-        createSymbolicReference("java.lang.String", 5, 23)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.SuppressWarnings", 1, 2),
+            createSymbolicReference("Constants", 1, 19),
+            createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
@@ -450,10 +411,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "}",
         "@interface Baz {}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("Bar", 1, 2),
-        createSymbolicReference("Baz", 1, 7),
-        createSymbolicReference("Baz", 5, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Bar", 1, 2),
+            createSymbolicReference("Baz", 1, 7),
+            createSymbolicReference("Baz", 5, 3)));
   }
 
   @Test
@@ -467,74 +430,74 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
         "}",
         "@interface Baz {}");
 
-    assertThat(typeReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("Bar", 1, 2),
-        createSymbolicReference("Baz", 1, 8),
-        createSymbolicReference("Baz", 1, 14),
-        createSymbolicReference("Baz", 5, 3)));
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Bar", 1, 2),
+            createSymbolicReference("Baz", 1, 8),
+            createSymbolicReference("Baz", 1, 14),
+            createSymbolicReference("Baz", 5, 3)));
   }
 
   @Test
   public void testFindsImportedTypes() throws IOException {
-    findTypeReferences(
-        "import java.util.List;",
-        "class Foo { }");
+    findTypeReferences("import java.util.List;", "class Foo { }");
 
-    assertThat(importedTypes, Matchers.containsInAnyOrder(
-        elements.getTypeElement("java.util.List")));
+    assertThat(
+        importedTypes, Matchers.containsInAnyOrder(elements.getTypeElement("java.util.List")));
   }
 
   @Test
   public void testIgnoresStaticImports() throws IOException {
-    findTypeReferences(
-        "import static java.util.Collections.*;",
-        "class Foo { }");
+    findTypeReferences("import static java.util.Collections.*;", "class Foo { }");
 
     assertThat(importedTypes, Matchers.empty());
   }
 
   @Test
   public void testDoesNotCrashOnSimpleNamedPackage() throws IOException {
-    findTypeReferencesErrorsOK(
-        "package example;",
-        "class Foo { }");
+    findTypeReferencesErrorsOK("package example;", "class Foo { }");
   }
 
   @Test
   public void testFindsSimpleNameConstants() throws IOException {
-    withClasspath(ImmutableMap.of(
-        "com/facebook/foo/Constants.java",
-        Joiner.on('\n').join(
-            "package com.facebook.foo;",
-            "class Constants {",
-            "  protected static final int CONSTANT = 3;",
-            "}")));
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/foo/Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "class Constants {",
+                    "  protected static final int CONSTANT = 3;",
+                    "}")));
     findTypeReferences(
         "package com.facebook.foo;",
         "class Foo extends Constants {",
         "  public static final int CONSTANT2 = CONSTANT;",
         "}");
 
-    assertThat(constantReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("3", 3, 39)));
+    assertThat(
+        constantReferences, Matchers.containsInAnyOrder(createSymbolicReference("3", 3, 39)));
   }
 
   @Test
   public void testFindsQualifiedNameConstants() throws IOException {
-    withClasspath(ImmutableMap.of(
-        "com/facebook/foo/Constants.java",
-        Joiner.on('\n').join(
-            "package com.facebook.foo;",
-            "public class Constants {",
-            "  public static final int CONSTANT = 3;",
-            "}")));
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/foo/Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "public class Constants {",
+                    "  public static final int CONSTANT = 3;",
+                    "}")));
     findTypeReferences(
         "class Foo {",
         "  public static final int CONSTANT2 = com.facebook.foo.Constants.CONSTANT;",
         "}");
 
-    assertThat(constantReferences, Matchers.containsInAnyOrder(
-        createSymbolicReference("3", 2, 39)));
+    assertThat(
+        constantReferences, Matchers.containsInAnyOrder(createSymbolicReference("3", 2, 39)));
   }
 
   @Test
@@ -586,12 +549,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
 
   private String createSymbolicReference(String referent, TreePath treePath) {
     try {
-      long position = trees.getSourcePositions().getStartPosition(
-          treePath.getCompilationUnit(),
-          treePath.getLeaf());
+      long position =
+          trees
+              .getSourcePositions()
+              .getStartPosition(treePath.getCompilationUnit(), treePath.getLeaf());
 
-      CharSequence content =
-          treePath.getCompilationUnit().getSourceFile().getCharContent(true);
+      CharSequence content = treePath.getCompilationUnit().getSourceFile().getCharContent(true);
 
       int line = 1;
       int column = 1;
@@ -619,19 +582,14 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
     }
 
     @Override
-    public void onTypeReferenceFound(
-        TypeElement type,
-        TreePath path,
-        Element enclosingElement) {
+    public void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement) {
       typeReferences.add(createSymbolicReference(type.getQualifiedName().toString(), path));
     }
 
     @Override
     public void onConstantReferenceFound(
         VariableElement constant, TreePath path, Element enclosingElement) {
-      constantReferences.add(createSymbolicReference(
-          constant.getConstantValue().toString(),
-          path));
+      constantReferences.add(createSymbolicReference(constant.getConstantValue().toString(), path));
     }
   }
 }

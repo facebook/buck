@@ -38,27 +38,23 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CalculateAbiFromClassesTest {
 
   @Test
   public void testIsAbiTargetRecognizesAbiTargets() {
     assertTrue(
-        HasJavaAbi.isClassAbiTarget(
-            BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
+        HasJavaAbi.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
   }
 
   @Test
   public void testIsAbiTargetRecognizesNonAbiTargets() {
     assertFalse(
-        HasJavaAbi.isClassAbiTarget(
-            BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
+        HasJavaAbi.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
   }
 
   @Test
@@ -79,15 +75,15 @@ public class CalculateAbiFromClassesTest {
     // Setup the initial java library.
     Path input = Paths.get("input.java");
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
-    JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
-        .addSrc(new PathSourcePath(filesystem, input));
+    JavaLibraryBuilder builder =
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(new PathSourcePath(filesystem, input));
     DefaultJavaLibrary javaLibrary = builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
     filesystem.writeContentsToPath(
-        "stuff",
-        pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateAbiFromClasses calculateAbi =
@@ -99,27 +95,18 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
-    DefaultRuleKeyFactory initialRuleKeyFactory = new DefaultRuleKeyFactory(
-        0,
-        initialHashCache,
-        pathResolver,
-        ruleFinder);
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+    DefaultRuleKeyFactory initialRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
     RuleKey initialInputKey =
-        new InputBasedRuleKeyFactory(
-            0,
-            initialHashCache,
-            pathResolver,
-            ruleFinder)
+        new InputBasedRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("new stuff", input);
     filesystem.writeContentsToPath(
-        "new stuff",
-        pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "new stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     // Re-setup some entities to drop internal rule key caching.
     resolver =
@@ -130,20 +117,12 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache alteredHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
-    DefaultRuleKeyFactory alteredRuleKeyFactory = new DefaultRuleKeyFactory(
-        0,
-        alteredHashCache,
-        pathResolver,
-        ruleFinder);
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+    DefaultRuleKeyFactory alteredRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
     RuleKey alteredInputKey =
-        new InputBasedRuleKeyFactory(
-            0,
-            alteredHashCache,
-            pathResolver,
-            ruleFinder)
+        new InputBasedRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
@@ -161,15 +140,15 @@ public class CalculateAbiFromClassesTest {
     // Setup the initial java library.
     Path input = Paths.get("input.java");
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
-    JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
-        .addSrc(new PathSourcePath(filesystem, input));
+    JavaLibraryBuilder builder =
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(new PathSourcePath(filesystem, input));
     DefaultJavaLibrary javaLibrary = builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
     filesystem.writeContentsToPath(
-        "stuff",
-        pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateAbiFromClasses calculateAbi =
@@ -181,20 +160,12 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
-    DefaultRuleKeyFactory initialRuleKeyFactory = new DefaultRuleKeyFactory(
-        0,
-        initialHashCache,
-        pathResolver,
-        ruleFinder);
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+    DefaultRuleKeyFactory initialRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
     RuleKey initialInputKey =
-        new InputBasedRuleKeyFactory(
-            0,
-            initialHashCache,
-            pathResolver,
-            ruleFinder)
+        new InputBasedRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -209,24 +180,15 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache alteredHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
-    DefaultRuleKeyFactory alteredRuleKeyFactory = new DefaultRuleKeyFactory(
-        0,
-        alteredHashCache,
-        pathResolver,
-        ruleFinder);
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+    DefaultRuleKeyFactory alteredRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
     RuleKey alteredInputKey =
-        new InputBasedRuleKeyFactory(
-            0,
-            alteredHashCache,
-            pathResolver,
-            ruleFinder)
+        new InputBasedRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
     assertThat(initialInputKey, Matchers.equalTo(alteredInputKey));
   }
-
 }

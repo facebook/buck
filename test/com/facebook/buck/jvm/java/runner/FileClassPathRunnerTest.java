@@ -21,11 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -36,11 +31,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class FileClassPathRunnerTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
   public void shouldNotTryAndReadFilesIfNoneAreFoundInUrlList() throws IOException {
@@ -52,9 +49,7 @@ public class FileClassPathRunnerTest {
 
   @Test
   public void shouldIdentifyFilesThatAreAnnotatedWithALeadingAtSign() throws IOException {
-    URL[] toLoad = {
-        new URL("file://foo/bar"),
-        new URL("file:/opt/@./cake")};
+    URL[] toLoad = {new URL("file://foo/bar"), new URL("file:/opt/@./cake")};
 
     List<Path> classpathFiles = FileClassPathRunner.getClasspathFiles(toLoad);
     assertEquals(1, classpathFiles.size());
@@ -64,17 +59,11 @@ public class FileClassPathRunnerTest {
   @Test
   public void shouldReadUrlsFromClasspathFile() throws IOException {
     Path urlsAreHere = tmp.newFile().toPath();
-    Files.write(urlsAreHere,
-        ImmutableList.of(
-            "vegetables.jar",
-            "cheese.jar"),
-        UTF_8);
+    Files.write(urlsAreHere, ImmutableList.of("vegetables.jar", "cheese.jar"), UTF_8);
 
     List<URL> readUrls = FileClassPathRunner.readUrls(ImmutableList.of(urlsAreHere), false);
 
-    assertEquals(
-        ImmutableList.of(urlify("vegetables.jar"), urlify("cheese.jar")),
-        readUrls);
+    assertEquals(ImmutableList.of(urlify("vegetables.jar"), urlify("cheese.jar")), readUrls);
   }
 
   @Test
@@ -84,8 +73,7 @@ public class FileClassPathRunnerTest {
     Files.write(classfile, "peppers.jar".getBytes());
 
     URL[] toLoad = {
-        new URL("file:" + subdir.toAbsolutePath() +
-                File.separator + "@" + classfile.toAbsolutePath())
+      new URL("file:" + subdir.toAbsolutePath() + File.separator + "@" + classfile.toAbsolutePath())
     };
 
     List<Path> classpathFiles = FileClassPathRunner.getClasspathFiles(toLoad);
@@ -100,15 +88,11 @@ public class FileClassPathRunnerTest {
   public void shouldAddReadUrlsToGivenUrlClassLoader()
       throws IOException, ReflectiveOperationException {
     Path urlsAreHere = tmp.newFile().toPath();
-    Files.write(urlsAreHere,
-        ImmutableList.of(
-            "vegetables.jar",
-            "cheese.jar"),
-        UTF_8);
+    Files.write(urlsAreHere, ImmutableList.of("vegetables.jar", "cheese.jar"), UTF_8);
 
     URL url = new URL("file:@" + urlsAreHere.toAbsolutePath());
 
-    try (URLClassLoader loader = new URLClassLoader(new URL[] { url })) {
+    try (URLClassLoader loader = new URLClassLoader(new URL[] {url})) {
       FileClassPathRunner.modifyClassLoader(loader, false);
 
       List<URL> allUrls = Arrays.asList(loader.getURLs());
@@ -151,8 +135,7 @@ public class FileClassPathRunnerTest {
     StringBuilder builder = new StringBuilder();
     FileClassPathRunner.constructNewClassPath(builder, "cake", ImmutableList.of("peas", "cheese"));
     assertEquals(
-        "cake" + File.pathSeparator + "peas" + File.pathSeparator + "cheese",
-        builder.toString());
+        "cake" + File.pathSeparator + "peas" + File.pathSeparator + "cheese", builder.toString());
   }
 
   private URL urlify(String string) throws MalformedURLException {

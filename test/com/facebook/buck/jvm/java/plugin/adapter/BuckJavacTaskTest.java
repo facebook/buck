@@ -20,22 +20,19 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 @RunWith(CompilerTreeApiTestRunner.class)
 public class BuckJavacTaskTest {
-  @Rule
-  public TestCompiler testCompiler = new TestCompiler();
+  @Rule public TestCompiler testCompiler = new TestCompiler();
 
   @Before
   public void setUp() throws Exception {
@@ -80,13 +77,14 @@ public class BuckJavacTaskTest {
     List<String> events = new ArrayList<>();
 
     RecordingTaskListener tl1 = new RecordingTaskListener("1", events);
-    RecordingTaskListener tl2 = new RecordingTaskListener("2", events) {
-      @Override
-      public void finished(String event) {
-        super.finished(event);
-        TestTaskListenerAdapter.removeTaskListener(javacTask, this);
-      }
-    };
+    RecordingTaskListener tl2 =
+        new RecordingTaskListener("2", events) {
+          @Override
+          public void finished(String event) {
+            super.finished(event);
+            TestTaskListenerAdapter.removeTaskListener(javacTask, this);
+          }
+        };
     RecordingTaskListener tl3 = new RecordingTaskListener("3", events);
 
     javacTask.setProcessors(Collections.emptyList());
@@ -150,17 +148,19 @@ public class BuckJavacTaskTest {
     BuckJavacTask javacTask = testCompiler.getJavacTask();
     List<String> events = new ArrayList<>();
 
-    javacTask.addPlugin(new BuckJavacPlugin() {
-      @Override
-      public String getName() {
-        return "Plugin!";
-      }
+    javacTask.addPlugin(
+        new BuckJavacPlugin() {
+          @Override
+          public String getName() {
+            return "Plugin!";
+          }
 
-      @Override
-      public void init(BuckJavacTask task, String... args) {
-        TestTaskListenerAdapter.setTaskListener(task, new RecordingTaskListener("Plugin", events));
-      }
-    });
+          @Override
+          public void init(BuckJavacTask task, String... args) {
+            TestTaskListenerAdapter.setTaskListener(
+                task, new RecordingTaskListener("Plugin", events));
+          }
+        });
     javacTask.setProcessors(Collections.emptyList());
     javacTask.enter();
 

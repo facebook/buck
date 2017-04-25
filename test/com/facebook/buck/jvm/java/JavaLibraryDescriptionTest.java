@@ -19,21 +19,19 @@ package com.facebook.buck.jvm.java;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
 
@@ -46,22 +44,21 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   public void setUp() throws NoSuchBuildTargetException {
     javaBuckConfig = getJavaBuckConfigWithCompilationMode();
 
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedNode, exportingNode);
 
-    resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
     exportingRule = resolver.requireRule(exportingNode.getBuildTarget());
@@ -70,9 +67,10 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
-        .addDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addDep(exportingRule.getBuildTarget())
+            .build(resolver);
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
@@ -85,9 +83,10 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
-        .addProvidedDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addProvidedDep(exportingRule.getBuildTarget())
+            .build(resolver);
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {

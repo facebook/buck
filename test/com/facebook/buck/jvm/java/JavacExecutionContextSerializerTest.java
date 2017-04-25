@@ -31,10 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -43,62 +39,62 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class JavacExecutionContextSerializerTest {
   @Test
   public void testSerializingAndDeserializing() throws Exception {
     Path tmp = Files.createTempDirectory("junit-temp-path").toRealPath();
 
-    JavacEventSink eventSink = new JavacEventSinkToBuckEventBusBridge(
-        BuckEventBusFactory.newInstance());
+    JavacEventSink eventSink =
+        new JavacEventSinkToBuckEventBusBridge(BuckEventBusFactory.newInstance());
     PrintStream stdErr = new PrintStream(new ByteArrayOutputStream());
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        Paths.get("/some/cell/path/resolver/path"),
-        ImmutableMap.of("key1", Paths.get("/path/1")));
-    DefaultJavaPackageFinder javaPackageFinder = new DefaultJavaPackageFinder(
-        ImmutableSortedSet.of("paths", "from", "root"),
-        ImmutableSet.of("path", "elements"));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            Paths.get("/some/cell/path/resolver/path"),
+            ImmutableMap.of("key1", Paths.get("/path/1")));
+    DefaultJavaPackageFinder javaPackageFinder =
+        new DefaultJavaPackageFinder(
+            ImmutableSortedSet.of("paths", "from", "root"), ImmutableSet.of("path", "elements"));
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp);
     NoOpClassUsageFileWriter classUsageFileWriter = NoOpClassUsageFileWriter.instance();
     ImmutableMap<String, String> environment = ImmutableMap.of("k1", "v1", "k2", "v2");
     ImmutableMap<String, String> processExecutorContext =
         ImmutableMap.of("pek1", "pev1", "pek2", "pev2");
-    ProcessExecutor processExecutor = new ContextualProcessExecutor(
-        new DefaultProcessExecutor(new TestConsole()),
-        processExecutorContext);
-    ImmutableList<Path> pathToInputs = ImmutableList.of(
-        Paths.get("/path/one"), Paths.get("/path/two"));
-    DirectToJarOutputSettings directToJarOutputSettings = DirectToJarOutputSettings.of(
-        Paths.get("/some/path"),
-        ImmutableSet.of(
-            Pattern.compile("[a-z]"),
-            Pattern.compile("[0-9]", Pattern.MULTILINE)),
-        ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
-        Optional.of("hello I am main class"),
-        Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
+    ProcessExecutor processExecutor =
+        new ContextualProcessExecutor(
+            new DefaultProcessExecutor(new TestConsole()), processExecutorContext);
+    ImmutableList<Path> pathToInputs =
+        ImmutableList.of(Paths.get("/path/one"), Paths.get("/path/two"));
+    DirectToJarOutputSettings directToJarOutputSettings =
+        DirectToJarOutputSettings.of(
+            Paths.get("/some/path"),
+            ImmutableSet.of(Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE)),
+            ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
+            Optional.of("hello I am main class"),
+            Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
 
-    JavacExecutionContext input = JavacExecutionContext.of(
-        eventSink,
-        stdErr,
-        classLoaderCache,
-        verbosity,
-        cellPathResolver,
-        javaPackageFinder,
-        projectFilesystem,
-        classUsageFileWriter,
-        environment,
-        processExecutor,
-        pathToInputs,
-        Optional.of(directToJarOutputSettings));
+    JavacExecutionContext input =
+        JavacExecutionContext.of(
+            eventSink,
+            stdErr,
+            classLoaderCache,
+            verbosity,
+            cellPathResolver,
+            javaPackageFinder,
+            projectFilesystem,
+            classUsageFileWriter,
+            environment,
+            processExecutor,
+            pathToInputs,
+            Optional.of(directToJarOutputSettings));
     Map<String, Object> data = JavacExecutionContextSerializer.serialize(input);
-    JavacExecutionContext output = JavacExecutionContextSerializer.deserialize(
-        data,
-        eventSink,
-        stdErr,
-        classLoaderCache,
-        new TestConsole());
+    JavacExecutionContext output =
+        JavacExecutionContextSerializer.deserialize(
+            data, eventSink, stdErr, classLoaderCache, new TestConsole());
 
     assertThat(output.getEventSink(), Matchers.equalTo(eventSink));
     assertThat(output.getStdErr(), Matchers.equalTo(stdErr));
@@ -108,9 +104,7 @@ public class JavacExecutionContextSerializerTest {
     assertThat(output.getCellPathResolver(), Matchers.instanceOf(DefaultCellPathResolver.class));
     DefaultCellPathResolver outCellPathResolver =
         (DefaultCellPathResolver) output.getCellPathResolver();
-    assertThat(
-        outCellPathResolver.getRoot(),
-        Matchers.equalToObject(cellPathResolver.getRoot()));
+    assertThat(outCellPathResolver.getRoot(), Matchers.equalToObject(cellPathResolver.getRoot()));
     assertThat(
         outCellPathResolver.getCellPaths(),
         Matchers.equalToObject(cellPathResolver.getCellPaths()));
@@ -119,8 +113,7 @@ public class JavacExecutionContextSerializerTest {
     ContextualProcessExecutor contextualProcessExecutor =
         (ContextualProcessExecutor) output.getProcessExecutor();
     assertThat(
-        contextualProcessExecutor.getContext(),
-        Matchers.equalToObject(processExecutorContext));
+        contextualProcessExecutor.getContext(), Matchers.equalToObject(processExecutorContext));
 
     assertThat(output.getJavaPackageFinder(), Matchers.instanceOf(DefaultJavaPackageFinder.class));
     DefaultJavaPackageFinder outputJavaPackageFinder =
@@ -137,8 +130,7 @@ public class JavacExecutionContextSerializerTest {
         Matchers.equalToObject(projectFilesystem.getRootPath()));
 
     assertThat(
-        output.getUsedClassesFileWriter(),
-        Matchers.instanceOf(NoOpClassUsageFileWriter.class));
+        output.getUsedClassesFileWriter(), Matchers.instanceOf(NoOpClassUsageFileWriter.class));
 
     assertThat(output.getEnvironment(), Matchers.equalToObject(environment));
 
@@ -160,10 +152,10 @@ public class JavacExecutionContextSerializerTest {
         output.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar().size(),
         Matchers.equalToObject(directToJarOutputSettings.getClassesToRemoveFromJar().size()));
 
-    ImmutableList<Pattern> inputPatterns = directToJarOutputSettings
-        .getClassesToRemoveFromJar().asList();
-    ImmutableList<Pattern> outputPatterns = output.getDirectToJarOutputSettings().get()
-        .getClassesToRemoveFromJar().asList();
+    ImmutableList<Pattern> inputPatterns =
+        directToJarOutputSettings.getClassesToRemoveFromJar().asList();
+    ImmutableList<Pattern> outputPatterns =
+        output.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar().asList();
 
     for (int i = 0; i < inputPatterns.size(); i++) {
       Pattern inputPattern = inputPatterns.get(i);

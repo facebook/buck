@@ -46,59 +46,48 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JavaSymbolsRuleTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void ensureJsonFilesGetWritten() throws IOException, InterruptedException {
-    TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "java_library_symbols_finder",
-        tmp)
+    TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
-    ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
-        .addAll(
-            Stream.of("Example1.java", "Example2.java")
-                .map(Paths::get)
-                .map(p -> new PathSourcePath(projectFilesystem, p))
-                .iterator())
-        .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
-        .build();
-    JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(
-        JavacOptions.builder()
-            .setSourceLevel("7")
-            .setTargetLevel("7")
-            .build());
-    JavaLibrarySymbolsFinder symbolsFinder = new JavaLibrarySymbolsFinder(
-        srcs,
-        javaFileParser,
-        /* shouldRecordRequiredSymbols */ true);
+    ImmutableSortedSet<SourcePath> srcs =
+        ImmutableSortedSet.<SourcePath>naturalOrder()
+            .addAll(
+                Stream.of("Example1.java", "Example2.java")
+                    .map(Paths::get)
+                    .map(p -> new PathSourcePath(projectFilesystem, p))
+                    .iterator())
+            .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+            .build();
+    JavaFileParser javaFileParser =
+        JavaFileParser.createJavaFileParser(
+            JavacOptions.builder().setSourceLevel("7").setTargetLevel("7").build());
+    JavaLibrarySymbolsFinder symbolsFinder =
+        new JavaLibrarySymbolsFinder(srcs, javaFileParser, /* shouldRecordRequiredSymbols */ true);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:examples");
-    JavaSymbolsRule javaSymbolsRule = new JavaSymbolsRule(
-        buildTarget,
-        symbolsFinder,
-        projectFilesystem);
+    JavaSymbolsRule javaSymbolsRule =
+        new JavaSymbolsRule(buildTarget, symbolsFinder, projectFilesystem);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     resolver.addToIndex(javaSymbolsRule);
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    List<Step> buildSteps = javaSymbolsRule.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver),
-        /* buildableContext */ null);
+    List<Step> buildSteps =
+        javaSymbolsRule.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), /* buildableContext */ null);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -106,27 +95,24 @@ public class JavaSymbolsRuleTest {
       step.execute(executionContext);
     }
 
-    try (JsonParser parser = ObjectMappers.createParser(
-        projectFilesystem
-            .resolve(
-                BuildTargets.getGenPath(
-                    javaSymbolsRule.getProjectFilesystem(),
-                    buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
-                    "__%s__.json"))
-            .toFile())) {
+    try (JsonParser parser =
+        ObjectMappers.createParser(
+            projectFilesystem
+                .resolve(
+                    BuildTargets.getGenPath(
+                        javaSymbolsRule.getProjectFilesystem(),
+                        buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
+                        "__%s__.json"))
+                .toFile())) {
       JsonNode jsonNode = ObjectMappers.READER.readTree(parser);
       assertTrue(jsonNode instanceof ObjectNode);
       assertEquals(
-          ImmutableSet.of(
-              "com.example.Example1",
-              "com.example.Example2"),
+          ImmutableSet.of("com.example.Example1", "com.example.Example2"),
           StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
               .map(JsonNode::textValue)
               .collect(MoreCollectors.toImmutableSet()));
       assertEquals(
-          ImmutableSet.of(
-              "com.example.other.Bar",
-              "com.example.other.Foo"),
+          ImmutableSet.of("com.example.other.Bar", "com.example.other.Foo"),
           StreamSupport.stream(jsonNode.get("required").spliterator(), false)
               .map(JsonNode::textValue)
               .collect(MoreCollectors.toImmutableSet()));

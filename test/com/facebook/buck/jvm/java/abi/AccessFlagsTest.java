@@ -21,12 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.objectweb.asm.Opcodes;
-
-import java.io.IOException;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class AccessFlagsTest extends CompilerTreeApiTest {
@@ -83,12 +81,10 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
 
   @Test
   public void testNoFlagForInterfaceDefaultMethod() throws IOException {
-    compile(Joiner.on('\n').join(
-       "interface Foo {",
-        "  default void foo() { }",
-        "}"));
+    compile(Joiner.on('\n').join("interface Foo {", "  default void foo() { }", "}"));
 
-    assertEquals(Opcodes.ACC_PUBLIC,
+    assertEquals(
+        Opcodes.ACC_PUBLIC,
         AccessFlags.getAccessFlags(findMethod("foo", elements.getTypeElement("Foo"))));
   }
 
@@ -105,10 +101,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
   @Test
   public void testStaticFlagOnClass() throws IOException {
     testTypeFlags(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  static class Inner { }",
-            "}"),
+        Joiner.on('\n').join("class Foo {", "  static class Inner { }", "}"),
         "Foo.Inner",
         Opcodes.ACC_STATIC | Opcodes.ACC_SUPER);
   }
@@ -145,10 +138,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
 
   @Test
   public void testAbstractFlagOnMethod() throws IOException {
-    compile(Joiner.on('\n').join(
-        "abstract class Foo {",
-        "  abstract void foo();",
-        "}"));
+    compile(Joiner.on('\n').join("abstract class Foo {", "  abstract void foo();", "}"));
     assertEquals(
         Opcodes.ACC_ABSTRACT,
         AccessFlags.getAccessFlags(findMethod("foo", elements.getTypeElement("Foo"))));
@@ -166,15 +156,11 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
 
   @Test
   public void testNativeFlag() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo {",
-        "  native void method();",
-        "}"));
+    compile(Joiner.on('\n').join("class Foo {", "  native void method();", "}"));
 
     assertEquals(
         Opcodes.ACC_NATIVE,
-        AccessFlags.getAccessFlags(
-            findMethod("method", elements.getTypeElement("Foo"))));
+        AccessFlags.getAccessFlags(findMethod("method", elements.getTypeElement("Foo"))));
   }
 
   @Test
@@ -189,15 +175,11 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
 
   @Test
   public void testVarArgsFlag() throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo {",
-        "  void method(String... s) { }",
-        "}"));
+    compile(Joiner.on('\n').join("class Foo {", "  void method(String... s) { }", "}"));
 
     assertEquals(
         Opcodes.ACC_VARARGS,
-        AccessFlags.getAccessFlags(
-            findMethod("method", elements.getTypeElement("Foo"))));
+        AccessFlags.getAccessFlags(findMethod("method", elements.getTypeElement("Foo"))));
   }
 
   @Test
@@ -213,7 +195,6 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
   @Test
   public void testAnnotationTypeFlags() throws IOException {
     testTypeFlags(
-
         "@java.lang.annotation.Documented @interface Foo { }",
         "Foo",
         Opcodes.ACC_ANNOTATION | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
@@ -221,30 +202,26 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
 
   @Test
   public void testInterfaceTypeFlags() throws IOException {
-    testTypeFlags(
-        "interface Foo { }",
-        "Foo",
-        Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
+    testTypeFlags("interface Foo { }", "Foo", Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
   }
 
   @Test
   public void testEnumTypeFlags() throws IOException {
     testTypeFlags(
-        "enum Foo { Item }",
-        "Foo",
-        Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL);
+        "enum Foo { Item }", "Foo", Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL);
   }
 
   @Test
   public void testEnumAbstractFlagIsInferred() throws IOException {
     testTypeFlags(
-        Joiner.on('\n').join(
-            "enum Foo {",
-            "  Value {",
-            "    int get() { return 3; }",
-            "  };",
-            "  abstract int get();",
-            "}"),
+        Joiner.on('\n')
+            .join(
+                "enum Foo {",
+                "  Value {",
+                "    int get() { return 3; }",
+                "  };",
+                "  abstract int get();",
+                "}"),
         "Foo",
         Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_ABSTRACT);
   }
@@ -254,51 +231,39 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
     compile("enum Foo { Item }");
     assertEquals(
         Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_ENUM,
-        AccessFlags.getAccessFlags(
-            findField("Item", elements.getTypeElement("Foo"))));
+        AccessFlags.getAccessFlags(findField("Item", elements.getTypeElement("Foo"))));
   }
 
   private void testClassFlags(String modifiers, int expectedFlags) throws IOException {
     testTypeFlags(
-        String.format("%s class Foo { }", modifiers),
-        "Foo",
-        expectedFlags | Opcodes.ACC_SUPER);
+        String.format("%s class Foo { }", modifiers), "Foo", expectedFlags | Opcodes.ACC_SUPER);
   }
 
-  private void testTypeFlags(
-      String content,
-      String typeName,
-      int expectedFlags) throws IOException {
+  private void testTypeFlags(String content, String typeName, int expectedFlags)
+      throws IOException {
     compile(content);
     assertNoErrors();
-    assertEquals(
-        expectedFlags,
-        AccessFlags.getAccessFlags(elements.getTypeElement(typeName)));
+    assertEquals(expectedFlags, AccessFlags.getAccessFlags(elements.getTypeElement(typeName)));
   }
 
   private void testMethodFlags(String modifiers, int expectedFlags) throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo {",
-        String.format("  %s void method() { }", modifiers),
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join("class Foo {", String.format("  %s void method() { }", modifiers), "}"));
 
     assertNoErrors();
     assertEquals(
         expectedFlags,
-        AccessFlags.getAccessFlags(
-            findMethod("method", elements.getTypeElement("Foo"))));
+        AccessFlags.getAccessFlags(findMethod("method", elements.getTypeElement("Foo"))));
   }
 
   private void testFieldFlags(String modifiers, int expectedFlags) throws IOException {
-    compile(Joiner.on('\n').join(
-        "class Foo {",
-        String.format("  %s int field = 0;", modifiers),
-        "}"));
+    compile(
+        Joiner.on('\n').join("class Foo {", String.format("  %s int field = 0;", modifiers), "}"));
 
     assertNoErrors();
     assertEquals(
         expectedFlags,
-        AccessFlags.getAccessFlags(
-            findField("field", elements.getTypeElement("Foo"))));
+        AccessFlags.getAccessFlags(findField("field", elements.getTypeElement("Foo"))));
   }
 }

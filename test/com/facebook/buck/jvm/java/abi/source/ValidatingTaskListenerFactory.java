@@ -21,17 +21,19 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.sun.source.util.TaskListener;
-
 import javax.tools.Diagnostic;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
   @Override
   public TaskListener newTaskListener(BuckJavacTask task) {
-    return new ValidatingTaskListener(new BuckJavacTaskProxyImpl(task), new BootClasspathOracle() {
-      @Override
-      public boolean isOnBootClasspath(String binaryName) {
-        return binaryName.startsWith("java.");
-      }
-    }, Diagnostic.Kind.ERROR);
+    return new ValidatingTaskListener(
+        new BuckJavacTaskProxyImpl(task),
+        new BootClasspathOracle() {
+          @Override
+          public boolean isOnBootClasspath(String binaryName) {
+            return binaryName.startsWith("java.");
+          }
+        },
+        Diagnostic.Kind.ERROR);
   }
 }

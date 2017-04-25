@@ -23,21 +23,13 @@ public class JavaCompilationConstants {
   public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
       JavaBuckConfig.of(FakeBuckConfig.builder().build());
 
-  public static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      JavaOptions.builder()
-          .build();
+  public static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.builder().build();
 
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
-      JavacOptions.builderForUseInJavaBuckConfig()
-          .setSourceLevel("7")
-          .setTargetLevel("7")
-          .build();
+      JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("7").build();
 
   public static final JavacOptions ANDROID_JAVAC_OPTIONS =
-      JavacOptions.builderForUseInJavaBuckConfig()
-          .setSourceLevel("7")
-          .setTargetLevel("6")
-          .build();
+      JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("6").build();
 
   public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
 

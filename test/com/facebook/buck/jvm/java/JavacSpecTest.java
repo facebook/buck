@@ -34,14 +34,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class JavacSpecTest {
   private BuildRuleResolver ruleResolver;
@@ -66,8 +64,7 @@ public class JavacSpecTest {
   @Test
   public void returnsBuiltInJavacWhenCompilerArgHasDefault() {
     Either<BuiltInJavac, SourcePath> either = Either.ofLeft(DEFAULT);
-    specBuilder
-        .setCompiler(either);
+    specBuilder.setCompiler(either);
 
     Javac javac = getJavac();
     assertTrue(javac instanceof JdkProvidedInMemoryJavac);
@@ -88,9 +85,7 @@ public class JavacSpecTest {
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(javacPath));
+    assertThat(javac.getInputs(), Matchers.contains(javacPath));
   }
 
   @Test
@@ -102,9 +97,7 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(sourcePath));
+    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
   }
 
   @Test
@@ -113,14 +106,10 @@ public class JavacSpecTest {
     SourcePath sourcePath = new FakeSourcePath(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
-    specBuilder
-        .setCompiler(either)
-        .setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
+    specBuilder.setCompiler(either).setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(sourcePath));
+    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
   }
 
   @Test
@@ -130,73 +119,57 @@ public class JavacSpecTest {
     specBuilder.setJavacJarPath(javacJarPath);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(javacJarPath));
+    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
   }
 
   @Test
   public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() throws Exception {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJar prebuiltJar = PrebuiltJarBuilder.createBuilder(target)
-        .setBinaryJar(javacJarPath)
-        .build(ruleResolver);
+    PrebuiltJar prebuiltJar =
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
     SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder.setCompiler(either);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
+    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test
   public void compilerArgTakesPrecedenceOverJavacJarArg() throws Exception {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJar prebuiltJar = PrebuiltJarBuilder.createBuilder(target)
-        .setBinaryJar(javacJarPath)
-        .build(ruleResolver);
+    PrebuiltJar prebuiltJar =
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
     SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder
         .setCompiler(either)
-        .setJavacJarPath(new PathSourcePath(
-            new FakeProjectFilesystem(),
-            Paths.get("does-not-exist")));
+        .setJavacJarPath(
+            new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
+    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test
   public void returnsOutOfProcessJarBackedJavacIfRequested() throws IOException {
     SourcePath javacJarPath = new FakeSourcePath("path/to/javac.jar");
 
-    specBuilder
-        .setJavacJarPath(javacJarPath)
-        .setJavacLocation(Javac.Location.OUT_OF_PROCESS);
+    specBuilder.setJavacJarPath(javacJarPath).setJavacLocation(Javac.Location.OUT_OF_PROCESS);
     OutOfProcessJarBackedJavac javac = (OutOfProcessJarBackedJavac) getJavac();
 
-    assertThat(
-        javac.getInputs(),
-        Matchers.contains(javacJarPath));
+    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
   }
 
   @Test
-  public void customCompilerClassNameIsSet()
-      throws IOException {
+  public void customCompilerClassNameIsSet() throws IOException {
     FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
     String compilerClassName = "test.compiler";
-    specBuilder
-        .setJavacJarPath(javacJarPath)
-        .setCompilerClassName(compilerClassName);
+    specBuilder.setJavacJarPath(javacJarPath).setCompilerClassName(compilerClassName);
 
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
@@ -206,9 +179,7 @@ public class JavacSpecTest {
   @Test(expected = HumanReadableException.class)
   public void mayOnlyPassOneOfJavacOrJavacJar() {
     FakeSourcePath sourcePath = new FakeSourcePath("path");
-    specBuilder
-        .setJavacPath(Either.ofRight(sourcePath))
-        .setJavacJarPath(sourcePath);
+    specBuilder.setJavacPath(Either.ofRight(sourcePath)).setJavacJarPath(sourcePath);
 
     getJavac();
   }

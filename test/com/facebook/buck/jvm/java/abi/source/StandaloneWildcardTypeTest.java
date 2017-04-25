@@ -19,13 +19,10 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-
+import java.io.IOException;
+import javax.lang.model.type.WildcardType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.io.IOException;
-
-import javax.lang.model.type.WildcardType;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandaloneWildcardTypeTest extends CompilerTreeApiParameterizedTest {

@@ -16,55 +16,53 @@
 
 package com.facebook.buck.jvm.scala;
 
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeNoException;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-
 public class ScalaLibraryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws Exception {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "scala_binary", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "scala_binary", tmp);
     workspace.setUp();
   }
 
   @Test(timeout = (2 * 60 * 1000))
   public void shouldCompileScalaClass() throws Exception {
     assertThat(
-        workspace.runBuckCommand(
-            "run",
-            "--config", "scala.compiler=//:scala-compiler",
-            "//:bin", "--", "world!").assertSuccess().getStdout(),
+        workspace
+            .runBuckCommand(
+                "run", "--config", "scala.compiler=//:scala-compiler", "//:bin", "--", "world!")
+            .assertSuccess()
+            .getStdout(),
         Matchers.containsString("Hello WORLD!"));
   }
 
   @Test(timeout = (2 * 60 * 1000))
   public void shouldWorkWithLocalCompiler() throws Exception {
     try {
-      new ScalaBuckConfig(FakeBuckConfig.builder().build()).getScalac(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-      );
+      new ScalaBuckConfig(FakeBuckConfig.builder().build())
+          .getScalac(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);
     }
@@ -76,19 +74,31 @@ public class ScalaLibraryIntegrationTest {
 
   @Test(timeout = (2 * 60 * 1000))
   public void scalacShouldAffectRuleKey() throws Exception {
-    String firstRuleKey = workspace.runBuckCommand(
-        "targets",
-        "--config", "scala.compiler=//:fake-scala-compiler",
-        "--show-rulekey",
-        "//:bin").assertSuccess().getStdout().trim();
+    String firstRuleKey =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--config",
+                "scala.compiler=//:fake-scala-compiler",
+                "--show-rulekey",
+                "//:bin")
+            .assertSuccess()
+            .getStdout()
+            .trim();
 
     workspace.writeContentsToPath("changes", "scalac.sh");
 
-    String secondRuleKey = workspace.runBuckCommand(
-        "targets",
-        "--config", "scala.compiler=//:fake-scala-compiler",
-        "--show-rulekey",
-        "//:bin").assertSuccess().getStdout().trim();
+    String secondRuleKey =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--config",
+                "scala.compiler=//:fake-scala-compiler",
+                "--show-rulekey",
+                "//:bin")
+            .assertSuccess()
+            .getStdout()
+            .trim();
 
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
   }

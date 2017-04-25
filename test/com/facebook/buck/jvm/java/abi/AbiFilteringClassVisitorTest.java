@@ -181,10 +181,7 @@ public class AbiFilteringClassVisitorTest {
 
     visitClass(filteringVisitor, "Foo");
     filteringVisitor.visitInnerClass(
-        "Foo$Inner",
-        "Foo",
-        "Inner",
-        Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC);
+        "Foo$Inner", "Foo", "Inner", Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC);
     verify(mockVisitor);
   }
 
@@ -222,8 +219,7 @@ public class AbiFilteringClassVisitorTest {
 
   private void testFieldWithAccess(int access, boolean shouldInclude) {
     if (shouldInclude) {
-      expect(mockVisitor.visitField(access, "Foo", "I", null, null))
-          .andReturn(null);
+      expect(mockVisitor.visitField(access, "Foo", "I", null, null)).andReturn(null);
     }
     replay(mockVisitor);
     filteringVisitor.visitField(access, "Foo", "I", null, null);
@@ -248,8 +244,7 @@ public class AbiFilteringClassVisitorTest {
 
   private void testMethodWithAccess(int access, String name, boolean shouldInclude) {
     if (shouldInclude) {
-      expect(mockVisitor.visitMethod(access, name, "()V", null, null))
-          .andReturn(null);
+      expect(mockVisitor.visitMethod(access, name, "()V", null, null)).andReturn(null);
     }
     replay(mockVisitor);
     filteringVisitor.visitMethod(access, name, "()V", null, null);

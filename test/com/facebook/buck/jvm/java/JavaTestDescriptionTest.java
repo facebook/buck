@@ -19,20 +19,18 @@ package com.facebook.buck.jvm.java;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class JavaTestDescriptionTest extends AbiCompilationModeTest {
 
@@ -45,24 +43,24 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> javaTestNode = JavaTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addDep(exportingNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> javaTestNode =
+        JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addDep(exportingNode.getBuildTarget())
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode,
-        javaTestNode);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -81,24 +79,24 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> javaTestNode = JavaTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addProvidedDep(exportingNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> javaTestNode =
+        JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addProvidedDep(exportingNode.getBuildTarget())
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode,
-        javaTestNode);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -114,5 +112,4 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
     ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
     assertThat(deps, Matchers.hasItem(exportedRule));
   }
-
 }

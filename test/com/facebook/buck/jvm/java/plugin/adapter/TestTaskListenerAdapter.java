@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -43,8 +42,7 @@ public class TestTaskListenerAdapter implements TaskListener {
     return taskListeners.get(testTaskListener);
   }
 
-  private static final Map<TestTaskListener, TaskListener> taskListeners =
-      new IdentityHashMap<>();
+  private static final Map<TestTaskListener, TaskListener> taskListeners = new IdentityHashMap<>();
 
   private TestTaskListener listener;
 

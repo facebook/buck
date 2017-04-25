@@ -26,7 +26,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 
 public class GroovyLibraryBuilder
@@ -35,9 +34,7 @@ public class GroovyLibraryBuilder
   private final ProjectFilesystem projectFilesystem;
 
   protected GroovyLibraryBuilder(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
+      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
         new GroovyLibraryDescription(null, DEFAULT_JAVAC_OPTIONS),
         target,
@@ -58,5 +55,4 @@ public class GroovyLibraryBuilder
   public GroovyLibraryBuilder addSrc(Path path) {
     return addSrc(new PathSourcePath(projectFilesystem, path));
   }
-
 }

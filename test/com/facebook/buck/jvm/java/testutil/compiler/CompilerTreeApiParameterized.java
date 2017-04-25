@@ -22,9 +22,9 @@ import org.junit.runners.model.TestClass;
 
 /**
  * Parameterized test runner that enables tests to work with the Compiler Tree API implementation
- * corresponding to the compiler returned by
- * {@link javax.tools.ToolProvider#getSystemJavaCompiler()}. These are public APIs
- * that are not provided in rt.jar and thus are not usually on the classpath.
+ * corresponding to the compiler returned by {@link
+ * javax.tools.ToolProvider#getSystemJavaCompiler()}. These are public APIs that are not provided in
+ * rt.jar and thus are not usually on the classpath.
  */
 public class CompilerTreeApiParameterized extends Parameterized {
   public CompilerTreeApiParameterized(Class<?> klass) throws Throwable {

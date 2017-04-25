@@ -33,13 +33,11 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.Test;
 
 public class JavaBinaryTest {
 
@@ -49,23 +47,25 @@ public class JavaBinaryTest {
   @Test
   public void testGetExecutableCommand() throws Exception {
     // prebuilt_jar //third_party/generator:generator
-    PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/generator:generator"))
+    PrebuiltJarBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
         .build();
 
     // prebuilt_jar //third_party/guava:guava
-    TargetNode<?, ?> guavaNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .build();
+    TargetNode<?, ?> guavaNode =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third_party/guava:guava"))
+            .setBinaryJar(PATH_TO_GUAVA_JAR)
+            .build();
 
     // java_library //java/com/facebook/base:base
-    TargetNode<?, ?> libraryNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addDep(guavaNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libraryNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
+            .addSrc(Paths.get("java/com/facebook/base/Base.java"))
+            .addDep(guavaNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
     BuildRuleResolver ruleResolver =
@@ -75,10 +75,11 @@ public class JavaBinaryTest {
 
     BuildRule libraryRule = ruleResolver.requireRule(libraryNode.getBuildTarget());
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
-        .build();
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
+            .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
+            .build();
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =
         ruleResolver.addToIndex(

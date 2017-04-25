@@ -20,23 +20,19 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class JarBackedJavacIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "jar_backed_javac", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "jar_backed_javac", tmp);
     workspace.setUp();
     workspace.enableDirCache();
   }

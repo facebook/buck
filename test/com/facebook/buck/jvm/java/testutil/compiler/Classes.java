@@ -16,15 +16,13 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
-import org.objectweb.asm.ClassVisitor;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.objectweb.asm.ClassVisitor;
 
-/**
- * Provides access to bytecode produced by a {@link TestCompiler}.
- */
+/** Provides access to bytecode produced by a {@link TestCompiler}. */
 public interface Classes {
   void acceptClassVisitor(String qualifiedName, int flags, ClassVisitor cv) throws IOException;
+
   void createJar(Path jarPath, boolean hashEntries) throws IOException;
 }

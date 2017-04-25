@@ -21,29 +21,23 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testAnnotationMirrorValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "@FooHelper",
-        "public class Foo {",
-        "}",
-        "@interface FooHelper {}"));
+    compile(
+        Joiner.on('\n').join("@FooHelper", "public class Foo {", "}", "@interface FooHelper {}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
     assertSameType(elements.getTypeElement("FooHelper").asType(), a.getAnnotationType());
@@ -51,13 +45,15 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
 
   @Test
   public void testSingleElementAnnotationMirrorValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "@FooHelper(42)",
-        "public class Foo {",
-        "}",
-        "@interface FooHelper {",
-        "  int value();",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "@FooHelper(42)",
+                "public class Foo {",
+                "}",
+                "@interface FooHelper {",
+                "  int value();",
+                "}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
     ExecutableElement keyElement = findMethod("value", elements.getTypeElement("FooHelper"));
@@ -68,13 +64,15 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
 
   @Test
   public void testSingleElementExplicitAnnotationMirrorValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "@FooHelper(number = 42)",
-        "public class Foo {",
-        "}",
-        "@interface FooHelper {",
-        "  int number();",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "@FooHelper(number = 42)",
+                "public class Foo {",
+                "}",
+                "@interface FooHelper {",
+                "  int number();",
+                "}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
     ExecutableElement keyElement = findMethod("number", elements.getTypeElement("FooHelper"));
@@ -85,13 +83,15 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
 
   @Test
   public void testSingleElementArrayAnnotationMirrorValueWithSingleEntry() throws IOException {
-    compile(Joiner.on('\n').join(
-        "@FooHelper(42)",
-        "public class Foo {",
-        "}",
-        "@interface FooHelper {",
-        "  int[] value();",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "@FooHelper(42)",
+                "public class Foo {",
+                "}",
+                "@interface FooHelper {",
+                "  int[] value();",
+                "}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
     ExecutableElement keyElement = findMethod("value", elements.getTypeElement("FooHelper"));
@@ -106,24 +106,29 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
 
   @Test
   public void testMultiElementAnnotationMirrorValue() throws IOException {
-    compile(Joiner.on('\n').join(
-        "@FooHelper(number=42, string=\"42\", doubleNumber=42.0)",
-        "public class Foo {",
-        "}",
-        "@interface FooHelper {",
-        "  double doubleNumber();",
-        "  int number();",
-        "  String string();",
-        "}"));
+    compile(
+        Joiner.on('\n')
+            .join(
+                "@FooHelper(number=42, string=\"42\", doubleNumber=42.0)",
+                "public class Foo {",
+                "}",
+                "@interface FooHelper {",
+                "  double doubleNumber();",
+                "  int number();",
+                "  String string();",
+                "}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
 
     assertThat(
-      a.getElementValues().entrySet().stream()
-          .flatMap(entry -> Stream.of(
-              entry.getKey().getSimpleName().toString(),
-              entry.getValue().getValue()))
-          .collect(Collectors.toList()),
+        a.getElementValues()
+            .entrySet()
+            .stream()
+            .flatMap(
+                entry ->
+                    Stream.of(
+                        entry.getKey().getSimpleName().toString(), entry.getValue().getValue()))
+            .collect(Collectors.toList()),
         Matchers.contains("number", 42, "string", "42", "doubleNumber", 42.0));
   }
 }

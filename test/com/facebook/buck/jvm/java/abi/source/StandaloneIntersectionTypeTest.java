@@ -20,16 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
-
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandaloneIntersectionTypeTest extends CompilerTreeApiParameterizedTest {
@@ -64,7 +61,6 @@ public class StandaloneIntersectionTypeTest extends CompilerTreeApiParameterized
     TypeMirror intersectionType = getTypeParameterUpperBound("Foo", 0);
 
     assertEquals(
-        "java.lang.Object&java.lang.Runnable&java.lang.CharSequence",
-        intersectionType.toString());
+        "java.lang.Object&java.lang.Runnable&java.lang.CharSequence", intersectionType.toString());
   }
 }

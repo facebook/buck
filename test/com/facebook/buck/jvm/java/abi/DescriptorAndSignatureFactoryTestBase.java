@@ -20,7 +20,15 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import org.junit.Before;
 import org.junit.Rule;
 import org.objectweb.asm.Opcodes;
@@ -28,29 +36,17 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-
 public class DescriptorAndSignatureFactoryTestBase {
 
-  @Rule
-  public TestCompiler testCompiler = new TestCompiler();
+  @Rule public TestCompiler testCompiler = new TestCompiler();
   protected Elements elements;
   List<String> errors = new ArrayList<>();
 
   @Before
   public void setUp() throws IOException {
-    Path sourceFile = TestDataHelper
-        .getTestDataScenario(this, "descriptor_and_signature_factories")
-        .resolve("Foo.java");
+    Path sourceFile =
+        TestDataHelper.getTestDataScenario(this, "descriptor_and_signature_factories")
+            .resolve("Foo.java");
 
     testCompiler.addSourceFile(sourceFile);
 
@@ -63,7 +59,8 @@ public class DescriptorAndSignatureFactoryTestBase {
       Function<FieldNode, String> fieldNodeExpectedValueGetter,
       Function<MethodNode, String> methodNodeExpectedValueGetter,
       Function<ClassNode, String> classNodeExpectedValueGetter,
-      Function<Element, String> elementActualValueGetter) throws IOException {
+      Function<Element, String> elementActualValueGetter)
+      throws IOException {
     TypeElement fooElement = elements.getTypeElement("com.facebook.foo.Foo");
     findErrors(
         fooElement,
@@ -79,7 +76,8 @@ public class DescriptorAndSignatureFactoryTestBase {
       Function<FieldNode, String> fieldNodeExpectedValueGetter,
       Function<MethodNode, String> methodNodeExpectedValueGetter,
       Function<ClassNode, String> classNodeExpectedValueGetter,
-      Function<Element, String> elementActualValueGetter) throws IOException {
+      Function<Element, String> elementActualValueGetter)
+      throws IOException {
     ClassNode typeNode = getClassNode(elements.getBinaryName(typeElement).toString());
     for (Element enclosedElement : typeElement.getEnclosedElements()) {
       Name elementName = enclosedElement.getSimpleName();
@@ -107,10 +105,7 @@ public class DescriptorAndSignatureFactoryTestBase {
           ClassNode innerTypeNode =
               getClassNode(elements.getBinaryName((TypeElement) enclosedElement).toString());
           checkValue(
-              "Class",
-              elementName,
-              classNodeExpectedValueGetter.apply(innerTypeNode),
-              actual);
+              "Class", elementName, classNodeExpectedValueGetter.apply(innerTypeNode), actual);
 
           findErrors(
               (TypeElement) enclosedElement,
@@ -119,40 +114,37 @@ public class DescriptorAndSignatureFactoryTestBase {
               classNodeExpectedValueGetter,
               elementActualValueGetter);
           break;
-        // $CASES-OMITTED$
+          // $CASES-OMITTED$
         default:
-          fail(String.format(
-              "Didn't implement testing for element kind %s",
-              enclosedElement.getKind()));
+          fail(
+              String.format(
+                  "Didn't implement testing for element kind %s", enclosedElement.getKind()));
           continue;
       }
     }
   }
 
-  private void checkValue(
-      String type,
-      Name elementName,
-      String expected,
-      String actual) {
+  private void checkValue(String type, Name elementName, String expected, String actual) {
     if (expected != actual && (expected == null || !expected.equals(actual))) {
-      errors.add(String.format(
-          "%s %s:\n\tExpected: %s\n\tActual: %s",
-          type,
-          elementName,
-          expected,
-          actual));
+      errors.add(
+          String.format(
+              "%s %s:\n\tExpected: %s\n\tActual: %s", type, elementName, expected, actual));
     }
   }
 
   private FieldNode getFieldNode(ClassNode classNode, Name name) {
-    return classNode.fields.stream()
+    return classNode
+        .fields
+        .stream()
         .filter(field -> name.contentEquals(field.name))
         .findFirst()
         .orElse(null);
   }
 
   private MethodNode getMethodNode(ClassNode classNode, Name name) {
-    return classNode.methods.stream()
+    return classNode
+        .methods
+        .stream()
         .filter(field -> name.contentEquals(field.name))
         .findFirst()
         .orElse(null);

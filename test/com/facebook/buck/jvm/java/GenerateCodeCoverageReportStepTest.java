@@ -31,12 +31,6 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -52,21 +46,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-public class  GenerateCodeCoverageReportStepTest {
+public class GenerateCodeCoverageReportStepTest {
 
   public static final String OUTPUT_DIRECTORY = Paths.get("buck-out/gen/output").toString();
-  public static final Set<String> SOURCE_DIRECTORIES = ImmutableSet.of(
-      MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src").toString(),
-      MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src").toString());
+  public static final Set<String> SOURCE_DIRECTORIES =
+      ImmutableSet.of(
+          MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src").toString(),
+          MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src").toString());
 
   private GenerateCodeCoverageReportStep step;
   private ExecutionContext context;
   private ProjectFilesystem filesystem;
   private Set<Path> jarFiles;
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Before
   public void setUp() throws Exception {
@@ -75,13 +73,13 @@ public class  GenerateCodeCoverageReportStepTest {
     jarFiles = new LinkedHashSet<>();
     File jarFile = new File(tmp.getRoot(), "foo.jar");
     File jar2File = new File(tmp.getRoot(), "foo2.jar");
-    try (InputStream jarIn = getClass()
-         .getResourceAsStream("testdata/code_coverage_test/foo.jar")) {
+    try (InputStream jarIn =
+        getClass().getResourceAsStream("testdata/code_coverage_test/foo.jar")) {
       Files.copy(jarIn, jarFile.toPath());
     }
 
-    try (InputStream jarIn = getClass()
-         .getResourceAsStream("testdata/code_coverage_test/foo.jar")) {
+    try (InputStream jarIn =
+        getClass().getResourceAsStream("testdata/code_coverage_test/foo.jar")) {
       Files.copy(jarIn, jar2File.toPath());
     }
 
@@ -90,16 +88,17 @@ public class  GenerateCodeCoverageReportStepTest {
 
     assertTrue(jarFile.exists());
 
-    step = new GenerateCodeCoverageReportStep(
-        new ExternalJavaRuntimeLauncher("/baz/qux/java"),
-        filesystem,
-        SOURCE_DIRECTORIES,
-        jarFiles,
-        Paths.get(OUTPUT_DIRECTORY),
-        CoverageReportFormat.HTML,
-        "TitleFoo",
-        Optional.empty(),
-        Optional.empty());
+    step =
+        new GenerateCodeCoverageReportStep(
+            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            filesystem,
+            SOURCE_DIRECTORIES,
+            jarFiles,
+            Paths.get(OUTPUT_DIRECTORY),
+            CoverageReportFormat.HTML,
+            "TitleFoo",
+            Optional.empty(),
+            Optional.empty());
 
     context = TestExecutionContext.newInstance();
   }
@@ -126,30 +125,28 @@ public class  GenerateCodeCoverageReportStepTest {
   @Test
   public void testJarFileIsExtracted() throws Throwable {
     final File[] extractedDir = new File[2];
-    step = new GenerateCodeCoverageReportStep(
-        new ExternalJavaRuntimeLauncher("/baz/qux/java"),
-        filesystem,
-        SOURCE_DIRECTORIES,
-        jarFiles,
-        Paths.get(OUTPUT_DIRECTORY),
-        CoverageReportFormat.HTML,
-        "TitleFoo",
-        Optional.empty(),
-        Optional.empty()) {
-        @Override
-        StepExecutionResult executeInternal(
-            ExecutionContext context,
-            Set<Path> jarFiles) {
-          for (int i = 0; i < 2; i++) {
-            extractedDir[i] = new ArrayList<>(jarFiles).get(i).toFile();
-            assertTrue(extractedDir[i].isDirectory());
-            assertTrue(
-                new File(extractedDir[i], "com/facebook/testing/coverage/Foo.class")
-                .exists());
+    step =
+        new GenerateCodeCoverageReportStep(
+            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            filesystem,
+            SOURCE_DIRECTORIES,
+            jarFiles,
+            Paths.get(OUTPUT_DIRECTORY),
+            CoverageReportFormat.HTML,
+            "TitleFoo",
+            Optional.empty(),
+            Optional.empty()) {
+          @Override
+          StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
+            for (int i = 0; i < 2; i++) {
+              extractedDir[i] = new ArrayList<>(jarFiles).get(i).toFile();
+              assertTrue(extractedDir[i].isDirectory());
+              assertTrue(
+                  new File(extractedDir[i], "com/facebook/testing/coverage/Foo.class").exists());
+            }
+            return null;
           }
-          return null;
-        }
-      };
+        };
 
     step.execute(TestExecutionContext.newInstance());
     assertFalse(extractedDir[0].exists());
@@ -162,25 +159,24 @@ public class  GenerateCodeCoverageReportStepTest {
     jarFiles.clear();
     jarFiles.add(classesDir.toPath());
 
-    step = new GenerateCodeCoverageReportStep(
-        new ExternalJavaRuntimeLauncher("/baz/qux/java"),
-        filesystem,
-        SOURCE_DIRECTORIES,
-        jarFiles,
-        Paths.get(OUTPUT_DIRECTORY),
-        CoverageReportFormat.HTML,
-        "TitleFoo",
-        Optional.empty(),
-        Optional.empty()) {
-        @Override
-        StepExecutionResult executeInternal(
-            ExecutionContext context,
-            Set<Path> jarFiles) {
-          assertEquals(1, jarFiles.size());
-          assertEquals(classesDir.toPath(), jarFiles.iterator().next());
-          return null;
-        }
-      };
+    step =
+        new GenerateCodeCoverageReportStep(
+            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            filesystem,
+            SOURCE_DIRECTORIES,
+            jarFiles,
+            Paths.get(OUTPUT_DIRECTORY),
+            CoverageReportFormat.HTML,
+            "TitleFoo",
+            Optional.empty(),
+            Optional.empty()) {
+          @Override
+          StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
+            assertEquals(1, jarFiles.size());
+            assertEquals(classesDir.toPath(), jarFiles.iterator().next());
+            return null;
+          }
+        };
 
     step.execute(TestExecutionContext.newInstance());
     assertTrue(classesDir.exists());
@@ -204,41 +200,34 @@ public class  GenerateCodeCoverageReportStepTest {
     }
 
     assertEquals(
-        absolutifyPath(Paths.get(OUTPUT_DIRECTORY)),
-        actual.getProperty("jacoco.output.dir"));
+        absolutifyPath(Paths.get(OUTPUT_DIRECTORY)), actual.getProperty("jacoco.output.dir"));
 
     assertEquals("jacoco.exec", actual.getProperty("jacoco.exec.data.file"));
     assertEquals("html", actual.getProperty("jacoco.format"));
     assertEquals("TitleFoo", actual.getProperty("jacoco.title"));
-    assertEquals(String.format(
-                     "%s:%s",
-                     absolutifyPath(Paths.get("foo/bar")),
-                     absolutifyPath(Paths.get("foo/bar2"))),
-                 actual.getProperty("classes.dir"));
-    assertEquals(String.format(
-                     "%s:%s",
-                     absolutifyPath(Paths.get("foo/bar")),
-                     absolutifyPath(Paths.get("foo/bar2"))),
-                 actual.getProperty("classes.dir"));
+    assertEquals(
+        String.format(
+            "%s:%s", absolutifyPath(Paths.get("foo/bar")), absolutifyPath(Paths.get("foo/bar2"))),
+        actual.getProperty("classes.dir"));
+    assertEquals(
+        String.format(
+            "%s:%s", absolutifyPath(Paths.get("foo/bar")), absolutifyPath(Paths.get("foo/bar2"))),
+        actual.getProperty("classes.dir"));
 
-    assertThat(
-        actual.getProperty("classes.jars"),
-        matchesPattern("^.*foo.jar:.*foo2.jar$"));
+    assertThat(actual.getProperty("classes.jars"), matchesPattern("^.*foo.jar:.*foo2.jar$"));
 
-    assertEquals(String.format(
-                     "%s:%s",
-                     MorePathsForTests.rootRelativePath(
-                         "/absolute/path/to/parentDirectory1/src").toString(),
-                     MorePathsForTests.rootRelativePath(
-                         "/absolute/path/to/parentDirectory2/src").toString()),
-                 actual.getProperty("src.dir"));
+    assertEquals(
+        String.format(
+            "%s:%s",
+            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src").toString(),
+            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src")
+                .toString()),
+        actual.getProperty("src.dir"));
   }
 
   private static String absolutifyPath(Path relativePath) {
     return String.format(
         "%s%c%s",
-        new File(".").getAbsoluteFile().toPath().normalize(),
-        File.separatorChar,
-        relativePath);
+        new File(".").getAbsoluteFile().toPath().normalize(), File.separatorChar, relativePath);
   }
 }

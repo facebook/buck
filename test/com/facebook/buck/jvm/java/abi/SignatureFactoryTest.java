@@ -20,12 +20,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class SignatureFactoryTest extends DescriptorAndSignatureFactoryTestBase {
@@ -39,11 +37,12 @@ public class SignatureFactoryTest extends DescriptorAndSignatureFactoryTestBase 
 
   @Test
   public void testAllTheThings() throws IOException {
-    List<String> errors = getTestErrors(
-        field -> field.signature,
-        method -> method.signature,
-        type -> type.signature,
-        signatureFactory::getSignature);
+    List<String> errors =
+        getTestErrors(
+            field -> field.signature,
+            method -> method.signature,
+            type -> type.signature,
+            signatureFactory::getSignature);
 
     assertTrue("Signature mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
   }

@@ -22,56 +22,49 @@ import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JavadocTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void shouldCreateJavadocs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "javadocs",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "javadocs", tmp);
     workspace.setUp();
 
     Path javadocJar = workspace.buildAndReturnOutput("//:lib#doc");
 
     assertTrue(Files.exists(javadocJar));
     try (Zip zip = new Zip(javadocJar, false)) {
-        Set<String> allFileNames = zip.getFileNames();
+      Set<String> allFileNames = zip.getFileNames();
 
-        // Make sure we have an entry for a source file and an index.html
-        assertTrue(allFileNames.contains("index.html"));
-        assertTrue(allFileNames.contains("com/example/A.html"));
+      // Make sure we have an entry for a source file and an index.html
+      assertTrue(allFileNames.contains("index.html"));
+      assertTrue(allFileNames.contains("com/example/A.html"));
     }
   }
 
   @Test
   public void shouldCreateAnEmptyJarIfThereAreNoSources() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "javadocs",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "javadocs", tmp);
     workspace.setUp();
 
     Path javadocJar = workspace.buildAndReturnOutput("//:empty-lib#doc");
 
     assertTrue(Files.exists(javadocJar));
     try (Zip zip = new Zip(javadocJar, false)) {
-        Set<String> allFileNames = zip.getFileNames();
+      Set<String> allFileNames = zip.getFileNames();
 
-        // Make sure we have an entry for a source file and an index.html
-        assertTrue(allFileNames.isEmpty());
+      // Make sure we have an entry for a source file and an index.html
+      assertTrue(allFileNames.isEmpty());
     }
   }
 }

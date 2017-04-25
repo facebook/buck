@@ -20,22 +20,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.TestCustomZipOutputStream;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.concurrent.Semaphore;
-
 import javax.tools.JavaFileObject;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Tests {@link JavaInMemoryFileObject}
- */
+/** Tests {@link JavaInMemoryFileObject} */
 public class JavaInMemoryFileObjectTest {
 
   private TestCustomZipOutputStream outputStream;
@@ -50,12 +45,13 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testJavaFileName() throws Exception {
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
-    JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        URI.create("file://tmp/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject inMemoryFileObject =
+        new JavaInMemoryFileObject(
+            URI.create("file://tmp/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     final String expectedName = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     assertEquals(expectedName, inMemoryFileObject.getName());
@@ -64,12 +60,13 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testJavaFileContent() throws Exception {
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
-    JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        URI.create("file://tmp/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject inMemoryFileObject =
+        new JavaInMemoryFileObject(
+            URI.create("file://tmp/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     OutputStream out = inMemoryFileObject.openOutputStream();
     out.write("content".getBytes());
@@ -83,20 +80,22 @@ public class JavaInMemoryFileObjectTest {
   @Test
   public void testMultipleJavaFiles() throws Exception {
     String relativePath = "com/facebook/buck/java/JavaFileParser.class";
-    JavaInMemoryFileObject file1 = new JavaInMemoryFileObject(
-        URI.create("file://tmp/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject file1 =
+        new JavaInMemoryFileObject(
+            URI.create("file://tmp/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     String relativePath2 = "com/facebook/buck/java/JavaLibrary.class";
-    JavaInMemoryFileObject file2 = new JavaInMemoryFileObject(
-        URI.create("file://tmp/" + relativePath2),
-        relativePath2,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject file2 =
+        new JavaInMemoryFileObject(
+            URI.create("file://tmp/" + relativePath2),
+            relativePath2,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     OutputStream file1Out = file1.openOutputStream();
     file1Out.write("file1Content".getBytes());
@@ -116,12 +115,13 @@ public class JavaInMemoryFileObjectTest {
   public void testJarURIName() throws Exception {
     String jarPath = "/tmp/test.jar";
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
-    JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        URI.create("jar:file://" + jarPath + "!/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject inMemoryFileObject =
+        new JavaInMemoryFileObject(
+            URI.create("jar:file://" + jarPath + "!/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     final String expectedName =
         "jar:file:///tmp/test.jar!/com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
@@ -134,12 +134,13 @@ public class JavaInMemoryFileObjectTest {
   public void testOpenForInputThrowsWhenNotWritten() throws Exception {
     String jarPath = "/tmp/test.jar";
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
-    JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        URI.create("jar:file://" + jarPath + "!/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject inMemoryFileObject =
+        new JavaInMemoryFileObject(
+            URI.create("jar:file://" + jarPath + "!/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     try (InputStream stream = inMemoryFileObject.openInputStream()) {
       stream.read();
@@ -150,12 +151,13 @@ public class JavaInMemoryFileObjectTest {
   public void testOpenForOutputTwiceThrows() throws Exception {
     String jarPath = "/tmp/test.jar";
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
-    JavaInMemoryFileObject inMemoryFileObject = new JavaInMemoryFileObject(
-        URI.create("jar:file://" + jarPath + "!/" + relativePath),
-        relativePath,
-        JavaFileObject.Kind.CLASS,
-        outputStream,
-        semaphore);
+    JavaInMemoryFileObject inMemoryFileObject =
+        new JavaInMemoryFileObject(
+            URI.create("jar:file://" + jarPath + "!/" + relativePath),
+            relativePath,
+            JavaFileObject.Kind.CLASS,
+            outputStream,
+            semaphore);
 
     try (OutputStream stream = inMemoryFileObject.openOutputStream()) {
       stream.write("Hello World!".getBytes());

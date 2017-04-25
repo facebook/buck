@@ -30,12 +30,10 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class MavenUberJarTest {
 
@@ -51,12 +49,9 @@ public class MavenUberJarTest {
     BuildTarget pythonTarget = BuildTargetFactory.newInstance("//:python");
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:java");
 
-    PythonLibraryBuilder pythonLibraryBuilder =
-        PythonLibraryBuilder
-            .createBuilder(pythonTarget);
+    PythonLibraryBuilder pythonLibraryBuilder = PythonLibraryBuilder.createBuilder(pythonTarget);
     JavaLibraryBuilder javaLibraryBuilder =
-        JavaLibraryBuilder
-            .createBuilder(javaTarget)
+        JavaLibraryBuilder.createBuilder(javaTarget)
             .addResource(new DefaultBuildTargetSourcePath(pythonTarget));
 
     TargetGraph targetGraph =
@@ -64,10 +59,8 @@ public class MavenUberJarTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    PythonLibrary pythonLibrary =
-        pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
-    JavaLibrary javaLibrary =
-        javaLibraryBuilder.build(resolver, filesystem, targetGraph);
+    PythonLibrary pythonLibrary = pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
+    JavaLibrary javaLibrary = javaLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     MavenUberJar buildRule =
         MavenUberJar.create(

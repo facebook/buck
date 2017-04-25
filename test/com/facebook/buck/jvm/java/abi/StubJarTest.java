@@ -34,23 +34,6 @@ import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InnerClassNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.ParameterNode;
-import org.objectweb.asm.tree.TypeAnnotationNode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,12 +51,26 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InnerClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.ParameterNode;
+import org.objectweb.asm.tree.TypeAnnotationNode;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StubJarTest {
@@ -86,39 +83,39 @@ public class StubJarTest {
   // Test a stub generated from source, with dependencies missing
   private static final String MODE_SOURCE_BASED_MISSING_DEPS = "SOURCE_BASED_MISSING_DEPS";
 
-  private static final String ANNOTATION_SOURCE = Joiner.on("\n").join(ImmutableList.of(
-      "package com.example.buck;",
-      "import java.lang.annotation.*;",
-      "import static java.lang.annotation.ElementType.*;",
-      "@Retention(RetentionPolicy.RUNTIME)",
-      "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
-      "public @interface Foo {",
-      "  int primitiveValue() default 0;",
-      "  String[] stringArrayValue() default {\"Hello\"};",
-      "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
-      "  Retention[] annotationArrayValue() default {};",
-      "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
-      "  Class typeValue() default Foo.class;",
-      "  @Target({TYPE_PARAMETER, TYPE_USE})",
-      "  @interface TypeAnnotation { }",
-      "}"
-  ));
+  private static final String ANNOTATION_SOURCE =
+      Joiner.on("\n")
+          .join(
+              ImmutableList.of(
+                  "package com.example.buck;",
+                  "import java.lang.annotation.*;",
+                  "import static java.lang.annotation.ElementType.*;",
+                  "@Retention(RetentionPolicy.RUNTIME)",
+                  "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
+                  "public @interface Foo {",
+                  "  int primitiveValue() default 0;",
+                  "  String[] stringArrayValue() default {\"Hello\"};",
+                  "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
+                  "  Retention[] annotationArrayValue() default {};",
+                  "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
+                  "  Class typeValue() default Foo.class;",
+                  "  @Target({TYPE_PARAMETER, TYPE_USE})",
+                  "  @interface TypeAnnotation { }",
+                  "}"));
 
-  @Parameterized.Parameter
-  public String testingMode;
+  @Parameterized.Parameter public String testingMode;
   private boolean allowCompilationErrors = false;
   private List<String> diagnostics;
   private Set<String> allowedInnerClassNames = new HashSet<>();
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
-    return new Object[]{MODE_JAR_BASED, MODE_SOURCE_BASED, MODE_SOURCE_BASED_MISSING_DEPS};
+    return new Object[] {MODE_JAR_BASED, MODE_SOURCE_BASED, MODE_SOURCE_BASED_MISSING_DEPS};
   }
 
   private static final ImmutableSortedSet<Path> EMPTY_CLASSPATH = ImmutableSortedSet.of();
 
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   private ProjectFilesystem filesystem;
 
@@ -130,10 +127,9 @@ public class StubJarTest {
 
   @Test
   public void emptyClass() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        "package com.example.buck; public class A {}");
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH, "A.java", "package com.example.buck; public class A {}");
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
 
@@ -148,71 +144,77 @@ public class StubJarTest {
 
   @Test
   public void emptyClassWithAnnotation() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        "package com.example.buck; @Deprecated public class A {}");
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH, "A.java", "package com.example.buck; @Deprecated public class A {}");
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void classWithTwoMethods() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(ImmutableList.of(
-            "package com.example.buck;",
-            "public class A {",
-            "  public String toString() { return null; }",
-            "  public void eatCake() {}",
-            "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public String toString() { return null; }",
+                        "  public void eatCake() {}",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-
   }
 
   @Test
   public void preservesThrowsClauses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public void throwSomeStuff() throws Exception, Throwable {}",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class A {",
+                    "  public void throwSomeStuff() throws Exception, Throwable {}",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void preservesThrowsClausesWithTypeVars() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.io.IOException;",
-            "public class A {",
-            "  public <E extends IOException> void throwSomeStuff() throws E {}",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "import java.io.IOException;",
+                    "public class A {",
+                    "  public <E extends IOException> void throwSomeStuff() throws E {}",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void genericClassSignaturesShouldBePreserved() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A<T> {",
-                "  public T get(String key) { return null; }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A<T> {",
+                        "  public T get(String key) { return null; }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -221,27 +223,28 @@ public class StubJarTest {
   public void elementsInStubCorrectlyInOrder() throws IOException {
     // Fields and methods should stub in order
     // Inner classes should stub in reverse
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "    boolean first;",
-                "    float second;",
-                "  public void foo() { }",
-                "  public class B { }",
-                "  public class C { }",
-                "  public void bar() { }",
-                "  public class D { }",
-                "    int between;",
-                "  public class E {",
-                "    public void hello() { }",
-                "    public void test() { }",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "    boolean first;",
+                        "    float second;",
+                        "  public void foo() { }",
+                        "  public class B { }",
+                        "  public class C { }",
+                        "  public void bar() { }",
+                        "  public class D { }",
+                        "    int between;",
+                        "  public class E {",
+                        "    public void hello() { }",
+                        "    public void test() { }",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(
         paths,
@@ -254,112 +257,116 @@ public class StubJarTest {
 
   @Test
   public void genericInterfaceSignaturesShouldBePreserved() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public interface A<T> {",
-                "  T get(String key);",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public interface A<T> {",
+                        "  T get(String key);",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldIgnorePrivateMethods() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  private void privateMethod() {}",
-                "  void packageMethod() {}",
-                "  protected void protectedMethod() {}",
-                "  public void publicMethod() {}",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  private void privateMethod() {}",
+                        "  void packageMethod() {}",
+                        "  protected void protectedMethod() {}",
+                        "  public void publicMethod() {}",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldGenerateConstructorForClassWithSinglePrivateConstructor() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  private A() { }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  private A() { }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldGenerateConstructorForClassWithPrivateConstructorsOnly() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  private A() { }",
-                "  private A(int test) { }",
-                "  private A(String test) { }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  private A() { }",
+                        "  private A(int test) { }",
+                        "  private A(String test) { }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldGeneratePrivateInnerClassDefaultConstructor() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public class Inner {",
-                "    private Inner() { }",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public class Inner {",
+                        "    private Inner() { }",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Outer.class",
-        "com/example/buck/Outer$Inner.class");
+        paths, "com/example/buck/Outer.class", "com/example/buck/Outer$Inner.class");
   }
 
   @Test
   public void shouldGeneratePrivateNestedClassDefaultConstructor() throws IOException {
     notYetImplementedForSource();
 
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public class Inner {",
-                "    public class Nested {",
-                "      private Nested() { }",
-                "    }",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public class Inner {",
+                        "    public class Nested {",
+                        "      private Nested() { }",
+                        "    }",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(
         paths,
@@ -370,63 +377,69 @@ public class StubJarTest {
 
   @Test
   public void shouldPreserveAField() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected String protectedField;",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  protected String protectedField;",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  private String privateField;",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  private String privateField;",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldPreserveGenericTypesOnFields() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A<T> {",
-                "  public T theField;",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A<T> {",
+                        "  public T theField;",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldPreserveGenericTypesOnMethods() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A<T> {",
-                "  public T get(String key) { return null; }",
-                "  public <X extends Comparable<T>> X compareWith(T other) { return null; }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A<T> {",
+                        "  public T get(String key) { return null; }",
+                        "  public <X extends Comparable<T>> X compareWith(T other) { return null; }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -436,16 +449,18 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  @Foo",
-                "  public void cheese(String key) {}",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  @Foo",
+                        "  public void cheese(String key) {}",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -455,16 +470,18 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  @Foo",
-                "  public String name;",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  @Foo",
+                        "  public String name;",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -474,15 +491,17 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public void peynir(@Foo String very, int tasty) {}",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public void peynir(@Foo String very, int tasty) {}",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -497,13 +516,14 @@ public class StubJarTest {
 
     Path annotations = createAnnotationFullJar();
 
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A<@Foo.TypeAnnotation T> { }")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;", "public class A<@Foo.TypeAnnotation T> { }")));
 
     addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
@@ -519,15 +539,17 @@ public class StubJarTest {
 
     Path annotations = createAnnotationFullJar();
 
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
+                        "}")));
 
     addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
@@ -543,16 +565,18 @@ public class StubJarTest {
 
     Path annotations = createAnnotationFullJar();
 
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "import java.util.List;",
-                "public class A {",
-                "  List<@Foo.TypeAnnotation String> list;",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "import java.util.List;",
+                        "public class A {",
+                        "  List<@Foo.TypeAnnotation String> list;",
+                        "}")));
 
     addAllowedInnerClassNames("com/example/buck/Foo$TypeAnnotation");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
@@ -560,59 +584,59 @@ public class StubJarTest {
 
   @Test
   public void omitsAnnotationsWithSourceRetention() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@SourceRetentionAnno()",
-            "public class A { }",
-            "@Retention(RetentionPolicy.SOURCE)",
-            "@interface SourceRetentionAnno { }"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@SourceRetentionAnno()",
+                    "public class A { }",
+                    "@Retention(RetentionPolicy.SOURCE)",
+                    "@interface SourceRetentionAnno { }"));
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/SourceRetentionAnno.class");
+        paths, "com/example/buck/A.class", "com/example/buck/SourceRetentionAnno.class");
   }
 
   @Test
   public void preservesAnnotationsWithClassRetention() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@ClassRetentionAnno()",
-            "public class A { }",
-            "@Retention(RetentionPolicy.CLASS)",
-            "@interface ClassRetentionAnno { }"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@ClassRetentionAnno()",
+                    "public class A { }",
+                    "@Retention(RetentionPolicy.CLASS)",
+                    "@interface ClassRetentionAnno { }"));
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/ClassRetentionAnno.class");
+        paths, "com/example/buck/A.class", "com/example/buck/ClassRetentionAnno.class");
   }
 
   @Test
   public void preservesAnnotationsWithRuntimeRetention() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@RuntimeRetentionAnno()",
-            "public class A { }",
-            "@Retention(RetentionPolicy.RUNTIME)",
-            "@interface RuntimeRetentionAnno { }"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@RuntimeRetentionAnno()",
+                    "public class A { }",
+                    "@Retention(RetentionPolicy.RUNTIME)",
+                    "@interface RuntimeRetentionAnno { }"));
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/RuntimeRetentionAnno.class");
+        paths, "com/example/buck/A.class", "com/example/buck/RuntimeRetentionAnno.class");
   }
 
   @Test
@@ -620,13 +644,15 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "@Foo(primitiveValue=1)",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "@Foo(primitiveValue=1)",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -636,27 +662,31 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "@Foo(stringArrayValue={\"1\", \"2\"})",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "@Foo(stringArrayValue={\"1\", \"2\"})",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void preservesAnnotationsWithEnumValues() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@Retention(RetentionPolicy.RUNTIME)",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@Retention(RetentionPolicy.RUNTIME)",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -666,27 +696,31 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "@Foo(typeValue=String.class)",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "@Foo(typeValue=String.class)",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void preservesAnnotationsWithEnumArrayValues() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@Target({ElementType.CONSTRUCTOR, ElementType.FIELD})",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@Target({ElementType.CONSTRUCTOR, ElementType.FIELD})",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -696,14 +730,16 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@Foo(annotationValue=@Retention(RetentionPolicy.RUNTIME))",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@Foo(annotationValue=@Retention(RetentionPolicy.RUNTIME))",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -713,14 +749,16 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "import java.lang.annotation.*;",
-            "@Foo(annotationArrayValue=@Retention(RetentionPolicy.RUNTIME))",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "import java.lang.annotation.*;",
+                    "@Foo(annotationArrayValue=@Retention(RetentionPolicy.RUNTIME))",
+                    "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -730,13 +768,11 @@ public class StubJarTest {
     notYetImplementedForMissingClasspath();
 
     Path annotations = createAnnotationFullJar();
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(annotations),
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "@Foo()",
-            "public @interface A {}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(annotations),
+            "A.java",
+            Joiner.on("\n").join("package com.example.buck;", "@Foo()", "public @interface A {}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
@@ -746,9 +782,7 @@ public class StubJarTest {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Foo.class",
-        "com/example/buck/Foo$TypeAnnotation.class");
+        paths, "com/example/buck/Foo.class", "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
@@ -756,9 +790,7 @@ public class StubJarTest {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Foo.class",
-        "com/example/buck/Foo$TypeAnnotation.class");
+        paths, "com/example/buck/Foo.class", "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
@@ -766,9 +798,7 @@ public class StubJarTest {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Foo.class",
-        "com/example/buck/Foo$TypeAnnotation.class");
+        paths, "com/example/buck/Foo.class", "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
@@ -776,9 +806,7 @@ public class StubJarTest {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Foo.class",
-        "com/example/buck/Foo$TypeAnnotation.class");
+        paths, "com/example/buck/Foo.class", "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
@@ -786,40 +814,37 @@ public class StubJarTest {
     JarPaths paths = createAnnotationFullAndStubJars();
 
     assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/Foo.class",
-        "com/example/buck/Foo$TypeAnnotation.class");
+        paths, "com/example/buck/Foo.class", "com/example/buck/Foo$TypeAnnotation.class");
   }
 
   @Test
   public void stubsEnums() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "public enum A {",
-            "  Value1,",
-            "  Value2",
-            "}"
-        ));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;", "public enum A {", "  Value1,", "  Value2", "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void stubsAbstractEnums() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            "package com.example.buck;",
-            "public enum A {",
-            "  Value1 {",
-            "    public int get() { return 1; }",
-            "  };",
-            "  public abstract int get();",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    "package com.example.buck;",
+                    "public enum A {",
+                    "  Value1 {",
+                    "    public int get() { return 1; }",
+                    "  };",
+                    "  public abstract int get();",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
     assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
@@ -827,79 +852,77 @@ public class StubJarTest {
 
   @Test
   public void stubsInnerClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public class B {",
+                        "    public int count;",
+                        "    public void foo() {}",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
   public void stubsProtectedInnerClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  protected class B {",
+                        "    public int count;",
+                        "    public void foo() {}",
+                        "  }",
+                        "}")));
 
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
   public void stubsDefaultInnerClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  class B {",
+                        "    public int count;",
+                        "    public void foo() {}",
+                        "  }",
+                        "}")));
 
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$B.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
   public void stubsInnerEnums() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public enum B { Value }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public enum B { Value }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
@@ -908,21 +931,22 @@ public class StubJarTest {
   public void stubsNestedInnerClasses() throws IOException {
     notYetImplementedForSource();
 
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public class B {",
-                "    public class C {",
-                "      public int count;",
-                "      public void foo() {}",
-                "    }",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public class B {",
+                        "    public class C {",
+                        "      public int count;",
+                        "      public void foo() {}",
+                        "    }",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(
         paths,
@@ -934,19 +958,20 @@ public class StubJarTest {
   @Test
   public void doesNotStubReferencesToInnerClassesOfOtherTypes() throws IOException {
     notYetImplementedForSource();
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  B.C field;",
-                "}",
-                "class B {",
-                "  public class C { }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  B.C field;",
+                        "}",
+                        "class B {",
+                        "  public class C { }",
+                        "}")));
 
     assertClassesStubbedCorrectly(
         paths,
@@ -957,37 +982,39 @@ public class StubJarTest {
 
   @Test
   public void stubsStaticMemberClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public static class B {",
-                "    public int count;",
-                "    public void foo() {}",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public static class B {",
+                        "    public int count;",
+                        "    public void foo() {}",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
   public void ignoresAnonymousClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public Runnable r = new Runnable() {",
-                "    public void run() { }",
-                "  };",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public Runnable r = new Runnable() {",
+                        "    public void run() { }",
+                        "  };",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
     assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
@@ -995,18 +1022,19 @@ public class StubJarTest {
 
   @Test
   public void ignoresLocalClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public void method() {",
-                "    class Local { };",
-                "  }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public void method() {",
+                        "    class Local { };",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
     assertClassesNotStubbed(paths, "com/example/buck/A$1Local.class");
@@ -1014,52 +1042,55 @@ public class StubJarTest {
 
   @Test
   public void preservesThrowsClausesOnInnerClassConstructors() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public class B {",
-            "    B() throws Exception, Throwable {",
-            "    }",
-            "  }",
-            "}"
-        ));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class A {",
+                    "  public class B {",
+                    "    B() throws Exception, Throwable {",
+                    "    }",
+                    "  }",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$B.class");
   }
 
   @Test
   public void abiSafeChangesResultInTheSameOutputJar() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected final static int count = 42;",
-                "  public String getGreeting() { return \"hello\"; }",
-                "  Class<?> clazz;",
-                "  public int other;",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  protected final static int count = 42;",
+                        "  public String getGreeting() { return \"hello\"; }",
+                        "  Class<?> clazz;",
+                        "  public int other;",
+                        "}")));
     Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
 
-    paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected final static int count = 42;",
-                "  public String getGreeting() { return \"merhaba\"; }",
-                "  Class<?> clazz = String.class;",
-                "  public int other = 32;",
-                "}"
-            )));
+    paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  protected final static int count = 42;",
+                        "  public String getGreeting() { return \"merhaba\"; }",
+                        "  Class<?> clazz = String.class;",
+                        "  public int other = 32;",
+                        "}")));
     Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
 
     assertEquals(originalHash, secondHash);
@@ -1069,29 +1100,31 @@ public class StubJarTest {
   public void shouldIncludeInnerClassTypeParameterReferenceInMethodParameter() throws IOException {
     notYetImplementedForSource();
 
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public enum Inner { }",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public enum Inner { }",
+                        "}")));
 
-    paths = createFullAndStubJars(
-        ImmutableSortedSet.of(paths.stubJar),
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "import java.util.Set;",
-                "import com.example.buck.Outer;",
-                "public interface A {",
-                "  void foo(Set<Outer.Inner> test);",
-                "}"
-            )));
+    paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(paths.stubJar),
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "import java.util.Set;",
+                        "import com.example.buck.Outer;",
+                        "public interface A {",
+                        "  void foo(Set<Outer.Inner> test);",
+                        "}")));
 
     addAllowedInnerClassNames("com/example/buck/Outer$Inner");
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
@@ -1099,34 +1132,36 @@ public class StubJarTest {
 
   @Test
   public void ordersChangesResultInADifferentOutputJar() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  protected final static int count = 42;",
-                "  public String getGreeting() { return \"hello\"; }",
-                "  Class<?> clazz;",
-                "  public int other;",
-                "}"
-            )));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  protected final static int count = 42;",
+                        "  public String getGreeting() { return \"hello\"; }",
+                        "  Class<?> clazz;",
+                        "  public int other;",
+                        "}")));
     Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
 
-    paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  Class<?> clazz;",
-                "  public String getGreeting() { return \"hello\"; }",
-                "  protected final static int count = 42;",
-                "  public int other;",
-                "}"
-            )));
+    paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  Class<?> clazz;",
+                        "  public String getGreeting() { return \"hello\"; }",
+                        "  protected final static int count = 42;",
+                        "  public int other;",
+                        "}")));
     Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
 
     assertNotEquals(originalHash, secondHash);
@@ -1134,434 +1169,477 @@ public class StubJarTest {
 
   @Test
   public void shouldIncludeStaticFields() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public static String foo;",
-                "  public final static int count = 42;",
-                "  protected static void method() {}",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public static String foo;",
+                        "  public final static int count = 42;",
+                        "  protected static void method() {}",
+                        "}")));
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void innerClassesInStubsCanBeCompiledAgainst() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public class Inner {",
-                "    public String getGreeting() { return \"hola\"; }",
-                "  }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public class Inner {",
+                        "    public String getGreeting() { return \"hola\"; }",
+                        "  }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",      // Note: different package
-                "import com.example.buck.Outer;",  // Inner class becomes available
-                "public class A {",
-                "  private Outer.Inner field;",    // Reference the inner class
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;", // Note: different package
+                    "import com.example.buck.Outer;", // Inner class becomes available
+                    "public class A {",
+                    "  private Outer.Inner field;", // Reference the inner class
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void staticMethodOfInnerClassInStubsCanBeCompiledAgainst() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public static class Inner {",
-                "    public static int testStatic() { return 0; }",
-                "  }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public static class Inner {",
+                        "    public static int testStatic() { return 0; }",
+                        "  }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.Outer;",
-                "public class A {",
-                "  public void testMethod() {",
-                "    int test = Outer.Inner.testStatic();",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.Outer;",
+                    "public class A {",
+                    "  public void testMethod() {",
+                    "    int test = Outer.Inner.testStatic();",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void privateFieldInInnerClassInStubsCanBeCompiledAgainst() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public String getInnerString() {",
-                "    return new Outer.Inner().innerPrivateString;", // Relies on synthetic method
-                "  }",
-                "  private static final class Inner {",
-                "    private final String innerPrivateString = \"hi!\";",
-                "  }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public String getInnerString() {",
+                        "    return new Outer.Inner().innerPrivateString;", // Relies on synthetic method
+                        "  }",
+                        "  private static final class Inner {",
+                        "    private final String innerPrivateString = \"hi!\";",
+                        "  }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.Outer;",
-                "public class A {",
-                "  public String testMethod() {",
-                "    Outer test = new Outer();",
-                "    return test.getInnerString();",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.Outer;",
+                    "public class A {",
+                    "  public String testMethod() {",
+                    "    Outer test = new Outer();",
+                    "    return test.getInnerString();",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void nestedClassInStubsCanBeCompiledAgainst() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Outer.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Outer {",
-                "  public class Inner {",
-                "    public class Nested { }",
-                "  }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Outer.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Outer {",
+                        "  public class Inner {",
+                        "    public class Nested { }",
+                        "  }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.Outer;",
-                "public class A {",
-                "  private Outer.Inner.Nested field;",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.Outer;",
+                    "public class A {",
+                    "  private Outer.Inner.Nested field;",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void methodReturningPrivateInnerClassInStubsCanBeCompiledAgainst() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Test.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Test {",
-                "  public static PrivateInner getPrivateInner() {",
-                "    return new PrivateInner();",
-                "  }",
-                "  private static class PrivateInner { }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Test.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Test {",
+                        "  public static PrivateInner getPrivateInner() {",
+                        "    return new PrivateInner();",
+                        "  }",
+                        "  private static class PrivateInner { }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.Test;",
-                "public class A {",
-                "  public void test() {",
-                "    Object privateInnerObject = Test.getPrivateInner();",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.Test;",
+                    "public class A {",
+                    "  public void test() {",
+                    "    Object privateInnerObject = Test.getPrivateInner();",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void methodOfPrivateSuperClassOfInnerPublicClassInStubsCanBeCompiledAgainst()
       throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Test.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class Test {",
-                "  private class PrivateInner { ",
-                "   public void foo() { }",
-                "  }",
-                "  public class PublicInner extends PrivateInner { }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "Test.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class Test {",
+                        "  private class PrivateInner { ",
+                        "   public void foo() { }",
+                        "  }",
+                        "  public class PublicInner extends PrivateInner { }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.Test;",
-                "public class A {",
-                "  public void test() {",
-                "    Test test = new Test();",
-                "    Test.PublicInner inner = test.new PublicInner();",
-                "    inner.foo();",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.Test;",
+                    "public class A {",
+                    "  public void test() {",
+                    "    Test test = new Test();",
+                    "    Test.PublicInner inner = test.new PublicInner();",
+                    "    inner.foo();",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
-  public void bridgeMethodInStubsCanBeCompiledAgainst()
-      throws IOException {
+  public void bridgeMethodInStubsCanBeCompiledAgainst() throws IOException {
     notYetImplementedForMissingClasspath();
 
-    JarPaths genericPaths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "TestGenericInterface.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public interface TestGenericInterface<T> {",
-                "  public int compare(T a, T b);",
-                "}")));
+    JarPaths genericPaths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "TestGenericInterface.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public interface TestGenericInterface<T> {",
+                        "  public int compare(T a, T b);",
+                        "}")));
 
-    JarPaths paths = createFullAndStubJars(
-        ImmutableSortedSet.of(genericPaths.stubJar),
-        "TestComparator.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "import com.example.buck.TestGenericInterface;",
-                "public class TestComparator implements TestGenericInterface<Integer> {",
-                "  public int compare(Integer a, Integer b) { return 1; }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            ImmutableSortedSet.of(genericPaths.stubJar),
+            "TestComparator.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "import com.example.buck.TestGenericInterface;",
+                        "public class TestComparator implements TestGenericInterface<Integer> {",
+                        "  public int compare(Integer a, Integer b) { return 1; }",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar, genericPaths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.TestComparator;",
-                "import com.example.buck.TestGenericInterface;",
-                "public class A {",
-                "  public void test() {",
-                "    Object first = 1;",
-                "    Object second = 2;",
-                "    TestGenericInterface com = new TestComparator();",
-                "    int result = com.compare(first, second);", // Relies on bridge method
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.TestComparator;",
+                    "import com.example.buck.TestGenericInterface;",
+                    "public class A {",
+                    "  public void test() {",
+                    "    Object first = 1;",
+                    "    Object second = 2;",
+                    "    TestGenericInterface com = new TestComparator();",
+                    "    int result = com.compare(first, second);", // Relies on bridge method
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
-  public void enumInStubsCanBeCompiledAgainst()
-      throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "TestEnum.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public enum TestEnum {",
-                "  Value1,",
-                "  Value2",
-                "}")));
+  public void enumInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "TestEnum.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public enum TestEnum {",
+                        "  Value1,",
+                        "  Value2",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.TestEnum;",
-                "public class A {",
-                "  TestEnum testEnum = TestEnum.Value1;",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.TestEnum;",
+                    "public class A {",
+                    "  TestEnum testEnum = TestEnum.Value1;",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
-  public void genericClassInStubsCanBeCompiledAgainst()
-      throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "GenericClass.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class GenericClass<T> {",
-                "  public T theField;",
-                "}")));
+  public void genericClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "GenericClass.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class GenericClass<T> {",
+                        "  public T theField;",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.GenericClass;",
-                "public class A {",
-                "  public void test() {",
-                "    GenericClass<String> field = new GenericClass<>();",
-                "    field.theField = \"facebook\";",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.GenericClass;",
+                    "public class A {",
+                    "  public void test() {",
+                    "    GenericClass<String> field = new GenericClass<>();",
+                    "    field.theField = \"facebook\";",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
-  public void classExtendingGenericClassInStubsCanBeCompiledAgainst()
-      throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "GenericClass.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class GenericClass<T> {",
-                "  public T theField;",
-                "}")));
+  public void classExtendingGenericClassInStubsCanBeCompiledAgainst() throws IOException {
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "GenericClass.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class GenericClass<T> {",
+                        "  public T theField;",
+                        "}")));
 
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.GenericClass;",
-                "public class A<T, M> extends GenericClass<T> {",
-                "  public M otherField;",
-                "  public A(T t, M m) {",
-                "    this.theField = t;",
-                "    this.otherField = m;",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.GenericClass;",
+                    "public class A<T, M> extends GenericClass<T> {",
+                    "  public M otherField;",
+                    "  public A(T t, M m) {",
+                    "    this.theField = t;",
+                    "    this.otherField = m;",
+                    "  }",
+                    "}")),
         temp.newFolder());
   }
 
   @Test
   public void privateConstructorResultsInCorrectCompileError() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "PrivateTest.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class PrivateTest {",
-                "  private PrivateTest() { }",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "PrivateTest.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class PrivateTest {",
+                        "  private PrivateTest() { }",
+                        "}")));
 
     allowCompilationErrors = true;
     compileToJar(
         ImmutableSortedSet.of(paths.stubJar),
         Collections.emptyList(),
         "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck2;",
-                "import com.example.buck.PrivateTest;",
-                "public class A {",
-                "  public void foo() {",
-                "   PrivateTest test = new PrivateTest();",
-                "  }",
-                "}")),
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "package com.example.buck2;",
+                    "import com.example.buck.PrivateTest;",
+                    "public class A {",
+                    "  public void foo() {",
+                    "   PrivateTest test = new PrivateTest();",
+                    "  }",
+                    "}")),
         temp.newFolder());
 
     ImmutableList<String> expectedErrors =
-        ImmutableList.of(Joiner.on('\n').join(
-            "A.java:5: error: PrivateTest() has private access in com.example.buck.PrivateTest",
-            "   PrivateTest test = new PrivateTest();",
-            "                      ^"));
+        ImmutableList.of(
+            Joiner.on('\n')
+                .join(
+                    "A.java:5: error: PrivateTest() has private access in com.example.buck.PrivateTest",
+                    "   PrivateTest test = new PrivateTest();",
+                    "                      ^"));
     assertCompilationErrors(expectedErrors);
   }
 
   @Test
   public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public synchronized void doMagic() {}",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public synchronized void doMagic() {}",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldKeepMultipleFieldsWithSameDescValue() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public static final A SEVERE = new A();",
-                "  public static final A NOT_SEVERE = new A();",
-                "  public static final A QUITE_MILD = new A();",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public static final A SEVERE = new A();",
+                        "  public static final A NOT_SEVERE = new A();",
+                        "  public static final A QUITE_MILD = new A();",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldNotStubClinit() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public static int i = 3;",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class A {",
+                    "  public static int i = 3;",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(
-            ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public String toString() { return null; }",
-                "  public void eatCake() {}",
-                "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on("\n")
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A {",
+                        "  public String toString() { return null; }",
+                        "  public void eatCake() {}",
+                        "}")));
 
     Path classDir = temp.newFolder().toPath();
     Unzip.extractZipFile(paths.fullJar, classDir, Unzip.ExistingFileMode.OVERWRITE);
@@ -1571,57 +1649,58 @@ public class StubJarTest {
 
   @Test
   public void shouldNotIncludeSyntheticFields() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  public void method() {",
-            "    assert false;",  // Using assert adds a synthetic field $assertionsDisabled
-            "  }",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class A {",
+                    "  public void method() {",
+                    "    assert false;", // Using assert adds a synthetic field $assertionsDisabled
+                    "  }",
+                    "}"));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void shouldNotIncludeSyntheticClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public class A {",
-            "  enum E { Value };",
-            "  public void method(E e) {",
-            "    switch (e) {",  // Switching on an enum introduces a synthetic helper class
-            "      case Value: break;",
-            "    }",
-            "  }",
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class A {",
+                    "  enum E { Value };",
+                    "  public void method(E e) {",
+                    "    switch (e) {", // Switching on an enum introduces a synthetic helper class
+                    "      case Value: break;",
+                    "    }",
+                    "  }",
+                    "}"));
 
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class",
-        "com/example/buck/A$E.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$E.class");
     assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
   }
 
   @Test
   public void shouldNotIncludeSyntheticMethods() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(
-            "package com.example.buck;",
-            "public enum A {",
-            "  Value1 { }",  // Creating an enum subclass creates a synthetic constructor
-            "}"));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public enum A {",
+                    "  Value1 { }", // Creating an enum subclass creates a synthetic constructor
+                    "}"));
 
-    assertClassesStubbedCorrectly(
-        paths,
-        "com/example/buck/A.class");
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
     assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
   }
 
@@ -1629,26 +1708,26 @@ public class StubJarTest {
   public void shouldIncludeBridgeMethods() throws IOException {
     notYetImplementedForSource();
 
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on('\n').join(ImmutableList.of(
-            "package com.example.buck;",
-            "public class A implements Comparable<A> {",
-            "  public int compareTo(A other) {",
-            "    return 0;",
-            "  }",
-            "}")));
+    JarPaths paths =
+        createFullAndStubJars(
+            EMPTY_CLASSPATH,
+            "A.java",
+            Joiner.on('\n')
+                .join(
+                    ImmutableList.of(
+                        "package com.example.buck;",
+                        "public class A implements Comparable<A> {",
+                        "  public int compareTo(A other) {",
+                        "    return 0;",
+                        "  }",
+                        "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
 
   @Test
   public void stubJarShouldHaveManifestWithEntriesForClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "A.java",
-        "public class A { }");
+    JarPaths paths = createFullAndStubJars(EMPTY_CLASSPATH, "A.java", "public class A { }");
 
     FileSystem fileSystem = FileSystems.newFileSystem(paths.stubJar, null);
     Path manifestPath = fileSystem.getPath("META-INF", "MANIFEST.MF");
@@ -1665,24 +1744,18 @@ public class StubJarTest {
   }
 
   private JarPaths createFullAndStubJars(
-      ImmutableSortedSet<Path> classPath,
-      String fileName,
-      String source) throws IOException {
+      ImmutableSortedSet<Path> classPath, String fileName, String source) throws IOException {
     File outputDir = temp.newFolder();
-    Path fullJar = compileToJar(
-        classPath,
-        Collections.emptyList(),
-        fileName,
-        source,
-        outputDir);
+    Path fullJar = compileToJar(classPath, Collections.emptyList(), fileName, source, outputDir);
 
     Path stubJar;
     if (testingMode != MODE_JAR_BASED) {
-      stubJar = createStubJar(
-          testingMode == MODE_SOURCE_BASED ? classPath : Collections.emptySortedSet(),
-          fileName,
-          source,
-          outputDir.toPath());
+      stubJar =
+          createStubJar(
+              testingMode == MODE_SOURCE_BASED ? classPath : Collections.emptySortedSet(),
+              fileName,
+              source,
+              outputDir.toPath());
     } else {
       stubJar = createStubJar(fullJar);
     }
@@ -1691,10 +1764,8 @@ public class StubJarTest {
   }
 
   private Path createStubJar(
-      SortedSet<Path> classpath,
-      String fileName,
-      String source,
-      Path outputDir) throws IOException {
+      SortedSet<Path> classpath, String fileName, String source, Path outputDir)
+      throws IOException {
     Path stubJar = outputDir.resolve("stub.jar");
 
     try (TestCompiler testCompiler = new TestCompiler()) {
@@ -1702,24 +1773,23 @@ public class StubJarTest {
       testCompiler.useFrontendOnlyJavacTask();
       testCompiler.addSourceFileContents(fileName, source);
       testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(ImmutableList.of(
-          new AbstractProcessor() {
-            @Override
-            public Set<String> getSupportedAnnotationTypes() {
-              return Collections.singleton("*");
-            }
+      testCompiler.setProcessors(
+          ImmutableList.of(
+              new AbstractProcessor() {
+                @Override
+                public Set<String> getSupportedAnnotationTypes() {
+                  return Collections.singleton("*");
+                }
 
-            @Override
-            public boolean process(
-                Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-              return false;
-            }
-          }
-      ));
-      StubGenerator generator = new StubGenerator(
-          SourceVersion.RELEASE_8,
-          testCompiler.getElements(),
-          testCompiler.getFileManager());
+                @Override
+                public boolean process(
+                    Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                  return false;
+                }
+              }));
+      StubGenerator generator =
+          new StubGenerator(
+              SourceVersion.RELEASE_8, testCompiler.getElements(), testCompiler.getFileManager());
 
       testCompiler.addPostEnterCallback(generator::generate);
 
@@ -1740,7 +1810,8 @@ public class StubJarTest {
       List<Processor> processors,
       String fileName,
       String source,
-      File outputDir) throws IOException {
+      File outputDir)
+      throws IOException {
     try (TestCompiler compiler = new TestCompiler()) {
       compiler.init();
       compiler.addSourceFileContents(fileName, source);
@@ -1762,24 +1833,16 @@ public class StubJarTest {
   }
 
   private JarPaths createAnnotationFullAndStubJars() throws IOException {
-    return createFullAndStubJars(
-        EMPTY_CLASSPATH,
-        "Foo.java",
-        ANNOTATION_SOURCE);
+    return createFullAndStubJars(EMPTY_CLASSPATH, "Foo.java", ANNOTATION_SOURCE);
   }
 
   private Path createAnnotationFullJar() throws IOException {
     return compileToJar(
-        EMPTY_CLASSPATH,
-        Collections.emptyList(),
-        "Foo.java",
-        ANNOTATION_SOURCE,
-        temp.newFolder());
+        EMPTY_CLASSPATH, Collections.emptyList(), "Foo.java", ANNOTATION_SOURCE, temp.newFolder());
   }
 
-  private void assertClassesNotStubbed(
-      JarPaths paths,
-      String... classFilePaths) throws IOException {
+  private void assertClassesNotStubbed(JarPaths paths, String... classFilePaths)
+      throws IOException {
     for (String classFilePath : classFilePaths) {
       AbiClass stubbed = readClass(paths.stubJar, classFilePath);
       if (stubbed != null) {
@@ -1788,9 +1851,8 @@ public class StubJarTest {
     }
   }
 
-  private void assertClassesStubbedCorrectly(
-      JarPaths paths,
-      String... classFilePaths) throws IOException {
+  private void assertClassesStubbedCorrectly(JarPaths paths, String... classFilePaths)
+      throws IOException {
     for (String classFilePath : classFilePaths) {
       String classFileName =
           classFilePath.substring(classFilePath.lastIndexOf(File.separatorChar) + 1);
@@ -1808,11 +1870,12 @@ public class StubJarTest {
   }
 
   /**
-   * A class is stubbed correctly if the stub is exactly the same as its full counterpart, with
-   * the following exceptions:
+   * A class is stubbed correctly if the stub is exactly the same as its full counterpart, with the
+   * following exceptions:
+   *
    * <ul>
-   * <li>No private members, &lt;clinit&gt;, synthetic members, bridge methods, or method bodies
-   * are present</li>
+   *   <li>No private members, &lt;clinit&gt;, synthetic members, bridge methods, or method bodies
+   *       are present
    * </ul>
    */
   private void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
@@ -1841,25 +1904,22 @@ public class StubJarTest {
     assertAnnotationsEqual(originalNode.visibleAnnotations, stubbedNode.visibleAnnotations);
     assertAnnotationsEqual(originalNode.invisibleAnnotations, stubbedNode.invisibleAnnotations);
     assertTypeAnnotationsEqual(
-        originalNode.visibleTypeAnnotations,
-        stubbedNode.visibleTypeAnnotations);
+        originalNode.visibleTypeAnnotations, stubbedNode.visibleTypeAnnotations);
     assertTypeAnnotationsEqual(
-        originalNode.invisibleTypeAnnotations,
-        stubbedNode.invisibleTypeAnnotations);
+        originalNode.invisibleTypeAnnotations, stubbedNode.invisibleTypeAnnotations);
     assertEquals(originalNode.attrs, stubbedNode.attrs);
-    assertInnerClassesStubbedCorrectly(
-        originalNode.innerClasses,
-        stubbedNode.innerClasses);
+    assertInnerClassesStubbedCorrectly(originalNode.innerClasses, stubbedNode.innerClasses);
     assertFieldsStubbedCorrectly(originalNode.fields, stubbedNode.fields);
     assertMethodsStubbedCorrectly(originalNode.methods, stubbedNode.methods);
   }
 
   private void assertInnerClassesStubbedCorrectly(
-      List<InnerClassNode> original,
-      List<InnerClassNode> stubbed) {
-    List<InnerClassNode> filteredOriginal = original.stream()
-        .filter(node -> allowedInnerClassNames.contains(node.name))
-        .collect(Collectors.toList());
+      List<InnerClassNode> original, List<InnerClassNode> stubbed) {
+    List<InnerClassNode> filteredOriginal =
+        original
+            .stream()
+            .filter(node -> allowedInnerClassNames.contains(node.name))
+            .collect(Collectors.toList());
     assertMembersStubbedCorrectly(
         filteredOriginal,
         stubbed,
@@ -1868,8 +1928,7 @@ public class StubJarTest {
   }
 
   private static void assertMethodsStubbedCorrectly(
-      List<MethodNode> original,
-      List<MethodNode> stubbed) {
+      List<MethodNode> original, List<MethodNode> stubbed) {
     boolean hasConstructor = false;
     List<MethodNode> filteredOriginal = new ArrayList<>();
     for (MethodNode m : original) {
@@ -1884,36 +1943,32 @@ public class StubJarTest {
 
     // Check that our stubbed class has a constructor if it should
     if (hasConstructor) {
-      List<MethodNode> stubbedConstructors = stubbed.stream()
-          .filter(m -> m.name.equals("<init>") && (m.access & Opcodes.ACC_SYNTHETIC) == 0)
-          .collect(Collectors.toList());
-      if (stubbedConstructors.size() == 1 &&
-          (stubbedConstructors.get(0).access & Opcodes.ACC_PRIVATE) > 0) {
+      List<MethodNode> stubbedConstructors =
+          stubbed
+              .stream()
+              .filter(m -> m.name.equals("<init>") && (m.access & Opcodes.ACC_SYNTHETIC) == 0)
+              .collect(Collectors.toList());
+      if (stubbedConstructors.size() == 1
+          && (stubbedConstructors.get(0).access & Opcodes.ACC_PRIVATE) > 0) {
         // A single private default constructor will exist if the stubbed class only has private
         // constructors. We remove it before comparing since we'll filter all private methods from
         // the original class anyway. See AbiFilteringClassVisitor.visitMethod() for more info
         stubbed.remove(stubbedConstructors.get(0));
       } else if (stubbedConstructors.size() == 0) {
-        fail("No constructor found.\n" +
-            "This stubbed class should at least have a default private constructor!");
+        fail(
+            "No constructor found.\n"
+                + "This stubbed class should at least have a default private constructor!");
       }
     }
 
     assertMembersStubbedCorrectly(
-        filteredOriginal,
-        stubbed,
-        node -> node.access,
-        StubJarTest::assertMethodStubbedCorrectly);
+        filteredOriginal, stubbed, node -> node.access, StubJarTest::assertMethodStubbedCorrectly);
   }
 
   private static void assertFieldsStubbedCorrectly(
-      List<FieldNode> original,
-      List<FieldNode> stubbed) {
+      List<FieldNode> original, List<FieldNode> stubbed) {
     assertMembersStubbedCorrectly(
-        original,
-        stubbed,
-        node -> node.access,
-        StubJarTest::assertFieldStubbedCorrectly);
+        original, stubbed, node -> node.access, StubJarTest::assertFieldStubbedCorrectly);
   }
 
   private static <M> void assertMembersStubbedCorrectly(
@@ -1921,24 +1976,28 @@ public class StubJarTest {
       List<M> stubbed,
       Function<M, Integer> getAccess,
       BiFunction<M, M, Void> assertMemberStubbedCorrectly) {
-    List<M> filtered = original.stream()
-        .filter(m -> {
-          if (m instanceof InnerClassNode) {
-            return true;
-          }
-          int access = getAccess.apply(m);
-          if ((access & Opcodes.ACC_PRIVATE) != 0) {
-            // Never stub privates
-            return false;
-          }
-          if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
-            // Never stub things that are synthetic but not bridges
-            return false;
-          }
+    List<M> filtered =
+        original
+            .stream()
+            .filter(
+                m -> {
+                  if (m instanceof InnerClassNode) {
+                    return true;
+                  }
+                  int access = getAccess.apply(m);
+                  if ((access & Opcodes.ACC_PRIVATE) != 0) {
+                    // Never stub privates
+                    return false;
+                  }
+                  if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE))
+                      == Opcodes.ACC_SYNTHETIC) {
+                    // Never stub things that are synthetic but not bridges
+                    return false;
+                  }
 
-          return true;
-        })
-        .collect(Collectors.toList());
+                  return true;
+                })
+            .collect(Collectors.toList());
 
     // We just iterate through since order of each list should match
     // An IndexOutOfBoundsException may be thrown if extra or missing stubs are found
@@ -1949,8 +2008,7 @@ public class StubJarTest {
   }
 
   private static Void assertInnerClassStubbedCorrectly(
-      InnerClassNode original,
-      InnerClassNode stubbed) {
+      InnerClassNode original, InnerClassNode stubbed) {
     assertEquals(original.name, stubbed.name);
     assertEquals(original.outerName, stubbed.outerName);
     assertEquals(original.innerName, stubbed.innerName);
@@ -1971,11 +2029,9 @@ public class StubJarTest {
     assertTypeAnnotationsEqual(original.invisibleTypeAnnotations, stubbed.invisibleTypeAnnotations);
     assertAnnotationValueEquals(original.annotationDefault, stubbed.annotationDefault);
     assertParameterAnnotationsEqual(
-        original.visibleParameterAnnotations,
-        stubbed.visibleParameterAnnotations);
+        original.visibleParameterAnnotations, stubbed.visibleParameterAnnotations);
     assertParameterAnnotationsEqual(
-        original.invisibleParameterAnnotations,
-        stubbed.invisibleParameterAnnotations);
+        original.invisibleParameterAnnotations, stubbed.invisibleParameterAnnotations);
 
     return null;
   }
@@ -1996,8 +2052,7 @@ public class StubJarTest {
   }
 
   private static void assertParameterAnnotationsEqual(
-      List<AnnotationNode>[] expected,
-      List<AnnotationNode>[] seen) {
+      List<AnnotationNode>[] expected, List<AnnotationNode>[] seen) {
     if (expected == null) {
       assertNull(seen);
       return;
@@ -2010,52 +2065,41 @@ public class StubJarTest {
     }
   }
 
-
   private static void assertAnnotationsEqual(
-      List<AnnotationNode> expected,
-      List<AnnotationNode> seen) {
+      List<AnnotationNode> expected, List<AnnotationNode> seen) {
     assertListsEqual(expected, seen, StubJarTest::annotationToString);
   }
 
   private static void assertParametersEqual(
-      List<ParameterNode> expected,
-      List<ParameterNode> seen) {
+      List<ParameterNode> expected, List<ParameterNode> seen) {
     assertListsEqual(expected, seen, StubJarTest::parameterToString);
   }
 
   private static void assertTypeAnnotationsEqual(
-      List<TypeAnnotationNode> expected,
-      List<TypeAnnotationNode> seen) {
+      List<TypeAnnotationNode> expected, List<TypeAnnotationNode> seen) {
     assertListsEqual(expected, seen, StubJarTest::typeAnnotationToString);
   }
 
   private static <T> void assertListsEqual(
-      List<T> expected,
-      List<T> seen,
-      Function<T, String> toString) {
+      List<T> expected, List<T> seen, Function<T, String> toString) {
     if (expected == null) {
       assertNull(seen);
       return;
     }
     assertNotNull(
-        String.format(
-            "Stubbed no %s's",
-            expected.get(0).getClass().getSimpleName()),
-        seen);
+        String.format("Stubbed no %s's", expected.get(0).getClass().getSimpleName()), seen);
 
     assertEquals(
-        expected.stream()
-            .map(toString)
-            .collect(Collectors.toList()),
-        seen.stream()
-            .map(toString)
-            .collect(Collectors.toList()));
+        expected.stream().map(toString).collect(Collectors.toList()),
+        seen.stream().map(toString).collect(Collectors.toList()));
   }
 
   private void assertCompilationErrors(List<String> expectedErrors) {
-    List<String> actual = diagnostics.stream()
-        .map(diagnostic -> diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
-        .collect(Collectors.toList());
+    List<String> actual =
+        diagnostics
+            .stream()
+            .map(diagnostic -> diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+            .collect(Collectors.toList());
     assertThat(actual, Matchers.containsInAnyOrder(expectedErrors.toArray()));
   }
 
@@ -2074,9 +2118,7 @@ public class StubJarTest {
 
   private static String annotationToString(AnnotationNode annotationNode) {
     return String.format(
-        "%s(%s)",
-        annotationNode.desc,
-        annotationValuesToString(annotationNode.values));
+        "%s(%s)", annotationNode.desc, annotationValuesToString(annotationNode.values));
   }
 
   private static void assertAnnotationValueEquals(Object expected, Object actual) {

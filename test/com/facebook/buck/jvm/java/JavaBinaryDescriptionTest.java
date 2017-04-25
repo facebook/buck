@@ -18,16 +18,15 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -41,9 +40,7 @@ public class JavaBinaryDescriptionTest {
 
     FakeJavaLibrary transitiveLibrary =
         resolver.addToIndex(
-            new FakeJavaLibrary(
-                BuildTargetFactory.newInstance("//:transitive_lib"),
-                pathResolver));
+            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_lib"), pathResolver));
     FakeJavaLibrary firstOrderLibrary =
         resolver.addToIndex(
             new FakeJavaLibrary(
@@ -52,13 +49,13 @@ public class JavaBinaryDescriptionTest {
                 ImmutableSortedSet.of(transitiveLibrary)));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaBinary = new JavaBinaryRuleBuilder(target)
-        .setDeps(ImmutableSortedSet.of(firstOrderLibrary.getBuildTarget()))
-        .build(resolver);
+    BuildRule javaBinary =
+        new JavaBinaryRuleBuilder(target)
+            .setDeps(ImmutableSortedSet.of(firstOrderLibrary.getBuildTarget()))
+            .build(resolver);
 
     assertThat(
         javaBinary.getBuildDeps(),
         Matchers.containsInAnyOrder(firstOrderLibrary, transitiveLibrary));
   }
-
 }

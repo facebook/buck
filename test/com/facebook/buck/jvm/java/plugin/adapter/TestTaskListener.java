@@ -18,5 +18,6 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 public interface TestTaskListener {
   void started(String event);
+
   void finished(String event);
 }

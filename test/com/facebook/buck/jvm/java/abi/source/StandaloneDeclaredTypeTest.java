@@ -20,24 +20,18 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StandaloneDeclaredTypeTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testToStringNoGenerics() throws IOException {
-    compile(Joiner.on('\n').join(
-        "package com.facebook.foo;",
-        "class Foo { }"
-    ));
+    compile(Joiner.on('\n').join("package com.facebook.foo;", "class Foo { }"));
 
     DeclaredType fooType = (DeclaredType) elements.getTypeElement("com.facebook.foo.Foo").asType();
 
@@ -53,8 +47,6 @@ public class StandaloneDeclaredTypeTest extends CompilerTreeApiParameterizedTest
     TypeMirror integerType = elements.getTypeElement("java.lang.Integer").asType();
     DeclaredType mapStringIntType = types.getDeclaredType(mapElement, stringType, integerType);
 
-    assertEquals(
-        "java.util.Map<java.lang.String,java.lang.Integer>",
-        mapStringIntType.toString());
+    assertEquals("java.util.Map<java.lang.String,java.lang.Integer>", mapStringIntType.toString());
   }
 }

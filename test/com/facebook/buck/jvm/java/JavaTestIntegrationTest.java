@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -29,45 +28,35 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JavaTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void shouldNotCompileIfDependsOnCompilerClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "missing_test_deps",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:no-jsr-305");
 
     result.assertFailure();
     String stderr = result.getStderr();
-    assertTrue(
-        stderr,
-        stderr.contains(
-            "cannot find symbol\nimport javax.annotation.Nullable;"));
+    assertTrue(stderr, stderr.contains("cannot find symbol\nimport javax.annotation.Nullable;"));
   }
 
   @Test
   public void shouldRefuseToRunJUnitTestsIfHamcrestNotOnClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "missing_test_deps",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-hamcrest");
@@ -84,10 +73,8 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void shouldRefuseToRunJUnitTestsIfJUnitNotOnClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "missing_test_deps",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-junit");
@@ -104,10 +91,8 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void shouldRefuseToRunTestNgTestsIfTestNgNotOnClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "missing_test_deps",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");
@@ -128,17 +113,15 @@ public class JavaTestIntegrationTest {
    * custom timeout for tests, then both tests are created and executed using the same single thread
    * executor, in the following order:
    *
-   * create suite -> create test -> run suite -> run test
+   * <p>create suite -> create test -> run suite -> run test
    *
-   * Obviously, that "run test" causes the deadlock, since suite hasn't finished executing and won't
-   * until test completes, but test won't be run until suite finishes. Furrfu.
+   * <p>Obviously, that "run test" causes the deadlock, since suite hasn't finished executing and
+   * won't until test completes, but test won't be run until suite finishes. Furrfu.
    */
   @Test
   public void shouldNotDeadlock() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "deadlock",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "deadlock", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:suite");
@@ -148,10 +131,9 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void missingResultsFileIsTestFailure() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "java_test_missing_result_file",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "java_test_missing_result_file", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
@@ -163,10 +145,8 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void spinningTestTimesOutGlobalTimeout() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_tests",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
     workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
 
@@ -180,10 +160,8 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void spinningTestTimesOutPerRuleTimeout() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_tests_per_rule_timeout",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests_per_rule_timeout", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
@@ -196,10 +174,8 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void normalTestDoesNotTimeOut() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_tests",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
     workspace.writeContentsToPath("[test]\n  rule_timeout = 10000", ".buckconfig");
 
@@ -208,34 +184,27 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void brokenTestGivesFailedTestResult() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "java_test_broken_test",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_broken_test", temp);
     workspace.setUp();
     workspace.runBuckCommand("test", "//:simple").assertTestFailure();
   }
 
   @Test
   public void staticInitializationException() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "static_initialization_test",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "static_initialization_test", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:npe");
     result.assertTestFailure();
     assertThat(
-        result.getStderr(),
-        Matchers.containsString("com.facebook.buck.example.StaticErrorTest"));
+        result.getStderr(), Matchers.containsString("com.facebook.buck.example.StaticErrorTest"));
   }
 
   @Test
   public void dependencyOnAnotherTest() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "depend_on_another_test",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "depend_on_another_test", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:a");
     result.assertSuccess();
@@ -244,10 +213,8 @@ public class JavaTestIntegrationTest {
   @Test
   public void testWithJni() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "test_with_jni",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
     result.assertSuccess();
@@ -256,10 +223,8 @@ public class JavaTestIntegrationTest {
   @Test
   public void testWithJniWithWhitelist() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "test_with_jni",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest-skip-dep");
     result.assertSuccess();
@@ -268,43 +233,26 @@ public class JavaTestIntegrationTest {
   @Test
   public void testWithJniWithWhitelistAndDangerousSymlink() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "test_with_jni",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
-        "test",
-        "//:jtest-pernicious",
-        "//:jtest-symlink");
+    ProjectWorkspace.ProcessResult result1 =
+        workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
     result1.assertSuccess();
 
-    workspace.replaceFileContents(
-        "BUCK",
-        "'//:jlib-native',#delete-1",
-        "");
-    workspace.replaceFileContents(
-        "JTestWithoutPernicious.java",
-        "@Test//getValue",
-        "");
-    workspace.replaceFileContents(
-        "JTestWithoutPernicious.java",
-        "//@Test//noTestLib",
-        "@Test");
+    workspace.replaceFileContents("BUCK", "'//:jlib-native',#delete-1", "");
+    workspace.replaceFileContents("JTestWithoutPernicious.java", "@Test//getValue", "");
+    workspace.replaceFileContents("JTestWithoutPernicious.java", "//@Test//noTestLib", "@Test");
 
-    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand(
-        "test",
-        "//:jtest-pernicious",
-        "//:jtest-symlink");
+    ProjectWorkspace.ProcessResult result2 =
+        workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
     result2.assertSuccess();
   }
 
   @Test
   public void testForkMode() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_tests",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
     result.assertSuccess();
@@ -312,26 +260,22 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testClasspath() throws IOException {
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "test_rule_classpath",
-        temp);
+    final ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "classpath",
-        "//:top");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("audit", "classpath", "//:top");
     result.assertSuccess();
-    ImmutableSortedSet<Path> actualPaths = FluentIterable.from(Arrays.asList(result.getStdout()
-        .split("\\s+")))
-        .transform(input -> temp.getRoot().relativize(Paths.get(input)))
-        .toSortedSet(Ordering.natural());
-    ImmutableSortedSet<Path> expectedPaths = ImmutableSortedSet.of(
-        Paths.get("buck-out/gen/lib__top__output/top.jar"),
-        Paths.get("buck-out/gen/lib__direct_dep__output/direct_dep.jar"),
-        Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"),
-        Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar")
-    );
+    ImmutableSortedSet<Path> actualPaths =
+        FluentIterable.from(Arrays.asList(result.getStdout().split("\\s+")))
+            .transform(input -> temp.getRoot().relativize(Paths.get(input)))
+            .toSortedSet(Ordering.natural());
+    ImmutableSortedSet<Path> expectedPaths =
+        ImmutableSortedSet.of(
+            Paths.get("buck-out/gen/lib__top__output/top.jar"),
+            Paths.get("buck-out/gen/lib__direct_dep__output/direct_dep.jar"),
+            Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"),
+            Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"));
     assertEquals(expectedPaths, actualPaths);
   }
 }

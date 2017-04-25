@@ -22,14 +22,11 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTreesTest extends CompilerTreeApiParameterizedTest {
@@ -55,7 +52,7 @@ public class TreeBackedTreesTest extends CompilerTreeApiParameterizedTest {
     Tree tTree = trees.getTree(tElement);
     TreePath tPath = trees.getPath(tElement);
 
-    assertNull(tTree);  // Odd behavior by javac, but we'll match it
+    assertNull(tTree); // Odd behavior by javac, but we'll match it
     assertSame(tElement, trees.getElement(tPath));
   }
 

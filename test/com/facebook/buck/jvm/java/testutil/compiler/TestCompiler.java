@@ -28,11 +28,6 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
-
-import org.hamcrest.Matchers;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -46,7 +41,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -58,12 +52,17 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+import org.hamcrest.Matchers;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * A {@link org.junit.Rule} for working with javac in tests.
+ *
+ * <p>Add it as a public field like this:
+ *
  * <p>
- * Add it as a public field like this:
- * <p>
+ *
  * <pre>
  * &#64;Rule
  * public TestCompiler testCompiler = new TestCompiler();
@@ -104,9 +103,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   public void addClasspath(Collection<Path> paths) {
-    paths.stream()
-        .map(Path::toString)
-        .forEach(classpath::add);
+    paths.stream().map(Path::toString).forEach(classpath::add);
   }
 
   public void addSourceFileContents(String fileName, String contents) throws IOException {
@@ -127,9 +124,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
   public void addSourceFile(Path file) throws IOException {
     Path outputFile = outputFolder.getRoot().toPath().resolve(file.getFileName());
-    ByteStreams.copy(
-        Files.newInputStream(file),
-        Files.newOutputStream(outputFile));
+    ByteStreams.copy(Files.newInputStream(file), Files.newOutputStream(outputFile));
 
     fileManager.getJavaFileObjects(outputFile.toFile()).forEach(sourceFiles::add);
   }
@@ -177,8 +172,9 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
     try {
       @SuppressWarnings("unchecked")
-      Iterable<? extends TypeElement> result = (Iterable<? extends TypeElement>)
-          javacTask.getClass().getMethod("enter").invoke(javacTask);
+      Iterable<? extends TypeElement> result =
+          (Iterable<? extends TypeElement>)
+              javacTask.getClass().getMethod("enter").invoke(javacTask);
       return result;
     } catch (IllegalAccessException | NoSuchMethodException e) {
       throw new AssertionError(e);
@@ -232,13 +228,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
         options.add(Joiner.on(File.pathSeparatorChar).join(classpath));
       }
 
-      JavacTask innerTask = (JavacTask) javaCompiler.getTask(
-          null,
-          fileManager,
-          diagnosticCollector,
-          options,
-          null,
-          sourceFiles);
+      JavacTask innerTask =
+          (JavacTask)
+              javaCompiler.getTask(
+                  null, fileManager, diagnosticCollector, options, null, sourceFiles);
 
       if (useFrontendOnlyJavacTask) {
         javacTask = new FrontendOnlyJavacTask(innerTask);
@@ -292,11 +285,11 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   /**
-   * There's an issue with using the built in {@link javax.tools.DiagnosticCollector}.
-   * Grabbing the {@link Diagnostic}s after compilation can lead to incorrect error messages. The
-   * references to info that make up the Diagnostic's error message string may be GC-ed by the time
-   * we request the message. To work around this, we use our own DiagnosticCollector that grabs the
-   * string of the diagnostic at the time its reported and collect that instead.
+   * There's an issue with using the built in {@link javax.tools.DiagnosticCollector}. Grabbing the
+   * {@link Diagnostic}s after compilation can lead to incorrect error messages. The references to
+   * info that make up the Diagnostic's error message string may be GC-ed by the time we request the
+   * message. To work around this, we use our own DiagnosticCollector that grabs the string of the
+   * diagnostic at the time its reported and collect that instead.
    */
   private static class DiagnosticMessageCollector<S> implements DiagnosticListener<S> {
     private List<String> diagnostics = new ArrayList<>();
@@ -310,5 +303,4 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       return diagnostics;
     }
   }
-
 }

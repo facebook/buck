@@ -19,13 +19,10 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Calls back when the ENTER phase is complete.
- */
+/** Calls back when the ENTER phase is complete. */
 abstract class PostEnterCallback implements TaskListener {
   private List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private int enterCount = 0;
@@ -49,7 +46,7 @@ abstract class PostEnterCallback implements TaskListener {
           enterComplete(compilationUnits);
         }
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         break;
     }

@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
-
 import org.junit.runners.Parameterized;
 
 /**
@@ -28,12 +27,11 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   private static final String JAVAC = "javac";
   private static final String TREES = "trees";
 
-  @Parameterized.Parameter
-  public String implementation;
+  @Parameterized.Parameter public String implementation;
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
-    return new Object[] { JAVAC, TREES };
+    return new Object[] {JAVAC, TREES};
   }
 
   @Override

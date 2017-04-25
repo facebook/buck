@@ -30,22 +30,18 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-
+import java.io.IOException;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Optional;
-
 public class PrebuiltJarTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private PrebuiltJar junitJarRule;
   private FakeProjectFilesystem filesystem;
-
 
   @Before
   public void setUp() throws IOException {
@@ -56,19 +52,19 @@ public class PrebuiltJarTest {
             .setProjectFilesystem(filesystem)
             .build();
 
-    junitJarRule = new PrebuiltJar(
-        buildRuleParams,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
-        new FakeSourcePath("abi.jar"),
-        Optional.of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
-        /* gwtJar */ Optional.empty(),
-        Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
-        /* mavenCoords */ Optional.empty(),
-        /* provided */ false);
+    junitJarRule =
+        new PrebuiltJar(
+            buildRuleParams,
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            new FakeSourcePath("abi.jar"),
+            Optional.of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
+            /* gwtJar */ Optional.empty(),
+            Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
+            /* mavenCoords */ Optional.empty(),
+            /* provided */ false);
   }
 
   @Test

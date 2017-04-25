@@ -18,13 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.Locale;
-
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import org.junit.Test;
 
 public class DiagnosticCleanerTest {
 
@@ -35,16 +33,15 @@ public class DiagnosticCleanerTest {
         Arrays.asList(
             newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
             newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1)
-        ),
-        DiagnosticCleaner.clean(Arrays.asList(
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1)
-      )));
+            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1)),
+        DiagnosticCleaner.clean(
+            Arrays.asList(
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 2, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 2, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 0, 0, 10, 1, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1))));
   }
 
   @Test
@@ -53,13 +50,12 @@ public class DiagnosticCleanerTest {
         Arrays.asList(
             newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
             newDiagnostic(Diagnostic.Kind.ERROR, "foo.bar", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1)
-        ),
-        DiagnosticCleaner.clean(Arrays.asList(
-            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "foo.bar", 0, 0, 10, 2, 1)
-        )));
+            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1)),
+        DiagnosticCleaner.clean(
+            Arrays.asList(
+                newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "foo.bar", 0, 0, 10, 2, 1))));
   }
 
   @Test
@@ -68,13 +64,13 @@ public class DiagnosticCleanerTest {
         Arrays.asList(
             newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
             newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1)
-        ),
-        DiagnosticCleaner.clean(Arrays.asList(
-            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 2, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
-            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1)
-        )));
+            newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1)),
+        DiagnosticCleaner.clean(
+            Arrays.asList(
+                newDiagnostic(Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 2, 1),
+                newDiagnostic(Diagnostic.Kind.ERROR, "proc.messager", 10, 10, 20, 1, 1),
+                newDiagnostic(
+                    Diagnostic.Kind.ERROR, "compiler.err.doesnt.exist", 0, 0, 10, 1, 1))));
   }
 
   private static FakeDiagnostic newDiagnostic(
@@ -99,13 +95,7 @@ public class DiagnosticCleanerTest {
     private final long col;
 
     private FakeDiagnostic(
-        Kind kind,
-        String code,
-        long pos,
-        long startPos,
-        long endPos,
-        long line,
-        long col) {
+        Kind kind, String code, long pos, long startPos, long endPos, long line, long col) {
       this.kind = kind;
       this.code = code;
       this.pos = pos;
@@ -206,15 +196,23 @@ public class DiagnosticCleanerTest {
 
     @Override
     public String toString() {
-      return "FakeDiagnostic{" +
-          "kind=" + kind +
-          ", code='" + code + '\'' +
-          ", pos=" + pos +
-          ", startPos=" + startPos +
-          ", endPos=" + endPos +
-          ", line=" + line +
-          ", col=" + col +
-          '}';
+      return "FakeDiagnostic{"
+          + "kind="
+          + kind
+          + ", code='"
+          + code
+          + '\''
+          + ", pos="
+          + pos
+          + ", startPos="
+          + startPos
+          + ", endPos="
+          + endPos
+          + ", line="
+          + line
+          + ", col="
+          + col
+          + '}';
     }
   }
 }
