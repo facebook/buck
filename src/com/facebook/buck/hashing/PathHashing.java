@@ -22,14 +22,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathHashing {
   // Utility class, do not instantiate.
-  private PathHashing() { }
+  private PathHashing() {}
 
   private static final Path EMPTY_PATH = Paths.get("");
 
@@ -37,11 +36,10 @@ public class PathHashing {
       Hasher hasher,
       ProjectFileHashLoader fileHashLoader,
       ProjectFilesystem projectFilesystem,
-      Path root) throws IOException {
+      Path root)
+      throws IOException {
     Preconditions.checkArgument(
-        !root.equals(EMPTY_PATH),
-        "Path to hash (%s) must not be empty",
-        root);
+        !root.equals(EMPTY_PATH), "Path to hash (%s) must not be empty", root);
     ImmutableSet.Builder<Path> children = ImmutableSet.builder();
     for (Path path : ImmutableSortedSet.copyOf(projectFilesystem.getFilesUnderPath(root))) {
       StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
@@ -52,5 +50,4 @@ public class PathHashing {
     }
     return children.build();
   }
-
 }

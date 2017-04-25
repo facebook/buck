@@ -18,13 +18,10 @@ package com.facebook.buck.hashing;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * Load hashes of paths under a {@link com.facebook.buck.io.ProjectFilesystem}.
- */
+/** Load hashes of paths under a {@link com.facebook.buck.io.ProjectFilesystem}. */
 public interface ProjectFileHashLoader {
 
   HashCode get(Path path) throws IOException;
@@ -32,5 +29,4 @@ public interface ProjectFileHashLoader {
   HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
 
   long getSize(Path path) throws IOException;
-
 }

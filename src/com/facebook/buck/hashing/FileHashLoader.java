@@ -19,19 +19,20 @@ package com.facebook.buck.hashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
 public interface FileHashLoader {
 
   HashCode get(Path path) throws IOException;
+
   long getSize(Path path) throws IOException;
+
   HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
 
   /**
-   * Return the {@link HashCode} for the given relative {@link Path} under the given
-   * {@link ProjectFilesystem}.
+   * Return the {@link HashCode} for the given relative {@link Path} under the given {@link
+   * ProjectFilesystem}.
    */
   default HashCode get(ProjectFilesystem filesystem, Path path) throws IOException {
     return get(filesystem.resolve(path));
@@ -51,5 +52,4 @@ public interface FileHashLoader {
   default long getSize(ProjectFilesystem filesystem, Path path) throws IOException {
     return getSize(filesystem.resolve(path));
   }
-
 }
