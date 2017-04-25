@@ -60,10 +60,10 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -147,11 +147,12 @@ public class ChromeTraceBuildListenerTest {
 
     listener.outputTrace(invocationInfo.getBuildId());
 
-    ImmutableList<String> files = FluentIterable.
-        from(Arrays.asList(projectFilesystem.listFiles(invocationInfo.getLogDirectoryPath()))).
-        filter(input -> input.toString().endsWith(".trace")).
-        transform(File::getName).
-        toList();
+    ImmutableList<String> files =
+        Arrays.stream(projectFilesystem.listFiles(invocationInfo.getLogDirectoryPath()))
+            .filter(i -> i.toString().endsWith(".trace"))
+            .map(File::getName)
+            .collect(MoreCollectors.toImmutableList());
+
     assertEquals(4, files.size());
     assertEquals(
         ImmutableSortedSet.of(
