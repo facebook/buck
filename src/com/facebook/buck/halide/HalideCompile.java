@@ -30,23 +30,18 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class HalideCompile extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool halideCompiler;
+  @AddToRuleKey private final Tool halideCompiler;
 
-  @AddToRuleKey
-  private final String targetPlatform;
+  @AddToRuleKey private final String targetPlatform;
 
-  @AddToRuleKey
-  private final Optional<ImmutableList<String>> compilerInvocationFlags;
+  @AddToRuleKey private final Optional<ImmutableList<String>> compilerInvocationFlags;
 
-  @AddToRuleKey
-  private final Optional<String> functionNameOverride;
+  @AddToRuleKey private final Optional<String> functionNameOverride;
 
   public HalideCompile(
       BuildRuleParams params,
@@ -63,17 +58,12 @@ public class HalideCompile extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path outputDir = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    buildableContext.recordArtifact(objectOutputPath(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        functionNameOverride));
-    buildableContext.recordArtifact(headerOutputPath(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        functionNameOverride));
+    buildableContext.recordArtifact(
+        objectOutputPath(getBuildTarget(), getProjectFilesystem(), functionNameOverride));
+    buildableContext.recordArtifact(
+        headerOutputPath(getBuildTarget(), getProjectFilesystem(), functionNameOverride));
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
@@ -94,8 +84,7 @@ public class HalideCompile extends AbstractBuildRule {
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        pathToOutput(getBuildTarget(), getProjectFilesystem()));
+        getBuildTarget(), pathToOutput(getBuildTarget(), getProjectFilesystem()));
   }
 
   private static Path pathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
@@ -119,8 +108,7 @@ public class HalideCompile extends AbstractBuildRule {
   }
 
   public static String fileOutputName(
-      BuildTarget buildTarget,
-      Optional<String> functionNameOverride) {
+      BuildTarget buildTarget, Optional<String> functionNameOverride) {
     return functionNameOverride.orElse(buildTarget.getShortName());
   }
 }

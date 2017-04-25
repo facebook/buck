@@ -43,13 +43,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class HalideLibrary
-    extends NoopBuildRule
-    implements CxxPreprocessorDep, NativeLinkable {
+public class HalideLibrary extends NoopBuildRule implements CxxPreprocessorDep, NativeLinkable {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -57,9 +54,9 @@ public class HalideLibrary
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-        > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   protected HalideLibrary(
       BuildRuleParams params,
@@ -72,10 +69,8 @@ public class HalideLibrary
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-    return !supportedPlatformsRegex.isPresent() ||
-        supportedPlatformsRegex.get()
-            .matcher(cxxPlatform.getFlavor().toString())
-            .find();
+    return !supportedPlatformsRegex.isPresent()
+        || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
   }
 
   @Override
@@ -83,14 +78,13 @@ public class HalideLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getBuildDeps())
-        .filter(CxxPreprocessorDep.class);
+    return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
   }
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.EMPTY;
     }
@@ -114,16 +108,14 @@ public class HalideLibrary
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(
         ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
@@ -142,23 +134,21 @@ public class HalideLibrary
   private Arg requireLibraryArg(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
       throws NoSuchBuildTargetException {
     BuildRule rule =
-        ruleResolver
-            .requireRule(
-                getBuildTarget().withFlavors(
+        ruleResolver.requireRule(
+            getBuildTarget()
+                .withFlavors(
                     CxxDescriptionEnhancer.flavorForLinkableDepType(type),
                     cxxPlatform.getFlavor()));
     if (rule instanceof Archive) {
       return ((Archive) rule).toArg();
     } else {
-      return SourcePathArg.of(
-          Preconditions.checkNotNull(rule.getSourcePathToOutput()));
+      return SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
@@ -177,5 +167,4 @@ public class HalideLibrary
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
-
 }
