@@ -19,19 +19,16 @@ package com.facebook.buck.test.labels;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class LabelsIntegrationTest {
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -62,9 +59,8 @@ public class LabelsIntegrationTest {
   }
 
   /**
-   * This will fail because, as stated in TestCommand.java:
-   *   "We always want to run the rules that are given on the command line. Always. Unless we don't
-   *    want to."
+   * This will fail because, as stated in TestCommand.java: "We always want to run the rules that
+   * are given on the command line. Always. Unless we don't want to."
    */
   @Test
   public void shouldFailBecauseWeExplicitlyAskedForAFailingTestToRunEvenThoughWeTriedToExcludeIt()
@@ -73,16 +69,18 @@ public class LabelsIntegrationTest {
   }
 
   /**
-   * This will succeed, as stated in TestCommand.java:
-   *   "We always want to run the rules that are given on the command line. Always. Unless we don't
-   *    want to."
+   * This will succeed, as stated in TestCommand.java: "We always want to run the rules that are
+   * given on the command line. Always. Unless we don't want to."
    */
   @Test
   public void shouldPassWhenFailingTestIncludedAndExcludedWithAlwaysExcludeFlag()
       throws IOException {
     assertTestsPass(
-        "test", "//test:geometry", "//test:orientation",
-        "--exclude", "unscientific",
+        "test",
+        "//test:geometry",
+        "//test:orientation",
+        "--exclude",
+        "unscientific",
         "--always_exclude");
   }
 
@@ -111,5 +109,4 @@ public class LabelsIntegrationTest {
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
-
 }

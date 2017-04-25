@@ -19,9 +19,7 @@ package com.facebook.buck.test.selectors;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
-/**
- * A Hamcrest matcher that matches when the {@link TestSelector} matches.
- */
+/** A Hamcrest matcher that matches when the {@link TestSelector} matches. */
 public class TestSelectorMatcher extends TypeSafeMatcher<TestDescription> {
   private TestSelector testSelector;
 
