@@ -25,16 +25,14 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.easymock.EasyMock;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class AbstractNetworkCacheTest {
 
@@ -57,56 +55,56 @@ public class AbstractNetworkCacheTest {
   }
 
   private void testStoreCall(
-      int expectStoreCallCount,
-      Optional<Long> maxArtifactSizeBytes,
-      int... artifactBytes) throws InterruptedException, IOException, ExecutionException {
+      int expectStoreCallCount, Optional<Long> maxArtifactSizeBytes, int... artifactBytes)
+      throws InterruptedException, IOException, ExecutionException {
     final AtomicInteger storeCallCount = new AtomicInteger(0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ListeningExecutorService service = new FakeListeningExecutorService() {
-      @Override
-      public void execute(Runnable command) {
-        command.run();
-      }
-    };
+    ListeningExecutorService service =
+        new FakeListeningExecutorService() {
+          @Override
+          public void execute(Runnable command) {
+            command.run();
+          }
+        };
 
-    AbstractNetworkCache cache = new AbstractNetworkCache(
-        NetworkCacheArgs.builder()
-            .setCacheName("AbstractNetworkCacheTest")
-            .setRepository("some_repository")
-            .setScheduleType("some_schedule_type")
-            .setFetchClient(EasyMock.createMock(HttpService.class))
-            .setStoreClient(EasyMock.createMock(HttpService.class))
-            .setCacheReadMode(CacheReadMode.READWRITE)
-            .setProjectFilesystem(filesystem)
-            .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
-            .setHttpWriteExecutorService(service)
-            .setErrorTextTemplate("super error message")
-            .setMaxStoreSizeBytes(maxArtifactSizeBytes)
-            .setDistributedBuildModeEnabled(false)
-            .build()) {
-      @Override
-      protected CacheResult fetchImpl(
-          RuleKey ruleKey,
-          LazyPath output,
-          HttpArtifactCacheEvent.Finished.Builder eventBuilder) throws IOException {
-        return null;
-      }
+    AbstractNetworkCache cache =
+        new AbstractNetworkCache(
+            NetworkCacheArgs.builder()
+                .setCacheName("AbstractNetworkCacheTest")
+                .setRepository("some_repository")
+                .setScheduleType("some_schedule_type")
+                .setFetchClient(EasyMock.createMock(HttpService.class))
+                .setStoreClient(EasyMock.createMock(HttpService.class))
+                .setCacheReadMode(CacheReadMode.READWRITE)
+                .setProjectFilesystem(filesystem)
+                .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
+                .setHttpWriteExecutorService(service)
+                .setErrorTextTemplate("super error message")
+                .setMaxStoreSizeBytes(maxArtifactSizeBytes)
+                .setDistributedBuildModeEnabled(false)
+                .build()) {
+          @Override
+          protected CacheResult fetchImpl(
+              RuleKey ruleKey,
+              LazyPath output,
+              HttpArtifactCacheEvent.Finished.Builder eventBuilder)
+              throws IOException {
+            return null;
+          }
 
-      @Override
-      protected void storeImpl(
-          ArtifactInfo info,
-          Path file,
-          HttpArtifactCacheEvent.Finished.Builder eventBuilder) throws IOException {
-        storeCallCount.incrementAndGet();
-      }
-    };
+          @Override
+          protected void storeImpl(
+              ArtifactInfo info, Path file, HttpArtifactCacheEvent.Finished.Builder eventBuilder)
+              throws IOException {
+            storeCallCount.incrementAndGet();
+          }
+        };
 
     for (int bytes : artifactBytes) {
       Path path = filesystem.getPathForRelativePath("topspin_" + this.getClass().getName());
       filesystem.writeBytesToPath(new byte[bytes], path);
-      ListenableFuture<Void> future = cache.store(
-          ArtifactInfo.builder().build(),
-          BorrowablePath.notBorrowablePath(path));
+      ListenableFuture<Void> future =
+          cache.store(ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(path));
       future.get();
     }
 

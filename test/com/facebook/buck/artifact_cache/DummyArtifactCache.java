@@ -22,13 +22,11 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import javax.annotation.Nullable;
 
 public class DummyArtifactCache extends NoopArtifactCache {
 
-  @Nullable
-  public RuleKey storeKey;
+  @Nullable public RuleKey storeKey;
 
   public void reset() {
     storeKey = null;
@@ -40,9 +38,7 @@ public class DummyArtifactCache extends NoopArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     storeKey = Iterables.getFirst(info.getRuleKeys(), null);
     return Futures.immediateFuture(null);
   }
@@ -51,5 +47,4 @@ public class DummyArtifactCache extends NoopArtifactCache {
   public CacheReadMode getCacheReadMode() {
     return CacheReadMode.READWRITE;
   }
-
 }

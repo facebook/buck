@@ -25,11 +25,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class RemoteArtifactsInLocalCacheArtifactCacheTest {
 
@@ -38,11 +36,11 @@ public class RemoteArtifactsInLocalCacheArtifactCacheTest {
     Fixture f = new Fixture();
     RuleKey ruleKey = f.getRuleKey();
 
-    ListenableFuture<Void> store = f.getCacheUnderTest().store(
-        ArtifactInfo.builder()
-            .addRuleKeys(ruleKey)
-            .build(),
-        BorrowablePath.notBorrowablePath(f.getArtifactPath()));
+    ListenableFuture<Void> store =
+        f.getCacheUnderTest()
+            .store(
+                ArtifactInfo.builder().addRuleKeys(ruleKey).build(),
+                BorrowablePath.notBorrowablePath(f.getArtifactPath()));
     store.get();
 
     LazyPath output = f.getResultPath();
@@ -55,11 +53,7 @@ public class RemoteArtifactsInLocalCacheArtifactCacheTest {
     Fixture f = new Fixture();
     RuleKey ruleKey = f.getRuleKey();
 
-    f.getRemoteCache().store(
-        ArtifactInfo.builder()
-            .addRuleKeys(ruleKey)
-            .build(),
-        new byte[0]);
+    f.getRemoteCache().store(ArtifactInfo.builder().addRuleKeys(ruleKey).build(), new byte[0]);
 
     assertFalse(f.getLocalCache().fetch(ruleKey, f.getResultPath()).getType().isSuccess());
     assertTrue(f.getCacheUnderTest().fetch(ruleKey, f.getResultPath()).getType().isSuccess());
@@ -71,11 +65,7 @@ public class RemoteArtifactsInLocalCacheArtifactCacheTest {
     Fixture f = new Fixture();
     RuleKey ruleKey = f.getRuleKey();
 
-    f.getLocalCache().store(
-        ArtifactInfo.builder()
-            .addRuleKeys(ruleKey)
-            .build(),
-        new byte[0]);
+    f.getLocalCache().store(ArtifactInfo.builder().addRuleKeys(ruleKey).build(), new byte[0]);
 
     assertTrue(f.getCacheUnderTest().fetch(ruleKey, f.getResultPath()).getType().isSuccess());
   }

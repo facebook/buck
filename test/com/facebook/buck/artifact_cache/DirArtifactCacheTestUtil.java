@@ -17,7 +17,6 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Preconditions;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,9 +27,7 @@ public class DirArtifactCacheTestUtil {
 
   // This is for DirArtifactCache only.
   public static Path getPathForRuleKey(
-      ArtifactCache cache,
-      RuleKey ruleKey,
-      Optional<String> extension) {
+      ArtifactCache cache, RuleKey ruleKey, Optional<String> extension) {
     Preconditions.checkArgument(cache instanceof DirArtifactCache);
     DirArtifactCache dirArtifactCache = (DirArtifactCache) cache;
     return dirArtifactCache.getPathForRuleKey(ruleKey, extension);

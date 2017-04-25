@@ -20,20 +20,15 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Optional;
-
 public class HttpArtifactCacheEventTest {
 
-  private static final ImmutableSet<RuleKey> TEST_RULE_KEYS = ImmutableSet.of(
-      new RuleKey("1234567890"),
-      new RuleKey("123456"),
-      new RuleKey("1234")
-  );
+  private static final ImmutableSet<RuleKey> TEST_RULE_KEYS =
+      ImmutableSet.of(new RuleKey("1234567890"), new RuleKey("123456"), new RuleKey("1234"));
 
   private static final RuleKey TEST_RULE_KEY = new RuleKey("4321");
 
@@ -55,17 +50,16 @@ public class HttpArtifactCacheEventTest {
       ImmutableSet<RuleKey> ruleKeys) {
 
     HttpArtifactCacheEvent.Scheduled scheduledEvent =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("target"), ruleKeys);
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(
-        scheduledEvent);
+        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("target"), ruleKeys);
+    HttpArtifactCacheEvent.Started startedEvent =
+        HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvent);
     configureEvent(startedEvent);
     return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
   }
 
   private static HttpArtifactCacheEvent.Finished.Builder createFetchBuilder(RuleKey ruleKey) {
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ruleKey);
+    HttpArtifactCacheEvent.Started startedEvent =
+        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
     configureEvent(startedEvent);
     HttpArtifactCacheEvent.Finished.Builder builder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);

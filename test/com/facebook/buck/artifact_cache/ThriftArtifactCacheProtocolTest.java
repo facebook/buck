@@ -23,17 +23,15 @@ import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.google.common.io.ByteSource;
-
-import org.apache.thrift.TException;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import org.apache.thrift.TException;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ThriftArtifactCacheProtocolTest {
   private static final ThriftProtocol PROTOCOL = ThriftArtifactCache.PROTOCOL;
@@ -120,14 +118,12 @@ public class ThriftArtifactCacheProtocolTest {
     }
 
     try (ByteArrayInputStream stream = new ByteArrayInputStream(responseRawData);
-         ByteArrayOutputStream payloadStream = new ByteArrayOutputStream()) {
+        ByteArrayOutputStream payloadStream = new ByteArrayOutputStream()) {
       ThriftArtifactCacheProtocol.Response response =
           ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, stream);
 
       BuckCacheResponse actualResponse = response.getThriftData();
-      Assert.assertEquals(
-          expectedResponse.getErrorMessage(),
-          actualResponse.getErrorMessage());
+      Assert.assertEquals(expectedResponse.getErrorMessage(), actualResponse.getErrorMessage());
 
       response.readPayload(payloadStream);
       byte[] actualPayload = payloadStream.toByteArray();
@@ -138,7 +134,7 @@ public class ThriftArtifactCacheProtocolTest {
     }
   }
 
-  @Test(expected =  IOException.class)
+  @Test(expected = IOException.class)
   public void testReceivingCorruptedData() throws IOException, TException {
     byte[] expectedPayload = createBuffer(21);
     byte[] responseRawData;
@@ -148,8 +144,8 @@ public class ThriftArtifactCacheProtocolTest {
     }
 
     try (ByteArrayInputStream stream =
-             new ByteArrayInputStream(responseRawData, 0, responseRawData.length - 4);
-         ByteArrayOutputStream payloadStream = new ByteArrayOutputStream()) {
+            new ByteArrayInputStream(responseRawData, 0, responseRawData.length - 4);
+        ByteArrayOutputStream payloadStream = new ByteArrayOutputStream()) {
       ThriftArtifactCacheProtocol.Response response =
           ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, stream);
       response.readPayload(payloadStream);
@@ -183,9 +179,7 @@ public class ThriftArtifactCacheProtocolTest {
   }
 
   private void testForSizeBytes(
-      int inputStreamSizeBytes,
-      int outputStreamSizeBytes,
-      int bytesToCopy) throws IOException {
+      int inputStreamSizeBytes, int outputStreamSizeBytes, int bytesToCopy) throws IOException {
 
     byte[] inputBuffer = new byte[inputStreamSizeBytes];
     for (int i = 0; i < inputStreamSizeBytes; ++i) {
@@ -195,7 +189,7 @@ public class ThriftArtifactCacheProtocolTest {
     byte[] outputBuffer = new byte[outputStreamSizeBytes];
 
     try (OutputStream output = wrapBuffer(outputBuffer);
-         InputStream input = new ByteArrayInputStream(inputBuffer)) {
+        InputStream input = new ByteArrayInputStream(inputBuffer)) {
       ThriftArtifactCacheProtocol.copyExactly(input, output, bytesToCopy);
 
       for (int i = 0; i < bytesToCopy; ++i) {
@@ -207,9 +201,7 @@ public class ThriftArtifactCacheProtocolTest {
 
       for (int i = inputStreamSizeBytes; i < outputStreamSizeBytes; ++i) {
         Assert.assertEquals(
-            "Extra bytes in output buffer should be unchanged.",
-            0,
-            outputBuffer[i]);
+            "Extra bytes in output buffer should be unchanged.", 0, outputBuffer[i]);
       }
     }
   }
@@ -236,9 +228,8 @@ public class ThriftArtifactCacheProtocolTest {
 
   // TODO(ruibm): Use Base64 response data generated from the real server implementation.
   private BuckCacheResponse serializeData(
-      String errorMessage,
-      OutputStream rawStream,
-      byte[]... payloads) throws IOException, TException {
+      String errorMessage, OutputStream rawStream, byte[]... payloads)
+      throws IOException, TException {
     BuckCacheResponse cacheResponse = new BuckCacheResponse();
     cacheResponse.setErrorMessage(errorMessage);
     for (byte[] payload : payloads) {
