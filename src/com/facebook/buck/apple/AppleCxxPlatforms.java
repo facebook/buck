@@ -58,9 +58,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.xml.sax.SAXException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,19 +70,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
- * Utility class to create Objective-C/C/C++/Objective-C++ platforms to
- * support building iOS and Mac OS X products with Xcode.
+ * Utility class to create Objective-C/C/C++/Objective-C++ platforms to support building iOS and Mac
+ * OS X products with Xcode.
  */
 public class AppleCxxPlatforms {
 
   private static final Logger LOG = Logger.get(AppleCxxPlatforms.class);
 
   // Utility class, do not instantiate.
-  private AppleCxxPlatforms() { }
+  private AppleCxxPlatforms() {}
 
   private static final String USR_BIN = "usr/bin";
 
@@ -99,8 +96,7 @@ public class AppleCxxPlatforms {
     Supplier<Optional<Path>> appleDeveloperDirectorySupplier =
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor);
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
-    if (appleDeveloperDirectory.isPresent() &&
-        !Files.isDirectory(appleDeveloperDirectory.get())) {
+    if (appleDeveloperDirectory.isPresent() && !Files.isDirectory(appleDeveloperDirectory.get())) {
       LOG.error(
           "Developer directory is set to %s, but is not a directory",
           appleDeveloperDirectory.get());
@@ -110,48 +106,48 @@ public class AppleCxxPlatforms {
     ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
     ImmutableMap<String, AppleToolchain> toolchains =
         AppleToolchainDiscovery.discoverAppleToolchains(
-            appleDeveloperDirectory,
-            appleConfig.getExtraToolchainPaths());
+            appleDeveloperDirectory, appleConfig.getExtraToolchainPaths());
 
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
-        appleDeveloperDirectory,
-        appleConfig.getExtraPlatformPaths(),
-        toolchains,
-        appleConfig);
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            appleDeveloperDirectory, appleConfig.getExtraPlatformPaths(), toolchains, appleConfig);
 
     Optional<String> swiftVersion = swiftBuckConfig.getVersion();
     Optional<AppleToolchain> swiftToolChain;
     if (swiftVersion.isPresent()) {
       Optional<String> swiftToolChainName =
           swiftVersion.map(AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
-      swiftToolChain = toolchains.values().stream()
-          .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
-          .findFirst();
+      swiftToolChain =
+          toolchains
+              .values()
+              .stream()
+              .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
+              .findFirst();
     } else {
       swiftToolChain = Optional.empty();
     }
 
     XcodeToolFinder xcodeToolFinder = new XcodeToolFinder();
     XcodeBuildVersionCache xcodeBuildVersionCache = new XcodeBuildVersionCache();
-    sdkPaths.forEach((sdk, appleSdkPaths) -> {
-      String targetSdkVersion =
-          appleConfig.getTargetSdkVersion(sdk.getApplePlatform())
-              .orElse(sdk.getVersion());
-      LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
-      for (String architecture : sdk.getArchitectures()) {
-        appleCxxPlatformsBuilder.add(
-            buildWithExecutableChecker(
-                filesystem,
-                sdk,
-                targetSdkVersion,
-                architecture,
-                appleSdkPaths,
-                buckConfig,
-                xcodeToolFinder,
-                xcodeBuildVersionCache,
-                swiftToolChain));
-      }
-    });
+    sdkPaths.forEach(
+        (sdk, appleSdkPaths) -> {
+          String targetSdkVersion =
+              appleConfig.getTargetSdkVersion(sdk.getApplePlatform()).orElse(sdk.getVersion());
+          LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
+          for (String architecture : sdk.getArchitectures()) {
+            appleCxxPlatformsBuilder.add(
+                buildWithExecutableChecker(
+                    filesystem,
+                    sdk,
+                    targetSdkVersion,
+                    architecture,
+                    appleSdkPaths,
+                    buckConfig,
+                    xcodeToolFinder,
+                    xcodeBuildVersionCache,
+                    swiftToolChain));
+          }
+        });
     return appleCxxPlatformsBuilder.build();
   }
 
@@ -200,7 +196,6 @@ public class AppleCxxPlatforms {
           Linkers.iXlinker("-bitcode_verify", "-bitcode_hide_symbols", "-bitcode_symbol_map"));
     }
 
-
     // Populate Xcode version keys from Xcode's own Info.plist if available.
     Optional<String> xcodeBuildVersion = Optional.empty();
     Optional<Path> developerPath = sdkPaths.getDeveloperPath();
@@ -218,13 +213,11 @@ public class AppleCxxPlatforms {
           }
         } catch (IOException e) {
           LOG.warn(
-              "Error reading Xcode's info plist %s; ignoring Xcode versions",
-              xcodeInfoPlistPath);
-        } catch (
-            PropertyListFormatException |
-                ParseException |
-                ParserConfigurationException |
-                SAXException e) {
+              "Error reading Xcode's info plist %s; ignoring Xcode versions", xcodeInfoPlistPath);
+        } catch (PropertyListFormatException
+            | ParseException
+            | ParserConfigurationException
+            | SAXException e) {
           LOG.warn("Error in parsing %s; ignoring Xcode versions", xcodeInfoPlistPath);
         }
       }
@@ -238,7 +231,9 @@ public class AppleCxxPlatforms {
     versions.add(targetSdk.getVersion());
 
     ImmutableList<String> toolchainVersions =
-        targetSdk.getToolchains().stream()
+        targetSdk
+            .getToolchains()
+            .stream()
             .map(AppleToolchain::getVersion)
             .flatMap(Optionals::toStream)
             .collect(MoreCollectors.toImmutableList());
@@ -255,81 +250,70 @@ public class AppleCxxPlatforms {
 
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    Tool clangPath = VersionedTool.of(
-        getToolPath("clang", toolSearchPaths, xcodeToolFinder),
-        "apple-clang",
-        version);
+    Tool clangPath =
+        VersionedTool.of(
+            getToolPath("clang", toolSearchPaths, xcodeToolFinder), "apple-clang", version);
 
-    Tool clangXxPath = VersionedTool.of(
-        getToolPath("clang++", toolSearchPaths, xcodeToolFinder),
-        "apple-clang++",
-        version);
+    Tool clangXxPath =
+        VersionedTool.of(
+            getToolPath("clang++", toolSearchPaths, xcodeToolFinder), "apple-clang++", version);
 
-    Tool ar = VersionedTool.of(
-        getToolPath("ar", toolSearchPaths, xcodeToolFinder),
-        "apple-ar",
-        version);
+    Tool ar =
+        VersionedTool.of(getToolPath("ar", toolSearchPaths, xcodeToolFinder), "apple-ar", version);
 
-    Tool ranlib = VersionedTool.builder()
-        .setPath(getToolPath("ranlib", toolSearchPaths, xcodeToolFinder))
-        .setName("apple-ranlib")
-        .setVersion(version)
-        .build();
+    Tool ranlib =
+        VersionedTool.builder()
+            .setPath(getToolPath("ranlib", toolSearchPaths, xcodeToolFinder))
+            .setName("apple-ranlib")
+            .setVersion(version)
+            .build();
 
-    Tool strip = VersionedTool.of(
-        getToolPath("strip", toolSearchPaths, xcodeToolFinder),
-        "apple-strip",
-        version);
+    Tool strip =
+        VersionedTool.of(
+            getToolPath("strip", toolSearchPaths, xcodeToolFinder), "apple-strip", version);
 
-    Tool nm = VersionedTool.of(
-        getToolPath("nm", toolSearchPaths, xcodeToolFinder),
-        "apple-nm",
-        version);
+    Tool nm =
+        VersionedTool.of(getToolPath("nm", toolSearchPaths, xcodeToolFinder), "apple-nm", version);
 
-    Tool actool = VersionedTool.of(
-        getToolPath("actool", toolSearchPaths, xcodeToolFinder),
-        "apple-actool",
-        version);
+    Tool actool =
+        VersionedTool.of(
+            getToolPath("actool", toolSearchPaths, xcodeToolFinder), "apple-actool", version);
 
-    Tool ibtool = VersionedTool.of(
-        getToolPath("ibtool", toolSearchPaths, xcodeToolFinder),
-        "apple-ibtool",
-        version);
+    Tool ibtool =
+        VersionedTool.of(
+            getToolPath("ibtool", toolSearchPaths, xcodeToolFinder), "apple-ibtool", version);
 
-    Tool momc = VersionedTool.of(
-        getToolPath("momc", toolSearchPaths, xcodeToolFinder),
-        "apple-momc",
-        version);
+    Tool momc =
+        VersionedTool.of(
+            getToolPath("momc", toolSearchPaths, xcodeToolFinder), "apple-momc", version);
 
-    Tool xctest = VersionedTool.of(
-        getToolPath("xctest", toolSearchPaths, xcodeToolFinder),
-        "apple-xctest",
-        version);
+    Tool xctest =
+        VersionedTool.of(
+            getToolPath("xctest", toolSearchPaths, xcodeToolFinder), "apple-xctest", version);
 
-    Tool dsymutil = VersionedTool.of(
-        getToolPath("dsymutil", toolSearchPaths, xcodeToolFinder),
-        "apple-dsymutil",
-        version);
+    Tool dsymutil =
+        VersionedTool.of(
+            getToolPath("dsymutil", toolSearchPaths, xcodeToolFinder), "apple-dsymutil", version);
 
-    Tool lipo = VersionedTool.of(
-        getToolPath("lipo", toolSearchPaths, xcodeToolFinder),
-        "apple-lipo",
-        version);
+    Tool lipo =
+        VersionedTool.of(
+            getToolPath("lipo", toolSearchPaths, xcodeToolFinder), "apple-lipo", version);
 
-    Tool lldb = VersionedTool.of(
-        getToolPath("lldb", toolSearchPaths, xcodeToolFinder),
-        "lldb",
-        version);
+    Tool lldb =
+        VersionedTool.of(getToolPath("lldb", toolSearchPaths, xcodeToolFinder), "lldb", version);
 
-    Optional<Path> stubBinaryPath = targetSdk.getApplePlatform().getStubBinaryPath()
-        .map(input -> sdkPaths.getSdkPath().resolve(input));
+    Optional<Path> stubBinaryPath =
+        targetSdk
+            .getApplePlatform()
+            .getStubBinaryPath()
+            .map(input -> sdkPaths.getSdkPath().resolve(input));
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
-    UserFlavor targetFlavor = UserFlavor.of(
-        Flavor.replaceInvalidCharacters(
-            targetSdk.getName() + "-" + targetArchitecture),
-        String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
+    UserFlavor targetFlavor =
+        UserFlavor.of(
+            Flavor.replaceInvalidCharacters(targetSdk.getName() + "-" + targetArchitecture),
+            String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
 
     ImmutableBiMap.Builder<Path, Path> sanitizerPaths = ImmutableBiMap.builder();
     sanitizerPaths.put(sdkPaths.getSdkPath(), Paths.get("APPLE_SDKROOT"));
@@ -338,19 +322,21 @@ public class AppleCxxPlatforms {
       sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
     }
 
-    DebugPathSanitizer compilerDebugPathSanitizer = new PrefixMapDebugPathSanitizer(
-        config.getDebugPathSanitizerLimit(),
-        File.separatorChar,
-        Paths.get("."),
-        sanitizerPaths.build(),
-        filesystem.getRootPath().toAbsolutePath(),
-        CxxToolProvider.Type.CLANG,
-        filesystem);
-    DebugPathSanitizer assemblerDebugPathSanitizer = new MungingDebugPathSanitizer(
-        config.getDebugPathSanitizerLimit(),
-        File.separatorChar,
-        Paths.get("."),
-        sanitizerPaths.build());
+    DebugPathSanitizer compilerDebugPathSanitizer =
+        new PrefixMapDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            sanitizerPaths.build(),
+            filesystem.getRootPath().toAbsolutePath(),
+            CxxToolProvider.Type.CLANG,
+            filesystem);
+    DebugPathSanitizer assemblerDebugPathSanitizer =
+        new MungingDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            sanitizerPaths.build());
 
     ImmutableList<String> cflags = cflagsBuilder.build();
 
@@ -385,8 +371,11 @@ public class AppleCxxPlatforms {
       LOG.warn(
           "%s does not exist. Build version will be unset for this platform.",
           platformVersionPlistPath);
-    } catch (PropertyListFormatException | SAXException | ParserConfigurationException |
-        ParseException | IOException e) {
+    } catch (PropertyListFormatException
+        | SAXException
+        | ParserConfigurationException
+        | ParseException
+        | IOException e) {
       // Some other error occurred, print the exception since it may contain error details.
       LOG.warn(
           e,
@@ -395,33 +384,23 @@ public class AppleCxxPlatforms {
     }
 
     PreprocessorProvider aspp =
-        new PreprocessorProvider(
-            new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     CompilerProvider as =
-        new CompilerProvider(
-            new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.CLANG);
+        new CompilerProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     PreprocessorProvider cpp =
-        new PreprocessorProvider(
-            new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     CompilerProvider cc =
-        new CompilerProvider(
-            new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.CLANG);
+        new CompilerProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
     PreprocessorProvider cxxpp =
-        new PreprocessorProvider(
-            new ConstantToolProvider(clangXxPath),
-            CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG);
     CompilerProvider cxx =
-        new CompilerProvider(
-            new ConstantToolProvider(clangXxPath),
-            CxxToolProvider.Type.CLANG);
+        new CompilerProvider(new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG);
     ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
-    whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getPlatformPath().toString() +
-                         "/Developer/Library/Frameworks") + "\\/.*");
+    whitelistBuilder.add(
+        "^"
+            + Pattern.quote(sdkPaths.getPlatformPath().toString() + "/Developer/Library/Frameworks")
+            + "\\/.*");
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       LOG.debug("Apple toolchain path: %s", toolchainPath);
       try {
@@ -432,43 +411,40 @@ public class AppleCxxPlatforms {
     }
     HeaderVerification headerVerification =
         config.getHeaderVerification().withPlatformWhitelist(whitelistBuilder.build());
-    LOG.debug("Headers verification platform whitelist: %s",
-        headerVerification.getPlatformWhitelist());
+    LOG.debug(
+        "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
 
-    CxxPlatform cxxPlatform = CxxPlatforms.build(
-        targetFlavor,
-        Platform.MACOS,
-        config,
-        as,
-        aspp,
-        cc,
-        cxx,
-        cpp,
-        cxxpp,
-        new DefaultLinkerProvider(
-            LinkerProvider.Type.DARWIN,
-            new ConstantToolProvider(clangXxPath)),
-        ImmutableList.<String>builder()
-            .addAll(cflags)
-            .addAll(ldflagsBuilder.build())
-            .build(),
-        strip,
-        new BsdArchiver(ar),
-        ranlib,
-        new PosixNmSymbolNameTool(nm),
-        cflagsBuilder.build(),
-        ImmutableList.of(),
-        cflags,
-        ImmutableList.of(),
-        "dylib",
-        "%s.dylib",
-        "a",
-        "o",
-        compilerDebugPathSanitizer,
-        assemblerDebugPathSanitizer,
-        macros,
-        Optional.empty(),
-        headerVerification);
+    CxxPlatform cxxPlatform =
+        CxxPlatforms.build(
+            targetFlavor,
+            Platform.MACOS,
+            config,
+            as,
+            aspp,
+            cc,
+            cxx,
+            cpp,
+            cxxpp,
+            new DefaultLinkerProvider(
+                LinkerProvider.Type.DARWIN, new ConstantToolProvider(clangXxPath)),
+            ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
+            strip,
+            new BsdArchiver(ar),
+            ranlib,
+            new PosixNmSymbolNameTool(nm),
+            cflagsBuilder.build(),
+            ImmutableList.of(),
+            cflags,
+            ImmutableList.of(),
+            "dylib",
+            "%s.dylib",
+            "a",
+            "o",
+            compilerDebugPathSanitizer,
+            assemblerDebugPathSanitizer,
+            macros,
+            Optional.empty(),
+            headerVerification);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
@@ -477,16 +453,17 @@ public class AppleCxxPlatforms {
       swiftOverrideSearchPathBuilder.add(swiftToolChain.get().getPath().resolve(USR_BIN));
       swiftSdkPathsBuilder.setToolchainPaths(ImmutableList.of(swiftToolChain.get().getPath()));
     }
-    Optional<SwiftPlatform> swiftPlatform = getSwiftPlatform(
-        applePlatform.getName(),
-        targetArchitecture + "-apple-" +
-            applePlatform.getSwiftName().orElse(applePlatform.getName()) + minVersion,
-        version,
-        swiftSdkPathsBuilder.build(),
-        swiftOverrideSearchPathBuilder
-            .addAll(toolSearchPaths)
-            .build(),
-        xcodeToolFinder);
+    Optional<SwiftPlatform> swiftPlatform =
+        getSwiftPlatform(
+            applePlatform.getName(),
+            targetArchitecture
+                + "-apple-"
+                + applePlatform.getSwiftName().orElse(applePlatform.getName())
+                + minVersion,
+            version,
+            swiftSdkPathsBuilder.build(),
+            swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
+            xcodeToolFinder);
 
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     platformBuilder
@@ -520,46 +497,39 @@ public class AppleCxxPlatforms {
       AbstractAppleSdkPaths sdkPaths,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder) {
-    ImmutableList<String> swiftParams = ImmutableList.of(
-        "-frontend",
-        "-sdk",
-        sdkPaths.getSdkPath().toString(),
-        "-target",
-        targetArchitectureName);
+    ImmutableList<String> swiftParams =
+        ImmutableList.of(
+            "-frontend",
+            "-sdk",
+            sdkPaths.getSdkPath().toString(),
+            "-target",
+            targetArchitectureName);
 
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
-      .add("--copy")
-      .add("--verbose")
-      .add("--strip-bitcode")
-      .add("--platform")
-      .add(platformName);
+        .add("--copy")
+        .add("--verbose")
+        .add("--strip-bitcode")
+        .add("--platform")
+        .add(platformName);
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
-      swiftStdlibToolParamsBuilder
-        .add("--toolchain")
-        .add(toolchainPath.toString());
+      swiftStdlibToolParamsBuilder.add("--toolchain").add(toolchainPath.toString());
     }
 
-    Optional<Tool> swiftc = getOptionalToolWithParams(
-        "swiftc",
-        toolSearchPaths,
-        xcodeToolFinder,
-        version,
-        swiftParams);
-    Optional<Tool> swiftStdLibTool = getOptionalToolWithParams(
-        "swift-stdlib-tool",
-        toolSearchPaths,
-        xcodeToolFinder,
-        version,
-        swiftStdlibToolParamsBuilder.build());
+    Optional<Tool> swiftc =
+        getOptionalToolWithParams("swiftc", toolSearchPaths, xcodeToolFinder, version, swiftParams);
+    Optional<Tool> swiftStdLibTool =
+        getOptionalToolWithParams(
+            "swift-stdlib-tool",
+            toolSearchPaths,
+            xcodeToolFinder,
+            version,
+            swiftStdlibToolParamsBuilder.build());
 
     if (swiftc.isPresent() && swiftStdLibTool.isPresent()) {
       return Optional.of(
           SwiftPlatforms.build(
-              platformName,
-              sdkPaths.getToolchainPaths(),
-              swiftc.get(),
-              swiftStdLibTool.get()));
+              platformName, sdkPaths.getToolchainPaths(), swiftc.get(), swiftStdLibTool.get()));
     } else {
       return Optional.empty();
     }
@@ -571,11 +541,7 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       String version) {
     return getOptionalToolWithParams(
-        tool,
-        toolSearchPaths,
-        xcodeToolFinder,
-        version,
-        ImmutableList.of());
+        tool, toolSearchPaths, xcodeToolFinder, version, ImmutableList.of());
   }
 
   private static Optional<Tool> getOptionalToolWithParams(
@@ -584,19 +550,20 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       final String version,
       final ImmutableList<String> params) {
-    return xcodeToolFinder.getToolPath(toolSearchPaths, tool).map(input ->
-        VersionedTool.builder()
-            .setPath(input)
-            .setName(tool)
-            .setVersion(version)
-            .setExtraArgs(params)
-            .build());
+    return xcodeToolFinder
+        .getToolPath(toolSearchPaths, tool)
+        .map(
+            input ->
+                VersionedTool.builder()
+                    .setPath(input)
+                    .setName(tool)
+                    .setVersion(version)
+                    .setExtraArgs(params)
+                    .build());
   }
 
   private static Path getToolPath(
-      String tool,
-      ImmutableList<Path> toolSearchPaths,
-      XcodeToolFinder xcodeToolFinder) {
+      String tool, ImmutableList<Path> toolSearchPaths, XcodeToolFinder xcodeToolFinder) {
     Optional<Path> result = xcodeToolFinder.getToolPath(toolSearchPaths, tool);
     if (!result.isPresent()) {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
@@ -609,40 +576,46 @@ public class AppleCxxPlatforms {
     private final Map<Path, Optional<String>> cache = new HashMap<>();
 
     /**
-     * Returns the Xcode build version. This is an alphanumeric string as output by
-     * {@code xcodebuild -version} and shown in the About Xcode window. This value is embedded into
-     * the plist of app bundles built by Xcode, under the field named {@code DTXcodeBuild}
+     * Returns the Xcode build version. This is an alphanumeric string as output by {@code
+     * xcodebuild -version} and shown in the About Xcode window. This value is embedded into the
+     * plist of app bundles built by Xcode, under the field named {@code DTXcodeBuild}
      *
      * @param developerDir Path to developer dir, i.e. /Applications/Xcode.app/Contents/Developer
      * @return the xcode build version if found, nothing if it fails to be found, or the version
-     *         plist file cannot be read.
+     *     plist file cannot be read.
      */
     Optional<String> lookup(Path developerDir) {
-      return cache.computeIfAbsent(developerDir, ignored -> {
-        Path versionPlist = developerDir.getParent().resolve("version.plist");
-        NSString result;
-        try {
-          NSDictionary dict =
-              (NSDictionary) PropertyListParser.parse(Files.readAllBytes(versionPlist));
-          result = (NSString) dict.get("ProductBuildVersion");
-        } catch (IOException | ClassCastException | SAXException | PropertyListFormatException |
-            ParseException e) {
-          LOG.warn(
-              e,
-              "%s: Cannot find xcode build version, file is in an invalid format.",
-              versionPlist);
-          return Optional.empty();
-        } catch (ParserConfigurationException e) {
-          throw new IllegalStateException("plist parser threw unexpected exception", e);
-        }
-        if (result != null) {
-          return Optional.of(result.toString());
-        } else {
-          LOG.warn(
-              "%s: Cannot find xcode build version, file is in an invalid format.", versionPlist);
-          return Optional.empty();
-        }
-      });
+      return cache.computeIfAbsent(
+          developerDir,
+          ignored -> {
+            Path versionPlist = developerDir.getParent().resolve("version.plist");
+            NSString result;
+            try {
+              NSDictionary dict =
+                  (NSDictionary) PropertyListParser.parse(Files.readAllBytes(versionPlist));
+              result = (NSString) dict.get("ProductBuildVersion");
+            } catch (IOException
+                | ClassCastException
+                | SAXException
+                | PropertyListFormatException
+                | ParseException e) {
+              LOG.warn(
+                  e,
+                  "%s: Cannot find xcode build version, file is in an invalid format.",
+                  versionPlist);
+              return Optional.empty();
+            } catch (ParserConfigurationException e) {
+              throw new IllegalStateException("plist parser threw unexpected exception", e);
+            }
+            if (result != null) {
+              return Optional.of(result.toString());
+            } else {
+              LOG.warn(
+                  "%s: Cannot find xcode build version, file is in an invalid format.",
+                  versionPlist);
+              return Optional.empty();
+            }
+          });
     }
   }
 }

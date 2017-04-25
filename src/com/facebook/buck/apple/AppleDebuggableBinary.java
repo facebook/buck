@@ -35,7 +35,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -44,8 +43,7 @@ import java.util.stream.Stream;
  * apple platform. Depending on the debug format, it should depend on dsym and stripped cxx binary,
  * or just on stripped binary.
  */
-public class AppleDebuggableBinary
-    extends AbstractBuildRule
+public class AppleDebuggableBinary extends AbstractBuildRule
     implements BuildRuleWithBinary, SupportsInputBasedRuleKey, HasRuntimeDeps {
 
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-debuggable-binary");
@@ -55,12 +53,9 @@ public class AppleDebuggableBinary
    */
   private final BuildRule binaryRule;
 
-  @AddToRuleKey
-  private final SourcePath binarySourcePath;
+  @AddToRuleKey private final SourcePath binarySourcePath;
 
-  public AppleDebuggableBinary(
-      BuildRuleParams buildRuleParams,
-      BuildRule binaryRule) {
+  public AppleDebuggableBinary(BuildRuleParams buildRuleParams, BuildRule binaryRule) {
     super(buildRuleParams);
     this.binaryRule = binaryRule;
     this.binarySourcePath = Preconditions.checkNotNull(binaryRule.getSourcePathToOutput());
@@ -70,18 +65,21 @@ public class AppleDebuggableBinary
   private void performChecks(BuildRuleParams buildRuleParams, BuildRule cxxStrip) {
     Preconditions.checkArgument(
         buildRuleParams.getBuildTarget().getFlavors().contains(RULE_FLAVOR),
-        "Rule %s should contain flavor %s", this, RULE_FLAVOR);
+        "Rule %s should contain flavor %s",
+        this,
+        RULE_FLAVOR);
     Preconditions.checkArgument(
         AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildRuleParams.getBuildTarget().getFlavors()),
-        "Rule %s should contain some of AppleDebugFormat flavors", this);
+        "Rule %s should contain some of AppleDebugFormat flavors",
+        this);
     Preconditions.checkArgument(
         getBuildDeps().contains(cxxStrip),
-        "Rule %s should depend on its stripped rule %s", this, cxxStrip);
+        "Rule %s should depend on its stripped rule %s",
+        this,
+        cxxStrip);
   }
 
-  /**
-   * Indicates whether its possible to wrap given _binary_ rule.
-   */
+  /** Indicates whether its possible to wrap given _binary_ rule. */
   public static boolean canWrapBinaryBuildRule(BuildRule binaryBuildRule) {
     return binaryBuildRule instanceof ProvidesLinkedBinaryDeps;
   }
@@ -93,8 +91,8 @@ public class AppleDebuggableBinary
     }
 
     // fat/thin binaries and dynamic libraries may have dSYMs
-    if (buildRule instanceof ProvidesLinkedBinaryDeps ||
-        buildRule instanceof AppleDebuggableBinary) {
+    if (buildRule instanceof ProvidesLinkedBinaryDeps
+        || buildRule instanceof AppleDebuggableBinary) {
       return true;
     }
 
@@ -123,7 +121,8 @@ public class AppleDebuggableBinary
     } else if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       Preconditions.checkArgument(
           appleDsym.isPresent(),
-          "debugFormat %s expects AppleDsym rule to be present", AppleDebugFormat.DWARF_AND_DSYM);
+          "debugFormat %s expects AppleDsym rule to be present",
+          AppleDebugFormat.DWARF_AND_DSYM);
       builder.add(strippedBinaryRule);
       builder.add(appleDsym.get());
     }
@@ -132,8 +131,7 @@ public class AppleDebuggableBinary
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

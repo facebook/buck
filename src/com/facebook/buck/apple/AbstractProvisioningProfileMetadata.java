@@ -36,9 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
@@ -47,11 +44,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-
-/**
- * Metadata contained in a provisioning profile (.mobileprovision).
- */
+/** Metadata contained in a provisioning profile (.mobileprovision). */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable {
@@ -60,7 +55,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   /**
    * Returns a (prefix, identifier) pair for which the profile is valid.
    *
-   * e.g. (ABCDE12345, com.example.TestApp) or (ABCDE12345, *)
+   * <p>e.g. (ABCDE12345, com.example.TestApp) or (ABCDE12345, *)
    */
   public abstract Pair<String, String> getAppID();
 
@@ -70,29 +65,23 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public abstract Path getProfilePath();
 
-  /**
-   * The set of platforms the profile is valid for.
-   */
+  /** The set of platforms the profile is valid for. */
   @Value.Default
   public ImmutableList<String> getPlatforms() {
     return ImmutableList.of(ApplePlatform.IPHONEOS.getProvisioningProfileName().get());
   }
 
-  /**
-   * Key/value pairs of the "Entitlements" dictionary in the embedded plist.
-   */
+  /** Key/value pairs of the "Entitlements" dictionary in the embedded plist. */
   public abstract ImmutableMap<String, NSObject> getEntitlements();
 
-  /**
-   * SHA1 hashes of the certificates in the "DeveloperCertificates" section.
-   */
+  /** SHA1 hashes of the certificates in the "DeveloperCertificates" section. */
   public abstract ImmutableSet<HashCode> getDeveloperCertificateFingerprints();
 
   /**
    * Takes a application identifier and splits it into prefix and bundle ID.
    *
-   * Prefix is always a ten-character alphanumeric sequence.
-   * Bundle ID may be a fully-qualified name or a wildcard ending in *.
+   * <p>Prefix is always a ten-character alphanumeric sequence. Bundle ID may be a fully-qualified
+   * name or a wildcard ending in *.
    */
   public static Pair<String, String> splitAppID(String appID) {
     Matcher matcher = BUNDLE_ID_PATTERN.matcher(appID);
@@ -107,8 +96,8 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   /**
-   * Takes an ImmutableMap representing an entitlements file, returns the application prefix
-   * if it can be inferred from keys in the entitlement.  Otherwise, it returns empty.
+   * Takes an ImmutableMap representing an entitlements file, returns the application prefix if it
+   * can be inferred from keys in the entitlement. Otherwise, it returns empty.
    */
   public static Optional<String> prefixFromEntitlements(
       ImmutableMap<String, NSObject> entitlements) {
@@ -123,9 +112,8 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(
-      ProcessExecutor executor,
-      ImmutableList<String> readCommand,
-      Path profilePath) throws IOException, InterruptedException {
+      ProcessExecutor executor, ImmutableList<String> readCommand, Path profilePath)
+      throws IOException, InterruptedException {
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
 
     // Extract the XML from its signed message wrapper.
@@ -135,9 +123,10 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
             .addCommand(profilePath.toString())
             .build();
     ProcessExecutor.Result result;
-    result = executor.launchAndExecute(
-        processExecutorParams,
-        options,
+    result =
+        executor.launchAndExecute(
+            processExecutorParams,
+            options,
             /* stdin */ Optional.empty(),
             /* timeOutMs */ Optional.empty(),
             /* timeOutHandler */ Optional.empty());
@@ -147,8 +136,8 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
     }
 
     try {
-      NSDictionary plist = (NSDictionary) PropertyListParser.parse(
-          result.getStdout().get().getBytes());
+      NSDictionary plist =
+          (NSDictionary) PropertyListParser.parse(result.getStdout().get().getBytes());
       Date expirationDate = ((NSDate) plist.get("ExpirationDate")).getDate();
       String uuid = ((NSString) plist.get("UUID")).getContent();
 
@@ -171,7 +160,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
       ProvisioningProfileMetadata.Builder provisioningProfileMetadata =
           ProvisioningProfileMetadata.builder();
       if (plist.get("Platform") != null) {
-        for (Object platform : (Object []) plist.get("Platform").toJavaObject()) {
+        for (Object platform : (Object[]) plist.get("Platform").toJavaObject()) {
           provisioningProfileMetadata.addPlatforms((String) platform);
         }
       }
@@ -194,21 +183,21 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   public ImmutableMap<String, NSObject> getMergeableEntitlements() {
-    final ImmutableSet<String> excludedKeys = ImmutableSet.of(
-        "com.apple.developer.icloud-container-development-container-identifiers",
-        "com.apple.developer.icloud-container-environment",
-        "com.apple.developer.icloud-container-identifiers",
-        "com.apple.developer.icloud-services",
-        "com.apple.developer.restricted-resource-mode",
-        "com.apple.developer.ubiquity-container-identifiers",
-        "com.apple.developer.ubiquity-kvstore-identifier",
-        "inter-app-audio",
-        "com.apple.developer.homekit",
-        "com.apple.developer.healthkit",
-        "com.apple.developer.in-app-payments",
-        "com.apple.developer.maps",
-        "com.apple.external-accessory.wireless-configuration"
-    );
+    final ImmutableSet<String> excludedKeys =
+        ImmutableSet.of(
+            "com.apple.developer.icloud-container-development-container-identifiers",
+            "com.apple.developer.icloud-container-environment",
+            "com.apple.developer.icloud-container-identifiers",
+            "com.apple.developer.icloud-services",
+            "com.apple.developer.restricted-resource-mode",
+            "com.apple.developer.ubiquity-container-identifiers",
+            "com.apple.developer.ubiquity-kvstore-identifier",
+            "inter-app-audio",
+            "com.apple.developer.homekit",
+            "com.apple.developer.healthkit",
+            "com.apple.developer.in-app-payments",
+            "com.apple.developer.maps",
+            "com.apple.external-accessory.wireless-configuration");
 
     ImmutableMap<String, NSObject> allEntitlements = getEntitlements();
     ImmutableMap.Builder<String, NSObject> filteredEntitlementsBuilder = ImmutableMap.builder();

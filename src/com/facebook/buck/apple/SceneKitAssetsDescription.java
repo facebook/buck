@@ -30,12 +30,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 /**
- * Description for a scenekit_assets rule, which identifies a assets directory
- * for use with Apple's SceneKit.
+ * Description for a scenekit_assets rule, which identifies a assets directory for use with Apple's
+ * SceneKit.
  */
-public class SceneKitAssetsDescription implements
-    Description<AppleWrapperResourceArg>,
-    Flavored {
+public class SceneKitAssetsDescription implements Description<AppleWrapperResourceArg>, Flavored {
 
   private static final String SCENEKIT_ASSETS_EXTENSION = "scnassets";
 

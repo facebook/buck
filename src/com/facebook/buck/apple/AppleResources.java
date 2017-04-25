@@ -23,7 +23,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -34,7 +33,7 @@ public class AppleResources {
       node -> node.getDescription() instanceof HasAppleBundleResourcesDescription;
 
   // Utility class, do not instantiate.
-  private AppleResources() { }
+  private AppleResources() {}
 
   /**
    * Collect resources from recursive dependencies.
@@ -47,17 +46,16 @@ public class AppleResources {
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
       Iterable<? extends TargetNode<?, ?>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(node ->
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
-                cache,
-                AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                node,
-                ImmutableSet.of(AppleResourceDescription.class)))
-        .transform(
-            input -> (AppleResourceDescription.Arg) input.getConstructorArg())
+    return FluentIterable.from(targetNodes)
+        .transformAndConcat(
+            node ->
+                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    targetGraph,
+                    cache,
+                    AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                    node,
+                    ImmutableSet.of(AppleResourceDescription.class)))
+        .transform(input -> (AppleResourceDescription.Arg) input.getConstructorArg())
         .toSet();
   }
 
@@ -91,8 +89,7 @@ public class AppleResources {
   }
 
   public static ImmutableSet<AppleResourceDescription.Arg> collectDirectResources(
-      TargetGraph targetGraph,
-      TargetNode<?, ?> targetNode) {
+      TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
     ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {

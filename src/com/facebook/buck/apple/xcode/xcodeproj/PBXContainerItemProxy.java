@@ -19,8 +19,8 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 
 /**
- * Reference to another object used by {@link PBXTargetDependency}. Can reference a remote file
- * by specifying the {@link PBXFileReference} to the remote project file, and the GID of the object
+ * Reference to another object used by {@link PBXTargetDependency}. Can reference a remote file by
+ * specifying the {@link PBXFileReference} to the remote project file, and the GID of the object
  * within that file.
  */
 public class PBXContainerItemProxy extends PBXContainerItem {
@@ -28,6 +28,7 @@ public class PBXContainerItemProxy extends PBXContainerItem {
     TARGET_REFERENCE(1);
 
     private final int intValue;
+
     private ProxyType(int intValue) {
       this.intValue = intValue;
     }
@@ -42,9 +43,7 @@ public class PBXContainerItemProxy extends PBXContainerItem {
   private final ProxyType proxyType;
 
   public PBXContainerItemProxy(
-      PBXFileReference containerPortal,
-      String remoteGlobalIDString,
-      ProxyType proxyType) {
+      PBXFileReference containerPortal, String remoteGlobalIDString, ProxyType proxyType) {
     this.containerPortal = containerPortal;
     this.remoteGlobalIDString = remoteGlobalIDString;
     this.proxyType = proxyType;

@@ -18,12 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
 import java.nio.file.Path;
 
-/**
- * A description for a resource defined by a single path.
- */
+/** A description for a resource defined by a single path. */
 @SuppressFieldNotInitialized
 public class AppleWrapperResourceArg extends AbstractDescriptionArg {
   public Path path;

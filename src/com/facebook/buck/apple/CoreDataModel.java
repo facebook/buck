@@ -34,7 +34,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -42,20 +41,15 @@ public class CoreDataModel extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = InternalFlavor.of("core-data-model");
 
-  @AddToRuleKey
-  private final String moduleName;
+  @AddToRuleKey private final String moduleName;
 
-  @AddToRuleKey
-  private final Tool momc;
+  @AddToRuleKey private final Tool momc;
 
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> dataModelPaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> dataModelPaths;
 
-  @AddToRuleKey
-  private final String sdkName;
+  @AddToRuleKey private final String sdkName;
 
-  @AddToRuleKey
-  private final String minOSVersion;
+  @AddToRuleKey private final String minOSVersion;
 
   private final Path sdkRoot;
   private final Path outputDir;
@@ -71,7 +65,7 @@ public class CoreDataModel extends AbstractBuildRule {
     String outputDirString =
         BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
             .toString()
-            .replace('#', '-');  // momc doesn't like # in paths
+            .replace('#', '-'); // momc doesn't like # in paths
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
@@ -94,9 +88,12 @@ public class CoreDataModel extends AbstractBuildRule {
 
               commandBuilder.addAll(momc.getCommandPrefix(context.getSourcePathResolver()));
               commandBuilder.add(
-                  "--sdkroot", sdkRoot.toString(),
-                  "--" + sdkName + "-deployment-target", minOSVersion,
-                  "--module", moduleName,
+                  "--sdkroot",
+                  sdkRoot.toString(),
+                  "--" + sdkName + "-deployment-target",
+                  minOSVersion,
+                  "--module",
+                  moduleName,
                   context.getSourcePathResolver().getAbsolutePath(dataModelPath).toString(),
                   getProjectFilesystem().resolve(outputDir).toString());
 

@@ -23,16 +23,12 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
+import org.immutables.value.Value;
 
-/**
- * Adds Apple-specific tools to {@link CxxPlatform}.
- */
+/** Adds Apple-specific tools to {@link CxxPlatform}. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
@@ -49,17 +45,29 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   public abstract AppleSdkPaths getAppleSdkPaths();
 
   public abstract Optional<String> getBuildVersion();
+
   public abstract String getMinVersion();
+
   public abstract Tool getActool();
+
   public abstract Tool getIbtool();
+
   public abstract Tool getMomc();
+
   public abstract Optional<Tool> getCopySceneKitAssets();
+
   public abstract Tool getXctest();
+
   public abstract Tool getDsymutil();
+
   public abstract Tool getLipo();
+
   public abstract Optional<Path> getStubBinary();
+
   public abstract Tool getLldb();
+
   public abstract ToolProvider getCodesignProvider();
+
   public abstract Optional<Tool> getCodesignAllocate();
 
   // Short Xcode version code, e.g. 0721

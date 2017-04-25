@@ -18,22 +18,20 @@ package com.facebook.buck.apple;
 
 import com.google.common.collect.ImmutableMap;
 
-/**
- * Types of actions in a scheme which include targets to build.
- */
+/** Types of actions in a scheme which include targets to build. */
 public enum SchemeActionType {
-    BUILD,
-    LAUNCH,
-    TEST,
-    PROFILE,
-    ANALYZE,
-    ARCHIVE;
+  BUILD,
+  LAUNCH,
+  TEST,
+  PROFILE,
+  ANALYZE,
+  ARCHIVE;
 
   public static final ImmutableMap<SchemeActionType, String> DEFAULT_CONFIG_NAMES =
-    ImmutableMap.of(
-        SchemeActionType.LAUNCH, "Debug",
-        SchemeActionType.TEST, "Debug",
-        SchemeActionType.PROFILE, "Release",
-        SchemeActionType.ANALYZE, "Debug",
-        SchemeActionType.ARCHIVE, "Release");
+      ImmutableMap.of(
+          SchemeActionType.LAUNCH, "Debug",
+          SchemeActionType.TEST, "Debug",
+          SchemeActionType.PROFILE, "Release",
+          SchemeActionType.ANALYZE, "Debug",
+          SchemeActionType.ARCHIVE, "Release");
 }

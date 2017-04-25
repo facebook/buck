@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -71,20 +70,23 @@ class ActoolStep extends ShellStep {
 
     commandBuilder.addAll(actoolCommand);
     commandBuilder.add(
-        "--output-format", "human-readable-text",
+        "--output-format",
+        "human-readable-text",
         "--notices",
         "--warnings",
         "--errors",
-        "--platform", applePlatformName,
-        "--minimum-deployment-target", target,
+        "--platform",
+        applePlatformName,
+        "--minimum-deployment-target",
+        target,
         "--compress-pngs",
         "--compile",
         output.toString(),
         "--output-partial-info-plist",
         outputPlist.toString());
 
-    if (applePlatformName.equals(ApplePlatform.APPLETVOS.getName()) ||
-        applePlatformName.equals(ApplePlatform.APPLETVSIMULATOR.getName())) {
+    if (applePlatformName.equals(ApplePlatform.APPLETVOS.getName())
+        || applePlatformName.equals(ApplePlatform.APPLETVSIMULATOR.getName())) {
       commandBuilder.add("--target-device", "tv");
     } else {
       //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)

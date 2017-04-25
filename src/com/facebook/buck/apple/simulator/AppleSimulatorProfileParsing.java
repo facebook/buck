@@ -22,24 +22,21 @@ import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-/**
- * Utility class to parse profile.plist from an iPhone simulator platform.
- */
+/** Utility class to parse profile.plist from an iPhone simulator platform. */
 public class AppleSimulatorProfileParsing {
 
   private static final Logger LOG = Logger.get(AppleSimulatorProfileParsing.class);
 
   // Utility class, do not instantiate.
-  private AppleSimulatorProfileParsing() { }
+  private AppleSimulatorProfileParsing() {}
 
   public static Optional<AppleSimulatorProfile> parseProfilePlistStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     NSDictionary profile;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {

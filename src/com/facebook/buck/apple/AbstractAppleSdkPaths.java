@@ -17,52 +17,49 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
-/**
- * Paths to Apple SDK directories under an installation of Xcode.
- */
+/** Paths to Apple SDK directories under an installation of Xcode. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleSdkPaths {
   /**
    * Absolute path to the active DEVELOPER_DIR.
    *
-   * Example:
+   * <p>Example:
    *
-   * {@code /Applications/Xcode.app/Contents/Developer}
+   * <p>{@code /Applications/Xcode.app/Contents/Developer}
    */
   public abstract Optional<Path> getDeveloperPath();
 
   /**
    * Absolute paths to tools and files independent of the platform.
    *
-   * Example:
+   * <p>Example:
    *
-   * {@code [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain]}
+   * <p>{@code [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain]}
    */
   public abstract Set<Path> getToolchainPaths();
 
   /**
    * Absolute path to tools and files which depend on a particular platform.
    *
-   * Example:
+   * <p>Example:
    *
-   * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform}
+   * <p>{@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform}
    */
   public abstract Path getPlatformPath();
 
   /**
    * Absolute path to tools and files which depend on a particular SDK on a particular platform.
    *
-   * Example:
+   * <p>Example:
    *
-   * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk}
+   * <p>{@code
+   * /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk}
    */
   public abstract Path getSdkPath();
 }

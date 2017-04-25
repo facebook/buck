@@ -18,9 +18,7 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.CharMatcher;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
@@ -29,38 +27,26 @@ import javax.annotation.Nullable;
  */
 public class PBXReference extends PBXContainerItem {
   public enum SourceTree {
-    /**
-     * Relative to the path of the group containing this.
-     */
+    /** Relative to the path of the group containing this. */
     GROUP("<group>"),
 
-    /**
-     * Absolute system path.
-     */
+    /** Absolute system path. */
     ABSOLUTE("<absolute>"),
-    /**
-     * Relative to the build setting {@code BUILT_PRODUCTS_DIR}.
-     */
+    /** Relative to the build setting {@code BUILT_PRODUCTS_DIR}. */
     BUILT_PRODUCTS_DIR("BUILT_PRODUCTS_DIR"),
 
-    /**
-     * Relative to the build setting {@code PLATFORM_DIR}.
-     */
+    /** Relative to the build setting {@code PLATFORM_DIR}. */
     PLATFORM_DIR("PLATFORM_DIR"),
 
-    /**
-     * Relative to the build setting {@code SDKROOT}.
-     */
+    /** Relative to the build setting {@code SDKROOT}. */
     SDKROOT("SDKROOT"),
 
-    /**
-     * Relative to the directory containing the project file {@code SOURCE_ROOT}.
-     */
+    /** Relative to the directory containing the project file {@code SOURCE_ROOT}. */
     SOURCE_ROOT("SOURCE_ROOT"),
 
     /**
-     * Relative to the Developer content directory inside the Xcode application
-     * (e.g. {@code /Applications/Xcode.app/Contents/Developer}).
+     * Relative to the Developer content directory inside the Xcode application (e.g. {@code
+     * /Applications/Xcode.app/Contents/Developer}).
      */
     DEVELOPER_DIR("DEVELOPER_DIR"),
     ;
@@ -79,7 +65,7 @@ public class PBXReference extends PBXContainerItem {
     /**
      * Return a sourceTree given a build setting that is typically used as a source tree prefix.
      *
-     * The build setting may be optionally prefixed by '$' which will be stripped.
+     * <p>The build setting may be optionally prefixed by '$' which will be stripped.
      */
     public static Optional<SourceTree> fromBuildSetting(String buildSetting) {
       switch (CharMatcher.is('$').trimLeadingFrom(buildSetting)) {
@@ -103,8 +89,8 @@ public class PBXReference extends PBXContainerItem {
   @Nullable private String path;
 
   /**
-   * The "base" path of the reference. The absolute path is resolved by prepending the resolved
-   * base path.
+   * The "base" path of the reference. The absolute path is resolved by prepending the resolved base
+   * path.
    */
   private SourceTree sourceTree;
 
@@ -122,12 +108,15 @@ public class PBXReference extends PBXContainerItem {
   public String getPath() {
     return path;
   }
+
   public void setPath(String v) {
     path = v;
   }
+
   public SourceTree getSourceTree() {
     return sourceTree;
   }
+
   public void setSourceTree(SourceTree v) {
     sourceTree = v;
   }
@@ -157,9 +146,6 @@ public class PBXReference extends PBXContainerItem {
   public String toString() {
     return String.format(
         "%s name=%s path=%s sourceTree=%s",
-        super.toString(),
-        getName(),
-        getPath(),
-        getSourceTree());
+        super.toString(), getName(), getPath(), getSourceTree());
   }
 }

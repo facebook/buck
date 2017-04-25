@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 @SuppressFieldNotInitialized
 public class XcodeScriptDescriptionArg extends AbstractDescriptionArg {
   public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();

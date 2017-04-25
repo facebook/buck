@@ -56,7 +56,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -130,15 +129,19 @@ public class WorkspaceAndProjectGenerator {
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
 
-    this.focusModules = focusModules.map(inputs ->
-        // Update the focused modules list (if present) to contain srcTarget (if present).
-        workspaceArguments.srcTarget
-            .map(srcTarget ->
-                ImmutableSet.<UnflavoredBuildTarget>builder()
-                    .addAll(inputs)
-                    .add(srcTarget.getUnflavoredBuildTarget())
-                    .build())
-            .orElse(inputs));
+    this.focusModules =
+        focusModules.map(
+            inputs ->
+                // Update the focused modules list (if present) to contain srcTarget (if present).
+                workspaceArguments
+                    .srcTarget
+                    .map(
+                        srcTarget ->
+                            ImmutableSet.<UnflavoredBuildTarget>builder()
+                                .addAll(inputs)
+                                .add(srcTarget.getUnflavoredBuildTarget())
+                                .build())
+                    .orElse(inputs));
   }
 
   @VisibleForTesting
@@ -161,8 +164,8 @@ public class WorkspaceAndProjectGenerator {
       throws IOException, InterruptedException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
-    String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
-        workspaceArguments);
+    String workspaceName =
+        XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(workspaceArguments);
     Path outputDirectory;
     if (combinedProject) {
       workspaceName += "-Combined";
@@ -174,19 +177,18 @@ public class WorkspaceAndProjectGenerator {
       outputDirectory = workspaceBuildTarget.getBasePath();
     }
 
-    WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
-        rootCell.getFilesystem(),
-        combinedProject ? "project" : workspaceName,
-        outputDirectory);
+    WorkspaceGenerator workspaceGenerator =
+        new WorkspaceGenerator(
+            rootCell.getFilesystem(), combinedProject ? "project" : workspaceName, outputDirectory);
 
     ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder =
         ImmutableMap.builder();
     ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
         schemeNameToSrcTargetNodeBuilder = ImmutableSetMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<?, ?>>
-        buildForTestNodesBuilder = ImmutableSetMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
-        testsBuilder = ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder =
+        ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>> testsBuilder =
+        ImmutableSetMultimap.builder();
 
     buildWorkspaceSchemes(
         projectGraph,
@@ -210,14 +212,13 @@ public class WorkspaceAndProjectGenerator {
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects =
         Stream.concat(
-            schemeNameToSrcTargetNode.values().stream().flatMap(Optionals::toStream),
-            buildForTestNodes.values().stream())
+                schemeNameToSrcTargetNode.values().stream().flatMap(Optionals::toStream),
+                buildForTestNodes.values().stream())
             .map(TargetNode::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet());
     ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
         ImmutableMap.builder();
-    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
-        ImmutableMap.builder();
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
     generateProjects(
         projectGenerators,
         listeningExecutorService,
@@ -304,34 +305,38 @@ public class WorkspaceAndProjectGenerator {
         projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
-        projectDirectoryToBuildTargetsBuilder.build();
+          projectDirectoryToBuildTargetsBuilder.build();
       final Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
       for (final Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
-        final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
-            projectGraph,
-            ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
+        final ImmutableSet<BuildTarget> rules =
+            filterRulesForProjectDirectory(
+                projectGraph,
+                ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
         if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
           continue;
         }
 
-        final boolean isMainProject = workspaceArguments.srcTarget.isPresent() &&
-            rules.contains(workspaceArguments.srcTarget.get());
+        final boolean isMainProject =
+            workspaceArguments.srcTarget.isPresent()
+                && rules.contains(workspaceArguments.srcTarget.get());
         projectGeneratorFutures.add(
             listeningExecutorService.submit(
                 () -> {
-                  GenerationResult result = generateProjectForDirectory(
-                        projectGenerators,
-                        projectCell,
-                        projectDirectory,
-                        rules,
-                        isMainProject,
-                        targetsInRequiredProjects);
+                  GenerationResult result =
+                      generateProjectForDirectory(
+                          projectGenerators,
+                          projectCell,
+                          projectDirectory,
+                          rules,
+                          isMainProject,
+                          targetsInRequiredProjects);
                   // convert the projectPath to relative to the target cell here
-                  result = GenerationResult.of(
-                      relativeTargetCell.resolve(result.getProjectPath()),
-                      result.isProjectGenerated(),
-                      result.getRequiredBuildTargets(),
-                      result.getBuildTargetToGeneratedTargetMap());
+                  result =
+                      GenerationResult.of(
+                          relativeTargetCell.resolve(result.getProjectPath()),
+                          result.isProjectGenerated(),
+                          result.getRequiredBuildTargets(),
+                          result.getBuildTargetToGeneratedTargetMap());
                   return result;
                 }));
       }
@@ -351,9 +356,7 @@ public class WorkspaceAndProjectGenerator {
       }
       workspaceGenerator.addFilePath(result.getProjectPath());
       processGenerationResult(
-          buildTargetToPbxTargetMapBuilder,
-          targetToProjectPathMapBuilder,
-          result);
+          buildTargetToPbxTargetMapBuilder, targetToProjectPathMapBuilder, result);
     }
   }
 
@@ -374,8 +377,8 @@ public class WorkspaceAndProjectGenerator {
       Path projectDirectory,
       final ImmutableSet<BuildTarget> rules,
       boolean isMainProject,
-      ImmutableSet<BuildTarget> targetsInRequiredProjects
-  ) throws IOException {
+      ImmutableSet<BuildTarget> targetsInRequiredProjects)
+      throws IOException {
     boolean shouldGenerateProjects = false;
     ProjectGenerator generator;
     synchronized (projectGenerators) {
@@ -383,10 +386,7 @@ public class WorkspaceAndProjectGenerator {
       if (generator != null) {
         LOG.debug("Already generated project for target %s, skipping", projectDirectory);
       } else {
-        LOG.debug(
-            "Generating project for directory %s with targets %s",
-            projectDirectory,
-            rules);
+        LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
         String projectName;
         if (projectDirectory.getFileName().toString().equals("")) {
           // If we're generating a project in the root directory, use a generic name.
@@ -395,33 +395,33 @@ public class WorkspaceAndProjectGenerator {
           // Otherwise, name the project the same thing as the directory we're in.
           projectName = projectDirectory.getFileName().toString();
         }
-        generator = new ProjectGenerator(
-            projectGraph,
-            dependenciesCache,
-            rules,
-            projectCell,
-            projectDirectory,
-            projectName,
-            buildFileName,
-            projectGeneratorOptions,
-            isMainProject,
-            workspaceArguments.srcTarget,
-            targetsInRequiredProjects,
-            focusModules,
-            defaultCxxPlatform,
-            buildRuleResolverForNode,
-            buckEventBus,
-            halideBuckConfig,
-            cxxBuckConfig,
-            swiftBuckConfig);
+        generator =
+            new ProjectGenerator(
+                projectGraph,
+                dependenciesCache,
+                rules,
+                projectCell,
+                projectDirectory,
+                projectName,
+                buildFileName,
+                projectGeneratorOptions,
+                isMainProject,
+                workspaceArguments.srcTarget,
+                targetsInRequiredProjects,
+                focusModules,
+                defaultCxxPlatform,
+                buildRuleResolverForNode,
+                buckEventBus,
+                halideBuckConfig,
+                cxxBuckConfig,
+                swiftBuckConfig);
         projectGenerators.put(projectDirectory, generator);
         shouldGenerateProjects = true;
       }
     }
 
     ImmutableSet<BuildTarget> requiredBuildTargets = ImmutableSet.of();
-    ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
-        ImmutableMap.of();
+    ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap = ImmutableMap.of();
     if (shouldGenerateProjects) {
       generator.createXcodeProjects();
     }
@@ -443,40 +443,41 @@ public class WorkspaceAndProjectGenerator {
       WorkspaceGenerator workspaceGenerator,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
-      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder) throws IOException {
+      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
+      throws IOException {
     LOG.debug("Generating a combined project");
-    ProjectGenerator generator = new ProjectGenerator(
-        projectGraph,
-        dependenciesCache,
-        targetsInRequiredProjects,
-        rootCell,
-        outputDirectory.getParent(),
-        workspaceName,
-        buildFileName,
-        projectGeneratorOptions,
-        true,
-        workspaceArguments.srcTarget,
-        targetsInRequiredProjects,
-        focusModules,
-        defaultCxxPlatform,
-        buildRuleResolverForNode,
-        buckEventBus,
-        halideBuckConfig,
-        cxxBuckConfig,
-        swiftBuckConfig);
+    ProjectGenerator generator =
+        new ProjectGenerator(
+            projectGraph,
+            dependenciesCache,
+            targetsInRequiredProjects,
+            rootCell,
+            outputDirectory.getParent(),
+            workspaceName,
+            buildFileName,
+            projectGeneratorOptions,
+            true,
+            workspaceArguments.srcTarget,
+            targetsInRequiredProjects,
+            focusModules,
+            defaultCxxPlatform,
+            buildRuleResolverForNode,
+            buckEventBus,
+            halideBuckConfig,
+            cxxBuckConfig,
+            swiftBuckConfig);
     combinedProjectGenerator = Optional.of(generator);
     generator.createXcodeProjects();
 
-    GenerationResult result = GenerationResult.of(
-        generator.getProjectPath(),
-        generator.isProjectGenerated(),
-        generator.getRequiredBuildTargets(),
-        generator.getBuildTargetToGeneratedTargetMap());
+    GenerationResult result =
+        GenerationResult.of(
+            generator.getProjectPath(),
+            generator.isProjectGenerated(),
+            generator.getRequiredBuildTargets(),
+            generator.getBuildTargetToGeneratedTargetMap());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(
-        buildTargetToPbxTargetMapBuilder,
-        targetToProjectPathMapBuilder,
-        result);
+        buildTargetToPbxTargetMapBuilder, targetToProjectPathMapBuilder, result);
   }
 
   private void buildWorkspaceSchemes(
@@ -488,8 +489,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
-      ImmutableSetMultimap.Builder<String, TargetNode<?, ?>>
-          buildForTestNodesBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>> testsBuilder) {
     ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
         extraTestNodesBuilder = ImmutableSetMultimap.builder();
@@ -510,8 +510,8 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder);
     ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode =
         schemeNameToSrcTargetNodeBuilder.build();
-    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>>
-        extraTestNodes = extraTestNodesBuilder.build();
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> extraTestNodes =
+        extraTestNodesBuilder.build();
 
     buildWorkspaceSchemeTests(
         workspaceArguments.srcTarget,
@@ -543,8 +543,7 @@ public class WorkspaceAndProjectGenerator {
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
                   Optional.of(dependenciesCache),
-                  projectGraph.get(
-                      schemeArguments.srcTarget.get())),
+                  projectGraph.get(schemeArguments.srcTarget.get())),
               Optional::of));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
@@ -564,10 +563,7 @@ public class WorkspaceAndProjectGenerator {
     }
 
     extraTestNodesBuilder.putAll(
-        schemeName,
-        getExtraTestTargetNodes(
-            projectGraph,
-            schemeArguments.extraTests));
+        schemeName, getExtraTestTargetNodes(projectGraph, schemeArguments.extraTests));
   }
 
   private static void addExtraWorkspaceSchemes(
@@ -582,8 +578,8 @@ public class WorkspaceAndProjectGenerator {
     for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
       Optional<TargetNode<?, ?>> extraSchemeNode = projectGraph.getOptional(extraSchemeTarget);
-      if (!extraSchemeNode.isPresent() ||
-          !(extraSchemeNode.get().getDescription() instanceof XcodeWorkspaceConfigDescription)) {
+      if (!extraSchemeNode.isPresent()
+          || !(extraSchemeNode.get().getDescription() instanceof XcodeWorkspaceConfigDescription)) {
         throw new HumanReadableException(
             "Extra scheme target '%s' should be of type 'xcode_workspace_config'",
             extraSchemeTarget);
@@ -603,8 +599,7 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private static ImmutableSet<BuildTarget> filterRulesForProjectDirectory(
-      TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> projectBuildTargets) {
+      TargetGraph projectGraph, ImmutableSet<BuildTarget> projectBuildTargets) {
     // ProjectGenerator implicitly generates targets for all apple_binary rules which
     // are referred to by apple_bundle rules' 'binary' field.
     //
@@ -612,8 +607,7 @@ public class WorkspaceAndProjectGenerator {
     // listed all dependencies explicitly, but now that we synthesize
     // one, we need to ensure we continue to only pass apple_binary
     // targets which do not belong to apple_bundle rules.
-    ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder =
-        ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder = ImmutableSet.builder();
     for (TargetNode<?, ?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
       if (projectTargetNode.getDescription() instanceof AppleBundleDescription) {
         AppleBundleDescription.Arg appleBundleDescriptionArg =
@@ -621,8 +615,10 @@ public class WorkspaceAndProjectGenerator {
         // We don't support apple_bundle rules referring to apple_binary rules
         // outside their current directory.
         Preconditions.checkState(
-            appleBundleDescriptionArg.binary.getBasePath().equals(
-                projectTargetNode.getBuildTarget().getBasePath()),
+            appleBundleDescriptionArg
+                .binary
+                .getBasePath()
+                .equals(projectTargetNode.getBuildTarget().getBasePath()),
             "apple_bundle target %s contains reference to binary %s outside base path %s",
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.binary,
@@ -645,7 +641,6 @@ public class WorkspaceAndProjectGenerator {
    * @param includeProjectTests whether to include tests of nodes in the project
    * @param orderedTargetNodes target nodes for which to fetch tests for
    * @param extraTestBundleTargets extra tests to include
-   *
    * @return test targets that should be run.
    */
   private ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> getOrderedTestNodes(
@@ -664,8 +659,8 @@ public class WorkspaceAndProjectGenerator {
         mainTargetNode = targetGraph.getOptional(mainTarget.get());
       }
       for (TargetNode<?, ?> node : orderedTargetNodes) {
-        if (includeDependenciesTests ||
-            (mainTargetNode.isPresent() && node.equals(mainTargetNode.get()))) {
+        if (includeDependenciesTests
+            || (mainTargetNode.isPresent() && node.equals(mainTargetNode.get()))) {
           if (!(node.getConstructorArg() instanceof HasTests)) {
             continue;
           }
@@ -682,16 +677,14 @@ public class WorkspaceAndProjectGenerator {
                 testsBuilder.add(castedNode.get());
               } else {
                 LOG.debug(
-                    "Test target specified in '%s' is not a apple_test;" +
-                        " not including in project: '%s'",
-                    node.getBuildTarget(),
-                    explicitTestTarget);
+                    "Test target specified in '%s' is not a apple_test;"
+                        + " not including in project: '%s'",
+                    node.getBuildTarget(), explicitTestTarget);
               }
             } else {
               throw new HumanReadableException(
                   "Test target specified in '%s' is not in the target graph: '%s'",
-                  node.getBuildTarget(),
-                  explicitTestTarget);
+                  node.getBuildTarget(), explicitTestTarget);
             }
           }
         }
@@ -716,8 +709,7 @@ public class WorkspaceAndProjectGenerator {
       final AppleDependenciesCache dependenciesCache,
       Iterable<? extends TargetNode<?, ?>> nodes,
       final ImmutableSet<TargetNode<?, ?>> excludes) {
-    return FluentIterable
-        .from(nodes)
+    return FluentIterable.from(nodes)
         .transformAndConcat(
             new Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>() {
               @Override
@@ -732,14 +724,14 @@ public class WorkspaceAndProjectGenerator {
             })
         .append(nodes)
         .filter(
-            input -> !excludes.contains(input) &&
-                AppleBuildRules.isXcodeTargetDescription(input.getDescription()))
+            input ->
+                !excludes.contains(input)
+                    && AppleBuildRules.isXcodeTargetDescription(input.getDescription()))
         .toSet();
   }
 
   private static ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> getExtraTestTargetNodes(
-      TargetGraph graph,
-      Iterable<BuildTarget> targets) {
+      TargetGraph graph, Iterable<BuildTarget> targets) {
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg, ?>> builder = ImmutableSet.builder();
     for (TargetNode<?, ?> node : graph.getAll(targets)) {
       Optional<TargetNode<AppleTestDescription.Arg, ?>> castedNode =
@@ -763,11 +755,12 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> extraTestNodes,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
           selectedTestsBuilder,
-      ImmutableSetMultimap.Builder<String, TargetNode<?, ?>>
-          buildForTestNodesBuilder) {
+      ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?, ?>> targetNodes =
-          schemeNameToSrcTargetNode.get(schemeName).stream()
+          schemeNameToSrcTargetNode
+              .get(schemeName)
+              .stream()
               .flatMap(Optionals::toStream)
               .collect(MoreCollectors.toImmutableSet());
       ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> testNodes =
@@ -783,11 +776,8 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           Iterables.filter(
               TopologicalSort.sort(projectGraph),
-              getTransitiveDepsAndInputs(
-                  projectGraph,
-                  dependenciesCache,
-                  testNodes,
-                  targetNodes)::contains));
+              getTransitiveDepsAndInputs(projectGraph, dependenciesCache, testNodes, targetNodes)
+                  ::contains));
     }
   }
 
@@ -799,17 +789,20 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap<String, TargetNode<?, ?>> buildForTestNodes,
       ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> ungroupedTests,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
-      ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget) throws IOException {
+      ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget)
+      throws IOException {
     for (Map.Entry<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigEntry :
         schemeConfigs.entrySet()) {
       String schemeName = schemeConfigEntry.getKey();
       XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();
-      if (schemeConfigArg.srcTarget.isPresent() &&
-          !focusModules.isFocusedOn(schemeConfigArg.srcTarget.get())) {
+      if (schemeConfigArg.srcTarget.isPresent()
+          && !focusModules.isFocusedOn(schemeConfigArg.srcTarget.get())) {
         continue;
       }
       ImmutableSet<PBXTarget> orderedBuildTargets =
-          schemeNameToSrcTargetNode.get(schemeName).stream()
+          schemeNameToSrcTargetNode
+              .get(schemeName)
+              .stream()
               .distinct()
               .flatMap(Optionals::toStream)
               .map(TargetNode::getBuildTarget)
@@ -817,13 +810,17 @@ public class WorkspaceAndProjectGenerator {
               .filter(Objects::nonNull)
               .collect(MoreCollectors.toImmutableSet());
       ImmutableSet<PBXTarget> orderedBuildTestTargets =
-          buildForTestNodes.get(schemeName).stream()
+          buildForTestNodes
+              .get(schemeName)
+              .stream()
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
               .collect(MoreCollectors.toImmutableSet());
       ImmutableSet<PBXTarget> orderedRunTestTargets =
-          ungroupedTests.get(schemeName).stream()
+          ungroupedTests
+              .get(schemeName)
+              .stream()
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
@@ -836,25 +833,25 @@ public class WorkspaceAndProjectGenerator {
       } else {
         remoteRunnablePath = Optional.empty();
       }
-      SchemeGenerator schemeGenerator = new SchemeGenerator(
-          rootCell.getFilesystem(),
-          schemeConfigArg.srcTarget.map(buildTargetToPBXTarget::get),
-          orderedBuildTargets,
-          orderedBuildTestTargets,
-          orderedRunTestTargets,
-          schemeName,
-          combinedProject ?
-              outputDirectory :
-              outputDirectory.resolve(workspaceName + ".xcworkspace"),
-          parallelizeBuild,
-          runnablePath,
-          remoteRunnablePath,
-          XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
-          targetToProjectPathMap,
-          schemeConfigArg.launchStyle.orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              rootCell.getFilesystem(),
+              schemeConfigArg.srcTarget.map(buildTargetToPBXTarget::get),
+              orderedBuildTargets,
+              orderedBuildTestTargets,
+              orderedRunTestTargets,
+              schemeName,
+              combinedProject
+                  ? outputDirectory
+                  : outputDirectory.resolve(workspaceName + ".xcworkspace"),
+              parallelizeBuild,
+              runnablePath,
+              remoteRunnablePath,
+              XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
+              targetToProjectPathMap,
+              schemeConfigArg.launchStyle.orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
   }
-
 }

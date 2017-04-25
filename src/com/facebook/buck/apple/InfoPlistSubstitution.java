@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,21 +29,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Utility class to substitute Xcode Info.plist variables in the forms:
- *
- * <code>
+ * Utility class to substitute Xcode Info.plist variables in the forms: <code>
  * ${FOO}
  * $(FOO)
  * ${FOO:modifier}
  * $(FOO:modifier)
- * </code>
- *
- * with specified string values.
+ * </code> with specified string values.
  */
 public class InfoPlistSubstitution {
 
   // Utility class, do not instantiate.
-  private InfoPlistSubstitution() { }
+  private InfoPlistSubstitution() {}
 
   private static final String VARIABLE_GROUP_NAME = "variable";
   private static final String OPEN_PAREN_GROUP_NAME = "openparen";
@@ -53,54 +48,59 @@ public class InfoPlistSubstitution {
 
   private static final Pattern PLIST_VARIABLE_PATTERN =
       Pattern.compile(
-          "\\$(?<" + OPEN_PAREN_GROUP_NAME + ">[\\{\\(])" +
-              "(?<" + VARIABLE_GROUP_NAME + ">[^\\}\\):]+)" +
-              "(?::(?<" + MODIFIER_GROUP_NAME + ">[^\\}\\)]+))?" +
-              "(?<" + CLOSE_PAREN_GROUP_NAME + ">[\\}\\)])");
+          "\\$(?<"
+              + OPEN_PAREN_GROUP_NAME
+              + ">[\\{\\(])"
+              + "(?<"
+              + VARIABLE_GROUP_NAME
+              + ">[^\\}\\):]+)"
+              + "(?::(?<"
+              + MODIFIER_GROUP_NAME
+              + ">[^\\}\\)]+))?"
+              + "(?<"
+              + CLOSE_PAREN_GROUP_NAME
+              + ">[\\}\\)])");
 
-  private static final ImmutableMap<String, String> MATCHING_PARENS = ImmutableMap.of(
-      "{", "}",
-      "(", ")"
-  );
+  private static final ImmutableMap<String, String> MATCHING_PARENS =
+      ImmutableMap.of(
+          "{", "}",
+          "(", ")");
 
   /**
-   * Returns a variable expansion for keys which may depend on platform name,
-   * trying from most to least specific.  While it doesn't capture all arbitrary
-   * wildcard expansions, it should handle everything likely to occur in practice.
+   * Returns a variable expansion for keys which may depend on platform name, trying from most to
+   * least specific. While it doesn't capture all arbitrary wildcard expansions, it should handle
+   * everything likely to occur in practice.
    *
-   * e.g.<code>VALID_ARCHS[sdk=iphoneos*]</code>
+   * <p>e.g.<code>VALID_ARCHS[sdk=iphoneos*]</code>
    *
-   * @param keyName           The name of the parent key.  e.g. "VALID_ARCHS"
-   * @param platformName      The name of the platform.  e.g. "iphoneos"
+   * @param keyName The name of the parent key. e.g. "VALID_ARCHS"
+   * @param platformName The name of the platform. e.g. "iphoneos"
    * @param variablesToExpand The mapping of variable keys to values.
    * @return Optional containing the string value if found, or absent.
    */
   public static Optional<String> getVariableExpansionForPlatform(
-      String keyName,
-      String platformName,
-      Map<String, String> variablesToExpand) {
+      String keyName, String platformName, Map<String, String> variablesToExpand) {
     final String[] keysToTry;
     if (platformName.equals("iphoneos") || platformName.equals("iphonesimulator")) {
-      keysToTry = new String[] {
-          keyName + "[sdk=" + platformName + "]",
-          keyName + "[sdk=" + platformName + "*]",
-          keyName + "[sdk=iphone*]",
-          keyName
-      };
+      keysToTry =
+          new String[] {
+            keyName + "[sdk=" + platformName + "]",
+            keyName + "[sdk=" + platformName + "*]",
+            keyName + "[sdk=iphone*]",
+            keyName
+          };
     } else {
-      keysToTry = new String[] {
-          keyName + "[sdk=" + platformName + "]",
-          keyName + "[sdk=" + platformName + "*]",
-          keyName
-      };
+      keysToTry =
+          new String[] {
+            keyName + "[sdk=" + platformName + "]", keyName + "[sdk=" + platformName + "*]", keyName
+          };
     }
 
     for (String keyToTry : keysToTry) {
       if (variablesToExpand.containsKey(keyToTry)) {
         return Optional.of(
             InfoPlistSubstitution.replaceVariablesInString(
-                variablesToExpand.get(keyToTry),
-                variablesToExpand));
+                variablesToExpand.get(keyToTry), variablesToExpand));
       }
     }
 
@@ -108,15 +108,12 @@ public class InfoPlistSubstitution {
   }
 
   public static String replaceVariablesInString(
-      String input,
-      Map<String, String> variablesToExpand) {
+      String input, Map<String, String> variablesToExpand) {
     return replaceVariablesInString(input, variablesToExpand, ImmutableList.of());
   }
 
   private static String replaceVariablesInString(
-      String input,
-      Map<String, String> variablesToExpand,
-      List<String> maskedVariables) {
+      String input, Map<String, String> variablesToExpand, List<String> maskedVariables) {
     Matcher variableMatcher = PLIST_VARIABLE_PATTERN.matcher(input);
 
     StringBuffer result = new StringBuffer();
@@ -128,8 +125,7 @@ public class InfoPlistSubstitution {
       if (!expectedCloseParen.equals(closeParen)) {
         // Mismatching parens; don't substitute.
         variableMatcher.appendReplacement(
-            result,
-            Matcher.quoteReplacement(variableMatcher.group(0)));
+            result, Matcher.quoteReplacement(variableMatcher.group(0)));
         continue;
       }
 
@@ -137,30 +133,30 @@ public class InfoPlistSubstitution {
       if (maskedVariables.contains(variableName)) {
         throw new HumanReadableException(
             "Recursive plist variable: %s -> %s",
-            Joiner.on(" -> ").join(maskedVariables),
-            variableName);
+            Joiner.on(" -> ").join(maskedVariables), variableName);
       }
 
       String expansion = variablesToExpand.get(variableName);
       if (expansion == null) {
         throw new HumanReadableException(
-            "Unrecognized plist variable: %s",
-            variableMatcher.group(0));
+            "Unrecognized plist variable: %s", variableMatcher.group(0));
       }
 
       // Variable replacements are allowed to reference other variables (but be careful to mask
       // so we don't end up in a recursive loop)
-      expansion = replaceVariablesInString(
-          expansion,
-          variablesToExpand,
-          new ImmutableList.Builder<String>().addAll(maskedVariables).add(variableName).build());
+      expansion =
+          replaceVariablesInString(
+              expansion,
+              variablesToExpand,
+              new ImmutableList.Builder<String>()
+                  .addAll(maskedVariables)
+                  .add(variableName)
+                  .build());
 
       // TODO(beng): Add support for "rfc1034identifier" modifier and sanitize
       // expansion so it's a legal hostname (a-zA-Z0-9, dash, period).
 
-      variableMatcher.appendReplacement(
-          result,
-          Matcher.quoteReplacement(expansion));
+      variableMatcher.appendReplacement(result, Matcher.quoteReplacement(expansion));
     }
     variableMatcher.appendTail(result);
     return result.toString();
@@ -168,8 +164,8 @@ public class InfoPlistSubstitution {
 
   public static Function<String, String> createVariableExpansionFunction(
       Map<String, String> variablesToExpand) {
-    final ImmutableMap<String, String> variablesToExpandCopy = ImmutableMap.copyOf(
-        variablesToExpand);
+    final ImmutableMap<String, String> variablesToExpandCopy =
+        ImmutableMap.copyOf(variablesToExpand);
     return input -> replaceVariablesInString(input, variablesToExpandCopy);
   }
 }

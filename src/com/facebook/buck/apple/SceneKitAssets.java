@@ -35,7 +35,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,17 +43,13 @@ public class SceneKitAssets extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = InternalFlavor.of("scenekit-assets");
 
-  @AddToRuleKey
-  private final Optional<Tool> copySceneKitAssets;
+  @AddToRuleKey private final Optional<Tool> copySceneKitAssets;
 
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> sceneKitAssetsPaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> sceneKitAssetsPaths;
 
-  @AddToRuleKey
-  private final String sdkName;
+  @AddToRuleKey private final String sdkName;
 
-  @AddToRuleKey
-  private final String minOSVersion;
+  @AddToRuleKey private final String minOSVersion;
 
   private final Path outputDir;
 
@@ -65,8 +60,7 @@ public class SceneKitAssets extends AbstractBuildRule {
     super(params);
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     String outputDirString =
-        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
-            .toString();
+        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s").toString();
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
@@ -95,7 +89,8 @@ public class SceneKitAssets extends AbstractBuildRule {
                     "-o",
                     getProjectFilesystem()
                         .resolve(outputDir)
-                        .resolve(absoluteInputPath.getFileName()).toString(),
+                        .resolve(absoluteInputPath.getFileName())
+                        .toString(),
                     "--target-platform=" + sdkName,
                     "--target-version=" + minOSVersion);
 

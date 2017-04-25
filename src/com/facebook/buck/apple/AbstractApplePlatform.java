@@ -20,15 +20,13 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform>,
-    RuleKeyAppendable {
+abstract class AbstractApplePlatform
+    implements Comparable<AbstractApplePlatform>, RuleKeyAppendable {
 
   public static final ApplePlatform IPHONEOS =
       ApplePlatform.builder()
@@ -52,7 +50,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public static final ApplePlatform WATCHOS =
       ApplePlatform.builder()
           .setName("watchos")
-          .setProvisioningProfileName("iOS")  // watchOS uses iOS provisioning profiles.
+          .setProvisioningProfileName("iOS") // watchOS uses iOS provisioning profiles.
           .setArchitectures(ImmutableList.of("armv7k"))
           .setMinVersionFlagPrefix("-mwatchos-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
@@ -85,21 +83,19 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setAppIncludesFrameworks(true)
           .build();
 
-  /**
-   * The full name of the platform. For example: {@code macosx}.
-   */
+  /** The full name of the platform. For example: {@code macosx}. */
   public abstract String getName();
 
   /**
-   * The Swift name for the platform. For example: {@code ios}. If absent,
-   * use {@link #getName()} instead.
+   * The Swift name for the platform. For example: {@code ios}. If absent, use {@link #getName()}
+   * instead.
    */
   public abstract Optional<String> getSwiftName();
 
   /**
    * The platform name used to match provisioning profiles. For example: {@code iOS}.
    *
-   * Not all platforms use provisioning profiles; these will return absent.
+   * <p>Not all platforms use provisioning profiles; these will return absent.
    */
   public abstract Optional<String> getProvisioningProfileName();
 
@@ -122,20 +118,20 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public static boolean needsCodeSign(String name) {
-    return name.startsWith(IPHONEOS.getName()) ||
-        name.startsWith(IPHONESIMULATOR.getName()) ||
-        name.startsWith(WATCHOS.getName()) ||
-        name.startsWith(WATCHSIMULATOR.getName()) ||
-        name.startsWith(APPLETVOS.getName()) ||
-        name.startsWith(APPLETVSIMULATOR.getName()) ||
-        name.startsWith(MACOSX.getName());
+    return name.startsWith(IPHONEOS.getName())
+        || name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHOS.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVOS.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName())
+        || name.startsWith(MACOSX.getName());
   }
 
   public static boolean adHocCodeSignIsSufficient(String name) {
-    return name.startsWith(IPHONESIMULATOR.getName()) ||
-        name.startsWith(WATCHSIMULATOR.getName()) ||
-        name.startsWith(APPLETVSIMULATOR.getName()) ||
-        name.startsWith(MACOSX.getName());
+    return name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName())
+        || name.startsWith(MACOSX.getName());
   }
 
   public static boolean needsInstallHelper(String name) {
@@ -143,21 +139,21 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public static boolean isSimulator(String name) {
-    return name.startsWith(IPHONESIMULATOR.getName()) ||
-      name.startsWith(WATCHSIMULATOR.getName()) ||
-      name.startsWith(APPLETVSIMULATOR.getName());
+    return name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName());
   }
 
   public static ApplePlatform of(String name) {
-    for (ApplePlatform platform : ImmutableList.of(
-      IPHONEOS,
-      IPHONESIMULATOR,
-      WATCHOS,
-      WATCHSIMULATOR,
-      APPLETVOS,
-      APPLETVSIMULATOR,
-      MACOSX
-    )) {
+    for (ApplePlatform platform :
+        ImmutableList.of(
+            IPHONEOS,
+            IPHONESIMULATOR,
+            WATCHOS,
+            WATCHSIMULATOR,
+            APPLETVOS,
+            APPLETVSIMULATOR,
+            MACOSX)) {
       if (name.equals(platform.getName())) {
         return platform;
       }

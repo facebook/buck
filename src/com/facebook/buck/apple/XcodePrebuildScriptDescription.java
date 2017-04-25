@@ -27,22 +27,23 @@ import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Description for an xcode_prebuild_script rule which runs a shell script
- * before the Apple target that depends on it is built.
- * <p>
- * Example rule:
+ * Description for an xcode_prebuild_script rule which runs a shell script before the Apple target
+ * that depends on it is built.
+ *
+ * <p>Example rule:
+ *
  * <pre>
  * xcode_prebuild_script(
  *   name = 'register_app',
  *   cmd = 'register_app.sh',
  * )
  * </pre>
- * <p>
- * This rule is a hack and in the long-term should be replaced with a genrule that works in both
+ *
+ * <p>This rule is a hack and in the long-term should be replaced with a genrule that works in both
  * Buck and Xcode build. Those rules do nothing when building with Buck.
  */
 public class XcodePrebuildScriptDescription
-  implements Description<XcodeScriptDescriptionArg>, Flavored {
+    implements Description<XcodeScriptDescriptionArg>, Flavored {
 
   @Override
   public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {

@@ -47,9 +47,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     }
   }
 
-  /**
-   * Spec for the destination folder.
-   */
+  /** Spec for the destination folder. */
   private CopyFilePhaseDestinationSpec dstSubfolderSpec;
 
   public PBXCopyFilesBuildPhase(CopyFilePhaseDestinationSpec dstSubfolderSpec) {

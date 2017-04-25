@@ -19,25 +19,20 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-/**
- * Utility class to parse Info.plist from an Apple bundle.
- */
+/** Utility class to parse Info.plist from an Apple bundle. */
 public class AppleInfoPlistParsing {
 
   // Utility class, do not instantiate.
-  private AppleInfoPlistParsing() { }
+  private AppleInfoPlistParsing() {}
 
-  /**
-   * Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present.
-   */
+  /** Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present. */
   public static Optional<String> getBundleIdFromPlistStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     NSDictionary infoPlist;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {

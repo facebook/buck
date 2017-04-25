@@ -30,7 +30,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,8 +42,8 @@ import java.util.Optional;
 /**
  * Runs {@code xctest} on logic or application tests paired with a host.
  *
- * The output is written as standard XCTest output to {@code outputPath}
- * and can be parsed by {@link XctestOutputParsing}.
+ * <p>The output is written as standard XCTest output to {@code outputPath} and can be parsed by
+ * {@link XctestOutputParsing}.
  */
 class XctestRunTestsStep implements Step {
 
@@ -111,24 +110,24 @@ class XctestRunTestsStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder()
-        .addAllCommand(getCommand())
-        .setDirectory(filesystem.getRootPath().toAbsolutePath())
-        .setRedirectErrorStream(true)
-        .setEnvironment(getEnv(context));
+    ProcessExecutorParams.Builder builder =
+        ProcessExecutorParams.builder()
+            .addAllCommand(getCommand())
+            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setRedirectErrorStream(true)
+            .setEnvironment(getEnv(context));
 
     ProcessExecutorParams params = builder.build();
     LOG.debug("xctest command: %s", Joiner.on(" ").join(params.getCommand()));
 
     try {
       ProcessExecutor executor = context.getProcessExecutor();
-      ProcessExecutor.LaunchedProcess launchedProcess =
-          executor.launchProcess(params);
+      ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
 
       int exitCode;
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
-           TeeInputStream outputWrapperStream = new TeeInputStream(
-               launchedProcess.getInputStream(), outputStream)) {
+          TeeInputStream outputWrapperStream =
+              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
         if (outputReadingCallback.isPresent()) {
           // The caller is responsible for reading all the data, which TeeInputStream will
           // copy to outputStream.
@@ -152,11 +151,9 @@ class XctestRunTestsStep implements Step {
       }
 
       if (exitCode != 0) {
-        context.getConsole().printErrorText(
-            String.format(
-                Locale.US,
-                "xctest failed with exit code %d",
-                exitCode));
+        context
+            .getConsole()
+            .printErrorText(String.format(Locale.US, "xctest failed with exit code %d", exitCode));
       }
 
       return StepExecutionResult.of(exitCode);

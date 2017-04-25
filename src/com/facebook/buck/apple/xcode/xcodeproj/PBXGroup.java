@@ -21,31 +21,20 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * A collection of files in Xcode's virtual filesystem hierarchy.
- */
+/** A collection of files in Xcode's virtual filesystem hierarchy. */
 public class PBXGroup extends PBXReference {
-  /**
-   * Method by which group contents will be sorted.
-   */
+  /** Method by which group contents will be sorted. */
   public enum SortPolicy {
-      /**
-       * By name, in default Java sort order.
-       */
-      BY_NAME,
+    /** By name, in default Java sort order. */
+    BY_NAME,
 
-      /**
-       * Group contents will not be sorted, and will remain in the
-       * order they were added.
-       */
-      UNSORTED;
+    /** Group contents will not be sorted, and will remain in the order they were added. */
+    UNSORTED;
   }
 
   // Unfortunately, we can't determine this at constructor time, because CacheBuilder
@@ -65,45 +54,53 @@ public class PBXGroup extends PBXReference {
     sortPolicy = SortPolicy.BY_NAME;
     children = new ArrayList<>();
 
-    childGroupsByName = CacheBuilder.newBuilder().build(
-        new CacheLoader<String, PBXGroup>() {
-          @Override
-          public PBXGroup load(String key) throws Exception {
-            PBXGroup group = new PBXGroup(key, null, SourceTree.GROUP);
-            children.add(group);
-            return group;
-          }
-        });
+    childGroupsByName =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<String, PBXGroup>() {
+                  @Override
+                  public PBXGroup load(String key) throws Exception {
+                    PBXGroup group = new PBXGroup(key, null, SourceTree.GROUP);
+                    children.add(group);
+                    return group;
+                  }
+                });
 
-    childVariantGroupsByName = CacheBuilder.newBuilder().build(
-        new CacheLoader<String, PBXVariantGroup>() {
-          @Override
-          public PBXVariantGroup load(String key) throws Exception {
-            PBXVariantGroup group = new PBXVariantGroup(key, null, SourceTree.GROUP);
-            children.add(group);
-            return group;
-          }
-        });
+    childVariantGroupsByName =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<String, PBXVariantGroup>() {
+                  @Override
+                  public PBXVariantGroup load(String key) throws Exception {
+                    PBXVariantGroup group = new PBXVariantGroup(key, null, SourceTree.GROUP);
+                    children.add(group);
+                    return group;
+                  }
+                });
 
-    fileReferencesBySourceTreePath = CacheBuilder.newBuilder().build(
-        new CacheLoader<SourceTreePath, PBXFileReference>() {
-          @Override
-          public PBXFileReference load(SourceTreePath key) throws Exception {
-            PBXFileReference ref = key.createFileReference();
-            children.add(ref);
-            return ref;
-          }
-        });
+    fileReferencesBySourceTreePath =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<SourceTreePath, PBXFileReference>() {
+                  @Override
+                  public PBXFileReference load(SourceTreePath key) throws Exception {
+                    PBXFileReference ref = key.createFileReference();
+                    children.add(ref);
+                    return ref;
+                  }
+                });
 
-    childVersionGroupsBySourceTreePath = CacheBuilder.newBuilder().build(
-        new CacheLoader<SourceTreePath, XCVersionGroup>() {
-          @Override
-          public XCVersionGroup load(SourceTreePath key) throws Exception {
-            XCVersionGroup ref = key.createVersionGroup();
-            children.add(ref);
-            return ref;
-          }
-        });
+    childVersionGroupsBySourceTreePath =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<SourceTreePath, XCVersionGroup>() {
+                  @Override
+                  public XCVersionGroup load(SourceTreePath key) throws Exception {
+                    XCVersionGroup ref = key.createVersionGroup();
+                    children.add(ref);
+                    return ref;
+                  }
+                });
   }
 
   public PBXGroup getOrCreateChildGroupByName(String name) {

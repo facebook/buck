@@ -35,15 +35,13 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
@@ -76,12 +74,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    */
   public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplier(
       ProcessExecutor processExecutor) {
-    Optional<String> xcodeDeveloperDirectory = delegate.getValue(
-        APPLE_SECTION,
-        "xcode_developer_dir");
+    Optional<String> xcodeDeveloperDirectory =
+        delegate.getValue(APPLE_SECTION, "xcode_developer_dir");
     if (xcodeDeveloperDirectory.isPresent()) {
-      Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
-          Paths.get(xcodeDeveloperDirectory.get()));
+      Path developerDirectory =
+          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+              Paths.get(xcodeDeveloperDirectory.get()));
       return Suppliers.ofInstance(Optional.of(developerDirectory));
     } else {
       return createAppleDeveloperDirectorySupplier(processExecutor);
@@ -89,18 +87,18 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a
-   * {@link Supplier}.
-   * Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally
-   * {@code xcode-select --print-path}.
+   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a {@link
+   * Supplier}. Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally {@code
+   * xcode-select --print-path}.
    */
   public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
       ProcessExecutor processExecutor) {
     Optional<String> xcodeDeveloperDirectory =
         delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
     if (xcodeDeveloperDirectory.isPresent()) {
-      Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
-          Paths.get(xcodeDeveloperDirectory.get()));
+      Path developerDirectory =
+          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+              Paths.get(xcodeDeveloperDirectory.get()));
       return Suppliers.ofInstance(Optional.of(developerDirectory));
     } else {
       return getAppleDeveloperDirectorySupplier(processExecutor);
@@ -108,21 +106,21 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public ImmutableList<Path> getExtraToolchainPaths() {
-    ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
-        APPLE_SECTION,
-        "extra_toolchain_paths");
-    return ImmutableList.copyOf(Lists.transform(
-        extraPathsStrings,
-        string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
+    ImmutableList<String> extraPathsStrings =
+        delegate.getListWithoutComments(APPLE_SECTION, "extra_toolchain_paths");
+    return ImmutableList.copyOf(
+        Lists.transform(
+            extraPathsStrings,
+            string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
   }
 
   public ImmutableList<Path> getExtraPlatformPaths() {
-    ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
-        APPLE_SECTION,
-        "extra_platform_paths");
-    return ImmutableList.copyOf(Lists.transform(
-        extraPathsStrings,
-        string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
+    ImmutableList<String> extraPathsStrings =
+        delegate.getListWithoutComments(APPLE_SECTION, "extra_platform_paths");
+    return ImmutableList.copyOf(
+        Lists.transform(
+            extraPathsStrings,
+            string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
   }
 
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
@@ -131,54 +129,53 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     try {
       ImmutableMap<String, AppleToolchain> toolchains =
           AppleToolchainDiscovery.discoverAppleToolchains(
-              appleDeveloperDirectory,
-              getExtraToolchainPaths());
+              appleDeveloperDirectory, getExtraToolchainPaths());
       return AppleSdkDiscovery.discoverAppleSdkPaths(
-          appleDeveloperDirectory,
-          getExtraPlatformPaths(),
-          toolchains,
-          this);
+          appleDeveloperDirectory, getExtraPlatformPaths(), toolchains, this);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   /**
-   * @return a memoizing {@link Supplier} that caches the output of
-   *     {@code xcode-select --print-path}.
+   * @return a memoizing {@link Supplier} that caches the output of {@code xcode-select
+   *     --print-path}.
    */
   private static Supplier<Optional<Path>> createAppleDeveloperDirectorySupplier(
       final ProcessExecutor processExecutor) {
-    return Suppliers.memoize(new Supplier<Optional<Path>>() {
-      @Override
-      public Optional<Path> get() {
-        ProcessExecutorParams processExecutorParams =
-            ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-                .build();
-        // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
-        Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-        ProcessExecutor.Result result;
-        try {
-          result = processExecutor.launchAndExecute(
-              processExecutorParams,
-              options,
-              /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.empty(),
-              /* timeOutHandler */ Optional.empty());
-        } catch (InterruptedException | IOException e) {
-          LOG.warn("Could not execute xcode-select, continuing without developer dir.");
-          return Optional.empty();
-        }
+    return Suppliers.memoize(
+        new Supplier<Optional<Path>>() {
+          @Override
+          public Optional<Path> get() {
+            ProcessExecutorParams processExecutorParams =
+                ProcessExecutorParams.builder()
+                    .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+                    .build();
+            // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
+            Set<ProcessExecutor.Option> options =
+                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+            ProcessExecutor.Result result;
+            try {
+              result =
+                  processExecutor.launchAndExecute(
+                      processExecutorParams,
+                      options,
+                      /* stdin */ Optional.empty(),
+                      /* timeOutMs */ Optional.empty(),
+                      /* timeOutHandler */ Optional.empty());
+            } catch (InterruptedException | IOException e) {
+              LOG.warn("Could not execute xcode-select, continuing without developer dir.");
+              return Optional.empty();
+            }
 
-        if (result.getExitCode() != 0) {
-          throw new RuntimeException(
-              result.getMessageForUnexpectedResult("xcode-select --print-path"));
-        }
+            if (result.getExitCode() != 0) {
+              throw new RuntimeException(
+                  result.getMessageForUnexpectedResult("xcode-select --print-path"));
+            }
 
-        return Optional.of(Paths.get(result.getStdout().get().trim()));
-      }
-    });
+            return Optional.of(Paths.get(result.getStdout().get().trim()));
+          }
+        });
   }
 
   public Optional<String> getTargetSdkVersion(ApplePlatform platform) {
@@ -186,9 +183,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public ImmutableList<String> getXctestPlatformNames() {
-    return delegate.getListWithoutComments(
-        APPLE_SECTION,
-        "xctest_platforms");
+    return delegate.getListWithoutComments(APPLE_SECTION, "xctest_platforms");
   }
 
   public Optional<Path> getXctoolPath() {
@@ -234,7 +229,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "cache_bundles_and_packages", true);
   }
 
-
   public Optional<Path> getAppleDeviceHelperAbsolutePath() {
     return getOptionalPath(APPLE_SECTION, "device_helper_path");
   }
@@ -244,81 +238,66 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public Path getProvisioningProfileSearchPath() {
-    return getOptionalPath(
-        APPLE_SECTION,
-        "provisioning_profile_search_path").orElse(Paths.get(System.getProperty("user.home") +
-        "/Library/MobileDevice/Provisioning Profiles"));
+    return getOptionalPath(APPLE_SECTION, "provisioning_profile_search_path")
+        .orElse(
+            Paths.get(
+                System.getProperty("user.home") + "/Library/MobileDevice/Provisioning Profiles"));
   }
 
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
     Optional<String> pathString = delegate.getValue(sectionName, propertyName);
     if (pathString.isPresent()) {
-      return Optional.of(delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
-              Paths.get(pathString.get())));
+      return Optional.of(
+          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(pathString.get())));
     } else {
       return Optional.empty();
     }
   }
 
   public boolean shouldUseHeaderMapsInXcodeProject() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION,
-        "use_header_maps_in_xcode",
-        true);
+    return delegate.getBooleanValue(APPLE_SECTION, "use_header_maps_in_xcode", true);
   }
 
   public boolean shouldMergeHeaderMapsInXcodeProject() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION,
-        "merge_header_maps_in_xcode",
-        false);
+    return delegate.getBooleanValue(APPLE_SECTION, "merge_header_maps_in_xcode", false);
   }
 
   public boolean shouldGenerateHeaderSymlinkTreesOnly() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION,
-        "generate_header_symlink_tree_only",
-        false);
+    return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
   }
 
   public String getTestLogDirectoryEnvironmentVariable() {
-    return delegate.getValue(
-        APPLE_SECTION,
-        "test_log_directory_environment_variable").orElse(
-        DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
+    return delegate
+        .getValue(APPLE_SECTION, "test_log_directory_environment_variable")
+        .orElse(DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevelEnvironmentVariable() {
-    return delegate.getValue(
-        APPLE_SECTION,
-        "test_log_level_environment_variable").orElse(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
+    return delegate
+        .getValue(APPLE_SECTION, "test_log_level_environment_variable")
+        .orElse(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevel() {
-    return delegate.getValue(
-        APPLE_SECTION,
-        "test_log_level").orElse(DEFAULT_TEST_LOG_LEVEL);
+    return delegate.getValue(APPLE_SECTION, "test_log_level").orElse(DEFAULT_TEST_LOG_LEVEL);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForBinaries() {
-    return delegate.getEnum(
-        APPLE_SECTION,
-        "default_debug_info_format_for_binaries",
-        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF_AND_DSYM);
+    return delegate
+        .getEnum(APPLE_SECTION, "default_debug_info_format_for_binaries", AppleDebugFormat.class)
+        .orElse(AppleDebugFormat.DWARF_AND_DSYM);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForTests() {
-    return delegate.getEnum(
-        APPLE_SECTION,
-        "default_debug_info_format_for_tests",
-        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
+    return delegate
+        .getEnum(APPLE_SECTION, "default_debug_info_format_for_tests", AppleDebugFormat.class)
+        .orElse(AppleDebugFormat.DWARF);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForLibraries() {
-    return delegate.getEnum(
-        APPLE_SECTION,
-        "default_debug_info_format_for_libraries",
-        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
+    return delegate
+        .getEnum(APPLE_SECTION, "default_debug_info_format_for_libraries", AppleDebugFormat.class)
+        .orElse(AppleDebugFormat.DWARF);
   }
 
   public ImmutableList<String> getProvisioningProfileReadCommand() {
@@ -340,7 +319,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   /**
    * Returns the custom packager command specified in the config, if defined.
    *
-   * This is translated into the config value of {@code apple.PLATFORMNAME_packager_command}.
+   * <p>This is translated into the config value of {@code apple.PLATFORMNAME_packager_command}.
    *
    * @param platform the platform to query.
    * @return the custom packager command specified in the config, if defined.
@@ -363,15 +342,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public Optional<ImmutableList<String>> getToolchainsOverrideForSDKName(String name) {
-    return delegate.getOptionalListWithoutComments(
-        APPLE_SECTION,
-        name + "_toolchains_override");
+    return delegate.getOptionalListWithoutComments(APPLE_SECTION, name + "_toolchains_override");
   }
 
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractApplePackageConfig {
     String getCommand();
+
     String getExtension();
   }
 }

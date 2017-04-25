@@ -19,24 +19,24 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value;
 
 /**
  * Information about a build target that represents a fat binary.
  *
- * Fat binaries are represented by build targets having multiple platform flavors.
+ * <p>Fat binaries are represented by build targets having multiple platform flavors.
  */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractMultiarchFileInfo {
   public abstract BuildTarget getFatTarget();
+
   public abstract ImmutableList<BuildTarget> getThinTargets();
 
   /**
    * Returns a representative platform for use in retrieving architecture agnostic tools.
    *
-   * Platforms are architecture specific, but some tools are architecture agnostic. Since there
+   * <p>Platforms are architecture specific, but some tools are architecture agnostic. Since there
    * isn't a concept of target architecture agnostic tools, this simply returns one of the
    * platforms, trusting the caller to only use the architecture agnostic tools.
    */

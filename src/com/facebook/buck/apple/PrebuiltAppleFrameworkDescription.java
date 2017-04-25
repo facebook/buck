@@ -45,14 +45,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class PrebuiltAppleFrameworkDescription implements
-    Description<PrebuiltAppleFrameworkDescription.Arg>,
-    Flavored,
-    MetadataProvidingDescription<PrebuiltAppleFrameworkDescription.Arg> {
+public class PrebuiltAppleFrameworkDescription
+    implements Description<PrebuiltAppleFrameworkDescription.Arg>,
+        Flavored,
+        MetadataProvidingDescription<PrebuiltAppleFrameworkDescription.Arg> {
 
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
 
@@ -67,20 +66,22 @@ public class PrebuiltAppleFrameworkDescription implements
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
     return RichStream.from(flavors)
-        .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
-        .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
-        .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
-        .filter(flavor -> !StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor))
-        .count() == 0;
+            .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
+            .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
+            .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
+            .filter(flavor -> !StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor))
+            .count()
+        == 0;
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(
-        appleCxxPlatformsFlavorDomain,
-        AppleDebugFormat.FLAVOR_DOMAIN,
-        AppleDescriptions.INCLUDE_FRAMEWORKS,
-        StripStyle.FLAVOR_DOMAIN));
+    return Optional.of(
+        ImmutableSet.of(
+            appleCxxPlatformsFlavorDomain,
+            AppleDebugFormat.FLAVOR_DOMAIN,
+            AppleDescriptions.INCLUDE_FRAMEWORKS,
+            StripStyle.FLAVOR_DOMAIN));
   }
 
   @Override
@@ -94,7 +95,8 @@ public class PrebuiltAppleFrameworkDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args) throws NoSuchBuildTargetException {
+      final A args)
+      throws NoSuchBuildTargetException {
     return new PrebuiltAppleFramework(
         params,
         resolver,
@@ -103,11 +105,9 @@ public class PrebuiltAppleFrameworkDescription implements
         args.preferredLinkage,
         args.frameworks,
         args.supportedPlatformsRegex,
-        input -> CxxFlags.getFlagsWithPlatformMacroExpansion(
-            args.exportedLinkerFlags,
-            args.exportedPlatformLinkerFlags,
-            input)
-    );
+        input ->
+            CxxFlags.getFlagsWithPlatformMacroExpansion(
+                args.exportedLinkerFlags, args.exportedPlatformLinkerFlags, input));
   }
 
   @Override
@@ -116,7 +116,8 @@ public class PrebuiltAppleFrameworkDescription implements
       BuildRuleResolver resolver,
       A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass) throws NoSuchBuildTargetException {
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       BuildRule buildRule = resolver.requireRule(buildTarget);
       ImmutableSet<SourcePath> sourcePaths = ImmutableSet.of(buildRule.getSourcePathToOutput());
@@ -126,8 +127,7 @@ public class PrebuiltAppleFrameworkDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg
-      implements HasSystemFrameworkAndLibraries {
+  public static class Arg extends AbstractDescriptionArg implements HasSystemFrameworkAndLibraries {
     public SourcePath framework;
     public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;

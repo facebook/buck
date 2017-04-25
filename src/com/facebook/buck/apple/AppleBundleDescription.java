@@ -35,11 +35,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicates;
@@ -48,17 +48,16 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>,
-    Flavored,
-    ImplicitDepsInferringDescription<AppleBundleDescription.Arg>,
-    MetadataProvidingDescription<AppleBundleDescription.Arg> {
+public class AppleBundleDescription
+    implements Description<AppleBundleDescription.Arg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AppleBundleDescription.Arg>,
+        MetadataProvidingDescription<AppleBundleDescription.Arg> {
 
-  public static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
-      CxxDescriptionEnhancer.STATIC_FLAVOR,
-      CxxDescriptionEnhancer.SHARED_FLAVOR);
+  public static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS =
+      ImmutableSet.of(CxxDescriptionEnhancer.STATIC_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
 
   public static final Flavor WATCH_OS_FLAVOR = InternalFlavor.of("watchos-armv7k");
   public static final Flavor WATCH_SIMULATOR_FLAVOR = InternalFlavor.of("watchsimulator-i386");
@@ -102,10 +101,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     ImmutableSet.Builder<FlavorDomain<?>> builder = ImmutableSet.builder();
 
-    ImmutableSet<FlavorDomain<?>> localDomains = ImmutableSet.of(
-        AppleDebugFormat.FLAVOR_DOMAIN,
-        AppleDescriptions.INCLUDE_FRAMEWORKS
-    );
+    ImmutableSet<FlavorDomain<?>> localDomains =
+        ImmutableSet.of(AppleDebugFormat.FLAVOR_DOMAIN, AppleDescriptions.INCLUDE_FRAMEWORKS);
 
     builder.addAll(localDomains);
     appleLibraryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
@@ -132,25 +129,29 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     return appleBinaryDescription.hasFlavors(flavorBuilder.build());
   }
 
-
   @Override
   public <A extends Arg> AppleBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget())
-        .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
+      A args)
+      throws NoSuchBuildTargetException {
+    AppleDebugFormat flavoredDebugFormat =
+        AppleDebugFormat.FLAVOR_DOMAIN
+            .getValue(params.getBuildTarget())
+            .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
-      return (AppleBundle) resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
+      return (AppleBundle)
+          resolver.requireRule(
+              params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-      return (AppleBundle) resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavors(
-              AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
+      return (AppleBundle)
+          resolver.requireRule(
+              params
+                  .getBuildTarget()
+                  .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
@@ -174,8 +175,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   /**
-   * Propagate the bundle's platform, debug symbol and strip flavors to its dependents
-   * which are other bundles (e.g. extensions)
+   * Propagate the bundle's platform, debug symbol and strip flavors to its dependents which are
+   * other bundles (e.g. extensions)
    */
   @Override
   public void findDepsForTargetFromConstructorArgs(
@@ -185,8 +186,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget = BuildTarget.builder(buildTarget).addAllFlavors(
-          ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();
+      buildTarget =
+          BuildTarget.builder(buildTarget)
+              .addAllFlavors(ImmutableSet.of(defaultCxxPlatform.getFlavor()))
+              .build();
     }
 
     Optional<MultiarchFileInfo> fatBinaryInfo =
@@ -196,78 +199,86 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
       cxxPlatform = appleCxxPlatform.getCxxPlatform();
     } else {
-      cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          buildTarget);
+      cxxPlatform =
+          ApplePlatforms.getCxxPlatformForBuildTarget(
+              cxxPlatformFlavorDomain, defaultCxxPlatform, buildTarget);
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
     final Flavor actualWatchFlavor;
     if (ApplePlatform.isSimulator(platformName)) {
       actualWatchFlavor = WATCH_SIMULATOR_FLAVOR;
-    } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName()) ||
-        platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
+    } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName())
+        || platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
       actualWatchFlavor = WATCH_OS_FLAVOR;
     } else {
       actualWatchFlavor = InternalFlavor.of(platformName);
     }
 
-    FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps)
-        .filter(Predicates.not(constructorArg.binary::equals));
+    FluentIterable<BuildTarget> depsExcludingBinary =
+        FluentIterable.from(constructorArg.deps)
+            .filter(Predicates.not(constructorArg.binary::equals));
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
     // watch to the actual watch platform (simulator or device) so can't use
     // BuildTargets.propagateFlavorsInDomainIfNotPresent()
     {
-      FluentIterable<BuildTarget> targetsWithPlatformFlavors = depsExcludingBinary.filter(
-          BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
+      FluentIterable<BuildTarget> targetsWithPlatformFlavors =
+          depsExcludingBinary.filter(BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
 
-      FluentIterable<BuildTarget> targetsWithoutPlatformFlavors = depsExcludingBinary.filter(
-          Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
+      FluentIterable<BuildTarget> targetsWithoutPlatformFlavors =
+          depsExcludingBinary.filter(
+              Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
 
-      FluentIterable<BuildTarget> watchTargets = targetsWithoutPlatformFlavors
-          .filter(BuildTargets.containsFlavor(WATCH))
-          .transform(
-              input -> BuildTarget.builder(
-                  input.withoutFlavors(WATCH))
-                  .addFlavors(actualWatchFlavor)
-                  .build());
+      FluentIterable<BuildTarget> watchTargets =
+          targetsWithoutPlatformFlavors
+              .filter(BuildTargets.containsFlavor(WATCH))
+              .transform(
+                  input ->
+                      BuildTarget.builder(input.withoutFlavors(WATCH))
+                          .addFlavors(actualWatchFlavor)
+                          .build());
 
-      targetsWithoutPlatformFlavors = targetsWithoutPlatformFlavors
-          .filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
+      targetsWithoutPlatformFlavors =
+          targetsWithoutPlatformFlavors.filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
 
       // Gather all the deps now that we've added platform flavors to everything.
-      depsExcludingBinary = targetsWithPlatformFlavors
-          .append(watchTargets)
-          .append(BuildTargets.propagateFlavorDomains(
-              buildTarget,
-              ImmutableSet.of(cxxPlatformFlavorDomain),
-              targetsWithoutPlatformFlavors));
+      depsExcludingBinary =
+          targetsWithPlatformFlavors
+              .append(watchTargets)
+              .append(
+                  BuildTargets.propagateFlavorDomains(
+                      buildTarget,
+                      ImmutableSet.of(cxxPlatformFlavorDomain),
+                      targetsWithoutPlatformFlavors));
     }
 
     // Propagate some flavors
-    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
-        StripStyle.FLAVOR_DOMAIN,
-        buildTarget,
-        depsExcludingBinary);
-    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
-        AppleDebugFormat.FLAVOR_DOMAIN,
-        buildTarget,
-        depsExcludingBinary);
-    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
-        LinkerMapMode.FLAVOR_DOMAIN,
-        buildTarget,
-        depsExcludingBinary);
+    depsExcludingBinary =
+        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+            StripStyle.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
+    depsExcludingBinary =
+        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+            AppleDebugFormat.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
+    depsExcludingBinary =
+        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+            LinkerMapMode.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
 
     if (fatBinaryInfo.isPresent()) {
-      depsExcludingBinary = depsExcludingBinary.append(
-          fatBinaryInfo.get().getRepresentativePlatform().getCodesignProvider().getParseTimeDeps());
+      depsExcludingBinary =
+          depsExcludingBinary.append(
+              fatBinaryInfo
+                  .get()
+                  .getRepresentativePlatform()
+                  .getCodesignProvider()
+                  .getParseTimeDeps());
     } else {
-      depsExcludingBinary = depsExcludingBinary.append(
-          appleCxxPlatformsFlavorDomain.getValue(buildTarget)
-              .map(platform -> platform.getCodesignProvider().getParseTimeDeps())
-              .orElse(ImmutableSet.of()));
+      depsExcludingBinary =
+          depsExcludingBinary.append(
+              appleCxxPlatformsFlavorDomain
+                  .getValue(buildTarget)
+                  .map(platform -> platform.getCodesignProvider().getParseTimeDeps())
+                  .orElse(ImmutableSet.of()));
     }
 
     extraDepsBuilder.addAll(depsExcludingBinary);
@@ -279,7 +290,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleResolver resolver,
       A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass) throws NoSuchBuildTargetException {
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();
@@ -293,8 +305,13 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public BuildTarget binary;
     public SourcePath infoPlist;
     public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
     public Optional<String> xcodeProductType;
     public Optional<String> productName;
 

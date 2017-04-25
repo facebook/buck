@@ -30,12 +30,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 /**
- * Description for a core_data_model rule, which identifies a model file
- * for use with Apple's Core Data.
+ * Description for a core_data_model rule, which identifies a model file for use with Apple's Core
+ * Data.
  */
-public class CoreDataModelDescription implements
-    Description<AppleWrapperResourceArg>,
-    Flavored {
+public class CoreDataModelDescription implements Description<AppleWrapperResourceArg>, Flavored {
 
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
@@ -54,8 +52,8 @@ public class CoreDataModelDescription implements
       A args) {
     String extension = Files.getFileExtension(args.path.getFileName().toString());
     Preconditions.checkArgument(
-        CORE_DATA_MODEL_EXTENSION.equals(extension) ||
-            VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
+        CORE_DATA_MODEL_EXTENSION.equals(extension)
+            || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
     return new NoopBuildRule(params);
   }

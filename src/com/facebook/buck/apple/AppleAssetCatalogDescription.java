@@ -25,13 +25,12 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
 import java.util.Optional;
 import java.util.SortedSet;
 
 /**
- * Description for an apple_asset_catalog rule, which identifies an asset
- * catalog for an iOS or Mac OS X library or binary.
+ * Description for an apple_asset_catalog rule, which identifies an asset catalog for an iOS or Mac
+ * OS X library or binary.
  */
 public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
 

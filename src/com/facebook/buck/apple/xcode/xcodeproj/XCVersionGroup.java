@@ -20,12 +20,10 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class XCVersionGroup extends PBXReference {
@@ -35,20 +33,21 @@ public class XCVersionGroup extends PBXReference {
 
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
-
   public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
     children = new ArrayList<>();
 
-    fileReferencesBySourceTreePath = CacheBuilder.newBuilder().build(
-        new CacheLoader<SourceTreePath, PBXFileReference>() {
-          @Override
-          public PBXFileReference load(SourceTreePath key) throws Exception {
-            PBXFileReference ref = key.createFileReference();
-            children.add(ref);
-            return ref;
-          }
-        });
+    fileReferencesBySourceTreePath =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<SourceTreePath, PBXFileReference>() {
+                  @Override
+                  public PBXFileReference load(SourceTreePath key) throws Exception {
+                    PBXFileReference ref = key.createFileReference();
+                    children.add(ref);
+                    return ref;
+                  }
+                });
 
     currentVersion = Optional.empty();
   }
@@ -87,7 +86,6 @@ public class XCVersionGroup extends PBXReference {
 
     Collections.sort(children, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     s.addField("children", children);
-
 
     if (currentVersion.isPresent()) {
       s.addField("currentVersion", currentVersion.get());

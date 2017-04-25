@@ -24,23 +24,23 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.TargetGraph;
 
 /**
- * Description for an xcode_postbuild_script rule which runs a shell script
- * after the 'copy resources' phase has run.
- * <p>
- * Example rule:
+ * Description for an xcode_postbuild_script rule which runs a shell script after the 'copy
+ * resources' phase has run.
+ *
+ * <p>Example rule:
+ *
  * <pre>
  * xcode_postbuild_script(
  *   name = 'pngcrush',
  *   cmd = '../Tools/pngcrush.sh',
  * )
  * </pre>
- * <p>
- * This rule is a hack and in the long-term should be replaced with a rule
- * which operates similarly to apk_genrule, or should be removed entirely
- * if possible. Those rules do nothing when building with Buck.
+ *
+ * <p>This rule is a hack and in the long-term should be replaced with a rule which operates
+ * similarly to apk_genrule, or should be removed entirely if possible. Those rules do nothing when
+ * building with Buck.
  */
-public class XcodePostbuildScriptDescription
-  implements Description<XcodeScriptDescriptionArg> {
+public class XcodePostbuildScriptDescription implements Description<XcodeScriptDescriptionArg> {
 
   @Override
   public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {
@@ -56,5 +56,4 @@ public class XcodePostbuildScriptDescription
       A args) {
     return new NoopBuildRule(params);
   }
-
 }

@@ -22,26 +22,17 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.UserFlavor;
 
 public enum AppleDebugFormat implements FlavorConvertible {
-  /**
-   * Produces a binary with the debug map stripped.
-   */
-  NONE(UserFlavor.of(
-      "no-debug",
-      "Produces a binary with the debug map stripped")),
+  /** Produces a binary with the debug map stripped. */
+  NONE(UserFlavor.of("no-debug", "Produces a binary with the debug map stripped")),
 
-  /**
-   * Produces an unstripped binary.
-   */
-  DWARF(UserFlavor.of(
-      "dwarf",
-      "Produces an unstripped binary")),
+  /** Produces an unstripped binary. */
+  DWARF(UserFlavor.of("dwarf", "Produces an unstripped binary")),
 
-  /**
-   * Generate a .dSYM file from the binary and its constituent object files.
-   */
-  DWARF_AND_DSYM(UserFlavor.of(
-      "dwarf-and-dsym",
-      "Generate a .dSYM file from the binary and its constituent object files")),
+  /** Generate a .dSYM file from the binary and its constituent object files. */
+  DWARF_AND_DSYM(
+      UserFlavor.of(
+          "dwarf-and-dsym",
+          "Generate a .dSYM file from the binary and its constituent object files")),
   ;
 
   private final Flavor flavor;
@@ -58,4 +49,3 @@ public enum AppleDebugFormat implements FlavorConvertible {
     return flavor;
   }
 }
-

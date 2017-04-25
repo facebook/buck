@@ -18,11 +18,9 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
@@ -35,13 +33,10 @@ public class SourceTreePath implements Comparable<SourceTreePath> {
   private final Optional<String> defaultType;
 
   public SourceTreePath(
-      PBXReference.SourceTree sourceTree,
-      Path path,
-      Optional<String> defaultType) {
+      PBXReference.SourceTree sourceTree, Path path, Optional<String> defaultType) {
     this.sourceTree = sourceTree;
     Preconditions.checkState(
-        path.toString().length() > 0,
-        "A path to a file cannot be null or empty");
+        path.toString().length() > 0, "A path to a file cannot be null or empty");
     path = path.normalize();
     Preconditions.checkState(path.toString().length() > 0, "A path to a file cannot be empty");
     this.path = path;
@@ -65,10 +60,7 @@ public class SourceTreePath implements Comparable<SourceTreePath> {
   }
 
   public XCVersionGroup createVersionGroup() {
-    return new XCVersionGroup(
-        path.getFileName().toString(),
-        path.toString(),
-        sourceTree);
+    return new XCVersionGroup(path.getFileName().toString(), path.toString(), sourceTree);
   }
 
   @Override
@@ -98,9 +90,9 @@ public class SourceTreePath implements Comparable<SourceTreePath> {
     }
 
     SourceTreePath that = (SourceTreePath) other;
-    return Objects.equals(this.sourceTree, that.sourceTree) &&
-        Objects.equals(this.path, that.path) &&
-        Objects.equals(this.defaultType, that.defaultType);
+    return Objects.equals(this.sourceTree, that.sourceTree)
+        && Objects.equals(this.path, that.path)
+        && Objects.equals(this.defaultType, that.defaultType);
   }
 
   @Override

@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-
 import javax.annotation.Nullable;
 
 /**
@@ -35,6 +34,7 @@ public class XCBuildConfiguration extends PBXBuildStyle {
   public PBXFileReference getBaseConfigurationReference() {
     return baseConfigurationReference;
   }
+
   public void setBaseConfigurationReference(PBXFileReference v) {
     baseConfigurationReference = v;
   }

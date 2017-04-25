@@ -16,9 +16,7 @@
 
 package com.facebook.buck.apple;
 
-/**
- * Known bundle extensions that have special handling.
- */
+/** Known bundle extensions that have special handling. */
 public enum AppleBundleExtension {
   APP,
   FRAMEWORK,

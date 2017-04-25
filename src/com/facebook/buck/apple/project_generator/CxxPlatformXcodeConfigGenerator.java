@@ -21,18 +21,14 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-/**
- * Generates a set of Xcode build configurations from given cxxPlatform
- */
+/** Generates a set of Xcode build configurations from given cxxPlatform */
 class CxxPlatformXcodeConfigGenerator {
 
   public static final String SDKROOT = "SDKROOT";
@@ -48,9 +44,8 @@ class CxxPlatformXcodeConfigGenerator {
   private CxxPlatformXcodeConfigGenerator() {}
 
   public static ImmutableMap<String, ImmutableMap<String, String>>
-  getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-      CxxPlatform cxxPlatform,
-      Map<String, String> appendedConfig) {
+      getDefaultXcodeBuildConfigurationsFromCxxPlatform(
+          CxxPlatform cxxPlatform, Map<String, String> appendedConfig) {
 
     ArrayList<String> notProcessedCxxFlags = new ArrayList<String>(cxxPlatform.getCxxflags());
     LinkedHashMap<String, String> notProcessedAppendedConfig =
@@ -58,10 +53,7 @@ class CxxPlatformXcodeConfigGenerator {
 
     ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
     setSdkRootAndDeploymentTargetValues(
-        configBuilder,
-        cxxPlatform,
-        notProcessedCxxFlags,
-        notProcessedAppendedConfig);
+        configBuilder, cxxPlatform, notProcessedCxxFlags, notProcessedAppendedConfig);
     removeArchsValue(notProcessedCxxFlags, notProcessedAppendedConfig);
     setLanguageStandardValue(configBuilder, notProcessedCxxFlags, notProcessedAppendedConfig);
     setCxxLibraryValue(notProcessedCxxFlags, notProcessedAppendedConfig, configBuilder);
@@ -79,7 +71,7 @@ class CxxPlatformXcodeConfigGenerator {
   private static void setFlagsFromNotProcessedAppendedConfig(
       ImmutableMap.Builder<String, String> configBuilder,
       Map<String, String> notProcessedAppendedConfig) {
-    for (Map.Entry<String, String> entry:
+    for (Map.Entry<String, String> entry :
         ImmutableSet.copyOf(notProcessedAppendedConfig.entrySet())) {
       if (entry.getValue().length() > 0) {
         configBuilder.put(entry);
@@ -95,9 +87,8 @@ class CxxPlatformXcodeConfigGenerator {
     if (notProcessedCxxFlags.isEmpty()) {
       return;
     }
-    String otherCplusplusFlagsValue = getOtherCplusplusFlags(
-        notProcessedAppendedConfig,
-        notProcessedCxxFlags);
+    String otherCplusplusFlagsValue =
+        getOtherCplusplusFlags(notProcessedAppendedConfig, notProcessedCxxFlags);
     configBuilder.put(OTHER_CPLUSPLUSFLAGS, otherCplusplusFlagsValue);
     notProcessedAppendedConfig.remove(OTHER_CPLUSPLUSFLAGS);
   }
@@ -106,12 +97,13 @@ class CxxPlatformXcodeConfigGenerator {
       List<String> notProcessedCxxFlags,
       Map<String, String> notProcessedAppendedConfig,
       ImmutableMap.Builder<String, String> configBuilder) {
-    String clangCxxLibraryValue = getConfigValueForKey(
-        CLANG_CXX_LIBRARY,
-        notProcessedCxxFlags,
-        "-stdlib=",
-        Optional.empty(),
-        notProcessedAppendedConfig);
+    String clangCxxLibraryValue =
+        getConfigValueForKey(
+            CLANG_CXX_LIBRARY,
+            notProcessedCxxFlags,
+            "-stdlib=",
+            Optional.empty(),
+            notProcessedAppendedConfig);
     if (clangCxxLibraryValue != null) {
       configBuilder.put(CLANG_CXX_LIBRARY, clangCxxLibraryValue);
       notProcessedAppendedConfig.remove(CLANG_CXX_LIBRARY);
@@ -129,16 +121,12 @@ class CxxPlatformXcodeConfigGenerator {
       configBuilder.put(SDKROOT, sdkRootValue);
       notProcessedAppendedConfig.remove(SDKROOT);
       setDeploymentTargetValue(
-          configBuilder,
-          sdkRootValue,
-          notProcessedCxxFlags,
-          notProcessedAppendedConfig);
+          configBuilder, sdkRootValue, notProcessedCxxFlags, notProcessedAppendedConfig);
     }
   }
 
   private static void removeArchsValue(
-      List<String> notProcessedCxxFlags,
-      Map<String, String> notProcessedAppendedConfig) {
+      List<String> notProcessedCxxFlags, Map<String, String> notProcessedAppendedConfig) {
     // we need to get rid of ARCH setting so Xcode would be able to let user switch between
     // iOS simulator and iOS device without forcing the ARCH of resulting binary
     getArchs(notProcessedAppendedConfig, notProcessedCxxFlags);
@@ -149,12 +137,13 @@ class CxxPlatformXcodeConfigGenerator {
       ImmutableMap.Builder<String, String> configBuilder,
       List<String> notProcessedCxxFlags,
       Map<String, String> notProcessedAppendedConfig) {
-    String clangCxxLanguageStandardValue = getConfigValueForKey(
-        CLANG_CXX_LANGUAGE_STANDARD,
-        notProcessedCxxFlags,
-        "-std=",
-        Optional.empty(),
-        notProcessedAppendedConfig);
+    String clangCxxLanguageStandardValue =
+        getConfigValueForKey(
+            CLANG_CXX_LANGUAGE_STANDARD,
+            notProcessedCxxFlags,
+            "-std=",
+            Optional.empty(),
+            notProcessedAppendedConfig);
     if (clangCxxLanguageStandardValue != null) {
       configBuilder.put(CLANG_CXX_LANGUAGE_STANDARD, clangCxxLanguageStandardValue);
       notProcessedAppendedConfig.remove(CLANG_CXX_LANGUAGE_STANDARD);
@@ -166,13 +155,14 @@ class CxxPlatformXcodeConfigGenerator {
       String sdkRootValue,
       List<String> notProcessedCxxFlags,
       Map<String, String> notProcessedAppendedConfig) {
-    String deploymentTargetKey = sdkRootValue.toUpperCase() + "_DEPLOYMENT_TARGET";  // magic
-    String deploymentTargetValue = getConfigValueForKey(
-        deploymentTargetKey,
-        notProcessedCxxFlags,
-        "-m",    // format is like "-mmacosx-version-min=10.9"
-        Optional.of("-version-min="),
-        notProcessedAppendedConfig);
+    String deploymentTargetKey = sdkRootValue.toUpperCase() + "_DEPLOYMENT_TARGET"; // magic
+    String deploymentTargetValue =
+        getConfigValueForKey(
+            deploymentTargetKey,
+            notProcessedCxxFlags,
+            "-m", // format is like "-mmacosx-version-min=10.9"
+            Optional.of("-version-min="),
+            notProcessedAppendedConfig);
     if (deploymentTargetValue != null) {
       configBuilder.put(deploymentTargetKey, deploymentTargetValue);
       notProcessedAppendedConfig.remove(deploymentTargetKey);
@@ -180,8 +170,7 @@ class CxxPlatformXcodeConfigGenerator {
   }
 
   private static String getOtherCplusplusFlags(
-      Map<String, String> appendedConfig,
-      List<String> notProcessesCxxFlags) {
+      Map<String, String> appendedConfig, List<String> notProcessesCxxFlags) {
     String value = appendedConfig.get(OTHER_CPLUSPLUSFLAGS);
     ArrayList<String> cPlusPlusFlags = new ArrayList<String>();
     if (value != null) {
@@ -197,8 +186,7 @@ class CxxPlatformXcodeConfigGenerator {
 
   @Nullable
   private static String getArchs(
-      Map<String, String> appendedConfig,
-      List<String> notProcessesCxxFlags) {
+      Map<String, String> appendedConfig, List<String> notProcessesCxxFlags) {
     String value = appendedConfig.get(ARCHS);
     if (value == null) {
       int indexOfArch = notProcessesCxxFlags.indexOf("-arch");
@@ -238,9 +226,9 @@ class CxxPlatformXcodeConfigGenerator {
   }
 
   /**
-   * If appendedConfig has value for given key, it will be used.
-   * Otherwise, this method will attempt to extract value from cxxFlags.
-   * */
+   * If appendedConfig has value for given key, it will be used. Otherwise, this method will attempt
+   * to extract value from cxxFlags.
+   */
   @Nullable
   private static String getConfigValueForKey(
       String key,

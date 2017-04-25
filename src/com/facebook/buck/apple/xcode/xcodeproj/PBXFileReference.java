@@ -19,23 +19,16 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.Files;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-/**
- * Reference to a concrete file.
- */
+/** Reference to a concrete file. */
 public class PBXFileReference extends PBXReference {
   private Optional<String> explicitFileType;
   private Optional<String> lastKnownFileType;
 
   public PBXFileReference(
-      String name,
-      @Nullable String path,
-      SourceTree sourceTree,
-      Optional<String> defaultType) {
+      String name, @Nullable String path, SourceTree sourceTree, Optional<String> defaultType) {
     super(name, path, sourceTree);
 
     // PBXVariantGroups create file references where the name doesn't contain the file
@@ -46,11 +39,10 @@ public class PBXFileReference extends PBXReference {
     String pathOrName = MoreObjects.firstNonNull(path, name);
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
-    String fileType = FileTypes.FILE_EXTENSION_TO_IDENTIFIER.get(
-        Files.getFileExtension(pathOrName));
-    if (fileType != null &&
-        (FileTypes.EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS.contains(fileType)) ||
-         FileTypes.MODIFIABLE_FILE_TYPE_IDENTIFIERS.contains(fileType)) {
+    String fileType =
+        FileTypes.FILE_EXTENSION_TO_IDENTIFIER.get(Files.getFileExtension(pathOrName));
+    if (fileType != null && (FileTypes.EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS.contains(fileType))
+        || FileTypes.MODIFIABLE_FILE_TYPE_IDENTIFIERS.contains(fileType)) {
       explicitFileType = Optional.empty();
       lastKnownFileType = Optional.of(fileType);
     } else if (fileType != null) {
@@ -94,9 +86,6 @@ public class PBXFileReference extends PBXReference {
 
   @Override
   public String toString() {
-    return String.format(
-        "%s explicitFileType=%s",
-        super.toString(),
-        getExplicitFileType());
+    return String.format("%s explicitFileType=%s", super.toString(), getExplicitFileType());
   }
 }

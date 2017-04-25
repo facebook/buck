@@ -21,7 +21,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,32 +31,27 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Utilty class to discover state about Apple simulators installed on the host system.
- */
+/** Utilty class to discover state about Apple simulators installed on the host system. */
 public class AppleSimulatorDiscovery {
   private static final Logger LOG = Logger.get(AppleSimulatorDiscovery.class);
 
   // Utility class, do not instantiate.
-  private AppleSimulatorDiscovery() { }
+  private AppleSimulatorDiscovery() {}
 
-  /**
-   * Discovers information about Apple simulators installed on the system.
-   */
+  /** Discovers information about Apple simulators installed on the system. */
   public static ImmutableSet<AppleSimulator> discoverAppleSimulators(
-      ProcessExecutor processExecutor,
-      Path simctlPath) throws InterruptedException, IOException {
+      ProcessExecutor processExecutor, Path simctlPath) throws InterruptedException, IOException {
     LOG.debug("Running xcrun simctl list to get list of simulators");
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of(simctlPath.toString(), "list"))
             .build();
-    ProcessExecutor.LaunchedProcess simctlListProcess = processExecutor.launchProcess(
-        processExecutorParams);
+    ProcessExecutor.LaunchedProcess simctlListProcess =
+        processExecutor.launchProcess(processExecutorParams);
     ImmutableSet.Builder<AppleSimulator> simulatorsBuilder = ImmutableSet.builder();
 
-    try (InputStreamReader stdoutReader = new InputStreamReader(
-             simctlListProcess.getInputStream(), StandardCharsets.UTF_8)) {
+    try (InputStreamReader stdoutReader =
+        new InputStreamReader(simctlListProcess.getInputStream(), StandardCharsets.UTF_8)) {
       LOG.debug("Parsing output of xcrun simctl list...");
       SimctlListOutputParsing.parseOutputFromReader(stdoutReader, simulatorsBuilder);
     }
@@ -72,17 +66,16 @@ public class AppleSimulatorDiscovery {
   }
 
   /**
-   * Given a simulators, looks up metadata on the supported architectures
-   * and product families for that simulator (if present).
+   * Given a simulators, looks up metadata on the supported architectures and product families for
+   * that simulator (if present).
    */
   public static Optional<AppleSimulatorProfile> discoverAppleSimulatorProfile(
-      AppleSimulator appleSimulator,
-      Path iphonesimulatorPlatformRoot) throws IOException {
+      AppleSimulator appleSimulator, Path iphonesimulatorPlatformRoot) throws IOException {
     Path simulatorProfilePlistPath =
         iphonesimulatorPlatformRoot.resolve(
             String.format(
-                "Developer/Library/CoreSimulator/Profiles/DeviceTypes/%s.simdevicetype/" +
-                "Contents/Resources/profile.plist",
+                "Developer/Library/CoreSimulator/Profiles/DeviceTypes/%s.simdevicetype/"
+                    + "Contents/Resources/profile.plist",
                 appleSimulator.getName()));
     LOG.debug("Parsing simulator profile plist %s", simulatorProfilePlistPath);
     try (InputStream inputStream = Files.newInputStream(simulatorProfilePlistPath)) {

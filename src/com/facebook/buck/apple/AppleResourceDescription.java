@@ -31,16 +31,13 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
-/**
- * Description for an apple_resource rule which copies resource files to the built bundle.
- */
-public class AppleResourceDescription implements
-    Description<AppleResourceDescription.Arg>,
-    Flavored,
-    HasAppleBundleResourcesDescription<AppleResourceDescription.Arg> {
+/** Description for an apple_resource rule which copies resource files to the built bundle. */
+public class AppleResourceDescription
+    implements Description<AppleResourceDescription.Arg>,
+        Flavored,
+        HasAppleBundleResourcesDescription<AppleResourceDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

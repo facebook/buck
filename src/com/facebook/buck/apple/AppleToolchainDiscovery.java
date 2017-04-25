@@ -23,9 +23,6 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.xml.sax.SAXException;
-
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,28 +35,23 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
-
 import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
-/**
- * Utility class to discover the location of toolchains contained inside an Xcode
- * installation.
- */
+/** Utility class to discover the location of toolchains contained inside an Xcode installation. */
 public class AppleToolchainDiscovery {
 
   private static final Logger LOG = Logger.get(AppleToolchainDiscovery.class);
 
   // Utility class; do not instantiate.
-  private AppleToolchainDiscovery() { }
+  private AppleToolchainDiscovery() {}
 
   /**
-   * Given a path to an Xcode developer directory, walks through the
-   * toolchains and builds a map of (identifier: path) pairs of the
-   * toolchains inside.
+   * Given a path to an Xcode developer directory, walks through the toolchains and builds a map of
+   * (identifier: path) pairs of the toolchains inside.
    */
   public static ImmutableMap<String, AppleToolchain> discoverAppleToolchains(
-      Optional<Path> developerDir,
-      ImmutableList<Path> extraDirs) throws IOException {
+      Optional<Path> developerDir, ImmutableList<Path> extraDirs) throws IOException {
     ImmutableMap.Builder<String, AppleToolchain> toolchainIdentifiersToToolchainsBuilder =
         ImmutableMap.builder();
 
@@ -78,9 +70,8 @@ public class AppleToolchainDiscovery {
 
       LOG.debug("Searching for Xcode toolchains in %s", toolchains);
 
-      try (DirectoryStream<Path> toolchainStream = Files.newDirectoryStream(
-               toolchains,
-               "*.xctoolchain")) {
+      try (DirectoryStream<Path> toolchainStream =
+          Files.newDirectoryStream(toolchains, "*.xctoolchain")) {
         for (Path toolchainPath : toolchainStream) {
           LOG.debug("Getting identifier for for Xcode toolchain under %s", toolchainPath);
           addIdentifierForToolchain(toolchainPath, toolchainIdentifiersToToolchainsBuilder);
@@ -92,9 +83,8 @@ public class AppleToolchainDiscovery {
   }
 
   private static void addIdentifierForToolchain(
-        Path toolchainDir,
-        ImmutableMap.Builder<String, AppleToolchain> identifierToToolchainBuilder)
-        throws IOException {
+      Path toolchainDir, ImmutableMap.Builder<String, AppleToolchain> identifierToToolchainBuilder)
+      throws IOException {
 
     boolean addedToolchain = false;
     String[] potentialPlistNames = {"ToolchainInfo.plist", "Info.plist"};
@@ -114,25 +104,24 @@ public class AppleToolchainDiscovery {
     if (!addedToolchain) {
       LOG.debug(
           "Failed to resolve info about toolchain %s from plist files %s",
-          toolchainDir.toString(),
-          Arrays.toString(potentialPlistNames));
+          toolchainDir.toString(), Arrays.toString(potentialPlistNames));
     }
   }
 
-  private static Optional<AppleToolchain> toolchainFromPlist(
-      Path toolchainDir,
-      String plistName
-  ) throws IOException {
+  private static Optional<AppleToolchain> toolchainFromPlist(Path toolchainDir, String plistName)
+      throws IOException {
     Path toolchainInfoPlistPath = toolchainDir.resolve(plistName);
     InputStream toolchainInfoPlist = Files.newInputStream(toolchainInfoPlistPath);
     BufferedInputStream bufferedToolchainInfoPlist = new BufferedInputStream(toolchainInfoPlist);
 
     NSDictionary parsedToolchainInfoPlist;
     try {
-      parsedToolchainInfoPlist = (NSDictionary) PropertyListParser.parse(
-          bufferedToolchainInfoPlist);
-    } catch (PropertyListFormatException | ParseException | ParserConfigurationException |
-        SAXException e) {
+      parsedToolchainInfoPlist =
+          (NSDictionary) PropertyListParser.parse(bufferedToolchainInfoPlist);
+    } catch (PropertyListFormatException
+        | ParseException
+        | ParserConfigurationException
+        | SAXException e) {
       LOG.error(e, "Failed to parse %s: %s, ignoring", plistName, toolchainInfoPlistPath);
       return Optional.empty();
     }
@@ -145,9 +134,7 @@ public class AppleToolchainDiscovery {
 
     NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
     Optional<String> version =
-        versionObject == null ?
-            Optional.empty() :
-            Optional.of(versionObject.toString());
+        versionObject == null ? Optional.empty() : Optional.of(versionObject.toString());
     LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
 
     AppleToolchain.Builder toolchainBuilder = AppleToolchain.builder();

@@ -21,12 +21,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.util.Optional;
 
 public class ApplePlatforms {
   // Utility class, do not instantiate.
-  private ApplePlatforms() { }
+  private ApplePlatforms() {}
 
   /** Only works with thin binaries. */
   static CxxPlatform getCxxPlatformForBuildTarget(
@@ -46,10 +45,8 @@ public class ApplePlatforms {
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
-      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          target);
+      CxxPlatform cxxPlatform =
+          getCxxPlatformForBuildTarget(cxxPlatformFlavorDomain, defaultCxxPlatform, target);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {

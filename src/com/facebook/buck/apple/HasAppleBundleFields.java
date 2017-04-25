@@ -19,13 +19,16 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
 public interface HasAppleBundleFields {
   public Either<AppleBundleExtension, String> getExtension();
+
   public SourcePath getInfoPlist();
+
   public Optional<String> getProductName();
+
   public Optional<String> getXcodeProductType();
+
   public ImmutableMap<String, String> getInfoPlistSubstitutions();
 }

@@ -27,7 +27,6 @@ import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -77,8 +76,7 @@ class SwiftStdlibStep implements Step {
     builder.addCommand("--destination", temp.toString());
     if (codeSignIdentitySupplier.isPresent()) {
       builder.addCommand(
-          "--sign",
-          CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
+          "--sign", CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
     }
 
     Map<String, String> environment = new HashMap<>();

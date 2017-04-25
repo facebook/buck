@@ -31,7 +31,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -67,8 +66,8 @@ public class XcodeWorkspaceConfigDescription
 
   public static ImmutableMap<SchemeActionType, String> getActionConfigNamesFromArg(Arg arg) {
     // Start out with the default action config names..
-    Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
-        SchemeActionType.DEFAULT_CONFIG_NAMES);
+    Map<SchemeActionType, String> newActionConfigNames =
+        new HashMap<>(SchemeActionType.DEFAULT_CONFIG_NAMES);
     // And override them with any provided in the "action_config_names" map.
     newActionConfigNames.putAll(arg.actionConfigNames);
 

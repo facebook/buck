@@ -20,16 +20,17 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractGenerationResult {
   public abstract Path getProjectPath();
+
   public abstract boolean isProjectGenerated();
+
   public abstract ImmutableSet<BuildTarget> getRequiredBuildTargets();
+
   public abstract ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
 }

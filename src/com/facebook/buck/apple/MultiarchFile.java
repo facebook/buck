@@ -38,24 +38,18 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.SortedSet;
 
-/**
- * Puts together multiple thin library/binaries into a multi-arch file.
- */
-public class MultiarchFile extends AbstractBuildRule
-    implements ProvidesLinkedBinaryDeps {
+/** Puts together multiple thin library/binaries into a multi-arch file. */
+public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBinaryDeps {
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final Tool lipo;
+  @AddToRuleKey private final Tool lipo;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> thinBinaries;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> thinBinaries;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -75,8 +69,7 @@ public class MultiarchFile extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -99,8 +92,10 @@ public class MultiarchFile extends AbstractBuildRule
         if (rule instanceof CxxBinary) {
           rule = ((CxxBinary) rule).getLinkRule();
         }
-        if (rule instanceof CxxLink &&
-            !rule.getBuildTarget().getFlavors().contains(LinkerMapMode.NO_LINKER_MAP.getFlavor())) {
+        if (rule instanceof CxxLink
+            && !rule.getBuildTarget()
+                .getFlavors()
+                .contains(LinkerMapMode.NO_LINKER_MAP.getFlavor())) {
           Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
           if (maybeLinkerMapPath.isPresent()) {
             Path source = maybeLinkerMapPath.get();

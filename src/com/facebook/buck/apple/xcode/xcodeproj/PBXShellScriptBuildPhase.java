@@ -19,15 +19,11 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Build phase which represents running a shell script.
- */
+/** Build phase which represents running a shell script. */
 public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   private List<String> inputPaths;
   private List<String> outputPaths;
@@ -48,49 +44,44 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   }
 
   /**
-   * Returns the list (possibly empty) of files passed as input to the shell script.
-   * May not be actual paths, because they can have variable interpolations.
+   * Returns the list (possibly empty) of files passed as input to the shell script. May not be
+   * actual paths, because they can have variable interpolations.
    */
   public List<String> getInputPaths() {
     return inputPaths;
   }
 
   /**
-   * Returns the list (possibly empty) of files created as output of the shell script.
-   * May not be actual paths, because they can have variable interpolations.
+   * Returns the list (possibly empty) of files created as output of the shell script. May not be
+   * actual paths, because they can have variable interpolations.
    */
   public List<String> getOutputPaths() {
     return outputPaths;
   }
 
   /**
-   * Returns the path to the shell under which the script is to be executed.
-   * Defaults to "/bin/sh".
+   * Returns the path to the shell under which the script is to be executed. Defaults to "/bin/sh".
    */
   @Nullable
   public String getShellPath() {
     return shellPath;
   }
 
-  /**
-   * Sets the path to the shell under which the script is to be executed.
-   */
+  /** Sets the path to the shell under which the script is to be executed. */
   public void setShellPath(String shellPath) {
     this.shellPath = shellPath;
   }
 
   /**
-   * Gets the contents of the shell script to execute under the shell
-   * returned by {@link #getShellPath()}.
+   * Gets the contents of the shell script to execute under the shell returned by {@link
+   * #getShellPath()}.
    */
   @Nullable
   public String getShellScript() {
     return shellScript;
   }
 
-  /**
-   * Sets the contents of the script to execute.
-   */
+  /** Sets the contents of the script to execute. */
   public void setShellScript(String shellScript) {
     this.shellScript = shellScript;
   }

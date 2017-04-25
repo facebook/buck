@@ -22,41 +22,27 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractGroupedSource {
-  /**
-   * The type of grouped source entry this object represents.
-   */
+  /** The type of grouped source entry this object represents. */
   public enum Type {
-      /**
-       * A single {@link SourceWithFlags}.
-       */
-      SOURCE_WITH_FLAGS,
-      /**
-       * A single {@link SourcePath} that shouldn't be included in the build phase.
-       */
-      IGNORED_SOURCE,
-      /**
-       * A single {@link SourcePath} representing a public header file.
-       */
-      PUBLIC_HEADER,
-      /**
-       * A single {@link SourcePath} representing a private header file.
-       */
-      PRIVATE_HEADER,
-      /**
-       * A source group (group name and one or more GroupedSource objects).
-       */
-      SOURCE_GROUP,
+    /** A single {@link SourceWithFlags}. */
+    SOURCE_WITH_FLAGS,
+    /** A single {@link SourcePath} that shouldn't be included in the build phase. */
+    IGNORED_SOURCE,
+    /** A single {@link SourcePath} representing a public header file. */
+    PUBLIC_HEADER,
+    /** A single {@link SourcePath} representing a private header file. */
+    PRIVATE_HEADER,
+    /** A source group (group name and one or more GroupedSource objects). */
+    SOURCE_GROUP,
   }
 
   @Value.Parameter
@@ -128,9 +114,7 @@ abstract class AbstractGroupedSource {
     }
   }
 
-  /**
-   * Creates a {@link GroupedSource} given a {@link SourceWithFlags}.
-   */
+  /** Creates a {@link GroupedSource} given a {@link SourceWithFlags}. */
   public static GroupedSource ofSourceWithFlags(SourceWithFlags sourceWithFlags) {
     return GroupedSource.of(
         Type.SOURCE_WITH_FLAGS,
@@ -181,10 +165,7 @@ abstract class AbstractGroupedSource {
         Optional.empty());
   }
 
-  /**
-   * Creates a {@link GroupedSource} given a source group name and a
-   * list of GroupedSources.
-   */
+  /** Creates a {@link GroupedSource} given a source group name and a list of GroupedSources. */
   public static GroupedSource ofSourceGroup(
       String sourceGroupName,
       Path sourceGroupPathRelativeToTarget,
@@ -200,9 +181,13 @@ abstract class AbstractGroupedSource {
 
   public interface Visitor {
     void visitSourceWithFlags(SourceWithFlags sourceWithFlags);
+
     void visitIgnoredSource(SourcePath source);
+
     void visitPublicHeader(SourcePath publicHeader);
+
     void visitPrivateHeader(SourcePath privateHeader);
+
     void visitSourceGroup(
         String sourceGroupName,
         Path sourceGroupPathRelativeToTarget,

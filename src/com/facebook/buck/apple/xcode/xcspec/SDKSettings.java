@@ -21,29 +21,24 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.InputStream;
 
-/**
- * Parsing logic for SDKSettings property list file that ships with Xcode.
- */
+/** Parsing logic for SDKSettings property list file that ships with Xcode. */
 public final class SDKSettings {
-  /**
-   * Key into the default properties dictionary for the default compiler identifier.
-   */
+  /** Key into the default properties dictionary for the default compiler identifier. */
   public static final String DEFAULT_COMPILER_KEY = "DEFAULT_COMPILER";
+
   private static final String DEFAULT_PROPERTIES_KEY = "DefaultProperties";
 
   // Utility class. Do not instantiate.
-  private SDKSettings() { }
+  private SDKSettings() {}
 
   /**
-   * Parses the contents of the provided SDKSettings.plist input stream
-   * and extracts the dictionary of DefaultProperties values.
+   * Parses the contents of the provided SDKSettings.plist input stream and extracts the dictionary
+   * of DefaultProperties values.
    */
   public static void parseDefaultPropertiesFromPlist(
-      InputStream sdkSettingsPlist,
-      ImmutableMap.Builder<String, String> defaultPropertiesBuilder)
+      InputStream sdkSettingsPlist, ImmutableMap.Builder<String, String> defaultPropertiesBuilder)
       throws Exception {
     NSObject sdkSettings = PropertyListParser.parse(sdkSettingsPlist);
     if (!(sdkSettings instanceof NSDictionary)) {
@@ -54,21 +49,22 @@ public final class SDKSettings {
   }
 
   private static void getDefaultPropertiesFromNSDictionary(
-      NSDictionary sdkSettingsDict,
-      ImmutableMap.Builder<String, String> defaultPropertiesBuilder) {
+      NSDictionary sdkSettingsDict, ImmutableMap.Builder<String, String> defaultPropertiesBuilder) {
     NSObject defaultProperties = sdkSettingsDict.objectForKey(DEFAULT_PROPERTIES_KEY);
     if (!(defaultProperties instanceof NSDictionary)) {
       throw new RuntimeException(
-          "Unexpected " + DEFAULT_PROPERTIES_KEY + " contents (expected NSDictionary, got " +
-          defaultProperties + ")");
+          "Unexpected "
+              + DEFAULT_PROPERTIES_KEY
+              + " contents (expected NSDictionary, got "
+              + defaultProperties
+              + ")");
     }
     NSDictionary defaultPropertiesDict = (NSDictionary) defaultProperties;
     for (String key : defaultPropertiesDict.allKeys()) {
       NSObject value = defaultPropertiesDict.objectForKey(key);
       if (!(value instanceof NSString)) {
         throw new RuntimeException(
-            "Unexpected key " + key + " contents (expected NSString, got " +
-            value + ")");
+            "Unexpected key " + key + " contents (expected NSString, got " + value + ")");
       }
       NSString stringValue = (NSString) value;
       defaultPropertiesBuilder.put(key, stringValue.toString());

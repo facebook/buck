@@ -25,7 +25,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +53,7 @@ class PlistProcessStep implements Step {
 
   /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
   private final ImmutableMap<String, NSObject> overrideKeys;
+
   private final OutputFormat outputFormat;
 
   public PlistProcessStep(
@@ -76,7 +76,7 @@ class PlistProcessStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try (InputStream stream = filesystem.newFileInputStream(input);
-         BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
+        BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;
       try {
         infoPlist = PropertyListParser.parse(bufferedStream);
@@ -89,8 +89,8 @@ class PlistProcessStep implements Step {
 
         if (additionalInputToMerge.isPresent()) {
           try (InputStream mergeStream =
-                   filesystem.newFileInputStream(additionalInputToMerge.get());
-               BufferedInputStream mergeBufferedStream = new BufferedInputStream(mergeStream)) {
+                  filesystem.newFileInputStream(additionalInputToMerge.get());
+              BufferedInputStream mergeBufferedStream = new BufferedInputStream(mergeStream)) {
             NSObject mergeInfoPlist;
             try {
               mergeInfoPlist = PropertyListParser.parse(mergeBufferedStream);
@@ -114,15 +114,11 @@ class PlistProcessStep implements Step {
       switch (this.outputFormat) {
         case XML:
           String serializedInfoPlist = infoPlist.toXMLPropertyList();
-          filesystem.writeContentsToPath(
-              serializedInfoPlist,
-              output);
+          filesystem.writeContentsToPath(serializedInfoPlist, output);
           break;
         case BINARY:
           byte[] binaryInfoPlist = BinaryPropertyListWriter.writeToArray(infoPlist);
-          filesystem.writeBytesToPath(
-              binaryInfoPlist,
-              output);
+          filesystem.writeBytesToPath(binaryInfoPlist, output);
           break;
       }
     } catch (IOException e) {
@@ -142,5 +138,4 @@ class PlistProcessStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("process-plist %s %s", input, output);
   }
-
 }

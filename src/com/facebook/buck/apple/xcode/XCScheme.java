@@ -149,9 +149,7 @@ public class XCScheme {
 
     private final EnumSet<BuildFor> buildFor;
 
-    public BuildActionEntry(
-        BuildableReference buildableReference,
-        EnumSet<BuildFor> buildFor) {
+    public BuildActionEntry(BuildableReference buildableReference, EnumSet<BuildFor> buildFor) {
       this.buildableReference = buildableReference;
       this.buildFor = buildFor;
     }
@@ -168,13 +166,9 @@ public class XCScheme {
   public static class LaunchAction {
 
     public enum LaunchStyle {
-      /**
-       * Starts the process with attached debugger.
-       */
+      /** Starts the process with attached debugger. */
       AUTO,
-      /**
-       * Debugger waits for executable to be launched.
-       */
+      /** Debugger waits for executable to be launched. */
       WAIT,
       ;
     }

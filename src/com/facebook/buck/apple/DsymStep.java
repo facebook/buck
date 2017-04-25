@@ -21,22 +21,21 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.List;
 
 /**
  * Invokes {@code dsymutil} to generate a dsym file.
  *
- * The linking step for apple executables does not actually embed debug information from the object
- * files that are being linked. Instead, the executable contains paths to object files from which
- * the debug information can be read. {@code dsymutil} reads this section of the executable and
- * collects the debugging information from all the mentioned object files and generates a
- * {@code .dSYM} bundle alongside the executable. This bundle is then loaded automatically by the
- * debugger for its debug information.
+ * <p>The linking step for apple executables does not actually embed debug information from the
+ * object files that are being linked. Instead, the executable contains paths to object files from
+ * which the debug information can be read. {@code dsymutil} reads this section of the executable
+ * and collects the debugging information from all the mentioned object files and generates a {@code
+ * .dSYM} bundle alongside the executable. This bundle is then loaded automatically by the debugger
+ * for its debug information.
  *
  * @see <a href="http://wiki.dwarfstd.org/index.php?title=Apple%27s_%22Lazy%22_DWARF_Scheme">
- *   Information on DWARF and DSYM on Macs</a>
+ *     Information on DWARF and DSYM on Macs</a>
  */
 class DsymStep extends ShellStep {
 
@@ -67,8 +66,7 @@ class DsymStep extends ShellStep {
 
     commandBuilder.addAll(command);
     commandBuilder.add(
-        "-o", filesystem.resolve(output).toString(),
-        filesystem.resolve(input).toString());
+        "-o", filesystem.resolve(output).toString(), filesystem.resolve(input).toString());
 
     return commandBuilder.build();
   }

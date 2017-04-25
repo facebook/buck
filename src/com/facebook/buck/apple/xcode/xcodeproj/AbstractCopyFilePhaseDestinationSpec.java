@@ -17,10 +17,8 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -30,6 +28,4 @@ interface AbstractCopyFilePhaseDestinationSpec {
   PBXCopyFilesBuildPhase.Destination getDestination();
 
   Optional<String> getPath();
-
 }
-

@@ -25,7 +25,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -33,10 +32,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-/**
- * A collection of code sign identities.
- */
+/** A collection of code sign identities. */
 public class CodeSignIdentityStore implements RuleKeyAppendable {
   private static final Logger LOG = Logger.get(CodeSignIdentityStore.class);
 
@@ -52,9 +48,7 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
     this.identitiesSupplier = identitiesSupplier;
   }
 
-  /**
-   * Get all the identities in the store.
-   */
+  /** Get all the identities in the store. */
   public ImmutableList<CodeSignIdentity> getIdentities() {
     return identitiesSupplier.get();
   }
@@ -67,65 +61,67 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
   /**
    * Construct a store by asking the system keychain for all stored code sign identities.
    *
-   * The loading process is deferred till first access.
+   * <p>The loading process is deferred till first access.
    */
   public static CodeSignIdentityStore fromSystem(
-      final ProcessExecutor processExecutor,
-      ImmutableList<String> command) {
-    return new CodeSignIdentityStore(Suppliers.memoize(
-        () -> {
-          ProcessExecutorParams processExecutorParams =
-              ProcessExecutorParams.builder()
-                  .addAllCommand(command)
-                  .build();
-          // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
-          Set<ProcessExecutor.Option> options =
-              EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-          ProcessExecutor.Result result;
-          try {
-            result = processExecutor.launchAndExecute(
-                processExecutorParams,
-                options,
-            /* stdin */ Optional.empty(),
-            /* timeOutMs */ Optional.empty(),
-            /* timeOutHandler */ Optional.empty());
-          } catch (InterruptedException | IOException e) {
-            LOG.warn("Could not execute security, continuing without codesign identity.");
-            return ImmutableList.of();
-          }
+      final ProcessExecutor processExecutor, ImmutableList<String> command) {
+    return new CodeSignIdentityStore(
+        Suppliers.memoize(
+            () -> {
+              ProcessExecutorParams processExecutorParams =
+                  ProcessExecutorParams.builder().addAllCommand(command).build();
+              // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
+              Set<ProcessExecutor.Option> options =
+                  EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+              ProcessExecutor.Result result;
+              try {
+                result =
+                    processExecutor.launchAndExecute(
+                        processExecutorParams,
+                        options,
+                        /* stdin */ Optional.empty(),
+                        /* timeOutMs */ Optional.empty(),
+                        /* timeOutHandler */ Optional.empty());
+              } catch (InterruptedException | IOException e) {
+                LOG.warn("Could not execute security, continuing without codesign identity.");
+                return ImmutableList.of();
+              }
 
-          if (result.getExitCode() != 0) {
-            throw new RuntimeException(
-                result.getMessageForUnexpectedResult("security -v -p codesigning"));
-          }
+              if (result.getExitCode() != 0) {
+                throw new RuntimeException(
+                    result.getMessageForUnexpectedResult("security -v -p codesigning"));
+              }
 
-          Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());
-          ImmutableList.Builder<CodeSignIdentity> builder = ImmutableList.builder();
-          while (matcher.find()) {
-            Optional<HashCode> fingerprint = CodeSignIdentity.toFingerprint(matcher.group(1));
-            if (!fingerprint.isPresent()) {
-              // security should always output a valid fingerprint string.
-              LOG.warn("Code sign identity fingerprint is invalid, ignored: " + matcher.group(1));
-              break;
-            }
-            String subjectCommonName = matcher.group(2);
-            CodeSignIdentity identity = CodeSignIdentity.builder()
-                .setFingerprint(fingerprint)
-                .setSubjectCommonName(subjectCommonName)
-                .build();
-            builder.add(identity);
-            LOG.debug("Found code signing identity: " + identity.toString());
-          }
-          ImmutableList<CodeSignIdentity> allValidIdentities = builder.build();
-          if (allValidIdentities.isEmpty()) {
-            LOG.warn("No valid code signing identities found.  Device build/install won't work.");
-          } else if (allValidIdentities.size() > 1) {
-            LOG.info(
-                "Multiple valid identity found.  This could potentially cause the wrong one to" +
-                    " be used unless explicitly specified via CODE_SIGN_IDENTITY.");
-          }
-          return allValidIdentities;
-        }));
+              Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());
+              ImmutableList.Builder<CodeSignIdentity> builder = ImmutableList.builder();
+              while (matcher.find()) {
+                Optional<HashCode> fingerprint = CodeSignIdentity.toFingerprint(matcher.group(1));
+                if (!fingerprint.isPresent()) {
+                  // security should always output a valid fingerprint string.
+                  LOG.warn(
+                      "Code sign identity fingerprint is invalid, ignored: " + matcher.group(1));
+                  break;
+                }
+                String subjectCommonName = matcher.group(2);
+                CodeSignIdentity identity =
+                    CodeSignIdentity.builder()
+                        .setFingerprint(fingerprint)
+                        .setSubjectCommonName(subjectCommonName)
+                        .build();
+                builder.add(identity);
+                LOG.debug("Found code signing identity: " + identity.toString());
+              }
+              ImmutableList<CodeSignIdentity> allValidIdentities = builder.build();
+              if (allValidIdentities.isEmpty()) {
+                LOG.warn(
+                    "No valid code signing identities found.  Device build/install won't work.");
+              } else if (allValidIdentities.size() > 1) {
+                LOG.info(
+                    "Multiple valid identity found.  This could potentially cause the wrong one to"
+                        + " be used unless explicitly specified via CODE_SIGN_IDENTITY.");
+              }
+              return allValidIdentities;
+            }));
   }
 
   public static CodeSignIdentityStore fromIdentities(Iterable<CodeSignIdentity> identities) {

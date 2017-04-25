@@ -71,7 +71,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -85,8 +84,7 @@ import java.util.stream.Stream;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle
-    extends AbstractBuildRule
+public class AppleBundle extends AbstractBuildRule
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
@@ -98,69 +96,48 @@ public class AppleBundle
   private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
       "BUCK_code_sign_entitlements.plist";
 
-  @AddToRuleKey
-  private final String extension;
+  @AddToRuleKey private final String extension;
 
-  @AddToRuleKey
-  private final Optional<String> productName;
+  @AddToRuleKey private final Optional<String> productName;
 
-  @AddToRuleKey
-  private final SourcePath infoPlist;
+  @AddToRuleKey private final SourcePath infoPlist;
 
-  @AddToRuleKey
-  private final ImmutableMap<String, String> infoPlistSubstitutions;
+  @AddToRuleKey private final ImmutableMap<String, String> infoPlistSubstitutions;
 
-  @AddToRuleKey
-  private final Optional<BuildRule> binary;
+  @AddToRuleKey private final Optional<BuildRule> binary;
 
-  @AddToRuleKey
-  private final Optional<AppleDsym> appleDsym;
+  @AddToRuleKey private final Optional<AppleDsym> appleDsym;
 
-  @AddToRuleKey
-  private final AppleBundleDestinations destinations;
+  @AddToRuleKey private final AppleBundleDestinations destinations;
 
-  @AddToRuleKey
-  private final AppleBundleResources resources;
+  @AddToRuleKey private final AppleBundleResources resources;
 
-  @AddToRuleKey
-  private final Set<SourcePath> frameworks;
+  @AddToRuleKey private final Set<SourcePath> frameworks;
 
-  @AddToRuleKey
-  private final Tool ibtool;
+  @AddToRuleKey private final Tool ibtool;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<BuildTarget> tests;
+  @AddToRuleKey private final ImmutableSortedSet<BuildTarget> tests;
 
-  @AddToRuleKey
-  private final ApplePlatform platform;
+  @AddToRuleKey private final ApplePlatform platform;
 
-  @AddToRuleKey
-  private final String sdkName;
+  @AddToRuleKey private final String sdkName;
 
-  @AddToRuleKey
-  private final String sdkVersion;
+  @AddToRuleKey private final String sdkVersion;
 
-  @AddToRuleKey
-  private final ProvisioningProfileStore provisioningProfileStore;
+  @AddToRuleKey private final ProvisioningProfileStore provisioningProfileStore;
 
-  @AddToRuleKey
-  private final CodeSignIdentityStore codeSignIdentityStore;
+  @AddToRuleKey private final CodeSignIdentityStore codeSignIdentityStore;
 
-  @AddToRuleKey
-  private final Optional<Tool> codesignAllocatePath;
+  @AddToRuleKey private final Optional<Tool> codesignAllocatePath;
 
-  @AddToRuleKey
-  private final Tool codesign;
+  @AddToRuleKey private final Tool codesign;
 
-  @AddToRuleKey
-  private final Optional<Tool> swiftStdlibTool;
+  @AddToRuleKey private final Optional<Tool> swiftStdlibTool;
 
-  @AddToRuleKey
-  private final boolean dryRunCodeSigning;
+  @AddToRuleKey private final boolean dryRunCodeSigning;
 
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
-  @AddToRuleKey
-  private final ImmutableMap<SourcePath, String> extensionBundlePaths;
+  @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
@@ -178,7 +155,6 @@ public class AppleBundle
 
   private final boolean hasBinary;
   private final boolean cacheable;
-
 
   AppleBundle(
       BuildRuleParams params,
@@ -203,9 +179,8 @@ public class AppleBundle
       boolean dryRunCodeSigning,
       boolean cacheable) {
     super(params);
-    this.extension = extension.isLeft() ?
-        extension.getLeft().toFileExtension() :
-        extension.getRight();
+    this.extension =
+        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     this.productName = productName;
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
@@ -222,8 +197,7 @@ public class AppleBundle
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
-    this.binaryPath = this.destinations.getExecutablesPath()
-        .resolve(this.binaryName);
+    this.binaryPath = this.destinations.getExecutablesPath().resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platform = sdk.getApplePlatform();
@@ -244,15 +218,14 @@ public class AppleBundle
       this.provisioningProfileStore = provisioningProfileStore;
       this.codeSignIdentityStore = codeSignIdentityStore;
     } else {
-      this.provisioningProfileStore = ProvisioningProfileStore.fromProvisioningProfiles(
-          ImmutableList.of());
-      this.codeSignIdentityStore =
-          CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+      this.provisioningProfileStore =
+          ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of());
+      this.codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
-    this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
-        .map(SwiftPlatform::getSwiftStdlibTool);
+    this.swiftStdlibTool =
+        appleCxxPlatform.getSwiftPlatform().map(SwiftPlatform::getSwiftStdlibTool);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -264,12 +237,8 @@ public class AppleBundle
   }
 
   public static Path getBundleRoot(
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      String binaryName,
-      String extension) {
-    return BuildTargets
-        .getGenPath(filesystem, buildTarget, "%s")
+      ProjectFilesystem filesystem, BuildTarget buildTarget, String binaryName, String extension) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "%s")
         .resolve(binaryName + "." + extension);
   }
 
@@ -303,16 +272,18 @@ public class AppleBundle
   }
 
   public boolean isLegacyWatchApp() {
-    return extension.equals(AppleBundleExtension.APP.toFileExtension()) &&
-        binary.isPresent() &&
-        binary.get().getBuildTarget().getFlavors()
+    return extension.equals(AppleBundleExtension.APP.toFileExtension())
+        && binary.isPresent()
+        && binary
+            .get()
+            .getBuildTarget()
+            .getFlavors()
             .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
     stepsBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), bundleRoot));
@@ -334,8 +305,9 @@ public class AppleBundle
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getRelativePath(
-                  coreDataModel.get().getSourcePathToOutput()),
+              context
+                  .getSourcePathResolver()
+                  .getRelativePath(coreDataModel.get().getSourcePathToOutput()),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -345,8 +317,9 @@ public class AppleBundle
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getRelativePath(
-                  sceneKitAssets.get().getSourcePathToOutput()),
+              context
+                  .getSourcePathResolver()
+                  .getRelativePath(sceneKitAssets.get().getSourcePathToOutput()),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -376,15 +349,13 @@ public class AppleBundle
                     infoPlistSubstitutions,
                     ImmutableMap.of(
                         "EXECUTABLE_NAME", binaryName,
-                        "PRODUCT_NAME", binaryName
-                    ))
-            )),
+                        "PRODUCT_NAME", binaryName)))),
         new PlistProcessStep(
             getProjectFilesystem(),
             infoPlistSubstitutionTempPath,
-            assetCatalog.isPresent() ?
-                Optional.of(assetCatalog.get().getOutputPlist()) :
-                Optional.empty(),
+            assetCatalog.isPresent()
+                ? Optional.of(assetCatalog.get().getOutputPlist())
+                : Optional.empty(),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),
@@ -395,12 +366,11 @@ public class AppleBundle
       appendCopyDsymStep(stepsBuilder, buildableContext, context.getSourcePathResolver());
     }
 
-    if (
-        !Iterables.isEmpty(
-            Iterables.concat(
-                resources.getResourceDirs(),
-                resources.getDirsContainingResourceDirs(),
-                resources.getResourceFiles()))) {
+    if (!Iterables.isEmpty(
+        Iterables.concat(
+            resources.getResourceDirs(),
+            resources.getDirsContainingResourceDirs(),
+            resources.getResourceFiles()))) {
       stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
       for (SourcePath dir : resources.getResourceDirs()) {
         stepsBuilder.add(
@@ -437,8 +407,8 @@ public class AppleBundle
       Path variantDirectory = variantFilePath.getParent();
       if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
         throw new HumanReadableException(
-            "Variant files have to be in a directory with name ending in '.lproj', " +
-                "but '%s' is not.",
+            "Variant files have to be in a directory with name ending in '.lproj', "
+                + "but '%s' is not.",
             variantFilePath);
       }
 
@@ -476,8 +446,8 @@ public class AppleBundle
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
         Optional<Path> entitlementsPlist = Optional.empty();
-        final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
-            getBuildTarget().getBasePath());
+        final Path srcRoot =
+            getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
         Optional<String> entitlementsPlistString =
             InfoPlistSubstitution.getVariableExpansionForPlatform(
                 CODE_SIGN_ENTITLEMENTS,
@@ -486,31 +456,31 @@ public class AppleBundle
                     infoPlistSubstitutions,
                     ImmutableMap.of(
                         "SOURCE_ROOT", srcRoot.toString(),
-                        "SRCROOT", srcRoot.toString()
-                    )));
-        entitlementsPlist = entitlementsPlistString
-            .map(entitlementsPlistName -> {
-              ProjectFilesystem filesystem = getProjectFilesystem();
-              Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
-              Path entitlementsPlistWithSubstitutions =
-                  BuildTargets.getScratchPath(
-                      filesystem,
-                      getBuildTarget(),
-                      "%s-Entitlements.plist");
+                        "SRCROOT", srcRoot.toString())));
+        entitlementsPlist =
+            entitlementsPlistString.map(
+                entitlementsPlistName -> {
+                  ProjectFilesystem filesystem = getProjectFilesystem();
+                  Path originalEntitlementsPlist =
+                      srcRoot.resolve(Paths.get(entitlementsPlistName));
+                  Path entitlementsPlistWithSubstitutions =
+                      BuildTargets.getScratchPath(
+                          filesystem, getBuildTarget(), "%s-Entitlements.plist");
 
-              stepsBuilder.add(
-                  new FindAndReplaceStep(
-                      filesystem,
-                      originalEntitlementsPlist,
-                      entitlementsPlistWithSubstitutions,
-                      InfoPlistSubstitution.createVariableExpansionFunction(
-                          infoPlistSubstitutions)));
+                  stepsBuilder.add(
+                      new FindAndReplaceStep(
+                          filesystem,
+                          originalEntitlementsPlist,
+                          entitlementsPlistWithSubstitutions,
+                          InfoPlistSubstitution.createVariableExpansionFunction(
+                              infoPlistSubstitutions)));
 
-              return filesystem.resolve(entitlementsPlistWithSubstitutions);
-            });
+                  return filesystem.resolve(entitlementsPlistWithSubstitutions);
+                });
 
-        signingEntitlementsTempPath = Optional.of(
-            BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
+        signingEntitlementsTempPath =
+            Optional.of(
+                BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
 
         final Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
 
@@ -519,66 +489,63 @@ public class AppleBundle
                 getProjectFilesystem(),
                 infoPlistOutputPath,
                 platform,
-                Optional.empty(),  // Provisioning profile UUID -- find automatically.
+                Optional.empty(), // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
                 provisioningProfileStore,
                 resourcesDestinationPath.resolve("embedded.mobileprovision"),
-                dryRunCodeSigning ?
-                    bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE) :
-                    signingEntitlementsTempPath.get(),
+                dryRunCodeSigning
+                    ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
+                    : signingEntitlementsTempPath.get(),
                 codeSignIdentityStore,
-                dryRunCodeSigning ?
-                    Optional.of(dryRunResultPath) :
-                    Optional.empty());
+                dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty());
         stepsBuilder.add(provisioningProfileCopyStep);
 
-        codeSignIdentitySupplier = () -> {
-          // Using getUnchecked here because the previous step should already throw if exception
-          // occurred, and this supplier would never be evaluated.
-          Optional<ProvisioningProfileMetadata> selectedProfile = Futures.getUnchecked(
-              provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+        codeSignIdentitySupplier =
+            () -> {
+              // Using getUnchecked here because the previous step should already throw if exception
+              // occurred, and this supplier would never be evaluated.
+              Optional<ProvisioningProfileMetadata> selectedProfile =
+                  Futures.getUnchecked(
+                      provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
 
-          if (!selectedProfile.isPresent()) {
-            // This should only happen in dry-run codesign mode (since otherwise an exception
-            // would have been thrown already.)  Still, we need to return *something*.
-            Preconditions.checkState(dryRunCodeSigning);
-            return CodeSignIdentity.AD_HOC;
-          }
+              if (!selectedProfile.isPresent()) {
+                // This should only happen in dry-run codesign mode (since otherwise an exception
+                // would have been thrown already.)  Still, we need to return *something*.
+                Preconditions.checkState(dryRunCodeSigning);
+                return CodeSignIdentity.AD_HOC;
+              }
 
-          ImmutableSet<HashCode> fingerprints =
-              selectedProfile.get().getDeveloperCertificateFingerprints();
-          if (fingerprints.isEmpty()) {
-            // No constraints, pick an arbitrary identity.
-            // If no identities are available, use an ad-hoc identity.
-            return Iterables.getFirst(
-                codeSignIdentityStore.getIdentities(),
-                CodeSignIdentity.AD_HOC);
-          }
-          for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
-            if (identity.getFingerprint().isPresent() &&
-                fingerprints.contains(identity.getFingerprint().get())) {
-              return identity;
-            }
-          }
+              ImmutableSet<HashCode> fingerprints =
+                  selectedProfile.get().getDeveloperCertificateFingerprints();
+              if (fingerprints.isEmpty()) {
+                // No constraints, pick an arbitrary identity.
+                // If no identities are available, use an ad-hoc identity.
+                return Iterables.getFirst(
+                    codeSignIdentityStore.getIdentities(), CodeSignIdentity.AD_HOC);
+              }
+              for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+                if (identity.getFingerprint().isPresent()
+                    && fingerprints.contains(identity.getFingerprint().get())) {
+                  return identity;
+                }
+              }
 
-          throw new HumanReadableException(
-              "No code sign identity available for provisioning profile: %s\n" +
-                  "Profile requires an identity with one of the following SHA1 fingerprints " +
-                  "available in your keychain: \n  %s",
-              selectedProfile.get().getProfilePath(),
-              Joiner.on("\n  ").join(fingerprints));
-        };
+              throw new HumanReadableException(
+                  "No code sign identity available for provisioning profile: %s\n"
+                      + "Profile requires an identity with one of the following SHA1 fingerprints "
+                      + "available in your keychain: \n  %s",
+                  selectedProfile.get().getProfilePath(), Joiner.on("\n  ").join(fingerprints));
+            };
       }
 
       addSwiftStdlibStepIfNeeded(
-        context.getSourcePathResolver(),
-        bundleRoot.resolve(Paths.get("Frameworks")),
-        dryRunCodeSigning ?
-            Optional.<Supplier<CodeSignIdentity>>empty() :
-            Optional.of(codeSignIdentitySupplier),
-        stepsBuilder,
-        false /* is for packaging? */
-      );
+          context.getSourcePathResolver(),
+          bundleRoot.resolve(Paths.get("Frameworks")),
+          dryRunCodeSigning
+              ? Optional.<Supplier<CodeSignIdentity>>empty()
+              : Optional.of(codeSignIdentitySupplier),
+          stepsBuilder,
+          false /* is for packaging? */);
 
       for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
         stepsBuilder.add(
@@ -590,9 +557,9 @@ public class AppleBundle
                 codeSignIdentitySupplier,
                 codesign,
                 codesignAllocatePath,
-                dryRunCodeSigning ?
-                    Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
-                    Optional.empty()));
+                dryRunCodeSigning
+                    ? Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
+                    : Optional.empty()));
       }
 
       stepsBuilder.add(
@@ -604,17 +571,16 @@ public class AppleBundle
               codeSignIdentitySupplier,
               codesign,
               codesignAllocatePath,
-              dryRunCodeSigning ?
-                  Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
-                  Optional.empty()));
+              dryRunCodeSigning
+                  ? Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
+                  : Optional.empty()));
     } else {
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(Paths.get("Frameworks")),
           Optional.<Supplier<CodeSignIdentity>>empty(),
           stepsBuilder,
-          false /* is for packaging? */
-      );
+          false /* is for packaging? */);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -625,45 +591,34 @@ public class AppleBundle
   }
 
   private void appendCopyBinarySteps(
-      ImmutableList.Builder<Step> stepsBuilder,
-      SourcePathResolver pathResolver) {
+      ImmutableList.Builder<Step> stepsBuilder, SourcePathResolver pathResolver) {
     Preconditions.checkArgument(hasBinary);
 
-    final Path binaryOutputPath = pathResolver.getRelativePath(
-        Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
+    final Path binaryOutputPath =
+        pathResolver.getRelativePath(
+            Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
     copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
     copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
   }
 
   private void copyBinaryIntoBundle(
-      ImmutableList.Builder<Step> stepsBuilder,
-      Path binaryOutputPath) {
+      ImmutableList.Builder<Step> stepsBuilder, Path binaryOutputPath) {
     stepsBuilder.add(
         MkdirStep.of(
-            getProjectFilesystem(),
-            bundleRoot.resolve(this.destinations.getExecutablesPath())));
-    stepsBuilder.add(
-        CopyStep.forFile(
-            getProjectFilesystem(),
-            binaryOutputPath,
-            bundleBinaryPath));
+            getProjectFilesystem(), bundleRoot.resolve(this.destinations.getExecutablesPath())));
+    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), binaryOutputPath, bundleBinaryPath));
   }
 
   private void copyAnotherCopyOfWatchKitStub(
-      ImmutableList.Builder<Step> stepsBuilder,
-      Path binaryOutputPath) {
-    if ((isLegacyWatchApp() ||
-        (platform.getName().contains("watch") &&
-            minOSVersion.equals("2.0"))) &&
-        binary.get() instanceof WriteFile) {
+      ImmutableList.Builder<Step> stepsBuilder, Path binaryOutputPath) {
+    if ((isLegacyWatchApp() || (platform.getName().contains("watch") && minOSVersion.equals("2.0")))
+        && binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
           MkdirStep.of(getProjectFilesystem(), watchKitStubDir),
           CopyStep.forFile(
-              getProjectFilesystem(),
-              binaryOutputPath,
-              watchKitStubDir.resolve("WK")));
+              getProjectFilesystem(), binaryOutputPath, watchKitStubDir.resolve("WK")));
     }
   }
 
@@ -691,8 +646,10 @@ public class AppleBundle
     // rename dSYM bundle to match bundle name
     Path dsymPath = pathResolver.getRelativePath(appleDsym.get().getSourcePathToOutput());
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
-    Path dsymDestinationPath = bundleRoot.getParent().resolve(
-        bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
+    Path dsymDestinationPath =
+        bundleRoot
+            .getParent()
+            .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
     stepsBuilder.add(RmStep.of(getProjectFilesystem(), dsymDestinationPath).withRecursive(true));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
@@ -718,11 +675,11 @@ public class AppleBundle
       Path destPath = bundleRoot.resolve(entry.getValue());
       stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), destPath));
       stepsBuilder.add(
-        CopyStep.forDirectory(
-            getProjectFilesystem(),
-            srcPath,
-            destPath,
-            CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              srcPath,
+              destPath,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       if (srcPath.toString().endsWith("." + FRAMEWORK_EXTENSION)) {
         codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
       }
@@ -730,10 +687,9 @@ public class AppleBundle
   }
 
   public static ImmutableMap<String, String> withDefaults(
-      ImmutableMap<String, String> map,
-      ImmutableMap<String, String> defaults) {
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
-        .putAll(map);
+      ImmutableMap<String, String> map, ImmutableMap<String, String> defaults) {
+    ImmutableMap.Builder<String, String> builder =
+        ImmutableMap.<String, String>builder().putAll(map);
     for (ImmutableMap.Entry<String, String> entry : defaults.entrySet()) {
       if (!map.containsKey(entry.getKey())) {
         builder = builder.put(entry.getKey(), entry.getValue());
@@ -815,15 +771,11 @@ public class AppleBundle
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
-              BuildTargets.getScratchPath(
-                  getProjectFilesystem(),
-                  getBuildTarget(),
-                  tempDirPattern),
+              BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), tempDirPattern),
               this.sdkPath,
               destinationPath,
               swiftStdlibCommand.build(),
-              codeSignIdentitySupplier)
-      );
+              codeSignIdentitySupplier));
     }
   }
 
@@ -833,9 +785,8 @@ public class AppleBundle
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder) {
     if (platform.getName().contains("watch") || isLegacyWatchApp()) {
-      LOG.debug("Compiling storyboard %s to storyboardc %s and linking",
-          sourcePath,
-          destinationPath);
+      LOG.debug(
+          "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
 
       Path compiledStoryboardPath =
           BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
@@ -863,8 +814,7 @@ public class AppleBundle
       String compiledStoryboardFilename =
           Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
 
-      Path compiledStoryboardPath =
-          destinationPath.getParent().resolve(compiledStoryboardFilename);
+      Path compiledStoryboardPath = destinationPath.getParent().resolve(compiledStoryboardFilename);
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),
@@ -881,8 +831,8 @@ public class AppleBundle
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder) {
-    String sourcePathExtension = Files.getFileExtension(sourcePath.toString())
-        .toLowerCase(Locale.US);
+    String sourcePathExtension =
+        Files.getFileExtension(sourcePath.toString()).toLowerCase(Locale.US);
     switch (sourcePathExtension) {
       case "plist":
       case "stringsdict":
@@ -901,8 +851,8 @@ public class AppleBundle
         addStoryboardProcessingSteps(resolver, sourcePath, destinationPath, stepsBuilder);
         break;
       case "xib":
-        String compiledNibFilename = Files.getNameWithoutExtension(destinationPath.toString()) +
-            ".nib";
+        String compiledNibFilename =
+            Files.getNameWithoutExtension(destinationPath.toString()) + ".nib";
         Path compiledNibPath = destinationPath.getParent().resolve(compiledNibFilename);
         LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
         stepsBuilder.add(
@@ -938,14 +888,12 @@ public class AppleBundle
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     if (binary.isPresent()) {
       BuildRule binaryRule = binary.get();
       if (binaryRule instanceof NativeTestable) {
-        return ((NativeTestable) binaryRule).getCxxPreprocessorInput(
-            cxxPlatform,
-            headerVisibility);
+        return ((NativeTestable) binaryRule).getCxxPreprocessorInput(cxxPlatform, headerVisibility);
       }
     }
     return CxxPreprocessorInput.EMPTY;
@@ -957,8 +905,9 @@ public class AppleBundle
 
   // .framework bundles will be code-signed when they're copied into the containing bundle.
   private boolean needCodeSign() {
-    return binary.isPresent() && ApplePlatform.needsCodeSign(platform.getName()) &&
-        !extension.equals(FRAMEWORK_EXTENSION);
+    return binary.isPresent()
+        && ApplePlatform.needsCodeSign(platform.getName())
+        && !extension.equals(FRAMEWORK_EXTENSION);
   }
 
   @Override
@@ -988,9 +937,7 @@ public class AppleBundle
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(
-            SourcePathArg.of(
-                new PathSourcePath(getProjectFilesystem(), bundleBinaryPath)))
+        .addArg(SourcePathArg.of(new PathSourcePath(getProjectFilesystem(), bundleBinaryPath)))
         .build();
   }
 }

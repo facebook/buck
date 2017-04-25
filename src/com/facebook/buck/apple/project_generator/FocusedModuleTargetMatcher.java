@@ -19,9 +19,7 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.function.Function;
-
 import javax.annotation.Nullable;
 
 public final class FocusedModuleTargetMatcher {
@@ -33,23 +31,17 @@ public final class FocusedModuleTargetMatcher {
     this.focusedTargets = focusedTargets;
   }
 
-  /**
-   * Returns a matcher that matches everything, i.e. no focus.
-   */
+  /** Returns a matcher that matches everything, i.e. no focus. */
   public static FocusedModuleTargetMatcher noFocus() {
     return NO_FOCUS;
   }
 
-  /**
-   * Returns a matcher that specifies a set of targets to focus on.
-   */
+  /** Returns a matcher that specifies a set of targets to focus on. */
   public static FocusedModuleTargetMatcher focusedOn(ImmutableSet<UnflavoredBuildTarget> targets) {
     return new FocusedModuleTargetMatcher(targets);
   }
 
-  /**
-   * Returns whether any focus is set.
-   */
+  /** Returns whether any focus is set. */
   public boolean hasFocus() {
     return focusedTargets != null;
   }
@@ -57,7 +49,7 @@ public final class FocusedModuleTargetMatcher {
   /**
    * Test whether target matches any focused targets.
    *
-   * If there is no focus, always return true.
+   * <p>If there is no focus, always return true.
    */
   public boolean isFocusedOn(BuildTarget buildTarget) {
     if (focusedTargets != null) {

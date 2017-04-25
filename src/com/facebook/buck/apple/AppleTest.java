@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,48 +66,37 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AppleTest
-    extends AbstractBuildRule
+public class AppleTest extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
-  @AddToRuleKey
-  private final Optional<SourcePath> xctool;
+  @AddToRuleKey private final Optional<SourcePath> xctool;
 
-  @AddToRuleKey
-  private Optional<Long> xctoolStutterTimeout;
+  @AddToRuleKey private Optional<Long> xctoolStutterTimeout;
 
-  @AddToRuleKey
-  private final Tool xctest;
+  @AddToRuleKey private final Tool xctest;
 
-  @AddToRuleKey
-  private final boolean useXctest;
+  @AddToRuleKey private final boolean useXctest;
 
-  @AddToRuleKey
-  private final String platformName;
+  @AddToRuleKey private final String platformName;
 
   private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
-  @AddToRuleKey
-  private final AppleBundle testBundle;
+  @AddToRuleKey private final AppleBundle testBundle;
 
-  @AddToRuleKey
-  private final Optional<AppleBundle> testHostApp;
+  @AddToRuleKey private final Optional<AppleBundle> testHostApp;
 
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<String> labels;
 
-  @AddToRuleKey
-  private final boolean runTestSeparately;
+  @AddToRuleKey private final boolean runTestSeparately;
 
-  @AddToRuleKey
-  private final boolean isUiTest;
+  @AddToRuleKey private final boolean isUiTest;
 
   private final Path testOutputPath;
   private final Path testLogsPath;
 
-  @AddToRuleKey
-  private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+  @AddToRuleKey private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
   private final SourcePathRuleFinder ruleFinder;
@@ -123,25 +111,24 @@ public class AppleTest
   /**
    * Absolute path to xcode developer dir.
    *
-   * Should not be added to rule key.
+   * <p>Should not be added to rule key.
    */
   private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
 
   private static class AppleTestXctoolStdoutReader
-    implements XctoolRunTestsStep.StdoutReadingCallback {
+      implements XctoolRunTestsStep.StdoutReadingCallback {
 
     private final TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler;
 
     public AppleTestXctoolStdoutReader(TestRule.TestReportingCallback testReportingCallback) {
-      this.xctoolEventHandler = new TestCaseSummariesBuildingXctoolEventHandler(
-          testReportingCallback);
+      this.xctoolEventHandler =
+          new TestCaseSummariesBuildingXctoolEventHandler(testReportingCallback);
     }
 
     @Override
     public void readStdout(InputStream stdout) throws IOException {
-      try (InputStreamReader stdoutReader =
-               new InputStreamReader(stdout, StandardCharsets.UTF_8);
-           BufferedReader bufferedReader = new BufferedReader(stdoutReader)) {
+      try (InputStreamReader stdoutReader = new InputStreamReader(stdout, StandardCharsets.UTF_8);
+          BufferedReader bufferedReader = new BufferedReader(stdoutReader)) {
         XctoolOutputParsing.streamOutputFromReader(bufferedReader, xctoolEventHandler);
       }
     }
@@ -152,22 +139,20 @@ public class AppleTest
   }
 
   private static class AppleTestXctestOutputReader
-    implements XctestRunTestsStep.OutputReadingCallback {
+      implements XctestRunTestsStep.OutputReadingCallback {
 
     private final TestCaseSummariesBuildingXctestEventHandler xctestEventHandler;
 
     public AppleTestXctestOutputReader(TestRule.TestReportingCallback testReportingCallback) {
-      this.xctestEventHandler = new TestCaseSummariesBuildingXctestEventHandler(
-          testReportingCallback);
+      this.xctestEventHandler =
+          new TestCaseSummariesBuildingXctestEventHandler(testReportingCallback);
     }
 
     @Override
     public void readOutput(InputStream output) throws IOException {
-      try (InputStreamReader outputReader =
-               new InputStreamReader(output, StandardCharsets.UTF_8);
-           BufferedReader outputBufferedReader = new BufferedReader(outputReader)) {
-        XctestOutputParsing.streamOutput(
-            outputBufferedReader, xctestEventHandler);
+      try (InputStreamReader outputReader = new InputStreamReader(output, StandardCharsets.UTF_8);
+          BufferedReader outputBufferedReader = new BufferedReader(outputReader)) {
+        XctestOutputParsing.streamOutput(outputBufferedReader, xctestEventHandler);
       }
     }
 
@@ -242,47 +227,47 @@ public class AppleTest
       TestRule.TestReportingCallback testReportingCallback) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    ExternalTestRunnerTestSpec.Builder externalSpec = ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget())
-        .setLabels(getLabels())
-        .setContacts(getContacts());
+    ExternalTestRunnerTestSpec.Builder externalSpec =
+        ExternalTestRunnerTestSpec.builder()
+            .setTarget(getBuildTarget())
+            .setLabels(getLabels())
+            .setContacts(getContacts());
 
-    Path resolvedTestBundleDirectory = pathResolver.getAbsolutePath(
-        Preconditions.checkNotNull(testBundle.getSourcePathToOutput()));
+    Path resolvedTestBundleDirectory =
+        pathResolver.getAbsolutePath(
+            Preconditions.checkNotNull(testBundle.getSourcePathToOutput()));
 
-    Path pathToTestOutput = getProjectFilesystem().resolve(
-        getPathToTestOutputDirectory());
+    Path pathToTestOutput = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
 
     Path resolvedTestLogsPath = getProjectFilesystem().resolve(testLogsPath);
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), resolvedTestLogsPath));
 
-    Path resolvedTestOutputPath = getProjectFilesystem().resolve(
-        testOutputPath);
+    Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
     Optional<Path> testHostAppPath = Optional.empty();
     if (testHostApp.isPresent()) {
-      Path resolvedTestHostAppDirectory = pathResolver.getAbsolutePath(
-          Preconditions.checkNotNull(testHostApp.get().getSourcePathToOutput()));
-      testHostAppPath = Optional.of(
-          resolvedTestHostAppDirectory.resolve(
-              testHostApp.get().getUnzippedOutputFilePathToBinary()));
+      Path resolvedTestHostAppDirectory =
+          pathResolver.getAbsolutePath(
+              Preconditions.checkNotNull(testHostApp.get().getSourcePathToOutput()));
+      testHostAppPath =
+          Optional.of(
+              resolvedTestHostAppDirectory.resolve(
+                  testHostApp.get().getUnzippedOutputFilePathToBinary()));
     }
 
     if (!useXctest) {
       if (!xctool.isPresent()) {
         throw new HumanReadableException(
-            "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip " +
-                "in the [apple] section of .buckconfig to run this test");
+            "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip "
+                + "in the [apple] section of .buckconfig to run this test");
       }
 
       ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
       ImmutableMap.Builder<Path, Path> appTestPathsToHostAppsBuilder = ImmutableMap.builder();
 
       if (testHostAppPath.isPresent()) {
-        appTestPathsToHostAppsBuilder.put(
-            resolvedTestBundleDirectory,
-            testHostAppPath.get());
+        appTestPathsToHostAppsBuilder.put(resolvedTestBundleDirectory, testHostAppPath.get());
       } else {
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
       }
@@ -290,11 +275,13 @@ public class AppleTest
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
       Optional<String> destinationSpecifierArg;
       if (!destinationSpecifier.get().isEmpty()) {
-        destinationSpecifierArg = Optional.of(
-            Joiner.on(',').join(
-                Iterables.transform(
-                    destinationSpecifier.get().entrySet(),
-                    input -> input.getKey() + "=" + input.getValue())));
+        destinationSpecifierArg =
+            Optional.of(
+                Joiner.on(',')
+                    .join(
+                        Iterables.transform(
+                            destinationSpecifier.get().entrySet(),
+                            input -> input.getKey() + "=" + input.getValue())));
       } else {
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
@@ -302,13 +289,17 @@ public class AppleTest
       Optional<String> snapshotReferenceImagesPath = Optional.empty();
       if (this.snapshotReferenceImagesPath.isPresent()) {
         if (this.snapshotReferenceImagesPath.get().isLeft()) {
-          snapshotReferenceImagesPath = Optional.of(
-              pathResolver.getAbsolutePath(
-                  this.snapshotReferenceImagesPath.get().getLeft()).toString());
+          snapshotReferenceImagesPath =
+              Optional.of(
+                  pathResolver
+                      .getAbsolutePath(this.snapshotReferenceImagesPath.get().getLeft())
+                      .toString());
         } else if (this.snapshotReferenceImagesPath.get().isRight()) {
-          snapshotReferenceImagesPath = Optional.of(
-              getProjectFilesystem().getPathForRelativePath(
-                  this.snapshotReferenceImagesPath.get().getRight()).toString());
+          snapshotReferenceImagesPath =
+              Optional.of(
+                  getProjectFilesystem()
+                      .getPathForRelativePath(this.snapshotReferenceImagesPath.get().getRight())
+                      .toString());
         }
       }
 
@@ -380,8 +371,7 @@ public class AppleTest
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      final ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;
       if (xctoolStdoutReader.isPresent()) {
@@ -394,8 +384,8 @@ public class AppleTest
         testCaseSummaries = xctestOutputReader.get().getTestCaseSummaries();
       } else if (isUiTest()) {
         TestCaseSummary noTestsSummary =
-              new TestCaseSummary("XCUITest runs not supported with buck test",
-                                  Collections.emptyList());
+            new TestCaseSummary(
+                "XCUITest runs not supported with buck test", Collections.emptyList());
         testCaseSummaries = Collections.singletonList(noTestsSummary);
       } else {
         Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);
@@ -414,13 +404,13 @@ public class AppleTest
           }
         }
       }
-      TestResults.Builder testResultsBuilder = TestResults.builder()
-          .setBuildTarget(getBuildTarget())
-          .setTestCases(testCaseSummaries)
-          .setContacts(contacts)
-          .setLabels(labels.stream()
-              .map(Object::toString)
-              .collect(MoreCollectors.toImmutableSet()));
+      TestResults.Builder testResultsBuilder =
+          TestResults.builder()
+              .setBuildTarget(getBuildTarget())
+              .setTestCases(testCaseSummaries)
+              .setContacts(contacts)
+              .setLabels(
+                  labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
       if (getProjectFilesystem().isDirectory(testLogsPath)) {
         for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
           testResultsBuilder.addTestLogPaths(testLogPath);
@@ -435,9 +425,7 @@ public class AppleTest
   public Path getPathToTestOutputDirectory() {
     // TODO(beng): Refactor the JavaTest implementation; this is identical.
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__apple_test_%s_output__");
+        getProjectFilesystem(), getBuildTarget(), "__apple_test_%s_output__");
   }
 
   @Override
@@ -451,15 +439,14 @@ public class AppleTest
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
-    return Stream
-        .concat(
-            Stream
-                .concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
-                .map(BuildRule::getBuildTarget),
-            OptionalCompat.asSet(xctool).stream()
-                .map(ruleFinder::filterBuildRuleInputs)
-                .flatMap(ImmutableSet::stream)
-                .map(BuildRule::getBuildTarget));
+    return Stream.concat(
+        Stream.concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
+            .map(BuildRule::getBuildTarget),
+        OptionalCompat.asSet(xctool)
+            .stream()
+            .map(ruleFinder::filterBuildRuleInputs)
+            .flatMap(ImmutableSet::stream)
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override
@@ -473,25 +460,20 @@ public class AppleTest
       TestRunningOptions testRunningOptions,
       SourcePathResolver pathResolver) {
     return getTestCommand(
-        executionContext,
-        testRunningOptions,
-        pathResolver,
-        NOOP_REPORTING_CALLBACK)
+            executionContext, testRunningOptions, pathResolver, NOOP_REPORTING_CALLBACK)
         .getSecond();
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(),
-        testBundle.getSourcePathToOutput());
+        getBuildTarget(), testBundle.getSourcePathToOutput());
   }
 
   public boolean isUiTest() {

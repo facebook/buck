@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -48,17 +47,19 @@ public class AppleDependenciesCache {
   private final LoadingCache<TargetNode<?, ?>, CacheItem> depsCache;
 
   public AppleDependenciesCache(TargetGraph projectGraph) {
-    this.depsCache = CacheBuilder.newBuilder().build(
-        CacheLoader.from(
-            node -> {
-                ImmutableSortedSet.Builder<TargetNode<?, ?>> defaultDepsBuilder =
-                    ImmutableSortedSet.naturalOrder();
-                ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
-                    ImmutableSortedSet.naturalOrder();
-                AppleBuildRules.addDirectAndExportedDeps(
-                    projectGraph, node, defaultDepsBuilder, exportedDepsBuilder);
-                return new CacheItem(defaultDepsBuilder.build(), exportedDepsBuilder.build());
-            }));
+    this.depsCache =
+        CacheBuilder.newBuilder()
+            .build(
+                CacheLoader.from(
+                    node -> {
+                      ImmutableSortedSet.Builder<TargetNode<?, ?>> defaultDepsBuilder =
+                          ImmutableSortedSet.naturalOrder();
+                      ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
+                          ImmutableSortedSet.naturalOrder();
+                      AppleBuildRules.addDirectAndExportedDeps(
+                          projectGraph, node, defaultDepsBuilder, exportedDepsBuilder);
+                      return new CacheItem(defaultDepsBuilder.build(), exportedDepsBuilder.build());
+                    }));
   }
 
   ImmutableSortedSet<TargetNode<?, ?>> getDefaultDeps(TargetNode<?, ?> node) {

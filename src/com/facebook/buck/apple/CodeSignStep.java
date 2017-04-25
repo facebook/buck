@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -78,9 +77,8 @@ class CodeSignStep implements Step {
         filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
         return StepExecutionResult.SUCCESS;
       } catch (IOException e) {
-        context.logError(e,
-            "Failed when trying to write dry run results: %s",
-            getDescription(context));
+        context.logError(
+            e, "Failed when trying to write dry run results: %s", getDescription(context));
         return StepExecutionResult.ERROR;
       }
     }
@@ -93,9 +91,7 @@ class CodeSignStep implements Step {
     }
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.addAll(codesign.getCommandPrefix(resolver));
-    commandBuilder.add(
-        "--force",
-        "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
+    commandBuilder.add("--force", "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
     if (pathToSigningEntitlements.isPresent()) {
       commandBuilder.add("--entitlements", pathToSigningEntitlements.get().toString());
     }
@@ -110,9 +106,10 @@ class CodeSignStep implements Step {
     ProcessExecutor.Result result;
     try {
       ProcessExecutor processExecutor = context.getProcessExecutor();
-      result = processExecutor.launchAndExecute(
-          processExecutorParams,
-          options,
+      result =
+          processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
               /* stdin */ Optional.empty(),
               /* timeOutMs */ Optional.of((long) 120000),
               /* timeOutHandler */ Optional.empty());
@@ -139,13 +136,10 @@ class CodeSignStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("code-sign %s",
-        pathToSign);
+    return String.format("code-sign %s", pathToSign);
   }
 
-  /**
-   * Convert a {@link CodeSignIdentity} into a string argument for the codesign tool.
-   */
+  /** Convert a {@link CodeSignIdentity} into a string argument for the codesign tool. */
   public static String getIdentityArg(CodeSignIdentity identity) {
     if (identity.getFingerprint().isPresent()) {
       return identity.getFingerprint().get().toString().toUpperCase();

@@ -39,7 +39,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -49,9 +48,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
   private final Path temp;
   private final BuildRule bundle;
 
-  public BuiltinApplePackage(
-      BuildRuleParams params,
-      BuildRule bundle) {
+  public BuiltinApplePackage(BuildRuleParams params, BuildRule bundle) {
     super(params);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(markwang): This will be different for Mac apps.
@@ -62,8 +59,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     // Remove the output .ipa file if it exists already
     commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
@@ -75,12 +71,15 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     commands.add(MkdirStep.of(getProjectFilesystem(), payloadDir));
 
     // Recursively copy the .app directory into the Payload folder
-    Path bundleOutputPath = context.getSourcePathResolver().getRelativePath(
-        Preconditions.checkNotNull(bundle.getSourcePathToOutput()));
+    Path bundleOutputPath =
+        context
+            .getSourcePathResolver()
+            .getRelativePath(Preconditions.checkNotNull(bundle.getSourcePathToOutput()));
 
     appendAdditionalAppleWatchSteps(commands);
 
-    commands.add(CopyStep.forDirectory(
+    commands.add(
+        CopyStep.forDirectory(
             getProjectFilesystem(),
             bundleOutputPath,
             payloadDir,
@@ -115,12 +114,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
       Path swiftSupportDir = temp.resolve("SwiftSupport").resolve(appleBundle.getPlatformName());
 
       appleBundle.addSwiftStdlibStepIfNeeded(
-        resolver,
-        swiftSupportDir,
-        Optional.empty(),
-        commands,
-        true /* is for packaging? */
-      );
+          resolver, swiftSupportDir, Optional.empty(), commands, true /* is for packaging? */);
     }
   }
 
@@ -144,23 +138,23 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             commands.add(MkdirStep.of(getProjectFilesystem(), temp.resolve("Symbols")));
             Path watchKitSupportDir = temp.resolve("WatchKitSupport2");
             commands.add(MkdirStep.of(getProjectFilesystem(), watchKitSupportDir));
-            commands.add(new WriteFileStep(
-                getProjectFilesystem(),
-                ByteSource.wrap(((WriteFile) binary).getFileContents()),
-                watchKitSupportDir.resolve("WK"),
-                true /* executable */
-            ));
+            commands.add(
+                new WriteFileStep(
+                    getProjectFilesystem(),
+                    ByteSource.wrap(((WriteFile) binary).getFileContents()),
+                    watchKitSupportDir.resolve("WK"),
+                    true /* executable */));
           } else {
             Optional<WriteFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
             if (legacyWatchStub.isPresent()) {
               Path watchKitSupportDir = temp.resolve("WatchKitSupport");
               commands.add(MkdirStep.of(getProjectFilesystem(), watchKitSupportDir));
-              commands.add(new WriteFileStep(
-                  getProjectFilesystem(),
-                  ByteSource.wrap(legacyWatchStub.get().getFileContents()),
-                  watchKitSupportDir.resolve("WK"),
-                  true /* executable */
-              ));
+              commands.add(
+                  new WriteFileStep(
+                      getProjectFilesystem(),
+                      ByteSource.wrap(legacyWatchStub.get().getFileContents()),
+                      watchKitSupportDir.resolve("WK"),
+                      true /* executable */));
             }
           }
         }
@@ -172,12 +166,14 @@ public class BuiltinApplePackage extends AbstractBuildRule {
    * Get the stub binary rule from a legacy Apple Watch Extension build rule.
    *
    * @return the WatchOS 1 stub binary if appleBundle represents a legacy Watch Extension.
-   * Otherwise, return absent.
+   *     Otherwise, return absent.
    */
   private Optional<WriteFile> getLegacyWatchStubFromDeps(AppleBundle appleBundle) {
     for (BuildRule rule : appleBundle.getBuildDeps()) {
-      if (rule instanceof AppleBundle && rule.getBuildTarget().getFlavors()
-            .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
+      if (rule instanceof AppleBundle
+          && rule.getBuildTarget()
+              .getFlavors()
+              .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
         AppleBundle legacyWatchApp = (AppleBundle) rule;
         if (legacyWatchApp.getBinary().isPresent()) {
           BuildRule legacyWatchStub = legacyWatchApp.getBinary().get();
