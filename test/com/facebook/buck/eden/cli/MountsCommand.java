@@ -21,7 +21,6 @@ import com.facebook.buck.eden.EdenMount;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;

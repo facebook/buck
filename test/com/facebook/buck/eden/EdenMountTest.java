@@ -33,19 +33,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.Test;
-
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.Test;
 
 public class EdenMountTest {
   @Test
   public void getSha1DelegatesToThriftClient() throws EdenError, TException {
-    List<MountInfo> mountInfos = ImmutableList.of(
-        new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""));
+    List<MountInfo> mountInfos =
+        ImmutableList.of(new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""));
     EdenService.Client thriftClient = createMock(EdenService.Client.class);
     expect(thriftClient.listMounts()).andReturn(mountInfos);
 
