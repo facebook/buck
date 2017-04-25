@@ -33,10 +33,8 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.util.Optional;
+import org.junit.Test;
 
 public class SwiftDescriptionsTest {
 
@@ -54,9 +52,9 @@ public class SwiftDescriptionsTest {
 
     FakeSourcePath swiftSrc = new FakeSourcePath("foo/bar.swift");
 
-    args.srcs = ImmutableSortedSet.of(
-        SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")),
-        SourceWithFlags.of(swiftSrc));
+    args.srcs =
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc));
     args.compilerFlags = ImmutableList.of();
     args.supportedPlatformsRegex = Optional.empty();
 
@@ -69,5 +67,4 @@ public class SwiftDescriptionsTest {
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
     assertThat(output.moduleName.get(), equalTo("baz"));
   }
-
 }

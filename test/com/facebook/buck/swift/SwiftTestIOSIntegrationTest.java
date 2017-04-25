@@ -34,28 +34,22 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class SwiftTestIOSIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testAppleTestToWorkWithSwift() throws Exception {
     assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "swift_test",
-        tmp);
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
@@ -65,24 +59,25 @@ public class SwiftTestIOSIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:MixedTest#iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        target.getFullyQualifiedName());
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path binaryOutput = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(
-                    InternalFlavor.of("iphonesimulator-x86_64"),
-                    InternalFlavor.of("apple-test-bundle"),
-                    AppleDebugFormat.DWARF.getFlavor(),
-                    LinkerMapMode.NO_LINKER_MAP.getFlavor(),
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
-            "%s/MixedTest.xctest"))
-        .resolve("MixedTest");
+    Path binaryOutput =
+        workspace
+            .getPath(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    BuildTarget.builder(target)
+                        .addFlavors(
+                            InternalFlavor.of("iphonesimulator-x86_64"),
+                            InternalFlavor.of("apple-test-bundle"),
+                            AppleDebugFormat.DWARF.getFlavor(),
+                            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                        .build(),
+                    "%s/MixedTest.xctest"))
+            .resolve("MixedTest");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(

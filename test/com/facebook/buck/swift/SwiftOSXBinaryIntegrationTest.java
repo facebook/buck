@@ -33,122 +33,93 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SwiftOSXBinaryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
 
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "helloworld",
-        tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        equalTo("Hello, \uD83C\uDF0E!\n"));
+    assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
   }
 
   @Test
   public void changingSourceOfSwiftLibraryDepRelinksBinary() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "helloworld",
-        tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        equalTo("Hello, \uD83C\uDF0E!\n"));
+    assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
 
     workspace.replaceFileContents("main.swift", "Hello", "Goodbye");
 
-    ProjectWorkspace.ProcessResult secondRunResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProjectWorkspace.ProcessResult secondRunResult =
+        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     secondRunResult.assertSuccess();
-    assertThat(
-        secondRunResult.getStdout(),
-        equalTo("Goodbye, \uD83C\uDF0E!\n"));
+    assertThat(secondRunResult.getStdout(), equalTo("Goodbye, \uD83C\uDF0E!\n"));
   }
 
   @Test
   public void objcMixedSwiftRunsAndPrintsMessageOnOSX() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "objc_mix_swift", tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "objc_mix_swift", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("swift", "version", "2.3");
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run", ":DemoMix#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand("run", ":DemoMix#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        equalTo("Hello Swift\n"));
+    assertThat(runResult.getStdout(), equalTo("Hello Swift\n"));
   }
 
   @Test
   public void swiftCallingObjCRunsAndPrintsMessageOnOSX() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_calls_objc", tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_calls_objc", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run", ":SwiftCallsObjC#macosx-x86_64");
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand("run", ":SwiftCallsObjC#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        containsString("Hello ObjC\n"));
+    assertThat(runResult.getStdout(), containsString("Hello ObjC\n"));
   }
 
   @Test
   public void testGeneratedModuleWithUmbrellaHeaderFile() throws IOException, InterruptedException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "modules_import", tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "modules_import", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:one#macosx-x86_64");
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "build",
-        "--config",
-        "swift.version=2.3",
-        target
-            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .getFullyQualifiedName());
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "swift.version=2.3",
+            target
+                .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+                .getFullyQualifiedName());
     runResult.assertSuccess();
 
     Path headerMapSymlinkTreePath =
@@ -166,21 +137,21 @@ public class SwiftOSXBinaryIntegrationTest {
 
   @Test
   public void testGeneratedModuleWithUmbrellaDirectory() throws IOException, InterruptedException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "modules_import", tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "modules_import", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:second-one#macosx-x86_64");
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "build",
-        "--config", "swift.version=2.3",
-        target
-            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .getFullyQualifiedName());
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "swift.version=2.3",
+            target
+                .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+                .getFullyQualifiedName());
     runResult.assertSuccess();
 
     Path headerMapSymlinkTreePath =

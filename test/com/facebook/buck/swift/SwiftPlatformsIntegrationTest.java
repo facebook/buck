@@ -25,19 +25,16 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class SwiftPlatformsIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Tool swiftcTool;
   private Tool swiftStdTool;
@@ -50,10 +47,8 @@ public class SwiftPlatformsIntegrationTest {
 
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
-    SwiftPlatform swiftPlatform = SwiftPlatforms.build(
-        "iphoneos",
-        ImmutableSet.of(),
-        swiftcTool, swiftStdTool);
+    SwiftPlatform swiftPlatform =
+        SwiftPlatforms.build("iphoneos", ImmutableSet.of(), swiftcTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftStdlibTool(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
@@ -63,10 +58,8 @@ public class SwiftPlatformsIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
     Path dir = tmp.newFolder("foo");
-    SwiftPlatform swiftPlatform = SwiftPlatforms.build(
-        "iphoneos",
-        ImmutableSet.of(dir),
-        swiftcTool, swiftStdTool);
+    SwiftPlatform swiftPlatform =
+        SwiftPlatforms.build("iphoneos", ImmutableSet.of(dir), swiftcTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -76,15 +69,16 @@ public class SwiftPlatformsIntegrationTest {
     tmp.newFolder("foo/usr/lib/swift/iphoneos");
     tmp.newFolder("foo2/usr/lib/swift_static/iphoneos");
     tmp.newFolder("foo3/usr/lib/swift_static/iphoneos");
-    SwiftPlatform swiftPlatform = SwiftPlatforms.build(
-        "iphoneos",
-        ImmutableSet.of(
-            tmp.getRoot().resolve("foo"),
-            tmp.getRoot().resolve("foo2"),
-            tmp.getRoot().resolve("foo3")),
-        swiftcTool, swiftStdTool);
+    SwiftPlatform swiftPlatform =
+        SwiftPlatforms.build(
+            "iphoneos",
+            ImmutableSet.of(
+                tmp.getRoot().resolve("foo"),
+                tmp.getRoot().resolve("foo2"),
+                tmp.getRoot().resolve("foo3")),
+            swiftcTool,
+            swiftStdTool);
     assertThat(swiftPlatform.getSwiftRuntimePaths(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }
-
 }

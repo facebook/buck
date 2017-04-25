@@ -32,32 +32,27 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class SwiftIOSBundleIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void simpleApplicationBundle() throws Exception {
     assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "simple_swift_application_bundle",
-        tmp);
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_swift_application_bundle", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -73,27 +68,24 @@ public class SwiftIOSBundleIntegrationTest {
                 .build(),
             "%s"));
 
-    Path appPath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                BuildTarget.builder(target)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .build(),
-                "%s")
-            .resolve(target.getShortName() + ".app"));
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    BuildTarget.builder(target)
+                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                        .build(),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
   }
 
   @Test
   public void swiftWithSwiftDependenciesBuildsSomething() throws Exception {
     assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "swift_on_swift",
-        tmp);
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -106,15 +98,15 @@ public class SwiftIOSBundleIntegrationTest {
     target = workspace.newBuildTarget("//:ios-sos#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path appPath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                BuildTarget.builder(target)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .build(),
-                "%s")
-            .resolve(target.getShortName() + ".app"));
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    BuildTarget.builder(target)
+                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                        .build(),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
   }
 
@@ -123,26 +115,22 @@ public class SwiftIOSBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_on_swift", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    BuildTarget parentDynamicTarget =
+        BuildTargetFactory.newInstance("//:ios-parent-dynamic")
+            .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        parentDynamicTarget.getFullyQualifiedName(),
-        "--config",
-        "cxx.cflags=-g");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", parentDynamicTarget.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            parentDynamicTarget,
-            "%s"));
+    Path binaryOutput =
+        workspace.resolve(BuildTargets.getGenPath(filesystem, parentDynamicTarget, "%s"));
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(
@@ -155,10 +143,11 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
         not(containsString("libdep1.dylib")));
 
-    Path dep1Output = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("iosdep1#iphonesimulator-x86_64,swift-compile")
-        .resolve("libiosdep1.dylib");
+    Path dep1Output =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("iosdep1#iphonesimulator-x86_64,swift-compile")
+            .resolve("libiosdep1.dylib");
     assertThat(Files.notExists(dep1Output), CoreMatchers.is(true));
   }
 
@@ -167,26 +156,22 @@ public class SwiftIOSBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_on_swift", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    BuildTarget parentDynamicTarget =
+        BuildTargetFactory.newInstance("//:ios-parent-dynamic")
+            .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        parentDynamicTarget.getFullyQualifiedName(),
-        "--config",
-        "cxx.cflags=-g");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", parentDynamicTarget.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            parentDynamicTarget,
-            "%s"));
+    Path binaryOutput =
+        workspace.resolve(BuildTargets.getGenPath(filesystem, parentDynamicTarget, "%s"));
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(
@@ -199,23 +184,20 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
         containsString("libiosdep1.dylib"));
 
-    Path parentOutput = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("ios-parent-dynamic#iphonesimulator-x86_64,swift-compile")
-        .resolve("ios_parent_dynamic.swiftmodule");
+    Path parentOutput =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("ios-parent-dynamic#iphonesimulator-x86_64,swift-compile")
+            .resolve("ios_parent_dynamic.swiftmodule");
     assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
 
-    BuildTarget iosdep1Target = BuildTargetFactory.newInstance("//:iosdep1")
-        .withAppendedFlavors(
-            InternalFlavor.of("iphonesimulator-x86_64"));
-    Path iosdep1TargetOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            iosdep1Target,
-            "%s"));
+    BuildTarget iosdep1Target =
+        BuildTargetFactory.newInstance("//:iosdep1")
+            .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    Path iosdep1TargetOutput =
+        workspace.resolve(BuildTargets.getGenPath(filesystem, iosdep1Target, "%s"));
     assertThat(
-        Files.exists(iosdep1TargetOutput.resolve("libiosdep1.dylib")),
-        CoreMatchers.is(true));
+        Files.exists(iosdep1TargetOutput.resolve("libiosdep1.dylib")), CoreMatchers.is(true));
   }
 
   @Test
@@ -223,22 +205,21 @@ public class SwiftIOSBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_on_swift", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        ":dep1-soname#iphonesimulator-x86_64,shared",
-        "--config",
-        "cxx.cflags=-g");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", ":dep1-soname#iphonesimulator-x86_64,shared", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("dep1-soname#iphonesimulator-x86_64")
-        .resolve("custom-soname");
+    Path binaryOutput =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("dep1-soname#iphonesimulator-x86_64")
+            .resolve("custom-soname");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(
@@ -260,8 +241,8 @@ public class SwiftIOSBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_on_swift", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -270,22 +251,22 @@ public class SwiftIOSBundleIntegrationTest {
         "preferred_linkage = 'any', # iosdep1 preferred_linkage anchor",
         "preferred_linkage = 'static'");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build",
-        ":ios-parent-dynamic#iphonesimulator-x86_64",
-        "--config",
-        "cxx.cflags=-g");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", ":ios-parent-dynamic#iphonesimulator-x86_64", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
+    Path binaryOutput =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
-    Path dep1Output = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("iosdep1#iphonesimulator-x86_64")
-        .resolve("libiosdep1.dylib");
+    Path dep1Output =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("iosdep1#iphonesimulator-x86_64")
+            .resolve("libiosdep1.dylib");
     assertThat(Files.exists(dep1Output), CoreMatchers.is(false));
 
     assertThat(
@@ -300,10 +281,9 @@ public class SwiftIOSBundleIntegrationTest {
   @Test
   public void swiftDependsOnObjCRunsAndPrintsMessage() throws Exception {
     assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "swift_on_objc", tmp);
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_objc", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -313,16 +293,15 @@ public class SwiftIOSBundleIntegrationTest {
     target = workspace.newBuildTarget("//:bundle#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path appPath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                BuildTarget.builder(target)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .build(),
-                "%s")
-            .resolve(target.getShortName() + ".app"));
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    BuildTarget.builder(target)
+                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                        .build(),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
   }
-
 }
