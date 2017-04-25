@@ -24,31 +24,24 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MorePathsTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testGetRelativePath() {
     // Path on base directory.
-    assertEquals(
-        Paths.get("file"),
-        MorePaths.getRelativePath(Paths.get("file"), Paths.get("")));
+    assertEquals(Paths.get("file"), MorePaths.getRelativePath(Paths.get("file"), Paths.get("")));
 
     // Path on base directory (using null).
-    assertEquals(
-        Paths.get("file"),
-        MorePaths.getRelativePath(Paths.get("file"), null));
+    assertEquals(Paths.get("file"), MorePaths.getRelativePath(Paths.get("file"), null));
 
     // Path internal to base directory.
     assertEquals(
@@ -64,20 +57,18 @@ public class MorePathsTest {
   @Test
   public void testFilterForSubpaths() {
     Path root = tmp.getRoot();
-    ImmutableSet<Path> paths = RichStream.of(
-        ".buckd",
-        "foo/bar",
-        root.toAbsolutePath() + "/buck-cache",
-        Paths.get("/root/not/in/test").toAbsolutePath().toString())
-        .map(Paths::get)
-        .toImmutableSet();
+    ImmutableSet<Path> paths =
+        RichStream.of(
+                ".buckd",
+                "foo/bar",
+                root.toAbsolutePath() + "/buck-cache",
+                Paths.get("/root/not/in/test").toAbsolutePath().toString())
+            .map(Paths::get)
+            .toImmutableSet();
 
     assertEquals(
         "Set should have been filtered down to paths contained under root.",
-        ImmutableSet.of(
-            Paths.get(".buckd"),
-            Paths.get("foo/bar"),
-            Paths.get("buck-cache")),
+        ImmutableSet.of(Paths.get(".buckd"), Paths.get("foo/bar"), Paths.get("buck-cache")),
         MorePaths.filterForSubpaths(paths, root));
   }
 
@@ -88,23 +79,24 @@ public class MorePathsTest {
 
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
-    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
-        pathToDesiredLinkUnderProjectRoot,
-        pathToExistingFileUnderProjectRoot,
-        projectFilesystem);
+    Path relativePath =
+        MoreProjectFilesystems.createRelativeSymlink(
+            pathToDesiredLinkUnderProjectRoot,
+            pathToExistingFileUnderProjectRoot,
+            projectFilesystem);
     assertEquals("biz.txt", relativePath.toString());
 
-    Path absolutePathToDesiredLinkUnderProjectRoot = projectFilesystem.resolve(
-        pathToDesiredLinkUnderProjectRoot);
+    Path absolutePathToDesiredLinkUnderProjectRoot =
+        projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
     assertEquals(relativePath, targetOfSymbolicLink);
 
-    Path absolutePathToExistingFileUnderProjectRoot = projectFilesystem.resolve(
-        pathToExistingFileUnderProjectRoot);
+    Path absolutePathToExistingFileUnderProjectRoot =
+        projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
     Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
-    String dataReadFromSymlink = new String(Files.readAllBytes(
-        absolutePathToDesiredLinkUnderProjectRoot));
+    String dataReadFromSymlink =
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -116,23 +108,24 @@ public class MorePathsTest {
     tmp.newFolder("alpha", "beta");
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
-    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
-        pathToDesiredLinkUnderProjectRoot,
-        pathToExistingFileUnderProjectRoot,
-        projectFilesystem);
+    Path relativePath =
+        MoreProjectFilesystems.createRelativeSymlink(
+            pathToDesiredLinkUnderProjectRoot,
+            pathToExistingFileUnderProjectRoot,
+            projectFilesystem);
     assertEquals(Paths.get("../../biz.txt").toString(), relativePath.toString());
 
-    Path absolutePathToDesiredLinkUnderProjectRoot = projectFilesystem.resolve(
-        pathToDesiredLinkUnderProjectRoot);
+    Path absolutePathToDesiredLinkUnderProjectRoot =
+        projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
     assertEquals(relativePath, targetOfSymbolicLink);
 
-    Path absolutePathToExistingFileUnderProjectRoot = projectFilesystem.resolve(
-        pathToExistingFileUnderProjectRoot);
+    Path absolutePathToExistingFileUnderProjectRoot =
+        projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
     Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
-    String dataReadFromSymlink = new String(Files.readAllBytes(
-        absolutePathToDesiredLinkUnderProjectRoot));
+    String dataReadFromSymlink =
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -145,23 +138,24 @@ public class MorePathsTest {
     tmp.newFolder("alpha", "beta");
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("foo/bar/baz/biz.txt");
-    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
-        pathToDesiredLinkUnderProjectRoot,
-        pathToExistingFileUnderProjectRoot,
-        projectFilesystem);
+    Path relativePath =
+        MoreProjectFilesystems.createRelativeSymlink(
+            pathToDesiredLinkUnderProjectRoot,
+            pathToExistingFileUnderProjectRoot,
+            projectFilesystem);
     assertEquals(Paths.get("../../foo/bar/baz/biz.txt").toString(), relativePath.toString());
 
-    Path absolutePathToDesiredLinkUnderProjectRoot = projectFilesystem.resolve(
-        pathToDesiredLinkUnderProjectRoot);
+    Path absolutePathToDesiredLinkUnderProjectRoot =
+        projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
     assertEquals(relativePath, targetOfSymbolicLink);
 
-    Path absolutePathToExistingFileUnderProjectRoot = projectFilesystem.resolve(
-        pathToExistingFileUnderProjectRoot);
+    Path absolutePathToExistingFileUnderProjectRoot =
+        projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
     Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
-    String dataReadFromSymlink = new String(Files.readAllBytes(
-        absolutePathToDesiredLinkUnderProjectRoot));
+    String dataReadFromSymlink =
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -174,21 +168,15 @@ public class MorePathsTest {
         MorePaths.expandHomeDir(Paths.get("~/foo")));
 
     assertEquals(
-        "Must expand home dir by itself too.",
-        homeDir,
-        MorePaths.expandHomeDir(Paths.get("~")));
+        "Must expand home dir by itself too.", homeDir, MorePaths.expandHomeDir(Paths.get("~")));
 
     Path relativePath = Paths.get("foo/bar");
     assertEquals(
-        "Must not expand relative paths.",
-        relativePath,
-        MorePaths.expandHomeDir(relativePath));
+        "Must not expand relative paths.", relativePath, MorePaths.expandHomeDir(relativePath));
 
     Path absolutePath = Paths.get("/foo/bar");
     assertEquals(
-        "Must not expand absolute paths.",
-        absolutePath,
-        MorePaths.expandHomeDir(absolutePath));
+        "Must not expand absolute paths.", absolutePath, MorePaths.expandHomeDir(absolutePath));
 
     Path funnyHomePath = Paths.get("~jacko/foo");
     assertEquals(
@@ -263,5 +251,4 @@ public class MorePathsTest {
     // should be the same!  Does not fully "normalize" path.
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
-
 }

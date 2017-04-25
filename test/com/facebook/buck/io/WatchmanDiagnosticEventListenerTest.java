@@ -24,16 +24,14 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class WatchmanDiagnosticEventListenerTest {
 
@@ -58,15 +56,18 @@ public class WatchmanDiagnosticEventListenerTest {
 
     Assert.assertThat(
         snoopingListener.receivedEvents,
-        Matchers.contains(ImmutableList.of(
-            new PredicateMatcher<>(
-                "warning message containing \"a warning\"",
-                (ConsoleEvent event) -> event.getMessage().contains("a warning") &&
-                    event.getLevel() == Level.WARNING),
-            new PredicateMatcher<>(
-                "error message containing \"an error\"",
-                (ConsoleEvent event) -> event.getMessage().contains("an error") &&
-                    event.getLevel() == Level.SEVERE))));
+        Matchers.contains(
+            ImmutableList.of(
+                new PredicateMatcher<>(
+                    "warning message containing \"a warning\"",
+                    (ConsoleEvent event) ->
+                        event.getMessage().contains("a warning")
+                            && event.getLevel() == Level.WARNING),
+                new PredicateMatcher<>(
+                    "error message containing \"an error\"",
+                    (ConsoleEvent event) ->
+                        event.getMessage().contains("an error")
+                            && event.getLevel() == Level.SEVERE))));
   }
 
   @Test
@@ -84,18 +85,17 @@ public class WatchmanDiagnosticEventListenerTest {
 
     Assert.assertThat(
         snoopingListener.receivedEvents,
-        Matchers.contains(ImmutableList.of(
-            new PredicateMatcher<>(
-                "message containing \"a warning\"",
-                (ConsoleEvent event) -> event.getMessage().contains("a warning")),
-            new PredicateMatcher<>(
-                "message containing \"another warning\"",
-                (ConsoleEvent event) -> event.getMessage().contains("another warning")))));
+        Matchers.contains(
+            ImmutableList.of(
+                new PredicateMatcher<>(
+                    "message containing \"a warning\"",
+                    (ConsoleEvent event) -> event.getMessage().contains("a warning")),
+                new PredicateMatcher<>(
+                    "message containing \"another warning\"",
+                    (ConsoleEvent event) -> event.getMessage().contains("another warning")))));
   }
 
-  /**
-   * A listener that receives and records console events.
-   */
+  /** A listener that receives and records console events. */
   private static class SnoopingListener implements BuckEventListener {
     List<ConsoleEvent> receivedEvents = new ArrayList<>();
 
@@ -105,7 +105,6 @@ public class WatchmanDiagnosticEventListenerTest {
     }
 
     @Override
-    public void outputTrace(BuildId buildId) {
-    }
+    public void outputTrace(BuildId buildId) {}
   }
 }

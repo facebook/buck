@@ -18,7 +18,6 @@ package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
