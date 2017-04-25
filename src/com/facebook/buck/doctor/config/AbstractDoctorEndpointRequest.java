@@ -18,10 +18,8 @@ package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -30,30 +28,24 @@ abstract class AbstractDoctorEndpointRequest {
   @Value.Parameter
   abstract Optional<BuildId> getBuildId();
 
-  /**
-   * @return the directory where all logs are under.
-   */
+  /** @return the directory where all logs are under. */
   @Value.Parameter
   abstract String getLogDirPath();
 
   /**
-   * For more information how MachineReadableLog works check
-   * {@link com.facebook.buck.event.listener.MachineReadableLoggerListener}.
+   * For more information how MachineReadableLog works check {@link
+   * com.facebook.buck.event.listener.MachineReadableLoggerListener}.
+   *
    * @return the contents of the machine readable logs. Each line marks a different key to json.
    */
   @Value.Parameter
   abstract Optional<String> getMachineReadableLog();
 
-  /**
-   * @return the contents of the message that rage returned.
-   */
+  /** @return the contents of the message that rage returned. */
   @Value.Parameter
   abstract Optional<String> getRageMessage();
 
-  /**
-   * @return if rage command returned a redirect link this will be saved here.
-   */
+  /** @return if rage command returned a redirect link this will be saved here. */
   @Value.Parameter
   abstract Optional<String> getRageUrl();
-
 }

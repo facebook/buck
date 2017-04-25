@@ -37,14 +37,12 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -57,8 +55,8 @@ public class DoctorReportHelper {
   private static final Logger LOG = Logger.get(DoctorReportHelper.class);
 
   private static final int ARGS_MAX_CHARS = 60;
-  private static final String WARNING_FILE_TEMPLATE = "Command %s does not contain a %s. Some " +
-      "information will not be available";
+  private static final String WARNING_FILE_TEMPLATE =
+      "Command %s does not contain a %s. Some " + "information will not be available";
   private static final String DECODE_FAIL_TEMPLATE = "Decoding remote response failed. Reason: %s";
 
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -69,10 +67,7 @@ public class DoctorReportHelper {
   private DoctorConfig doctorConfig;
 
   public DoctorReportHelper(
-      ProjectFilesystem filesystem,
-      UserInput input,
-      Console console,
-      DoctorConfig doctorConfig) {
+      ProjectFilesystem filesystem, UserInput input, Console console, DoctorConfig doctorConfig) {
     this.filesystem = filesystem;
     this.input = input;
     this.console = console;
@@ -104,15 +99,15 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
-      BuildLogEntry entry,
-      DefectSubmitResult rageResult)
-      throws IOException {
+      BuildLogEntry entry, DefectSubmitResult rageResult) throws IOException {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
-      machineLog = Optional.of(Files.toString(
-          filesystem.resolve(entry.getMachineReadableLogFile().get()).toFile(),
-          Charsets.UTF_8));
+      machineLog =
+          Optional.of(
+              Files.toString(
+                  filesystem.resolve(entry.getMachineReadableLogFile().get()).toFile(),
+                  Charsets.UTF_8));
     } else {
       LOG.warn(String.format(WARNING_FILE_TEMPLATE, entry.toString(), "machine readable log"));
       machineLog = Optional.empty();
@@ -128,10 +123,10 @@ public class DoctorReportHelper {
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
     if (!doctorConfig.getEndpointUrl().isPresent()) {
-      String errorMsg = String.format(
-          "Doctor endpoint URL is not set. Please set [%s] %s on your .buckconfig",
-          DoctorConfig.DOCTOR_SECTION,
-          DoctorConfig.URL_FIELD);
+      String errorMsg =
+          String.format(
+              "Doctor endpoint URL is not set. Please set [%s] %s on your .buckconfig",
+              DoctorConfig.DOCTOR_SECTION, DoctorConfig.URL_FIELD);
       return createErrorDoctorEndpointResponse(errorMsg);
     }
 
@@ -139,15 +134,16 @@ public class DoctorReportHelper {
     try {
       requestJson = ObjectMappers.WRITER.writeValueAsBytes(request);
     } catch (JsonProcessingException e) {
-      return createErrorDoctorEndpointResponse("Failed to encode request to JSON. " +
-          "Reason: " + e.getMessage());
+      return createErrorDoctorEndpointResponse(
+          "Failed to encode request to JSON. " + "Reason: " + e.getMessage());
     }
 
-    OkHttpClient httpClient = new OkHttpClient.Builder()
-        .connectTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-        .readTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-        .writeTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-        .build();
+    OkHttpClient httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
+            .build();
 
     Response httpResponse;
     try {
@@ -164,15 +160,15 @@ public class DoctorReportHelper {
         requestBody = formBody.build();
       }
 
-      Request httpRequest = new Request.Builder()
-          .url(doctorConfig.getEndpointUrl().get())
-          .post(requestBody)
-          .build();
+      Request httpRequest =
+          new Request.Builder().url(doctorConfig.getEndpointUrl().get()).post(requestBody).build();
       httpResponse = httpClient.newCall(httpRequest).execute();
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(
-          "Failed to perform the request to " + doctorConfig.getEndpointUrl().get() +
-              ". Reason: " + e.getMessage());
+          "Failed to perform the request to "
+              + doctorConfig.getEndpointUrl().get()
+              + ". Reason: "
+              + e.getMessage());
     }
 
     try {
@@ -214,33 +210,38 @@ public class DoctorReportHelper {
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
         if (submitResult.getRequestProtocol().equals(RageConfig.RageProtocolVersion.JSON)) {
-          console.getStdOut().printf(
-              "=> Report was uploaded to %s.\n\n",
-              submitResult.getReportSubmitLocation().get());
+          console
+              .getStdOut()
+              .printf(
+                  "=> Report was uploaded to %s.\n\n",
+                  submitResult.getReportSubmitLocation().get());
         } else {
           console.getStdOut().printf("%s", submitResult.getReportSubmitLocation().get());
         }
       }
     } else {
-      console.getStdOut().printf(
-          "=> Report saved at %s\n",
-          submitResult.getReportSubmitLocation().get());
+      console
+          .getStdOut()
+          .printf("=> Report saved at %s\n", submitResult.getReportSubmitLocation().get());
     }
   }
 
   private void prettyPrintSuggestion(DoctorSuggestion suggestion) {
-    console.getStdOut().println(String.format(
-        "- [%s]%s %s",
-        console.getAnsi().isAnsiTerminal()
-            ? suggestion.getStatus().getEmoji() + " "
-            : suggestion.getStatus().getText(),
-        suggestion.getArea().isPresent() ? ("[" + suggestion.getArea().get() + "]") : "",
-        suggestion.getSuggestion()));
+    console
+        .getStdOut()
+        .println(
+            String.format(
+                "- [%s]%s %s",
+                console.getAnsi().isAnsiTerminal()
+                    ? suggestion.getStatus().getEmoji() + " "
+                    : suggestion.getStatus().getText(),
+                suggestion.getArea().isPresent() ? ("[" + suggestion.getArea().get() + "]") : "",
+                suggestion.getSuggestion()));
   }
 
   private String prettyPrintExitCode(OptionalInt exitCode) {
-    String result = "Exit code: " +
-        (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
+    String result =
+        "Exit code: " + (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
     if (exitCode.isPresent() && console.getAnsi().isAnsiTerminal()) {
       if (exitCode.getAsInt() == 0) {
         return console.getAnsi().asGreenText(result);
@@ -261,5 +262,4 @@ public class DoctorReportHelper {
   Console getConsole() {
     return console;
   }
-
 }
