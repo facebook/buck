@@ -27,15 +27,25 @@ def java_immutables_library(name, **kwargs):
 original_java_test = java_test
 def java_test(
     name,
-    deps=[],
     vm_args=[],
     labels=[],
     run_test_separately=False,
+    has_immutable_types=False,
+    # deps, provided_deps and plugins are handled in kwargs so that immutables can be handled there
     **kwargs
     ):
   extra_labels = ['run_as_bundle']
   if run_test_separately:
     extra_labels.append('serialize')
+
+  if has_immutable_types:
+    kwargs = _add_immutables(**kwargs)
+
+  if 'deps' in kwargs:
+    deps = kwargs['deps']
+    del kwargs['deps']
+  else:
+    deps = []
 
   original_java_test(
     name,
@@ -145,12 +155,8 @@ def standard_java_test(
     vm_args = None,
     fork_mode = 'none',
     labels = None,
-    has_immutable_types = False,
     **kwargs
 ):
-    if has_immutable_types:
-        kwargs = _add_immutables(**kwargs)
-
     if vm_args is None:
         vm_args = ['-Xmx256M']
 
