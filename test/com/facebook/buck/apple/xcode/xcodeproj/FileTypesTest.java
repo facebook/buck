@@ -21,9 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
-/**
- * Unit tests for {@link FileTypes}.
- */
+/** Unit tests for {@link FileTypes}. */
 public class FileTypesTest {
 
   @Test
@@ -37,5 +35,4 @@ public class FileTypesTest {
   public void testFileExtensionMapsToIdentifier() {
     assertEquals(FileTypes.FILE_EXTENSION_TO_IDENTIFIER.get("cpp"), "sourcecode.cpp.cpp");
   }
-
 }

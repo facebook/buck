@@ -34,30 +34,27 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class PrebuiltAppleFrameworkIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testPrebuiltAppleFrameworkBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_builds", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_builds", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//prebuilt:BuckTest");
+    BuildTarget target = BuildTargetFactory.newInstance("//prebuilt:BuckTest");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
@@ -68,13 +65,13 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   @Test
   public void testPrebuiltAppleFrameworkLinks() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_links", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//app:TestApp");
+    BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
@@ -82,22 +79,20 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertTrue(Files.exists(testBinaryPath));
 
-    ProcessExecutor.Result otoolResult = workspace.runCommand(
-        "otool", "-L", testBinaryPath.toString());
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-L", testBinaryPath.toString());
     assertEquals(0, otoolResult.getExitCode());
     assertThat(
-        otoolResult.getStdout().orElse(""),
-        containsString("@rpath/BuckTest.framework/BuckTest"));
-    assertThat(
-        otoolResult.getStdout().orElse(""),
-        not(containsString("BuckTest.dylib")));
+        otoolResult.getStdout().orElse(""), containsString("@rpath/BuckTest.framework/BuckTest"));
+    assertThat(otoolResult.getStdout().orElse(""), not(containsString("BuckTest.dylib")));
   }
 
   @Test
   public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_links", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
@@ -107,81 +102,73 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-
-    Path includedFramework = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
-        .resolve("TestAppBundle.app")
-        .resolve("Frameworks")
-        .resolve("BuckTest.framework");
+    Path includedFramework =
+        workspace
+            .getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
+            .resolve("TestAppBundle.app")
+            .resolve("Frameworks")
+            .resolve("BuckTest.framework");
     assertTrue(Files.isDirectory(includedFramework));
   }
-
 
   @Test
   public void testStaticWithDependencies() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_static", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_static", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//app:TestApp#static,macosx-x86_64");
+    BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp#static,macosx-x86_64");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
 
-    ProcessExecutor.Result otoolResult = workspace.runCommand(
-        "otool", "-L", testBinaryPath.toString());
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-L", testBinaryPath.toString());
     assertEquals(0, otoolResult.getExitCode());
-    assertThat(
-        otoolResult.getStdout().orElse(""),
-        containsString("Foundation.framework"));
+    assertThat(otoolResult.getStdout().orElse(""), containsString("Foundation.framework"));
     assertThat(
         otoolResult.getStdout().orElse(""),
         not(containsString("@rpath/BuckTest.framework/BuckTest")));
 
-    ProcessExecutor.Result nmResult = workspace.runCommand(
-        "nm", testBinaryPath.toString());
+    ProcessExecutor.Result nmResult = workspace.runCommand("nm", testBinaryPath.toString());
     assertEquals(0, nmResult.getExitCode());
-    assertThat(
-        nmResult.getStdout().orElse(""),
-        containsString("S _OBJC_CLASS_$_Hello"));
-    assertThat(
-        nmResult.getStdout().orElse(""),
-        not(containsString("U _OBJC_CLASS_$_Hello")));
-    assertThat(
-        nmResult.getStdout().orElse(""),
-        containsString("S _OBJC_CLASS_$_Strings"));
-    assertThat(
-        nmResult.getStdout().orElse(""),
-        not(containsString("U _OBJC_CLASS_$_Strings")));
+    assertThat(nmResult.getStdout().orElse(""), containsString("S _OBJC_CLASS_$_Hello"));
+    assertThat(nmResult.getStdout().orElse(""), not(containsString("U _OBJC_CLASS_$_Hello")));
+    assertThat(nmResult.getStdout().orElse(""), containsString("S _OBJC_CLASS_$_Strings"));
+    assertThat(nmResult.getStdout().orElse(""), not(containsString("U _OBJC_CLASS_$_Strings")));
   }
 
   @Test
   public void headerUsesShouldMapBackToTestApp() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_links", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
     workspace.setUp();
-    workspace.runBuckBuild(
-        "//app:TestApp#iphonesimulator-x86_64",
-        "--config", "cxx.untracked_headers=error")
+    workspace
+        .runBuckBuild(
+            "//app:TestApp#iphonesimulator-x86_64", "--config", "cxx.untracked_headers=error")
         .assertSuccess();
   }
 
   @Test
   public void ruleKeyChangesWhenFrameworkIsModified() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_links", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
     workspace.setUp();
 
     String resultBefore;
     {
-      ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-          "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
+      ProjectWorkspace.ProcessResult result =
+          workspace.runBuckCommand(
+              "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
       resultBefore = result.assertSuccess().getStdout();
     }
 
@@ -189,43 +176,48 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     String resultAfter;
     {
-      ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-          "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
+      ProjectWorkspace.ProcessResult result =
+          workspace.runBuckCommand(
+              "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
       resultAfter = result.assertSuccess().getStdout();
     }
 
     assertNotEquals(
-        "Rule Key before and after header change should be different",
-        resultBefore,
-        resultAfter);
+        "Rule Key before and after header change should be different", resultBefore, resultAfter);
   }
-
 
   @Test
   public void testProjectGeneratorGeneratesWorkingProject() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_apple_framework_links", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
     workspace.setUp();
     workspace.runBuckCommand("project", "//app:workspace").assertSuccess();
 
     {
-      ProcessExecutor.Result result = workspace.runCommand(
-          "xcodebuild",
+      ProcessExecutor.Result result =
+          workspace.runCommand(
+              "xcodebuild",
 
-          // "json" output.
-          "-json",
+              // "json" output.
+              "-json",
 
-          // Make sure the output stays in the temp folder.
-          "-derivedDataPath", "xcode-out/",
+              // Make sure the output stays in the temp folder.
+              "-derivedDataPath",
+              "xcode-out/",
 
-          // Build the project that we just generated
-          "-workspace", "app/TestAppBundle.xcworkspace",
-          "-scheme", "TestAppBundle",
+              // Build the project that we just generated
+              "-workspace",
+              "app/TestAppBundle.xcworkspace",
+              "-scheme",
+              "TestAppBundle",
 
-          // Build for iphonesimulator
-          "-arch", "x86_64",
-          "-sdk", "iphonesimulator");
+              // Build for iphonesimulator
+              "-arch",
+              "x86_64",
+              "-sdk",
+              "iphonesimulator");
       result.getStderr().ifPresent(System.err::print);
       assertEquals("xcodebuild should succeed", 0, result.getExitCode());
     }

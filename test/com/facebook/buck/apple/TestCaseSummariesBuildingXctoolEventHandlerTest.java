@@ -16,37 +16,33 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.hasProperty;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
-
-import org.hamcrest.Matcher;
-
+import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
+import org.hamcrest.Matcher;
 import org.junit.Test;
 
 public class TestCaseSummariesBuildingXctoolEventHandlerTest {
   @Test
   public void noTestCasesAndOcunitFailureReturnsFailedTestResultSummary() throws Exception {
-    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/ocunit-failure.json");
+    Path jsonPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/ocunit-failure.json");
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       TestCaseSummariesBuildingXctoolEventHandler testCaseSummariesBuilder =
           new TestCaseSummariesBuildingXctoolEventHandler(TestRule.NOOP_REPORTING_CALLBACK);
@@ -55,24 +51,20 @@ public class TestCaseSummariesBuildingXctoolEventHandlerTest {
       assertThat(summaries, hasSize(1));
       Matcher<TestResultSummary> summaryMatcher =
           allOf(
-              hasProperty(
-                  "type",
-                  equalTo(ResultType.FAILURE)),
+              hasProperty("type", equalTo(ResultType.FAILURE)),
               hasProperty(
                   "message",
                   containsString(
                       "dyld: app was built for iOS 8.3 which is newer than this simulator 8.1")));
-      assertThat(
-          summaries.get(0).getTestResults(),
-          contains(summaryMatcher));
+      assertThat(summaries.get(0).getTestResults(), contains(summaryMatcher));
     }
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void mixedPassAndFailReturnsMixedResultSummary() throws Exception {
-    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/mixed-pass-and-fail.json");
+    Path jsonPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/mixed-pass-and-fail.json");
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       TestCaseSummariesBuildingXctoolEventHandler testCaseSummariesBuilder =
           new TestCaseSummariesBuildingXctoolEventHandler(TestRule.NOOP_REPORTING_CALLBACK);
@@ -144,9 +136,7 @@ public class TestCaseSummariesBuildingXctoolEventHandlerTest {
               hasProperty("testName", equalTo("-[SomeTests testWillFail]")),
               hasProperty("type", equalTo(ResultType.FAILURE)),
               hasProperty("time", equalTo(0L)),
-              hasProperty(
-                  "message",
-                  containsString("SomeTests.m:40: 'a' should be equal to 'b'")),
+              hasProperty("message", containsString("SomeTests.m:40: 'a' should be equal to 'b'")),
               hasProperty("stacktrace", nullValue(String.class)),
               hasProperty("stdOut", nullValue(String.class)),
               hasProperty("stdErr", nullValue(String.class)));

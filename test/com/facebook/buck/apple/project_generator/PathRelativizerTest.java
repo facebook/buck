@@ -25,30 +25,29 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class PathRelativizerTest {
   private PathRelativizer pathRelativizer;
 
   @Before
   public void setUp() {
-    pathRelativizer = new PathRelativizer(
-        Paths.get("output0/output1"),
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())))::getRelativePath);
+    pathRelativizer =
+        new PathRelativizer(
+            Paths.get("output0/output1"),
+            new SourcePathResolver(
+                    new SourcePathRuleFinder(
+                        new BuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())))
+                ::getRelativePath);
   }
 
   @Test
   public void testOutputPathToBuildTargetPath() {
     assertEquals(
-        Paths.get("../../foo/bar"),
-        pathRelativizer.outputDirToRootRelative(Paths.get("foo/bar")));
+        Paths.get("../../foo/bar"), pathRelativizer.outputDirToRootRelative(Paths.get("foo/bar")));
   }
 
   @Test
@@ -76,14 +75,11 @@ public class PathRelativizerTest {
   @Test
   public void testOutputDirToRootRelativeWorksForCurrentDir() {
     assertEquals(
-        Paths.get("."),
-        pathRelativizer.outputDirToRootRelative(Paths.get("output0/output1")));
+        Paths.get("."), pathRelativizer.outputDirToRootRelative(Paths.get("output0/output1")));
   }
 
   @Test
   public void testOutputDirToRootRelativeWorksForParentDir() {
-    assertEquals(
-        Paths.get(".."),
-        pathRelativizer.outputDirToRootRelative(Paths.get("output0")));
+    assertEquals(Paths.get(".."), pathRelativizer.outputDirToRootRelative(Paths.get("output0")));
   }
 }

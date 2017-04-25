@@ -32,20 +32,17 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 public class WorkspaceGeneratorTest {
   private SettableFakeClock clock;
@@ -61,7 +58,7 @@ public class WorkspaceGeneratorTest {
   }
 
   @Test
-   public void testFlatWorkspaceContainsCorrectFileRefs() throws Exception {
+  public void testFlatWorkspaceContainsCorrectFileRefs() throws Exception {
     generator.addFilePath(Paths.get("./Project.xcodeproj"));
     Path workspacePath = generator.writeWorkspace();
     Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
@@ -70,8 +67,9 @@ public class WorkspaceGeneratorTest {
     DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
     Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
     assertThat(workspace, hasXPath("/Workspace[@version = \"1.0\"]"));
-    assertThat(workspace, hasXPath("/Workspace/FileRef/@location",
-            equalTo("container:Project.xcodeproj")));
+    assertThat(
+        workspace,
+        hasXPath("/Workspace/FileRef/@location", equalTo("container:Project.xcodeproj")));
   }
 
   @Test
@@ -83,15 +81,17 @@ public class WorkspaceGeneratorTest {
     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
     Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
-    assertThat(workspace, hasXPath("/Workspace/Group[@name=\"grandparent\"]/FileRef/@location",
+    assertThat(
+        workspace,
+        hasXPath(
+            "/Workspace/Group[@name=\"grandparent\"]/FileRef/@location",
             equalTo("container:grandparent/parent/Project.xcodeproj")));
   }
 
   @Test
   public void testWorkspaceWithCustomFilePaths() throws Exception {
     generator.addFilePath(
-        Paths.get("grandparent/parent/Project.xcodeproj"),
-        Optional.of(Paths.get("VirtualParent")));
+        Paths.get("grandparent/parent/Project.xcodeproj"), Optional.of(Paths.get("VirtualParent")));
     Path workspacePath = generator.writeWorkspace();
     Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
 
@@ -100,8 +100,9 @@ public class WorkspaceGeneratorTest {
     Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
     assertThat(
         workspace,
-        hasXPath("/Workspace/Group[@name=\"VirtualParent\"]/FileRef/@location",
-        equalTo("container:grandparent/parent/Project.xcodeproj")));
+        hasXPath(
+            "/Workspace/Group[@name=\"VirtualParent\"]/FileRef/@location",
+            equalTo("container:grandparent/parent/Project.xcodeproj")));
   }
 
   @Test
@@ -168,10 +169,8 @@ public class WorkspaceGeneratorTest {
     }
 
     {
-      WorkspaceGenerator generator2 = new WorkspaceGenerator(
-          projectFilesystem,
-          "ws",
-          Paths.get("."));
+      WorkspaceGenerator generator2 =
+          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
       generator2.addFilePath(Paths.get("./Project2.xcodeproj"));
       clock.setCurrentTimeMillis(64738);
       Path workspacePath2 = generator2.writeWorkspace();
@@ -193,10 +192,8 @@ public class WorkspaceGeneratorTest {
     }
 
     {
-      WorkspaceGenerator generator2 = new WorkspaceGenerator(
-          projectFilesystem,
-          "ws",
-          Paths.get("."));
+      WorkspaceGenerator generator2 =
+          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
       generator2.addFilePath(Paths.get("./Project.xcodeproj"));
       clock.setCurrentTimeMillis(64738);
       Path workspacePath2 = generator2.writeWorkspace();
@@ -209,14 +206,14 @@ public class WorkspaceGeneratorTest {
   @Test
   public void workspaceDisablesSchemeAutoCreation() throws Exception {
     Path workspacePath = generator.writeWorkspace();
-    Optional<String> settings = projectFilesystem.readFileIfItExists(
-        workspacePath.resolve(
-            "xcshareddata/WorkspaceSettings.xcsettings"));
+    Optional<String> settings =
+        projectFilesystem.readFileIfItExists(
+            workspacePath.resolve("xcshareddata/WorkspaceSettings.xcsettings"));
     assertThat(settings.isPresent(), equalTo(true));
     NSObject object = PropertyListParser.parse(settings.get().getBytes(Charsets.UTF_8));
     assertThat(object, instanceOf(NSDictionary.class));
-    NSObject autocreate = ((NSDictionary) object).get(
-        "IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
+    NSObject autocreate =
+        ((NSDictionary) object).get("IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
     assertThat(autocreate, instanceOf(NSNumber.class));
     assertThat((NSNumber) autocreate, equalTo(new NSNumber(false)));
   }

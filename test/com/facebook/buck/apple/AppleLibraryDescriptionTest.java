@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -50,19 +49,17 @@ public class AppleLibraryDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
-    BuildTarget sandboxTarget = BuildTargetFactory.newInstance("//:rule")
-        .withFlavors(
-            CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR,
-            DefaultCxxPlatforms.FLAVOR);
+    BuildTarget sandboxTarget =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR, DefaultCxxPlatforms.FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule")
-        .withFlavors(
-            DefaultCxxPlatforms.FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -72,21 +69,15 @@ public class AppleLibraryDescriptionTest {
             .setLinkerFlags(
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
-                        "--linker-script=%s",
-                        LocationMacro.of(dep.getBuildTarget()))))
+                        "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
-    assertThat(
-        builder.build().getExtraDeps(),
-        Matchers.hasItem(dep.getBuildTarget()));
+    assertThat(builder.build().getExtraDeps(), Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(resolver);
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
-    assertThat(
-        binary.getBuildDeps(),
-        Matchers.hasItem(dep));
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
-
 }

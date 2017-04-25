@@ -30,11 +30,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -42,14 +37,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AppleSdkDiscoveryTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private AppleToolchain getDefaultToolchain(Path path) {
     return AppleToolchain.builder()
@@ -61,45 +57,37 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldReturnAnEmptyMapIfNoPlatformsFound() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-empty",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-empty", temp);
     workspace.setUp();
     Path path = workspace.getPath("");
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(path)
-    );
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        Optional.of(path),
-        ImmutableList.of(),
-        toolchains,
-        FakeBuckConfig.builder().build().getView(AppleConfig.class));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(path));
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdks =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(path),
+            ImmutableList.of(),
+            toolchains,
+            FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(0, sdks.size());
   }
 
   @Test
   public void shouldResolveSdkVersionConflicts() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-conflict",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-conflict", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
-    ProjectWorkspace emptyWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-empty",
-        temp);
+    ProjectWorkspace emptyWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-empty", temp);
     emptyWorkspace.setUp();
     Path path = emptyWorkspace.getPath("");
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(path));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(path));
 
     AppleSdk macosxReleaseSdk =
         AppleSdk.builder()
@@ -129,8 +117,8 @@ public class AppleSdkDiscoveryTest {
             .setDeveloperPath(path)
             .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
-            .setSdkPath(root.resolve(
-                "Platforms/MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk"))
+            .setSdkPath(
+                root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk"))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -150,23 +138,18 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldFindPlatformsInExtraPlatformDirectories() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-minimal",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-minimal", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
-    ProjectWorkspace emptyWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-empty",
-        temp);
+    ProjectWorkspace emptyWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-empty", temp);
     emptyWorkspace.setUp();
     Path path = emptyWorkspace.getPath("");
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(path));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(path));
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -201,18 +184,15 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void ignoresInvalidExtraPlatformDirectories() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-minimal",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-minimal", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
     Path path = Paths.get("invalid");
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -247,22 +227,20 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldNotIgnoreSdkWithUnrecognizedPlatform() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-unknown-platform-discovery",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sdk-unknown-platform-discovery", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root)
-    );
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        Optional.of(root),
-        ImmutableList.of(),
-        toolchains,
-        FakeBuckConfig.builder().build().getView(AppleConfig.class));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdks =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(),
+            toolchains,
+            FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(2, sdks.size());
   }
@@ -278,25 +256,22 @@ public class AppleSdkDiscoveryTest {
     Files.createSymbolicLink(symlink, toDelete.toPath());
     assertTrue(toDelete.delete());
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root)
-    );
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        Optional.of(root),
-        ImmutableList.of(),
-        toolchains,
-        FakeBuckConfig.builder().build().getView(AppleConfig.class));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdks =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(),
+            toolchains,
+            FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertEquals(0, sdks.size());
   }
 
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
     createSymLinkIosSdks(root, "8.0");
@@ -383,8 +358,7 @@ public class AppleSdkDiscoveryTest {
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(root.resolve("Platforms/WatchSimulator.platform"))
             .setSdkPath(
-                root.resolve(
-                    "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
+                root.resolve("Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
             .build();
 
     AppleSdk appletvos91Sdk =
@@ -421,9 +395,8 @@ public class AppleSdkDiscoveryTest {
                     "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk"))
             .build();
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
         ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
@@ -454,10 +427,8 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void noAppleSdksFoundIfDefaultPlatformMissing() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
@@ -465,19 +436,18 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            Optional.of(root),
-            ImmutableList.of(),
-            toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)).entrySet(),
+                Optional.of(root),
+                ImmutableList.of(),
+                toolchains,
+                FakeBuckConfig.builder().build().getView(AppleConfig.class))
+            .entrySet(),
         empty());
   }
 
   @Test
   public void multipleAppleSdkPathsPerPlatformBuiltFromDirectory() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-multi-version-discovery",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-multi-version-discovery", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
@@ -579,9 +549,8 @@ public class AppleSdkDiscoveryTest {
             .put(iphonesimulator81Sdk.withName("iphonesimulator"), iphonesimulator81Paths)
             .build();
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
@@ -594,10 +563,8 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldDiscoverRealSdkThroughAbsoluteSymlink() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-symlink",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-symlink", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
@@ -607,9 +574,8 @@ public class AppleSdkDiscoveryTest {
     Files.createDirectories(sdksDir);
     Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -644,10 +610,8 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldScanRealDirectoryOnlyOnce() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-symlink",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-symlink", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
     FileSystem fileSystem = root.getFileSystem();
@@ -661,15 +625,15 @@ public class AppleSdkDiscoveryTest {
     // create absolute symlink
     Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), actualSdkPath);
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
-    ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
-        Optional.of(root),
-        ImmutableList.of(root),
-        toolchains,
-        FakeBuckConfig.builder().build().getView(AppleConfig.class));
+    ImmutableMap<AppleSdk, AppleSdkPaths> actual =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(root),
+            toolchains,
+            FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     // if both symlinks were to be visited, exception would have been thrown during discovery
     assertThat(actual.size(), is(2));
@@ -677,10 +641,8 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldNotCrashOnBrokenSymlink() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-symlink",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-symlink", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
     FileSystem fileSystem = root.getFileSystem();
@@ -689,51 +651,52 @@ public class AppleSdkDiscoveryTest {
     Files.createDirectories(sdksDir);
     Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), fileSystem.getPath("does_not_exist"));
 
-    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root));
+    ImmutableMap<String, AppleToolchain> toolchains =
+        ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
 
-    ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
-        Optional.of(root),
-        ImmutableList.of(root),
-        toolchains,
-        FakeBuckConfig.builder().build().getView(AppleConfig.class));
+    ImmutableMap<AppleSdk, AppleSdkPaths> actual =
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(root),
+            toolchains,
+            FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
     assertThat(actual.size(), is(0));
   }
 
   @Test
   public void overrideToolchains() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-discovery-minimal",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-minimal", temp);
     workspace.setUp();
     Path root = workspace.getPath("");
 
     String toolchainName1 = "toolchainoverride.1";
     String toolchainPath1 = "Toolchains/" + toolchainName1;
-    AppleToolchain overrideToolchain1 = AppleToolchain.builder()
-        .setIdentifier(toolchainName1)
-        .setPath(root.resolve(toolchainPath1))
-        .setVersion("1")
-        .build();
+    AppleToolchain overrideToolchain1 =
+        AppleToolchain.builder()
+            .setIdentifier(toolchainName1)
+            .setPath(root.resolve(toolchainPath1))
+            .setVersion("1")
+            .build();
 
     String toolchainName2 = "toolchainoverride.2";
     String toolchainPath2 = "Toolchains/" + toolchainName2;
-    AppleToolchain overrideToolchain2 = AppleToolchain.builder()
-        .setIdentifier(toolchainName2)
-        .setPath(root.resolve(toolchainPath2))
-        .setVersion("1")
-        .build();
+    AppleToolchain overrideToolchain2 =
+        AppleToolchain.builder()
+            .setIdentifier(toolchainName2)
+            .setPath(root.resolve(toolchainPath2))
+            .setVersion("1")
+            .build();
 
-    ImmutableMap<String, AppleToolchain> allToolchains = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        getDefaultToolchain(root),
-        toolchainName1,
-        overrideToolchain1,
-        toolchainName2,
-        overrideToolchain2);
+    ImmutableMap<String, AppleToolchain> allToolchains =
+        ImmutableMap.of(
+            "com.apple.dt.toolchain.XcodeDefault",
+            getDefaultToolchain(root),
+            toolchainName1,
+            overrideToolchain1,
+            toolchainName2,
+            overrideToolchain2);
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -768,10 +731,7 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            Optional.of(root),
-            ImmutableList.of(root),
-            allToolchains,
-            fakeAppleConfig),
+            Optional.of(root), ImmutableList.of(root), allToolchains, fakeAppleConfig),
         equalTo(expected));
   }
 
@@ -783,14 +743,12 @@ public class AppleSdkDiscoveryTest {
     createSymLinkSdks(ImmutableSet.of("WatchOS", "WatchSimulator"), root, version);
   }
 
-  private void createSymLinkAppletvosSdks(Path root, String version) throws  IOException {
+  private void createSymLinkAppletvosSdks(Path root, String version) throws IOException {
     createSymLinkSdks(ImmutableSet.of("AppleTVOS", "AppleTVSimulator"), root, version);
   }
 
-  private void createSymLinkSdks(
-      Iterable<String> sdks,
-      Path root,
-      String version) throws IOException {
+  private void createSymLinkSdks(Iterable<String> sdks, Path root, String version)
+      throws IOException {
     for (String sdk : sdks) {
       Path sdkDir = root.resolve(String.format("Platforms/%s.platform/Developer/SDKs", sdk));
 

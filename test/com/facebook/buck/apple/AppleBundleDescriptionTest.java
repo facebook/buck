@@ -31,9 +31,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
-
 
 public class AppleBundleDescriptionTest {
 
@@ -47,32 +45,24 @@ public class AppleBundleDescriptionTest {
     BuildTarget unflavoredDepAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64");
 
-    BuildTarget flavoredDep = BuildTargetFactory.newInstance(
-        "//bar:dep2#iphoneos-x86_64,iphoneos-i386");
+    BuildTarget flavoredDep =
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-x86_64,iphoneos-i386");
 
-    BuildTarget flavoredDepNotInDomain =
-        BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
+    BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
     BuildTarget flavoredDepNotInDomainAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep3#iphoneos-x86_64,otherflavor");
 
-    BuildTarget watchDep = BuildTargetFactory.newInstance(
-        "//bar:watch#watch");
-    BuildTarget watchDepAfterPropagation = BuildTargetFactory.newInstance(
-        "//bar:watch#watchos-armv7k");
+    BuildTarget watchDep = BuildTargetFactory.newInstance("//bar:watch#watch");
+    BuildTarget watchDepAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:watch#watchos-armv7k");
 
-    BuildTarget binary =
-        BuildTargetFactory.newInstance("//bar:binary");
+    BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
     AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.binary = binary;
     constructorArg.deps =
-        ImmutableSortedSet.of(
-            binary,
-            unflavoredDep,
-            flavoredDep,
-            flavoredDepNotInDomain,
-            watchDep);
+        ImmutableSortedSet.of(binary, unflavoredDep, flavoredDep, flavoredDepNotInDomain, watchDep);
 
     // Now call the find deps methods and verify it returns the targets with flavors.
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
@@ -102,27 +92,23 @@ public class AppleBundleDescriptionTest {
     BuildTarget unflavoredDepAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64,strip-all,dwarf-and-dsym");
 
-    BuildTarget flavoredDep = BuildTargetFactory.newInstance(
-        "//bar:dep2#iphoneos-i386,strip-debug,dwarf");
+    BuildTarget flavoredDep =
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-i386,strip-debug,dwarf");
 
-    BuildTarget flavoredDepNotInDomain =
-        BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
+    BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
     BuildTarget flavoredDepNotInDomainAfterPropagation =
         BuildTargetFactory.newInstance(
             "//bar:dep3#iphoneos-x86_64,strip-all,dwarf-and-dsym,otherflavor");
 
-    BuildTarget stripFlavorOnly =
-        BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
+    BuildTarget stripFlavorOnly = BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
     BuildTarget stripFlavorOnlyAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep4#iphoneos-x86_64,strip-debug,dwarf-and-dsym");
 
-    BuildTarget debugFlavorOnly =
-        BuildTargetFactory.newInstance("//bar:dep5#dwarf");
+    BuildTarget debugFlavorOnly = BuildTargetFactory.newInstance("//bar:dep5#dwarf");
     BuildTarget debugFlavorOnlyAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep5#iphoneos-x86_64,strip-all,dwarf");
 
-    BuildTarget binary =
-        BuildTargetFactory.newInstance("//bar:binary");
+    BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
     AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
@@ -160,25 +146,23 @@ public class AppleBundleDescriptionTest {
   @Test
   public void metadataTraversalForFrameworkDependenciesAreTerminated() throws Exception {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
-    TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget)
-        .build();
+    TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//:bundle");
-    TargetNode<?, ?> bundleNode = new AppleBundleBuilder(bundleTarget)
-        .setBinary(binaryTarget)
-        .build();
+    TargetNode<?, ?> bundleNode =
+        new AppleBundleBuilder(bundleTarget).setBinary(binaryTarget).build();
 
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
-        TargetGraphFactory.newInstance(
-            bundleNode,
-            binaryNode),
-        new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(bundleNode, binaryNode),
+            new DefaultTargetNodeToBuildRuleTransformer());
     assertTrue(
         "Although querying a binary's framework dependencies should not return empty...",
-        buildRuleResolver.requireMetadata(
-            binaryTarget.withFlavors(
-                FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
-            FrameworkDependencies.class)
+        buildRuleResolver
+            .requireMetadata(
+                binaryTarget.withFlavors(
+                    FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
+                FrameworkDependencies.class)
             .isPresent());
     assertFalse(
         "Querying a bundle's framework dependencies should return empty.",

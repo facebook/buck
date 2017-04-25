@@ -40,12 +40,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -55,6 +49,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.concurrent.Future;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ProvisioningProfileCopyStepTest {
   private Path testdataDir;
@@ -67,11 +65,9 @@ public class ProvisioningProfileCopyStepTest {
   private ExecutionContext executionContext;
   private CodeSignIdentityStore codeSignIdentityStore;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
-  @Rule
-  public final TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
@@ -84,8 +80,7 @@ public class ProvisioningProfileCopyStepTest {
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
               throws IOException {
             projectFilesystem.writeBytesToPath(
-                Files.readAllBytes(file),
-                projectFilesystem.resolve(file));
+                Files.readAllBytes(file), projectFilesystem.resolve(file));
             return FileVisitResult.CONTINUE;
           }
         });
@@ -94,8 +89,7 @@ public class ProvisioningProfileCopyStepTest {
     xcentFile = Paths.get("test.xcent");
     dryRunResultFile = Paths.get("test_dry_run_results.plist");
     executionContext = TestExecutionContext.newInstance();
-    codeSignIdentityStore =
-        CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+    codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
     entitlementsFile = testdataDir.resolve("Entitlements.plist");
   }
 
@@ -105,21 +99,21 @@ public class ProvisioningProfileCopyStepTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(startsWith("Malformed entitlement .plist: "));
 
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.empty(),
-        Optional.of(testdataDir.resolve("Invalid.plist")),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testdataDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.of(testdataDir.resolve("Invalid.plist")),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
 
     step.execute(executionContext);
   }
@@ -130,21 +124,21 @@ public class ProvisioningProfileCopyStepTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(startsWith("Unable to get bundle ID from info.plist"));
 
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Invalid.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.empty(),
-        Optional.empty(),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testdataDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Invalid.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
 
     step.execute(executionContext);
   }
@@ -159,21 +153,21 @@ public class ProvisioningProfileCopyStepTest {
     Path emptyDir =
         TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
 
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.empty(),
-        Optional.empty(),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            emptyDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                emptyDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
 
     step.execute(executionContext);
   }
@@ -184,21 +178,21 @@ public class ProvisioningProfileCopyStepTest {
     Path emptyDir =
         TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
 
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.empty(),
-        Optional.empty(),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            emptyDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.of(dryRunResultFile)
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                emptyDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.of(dryRunResultFile));
 
     Future<Optional<ProvisioningProfileMetadata>> profileFuture =
         step.getSelectedProvisioningProfileFuture();
@@ -209,31 +203,30 @@ public class ProvisioningProfileCopyStepTest {
 
     Optional<String> resultContents = projectFilesystem.readFileIfItExists(dryRunResultFile);
     assertTrue(resultContents.isPresent());
-    NSDictionary resultPlist = (NSDictionary)
-        PropertyListParser.parse(resultContents.get().getBytes(Charsets.UTF_8));
+    NSDictionary resultPlist =
+        (NSDictionary) PropertyListParser.parse(resultContents.get().getBytes(Charsets.UTF_8));
 
     assertEquals(new NSString("com.example.TestApp"), resultPlist.get("bundle-id"));
   }
 
-
   @Test
   public void shouldSetProvisioningProfileFutureWhenStepIsRun() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.empty(),
-        Optional.empty(),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testdataDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
 
     Future<Optional<ProvisioningProfileMetadata>> profileFuture =
         step.getSelectedProvisioningProfileFuture();
@@ -245,72 +238,78 @@ public class ProvisioningProfileCopyStepTest {
   @Test
   public void testNoEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.of("00000000-0000-0000-0000-000000000000"),
-        Optional.empty(),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testdataDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.of("00000000-0000-0000-0000-000000000000"),
+            Optional.empty(),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
     step.execute(executionContext);
 
     ProvisioningProfileMetadata selectedProfile =
         step.getSelectedProvisioningProfileFuture().get().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
-    assertTrue(profileEntitlements.containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
+    assertTrue(
+        profileEntitlements.containsKey(
+            "com.apple.developer.icloud-container-development-container-identifiers"));
 
     Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
     assertTrue(xcentContents.isPresent());
-    NSDictionary xcentPlist = (NSDictionary)
-        PropertyListParser.parse(xcentContents.get().getBytes());
-    assertFalse(xcentPlist.containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
-    assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
+    NSDictionary xcentPlist =
+        (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
+    assertFalse(
+        xcentPlist.containsKey(
+            "com.apple.developer.icloud-container-development-container-identifiers"));
+    assertEquals(
+        xcentPlist.get("com.apple.developer.team-identifier"),
         profileEntitlements.get("com.apple.developer.team-identifier"));
   }
 
   @Test
   public void testEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
-        projectFilesystem,
-        testdataDir.resolve("Info.plist"),
-        ApplePlatform.IPHONEOS,
-        Optional.of("00000000-0000-0000-0000-000000000000"),
-        Optional.of(entitlementsFile),
-        ProvisioningProfileStore.fromSearchPath(
-            new DefaultProcessExecutor(new TestConsole()),
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testdataDir),
-        outputFile,
-        xcentFile,
-        codeSignIdentityStore,
-        Optional.empty()
-    );
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.of("00000000-0000-0000-0000-000000000000"),
+            Optional.of(entitlementsFile),
+            ProvisioningProfileStore.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()),
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentityStore,
+            Optional.empty());
     step.execute(executionContext);
 
     ProvisioningProfileMetadata selectedProfile =
         step.getSelectedProvisioningProfileFuture().get().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
-    assertTrue(profileEntitlements.containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
+    assertTrue(
+        profileEntitlements.containsKey(
+            "com.apple.developer.icloud-container-development-container-identifiers"));
 
     Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
     assertTrue(xcentContents.isPresent());
-    NSDictionary xcentPlist = (NSDictionary)
-        PropertyListParser.parse(xcentContents.get().getBytes());
-    assertFalse(xcentPlist.containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
-    assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
+    NSDictionary xcentPlist =
+        (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
+    assertFalse(
+        xcentPlist.containsKey(
+            "com.apple.developer.icloud-container-development-container-identifiers"));
+    assertEquals(
+        xcentPlist.get("com.apple.developer.team-identifier"),
         profileEntitlements.get("com.apple.developer.team-identifier"));
   }
 }

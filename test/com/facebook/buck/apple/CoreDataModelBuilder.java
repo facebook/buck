@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-
 import java.nio.file.Path;
 
 public class CoreDataModelBuilder
@@ -36,5 +35,4 @@ public class CoreDataModelBuilder
     arg.path = path;
     return this;
   }
-
 }

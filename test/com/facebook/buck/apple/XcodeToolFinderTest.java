@@ -23,23 +23,20 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class XcodeToolFinderTest {
 
-  @Rule
-  public TemporaryPaths tempPath = new TemporaryPaths();
+  @Rule public TemporaryPaths tempPath = new TemporaryPaths();
 
   @Before
   public void setUp() {
@@ -54,9 +51,7 @@ public class XcodeToolFinderTest {
 
     XcodeToolFinder finder = new XcodeToolFinder();
 
-    assertTrue(
-        "Directory should look like something executable.",
-        Files.isExecutable(directory));
+    assertTrue("Directory should look like something executable.", Files.isExecutable(directory));
     assertFalse(
         "But the finder still should not select it.",
         finder.getToolPath(ImmutableList.of(searchRoot), "clang").isPresent());
@@ -70,8 +65,7 @@ public class XcodeToolFinderTest {
 
     XcodeToolFinder finder = new XcodeToolFinder();
     assertFalse("Created file should not be accessible", Files.isExecutable(file));
-    assertFalse(
-        finder.getToolPath(ImmutableList.of(searchRoot), "clang").isPresent());
+    assertFalse(finder.getToolPath(ImmutableList.of(searchRoot), "clang").isPresent());
   }
 
   @Test
@@ -134,7 +128,6 @@ public class XcodeToolFinderTest {
         finder.getToolPath(ImmutableList.of(searchRoot), "bob").isPresent());
     assertTrue(
         "A new instance would find the entries again.",
-        new XcodeToolFinder()
-            .getToolPath(ImmutableList.of(searchRoot), "bob").isPresent());
+        new XcodeToolFinder().getToolPath(ImmutableList.of(searchRoot), "bob").isPresent());
   }
 }

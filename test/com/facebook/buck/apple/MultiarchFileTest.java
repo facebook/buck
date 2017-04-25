@@ -57,43 +57,46 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 @RunWith(Parameterized.class)
 public class MultiarchFileTest {
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] {
-        {
+    return Arrays.asList(
+        new Object[][] {
+          {
             "AppleBinaryDescription",
             FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
             (NodeBuilderFactory) AppleBinaryBuilder::createBuilder
-        },
-        {
+          },
+          {
             "AppleLibraryDescription (static)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
-            (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(InternalFlavor.of("static")))
-                .setSrcs(ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c"))))
-        },
-        {
+            (NodeBuilderFactory)
+                target ->
+                    AppleLibraryBuilder.createBuilder(
+                            target.withAppendedFlavors(InternalFlavor.of("static")))
+                        .setSrcs(
+                            ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+          },
+          {
             "AppleLibraryDescription (shared)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
-            (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(InternalFlavor.of("shared")))
-                .setSrcs(ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c"))))
-        },
-    });
+            (NodeBuilderFactory)
+                target ->
+                    AppleLibraryBuilder.createBuilder(
+                            target.withAppendedFlavors(InternalFlavor.of("shared")))
+                        .setSrcs(
+                            ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+          },
+        });
   }
 
   @Parameterized.Parameter(0)
@@ -113,35 +116,32 @@ public class MultiarchFileTest {
   @Test
   public void shouldAllowMultiplePlatformFlavors() {
     assertTrue(
-        ((Flavored) description).hasFlavors(
-            ImmutableSet.of(
-                InternalFlavor.of("iphoneos-i386"),
-                InternalFlavor.of("iphoneos-x86_64"))));
+        ((Flavored) description)
+            .hasFlavors(
+                ImmutableSet.of(
+                    InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64"))));
   }
 
   @SuppressWarnings({"unchecked"})
   @Test
-  public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile()
-      throws Exception {
+  public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() throws Exception {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
-    BuildTarget sandboxTarget = BuildTargetFactory.newInstance(
-        "//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
+    BuildTarget sandboxTarget =
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRule multiarchRule = nodeBuilderFactory
-        .getNodeBuilder(target)
-        .build(resolver, filesystem);
+    BuildRule multiarchRule = nodeBuilderFactory.getNodeBuilder(target).build(resolver, filesystem);
 
     assertThat(multiarchRule, instanceOf(MultiarchFile.class));
 
-    ImmutableList<Step> steps = multiarchRule.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver),
-        new FakeBuildableContext());
+    ImmutableList<Step> steps =
+        multiarchRule.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 
     ShellStep step = Iterables.getLast(Iterables.filter(steps, ShellStep.class));
 
@@ -183,17 +183,18 @@ public class MultiarchFileTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
-    Iterable<Flavor> forbiddenFlavors = ImmutableList.<Flavor>builder()
-        .addAll(CxxInferEnhancer.InferFlavors.getAll())
-        .add(CxxCompilationDatabase.COMPILATION_DATABASE)
-        .build();
+    Iterable<Flavor> forbiddenFlavors =
+        ImmutableList.<Flavor>builder()
+            .addAll(CxxInferEnhancer.InferFlavors.getAll())
+            .add(CxxCompilationDatabase.COMPILATION_DATABASE)
+            .build();
 
     for (Flavor flavor : forbiddenFlavors) {
       try {
         nodeBuilderFactory
             .getNodeBuilder(
-                BuildTargetFactory.newInstance("//foo:xctest#" +
-                    "iphoneos-i386,iphoneos-x86_64," + flavor.toString()))
+                BuildTargetFactory.newInstance(
+                    "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor.toString()))
             .build(resolver);
       } catch (HumanReadableException e) {
         exception = e;
@@ -206,9 +207,7 @@ public class MultiarchFileTest {
     }
   }
 
-  /**
-   * Rule builders pass BuildTarget as a constructor arg, so this is unfortunately necessary.
-   */
+  /** Rule builders pass BuildTarget as a constructor arg, so this is unfortunately necessary. */
   private interface NodeBuilderFactory {
     AbstractNodeBuilder<?, ?, ?> getNodeBuilder(BuildTarget target);
   }

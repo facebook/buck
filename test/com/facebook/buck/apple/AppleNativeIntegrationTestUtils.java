@@ -23,7 +23,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
 public class AppleNativeIntegrationTestUtils {
@@ -38,9 +37,10 @@ public class AppleNativeIntegrationTestUtils {
   }
 
   private static Optional<AppleSdk> anySdkForPlatform(
-      final ApplePlatform platform,
-      final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
-    return sdkPaths.keySet().stream()
+      final ApplePlatform platform, final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
+    return sdkPaths
+        .keySet()
+        .stream()
         .filter(sdk -> sdk.getApplePlatform().equals(platform))
         .findFirst();
   }
@@ -58,17 +58,17 @@ public class AppleNativeIntegrationTestUtils {
       return false;
     }
     AppleSdk anySdk = anySdkOptional.get();
-    AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.buildWithExecutableChecker(
-        new FakeProjectFilesystem(),
-        anySdk,
-        "fakeversion",
-        "fakearch",
-        sdkPaths.get(anySdk),
-        buckConfig,
-        new XcodeToolFinder(),
-        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
-        Optional.empty());
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
+            anySdk,
+            "fakeversion",
+            "fakearch",
+            sdkPaths.get(anySdk),
+            buckConfig,
+            new XcodeToolFinder(),
+            FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
+            Optional.empty());
     return appleCxxPlatform.getSwiftPlatform().isPresent();
   }
-
 }

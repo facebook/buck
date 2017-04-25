@@ -32,19 +32,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public abstract class AbstractAppleNativeTargetBuilder<
-    ARG extends AppleNativeTargetDescriptionArg,
-    DESCRIPTION extends Description<ARG>,
-    BUILDRULE extends BuildRule,
-    BUILDER extends AbstractAppleNativeTargetBuilder<ARG, DESCRIPTION, BUILDRULE, BUILDER>>
+        ARG extends AppleNativeTargetDescriptionArg,
+        DESCRIPTION extends Description<ARG>,
+        BUILDRULE extends BuildRule,
+        BUILDER extends AbstractAppleNativeTargetBuilder<ARG, DESCRIPTION, BUILDRULE, BUILDER>>
     extends AbstractNodeBuilder<ARG, DESCRIPTION, BUILDRULE> {
 
-  public AbstractAppleNativeTargetBuilder(
-      DESCRIPTION description,
-      BuildTarget target) {
+  public AbstractAppleNativeTargetBuilder(DESCRIPTION description, BuildTarget target) {
     super(description, target);
   }
 
@@ -75,8 +72,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setExportedPreprocessorFlags(
-      ImmutableList<String> exportedPreprocessorFlags) {
+  public BUILDER setExportedPreprocessorFlags(ImmutableList<String> exportedPreprocessorFlags) {
     arg.exportedPreprocessorFlags = exportedPreprocessorFlags;
     return getThis();
   }

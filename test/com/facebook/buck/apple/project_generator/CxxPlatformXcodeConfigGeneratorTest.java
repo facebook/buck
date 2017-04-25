@@ -23,11 +23,9 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.LinkedHashMap;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.LinkedHashMap;
 
 public class CxxPlatformXcodeConfigGeneratorTest {
 
@@ -37,13 +35,15 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasCommonBuildConfigurations() {
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            DEFAULT_PLATFORM,
-            new LinkedHashMap<String, String>());
-    assertThat(buildConfigs.keySet(),
+            DEFAULT_PLATFORM, new LinkedHashMap<String, String>());
+    assertThat(
+        buildConfigs.keySet(),
         Matchers.hasItem(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME));
-    assertThat(buildConfigs.keySet(),
+    assertThat(
+        buildConfigs.keySet(),
         Matchers.hasItem(CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME));
-    assertThat(buildConfigs.keySet(),
+    assertThat(
+        buildConfigs.keySet(),
         Matchers.hasItem(CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME));
   }
 
@@ -53,108 +53,104 @@ public class CxxPlatformXcodeConfigGeneratorTest {
     appendConfig.put(CxxPlatformXcodeConfigGenerator.SDKROOT, "somesdkroot");
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            DEFAULT_PLATFORM,
-            appendConfig);
+            DEFAULT_PLATFORM, appendConfig);
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.SDKROOT),
         Matchers.equalTo(appendConfig.get(CxxPlatformXcodeConfigGenerator.SDKROOT)));
   }
 
   @Test
   public void testResultHasIphoneOsSdkRootTakenFromIphoneSimulatorFlavor() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setFlavor(InternalFlavor.of("iphonesimulator-x86_64"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setFlavor(InternalFlavor.of("iphonesimulator-x86_64"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT),
-        Matchers.equalTo("iphoneos"));
+    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT), Matchers.equalTo("iphoneos"));
   }
 
   @Test
   public void testResultHasIphoneOsSdkRootTakenFromIphoneOsFlavor() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setFlavor(InternalFlavor.of("iphoneos-9.1"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setFlavor(InternalFlavor.of("iphoneos-9.1"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT),
-        Matchers.equalTo("iphoneos"));
+    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT), Matchers.equalTo("iphoneos"));
   }
 
   @Test
   public void testResultHasMacOsxSdkRootTakenFromMacOsxFlavor() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setFlavor(InternalFlavor.of("macosx-12.0"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setFlavor(InternalFlavor.of("macosx-12.0"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT),
-        Matchers.equalTo("macosx"));
+    assertThat(config.get(CxxPlatformXcodeConfigGenerator.SDKROOT), Matchers.equalTo("macosx"));
   }
 
   @Test
   public void testResultHasDeploymentTargetValueTakenFromPlatformCxxflags() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setFlavor(InternalFlavor.of("macosx-12.0"))
-        .setCxxflags(ImmutableList.of("-mmacosx-version-min=10.8"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setFlavor(InternalFlavor.of("macosx-12.0"))
+            .setCxxflags(ImmutableList.of("-mmacosx-version-min=10.8"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get("MACOSX_DEPLOYMENT_TARGET"),
-        Matchers.equalTo("10.8"));
+    assertThat(config.get("MACOSX_DEPLOYMENT_TARGET"), Matchers.equalTo("10.8"));
   }
 
   @Test
   public void testResultHasNoArchSetToAllowAutomaticDeviceSwitchInXcode() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-arch", "x86-64"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-arch", "x86-64"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.ARCHS),
-        Matchers.nullValue());
+    assertThat(config.get(CxxPlatformXcodeConfigGenerator.ARCHS), Matchers.nullValue());
   }
 
   @Test
   public void testResultHasCxxLanguageStandardValueTakenFromPlatformCxxflags() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-std=somevalue"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-std=somevalue"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD),
         Matchers.equalTo("somevalue"));
   }
 
@@ -163,34 +159,36 @@ public class CxxPlatformXcodeConfigGeneratorTest {
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD, "value");
 
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-std=cxxflagsvalue"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-std=cxxflagsvalue"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            appendConfig);
+            platform, appendConfig);
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD),
         Matchers.equalTo(
             appendConfig.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD)));
   }
 
   @Test
   public void testResultHasCxxLibraryValueTakenFromPlatformCxxflags() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-stdlib=somevalue"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-stdlib=somevalue"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY),
         Matchers.equalTo("somevalue"));
   }
 
@@ -199,32 +197,34 @@ public class CxxPlatformXcodeConfigGeneratorTest {
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY, "value");
 
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-stdlib=cxxflagsvalue"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-stdlib=cxxflagsvalue"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            appendConfig);
+            platform, appendConfig);
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY),
         Matchers.equalTo(appendConfig.get(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY)));
   }
 
   @Test
   public void testResultHasOtherCxxFlagsTakenFromPlatformCxxflags() {
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<String, String>());
     ImmutableMap<String, String> config = buildConfigs.get("Debug");
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
         Matchers.equalTo("-Wno-warning -someflag -g"));
   }
 
@@ -232,17 +232,18 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasOtherCxxFlagsTakenFromPlatformCxxflagsAndMergedWithAppendConfig() {
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS, "-flag1 -flag2");
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            appendConfig);
+            platform, appendConfig);
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
         Matchers.equalTo("-flag1 -flag2 -Wno-warning -someflag -g"));
   }
 
@@ -253,17 +254,18 @@ public class CxxPlatformXcodeConfigGeneratorTest {
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(someCrazyKey, "value");
 
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            appendConfig);
+            platform, appendConfig);
     ImmutableMap<String, String> config =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertThat(config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
+    assertThat(
+        config.get(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS),
         Matchers.equalTo("-Wno-warning -someflag -g"));
     assertThat(config.get(someCrazyKey), Matchers.equalTo(appendConfig.get(someCrazyKey)));
   }
@@ -275,18 +277,15 @@ public class CxxPlatformXcodeConfigGeneratorTest {
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(someCrazyKey, "value");
 
-    CxxPlatform platform = CxxPlatform.builder()
-        .from(DEFAULT_PLATFORM)
-        .setFlavor(InternalFlavor.of("macosx-12.0"))
-        .setCxxflags(ImmutableList.of(
-                "-Wno-warning",
-                "-someflag",
-                "-mmacosx-version-min=10.8"))
-        .build();
+    CxxPlatform platform =
+        CxxPlatform.builder()
+            .from(DEFAULT_PLATFORM)
+            .setFlavor(InternalFlavor.of("macosx-12.0"))
+            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-mmacosx-version-min=10.8"))
+            .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-            platform,
-            appendConfig);
+            platform, appendConfig);
     ImmutableMap<String, String> debugConfig =
         buildConfigs.get(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
     ImmutableMap<String, String> releaseConfig =

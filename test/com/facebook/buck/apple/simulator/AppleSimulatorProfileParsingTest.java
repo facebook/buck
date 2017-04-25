@@ -20,29 +20,29 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link SimctlListOutputParsing}.
- */
+/** Unit tests for {@link SimctlListOutputParsing}. */
 public class AppleSimulatorProfileParsingTest {
   @Test
   public void iphone5sProfileParses() throws IOException {
     Optional<AppleSimulatorProfile> simulatorProfile;
-    try (InputStream in = getClass().getResourceAsStream(
-             "testdata/Developer/Library/CoreSimulator/Profiles/DeviceTypes/" +
-             "iPhone 5s.simdevicetype/Contents/Resources/profile.plist")) {
+    try (InputStream in =
+        getClass()
+            .getResourceAsStream(
+                "testdata/Developer/Library/CoreSimulator/Profiles/DeviceTypes/"
+                    + "iPhone 5s.simdevicetype/Contents/Resources/profile.plist")) {
       simulatorProfile = AppleSimulatorProfileParsing.parseProfilePlistStream(in);
     }
 
-    AppleSimulatorProfile expected = AppleSimulatorProfile.builder()
-        .addSupportedProductFamilyIDs(1)
-        .addSupportedArchitectures("i386", "x86_64")
-        .build();
+    AppleSimulatorProfile expected =
+        AppleSimulatorProfile.builder()
+            .addSupportedProductFamilyIDs(1)
+            .addSupportedArchitectures("i386", "x86_64")
+            .build();
 
     assertThat(simulatorProfile, is(equalTo(Optional.of(expected))));
   }

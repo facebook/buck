@@ -21,23 +21,18 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Preconditions;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link AppleInfoPlistParsing}.
- */
+/** Unit tests for {@link AppleInfoPlistParsing}. */
 public class AppleInfoPlistParsingTest {
   @Test
   public void infoPlistParsingReturnsBundleID() throws IOException {
     Optional<String> bundleID;
     try (InputStream in =
-             getClass().getResourceAsStream(
-                 "testdata/simple_application_bundle_no_debug/Info.plist")) {
+        getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
       Preconditions.checkState(in != null);
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }
@@ -48,8 +43,7 @@ public class AppleInfoPlistParsingTest {
   @Test
   public void failedInfoPlistParsingReturnsAbsent() throws IOException {
     Optional<String> bundleID;
-    try (InputStream in =
-             getClass().getResourceAsStream("testdata/ios-project/version.plist")) {
+    try (InputStream in = getClass().getResourceAsStream("testdata/ios-project/version.plist")) {
       Preconditions.checkState(in != null);
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }

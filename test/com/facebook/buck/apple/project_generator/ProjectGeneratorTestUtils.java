@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,9 +52,7 @@ import java.util.Optional;
 
 public final class ProjectGeneratorTestUtils {
 
-  /**
-   * Utility class should not be instantiated.
-   */
+  /** Utility class should not be instantiated. */
   private ProjectGeneratorTestUtils() {}
 
   public static <T> T createDescriptionArgWithDefaults(Description<T> description) {
@@ -93,16 +90,13 @@ public final class ProjectGeneratorTestUtils {
   }
 
   public static PBXTarget assertTargetExistsAndReturnTarget(
-      PBXProject generatedProject,
-      String name) {
+      PBXProject generatedProject, String name) {
     PBXTarget target = getTargetByName(generatedProject, name);
     assertNotNull("No generated target with name: " + name, target);
     return target;
   }
 
-  private static PBXTarget getTargetByName(
-      PBXProject generatedProject,
-      String name) {
+  private static PBXTarget getTargetByName(PBXProject generatedProject, String name) {
     Preconditions.checkNotNull(name);
     for (PBXTarget target : generatedProject.getTargets()) {
       if (target.getName().equals(name)) {
@@ -112,17 +106,15 @@ public final class ProjectGeneratorTestUtils {
     return null;
   }
 
-  public static void assertTargetExists(
-      ProjectGenerator generator,
-      String name) {
-    assertNotNull("No generated target with name: " + name,
+  public static void assertTargetExists(ProjectGenerator generator, String name) {
+    assertNotNull(
+        "No generated target with name: " + name,
         getTargetByName(generator.getGeneratedProject(), name));
   }
 
-  public static void assertTargetDoesNotExists(
-      ProjectGenerator generator,
-      String name) {
-    assertNull("There is generated target with name: " + name,
+  public static void assertTargetDoesNotExists(ProjectGenerator generator, String name) {
+    assertNull(
+        "There is generated target with name: " + name,
         getTargetByName(generator.getGeneratedProject(), name));
   }
 
@@ -132,14 +124,12 @@ public final class ProjectGeneratorTestUtils {
   }
 
   public static void assertHasSingletonCopyFilesPhaseWithFileEntries(
-    PBXTarget target, ImmutableList<String>files) {
+      PBXTarget target, ImmutableList<String> files) {
     assertHasSingletonPhaseWithEntries(target, PBXCopyFilesBuildPhase.class, files);
   }
 
   public static <T extends PBXBuildPhase> void assertHasSingletonPhaseWithEntries(
-      PBXTarget target,
-      final Class<T> cls,
-      ImmutableList<String> entries) {
+      PBXTarget target, final Class<T> cls, ImmutableList<String> entries) {
     PBXBuildPhase buildPhase = getSingletonPhaseByType(target, cls);
     assertThat(
         "Phase should have right number of entries",
@@ -155,7 +145,7 @@ public final class ProjectGeneratorTestUtils {
         case ABSOLUTE:
           fail("Should not emit entries with sourceTree <absolute>");
           break;
-        // $CASES-OMITTED$
+          // $CASES-OMITTED$
         default:
           String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
           assertThat(
@@ -170,8 +160,7 @@ public final class ProjectGeneratorTestUtils {
   public static <T extends PBXBuildPhase> T getSingletonPhaseByType(
       PBXTarget target, final Class<T> cls) {
     Iterable<PBXBuildPhase> buildPhases =
-        Iterables.filter(
-            target.getBuildPhases(), cls::isInstance);
+        Iterables.filter(target.getBuildPhases(), cls::isInstance);
     assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));
     @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);
@@ -183,8 +172,8 @@ public final class ProjectGeneratorTestUtils {
       BuildTarget buildTarget,
       PBXTarget target,
       String config) {
-    XCBuildConfiguration configuration = target
-        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get(config);
+    XCBuildConfiguration configuration =
+        target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get(config);
     assertEquals(configuration.getBuildSettings().count(), 0);
 
     PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();

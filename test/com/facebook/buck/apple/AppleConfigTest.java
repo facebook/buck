@@ -33,20 +33,17 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 public class AppleConfigTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -62,10 +59,12 @@ public class AppleConfigTest {
 
   @Test
   public void getSpecifiedAppleDeveloperDirectorySupplier() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "apple",
-            ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere"))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "apple", ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere")))
+            .build();
     AppleConfig config = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> supplier =
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
@@ -81,12 +80,15 @@ public class AppleConfigTest {
 
   @Test
   public void getSpecifiedAppleDeveloperDirectorySupplierForTests() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "apple",
-            ImmutableMap.of(
-                "xcode_developer_dir", "/path/to/somewhere",
-                "xcode_developer_dir_for_tests", "/path/to/somewhere2"))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "apple",
+                    ImmutableMap.of(
+                        "xcode_developer_dir", "/path/to/somewhere",
+                        "xcode_developer_dir_for_tests", "/path/to/somewhere2")))
+            .build();
     AppleConfig config = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> supplier =
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
@@ -108,8 +110,8 @@ public class AppleConfigTest {
             .setCommand(ImmutableList.of("xcode-select", "--print-path"))
             .build();
     FakeProcess fakeXcodeSelect = new FakeProcess(0, "/path/to/another/place", "");
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(xcodeSelectParams, fakeXcodeSelect));
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(xcodeSelectParams, fakeXcodeSelect));
     Supplier<Optional<Path>> supplier = config.getAppleDeveloperDirectorySupplier(processExecutor);
     assertNotNull(supplier);
     assertEquals(Optional.of(Paths.get("/path/to/another/place")), supplier.get());
@@ -117,11 +119,11 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigCommandWithoutExtensionShouldThrow() {
-    AppleConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[apple]",
-            "iphoneos_package_command = echo")
-        .build().getView(AppleConfig.class);
+    AppleConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "iphoneos_package_command = echo")
+            .build()
+            .getView(AppleConfig.class);
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("be both specified, or be both omitted"));
     config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
@@ -129,11 +131,11 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigExtensionWithoutCommandShouldThrow() {
-    AppleConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[apple]",
-            "iphoneos_package_extension = api")
-        .build().getView(AppleConfig.class);
+    AppleConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "iphoneos_package_extension = api")
+            .build()
+            .getView(AppleConfig.class);
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("be both specified, or be both omitted"));
     config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
@@ -141,25 +143,25 @@ public class AppleConfigTest {
 
   @Test
   public void packageConfigTreatsEmptyStringAsOmitted() {
-    AppleConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[apple]",
-            "iphoneos_package_extension = ",
-            "iphoneos_package_command = ")
-        .build().getView(AppleConfig.class);
+    AppleConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "iphoneos_package_extension = ", "iphoneos_package_command = ")
+            .build()
+            .getView(AppleConfig.class);
     assertThat(
-        config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS),
-        equalTo(Optional.empty()));
+        config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS), equalTo(Optional.empty()));
   }
 
   @Test
   public void packageConfigExtractsValuesFromConfig() {
-    AppleConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[apple]",
-            "iphoneos_package_extension = api",
-            "iphoneos_package_command = echo $OUT")
-        .build().getView(AppleConfig.class);
+    AppleConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                "[apple]",
+                "iphoneos_package_extension = api",
+                "iphoneos_package_command = echo $OUT")
+            .build()
+            .getView(AppleConfig.class);
     Optional<ApplePackageConfig> packageConfig =
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
     assertThat(packageConfig.get().getCommand(), equalTo("echo $OUT"));

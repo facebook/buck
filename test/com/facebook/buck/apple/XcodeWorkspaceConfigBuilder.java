@@ -22,13 +22,11 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class XcodeWorkspaceConfigBuilder extends AbstractNodeBuilder<
-    XcodeWorkspaceConfigDescription.Arg,
-    XcodeWorkspaceConfigDescription,
-    BuildRule> {
+public class XcodeWorkspaceConfigBuilder
+    extends AbstractNodeBuilder<
+        XcodeWorkspaceConfigDescription.Arg, XcodeWorkspaceConfigDescription, BuildRule> {
 
   protected XcodeWorkspaceConfigBuilder(BuildTarget target) {
     super(new XcodeWorkspaceConfigDescription(), target);
@@ -74,5 +72,4 @@ public class XcodeWorkspaceConfigBuilder extends AbstractNodeBuilder<
     arg.launchStyle = launchStyle;
     return this;
   }
-
 }

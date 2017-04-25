@@ -19,29 +19,23 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
 import org.junit.Rule;
 import org.junit.Test;
 
 public class ExternalApplePackageIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void usesExternalPackagerAndSetsSdkroot() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "external_apple_package",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_apple_package", tmp);
     workspace.setUp();
-    workspace.runBuckBuild(
-        "//:FooPackage#iphonesimulator-x86_64")
-        .assertSuccess();
+    workspace.runBuckBuild("//:FooPackage#iphonesimulator-x86_64").assertSuccess();
     assertThat(
         workspace.getFileContents("buck-out/gen/FooPackage#iphonesimulator-x86_64/FooPackage.omg"),
         matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
@@ -50,14 +44,11 @@ public class ExternalApplePackageIntegrationTest {
   @Test
   public void useDefaultPlatformToDeterminePackagerIfPlatformFlavorIsOmitted() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "external_apple_package",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_apple_package", tmp);
     workspace.setUp();
-    workspace.runBuckBuild(
-        "--config=cxx.default_platform=iphonesimulator-x86_64",
-        "//:FooPackage")
+    workspace
+        .runBuckBuild("--config=cxx.default_platform=iphonesimulator-x86_64", "//:FooPackage")
         .assertSuccess();
     assertThat(
         workspace.getFileContents("buck-out/gen/FooPackage/FooPackage.omg"),

@@ -20,12 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 
 public class AppleBinaryBuilder
-    extends
-    AbstractAppleNativeTargetBuilder<
-        AppleBinaryDescription.Arg,
-        AppleBinaryDescription,
-        BuildRule,
-        AppleBinaryBuilder> {
+    extends AbstractAppleNativeTargetBuilder<
+        AppleBinaryDescription.Arg, AppleBinaryDescription, BuildRule, AppleBinaryBuilder> {
 
   @Override
   protected AppleBinaryBuilder getThis() {

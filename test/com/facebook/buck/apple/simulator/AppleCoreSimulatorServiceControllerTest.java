@@ -25,25 +25,19 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeUserIdFetcher;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link AppleCoreSimulatorServiceController}.
- */
+/** Unit tests for {@link AppleCoreSimulatorServiceController}. */
 public class AppleCoreSimulatorServiceControllerTest {
 
   private static final ProcessExecutorParams LAUNCHCTL_LIST_PARAMS =
-      ProcessExecutorParams.builder()
-          .setCommand(ImmutableList.of("launchctl", "list"))
-          .build();
+      ProcessExecutorParams.builder().setCommand(ImmutableList.of("launchctl", "list")).build();
 
   @Test
   public void coreSimulatorServicePathFetchedFromLaunchctlPrint()
@@ -64,33 +58,30 @@ public class AppleCoreSimulatorServiceControllerTest {
                     ImmutableList.of(
                         "launchctl",
                         "print",
-                        "user/42/com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"
-                    ))
+                        "user/42/com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
                 .build(),
             new FakeProcess(
                 0,
-                "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy = {\n" +
-                "    path = xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework" +
-                "/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc\n" +
-                "}\n",
+                "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy = {\n"
+                    + "    path = xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework"
+                    + "/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc\n"
+                    + "}\n",
                 "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
     AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
         new AppleCoreSimulatorServiceController(fakeProcessExecutor);
     Optional<Path> coreSimulatorServicePath =
-        appleCoreSimulatorServiceController.getCoreSimulatorServicePath(
-            new FakeUserIdFetcher(42));
+        appleCoreSimulatorServiceController.getCoreSimulatorServicePath(new FakeUserIdFetcher(42));
     Optional<Path> expected =
         Optional.of(
-            Paths.get("xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework/" +
-                      "Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc"));
+            Paths.get(
+                "xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework/"
+                    + "Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc"));
     assertThat(coreSimulatorServicePath, is(equalTo(expected)));
   }
 
   @Test
-  public void coreSimulatorServicesKilledSuccessfully()
-      throws IOException, InterruptedException {
+  public void coreSimulatorServicesKilledSuccessfully() throws IOException, InterruptedException {
     ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     fakeProcessesBuilder.add(
@@ -98,44 +89,40 @@ public class AppleCoreSimulatorServiceControllerTest {
             LAUNCHCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "87823\t0\tcom.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy\n" +
-                "74617\t0\tcom.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057" +
-                ".launchd_sim\n" +
-                "74614\t0\tcom.apple.iphonesimulator.6564\n",
+                "87823\t0\tcom.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy\n"
+                    + "74617\t0\tcom.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057"
+                    + ".launchd_sim\n"
+                    + "74614\t0\tcom.apple.iphonesimulator.6564\n",
                 "")));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of(
+                        "launchctl",
+                        "remove",
+                        "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
+                .build(),
             new FakeProcess(0)));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057." +
-                    "launchd_sim"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of(
+                        "launchctl",
+                        "remove",
+                        "com.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057."
+                            + "launchd_sim"))
+                .build(),
             new FakeProcess(0)));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.iphonesimulator.6564"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of("launchctl", "remove", "com.apple.iphonesimulator.6564"))
+                .build(),
             new FakeProcess(0)));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
     AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
         new AppleCoreSimulatorServiceController(fakeProcessExecutor);
     assertThat(appleCoreSimulatorServiceController.killSimulatorProcesses(), is(true));
@@ -151,44 +138,40 @@ public class AppleCoreSimulatorServiceControllerTest {
             LAUNCHCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "87823\t0\tcom.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy\n" +
-                "74617\t0\tcom.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057" +
-                ".launchd_sim\n" +
-                "74614\t0\tcom.apple.iphonesimulator.6564\n",
+                "87823\t0\tcom.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy\n"
+                    + "74617\t0\tcom.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057"
+                    + ".launchd_sim\n"
+                    + "74614\t0\tcom.apple.iphonesimulator.6564\n",
                 "")));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of(
+                        "launchctl",
+                        "remove",
+                        "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
+                .build(),
             new FakeProcess(0)));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057." +
-                    "launchd_sim"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of(
+                        "launchctl",
+                        "remove",
+                        "com.apple.CoreSimulator.SimDevice.CC1B0BAD-BAE6-4A53-92CF-F79850654057."
+                            + "launchd_sim"))
+                .build(),
             new FakeProcess(3)));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.iphonesimulator.6564"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of("launchctl", "remove", "com.apple.iphonesimulator.6564"))
+                .build(),
             new FakeProcess(0)));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
     AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
         new AppleCoreSimulatorServiceController(fakeProcessExecutor);
     assertThat(appleCoreSimulatorServiceController.killSimulatorProcesses(), is(true));
@@ -209,15 +192,14 @@ public class AppleCoreSimulatorServiceControllerTest {
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
             ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    "launchctl",
-                    "remove",
-                    "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
-            .build(),
+                .setCommand(
+                    ImmutableList.of(
+                        "launchctl",
+                        "remove",
+                        "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
+                .build(),
             new FakeProcess(42)));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
     AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
         new AppleCoreSimulatorServiceController(fakeProcessExecutor);
     assertThat(appleCoreSimulatorServiceController.killSimulatorProcesses(), is(false));

@@ -33,10 +33,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.hamcrest.Matcher;
-import org.junit.Test;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -45,14 +41,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.hamcrest.Matcher;
+import org.junit.Test;
 
 public class XctestOutputParsingTest {
 
   @Test
   @SuppressWarnings("unchecked")
   public void mixedPassAndFailReturnsMixedResultSummary() throws Exception {
-    Path outputPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctest-output/mixed-pass-and-fail.txt");
+    Path outputPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/mixed-pass-and-fail.txt");
     try (Reader outputReader = Files.newBufferedReader(outputPath, StandardCharsets.UTF_8)) {
       TestCaseSummariesBuildingXctestEventHandler xctestEventHandler =
           new TestCaseSummariesBuildingXctestEventHandler(TestRule.NOOP_REPORTING_CALLBACK);
@@ -98,11 +96,7 @@ public class XctestOutputParsingTest {
               hasProperty("stdErr", nullValue(String.class)));
 
       List<TestResultSummary> someTestsResults = summaries.get(1).getTestResults();
-      assertThat(
-          someTestsResults,
-          contains(
-              isSomeTestsTestWillFail,
-              isSomeTestsTestWillPass));
+      assertThat(someTestsResults, contains(isSomeTestsTestWillFail, isSomeTestsTestWillPass));
     }
   }
 
@@ -111,46 +105,46 @@ public class XctestOutputParsingTest {
   private static XctestOutputParsing.XctestEventCallback eventCallbackAddingEventsToList(
       final List<Object> streamedObjects) {
     return new XctestOutputParsing.XctestEventCallback() {
-        @Override
-        public void handleBeginXctestEvent(XctestOutputParsing.BeginXctestEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginXctestEvent(XctestOutputParsing.BeginXctestEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndXctestEvent(XctestOutputParsing.EndXctestEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleEndXctestEvent(XctestOutputParsing.EndXctestEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleBeginTestSuiteEvent(XctestOutputParsing.BeginTestSuiteEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginTestSuiteEvent(XctestOutputParsing.BeginTestSuiteEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndTestSuiteEvent(XctestOutputParsing.EndTestSuiteEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleEndTestSuiteEvent(XctestOutputParsing.EndTestSuiteEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleBeginTestCaseEvent(XctestOutputParsing.BeginTestCaseEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginTestCaseEvent(XctestOutputParsing.BeginTestCaseEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndTestCaseEvent(XctestOutputParsing.EndTestCaseEvent event) {
-          streamedObjects.add(event);
-        }};
+      @Override
+      public void handleEndTestCaseEvent(XctestOutputParsing.EndTestCaseEvent event) {
+        streamedObjects.add(event);
+      }
+    };
   }
 
   @Test
   public void streamingSimpleSuccess() throws Exception {
-    Path outputPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctest-output/simple-success.txt");
+    Path outputPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/simple-success.txt");
     final List<Object> streamedObjects = new ArrayList<>();
     try (Reader outputReader = Files.newBufferedReader(outputPath, StandardCharsets.UTF_8)) {
       XctestOutputParsing.streamOutput(
-          outputReader,
-          eventCallbackAddingEventsToList(streamedObjects));
+          outputReader, eventCallbackAddingEventsToList(streamedObjects));
     }
     assertThat(streamedObjects, hasSize(8));
 
@@ -220,13 +214,12 @@ public class XctestOutputParsingTest {
 
   @Test
   public void streamingSimpleFailure() throws Exception {
-    Path outputPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctest-output/simple-failure.txt");
+    Path outputPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/simple-failure.txt");
     final List<Object> streamedObjects = new ArrayList<>();
     try (Reader outputReader = Files.newBufferedReader(outputPath, StandardCharsets.UTF_8)) {
       XctestOutputParsing.streamOutput(
-          outputReader,
-          eventCallbackAddingEventsToList(streamedObjects));
+          outputReader, eventCallbackAddingEventsToList(streamedObjects));
     }
     assertThat(streamedObjects, hasSize(8));
 
@@ -303,8 +296,7 @@ public class XctestOutputParsingTest {
   public void streamingEmptyReaderDoesNotCauseFailure() {
     final List<Object> streamedObjects = new ArrayList<>();
     XctestOutputParsing.streamOutput(
-        new StringReader(""),
-        eventCallbackAddingEventsToList(streamedObjects));
+        new StringReader(""), eventCallbackAddingEventsToList(streamedObjects));
     assertThat(streamedObjects, hasSize(2));
 
     Iterator<Object> iter = streamedObjects.iterator();
