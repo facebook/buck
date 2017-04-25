@@ -17,15 +17,11 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
 public interface WatchmanEvent {
-  /**
-   * Cell path being watched.
-   */
+  /** Cell path being watched. */
   Path getCellPath();
 }
 
@@ -50,9 +46,7 @@ abstract class AbstractWatchmanPathEvent implements WatchmanEvent {
   @Override
   public abstract Path getCellPath();
 
-  /**
-   * The kind of event that occurred.
-   */
+  /** The kind of event that occurred. */
   public abstract Kind getKind();
 
   /**

@@ -21,7 +21,6 @@ import com.facebook.buck.hashing.ProjectFileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -46,5 +45,4 @@ public interface ProjectFileHashCache extends ProjectFileHashLoader {
     throw new RuntimeException(
         "ProjectFileHashCache class " + getClass().getName() + " does not support verification.");
   }
-
 }

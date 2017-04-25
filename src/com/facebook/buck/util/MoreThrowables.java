@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-
 import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedByInterruptException;
@@ -35,9 +34,7 @@ public class MoreThrowables {
     return e;
   }
 
-  /**
-   * Propagates an {@link InterruptedException} masquerading as another {@code Throwable}.
-   */
+  /** Propagates an {@link InterruptedException} masquerading as another {@code Throwable}. */
   public static void propagateIfInterrupt(Throwable thrown) throws InterruptedException {
 
     // If it's already an `InterruptedException`, just rethrow it.
@@ -54,19 +51,15 @@ public class MoreThrowables {
     // `InterruptedIOException` can also be thrown when a thread is interrupted while blocked
     // by I/O, so propagate this -- unless it's a `SocketTimeoutException` which is thrown when
     // when a the timeout set on a socket is triggered.
-    if (thrown instanceof InterruptedIOException &&
-        !(thrown instanceof SocketTimeoutException)) {
+    if (thrown instanceof InterruptedIOException && !(thrown instanceof SocketTimeoutException)) {
       throw asInterruptedException(thrown);
     }
   }
 
-  /**
-   * If throwable has a non-empty cause, returns throwable at the bottom of the stack.
-   */
+  /** If throwable has a non-empty cause, returns throwable at the bottom of the stack. */
   public static Throwable getInitialCause(Throwable throwable) {
     if (throwable.getCause() != null) {
-      Set<Throwable> seen =
-          Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+      Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
       seen.add(throwable);
       return getInitialCause(throwable, seen);
     }
@@ -83,8 +76,8 @@ public class MoreThrowables {
   }
 
   /**
-   * Returns string representing class, method, filename and line number that throwable was
-   * thrown from
+   * Returns string representing class, method, filename and line number that throwable was thrown
+   * from
    */
   public static String getThrowableOrigin(Throwable throwable) {
     StackTraceElement[] stack = throwable.getStackTrace();

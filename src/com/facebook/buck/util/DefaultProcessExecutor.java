@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -40,18 +39,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-/**
- * Executes a {@link Process} and blocks until it is finished.
- */
+/** Executes a {@link Process} and blocks until it is finished. */
 public class DefaultProcessExecutor implements ProcessExecutor {
 
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
-  private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
-      0,
-      Integer.MAX_VALUE,
-      1, TimeUnit.SECONDS,
-      new SynchronousQueue<>(),
-      new MostExecutors.NamedThreadFactory("ProcessExecutor"));
+  private static final ThreadPoolExecutor THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -60,8 +59,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private final ProcessRegistry processRegistry;
 
   /**
-   * Creates a new {@link DefaultProcessExecutor} with the specified parameters used for writing the output
-   * of the process.
+   * Creates a new {@link DefaultProcessExecutor} with the specified parameters used for writing the
+   * output of the process.
    */
   public DefaultProcessExecutor(Console console) {
     this(
@@ -87,14 +86,9 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor cloneWithOutputStreams(
-      PrintStream newStdOutStream,
-      PrintStream newStdErrStream) {
+      PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new DefaultProcessExecutor(
-        newStdOutStream,
-        newStdErrStream,
-        ansi,
-        processHelper,
-        processRegistry);
+        newStdOutStream, newStdErrStream, ansi, processHelper, processRegistry);
   }
 
   @Override
@@ -104,9 +98,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws InterruptedException, IOException {
+  public Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws InterruptedException, IOException {
     return launchAndExecute(
         params,
         context,
@@ -146,8 +139,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws IOException {
+      ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     ImmutableList<String> command = params.getCommand();
     /* On Windows, we need to escape the arguments we hand off to `CreateProcess`.  See
      * http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
@@ -188,33 +180,24 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result waitForLaunchedProcess(
-      LaunchedProcess launchedProcess) throws InterruptedException {
+  public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     int exitCode = ((LaunchedProcessImpl) launchedProcess).process.waitFor();
-    return new Result(
-        exitCode,
-        false,
-        Optional.empty(),
-        Optional.empty()
-    );
+    return new Result(exitCode, false, Optional.empty(), Optional.empty());
   }
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess,
       long millis,
-      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
+      final Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     final Process process = ((LaunchedProcessImpl) launchedProcess).process;
     boolean timedOut = waitForTimeoutInternal(process, millis, timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
-    return new Result(
-        exitCode,
-        timedOut,
-        Optional.empty(),
-        Optional.empty()
-    );
+    return new Result(exitCode, timedOut, Optional.empty(), Optional.empty());
   }
 
   /**
@@ -223,16 +206,17 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    * @return whether the wait has timed out.
    */
   private boolean waitForTimeoutInternal(
-      final Process process,
-      long millis,
-      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
-    Future<?> waiter = THREAD_POOL.submit(() -> {
-      try {
-        process.waitFor();
-      } catch (InterruptedException e) {
-        // The thread waiting has hit its timeout.
-      }
-    });
+      final Process process, long millis, final Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
+    Future<?> waiter =
+        THREAD_POOL.submit(
+            () -> {
+              try {
+                process.waitFor();
+              } catch (InterruptedException e) {
+                // The thread waiting has hit its timeout.
+              }
+            });
     try {
       waiter.get(millis, TimeUnit.MILLISECONDS);
     } catch (TimeoutException e) {
@@ -251,14 +235,15 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   /**
    * Executes the specified already-launched process.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process will
-   * be written directly to the stdout passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process
+   * will be written directly to the stdout passed to the constructor of this executor. Otherwise,
    * the stdout of the process will be made available via {@link Result#getStdout()}.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process will
-   * be written directly to the stderr passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process
+   * will be written directly to the stderr passed to the constructor of this executor. Otherwise,
    * the stderr of the process will be made available via {@link Result#getStderr()}.
+   *
    * @param timeOutHandler If present, this method will be called before the process is killed.
    */
   public Result execute(
@@ -266,32 +251,33 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
     boolean expectingStdOut = options.contains(Option.EXPECTING_STD_OUT);
-    PrintStream stdOutToWriteTo = shouldPrintStdOut ?
-        stdOutStream : new CapturingPrintStream();
-    InputStreamConsumer stdOut = new InputStreamConsumer(
-        process.getInputStream(),
-        InputStreamConsumer.createAnsiHighlightingHandler(
-            /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut,
-            stdOutToWriteTo,
-            ansi));
+    PrintStream stdOutToWriteTo = shouldPrintStdOut ? stdOutStream : new CapturingPrintStream();
+    InputStreamConsumer stdOut =
+        new InputStreamConsumer(
+            process.getInputStream(),
+            InputStreamConsumer.createAnsiHighlightingHandler(
+                /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut,
+                stdOutToWriteTo,
+                ansi));
 
     boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
     boolean expectingStdErr = options.contains(Option.EXPECTING_STD_ERR);
-    PrintStream stdErrToWriteTo = shouldPrintStdErr ?
-        stdErrStream : new CapturingPrintStream();
-    InputStreamConsumer stdErr = new InputStreamConsumer(
-        process.getErrorStream(),
-        InputStreamConsumer.createAnsiHighlightingHandler(
-            /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr,
-            stdErrToWriteTo,
-            ansi));
+    PrintStream stdErrToWriteTo = shouldPrintStdErr ? stdErrStream : new CapturingPrintStream();
+    InputStreamConsumer stdErr =
+        new InputStreamConsumer(
+            process.getErrorStream(),
+            InputStreamConsumer.createAnsiHighlightingHandler(
+                /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr,
+                stdErrToWriteTo,
+                ansi));
 
     // Consume the streams so they do not deadlock.
     Future<Void> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
@@ -357,8 +343,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   private static Optional<String> getDataIfNotPrinted(
-      PrintStream printStream,
-      boolean shouldPrint) {
+      PrintStream printStream, boolean shouldPrint) {
     if (!shouldPrint) {
       CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
       return Optional.of(capturingPrintStream.getContentsAsString(UTF_8));
@@ -366,5 +351,4 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       return Optional.empty();
     }
   }
-
 }

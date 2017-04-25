@@ -19,44 +19,27 @@ import java.util.Optional;
 
 public interface ExecutionEnvironment {
 
-  /**
-   * @return The current hostname or 'unknown'
-   */
+  /** @return The current hostname or 'unknown' */
   String getHostname();
 
-  /**
-   * @return The current username or 'unknown'
-   */
+  /** @return The current username or 'unknown' */
   String getUsername();
 
-  /**
-   * @return The number of cores on this machine.
-   */
+  /** @return The number of cores on this machine. */
   int getAvailableCores();
 
-  /**
-   * @return The amount of system memory on this machine in bytes.
-   */
+  /** @return The amount of system memory on this machine in bytes. */
   long getTotalMemory();
 
-  /**
-   * @return The current operating system.
-   */
+  /** @return The current operating system. */
   Platform getPlatform();
 
-  /**
-   * @return Whether an ethernet interface is available and enabled.
-   */
+  /** @return Whether an ethernet interface is available and enabled. */
   Network getLikelyActiveNetwork();
 
-  /**
-   * @return The SSID of the current wifi network if it can be determined.
-   */
+  /** @return The SSID of the current wifi network if it can be determined. */
   Optional<String> getWifiSsid();
 
-  /**
-   * Gets the environment variable indicated by the specified key.
-   */
+  /** Gets the environment variable indicated by the specified key. */
   String getenv(String key, String defaultValue);
-
 }

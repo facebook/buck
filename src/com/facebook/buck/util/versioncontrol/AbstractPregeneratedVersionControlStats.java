@@ -17,11 +17,8 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractPregeneratedVersionControlStats extends CommonVersionControlStats {
-
-}
+interface AbstractPregeneratedVersionControlStats extends CommonVersionControlStats {}

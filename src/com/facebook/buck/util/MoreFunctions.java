@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.io.IOException;
 import java.util.function.Function;
 

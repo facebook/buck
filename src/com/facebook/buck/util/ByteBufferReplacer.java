@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -55,14 +54,12 @@ public class ByteBufferReplacer {
   }
 
   /**
-   * Build a replacer using the given map of paths to replacement paths, using {@code charset}
-   * to convert to underlying byte arrays.  If the replacement paths are not long enough, use
-   * the given path separator to fill.
+   * Build a replacer using the given map of paths to replacement paths, using {@code charset} to
+   * convert to underlying byte arrays. If the replacement paths are not long enough, use the given
+   * path separator to fill.
    */
   public static ByteBufferReplacer fromPaths(
-      ImmutableMap<Path, Path> paths,
-      char separator,
-      Charset charset) {
+      ImmutableMap<Path, Path> paths, char separator, Charset charset) {
 
     ImmutableMap.Builder<byte[], byte[]> replacements = ImmutableMap.builder();
 
@@ -88,8 +85,8 @@ public class ByteBufferReplacer {
   }
 
   /**
-   * Perform an in-place replacement pass over the given buffer (bounded by
-   * {@link java.nio.Buffer#position} and {@link java.nio.Buffer#limit}).
+   * Perform an in-place replacement pass over the given buffer (bounded by {@link
+   * java.nio.Buffer#position} and {@link java.nio.Buffer#limit}).
    *
    * @param buffer the buffer on which to perform replacements.
    * @param maxReplacements the maximum number of replacements to perform (-1 means unlimited).
@@ -105,9 +102,8 @@ public class ByteBufferReplacer {
 
       // Since we can't use Pattern on a byte[], we need to convert our search byte array
       // to a string.  To do this we use ISO-8859-1 since it maps 1-to-1 in 0-0xFF range.
-      Pattern pattern = Pattern.compile(
-          new String(entry.getKey(), Charsets.ISO_8859_1),
-          Pattern.LITERAL);
+      Pattern pattern =
+          Pattern.compile(new String(entry.getKey(), Charsets.ISO_8859_1), Pattern.LITERAL);
       Matcher matcher = pattern.matcher(charSequence);
 
       while (matcher.find() && (numReplacements < maxReplacements || maxReplacements == -1)) {
@@ -156,7 +152,5 @@ public class ByteBufferReplacer {
       slice.limit(buffer.position() + end);
       return new ByteBufferCharSequence(slice);
     }
-
   }
-
 }

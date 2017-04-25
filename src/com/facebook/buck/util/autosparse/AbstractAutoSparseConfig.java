@@ -19,13 +19,11 @@ package com.facebook.buck.util.autosparse;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import org.immutables.value.Value;
 
 @Value.Immutable(copy = false)
 @BuckStyleTuple
@@ -38,7 +36,7 @@ public abstract class AbstractAutoSparseConfig {
 
   public static AutoSparseConfig of(boolean enabled, List<String> ignore) {
     ImmutableSet.Builder<Path> ignoredPaths = ImmutableSet.builder();
-    for (String path: ignore) {
+    for (String path : ignore) {
       ignoredPaths.add(Paths.get(path));
     }
     return AutoSparseConfig.of(enabled, ignoredPaths.build());
@@ -47,7 +45,6 @@ public abstract class AbstractAutoSparseConfig {
   public static AutoSparseConfig of(Config config) {
     return AutoSparseConfig.of(
         config.getBooleanValue("project", "enable_autosparse", false),
-        config.getListWithoutComments("autosparse", "ignore")
-    );
+        config.getListWithoutComments("autosparse", "ignore"));
   }
 }

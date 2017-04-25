@@ -17,13 +17,12 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.log.Logger;
-
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Makes it simple to assert that access to a piece of code should be done from one thread
- * at a time in a non-reentrant manner.
+ * Makes it simple to assert that access to a piece of code should be done from one thread at a time
+ * in a non-reentrant manner.
  */
 public class AssertScopeExclusiveAccess {
   private static final Logger LOG = Logger.get(AssertScopeExclusiveAccess.class);
@@ -43,9 +42,7 @@ public class AssertScopeExclusiveAccess {
     }
 
     if (!firstOneInScope) {
-      LOG.verbose(
-          inScopeStack.get(),
-          "Indicating previous access to single threaded scope.");
+      LOG.verbose(inScopeStack.get(), "Indicating previous access to single threaded scope.");
 
       throw new IllegalStateException(
           "More than one thread attempting access to single-threaded scope.");

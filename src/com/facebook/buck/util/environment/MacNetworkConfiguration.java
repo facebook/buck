@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +28,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Mac OS X implementation for finding likely network states for diagnostic purposes.
- */
+/** Mac OS X implementation for finding likely network states for diagnostic purposes. */
 public class MacNetworkConfiguration {
   private static final Logger LOG = Logger.get(MacNetworkConfiguration.class);
   private static final long COMMAND_TIMEOUT_MS = 1000L;
 
   // Utility class, do not instantiate.
-  private MacNetworkConfiguration () { }
+  private MacNetworkConfiguration() {}
 
-  /**
-   * Returns a string representing likely active network; eg 'Wired', 'WiFi:<ssid>'.
-   */
+  /** Returns a string representing likely active network; eg 'Wired', 'WiFi:<ssid>'. */
   public static Network getLikelyActiveNetwork() {
     try {
       for (String device : getDevicesByServiceOrder()) {
@@ -60,9 +55,7 @@ public class MacNetworkConfiguration {
   }
 
   static Pattern devicePattern = Pattern.compile("Device: ([^)]*)\\)");
-  /**
-   * Returns a list of the network devices in order of their service priorities.
-   */
+  /** Returns a list of the network devices in order of their service priorities. */
   private static List<String> getDevicesByServiceOrder() throws InterruptedException {
     /*
     $ networksetup -listnetworkserviceorder
@@ -84,9 +77,7 @@ public class MacNetworkConfiguration {
   }
 
   static Pattern activePattern = Pattern.compile("Active: (.*)$");
-  /**
-   * Indicates whether device is active (i.e. physically connected).
-   */
+  /** Indicates whether device is active (i.e. physically connected). */
   private static Boolean isDeviceActive(String device) throws InterruptedException {
     /*
       $ networksetup -getMedia "en0"
@@ -104,9 +95,7 @@ public class MacNetworkConfiguration {
   }
 
   static Pattern ssidPattern = Pattern.compile("Current Wi-Fi Network: (.*)$");
-  /**
-   * Gets the SSID of a device (sadly the most definitive way to determine wired vs wireless).
-   */
+  /** Gets the SSID of a device (sadly the most definitive way to determine wired vs wireless). */
   private static Optional<String> getDeviceSSID(String device) throws InterruptedException {
     /*
       $ networksetup -getairportnetwork "en0"
@@ -129,25 +118,22 @@ public class MacNetworkConfiguration {
     return Optional.empty();
   }
 
-  private static String runNetworkSetupCommand(
-      String subCommand) throws InterruptedException {
+  private static String runNetworkSetupCommand(String subCommand) throws InterruptedException {
     return runNetworkSetupCommand(subCommand, "");
   }
 
-  /**
-   * Naive `networksetup` invocation; returns non-empty string of stdout if all went well.
-   */
-  private static String runNetworkSetupCommand(
-      String subCommand,
-      String argument) throws InterruptedException {
+  /** Naive `networksetup` invocation; returns non-empty string of stdout if all went well. */
+  private static String runNetworkSetupCommand(String subCommand, String argument)
+      throws InterruptedException {
 
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     SimpleProcessListener listener = new SimpleProcessListener();
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-      .addCommand("networksetup")
-      .addCommand(String.format("-%s", subCommand))
-      .addCommand(argument)
-      .build();
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .addCommand("networksetup")
+            .addCommand(String.format("-%s", subCommand))
+            .addCommand(argument)
+            .build();
 
     ListeningProcessExecutor.LaunchedProcess process = null;
     try {
@@ -164,7 +150,5 @@ public class MacNetworkConfiguration {
         executor.destroyProcess(process, /* force */ true);
       }
     }
-
   }
-
 }

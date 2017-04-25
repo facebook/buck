@@ -27,37 +27,33 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
  * A lookup table of {@link TargetNode}s which matches {@link BuildTarget} lookups to nodes indexed
- * by a base target which contains a subset of the input targets flavors.  It is expected that every
+ * by a base target which contains a subset of the input targets flavors. It is expected that every
  * lookup should match at most one base target.
  */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractFlavorSearchTargetNodeFinder {
 
-  /**
-   * @return a map of nodes indexed by their "base" target.
-   */
+  /** @return a map of nodes indexed by their "base" target. */
   abstract ImmutableMap<BuildTarget, TargetNode<?, ?>> getBaseTargetIndex();
 
-  /**
-   * Verify that base targets correctly correspond to their node.
-   */
+  /** Verify that base targets correctly correspond to their node. */
   @Value.Check
   void check() {
     for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : getBaseTargetIndex().entrySet()) {
       Preconditions.checkArgument(
-          ent.getValue().getBuildTarget().getUnflavoredBuildTarget()
+          ent.getValue()
+              .getBuildTarget()
+              .getUnflavoredBuildTarget()
               .equals(ent.getKey().getUnflavoredBuildTarget()));
       Preconditions.checkArgument(
           ent.getValue().getBuildTarget().getFlavors().containsAll(ent.getKey().getFlavors()));
@@ -65,12 +61,14 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
   }
 
   /**
-   * @return an index from the original node target to node.  Used as an optimization to avoid a
-   *         more expensive flavor-subset-based lookup if we can find the node by the exact name.
+   * @return an index from the original node target to node. Used as an optimization to avoid a more
+   *     expensive flavor-subset-based lookup if we can find the node by the exact name.
    */
   @Value.Derived
   ImmutableMap<BuildTarget, TargetNode<?, ?>> getBuildTargetIndex() {
-    return getBaseTargetIndex().values().stream()
+    return getBaseTargetIndex()
+        .values()
+        .stream()
         .collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n));
   }
 
@@ -118,17 +116,16 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
     // from largest flavor set to smallest.  We then use the first match, and verify the subsequent
     // matches are subsets.
     ImmutableList<ImmutableSet<Flavor>> matches =
-        RichStream.from(flavorList)
-            .filter(target.getFlavors()::containsAll)
-            .toImmutableList();
+        RichStream.from(flavorList).filter(target.getFlavors()::containsAll).toImmutableList();
     if (!matches.isEmpty()) {
       ImmutableSet<Flavor> firstMatch = matches.get(0);
       for (ImmutableSet<Flavor> subsequentMatch : matches.subList(1, matches.size())) {
         Preconditions.checkState(
             firstMatch.size() > subsequentMatch.size(),
-            "Expected to find larger flavor lists earlier in the flavor map " +
-                "index (sizeof(%s) <= sizeof(%s))",
-            firstMatch.size(), subsequentMatch.size());
+            "Expected to find larger flavor lists earlier in the flavor map "
+                + "index (sizeof(%s) <= sizeof(%s))",
+            firstMatch.size(),
+            subsequentMatch.size());
         Preconditions.checkState(
             firstMatch.containsAll(subsequentMatch),
             "Found multiple disjoint flavor matches for %s: %s and %s (from %s)",
@@ -147,5 +144,4 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
     // Otherwise, return `null` to indicate this node isn't in the target graph.
     return Optional.empty();
   }
-
 }

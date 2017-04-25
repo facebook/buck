@@ -19,15 +19,11 @@ package com.facebook.buck.util;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Value type passed to {@link ProcessExecutor} to launch a process.
- */
+/** Value type passed to {@link ProcessExecutor} to launch a process. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProcessExecutorParams {
@@ -36,42 +32,38 @@ abstract class AbstractProcessExecutorParams {
     return ProcessExecutorParams.builder().addCommand(args).build();
   }
 
-  /**
-   * The command and arguments to launch.
-   */
+  /** The command and arguments to launch. */
   @Value.Parameter
   public abstract ImmutableList<String> getCommand();
 
-  /**
-   * If present, the current working directory for the launched process.
-   */
+  /** If present, the current working directory for the launched process. */
   @Value.Parameter
   public abstract Optional<Path> getDirectory();
 
   /**
-   * If present, the map of environment variables used for the launched
-   * process. Otherwise, inherits the current process's environment.
+   * If present, the map of environment variables used for the launched process. Otherwise, inherits
+   * the current process's environment.
    */
   @Value.Parameter
   public abstract Optional<ImmutableMap<String, String>> getEnvironment();
 
   /**
-   * If present, redirects stdout for the process to this location.
-   * Otherwise, opens a pipe for stdout.
+   * If present, redirects stdout for the process to this location. Otherwise, opens a pipe for
+   * stdout.
    */
   @Value.Parameter
   public abstract Optional<ProcessBuilder.Redirect> getRedirectInput();
 
   /**
-   * If present, redirects stdin for the process to this location.
-   * Otherwise, opens a pipe for stdin.
+   * If present, redirects stdin for the process to this location. Otherwise, opens a pipe for
+   * stdin.
    */
   @Value.Parameter
   public abstract Optional<ProcessBuilder.Redirect> getRedirectOutput();
 
   /**
-   * If present, redirects stderr for the process to this location.
-   * Otherwise, opens a pipe for stderr.
+   * If present, redirects stderr for the process to this location. Otherwise, opens a pipe for
+   * stderr.
    */
   @Value.Parameter
   public abstract Optional<ProcessBuilder.Redirect> getRedirectError();
@@ -81,5 +73,4 @@ abstract class AbstractProcessExecutorParams {
    */
   @Value.Parameter
   public abstract Optional<Boolean> getRedirectErrorStream();
-
 }

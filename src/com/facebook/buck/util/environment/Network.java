@@ -23,12 +23,15 @@ public class Network {
 
   public final NetworkMedium medium;
   public final Optional<String> ssid;
+
   public Network() {
     this(NetworkMedium.UNKNOWN);
   }
+
   Network(NetworkMedium medium) {
     this(medium, Optional.empty());
   }
+
   Network(NetworkMedium medium, Optional<String> ssid) {
     this.medium = medium;
     this.ssid = ssid;

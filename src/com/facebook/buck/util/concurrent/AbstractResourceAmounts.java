@@ -16,7 +16,6 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -24,16 +23,17 @@ import org.immutables.value.Value;
 abstract class AbstractResourceAmounts {
   @Value.Parameter
   public abstract int getCpu();
+
   @Value.Parameter
   public abstract int getMemory();
+
   @Value.Parameter
   public abstract int getDiskIO();
+
   @Value.Parameter
   public abstract int getNetworkIO();
 
-  /**
-   * If you add or remove resource types above please make sure you update the number below.
-   */
+  /** If you add or remove resource types above please make sure you update the number below. */
   public static final int RESOURCE_TYPE_COUNT = 4;
 
   public static final ResourceAmounts ZERO = ResourceAmounts.of(0, 0, 0, 0);
@@ -55,16 +55,16 @@ abstract class AbstractResourceAmounts {
   }
 
   public boolean containsValuesLessThan(ResourceAmounts amounts) {
-    return getCpu() < amounts.getCpu() ||
-        getMemory() < amounts.getMemory() ||
-        getDiskIO() < amounts.getDiskIO() ||
-        getNetworkIO() < amounts.getNetworkIO();
+    return getCpu() < amounts.getCpu()
+        || getMemory() < amounts.getMemory()
+        || getDiskIO() < amounts.getDiskIO()
+        || getNetworkIO() < amounts.getNetworkIO();
   }
 
   public boolean allValuesLessThanOrEqual(ResourceAmounts amounts) {
-    return getCpu() <= amounts.getCpu() &&
-        getMemory() <= amounts.getMemory() &&
-        getDiskIO() <= amounts.getDiskIO() &&
-        getNetworkIO() <= amounts.getNetworkIO();
+    return getCpu() <= amounts.getCpu()
+        && getMemory() <= amounts.getMemory()
+        && getDiskIO() <= amounts.getDiskIO()
+        && getNetworkIO() <= amounts.getNetworkIO();
   }
 }

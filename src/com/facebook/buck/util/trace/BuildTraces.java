@@ -23,7 +23,6 @@ import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -45,10 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
-/**
- * Utility to help with reading data from build trace files.
- */
+/** Utility to help with reading data from build trace files. */
 public class BuildTraces {
 
   /**
@@ -70,12 +66,13 @@ public class BuildTraces {
   }
 
   public static class TraceAttributes {
-    private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-      @Override
-      protected DateFormat initialValue() {
-        return new SimpleDateFormat("EEE, MMM d h:mm a");
-      }
-    };
+    private static final ThreadLocal<DateFormat> DATE_FORMAT =
+        new ThreadLocal<DateFormat>() {
+          @Override
+          protected DateFormat initialValue() {
+            return new SimpleDateFormat("EEE, MMM d h:mm a");
+          }
+        };
 
     private final Optional<String> command;
     private final FileTime lastModifiedTime;
@@ -121,8 +118,8 @@ public class BuildTraces {
 
   /**
    * Parses a trace file and returns the command that the user executed to create the trace.
-   * <p>
-   * This method tries to be reasonably tolerant of changes to the .trace file schema, returning
+   *
+   * <p>This method tries to be reasonably tolerant of changes to the .trace file schema, returning
    * {@link Optional#empty()} if it does not find the fields in the JSON that it expects.
    */
   public TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
@@ -132,8 +129,8 @@ public class BuildTraces {
   }
 
   private Optional<String> parseCommandFrom(Path pathToTrace) {
-    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers = ImmutableSet.of(
-        ChromeTraceParser.COMMAND);
+    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers =
+        ImmutableSet.of(ChromeTraceParser.COMMAND);
     ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
 
     Map<ChromeTraceEventMatcher<?>, Object> results;
@@ -154,9 +151,7 @@ public class BuildTraces {
     return name.startsWith(testPrefix) && name.endsWith(testSuffix);
   }
 
-  /**
-   * The most recent trace (the one with the greatest last-modified time) will be listed first.
-   */
+  /** The most recent trace (the one with the greatest last-modified time) will be listed first. */
   public List<Path> listTraceFilesByLastModified() throws IOException {
     final List<Path> allTraces = new ArrayList<>();
 
@@ -164,8 +159,8 @@ public class BuildTraces {
         projectFilesystem.getBuckPaths().getLogDir(),
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(
-              Path file, BasicFileAttributes attrs) throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
             Matcher matcher = TRACES_FILE_PATTERN.matcher(file.getFileName().toString());
             if (matcher.matches()) {
               allTraces.add(file);
@@ -178,39 +173,43 @@ public class BuildTraces {
     // Sort by:
     // 1. Reverse chronological order.
     // 2. Alphabetical order.
-    Collections.sort(allTraces, (path1, path2) -> {
-      int result = 0;
-      FileTime lastModifiedTime1;
-      FileTime lastModifiedTime2;
-      try {
-        lastModifiedTime1 = projectFilesystem.getLastModifiedTime(path1);
-        lastModifiedTime2 = projectFilesystem.getLastModifiedTime(path2);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+    Collections.sort(
+        allTraces,
+        (path1, path2) -> {
+          int result = 0;
+          FileTime lastModifiedTime1;
+          FileTime lastModifiedTime2;
+          try {
+            lastModifiedTime1 = projectFilesystem.getLastModifiedTime(path1);
+            lastModifiedTime2 = projectFilesystem.getLastModifiedTime(path2);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
 
-      result = lastModifiedTime2.compareTo(lastModifiedTime1);
-      if (result == 0) {
-        return path2.toString().compareTo(path1.toString());
-      } else {
-        return result;
-      }
-    });
+          result = lastModifiedTime2.compareTo(lastModifiedTime1);
+          if (result == 0) {
+            return path2.toString().compareTo(path1.toString());
+          } else {
+            return result;
+          }
+        });
 
     return allTraces;
   }
 
   /**
    * Returns a collection of paths containing traces for the specified build ID.
-   * <p>
-   * A given build might have more than one trace file (for example,
-   * the buck.py launcher has its own trace file).
+   *
+   * <p>A given build might have more than one trace file (for example, the buck.py launcher has its
+   * own trace file).
    */
   private Collection<Path> getPathsToTraces(final String id) throws IOException {
     Preconditions.checkArgument(TRACE_ID_PATTERN.matcher(id).matches());
-    List<Path> traces = listTraceFilesByLastModified().stream()
-        .filter(input -> input.getFileName().toString().contains(id))
-        .collect(Collectors.toList());
+    List<Path> traces =
+        listTraceFilesByLastModified()
+            .stream()
+            .filter(input -> input.getFileName().toString().contains(id))
+            .collect(Collectors.toList());
 
     if (traces.isEmpty()) {
       throw new HumanReadableException("Could not find a build trace with id %s.", id);

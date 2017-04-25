@@ -30,9 +30,7 @@ public enum Platform {
     this.autoconfName = autoconfName;
   }
 
-  /**
-   * @return platform name as used in autoconf target tuples
-   */
+  /** @return platform name as used in autoconf target tuples */
   public String getAutoconfName() {
     return autoconfName;
   }

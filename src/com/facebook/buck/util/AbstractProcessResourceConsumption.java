@@ -16,14 +16,10 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
-
-/**
- * Represents resource consumption counters of a {@link Process}.
- */
+/** Represents resource consumption counters of a {@link Process}. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProcessResourceConsumption {
@@ -56,8 +52,7 @@ abstract class AbstractProcessResourceConsumption {
 
   @Nullable
   public static ProcessResourceConsumption getPeak(
-      @Nullable ProcessResourceConsumption r1,
-      @Nullable ProcessResourceConsumption r2) {
+      @Nullable ProcessResourceConsumption r1, @Nullable ProcessResourceConsumption r2) {
     if (r1 == null) {
       return r2;
     }
@@ -79,8 +74,7 @@ abstract class AbstractProcessResourceConsumption {
 
   @Nullable
   public static ProcessResourceConsumption getTotal(
-      @Nullable ProcessResourceConsumption r1,
-      @Nullable ProcessResourceConsumption r2) {
+      @Nullable ProcessResourceConsumption r1, @Nullable ProcessResourceConsumption r2) {
     if (r1 == null) {
       return r2;
     }

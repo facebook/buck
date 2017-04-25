@@ -16,9 +16,7 @@
 
 package com.facebook.buck.util;
 
-/**
- * Indicates that something could not be done because Buck was dying.
- */
+/** Indicates that something could not be done because Buck was dying. */
 public class BuckIsDyingException extends RuntimeException {
   public BuckIsDyingException(String message) {
     super(message);

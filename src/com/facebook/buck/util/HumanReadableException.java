@@ -41,15 +41,13 @@ public class HumanReadableException extends RuntimeException
     this.humanReadableErrorMessage = humanReadableErrorMessage;
   }
 
-  public HumanReadableException(@Nullable Throwable cause,
-                                String humanReadableFormatString,
-                                Object... args) {
+  public HumanReadableException(
+      @Nullable Throwable cause, String humanReadableFormatString, Object... args) {
     this(cause, String.format(humanReadableFormatString, args));
   }
 
   public HumanReadableException(ExceptionWithHumanReadableMessage e) {
-    this((Throwable) ((e instanceof Throwable) ? e : null),
-        e.getHumanReadableErrorMessage());
+    this((Throwable) ((e instanceof Throwable) ? e : null), e.getHumanReadableErrorMessage());
   }
 
   @Override

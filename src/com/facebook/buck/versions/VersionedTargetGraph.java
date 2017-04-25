@@ -23,10 +23,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.Nullable;
 
 public class VersionedTargetGraph extends TargetGraph {
@@ -34,11 +32,12 @@ public class VersionedTargetGraph extends TargetGraph {
   private final FlavorSearchTargetNodeFinder nodeFinder;
 
   private VersionedTargetGraph(
-      MutableDirectedGraph<TargetNode<?, ?>> graph,
-      FlavorSearchTargetNodeFinder nodeFinder) {
+      MutableDirectedGraph<TargetNode<?, ?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
     super(
         graph,
-        graph.getNodes().stream()
+        graph
+            .getNodes()
+            .stream()
             .collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
     for (TargetNode<?, ?> node : graph.getNodes()) {
       Preconditions.checkArgument(
@@ -78,10 +77,7 @@ public class VersionedTargetGraph extends TargetGraph {
 
     public VersionedTargetGraph build() {
       return new VersionedTargetGraph(
-          graph,
-          FlavorSearchTargetNodeFinder.of(ImmutableMap.copyOf(index)));
+          graph, FlavorSearchTargetNodeFinder.of(ImmutableMap.copyOf(index)));
     }
-
   }
-
 }

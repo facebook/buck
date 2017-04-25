@@ -19,7 +19,6 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-
 import java.util.Optional;
 
 /**
@@ -28,13 +27,10 @@ import java.util.Optional;
  */
 public interface TargetTranslatorOverridingDescription<A> extends Description<A> {
 
-  /**
-   * @return the translated constructor arg, if any translation was necessary.
-   */
+  /** @return the translated constructor arg, if any translation was necessary. */
   Optional<A> translateConstructorArg(
       BuildTarget target,
       CellPathResolver cellNames,
       TargetNodeTranslator translator,
       A constructorArg);
-
 }

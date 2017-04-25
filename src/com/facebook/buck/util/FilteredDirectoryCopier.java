@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -27,24 +26,22 @@ public interface FilteredDirectoryCopier {
 
   /**
    * Copies multiple directories while filtering out individual files which fail a predicate.
+   *
    * @param sourcesToDestinations mapping from source to destination directories
    * @param pred predicate to test against
    */
   public abstract void copyDirs(
-      ProjectFilesystem filesystem,
-      Map<Path, Path> sourcesToDestinations,
-      Predicate<Path> pred) throws IOException;
+      ProjectFilesystem filesystem, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
+      throws IOException;
 
   /**
    * Creates a filtered copy of a directory.
+   *
    * @param srcDir source directory
    * @param destDir destination directory
    * @param pred a predicate to determine which files should be copied.
    */
   public abstract void copyDir(
-      ProjectFilesystem filesystem,
-      Path srcDir,
-      Path destDir,
-      Predicate<Path> pred) throws IOException;
-
+      ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
+      throws IOException;
 }

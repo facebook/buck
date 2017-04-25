@@ -15,12 +15,10 @@
  */
 package com.facebook.buck.util.concurrent;
 
-/**
- * How to handle fairness when acquiring the semaphore.
- */
+/** How to handle fairness when acquiring the semaphore. */
 public enum ResourceAllocationFairness {
   /**
-   * Make acquisitions happen in order.  This may mean a high-permit count acquisition can block
+   * Make acquisitions happen in order. This may mean a high-permit count acquisition can block
    * smaller ones queued behind it that could otherwise grab the semaphore.
    */
   FAIR,

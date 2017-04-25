@@ -17,11 +17,10 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class ContextualProcessExecutor implements ProcessExecutor {
@@ -29,9 +28,7 @@ public class ContextualProcessExecutor implements ProcessExecutor {
   private final ProcessExecutor delegate;
   private final ImmutableMap<String, String> context;
 
-  public ContextualProcessExecutor(
-      ProcessExecutor delegate,
-      ImmutableMap<String, String> context) {
+  public ContextualProcessExecutor(ProcessExecutor delegate, ImmutableMap<String, String> context) {
     this.delegate = delegate;
     this.context = context;
   }
@@ -51,8 +48,7 @@ public class ContextualProcessExecutor implements ProcessExecutor {
 
   @Override
   public LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws IOException {
+      ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     return delegate.launchProcess(params, MoreMaps.merge(this.context, context));
   }
 
@@ -63,9 +59,8 @@ public class ContextualProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws InterruptedException, IOException {
+  public Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws InterruptedException, IOException {
     return delegate.launchAndExecute(params, MoreMaps.merge(this.context, context));
   }
 
@@ -75,7 +70,8 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException {
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException, IOException {
     return delegate.launchAndExecute(params, context, options, stdin, timeOutMs, timeOutHandler);
   }
 
@@ -86,14 +82,10 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException {
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException, IOException {
     return delegate.launchAndExecute(
-        params,
-        MoreMaps.merge(this.context, context),
-        options,
-        stdin,
-        timeOutMs,
-        timeOutHandler);
+        params, MoreMaps.merge(this.context, context), options, stdin, timeOutMs, timeOutHandler);
   }
 
   @Override
@@ -104,9 +96,8 @@ public class ContextualProcessExecutor implements ProcessExecutor {
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
-      LaunchedProcess launchedProcess,
-      long millis,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
+      LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
     return delegate.waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
   }
 
@@ -117,10 +108,8 @@ public class ContextualProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor cloneWithOutputStreams(
-      PrintStream newStdOutStream,
-      PrintStream newStdErrStream) {
+      PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new ContextualProcessExecutor(
-        delegate.cloneWithOutputStreams(newStdOutStream, newStdErrStream),
-        context);
+        delegate.cloneWithOutputStreams(newStdOutStream, newStdErrStream), context);
   }
 }

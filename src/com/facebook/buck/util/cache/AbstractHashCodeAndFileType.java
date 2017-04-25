@@ -23,12 +23,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -60,9 +58,7 @@ abstract class AbstractHashCodeAndFileType {
   }
 
   public static HashCodeAndFileType ofArchive(
-      HashCode hashCode,
-      ProjectFilesystem projectFilesystem,
-      Path archiveRelativePath) {
+      HashCode hashCode, ProjectFilesystem projectFilesystem, Path archiveRelativePath) {
     return HashCodeAndFileType.builder()
         .setType(Type.ARCHIVE)
         .setGetHashCode(hashCode)
@@ -79,10 +75,7 @@ abstract class AbstractHashCodeAndFileType {
   }
 
   public static HashCodeAndFileType ofFile(HashCode hashCode) {
-    return HashCodeAndFileType.builder()
-        .setType(Type.FILE)
-        .setGetHashCode(hashCode)
-        .build();
+    return HashCodeAndFileType.builder().setType(Type.FILE).setGetHashCode(hashCode).build();
   }
 
   enum Type {
@@ -90,5 +83,4 @@ abstract class AbstractHashCodeAndFileType {
     FILE,
     DIRECTORY
   };
-
 }

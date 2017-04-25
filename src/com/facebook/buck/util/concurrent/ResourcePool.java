@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -35,51 +34,56 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Allows multiple concurrently executing futures to share a constrained number of resources.
  *
- * Resources are lazily created up till a fixed maximum. If more than max resources are
- * requested the associated 'requests' are queued up in the resourceRequests field. As soon as
- * a resource is returned it will be used to satisfy the first pending request, otherwise it
- * is stored in the parkedResources queue.
+ * <p>Resources are lazily created up till a fixed maximum. If more than max resources are requested
+ * the associated 'requests' are queued up in the resourceRequests field. As soon as a resource is
+ * returned it will be used to satisfy the first pending request, otherwise it is stored in the
+ * parkedResources queue.
  *
- * If the resourceSupplier throws a RuntimeException the Future associated with the failed attempt
- * to create the resource will contain the relevant exception. Any subsequent requests the pool
- * will get will attempt to create a new resource.
+ * <p>If the resourceSupplier throws a RuntimeException the Future associated with the failed
+ * attempt to create the resource will contain the relevant exception. Any subsequent requests the
+ * pool will get will attempt to create a new resource.
  *
- * If the {@link ResourceUsageErrorPolicy#RECYCLE} error usage policy is specified then, in case of
- * errors when "using" a resource it is assumed to be defective, will be retired
- * and a new resource will be requested from the supplier. The Future associated with the failed
- * attempt to use the resource will contain the relevant exception.
+ * <p>If the {@link ResourceUsageErrorPolicy#RECYCLE} error usage policy is specified then, in case
+ * of errors when "using" a resource it is assumed to be defective, will be retired and a new
+ * resource will be requested from the supplier. The Future associated with the failed attempt to
+ * use the resource will contain the relevant exception.
  */
 public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   private static final Logger LOG = Logger.get(ResourcePool.class);
 
   private final int maxResources;
   private final ResourceUsageErrorPolicy resourceUsageErrorPolicy;
+
   @GuardedBy("this")
   private final Supplier<R> resourceSupplier;
+
   @GuardedBy("this")
   private final List<R> createdResources;
+
   @GuardedBy("this")
   private final Deque<R> parkedResources;
+
   @GuardedBy("this")
   private final Deque<SettableFuture<Void>> resourceRequests;
+
   private final AtomicBoolean closing;
+
   @GuardedBy("this")
   private @Nullable ListenableFuture<Void> shutdownFuture;
+
   @GuardedBy("this")
   private final Set<ListenableFuture<?>> pendingWork;
 
   /**
    * @param maxResources maximum number of resources to use concurrently.
    * @param resourceSupplier function used to create a new resource. It should never block, it may
-   *                      be called more than maxResources times if processing resources throws
-   *                      exceptions.
+   *     be called more than maxResources times if processing resources throws exceptions.
    */
   public ResourcePool(
       int maxResources,
@@ -100,39 +104,39 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
 
   /**
    * @param executorService where to perform the resource processing. Should really be a "real"
-   *                        executor (not a directExecutor).
+   *     executor (not a directExecutor).
    * @return a {@link ListenableFuture} containing the result of the processing. The future will be
-   *         cancelled if the {@link ResourcePool#close()} method is called.
+   *     cancelled if the {@link ResourcePool#close()} method is called.
    */
   public synchronized <T> ListenableFuture<T> scheduleOperationWithResource(
-      ThrowingFunction<R, T> withResource,
-      final ListeningExecutorService executorService) {
+      ThrowingFunction<R, T> withResource, final ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    final ListenableFuture<T> futureWork = Futures.transformAsync(
-        initialSchedule(),
-        new AsyncFunction<Void, T>() {
-          @Override
-          public ListenableFuture<T> apply(Void input) throws Exception {
-            Either<R, ListenableFuture<Void>> resourceRequest = requestResource();
-            if (resourceRequest.isLeft()) {
-              R resource = resourceRequest.getLeft();
-              boolean resourceIsDefunct = false;
-              try {
-                return Futures.immediateFuture(withResource.apply(resource));
-              } catch (Exception e) {
-                resourceIsDefunct =
-                    (resourceUsageErrorPolicy == ResourceUsageErrorPolicy.RETIRE);
-                throw e;
-              } finally {
-                returnResource(resource, resourceIsDefunct);
+    final ListenableFuture<T> futureWork =
+        Futures.transformAsync(
+            initialSchedule(),
+            new AsyncFunction<Void, T>() {
+              @Override
+              public ListenableFuture<T> apply(Void input) throws Exception {
+                Either<R, ListenableFuture<Void>> resourceRequest = requestResource();
+                if (resourceRequest.isLeft()) {
+                  R resource = resourceRequest.getLeft();
+                  boolean resourceIsDefunct = false;
+                  try {
+                    return Futures.immediateFuture(withResource.apply(resource));
+                  } catch (Exception e) {
+                    resourceIsDefunct =
+                        (resourceUsageErrorPolicy == ResourceUsageErrorPolicy.RETIRE);
+                    throw e;
+                  } finally {
+                    returnResource(resource, resourceIsDefunct);
+                  }
+                } else {
+                  return Futures.transformAsync(resourceRequest.getRight(), this, executorService);
+                }
               }
-            } else {
-              return Futures.transformAsync(resourceRequest.getRight(), this, executorService);
-            }
-          }
-        },
-        executorService);
+            },
+            executorService);
 
     pendingWork.add(futureWork);
     futureWork.addListener(
@@ -232,8 +236,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   @Nullable
   public synchronized ListenableFuture<Void> getShutdownFullyCompleteFuture() {
     Preconditions.checkState(
-        closing.get(),
-        "This method should not be called before the .close() method is called.");
+        closing.get(), "This method should not be called before the .close() method is called.");
     return Preconditions.checkNotNull(shutdownFuture);
   }
 
@@ -265,34 +268,34 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
 
     // It is possible that more requests for work are scheduled at this point, however they should
     // all early-out due to `closing` being set to true, so we don't really care about those.
-    shutdownFuture = Futures.transformAsync(
-        closeFuture,
-        new AsyncFunction<List<Object>, Void>() {
-          @Override
-          public ListenableFuture<Void> apply(List<Object> input) throws Exception {
-            synchronized (ResourcePool.this) {
-              if (parkedResources.size() != createdResources.size()) {
-                LOG.error("Whoops! Some resource are still in use during shutdown.");
+    shutdownFuture =
+        Futures.transformAsync(
+            closeFuture,
+            new AsyncFunction<List<Object>, Void>() {
+              @Override
+              public ListenableFuture<Void> apply(List<Object> input) throws Exception {
+                synchronized (ResourcePool.this) {
+                  if (parkedResources.size() != createdResources.size()) {
+                    LOG.error("Whoops! Some resource are still in use during shutdown.");
+                  }
+                  // Now that pending work is done we can close all resources.
+                  for (R resource : createdResources) {
+                    resource.close();
+                  }
+                  if (!resourceRequests.isEmpty()) {
+                    LOG.error(
+                        "Error shutting down ResourcePool: "
+                            + "there should be no enqueued resource requests.");
+                  }
+                }
+                executorService.shutdown();
+                return Futures.immediateFuture(null);
               }
-              // Now that pending work is done we can close all resources.
-              for (R resource : createdResources) {
-                resource.close();
-              }
-              if (!resourceRequests.isEmpty()) {
-                LOG.error("Error shutting down ResourcePool: " +
-                    "there should be no enqueued resource requests.");
-              }
-            }
-            executorService.shutdown();
-            return Futures.immediateFuture(null);
-          }
-        },
-        executorService);
+            },
+            executorService);
   }
 
-  /**
-   * Describes how to handle errors that take place during resource usage.
-   */
+  /** Describes how to handle errors that take place during resource usage. */
   public enum ResourceUsageErrorPolicy {
     RETIRE,
     RECYCLE

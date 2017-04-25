@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
-
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
@@ -34,17 +33,13 @@ import java.lang.management.MemoryType;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Periodically probes for process-wide perf-related metrics.
- */
+/** Periodically probes for process-wide perf-related metrics. */
 public class PerfStatsTracking extends AbstractScheduledService implements AutoCloseable {
   private final BuckEventBus eventBus;
   private final ServiceManager serviceManager;
   private final InvocationInfo invocationInfo;
 
-  public PerfStatsTracking(
-      BuckEventBus eventBus,
-      InvocationInfo invocationInfo) {
+  public PerfStatsTracking(BuckEventBus eventBus, InvocationInfo invocationInfo) {
     this.eventBus = eventBus;
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
     this.invocationInfo = invocationInfo;
@@ -75,20 +70,21 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
       currentMemoryBytesUsageByPool.put(name + "(" + type + ")", currentlyUsedBytes);
     }
 
-    eventBus.post(new MemoryPerfStatsEvent(
-        freeMemoryBytes,
-        totalMemoryBytes,
-        maxMemoryBytes,
-        totalGcTimeMs,
-        currentMemoryBytesUsageByPool.build()));
+    eventBus.post(
+        new MemoryPerfStatsEvent(
+            freeMemoryBytes,
+            totalMemoryBytes,
+            maxMemoryBytes,
+            totalGcTimeMs,
+            currentMemoryBytesUsageByPool.build()));
   }
 
   @Override
   protected void runOneIteration() throws Exception {
     try {
-      GlobalStateManager.singleton().getThreadToCommandRegister().register(
-          Thread.currentThread().getId(),
-          invocationInfo.getCommandId());
+      GlobalStateManager.singleton()
+          .getThreadToCommandRegister()
+          .register(Thread.currentThread().getId(), invocationInfo.getCommandId());
       probeMemory();
     } catch (Exception e) {
       Logger.get(PerfStatsTracking.class).error(e);
@@ -98,10 +94,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedRateSchedule(
-        1L,
-        1L,
-        TimeUnit.SECONDS);
+    return Scheduler.newFixedRateSchedule(1L, 1L, TimeUnit.SECONDS);
   }
 
   @Override

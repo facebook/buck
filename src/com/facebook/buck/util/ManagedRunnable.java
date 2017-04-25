@@ -20,13 +20,11 @@ import java.io.InterruptedIOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
 import javax.annotation.Nullable;
 
 /**
- * A wrapper around a {@link Thread} which implements the {@link AutoCloseable} interface to be
- * used in try-resource blocks and which also supports forwarding exceptions to the managing
- * thread.
+ * A wrapper around a {@link Thread} which implements the {@link AutoCloseable} interface to be used
+ * in try-resource blocks and which also supports forwarding exceptions to the managing thread.
  */
 public abstract class ManagedRunnable implements AutoCloseable {
 
@@ -34,8 +32,7 @@ public abstract class ManagedRunnable implements AutoCloseable {
   private final ExecutorService threadPool;
   private @Nullable Future<?> runnableFuture;
 
-  @Nullable
-  private Exception exception;
+  @Nullable private Exception exception;
 
   public ManagedRunnable(ExecutorService threadPool) {
     this.threadPool = threadPool;
@@ -56,9 +53,7 @@ public abstract class ManagedRunnable implements AutoCloseable {
 
   protected abstract void run() throws Exception;
 
-  /**
-   * Wait for the backing thread to terminate.
-   */
+  /** Wait for the backing thread to terminate. */
   public void waitFor() throws InterruptedException, ExecutionException {
     if (runnableFuture == null) {
       throw new IllegalStateException("Cannot call waitFor on unstarted ManagedRunnable");
@@ -82,5 +77,4 @@ public abstract class ManagedRunnable implements AutoCloseable {
       throw exception;
     }
   }
-
 }

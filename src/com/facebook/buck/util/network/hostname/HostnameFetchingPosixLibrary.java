@@ -23,7 +23,7 @@ import com.sun.jna.Platform;
 public class HostnameFetchingPosixLibrary {
 
   // Utility class, do not instantiate.
-  private HostnameFetchingPosixLibrary() { }
+  private HostnameFetchingPosixLibrary() {}
 
   public static native int gethostname(byte[] name, int namelen) throws LastErrorException;
 

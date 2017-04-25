@@ -26,13 +26,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-
 import javax.annotation.Nonnull;
 
 public class MoreFutures {
@@ -41,19 +39,20 @@ public class MoreFutures {
   private MoreFutures() {}
 
   /**
-   * Invoke multiple callables on the provided executor and wait for all to return successfully.
-   * An exception is thrown (immediately) if any callable fails.
+   * Invoke multiple callables on the provided executor and wait for all to return successfully. An
+   * exception is thrown (immediately) if any callable fails.
+   *
    * @param executorService Executor service.
    * @param callables Callables to call.
    * @return List of values from each invoked callable in order if all callables execute without
    *     throwing.
-   * @throws ExecutionException If any callable throws an exception, the first of such is wrapped
-   *     in an ExecutionException and thrown.  Access via
-   *     {@link java.util.concurrent.ExecutionException#getCause()}}.
+   * @throws ExecutionException If any callable throws an exception, the first of such is wrapped in
+   *     an ExecutionException and thrown. Access via {@link
+   *     java.util.concurrent.ExecutionException#getCause()}}.
    */
   public static <V> List<V> getAll(
-      ListeningExecutorService executorService,
-      Iterable<Callable<V>> callables) throws ExecutionException, InterruptedException {
+      ListeningExecutorService executorService, Iterable<Callable<V>> callables)
+      throws ExecutionException, InterruptedException {
     // Invoke.
     ImmutableList.Builder<ListenableFuture<V>> futures = ImmutableList.builder();
     for (Callable<V> callable : callables) {
@@ -100,6 +99,7 @@ public class MoreFutures {
 
   /**
    * Returns the failure for a {@link ListenableFuture}.
+   *
    * @param future Must have completed unsuccessfully.
    */
   public static Throwable getFailure(ListenableFuture<?> future) throws InterruptedException {
@@ -116,9 +116,7 @@ public class MoreFutures {
   }
 
   public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future,
-      final FutureCallback<? super V> callback,
-      Executor executor) {
+      ListenableFuture<V> future, final FutureCallback<? super V> callback, Executor executor) {
     final SettableFuture<Void> waiter = SettableFuture.create();
     Futures.addCallback(
         future,
@@ -150,36 +148,26 @@ public class MoreFutures {
   }
 
   public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future,
-      final FutureCallback<? super V> callback) {
-    return addListenableCallback(
-        future,
-        callback,
-        directExecutor());
+      ListenableFuture<V> future, final FutureCallback<? super V> callback) {
+    return addListenableCallback(future, callback, directExecutor());
   }
 
   /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns
-   *     the value contained in {@code to} if they both succeed.
+   * @return a {@link ListenableFuture} which fails if either input future fails or returns the
+   *     value contained in {@code to} if they both succeed.
    */
   public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from,
-      final ListenableFuture<T> to) {
+      ListenableFuture<F> from, final ListenableFuture<T> to) {
     return chainExceptions(from, to, directExecutor());
   }
 
   /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns
-   *     the value contained in {@code to} if they both succeed.
+   * @return a {@link ListenableFuture} which fails if either input future fails or returns the
+   *     value contained in {@code to} if they both succeed.
    */
   public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from,
-      final ListenableFuture<T> to,
-      Executor executor) {
-    return Futures.transformAsync(
-        from,
-        result -> to,
-        executor);
+      ListenableFuture<F> from, final ListenableFuture<T> to, Executor executor) {
+    return Futures.transformAsync(from, result -> to, executor);
   }
 
   public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {

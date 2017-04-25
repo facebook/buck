@@ -16,21 +16,18 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
 /**
- * Transitional helper functions for {@link java.util.Optional} that mimics functionality of
- * {@link com.google.common.base.Optional}.
+ * Transitional helper functions for {@link java.util.Optional} that mimics functionality of {@link
+ * com.google.common.base.Optional}.
  *
- * Avoid using these functions for new code.
+ * <p>Avoid using these functions for new code.
  */
 public final class OptionalCompat {
   private OptionalCompat() {}
 
-  /**
-   * @see com.google.common.base.Optional#asSet()
-   */
+  /** @see com.google.common.base.Optional#asSet() */
   public static final <T> ImmutableSet<T> asSet(Optional<T> optional) {
     if (optional.isPresent()) {
       return ImmutableSet.of(optional.get());

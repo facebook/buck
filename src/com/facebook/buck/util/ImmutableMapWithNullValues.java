@@ -20,13 +20,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
-
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
 
 /**
@@ -56,7 +54,9 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public Collection<V> values() {
-    return delegate.values().stream()
+    return delegate
+        .values()
+        .stream()
         .map(v -> v == NULL ? null : (V) v)
         .collect(Collectors.toList());
   }
@@ -64,10 +64,14 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public Set<Entry<K, V>> entrySet() {
-    return delegate.entrySet().stream()
-        .map(e -> e.getValue() == NULL
-            ? new AbstractMap.SimpleEntry<K, V>(e.getKey(), null)
-            : (Map.Entry<K, V>) e)
+    return delegate
+        .entrySet()
+        .stream()
+        .map(
+            e ->
+                e.getValue() == NULL
+                    ? new AbstractMap.SimpleEntry<K, V>(e.getKey(), null)
+                    : (Map.Entry<K, V>) e)
         // Use ImmutableSet instead of Set here to preserve iteration order:
         .collect(MoreCollectors.toImmutableSet());
   }

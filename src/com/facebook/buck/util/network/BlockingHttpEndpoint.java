@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,27 +50,27 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   private int timeoutMillis;
   private final ListeningExecutorService requestService;
   private static final ThreadFactory threadFactory =
-      new ThreadFactoryBuilder().setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
+      new ThreadFactoryBuilder()
+          .setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
           .build();
 
-  public BlockingHttpEndpoint(
-      String url,
-      int maxParallelRequests,
-      int timeoutMillis) throws MalformedURLException {
+  public BlockingHttpEndpoint(String url, int maxParallelRequests, int timeoutMillis)
+      throws MalformedURLException {
     this.url = new URL(url);
     this.timeoutMillis = timeoutMillis;
 
     // Create an ExecutorService that blocks after N requests are in flight.  Taken from
     // http://www.springone2gx.com/blog/billy_newport/2011/05/there_s_more_to_configuring_threadpools_than_thread_pool_size
     LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(maxParallelRequests);
-    ExecutorService executor = new ThreadPoolExecutor(
-        maxParallelRequests,
-        maxParallelRequests,
-        2L,
-        TimeUnit.MINUTES,
-        workQueue,
-        threadFactory,
-        new ThreadPoolExecutor.CallerRunsPolicy());
+    ExecutorService executor =
+        new ThreadPoolExecutor(
+            maxParallelRequests,
+            maxParallelRequests,
+            2L,
+            TimeUnit.MINUTES,
+            workQueue,
+            threadFactory,
+            new ThreadPoolExecutor.CallerRunsPolicy());
     requestService = MoreExecutors.listeningDecorator(executor);
   }
 
@@ -96,8 +95,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
       out.flush();
       out.close();
       InputStream inputStream = connection.getInputStream();
-      String response = CharStreams.toString(
-          new InputStreamReader(inputStream, Charsets.UTF_8));
+      String response = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       return new HttpResponse(response);
     } finally {
       connection.disconnect();
@@ -123,12 +121,14 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
     requestService.shutdown();
     try {
       if (!requestService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-        LOG.warn(Joiner.on(System.lineSeparator()).join(
-            "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
-            "Your build might have succeeded, but some requests made to ",
-            this.url + " were probably lost.",
-            "Here's some debugging information:",
-            requestService.toString()));
+        LOG.warn(
+            Joiner.on(System.lineSeparator())
+                .join(
+                    "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
+                    "Your build might have succeeded, but some requests made to ",
+                    this.url + " were probably lost.",
+                    "Here's some debugging information:",
+                    requestService.toString()));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

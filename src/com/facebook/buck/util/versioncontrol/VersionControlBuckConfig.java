@@ -20,29 +20,22 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/***
- * Provides simplified access to settings from the version_control section of a .buckconfig file.
+/**
+ * * Provides simplified access to settings from the version_control section of a .buckconfig file.
  *
- * Available keys:
+ * <p>Available keys:
  *
- * generate_statistics:
- * - Enable or disable the generation of version control statistics
- * - Default value is false.
- * - Currently only Mercurial is supported.
- * hg_cmd:
- * - Override the default Mercurial command used when generating statistics.
- * - Default value is hg
+ * <p>generate_statistics: - Enable or disable the generation of version control statistics -
+ * Default value is false. - Currently only Mercurial is supported. hg_cmd: - Override the default
+ * Mercurial command used when generating statistics. - Default value is hg
  *
- * Example config section:
+ * <p>Example config section:
  *
- * [version_control]
- *    hg_cmd = hg3
- *    generate_statistics = true
+ * <p>[version_control] hg_cmd = hg3 generate_statistics = true
  */
 public class VersionControlBuckConfig {
   static final String VC_SECTION_KEY = "version_control";
@@ -53,12 +46,10 @@ public class VersionControlBuckConfig {
   static final String HG_CMD_SETTING_KEY = "hg_cmd";
   static final String HG_CMD_DEFAULT = "hg";
 
-  static final String PREGENERATED_CURRENT_REVISION_ID =
-      "pregenerated_current_revision_id";
+  static final String PREGENERATED_CURRENT_REVISION_ID = "pregenerated_current_revision_id";
   static final String PREGENERATED_BASE_BOOKMARKS = "pregenerated_base_bookmarks";
   static final String PREGENERATED_BASE_REVISION_ID = "pregenerated_base_revision_id";
-  static final String PREGENERATED_BASE_REVISION_TIMESTAMP =
-      "pregenerated_base_revision_timestamp";
+  static final String PREGENERATED_BASE_REVISION_TIMESTAMP = "pregenerated_base_revision_timestamp";
 
   private final BuckConfig delegate;
 
@@ -72,9 +63,7 @@ public class VersionControlBuckConfig {
 
   public boolean shouldGenerateStatistics() {
     return delegate.getBooleanValue(
-        VC_SECTION_KEY,
-        GENERATE_STATISTICS_KEY,
-        GENERATE_STATISTICS_DEFAULT);
+        VC_SECTION_KEY, GENERATE_STATISTICS_KEY, GENERATE_STATISTICS_DEFAULT);
   }
 
   public Optional<PregeneratedVersionControlStats> getPregeneratedVersionControlStats() {
@@ -87,10 +76,9 @@ public class VersionControlBuckConfig {
     if (stats.stream().anyMatch(Optional::isPresent)) {
       if (!stats.stream().allMatch(Optional::isPresent)) {
         throw new HumanReadableException(
-            "Specified some of the pregenerated version control stats in the configs, " +
-                "but not all: " +
-                Stream
-                    .of(
+            "Specified some of the pregenerated version control stats in the configs, "
+                + "but not all: "
+                + Stream.of(
                         PREGENERATED_CURRENT_REVISION_ID,
                         PREGENERATED_BASE_BOOKMARKS,
                         PREGENERATED_BASE_REVISION_ID,

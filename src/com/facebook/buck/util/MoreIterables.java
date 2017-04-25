@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,8 +37,8 @@ public class MoreIterables {
   }
 
   /**
-   * Combine the given iterables by peeling off items one at a time from each of the input
-   * iterables until any one of the iterables are exhausted.
+   * Combine the given iterables by peeling off items one at a time from each of the input iterables
+   * until any one of the iterables are exhausted.
    */
   @SafeVarargs
   public static <T> Iterable<T> zipAndConcat(Iterable<T>... inputs) {
@@ -68,10 +67,9 @@ public class MoreIterables {
   }
 
   /**
-   * Returns a deduped version of toDedup and keeps the order of elements
-   * If a key is contained more than once
-   * (that is, there are multiple elements e1, e2... en, such that ei.equals(ej))
-   * then the last one will be kept in the ordering
+   * Returns a deduped version of toDedup and keeps the order of elements If a key is contained more
+   * than once (that is, there are multiple elements e1, e2... en, such that ei.equals(ej)) then the
+   * last one will be kept in the ordering
    */
   public static <T> Set<T> dedupKeepLast(Iterable<T> toDedup) {
     Set<T> dedupedSet = new LinkedHashSet<>();
@@ -87,7 +85,7 @@ public class MoreIterables {
 
   /**
    * @return a new {@link Iterable} containing pairs of the original items along with the index of
-   *         the current item.
+   *     the current item.
    */
   public static <T> Iterable<Pair<Integer, T>> enumerate(Iterable<T> items) {
     return () ->
@@ -105,8 +103,6 @@ public class MoreIterables {
           public Pair<Integer, T> next() {
             return new Pair<>(index++, delegate.next());
           }
-
         };
   }
-
 }

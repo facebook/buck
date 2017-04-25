@@ -22,7 +22,6 @@ import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -32,29 +31,27 @@ import java.util.function.Function;
 /**
  * Wraps a collection of {@link ProjectFilesystem}-specific {@link ProjectFileHashCache}s as a
  * single cache, implementing a Chain of Responsibility to find and forward operations to the
- * correct inner cache.  As this "multi"-cache is meant to handle paths across different
- * {@link ProjectFilesystem}s, as opposed to paths within the same {@link ProjectFilesystem}, it is
- * a distinct type from {@link ProjectFileHashCache}.
- * <p>
- * This "stacking" approach provides a few appealing properties:
- * 1) It makes it easier to module path roots with differing hash cached lifetime requirements.
- * Hashes of paths from roots watched by watchman can be cached indefinitely, until a watchman
- * event triggers invalidation.  Hashes of paths under roots not watched by watchman, however,
- * can only be cached for the duration of a single build (as we have no way to know when these
- * paths are modified).  By using separate {@link ProjectFileHashCache}s per path root, we can
- * construct a new {@link StackedFileHashCache} on each build composed of either persistent or
- * ephemeral per-root inner caches that properly manager the lifetime of cached hashes from their
- * root.
- * 2) Modeling the hash cache around path root and sub-paths also works well with a current
- * limitation with our watchman events in which they only store relative paths, with no reference
- * to the path root they originated from.  If we stored hashes internally indexed by absolute
- * path, then we wouldn't know where to anchor the search to resolve the path that a watchman
- * event refers to (e.g. a watch event for `foo.h` could refer to `/a/b/foo.h` or `/a/b/c/foo.h`,
- * depending on where the project root is).  By indexing hashes by pairs of project root and
- * sub-path, it's easier to identity paths to invalidate (e.g. `foo.h` would invalidate
- * (`/a/b/`,`foo.h`) and not (`/a/b/`,`c/foo.h`)).
- * 3) Since the current implementation of inner caches and callers generally use path root and
- * sub-path pairs, it allows avoiding any overhead converting to/from absolute paths.
+ * correct inner cache. As this "multi"-cache is meant to handle paths across different {@link
+ * ProjectFilesystem}s, as opposed to paths within the same {@link ProjectFilesystem}, it is a
+ * distinct type from {@link ProjectFileHashCache}.
+ *
+ * <p>This "stacking" approach provides a few appealing properties: 1) It makes it easier to module
+ * path roots with differing hash cached lifetime requirements. Hashes of paths from roots watched
+ * by watchman can be cached indefinitely, until a watchman event triggers invalidation. Hashes of
+ * paths under roots not watched by watchman, however, can only be cached for the duration of a
+ * single build (as we have no way to know when these paths are modified). By using separate {@link
+ * ProjectFileHashCache}s per path root, we can construct a new {@link StackedFileHashCache} on each
+ * build composed of either persistent or ephemeral per-root inner caches that properly manager the
+ * lifetime of cached hashes from their root. 2) Modeling the hash cache around path root and
+ * sub-paths also works well with a current limitation with our watchman events in which they only
+ * store relative paths, with no reference to the path root they originated from. If we stored
+ * hashes internally indexed by absolute path, then we wouldn't know where to anchor the search to
+ * resolve the path that a watchman event refers to (e.g. a watch event for `foo.h` could refer to
+ * `/a/b/foo.h` or `/a/b/c/foo.h`, depending on where the project root is). By indexing hashes by
+ * pairs of project root and sub-path, it's easier to identity paths to invalidate (e.g. `foo.h`
+ * would invalidate (`/a/b/`,`foo.h`) and not (`/a/b/`,`c/foo.h`)). 3) Since the current
+ * implementation of inner caches and callers generally use path root and sub-path pairs, it allows
+ * avoiding any overhead converting to/from absolute paths.
  */
 public class StackedFileHashCache implements FileHashCache {
 
@@ -66,16 +63,14 @@ public class StackedFileHashCache implements FileHashCache {
 
   /**
    * @return the {@link ProjectFileHashCache} which handles the given relative {@link Path} under
-   * the given {@link ProjectFilesystem}.
+   *     the given {@link ProjectFilesystem}.
    */
-  private Optional<? extends ProjectFileHashCache> lookup(
-      ProjectFilesystem filesystem,
-      Path path) {
+  private Optional<? extends ProjectFileHashCache> lookup(ProjectFilesystem filesystem, Path path) {
     for (ProjectFileHashCache cache : caches) {
       // TODO(agallagher): This should check for equal filesystems probably shouldn't be using the
       // root path, but we currently rely on this behavior.
-      if (cache.getFilesystem().getRootPath().equals(filesystem.getRootPath()) &&
-          cache.willGet(path)) {
+      if (cache.getFilesystem().getRootPath().equals(filesystem.getRootPath())
+          && cache.willGet(path)) {
         return Optional.of(cache);
       }
     }
@@ -97,7 +92,9 @@ public class StackedFileHashCache implements FileHashCache {
     Preconditions.checkArgument(path.isAbsolute());
     for (ProjectFileHashCache cache : caches) {
       Optional<ArchiveMemberPath> relativePath =
-          cache.getFilesystem().getPathRelativeToProjectRoot(path.getArchivePath())
+          cache
+              .getFilesystem()
+              .getPathRelativeToProjectRoot(path.getArchivePath())
               .map(path::withArchivePath);
       if (relativePath.isPresent() && cache.willGet(relativePath.get())) {
         return Optional.of(new Pair<>(cache, relativePath.get()));
@@ -169,10 +166,7 @@ public class StackedFileHashCache implements FileHashCache {
       builder.addAllVerificationErrors(result.getVerificationErrors());
     }
 
-    return builder
-        .setCachesExamined(cachesExamined)
-        .setFilesExamined(filesExamined)
-        .build();
+    return builder.setCachesExamined(cachesExamined).setFilesExamined(filesExamined).build();
   }
 
   @Override

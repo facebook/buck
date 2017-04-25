@@ -17,8 +17,8 @@
 package com.facebook.buck.util;
 
 /**
- * Signals that processing could not be interrupted.
- * This exception is meant only to be caught at the top level of the application.
+ * Signals that processing could not be interrupted. This exception is meant only to be caught at
+ * the top level of the application.
  */
 @SuppressWarnings("serial")
 public class InterruptionFailedException extends RuntimeException {

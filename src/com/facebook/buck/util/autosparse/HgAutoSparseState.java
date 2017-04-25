@@ -21,7 +21,6 @@ import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -37,23 +36,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
  * AutoSparseState for a mercurial repository.
- * <p>
- * The first time access to the manifest is requested, load the manifest in one big blob and store
- * the information in <code>hgManifest</code> (containing {@link ManifestInfo} entries) and
+ *
+ * <p>The first time access to the manifest is requested, load the manifest in one big blob and
+ * store the information in <code>hgManifest</code> (containing {@link ManifestInfo} entries) and
  * <code>hgKnownDirectories</code> (a set of directories containing files with manifest entries).
- * <p>
- * When adding files to the sparse profile, the <em>parent directory</em> is added instead, to
- * minimise the sparse profile. An exception is made for paths in the <code>ignore</code> set;
- * for those only the direct file path is added to the profile. This makes it possible to quickly
- * add a series of subdirectories to the profile, but lets us keep some directories (like the
- * project root) out of the sparse profile to prevent extending a sparse profile too far.
- * <p>
- * Another optimisation is that once a parent directory has been adedd to the profile, any child
+ *
+ * <p>When adding files to the sparse profile, the <em>parent directory</em> is added instead, to
+ * minimise the sparse profile. An exception is made for paths in the <code>ignore</code> set; for
+ * those only the direct file path is added to the profile. This makes it possible to quickly add a
+ * series of subdirectories to the profile, but lets us keep some directories (like the project
+ * root) out of the sparse profile to prevent extending a sparse profile too far.
+ *
+ * <p>Another optimisation is that once a parent directory has been adedd to the profile, any child
  * paths are ignored. After all, these are already going to be part of the working copy once the
  * parent directory has been materialised.
  */
@@ -96,9 +94,7 @@ public class HgAutoSparseState implements AutoSparseState {
       LOG.debug("Exporting %d entries to the sparse profile", hgSparseSeen.size());
       try {
         Path exportFile = Files.createTempFile("buck_autosparse_rules", "");
-        try (Writer writer =
-                 new BufferedWriter(
-                     new FileWriter(exportFile.toFile()))) {
+        try (Writer writer = new BufferedWriter(new FileWriter(exportFile.toFile()))) {
           writer.write(SPARSE_INCLUDE_HEADER);
           for (Path path : hgSparseSeen) {
             writer.write(path.toString() + "\n");
@@ -169,8 +165,7 @@ public class HgAutoSparseState implements AutoSparseState {
     }
     // Any parent files not in the manifest, or not a direct parent of a file in the manifest
     // is ignored.
-    if (!hgManifest.containsKey(relativePath) &&
-        !hgDirectParents.contains(relativePath)) {
+    if (!hgManifest.containsKey(relativePath) && !hgDirectParents.contains(relativePath)) {
       LOG.debug("Not adding unknown file or directory %s to sparse profile", relativePath);
       return;
     }
@@ -189,20 +184,17 @@ public class HgAutoSparseState implements AutoSparseState {
     hgSparseSeen.add(relativePath);
   }
 
-  private void loadHgManifest()
-      throws VersionControlCommandFailedException, InterruptedException {
+  private void loadHgManifest() throws VersionControlCommandFailedException, InterruptedException {
     if (!hgManifestLoaded) {
       // Cache manifest data
-      try (
-        InputStream is = new FileInputStream(hgCmdLine.extractRawManifest());
-        BufferedReader reader = new BufferedReader(
-            new InputStreamReader(
-                is,
-                // Here is to hoping this is the correct codec on all platforms; Mercurial
-                // doesn't care what the filesystem encoding is and just stores the raw bytes.
-                System.getProperty("file.encoding", "UTF-8")
-            ));
-      ) {
+      try (InputStream is = new FileInputStream(hgCmdLine.extractRawManifest());
+          BufferedReader reader =
+              new BufferedReader(
+                  new InputStreamReader(
+                      is,
+                      // Here is to hoping this is the correct codec on all platforms; Mercurial
+                      // doesn't care what the filesystem encoding is and just stores the raw bytes.
+                      System.getProperty("file.encoding", "UTF-8"))); ) {
 
         hgManifest = new HashMap<Path, ManifestInfo>();
         String line;

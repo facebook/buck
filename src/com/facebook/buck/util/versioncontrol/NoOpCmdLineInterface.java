@@ -20,9 +20,7 @@ import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-/***
- * This is used if the project being built doesn't use a supported VCS.
- */
+/** * This is used if the project being built doesn't use a supported VCS. */
 public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public boolean isSupportedVersionControlSystem() throws InterruptedException {
@@ -42,9 +40,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public String commonAncestor(
-      String revisionIdOne,
-      String revisionIdTwo)
+  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
     throw new VersionControlCommandFailedException("");
   }
@@ -75,8 +71,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
 
   @Override
   public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
-    throws InterruptedException, VersionControlCommandFailedException {
+      throws InterruptedException, VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
-
 }

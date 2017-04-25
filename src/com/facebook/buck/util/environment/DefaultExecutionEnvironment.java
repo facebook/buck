@@ -18,7 +18,6 @@ package com.facebook.buck.util.environment;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
-
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Optional;
@@ -37,8 +36,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private final Properties properties;
 
   public DefaultExecutionEnvironment(
-      ImmutableMap<String, String> environment,
-      Properties properties) {
+      ImmutableMap<String, String> environment, Properties properties) {
     this.platform = Platform.detect();
     this.environment = environment;
     this.properties = properties;

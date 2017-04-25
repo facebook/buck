@@ -20,7 +20,6 @@ import com.facebook.buck.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,18 +46,17 @@ public class JarContentHasher {
     Manifest manifest = filesystem.getJarManifest(jarRelativePath);
     if (manifest == null) {
       throw new UnsupportedOperationException(
-          "Cache does not know how to return hash codes for archive members except " +
-              "when the archive contains a META-INF/MANIFEST.MF with " +
-              CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME +
-              " attributes for each file.");
+          "Cache does not know how to return hash codes for archive members except "
+              + "when the archive contains a META-INF/MANIFEST.MF with "
+              + CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME
+              + " attributes for each file.");
     }
 
     ImmutableMap.Builder<Path, HashCodeAndFileType> builder = ImmutableMap.builder();
     for (Map.Entry<String, Attributes> nameAttributesEntry : manifest.getEntries().entrySet()) {
       Path memberPath = Paths.get(nameAttributesEntry.getKey());
       Attributes attributes = nameAttributesEntry.getValue();
-      String hashStringValue = attributes.getValue(
-          CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME);
+      String hashStringValue = attributes.getValue(CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME);
       if (hashStringValue == null) {
         continue;
       }

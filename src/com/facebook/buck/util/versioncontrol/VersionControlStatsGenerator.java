@@ -23,11 +23,9 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -35,8 +33,9 @@ public class VersionControlStatsGenerator {
 
   private static final Logger LOG = Logger.get(VersionControlStatsGenerator.class);
 
-  /** Modes the generator can get stats in, in order from least comprehensive to most
-   *  comprehensive. Each mode should include all the information present in the previous one.
+  /**
+   * Modes the generator can get stats in, in order from least comprehensive to most comprehensive.
+   * Each mode should include all the information present in the previous one.
    */
   public enum Mode {
     /** Do not generate new information, but return whatever is already generated */
@@ -49,27 +48,34 @@ public class VersionControlStatsGenerator {
   }
 
   private static final String REMOTE_MASTER = "remote/master";
-  private static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
-      REMOTE_MASTER);
+  private static final ImmutableSet<String> TRACKED_BOOKMARKS =
+      ImmutableSet.of(
+          REMOTE_MASTER);
 
   private final VersionControlCmdLineInterface versionControlCmdLineInterface;
 
   private final Optional<PregeneratedVersionControlStats> pregeneratedVersionControlStats;
+
   @GuardedBy("this")
   @Nullable
   private String currentRevisionId;
+
   @GuardedBy("this")
   @Nullable
   private ImmutableSet<String> baseBookmarks;
+
   @GuardedBy("this")
   @Nullable
   private String baseRevisionId;
+
   @GuardedBy("this")
   @Nullable
   private Long baseRevisionTimestamp;
+
   @GuardedBy("this")
   @Nullable
   private ImmutableSet<String> changedFiles;
+
   @GuardedBy("this")
   @Nullable
   private Optional<String> diff;
@@ -82,23 +88,19 @@ public class VersionControlStatsGenerator {
     if (pregeneratedVersionControlStats.isPresent()) {
       this.currentRevisionId = pregeneratedVersionControlStats.get().getCurrentRevisionId();
       this.baseBookmarks = pregeneratedVersionControlStats.get().getBaseBookmarks();
-      this.baseRevisionId =
-          pregeneratedVersionControlStats.get().getBranchedFromMasterRevisionId();
+      this.baseRevisionId = pregeneratedVersionControlStats.get().getBranchedFromMasterRevisionId();
       this.baseRevisionTimestamp = pregeneratedVersionControlStats.get().getBranchedFromMasterTS();
     }
   }
 
   public void generateStatsAsync(
-      Mode mode,
-      ExecutorService executorService,
-      BuckEventBus buckEventBus) {
+      Mode mode, ExecutorService executorService, BuckEventBus buckEventBus) {
     executorService.submit(
         () -> {
           try {
-            Optional<VersionControlStats>  versionControlStats;
-            try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-                buckEventBus,
-                "gen_source_control_info")) {
+            Optional<VersionControlStats> versionControlStats;
+            try (SimplePerfEvent.Scope ignored =
+                SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
               versionControlStats = generateStats(mode);
             }
             versionControlStats.ifPresent(x -> buckEventBus.post(new VersionControlStatsEvent(x)));
@@ -153,24 +155,25 @@ public class VersionControlStatsGenerator {
             // Get the common ancestor of current and master revision
             Pair<String, Long> baseRevisionInfo =
                 versionControlCmdLineInterface.commonAncestorAndTS(
-                    currentRevisionId,
-                    masterRevisionId);
+                    currentRevisionId, masterRevisionId);
             if (baseBookmarks == null) {
-              baseBookmarks = bookmarksRevisionIds.entrySet().stream()
-                  .filter(e -> e.getValue().startsWith(baseRevisionInfo.getFirst()))
-                  .map(Map.Entry::getKey)
-                  .collect(MoreCollectors.toImmutableSet());
+              baseBookmarks =
+                  bookmarksRevisionIds
+                      .entrySet()
+                      .stream()
+                      .filter(e -> e.getValue().startsWith(baseRevisionInfo.getFirst()))
+                      .map(Map.Entry::getKey)
+                      .collect(MoreCollectors.toImmutableSet());
               versionControlStatsBuilder.setBaseBookmarks(baseBookmarks);
             }
             if (baseRevisionId == null) {
               baseRevisionId = baseRevisionInfo.getFirst();
-              versionControlStatsBuilder
-                  .setBranchedFromMasterRevisionId(baseRevisionInfo.getFirst());
+              versionControlStatsBuilder.setBranchedFromMasterRevisionId(
+                  baseRevisionInfo.getFirst());
             }
             if (baseRevisionTimestamp == null) {
               baseRevisionTimestamp = baseRevisionInfo.getSecond();
-              versionControlStatsBuilder
-                  .setBranchedFromMasterTS(baseRevisionInfo.getSecond());
+              versionControlStatsBuilder.setBranchedFromMasterTS(baseRevisionInfo.getSecond());
             }
           }
         }
@@ -185,14 +188,13 @@ public class VersionControlStatsGenerator {
           // We can only query these if we have a base revision id.
           if (baseRevisionId != null) {
             if (changedFiles == null) {
-              changedFiles =
-                  versionControlCmdLineInterface.changedFiles(baseRevisionId);
+              changedFiles = versionControlCmdLineInterface.changedFiles(baseRevisionId);
               versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
             }
             if (diff == null) {
-              diff = versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
-                  baseRevisionId,
-                  currentRevisionId);
+              diff =
+                  versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+                      baseRevisionId, currentRevisionId);
               versionControlStatsBuilder.setDiff(diff);
             }
           }

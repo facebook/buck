@@ -21,9 +21,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
-/**
- * Uploads log entries to the given scribe category.
- */
+/** Uploads log entries to the given scribe category. */
 public class ScribeBatchingLogger extends AbstractBatchingLogger {
 
   private final ScribeLogger scribeLogger;
@@ -36,9 +34,8 @@ public class ScribeBatchingLogger extends AbstractBatchingLogger {
 
   @Override
   protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
-    ImmutableList<String> lines = data.stream()
-        .map(BatchEntry::getLine)
-        .collect(MoreCollectors.toImmutableList());
+    ImmutableList<String> lines =
+        data.stream().map(BatchEntry::getLine).collect(MoreCollectors.toImmutableList());
     return scribeLogger.log(category, lines);
   }
 }

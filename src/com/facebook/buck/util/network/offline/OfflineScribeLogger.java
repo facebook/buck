@@ -35,7 +35,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -54,7 +53,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -84,8 +82,7 @@ public class OfflineScribeLogger extends ScribeLogger {
   private final int maxScribeOfflineLogsBytes;
   private final ProjectFilesystem filesystem;
 
-  @Nullable
-  private BufferedOutputStream logFileStoreStream;
+  @Nullable private BufferedOutputStream logFileStoreStream;
   private boolean storingAvailable;
   private int bytesStoredSoFar;
   private volatile boolean startedStoring;
@@ -130,20 +127,15 @@ public class OfflineScribeLogger extends ScribeLogger {
     this.categoriesReportedAnError = Sets.newConcurrentHashSet();
 
     this.startedSendingStored = new AtomicBoolean(false);
-    this.totalLinesResent = new IntegerCounter(
-        COUNTERS_CATEGORY,
-        "total_lines_resent",
-        ImmutableMap.of());
-    this.totalBytesResent = new IntegerCounter(
-        COUNTERS_CATEGORY,
-        "total_bytes_resent",
-        ImmutableMap.of());
-    this.logfilesResent = new IntegerCounter(
-        COUNTERS_CATEGORY,
-        "logfiles_resent",
-        ImmutableMap.of());
-    buckEventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(
-        ImmutableSet.of(totalLinesResent, totalBytesResent, logfilesResent)));
+    this.totalLinesResent =
+        new IntegerCounter(COUNTERS_CATEGORY, "total_lines_resent", ImmutableMap.of());
+    this.totalBytesResent =
+        new IntegerCounter(COUNTERS_CATEGORY, "total_bytes_resent", ImmutableMap.of());
+    this.logfilesResent =
+        new IntegerCounter(COUNTERS_CATEGORY, "logfiles_resent", ImmutableMap.of());
+    buckEventBus.post(
+        new CounterRegistry.AsyncCounterRegistrationEvent(
+            ImmutableSet.of(totalLinesResent, totalBytesResent, logfilesResent)));
   }
 
   @Override
@@ -170,19 +162,16 @@ public class OfflineScribeLogger extends ScribeLogger {
               // Get data to store.
               byte[] scribeData;
               try {
-                scribeData = ObjectMappers.WRITER
-                    .writeValueAsString(
-                        ScribeData.builder()
-                            .setCategory(category)
-                            .setLines(lines)
-                            .build())
-                    .getBytes(Charsets.UTF_8);
+                scribeData =
+                    ObjectMappers.WRITER
+                        .writeValueAsString(
+                            ScribeData.builder().setCategory(category).setLines(lines).build())
+                        .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
                 if (categoriesReportedAnError.add(category)) {
                   LOG.error(
                       "Failed generating JSON to store for category: %s: %s.",
-                      category,
-                      e.getMessage());
+                      category, e.getMessage());
                 }
                 return;
               }
@@ -280,9 +269,7 @@ public class OfflineScribeLogger extends ScribeLogger {
         // No logs to submit to Scribe.
         return;
       }
-      logsPaths = filesystem.getMtimeSortedMatchingDirectoryContents(
-          logDir,
-          LOGFILE_PATTERN);
+      logsPaths = filesystem.getMtimeSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
     } catch (Exception e) {
       LOG.error(e, "Fetching stored logs list failed.");
       return;
@@ -312,15 +299,15 @@ public class OfflineScribeLogger extends ScribeLogger {
         } catch (FileNotFoundException e) {
           LOG.info(
               e,
-              "There was a problem getting stream for logfile: %s. Likely logfile was resent and" +
-              "deleted by a concurrent Buck command.",
+              "There was a problem getting stream for logfile: %s. Likely logfile was resent and"
+                  + "deleted by a concurrent Buck command.",
               logPath);
           continue;
         }
 
-        it = ObjectMappers.READER.readValues(
-            new JsonFactory().createParser(logFileStream),
-            ScribeData.class);
+        it =
+            ObjectMappers.READER.readValues(
+                new JsonFactory().createParser(logFileStream), ScribeData.class);
       } catch (Exception e) {
         LOG.error(e, "Failed to initiate reading from: %s. File may be corrupted.", logPath);
         continue;
@@ -383,8 +370,8 @@ public class OfflineScribeLogger extends ScribeLogger {
       } catch (Exception e) {
         LOG.error(
             e,
-            "Error while reading offline log from: %s. This log will not be removed now. If this " +
-            "error reappears in further runs, the file may be corrupted and should be deleted. ",
+            "Error while reading offline log from: %s. This log will not be removed now. If this "
+                + "error reappears in further runs, the file may be corrupted and should be deleted. ",
             logPath);
         logFutures.clear();
         continue;

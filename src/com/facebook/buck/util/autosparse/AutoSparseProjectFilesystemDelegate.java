@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -31,10 +30,10 @@ import java.nio.file.Path;
  * Virtual project filesystem that answers questions about files via the source control manifest.
  * This removes the need to have all files checked out while Buck parses (a so-called
  * <em>sparse</em> profile.
- * <p>
- * The source control system state is tracked by in an {@link AutoSparseState} instance. Any files
- * queries about files outside the source control system manifest are forwarded to
- * {@link DefaultProjectFilesystemDelegate}.
+ *
+ * <p>The source control system state is tracked by in an {@link AutoSparseState} instance. Any
+ * files queries about files outside the source control system manifest are forwarded to {@link
+ * DefaultProjectFilesystemDelegate}.
  */
 public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
@@ -68,8 +67,8 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
       eventBus.post(failed);
       throw new HumanReadableException(
           e,
-          "Sparse profile could not be materialised. " +
-              "Try again or disable the project.enable_autosparse option.");
+          "Sparse profile could not be materialised. "
+              + "Try again or disable the project.enable_autosparse option.");
     }
     eventBus.post(new AutoSparseStateEvents.SparseRefreshFinished(started));
   }

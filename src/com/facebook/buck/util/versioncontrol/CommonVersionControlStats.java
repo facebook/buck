@@ -37,5 +37,4 @@ interface CommonVersionControlStats {
   /* The timestamp of the base revision */
   @JsonView(JsonViews.MachineReadableLog.class)
   Long getBranchedFromMasterTS();
-
 }

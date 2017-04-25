@@ -17,14 +17,11 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Allows for conveniently expressing that a resource should be closed asynchronously.
- */
+/** Allows for conveniently expressing that a resource should be closed asynchronously. */
 public class AsyncCloseable implements AutoCloseable {
 
   private static final Logger LOG = Logger.get(AsyncCloseable.class);
@@ -32,18 +29,15 @@ public class AsyncCloseable implements AutoCloseable {
   private final ExecutorService executorService;
   private final List<Runnable> pendingClosers;
 
-  /**
-   * @param executorService the service that will be used to close the registered objects.
-   */
+  /** @param executorService the service that will be used to close the registered objects. */
   public AsyncCloseable(ExecutorService executorService) {
     this.executorService = executorService;
     this.pendingClosers = new ArrayList<>();
   }
 
   /**
-   * @param asyncCloseable the object that will be close when this instance of
-   *                       {@link AsyncCloseable} will be closed. Exceptions thrown by registered
-   *                       instances are only logged.
+   * @param asyncCloseable the object that will be close when this instance of {@link
+   *     AsyncCloseable} will be closed. Exceptions thrown by registered instances are only logged.
    * @param <T>
    * @return input arg (for intialization convenience).
    */
@@ -59,9 +53,7 @@ public class AsyncCloseable implements AutoCloseable {
     return asyncCloseable;
   }
 
-  /**
-   * schedule the closing of all registered objects.
-   */
+  /** schedule the closing of all registered objects. */
   @Override
   public void close() {
     for (Runnable closer : pendingClosers) {

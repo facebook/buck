@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
@@ -37,8 +36,8 @@ import java.util.Optional;
 /**
  * A helper class which uses reflection to translate {@link BuildTarget}s in {@link TargetNode}s.
  * The API methods use an {@link Optional} for their return types, so that {@link Optional#empty()}
- * can be used to signify a translation was not needed.  This may allow some translation functions
- * to avoid copying or creating unnecessary new objects.
+ * can be used to signify a translation was not needed. This may allow some translation functions to
+ * avoid copying or creating unnecessary new objects.
  */
 public abstract class TargetNodeTranslator {
 
@@ -158,9 +157,9 @@ public abstract class TargetNodeTranslator {
       DefaultBuildTargetSourcePath val) {
     BuildTarget target = val.getTarget();
     Optional<BuildTarget> translatedTarget = translate(cellPathResolver, pattern, target);
-    return translatedTarget.isPresent() ?
-        Optional.of(new DefaultBuildTargetSourcePath(translatedTarget.get())) :
-        Optional.empty();
+    return translatedTarget.isPresent()
+        ? Optional.of(new DefaultBuildTargetSourcePath(translatedTarget.get()))
+        : Optional.empty();
   }
 
   public Optional<SourceWithFlags> translateSourceWithFlags(
@@ -169,9 +168,9 @@ public abstract class TargetNodeTranslator {
       SourceWithFlags val) {
     Optional<SourcePath> translatedSourcePath =
         translate(cellPathResolver, pattern, val.getSourcePath());
-    return translatedSourcePath.isPresent() ?
-        Optional.of(SourceWithFlags.of(translatedSourcePath.get(), val.getFlags())) :
-        Optional.empty();
+    return translatedSourcePath.isPresent()
+        ? Optional.of(SourceWithFlags.of(translatedSourcePath.get(), val.getFlags()))
+        : Optional.empty();
   }
 
   @SuppressWarnings("unchecked")
@@ -215,34 +214,28 @@ public abstract class TargetNodeTranslator {
     } else if (object instanceof ImmutableList) {
       return (Optional<A>) translateList(cellPathResolver, pattern, (ImmutableList<?>) object);
     } else if (object instanceof ImmutableSortedSet) {
-      return (Optional<A>) translateSortedSet(
-          cellPathResolver,
-          pattern,
-          (ImmutableSortedSet<? extends Comparable<?>>) object);
+      return (Optional<A>)
+          translateSortedSet(
+              cellPathResolver, pattern, (ImmutableSortedSet<? extends Comparable<?>>) object);
     } else if (object instanceof ImmutableSet) {
       return (Optional<A>) translateSet(cellPathResolver, pattern, (ImmutableSet<?>) object);
     } else if (object instanceof ImmutableSortedMap) {
-      return (Optional<A>) translateSortedMap(
-          cellPathResolver,
-          pattern,
-          (ImmutableSortedMap<? extends Comparable<?>, ?>) object);
+      return (Optional<A>)
+          translateSortedMap(
+              cellPathResolver, pattern, (ImmutableSortedMap<? extends Comparable<?>, ?>) object);
     } else if (object instanceof ImmutableMap) {
-      return (Optional<A>) translateMap(
-          cellPathResolver,
-          pattern,
-          (ImmutableMap<? extends Comparable<?>, ?>) object);
+      return (Optional<A>)
+          translateMap(
+              cellPathResolver, pattern, (ImmutableMap<? extends Comparable<?>, ?>) object);
     } else if (object instanceof Pair) {
       return (Optional<A>) translatePair(cellPathResolver, pattern, (Pair<?, ?>) object);
     } else if (object instanceof DefaultBuildTargetSourcePath) {
-      return (Optional<A>) translateBuildTargetSourcePath(
-          cellPathResolver,
-          pattern,
-          (DefaultBuildTargetSourcePath) object);
+      return (Optional<A>)
+          translateBuildTargetSourcePath(
+              cellPathResolver, pattern, (DefaultBuildTargetSourcePath) object);
     } else if (object instanceof SourceWithFlags) {
-      return (Optional<A>) translateSourceWithFlags(
-          cellPathResolver,
-          pattern,
-          (SourceWithFlags) object);
+      return (Optional<A>)
+          translateSourceWithFlags(cellPathResolver, pattern, (SourceWithFlags) object);
     } else if (object instanceof BuildTarget) {
       return (Optional<A>) translateBuildTarget((BuildTarget) object);
     } else if (object instanceof TargetTranslatable) {
@@ -285,10 +278,7 @@ public abstract class TargetNodeTranslator {
     if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
       return ((TargetTranslatorOverridingDescription<A>) node.getDescription())
           .translateConstructorArg(
-              node.getBuildTarget(),
-              node.getCellNames(),
-              this,
-              constructorArg);
+              node.getBuildTarget(), node.getCellNames(), this, constructorArg);
     } else {
       A newConstructorArg = node.getDescription().createUnpopulatedConstructorArg();
       boolean modified =
@@ -299,7 +289,7 @@ public abstract class TargetNodeTranslator {
 
   /**
    * @return a copy of the given {@link TargetNode} with all found {@link BuildTarget}s translated,
-   *         or {@link Optional#empty()} if the node requires no translation.
+   *     or {@link Optional#empty()} if the node requires no translation.
    */
   public <A> Optional<TargetNode<A, ?>> translateNode(TargetNode<A, ?> node) {
     CellPathResolver cellPathResolver = node.getCellNames();
@@ -319,17 +309,17 @@ public abstract class TargetNodeTranslator {
         getSelectedVersions(node.getBuildTarget());
     Optional<ImmutableMap<BuildTarget, Version>> oldSelectedVersions = node.getSelectedVersions();
     Optional<Optional<ImmutableMap<BuildTarget, Version>>> selectedVersions =
-        oldSelectedVersions.equals(newSelectedVersions) ?
-            Optional.empty() :
-            Optional.of(newSelectedVersions);
+        oldSelectedVersions.equals(newSelectedVersions)
+            ? Optional.empty()
+            : Optional.of(newSelectedVersions);
 
     // If nothing has changed, don't generate a new node.
-    if (!target.isPresent() &&
-        !constructorArg.isPresent() &&
-        !declaredDeps.isPresent() &&
-        !extraDeps.isPresent() &&
-        !targetGraphOnlyDeps.isPresent() &&
-        !selectedVersions.isPresent()) {
+    if (!target.isPresent()
+        && !constructorArg.isPresent()
+        && !declaredDeps.isPresent()
+        && !extraDeps.isPresent()
+        && !targetGraphOnlyDeps.isPresent()
+        && !selectedVersions.isPresent()) {
       return Optional.empty();
     }
 
@@ -342,5 +332,4 @@ public abstract class TargetNodeTranslator {
             targetGraphOnlyDeps.orElse(node.getTargetGraphOnlyDeps()),
             selectedVersions.orElse(oldSelectedVersions)));
   }
-
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-
 import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,9 +30,7 @@ public abstract class LineProcessorRunnable extends ManagedRunnable {
   private final OutputStream outputStream;
 
   public LineProcessorRunnable(
-      ExecutorService threadPool,
-      InputStream inputStream,
-      OutputStream outputStream) {
+      ExecutorService threadPool, InputStream inputStream, OutputStream outputStream) {
     super(threadPool);
     this.inputStream = Preconditions.checkNotNull(inputStream);
     this.outputStream = Preconditions.checkNotNull(outputStream);
@@ -44,7 +41,7 @@ public abstract class LineProcessorRunnable extends ManagedRunnable {
   @Override
   protected void run() throws Exception {
     try (LineFetcher reader = new LineFetcher(new InputStreamReader(inputStream));
-         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       String line;
       while ((line = reader.readLine()) != null) {
         writer.write(process(line));
@@ -52,5 +49,4 @@ public abstract class LineProcessorRunnable extends ManagedRunnable {
       }
     }
   }
-
 }

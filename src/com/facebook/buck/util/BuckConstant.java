@@ -34,7 +34,8 @@ public class BuckConstant {
   /**
    * The relative path to the directory where Buck will generate its files.
    *
-   * NOTE: Should only ever be used from there and {@link com.facebook.buck.io.ProjectFilesystem}.
+   * <p>NOTE: Should only ever be used from there and {@link
+   * com.facebook.buck.io.ProjectFilesystem}.
    */
   public static Path getBuckOutputPath() {
     return BUCK_OUTPUT_PATH_DEFAULT;

@@ -16,9 +16,7 @@
 
 package com.facebook.buck.util.liteinfersupport;
 
-/**
- * Read description of {@link com.facebook.buck.util.liteinfersupport.Nullable}.
- */
+/** Read description of {@link com.facebook.buck.util.liteinfersupport.Nullable}. */
 public class Preconditions {
   private Preconditions() {}
 

@@ -20,14 +20,13 @@ import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import com.sun.jna.ptr.IntByReference;
-
 import java.io.IOException;
 
 public class HostnameFetching {
   private static final int HOSTNAME_MAX_LEN = 512;
 
   // Utility class; do not instantiate.
-  private HostnameFetching() { }
+  private HostnameFetching() {}
 
   public static String getHostname() throws IOException {
     if (Platform.isWindows()) {
@@ -51,14 +50,12 @@ public class HostnameFetching {
   private static String getHostnameWin32() throws IOException {
     char[] hostnameBuf = new char[HOSTNAME_MAX_LEN];
     IntByReference hostnameBufLen = new IntByReference(hostnameBuf.length);
-    boolean result = HostnameFetchingWin32Library.INSTANCE.GetComputerNameEx(
-        HostnameFetchingWin32Library.NAME_TYPE_DNS_HOSTNAME,
-        hostnameBuf,
-        hostnameBufLen);
+    boolean result =
+        HostnameFetchingWin32Library.INSTANCE.GetComputerNameEx(
+            HostnameFetchingWin32Library.NAME_TYPE_DNS_HOSTNAME, hostnameBuf, hostnameBufLen);
     if (!result) {
-      throw new IOException(String.format(
-          "Call to GetComputerNameEx failed with code %d",
-          Native.getLastError()));
+      throw new IOException(
+          String.format("Call to GetComputerNameEx failed with code %d", Native.getLastError()));
     }
     return new String(hostnameBuf, 0, hostnameBufLen.getValue());
   }

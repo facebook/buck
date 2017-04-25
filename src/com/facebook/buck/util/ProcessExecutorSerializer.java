@@ -17,7 +17,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
 public class ProcessExecutorSerializer {
@@ -41,9 +40,7 @@ public class ProcessExecutorSerializer {
       builder.put(DELEGATE, serialize(contextualProcessExecutor.getDelegate()));
     } else {
       throw new RuntimeException(
-          String.format(
-              "Cannot serialize ProcessExecutor with class %s",
-              executor.getClass()));
+          String.format("Cannot serialize ProcessExecutor with class %s", executor.getClass()));
     }
     return builder.build();
   }
@@ -60,12 +57,9 @@ public class ProcessExecutorSerializer {
           delegateData,
           "Expected to find serialized data for delegate of the ContextualProcessExecutor");
       Map<String, String> context = (Map<String, String>) data.get(CONTEXT);
-      Preconditions.checkNotNull(
-          context,
-          "Expected to find context for ContextualProcessExecutor");
+      Preconditions.checkNotNull(context, "Expected to find context for ContextualProcessExecutor");
       return new ContextualProcessExecutor(
-          deserialize(delegateData, console),
-          ImmutableMap.copyOf(context));
+          deserialize(delegateData, console), ImmutableMap.copyOf(context));
     } else {
       throw new RuntimeException(
           String.format("Cannot serialize ProcessExecutor with type %s", type));

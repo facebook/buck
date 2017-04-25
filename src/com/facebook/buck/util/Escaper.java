@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -33,11 +32,8 @@ public final class Escaper {
   /** Utility class: do not instantiate. */
   private Escaper() {}
 
-  /**
-   * The quoting style to use when escaping.
-   */
+  /** The quoting style to use when escaping. */
   public static enum Quoter {
-
     SINGLE {
       @Override
       public String quote(String str) {
@@ -55,18 +51,15 @@ public final class Escaper {
       public String quote(String str) {
         return '"' + str.replace("\\", "\\\\") + '"';
       }
-    }
-    ;
+    };
 
-    /**
-     * @return the string with this quoting style applied.
-     */
+    /** @return the string with this quoting style applied. */
     public abstract String quote(String str);
-
   }
 
   /**
    * Escapes the special characters identified the {@link CharMatcher}, using single quotes.
+   *
    * @param matcher identifies characters to be escaped
    * @param str string to quote
    * @return possibly quoted string
@@ -80,35 +73,29 @@ public final class Escaper {
   }
 
   /**
-   * @return a escaper function using the given quote style and escaping characters determined
-   *     by the given matcher.
+   * @return a escaper function using the given quote style and escaping characters determined by
+   *     the given matcher.
    */
-  public static Function<String, String> escaper(
-      final Quoter quoter,
-      final CharMatcher matcher) {
+  public static Function<String, String> escaper(final Quoter quoter, final CharMatcher matcher) {
     return input -> escape(quoter, matcher, input);
   }
 
   public static Function<String, String> javacEscaper() {
     if (Platform.detect() == Platform.WINDOWS) {
       return Escaper.escaper(
-          Quoter.DOUBLE_WINDOWS_JAVAC,
-          CharMatcher.anyOf("#'").or(CharMatcher.whitespace()));
+          Quoter.DOUBLE_WINDOWS_JAVAC, CharMatcher.anyOf("#'").or(CharMatcher.whitespace()));
     } else {
       return Escaper.escaper(
-          Escaper.Quoter.DOUBLE,
-          CharMatcher.anyOf("#\"'").or(CharMatcher.whitespace()));
+          Escaper.Quoter.DOUBLE, CharMatcher.anyOf("#\"'").or(CharMatcher.whitespace()));
     }
   }
 
   private static final CharMatcher BASH_SPECIAL_CHARS =
-      CharMatcher
-          .anyOf("<>|!?*[]$\\(){}\"'`&;=")
-          .or(CharMatcher.whitespace());
+      CharMatcher.anyOf("<>|!?*[]$\\(){}\"'`&;=").or(CharMatcher.whitespace());
 
   /**
-   * Bash quoting {@link com.google.common.base.Function Function} which can be passed to
-   * {@link com.google.common.collect.Iterables#transform Iterables.transform()}.
+   * Bash quoting {@link com.google.common.base.Function Function} which can be passed to {@link
+   * com.google.common.collect.Iterables#transform Iterables.transform()}.
    */
   public static final Function<String, String> BASH_ESCAPER =
       escaper(Quoter.SINGLE, BASH_SPECIAL_CHARS);
@@ -131,31 +118,25 @@ public final class Escaper {
   /**
    * Escaper for argfiles for clang and gcc.
    *
-   * Based on the following docs in the gcc manual:
+   * <p>Based on the following docs in the gcc manual:
    *
-   * {@literal @file}
-   * Read command-line options from file.  The options read are inserted
-   * in place of the original {@literal @file} option.  If file does not exist, or
-   * cannot be read, then the option will be treated literally, and not
-   * removed.
+   * <p>{@literal @file} Read command-line options from file. The options read are inserted in place
+   * of the original {@literal @file} option. If file does not exist, or cannot be read, then the
+   * option will be treated literally, and not removed.
    *
-   * Options in file are separated by whitespace.  A whitespace
-   * character may be included in an option by surrounding the entire
-   * option in either single or double quotes.  Any character (including
-   * a backslash) may be included by prefixing the character to be
-   * included with a backslash.  The file may itself contain additional
-   * {@literal @file} options; any such options will be processed recursively.
+   * <p>Options in file are separated by whitespace. A whitespace character may be included in an
+   * option by surrounding the entire option in either single or double quotes. Any character
+   * (including a backslash) may be included by prefixing the character to be included with a
+   * backslash. The file may itself contain additional {@literal @file} options; any such options
+   * will be processed recursively.
    */
-  public static final Function<String, String> ARGFILE_ESCAPER = escaper(
-      Quoter.DOUBLE,
-      CharMatcher
-          .anyOf("\"\\")
-          .or(CharMatcher.whitespace()));
-
+  public static final Function<String, String> ARGFILE_ESCAPER =
+      escaper(Quoter.DOUBLE, CharMatcher.anyOf("\"\\").or(CharMatcher.whitespace()));
 
   /**
-   * Quotes a string to be passed to the shell, if necessary.  This works for the appropriate shell
+   * Quotes a string to be passed to the shell, if necessary. This works for the appropriate shell
    * regardless of the platform it is run on.
+   *
    * @param str string to escape
    * @return possibly escaped string
    */
@@ -166,6 +147,7 @@ public final class Escaper {
   /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable
    * expansion, `...` evaluation etc.
+   *
    * @param str string to quote
    * @return possibly quoted string
    */
@@ -184,8 +166,8 @@ public final class Escaper {
   // Adapted from org.apache.commons.lang.StringEscapeUtils
 
   /**
-   * @return a double-quoted string with metacharacters and quotes escaped with
-   *         a backslash; non-ASCII characters escaped as &#92;u
+   * @return a double-quoted string with metacharacters and quotes escaped with a backslash;
+   *     non-ASCII characters escaped as &#92;u
    */
   public static String escapeAsPythonString(String str) {
     StringBuilder builder = new StringBuilder();
@@ -200,51 +182,51 @@ public final class Escaper {
         builder.append("\\u00" + hex(ch));
       } else if (ch < 32) {
         switch (ch) {
-        case '\b':
-          builder.append('\\');
-          builder.append('b');
-          break;
-        case '\n':
-          builder.append('\\');
-          builder.append('n');
-          break;
-        case '\t':
-          builder.append('\\');
-          builder.append('t');
-          break;
-        case '\f':
-          builder.append('\\');
-          builder.append('f');
-          break;
-        case '\r':
-          builder.append('\\');
-          builder.append('r');
-          break;
-        default:
-          if (ch > 0xf) {
-            builder.append("\\u00" + hex(ch));
-          } else {
-            builder.append("\\u000" + hex(ch));
-          }
-          break;
+          case '\b':
+            builder.append('\\');
+            builder.append('b');
+            break;
+          case '\n':
+            builder.append('\\');
+            builder.append('n');
+            break;
+          case '\t':
+            builder.append('\\');
+            builder.append('t');
+            break;
+          case '\f':
+            builder.append('\\');
+            builder.append('f');
+            break;
+          case '\r':
+            builder.append('\\');
+            builder.append('r');
+            break;
+          default:
+            if (ch > 0xf) {
+              builder.append("\\u00" + hex(ch));
+            } else {
+              builder.append("\\u000" + hex(ch));
+            }
+            break;
         }
       } else {
         switch (ch) {
-        case '\'':
-          builder.append('\\');
-          builder.append('\'');
-          break;
-        case '"':
-          builder.append('\\');
-          builder.append('"');
-          break;
-        case '\\':
-          builder.append('\\');
-          builder.append('\\');
-          break;
-        default:
-          builder.append(ch);
-          break;
+          case '\'':
+            builder.append('\\');
+            builder.append('\'');
+            break;
+          case '"':
+            builder.append('\\');
+            builder.append('"');
+            break;
+          case '\\':
+            builder.append('\\');
+            builder.append('\\');
+            break;
+          default:
+            builder.append(ch);
+            break;
         }
       }
     }
@@ -252,10 +234,7 @@ public final class Escaper {
     return builder.toString();
   }
 
-  private static boolean shouldEscapeMakefileString(
-      String escapees,
-      String blob,
-      int index) {
+  private static boolean shouldEscapeMakefileString(String escapees, String blob, int index) {
 
     Preconditions.checkArgument(blob.length() > index);
 
@@ -293,8 +272,9 @@ public final class Escaper {
   }
 
   /**
-   * Escapes forward slashes in a Path as a String that is safe to consume with other tools (such
-   * as gcc).  On Unix systems, this is equivalent to {@link java.nio.file.Path Path.toString()}.
+   * Escapes forward slashes in a Path as a String that is safe to consume with other tools (such as
+   * gcc). On Unix systems, this is equivalent to {@link java.nio.file.Path Path.toString()}.
+   *
    * @param path the Path to escape
    * @return the escaped Path
    */
@@ -306,7 +286,7 @@ public final class Escaper {
     if (path.startsWith(File.separator)) {
       result.append("\\\\");
     }
-    for (Iterator<Path> iterator = path.iterator(); iterator.hasNext();) {
+    for (Iterator<Path> iterator = path.iterator(); iterator.hasNext(); ) {
       result.append(iterator.next());
       if (iterator.hasNext()) {
         result.append("\\\\");
@@ -324,15 +304,15 @@ public final class Escaper {
   }
 
   /**
-   * Unescape a path string obtained from preprocessor output, as in:
-   * <a href="https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html">
-   * https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
-   * </a>.
+   * Unescape a path string obtained from preprocessor output, as in: <a
+   * href="https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html">
+   * https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html </a>.
+   *
    * @see #decodeNumericEscape(StringBuilder, String, int, int, int, int)
    */
   public static String unescapeLineMarkerPath(String escaped) {
     StringBuilder ret = new StringBuilder();
-    for (int i = 0; i < escaped.length(); /* i incremented below */) {
+    for (int i = 0; i < escaped.length(); /* i incremented below */ ) {
       // consume character, advance index
       char c = escaped.charAt(i);
       i++;
@@ -351,13 +331,13 @@ public final class Escaper {
         c = escaped.charAt(i); // peek (don't consume) next char
 
         switch (c) {
-          // standard escapes: http://en.cppreference.com/w/cpp/language/escape
+            // standard escapes: http://en.cppreference.com/w/cpp/language/escape
           case '\\':
           case '"':
           case '\'':
           case '?':
             ret.append(c);
-            i++;  // consume it
+            i++; // consume it
             break;
 
           case '0':
@@ -368,16 +348,17 @@ public final class Escaper {
           case '5':
           case '6':
           case '7':
-            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/3, /*base*/8);
+            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/ 3, /*base*/ 8);
             break;
 
           case 'x':
-            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/2, /*base*/16);
+            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/ 2, /*base*/ 16);
             break;
 
           case 'u':
-            i = decodeNumericEscape(
-                ret, escaped, i, /*maxCodeLength=*/4, /*base*/16, /*maxCodes*/2);
+            i =
+                decodeNumericEscape(
+                    ret, escaped, i, /*maxCodeLength=*/ 4, /*base*/ 16, /*maxCodes*/ 2);
             break;
 
           default:
@@ -389,18 +370,19 @@ public final class Escaper {
   }
 
   /**
-   * Decode a numeric escape as explained in this page:
-   * <a href="http://en.cppreference.com/w/cpp/language/escape">
-   * http://en.cppreference.com/w/cpp/language/escape
-   * </a>.  The pointed-to substring shouldn't contain the leading backslash + optional 'x' or 'u'.
+   * Decode a numeric escape as explained in this page: <a
+   * href="http://en.cppreference.com/w/cpp/language/escape">
+   * http://en.cppreference.com/w/cpp/language/escape </a>. The pointed-to substring shouldn't
+   * contain the leading backslash + optional 'x' or 'u'.
+   *
    * @param out receives decoded characters
    * @param escaped the string containing the escape sequence
    * @param pos starting index of escape (but after the backslash)
    * @param base number base, e.g. 8 for octal, or 16 for hex or unicode.
-   * @param maxCodes maximum number of sequences of escape numbers to decode.  This is mainly
-   *        to support unicode escape sequences which might represent one or two characters.
-   * @return position to first character just after the consumed numeric code.  Is number of
-   *         consumed code bytes + {@code pos} argument.
+   * @param maxCodes maximum number of sequences of escape numbers to decode. This is mainly to
+   *     support unicode escape sequences which might represent one or two characters.
+   * @return position to first character just after the consumed numeric code. Is number of consumed
+   *     code bytes + {@code pos} argument.
    */
   public static int decodeNumericEscape(
       StringBuilder out, String escaped, int pos, int maxCodeLength, int base, int maxCodes) {
@@ -431,12 +413,11 @@ public final class Escaper {
   }
 
   /**
-   * Call {@link #decodeNumericEscape(StringBuilder, String, int, int, int, int)} to
-   * parse at most one escaped character; i.e. calls that method with {@code maxCodes = 1}.
+   * Call {@link #decodeNumericEscape(StringBuilder, String, int, int, int, int)} to parse at most
+   * one escaped character; i.e. calls that method with {@code maxCodes = 1}.
    */
   public static int decodeNumericEscape(
       StringBuilder out, String escaped, int pos, int maxCodeLength, int base) {
     return decodeNumericEscape(out, escaped, pos, maxCodeLength, base, 1);
   }
-
 }

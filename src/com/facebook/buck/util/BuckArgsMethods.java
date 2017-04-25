@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,9 +26,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Utility class for methods related to args handling.
- */
+/** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
 
   private BuckArgsMethods() {
@@ -47,7 +44,8 @@ public class BuckArgsMethods {
    */
   public static String[] expandAtFiles(String[] args, Path projectRoot) {
     return Arrays.stream(args)
-        .flatMap(arg -> {
+        .flatMap(
+            arg -> {
               if (arg.startsWith("@")) {
                 Path argsPath = projectRoot.resolve(Paths.get(arg.substring(1)));
                 try {
@@ -58,8 +56,8 @@ public class BuckArgsMethods {
               } else {
                 return ImmutableList.of(arg).stream();
               }
-            }
-        ).toArray(String[]::new);
+            })
+        .toArray(String[]::new);
   }
 
   /**
@@ -67,12 +65,11 @@ public class BuckArgsMethods {
    *
    * @param args args array.
    * @param optionsToSkip if args contains an element from this array skip the element and the
-   *                      element immediately after it.
+   *     element immediately after it.
    * @return filtered args array
    */
   public static ImmutableList<String> filterArgs(
-      List<String> args,
-      ImmutableSet<String> optionsToSkip) {
+      List<String> args, ImmutableSet<String> optionsToSkip) {
     ImmutableList.Builder<String> result = ImmutableList.builder();
     for (int i = 0; i < args.size(); ++i) {
       if (optionsToSkip.contains(args.get(i))) {

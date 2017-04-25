@@ -16,29 +16,29 @@
 
 package com.facebook.buck.util.immutables;
 
-import org.immutables.value.Value;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.immutables.value.Value;
 
 /**
  * Immutables conforming to {@link BuckStyleImmutable} naming style.
  *
- * Step-style objects have all required attributes as constructor parameters, and do not have
+ * <p>Step-style objects have all required attributes as constructor parameters, and do not have
  * builders.
  *
  * @see <a href="http://immutables.github.io/immutable.html#tuples">Immutable user guide</a>
  */
 @Value.Style(
-    typeImmutable = "*",
-    typeAbstract = "Abstract*",
-    get = {"is*", "get*"},
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PUBLIC,
-    defaults = @Value.Immutable(builder = false),
-    forceJacksonPropertyNames = false)
+  typeImmutable = "*",
+  typeAbstract = "Abstract*",
+  get = {"is*", "get*"},
+  init = "set*",
+  visibility = Value.Style.ImplementationVisibility.PUBLIC,
+  defaults = @Value.Immutable(builder = false),
+  forceJacksonPropertyNames = false
+)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface BuckStyleStep {}

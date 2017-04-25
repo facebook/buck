@@ -19,17 +19,11 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
-/***
- * Provides meta-data about the version control repository the project being built is using.
- */
+/** * Provides meta-data about the version control repository the project being built is using. */
 public interface VersionControlCmdLineInterface {
-  /**
-   *
-   * @return true if project is using version control, and we support it (i.e. hg)
-   */
+  /** @return true if project is using version control, and we support it (i.e. hg) */
   boolean isSupportedVersionControlSystem() throws InterruptedException;
 
   /**
@@ -43,8 +37,8 @@ public interface VersionControlCmdLineInterface {
   /**
    * @param name Bookmark name, e.g master
    * @return Global revision ID for given name or {@link Optional#empty} if the bookmark doesn't
-   * exist or an error was encountered. If you want to handle the exception use
-   * {@link #revisionId(String)}
+   *     exist or an error was encountered. If you want to handle the exception use {@link
+   *     #revisionId(String)}
    * @throws InterruptedException
    */
   default Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
@@ -76,7 +70,7 @@ public interface VersionControlCmdLineInterface {
    * @param revisionIdOne
    * @param revisionIdTwo
    * @return A {@link Pair} containing a revision ID and its timestamp that is the common ancestor
-   * of revisionIdOne and revisionIdTwo.
+   *     of revisionIdOne and revisionIdTwo.
    * @throws VersionControlCommandFailedException
    * @throws InterruptedException
    */
@@ -86,9 +80,9 @@ public interface VersionControlCmdLineInterface {
   /**
    * @param revisionIdOne
    * @param revisionIdTwo
-   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or
-   * {@link Optional#empty()} is there is no common ancestor or an error was encountered. If you
-   * want to handle the error use {@link #commonAncestor(String, String)}
+   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or {@link
+   *     Optional#empty()} is there is no common ancestor or an error was encountered. If you want
+   *     to handle the error use {@link #commonAncestor(String, String)}
    * @throws InterruptedException
    */
   default Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
@@ -104,15 +98,13 @@ public interface VersionControlCmdLineInterface {
    * @param revisionIdOne
    * @param revisionIdTwo
    * @return A Pair containing a revision ID and its timestamp that is the common ancestor of
-   * revisionIdOne and revisionIdTwo. If there is not a common ancestor or an error is encountered
-   * then {@link Optional#empty()} is returned.If you want to handle the error use
-   * {@link #commonAncestorAndTS(String, String)}.
+   *     revisionIdOne and revisionIdTwo. If there is not a common ancestor or an error is
+   *     encountered then {@link Optional#empty()} is returned.If you want to handle the error use
+   *     {@link #commonAncestorAndTS(String, String)}.
    * @throws InterruptedException
    */
   default Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
-      String revisionIdOne,
-      String revisionIdTwo)
-      throws InterruptedException {
+      String revisionIdOne, String revisionIdTwo) throws InterruptedException {
     try {
       return Optional.of(commonAncestorAndTS(revisionIdOne, revisionIdTwo));
     } catch (VersionControlCommandFailedException e) {
@@ -165,11 +157,11 @@ public interface VersionControlCmdLineInterface {
 
   /**
    * It receives a list of bookmarks and returns a map of bookmarks to revision ids.
+   *
    * @return a map of bookmark to revision id.
    * @throws InterruptedException
    * @throws VersionControlCommandFailedException
    */
   ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
       throws InterruptedException, VersionControlCommandFailedException;
-
 }

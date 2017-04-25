@@ -18,7 +18,6 @@ package com.facebook.buck.util.autosparse;
 
 import java.io.IOException;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 /**
@@ -27,13 +26,12 @@ import javax.annotation.Nullable;
  * files under source control are actually physically present on disk).
  */
 public interface AutoSparseState {
-  /**
-   * @return The root path of the working copy this state tracks.
-   */
+  /** @return The root path of the working copy this state tracks. */
   Path getSCRoot();
 
   /**
    * Query the source control manifest for information on a file.
+   *
    * @param path the file to get the manifest information for
    * @return a {@link ManifestInfo} instance if this file is under source control, null otherwise.
    */
@@ -43,15 +41,17 @@ public interface AutoSparseState {
   /**
    * Query if a file is available in the source control manifest (and is thus tracked by source
    * control)
+   *
    * @param path to a file or directory
    * @return true if the path is a file that exists in the manifest, or a directory that contains
-   * files that are in the manifest.
+   *     files that are in the manifest.
    */
   boolean existsInManifest(Path path);
 
   /**
    * Add a path that should, at some point in the future, be part of the working copy sparse
    * profile.
+   *
    * @param path The path to a source-control managed file or directory to be added
    */
   void addToSparseProfile(Path path);

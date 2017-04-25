@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -28,12 +27,10 @@ import java.nio.file.Path;
 public class NullFileHashCache implements FileHashCache {
 
   @Override
-  public void invalidate(Path path) {
-  }
+  public void invalidate(Path path) {}
 
   @Override
-  public void invalidateAll() {
-  }
+  public void invalidateAll() {}
 
   @Override
   public HashCode get(Path path) throws IOException {
@@ -51,8 +48,7 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
-  public void set(Path path, HashCode hashCode) {
-  }
+  public void set(Path path, HashCode hashCode) {}
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {

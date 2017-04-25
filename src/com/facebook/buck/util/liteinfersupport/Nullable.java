@@ -18,8 +18,7 @@ package com.facebook.buck.util.liteinfersupport;
 
 /**
  * Some projects like FatJar is going to be embedded in many targets, it cannot have external
- * dependencies, but we'd like to have {@link javax.annotation.Nullable} and
- * {@link com.google.common.base.Preconditions#checkNotNull} anyway, so we define these here.
+ * dependencies, but we'd like to have {@link javax.annotation.Nullable} and {@link
+ * com.google.common.base.Preconditions#checkNotNull} anyway, so we define these here.
  */
-public @interface Nullable {
-}
+public @interface Nullable {}

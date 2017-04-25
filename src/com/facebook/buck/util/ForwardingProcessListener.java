@@ -31,12 +31,10 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
   }
 
   @Override
-  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
-  }
+  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {}
 
   @Override
-  public void onExit(int exitCode) {
-  }
+  public void onExit(int exitCode) {}
 
   @Override
   public void onStdout(ByteBuffer buffer, boolean closed) {
@@ -61,5 +59,4 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
     buffer.flip();
     return false;
   }
-
 }

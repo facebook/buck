@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -28,24 +27,22 @@ public class Optionals {
   /** Utility class: do not instantiate. */
   private Optionals() {}
 
-  public static <T> void addIfPresent(Optional<T> optional,
-                                      ImmutableCollection.Builder<T> collection) {
+  public static <T> void addIfPresent(
+      Optional<T> optional, ImmutableCollection.Builder<T> collection) {
     if (optional.isPresent()) {
       collection.add(optional.get());
     }
   }
 
-  public static <K, T> void putIfPresent(Optional<T> optional,
-                                         K key,
-                                         ImmutableMap.Builder<K, T> collection) {
+  public static <K, T> void putIfPresent(
+      Optional<T> optional, K key, ImmutableMap.Builder<K, T> collection) {
     if (optional.isPresent()) {
       collection.put(key, optional.get());
     }
   }
 
   public static <T, U> Optional<U> bind(
-      Optional<? extends T> optional,
-      Function<? super T, Optional<U>> f) {
+      Optional<? extends T> optional, Function<? super T, Optional<U>> f) {
     if (!optional.isPresent()) {
       return Optional.empty();
     }
@@ -68,14 +65,14 @@ public class Optionals {
    * Returns a singleton stream of an {@code Optional}'s value if present, otherwise an empty
    * stream.
    *
-   * Useful for filtering present instances in a stream pipeline:
+   * <p>Useful for filtering present instances in a stream pipeline:
+   *
    * <pre>{@code
    * Stream.of(Optional.empty(), Optional.of(1), Optional.of(2))
    *   .flatMap(Optionals::toStream)
    *
    * // Yields a stream of 2 elements, [1, 2]
-   * }
-   * </pre>
+   * }</pre>
    */
   public static <T> Stream<T> toStream(Optional<T> optional) {
     if (optional.isPresent()) {

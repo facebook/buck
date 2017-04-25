@@ -29,7 +29,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +43,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
-
 import javax.annotation.Nullable;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
@@ -54,21 +52,21 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final String HG_ROOT_PATH = ".hg";
   private static final String REMOTE_NAMES_FILENAME = "remotenames";
 
-  private static final Map<String, String> HG_ENVIRONMENT_VARIABLES = ImmutableMap.of(
-      // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected behavior.
-      "HGPLAIN", "1"
-  );
+  private static final Map<String, String> HG_ENVIRONMENT_VARIABLES =
+      ImmutableMap.of(
+          // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected behavior.
+          "HGPLAIN", "1");
 
   /**
-   * Path to the rawmanifest.py Mercurial extenions used to transfer the manifest to Buck.
-   * We can't use PackagedResource here because we need to get the raw manifest from the
-   * AutoSparse ProjectFileSystemDelegate, which should not have access to the parent
-   * ProjectFileSystem.
+   * Path to the rawmanifest.py Mercurial extenions used to transfer the manifest to Buck. We can't
+   * use PackagedResource here because we need to get the raw manifest from the AutoSparse
+   * ProjectFileSystemDelegate, which should not have access to the parent ProjectFileSystem.
    */
-  private static final String PATH_TO_RAWMANIFEST_PY = System.getProperty(
-      "buck.path_to_rawmanifest_py",
-      // Fall back on this value when running Buck from an IDE.
-      new File("src/com/facebook/buck/util/versioncontrol/rawmanifest.py").getAbsolutePath());
+  private static final String PATH_TO_RAWMANIFEST_PY =
+      System.getProperty(
+          "buck.path_to_rawmanifest_py",
+          // Fall back on this value when running Buck from an IDE.
+          new File("src/com/facebook/buck/util/versioncontrol/rawmanifest.py").getAbsolutePath());
 
   private static final Pattern HG_REVISION_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
   private static final Pattern HG_DATE_PATTERN = Pattern.compile("(\\d+)\\s([\\-\\+]?\\d+)");
@@ -98,9 +96,14 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       ImmutableList.of(HG_CMD_TEMPLATE, "sparse", "--import-rules", PATH_TEMPLATE, "--traceback");
 
   private static final ImmutableList<String> RAW_MANIFEST_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "--config",
+      ImmutableList.of(
+          HG_CMD_TEMPLATE,
+          "--config",
           "extensions.rawmanifest=" + PATH_TO_RAWMANIFEST_PY,
-          "rawmanifest", "-d", "-o", PATH_TEMPLATE);
+          "rawmanifest",
+          "-d",
+          "-o",
+          PATH_TEMPLATE);
 
   private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
       ImmutableList.of(
@@ -122,12 +125,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final ImmutableList<String> REVISION_AGE_COMMAND =
       ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "log",
-          "-r",
-          REVISION_ID_TEMPLATE,
-          "--template",
-          "'{date|hgdate}'");
+          HG_CMD_TEMPLATE, "log", "-r", REVISION_ID_TEMPLATE, "--template", "'{date|hgdate}'");
 
   private ProcessExecutorFactory processExecutorFactory;
   private final Path projectRoot;
@@ -144,23 +142,23 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
-    this.environment = MoreMaps.merge(
-        environment,
-        HG_ENVIRONMENT_VARIABLES);
-    this.hgRoot = Suppliers.memoize(new Supplier<Path>() {
-      @Override
-      @Nullable
-      public Path get() {
-        try {
-          Path root = Paths.get(executeCommand(ROOT_COMMAND));
-          LOG.verbose("Set hg root to %s", root);
-          return root;
-        } catch (VersionControlCommandFailedException | InterruptedException e) {
-          LOG.verbose("Unable to obtain a hg root for %s", projectRoot);
-          return null;
-        }
-      }
-    });
+    this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
+    this.hgRoot =
+        Suppliers.memoize(
+            new Supplier<Path>() {
+              @Override
+              @Nullable
+              public Path get() {
+                try {
+                  Path root = Paths.get(executeCommand(ROOT_COMMAND));
+                  LOG.verbose("Set hg root to %s", root);
+                  return root;
+                } catch (VersionControlCommandFailedException | InterruptedException e) {
+                  LOG.verbose("Unable to obtain a hg root for %s", projectRoot);
+                  return null;
+                }
+              }
+            });
   }
 
   @Override
@@ -173,15 +171,12 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(
         executeCommand(
-            replaceTemplateValue(
-                REVISION_ID_FOR_NAME_COMMAND_TEMPLATE,
-                NAME_TEMPLATE,
-                name)));
+            replaceTemplateValue(REVISION_ID_FOR_NAME_COMMAND_TEMPLATE, NAME_TEMPLATE, name)));
   }
 
   @Override
   public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException  {
+      throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(executeCommand(CURRENT_REVISION_ID_COMMAND));
   }
 
@@ -200,11 +195,13 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
     // The return format is {hash} {timestamp.ns_timestamp}. We only use the 1st part of the TS.
-    String[] results = executeCommand(
-        replaceTemplateValue(
-            COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE,
-            REVISION_IDS_TEMPLATE,
-            (revisionIdOne + "," + revisionIdTwo))).split(" ");
+    String[] results =
+        executeCommand(
+                replaceTemplateValue(
+                    COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE,
+                    REVISION_IDS_TEMPLATE,
+                    (revisionIdOne + "," + revisionIdTwo)))
+            .split(" ");
     return new Pair<>(validateRevisionId(results[0]), Long.parseLong(results[1]));
   }
 
@@ -218,13 +215,14 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     try {
       temp = File.createTempFile("diff", ".tmp");
       // Command: hg export -r "base::tip - base"
-      executeCommand(ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "export",
-          "-o",
-          temp.toString(),
-          "--rev",
-          baseRevision + "::" + tipRevision + " - " + baseRevision));
+      executeCommand(
+          ImmutableList.of(
+              HG_CMD_TEMPLATE,
+              "export",
+              "-o",
+              temp.toString(),
+              "--rev",
+              baseRevision + "::" + tipRevision + " - " + baseRevision));
       return new String(Files.readAllBytes(temp.toPath()));
     } catch (IOException e) {
       LOG.debug(e.getMessage());
@@ -239,10 +237,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException {
-    String hgChangedFilesString = executeCommand(replaceTemplateValue(
-        CHANGED_FILES_COMMAND,
-        REVISION_ID_TEMPLATE,
-        fromRevisionId));
+    String hgChangedFilesString =
+        executeCommand(
+            replaceTemplateValue(CHANGED_FILES_COMMAND, REVISION_ID_TEMPLATE, fromRevisionId));
     return Arrays.stream(hgChangedFilesString.split("\0"))
         .filter(s -> !s.isEmpty())
         .collect(MoreCollectors.toImmutableSet());
@@ -251,10 +248,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException {
-    String hgTimeString = executeCommand(replaceTemplateValue(
-            REVISION_AGE_COMMAND,
-            REVISION_ID_TEMPLATE,
-            revisionId));
+    String hgTimeString =
+        executeCommand(
+            replaceTemplateValue(REVISION_AGE_COMMAND, REVISION_ID_TEMPLATE, revisionId));
 
     // hgdate is UTC timestamp + local offset,
     // e.g. 1440601290 -7200 (for France, which is UTC + 2H)
@@ -270,14 +266,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     ImmutableMap.Builder<String, String> bookmarksRevisions = ImmutableMap.builder();
     try {
       List<String> lines = Files.readAllLines(remoteNames);
-      lines.forEach(line -> {
-        for (String bookmark : bookmarks) {
-          if (line.endsWith(bookmark)) {
-            String[] parts = line.split(" ");
-            bookmarksRevisions.put(parts[2], parts[0]);
-          }
-        }
-      });
+      lines.forEach(
+          line -> {
+            for (String bookmark : bookmarks) {
+              if (line.endsWith(bookmark)) {
+                String[] parts = line.split(" ");
+                bookmarksRevisions.put(parts[2], parts[0]);
+              }
+            }
+          });
     } catch (IOException e) {
       return ImmutableMap.of();
     }
@@ -291,11 +288,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       hgmanifestDir.toFile().deleteOnExit();
       Path hgmanifestOutput = hgmanifestDir.resolve("manifest.raw");
       executeCommand(
-          replaceTemplateValue(
-              RAW_MANIFEST_COMMAND,
-              PATH_TEMPLATE,
-              hgmanifestOutput.toString()
-          ));
+          replaceTemplateValue(RAW_MANIFEST_COMMAND, PATH_TEMPLATE, hgmanifestOutput.toString()));
       return hgmanifestOutput.toString();
     } catch (IOException e) {
       throw new VersionControlCommandFailedException("Unable to load hg manifest");
@@ -310,11 +303,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   public void exportHgSparseRules(Path exportFile)
       throws VersionControlCommandFailedException, InterruptedException {
     executeCommand(
-        replaceTemplateValue(
-          SPARSE_IMPORT_COMMAND,
-          PATH_TEMPLATE,
-          exportFile.toString()
-    ));
+        replaceTemplateValue(SPARSE_IMPORT_COMMAND, PATH_TEMPLATE, exportFile.toString()));
   }
 
   private String executeCommand(Iterable<String> command)
@@ -323,15 +312,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     String commandString = commandAsString(command);
     LOG.debug("Executing command: " + commandString);
 
-    ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
-        .setCommand(command)
-        .setDirectory(projectRoot)
-        .setEnvironment(environment)
-        .build();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(command)
+            .setDirectory(projectRoot)
+            .setEnvironment(environment)
+            .build();
 
     ProcessExecutor.Result result;
-    try (
-        PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
+    try (PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
         PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
 
       ProcessExecutor processExecutor =
@@ -346,8 +335,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
     if (!resultString.isPresent()) {
       throw new VersionControlCommandFailedException(
-          "Received no output from launched process for command: " + commandString
-      );
+          "Received no output from launched process for command: " + commandString);
     }
 
     if (result.getExitCode() != 0) {
@@ -357,7 +345,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
     return cleanResultString(resultString.get());
   }
-
 
   private static String validateRevisionId(String revisionId)
       throws VersionControlCommandFailedException {

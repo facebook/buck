@@ -18,58 +18,41 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-/**
- * A singleton helper class for process registration.
- */
+/** A singleton helper class for process registration. */
 public class ProcessRegistry {
 
   private static final ProcessRegistry INSTANCE = new ProcessRegistry();
 
-  /**
-   * Gets the singleton instance of this class.
-   */
+  /** Gets the singleton instance of this class. */
   public static ProcessRegistry getInstance() {
     return INSTANCE;
   }
 
-  /**
-   * This is a helper singleton.
-   */
+  /** This is a helper singleton. */
   @VisibleForTesting
   ProcessRegistry() {}
 
-  /**
-   * A callback to be called upon registering a process.
-   */
+  /** A callback to be called upon registering a process. */
   public interface ProcessRegisterCallback {
     void call(Object process, ProcessExecutorParams params, ImmutableMap<String, String> context);
   }
 
-  /**
-   * Subscribes the process register callback.
-   */
+  /** Subscribes the process register callback. */
   public void subscribe(ProcessRegisterCallback processRegisterCallback) {
     processRegisterCallbacks.add(processRegisterCallback);
   }
 
-  /**
-   * Unsubscribes the process register callback.
-   */
+  /** Unsubscribes the process register callback. */
   public void unsubscribe(ProcessRegisterCallback processRegisterCallback) {
     processRegisterCallbacks.remove(processRegisterCallback);
   }
 
-  /**
-   * Registers the process and notifies the subscribers.
-   */
+  /** Registers the process and notifies the subscribers. */
   public void registerProcess(
-      Object process,
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) {
+      Object process, ProcessExecutorParams params, ImmutableMap<String, String> context) {
     for (ProcessRegisterCallback callback : processRegisterCallbacks) {
       callback.call(process, params, context);
     }

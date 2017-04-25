@@ -26,7 +26,6 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,7 +63,8 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     // A pattern matching all of the build targets in the query string.
     Pattern targetsPattern =
         Pattern.compile(
-            targets.stream()
+            targets
+                .stream()
                 .map(Object::toString)
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|")));
@@ -87,5 +87,4 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
 
     return queryString.equals(newQuery) ? Optional.empty() : Optional.of(Query.of(newQuery));
   }
-
 }

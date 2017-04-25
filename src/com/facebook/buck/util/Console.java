@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-
 import java.io.PrintStream;
 
 public class Console {
@@ -31,20 +30,14 @@ public class Console {
   private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
 
-  /**
-   * Returns a {@link Console} that simply discards written bytes.
-   */
+  /** Returns a {@link Console} that simply discards written bytes. */
   public static Console createNullConsole() {
     PrintStream stdout = new PrintStream(ByteStreams.nullOutputStream());
     PrintStream stderr = new PrintStream(ByteStreams.nullOutputStream());
     return new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
   }
 
-  public Console(
-      Verbosity verbosity,
-      PrintStream stdOut,
-      PrintStream stdErr,
-      Ansi ansi) {
+  public Console(Verbosity verbosity, PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
     this.verbosity = verbosity;
     this.stdOut = new DirtyPrintStreamDecorator(stdOut);
     this.stdErr = new DirtyPrintStreamDecorator(stdErr);
@@ -72,37 +65,32 @@ public class Console {
    *     a terminal, then this will append an ANSI reset escape sequence followed by a newline.
    */
   public void printSuccess(String successMessage) {
-    Preconditions.checkArgument(!successMessage.endsWith("\n"),
-        "Trailing newline will be added by this method");
+    Preconditions.checkArgument(
+        !successMessage.endsWith("\n"), "Trailing newline will be added by this method");
     LOG.debug("Build success: %s", successMessage);
     ansi.printHighlightedSuccessText(stdErr, successMessage);
     stdErr.print('\n');
   }
 
-  /**
-   * Prints a formatted success message. {@see #printSuccess(String)}
-   */
+  /** Prints a formatted success message. {@see #printSuccess(String)} */
   public void printSuccess(String successMessage, Object... args) {
     printSuccess(String.format(successMessage, args));
   }
 
-  /**
-   * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
-   */
+  /** Prints an error message to stderr that will be highlighted in red if stderr is a tty. */
   public void printErrorText(String message) {
     LOG.warn("Build error: %s", message);
     stdErr.println(ansi.asErrorText(message));
   }
 
-  /**
-   * Prints a formatted error message. {@see #printErrorText(String)}
-   */
+  /** Prints a formatted error message. {@see #printErrorText(String)} */
   public void printErrorText(String message, Object... args) {
     printErrorText(String.format(message, args));
   }
 
   /**
    * Prints the root cause of the {@link Throwable} with its stacktrace as a build failure.
+   *
    * @see #printBuildFailure(String)
    */
   public void printBuildFailureWithStacktrace(Throwable t) {
@@ -114,6 +102,7 @@ public class Console {
 
   /**
    * Prints the message of the {@link Throwable} as a build failure.
+   *
    * @see #printBuildFailure(String)
    */
   public void printBuildFailureWithoutStacktraceDontUnwrap(Throwable t) {

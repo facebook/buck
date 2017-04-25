@@ -19,12 +19,10 @@ package com.facebook.buck.util.autosparse;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
 public class AbstractAutoSparseFactory {
@@ -56,8 +54,7 @@ public class AbstractAutoSparseFactory {
       }
     }
 
-    HgAutoSparseState newState = new HgAutoSparseState(
-        hgCmdLine, hgRoot, autoSparseConfig);
+    HgAutoSparseState newState = new HgAutoSparseState(hgCmdLine, hgRoot, autoSparseConfig);
     perSCRoot.put(hgRoot, new WeakReference<AutoSparseState>(newState));
     return newState;
   }

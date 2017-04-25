@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +40,7 @@ public class ObjectMappers {
   public static final ObjectWriter WRITER;
 
   public static <T> T readValue(File file, Class<T> clazz) throws IOException {
-    try (JsonParser parser = createParser(file)){
+    try (JsonParser parser = createParser(file)) {
       return READER.readValue(parser, clazz);
     }
   }
@@ -113,6 +112,5 @@ public class ObjectMappers {
     return mapper;
   }
 
-  private ObjectMappers() {
-  }
+  private ObjectMappers() {}
 }

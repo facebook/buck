@@ -16,12 +16,8 @@
 
 package com.facebook.buck.util;
 
-/**
- * Fetches the user ID of the running process.
- */
+/** Fetches the user ID of the running process. */
 public interface UserIdFetcher {
-  /**
-   * Returns the user ID for the current user.
-   */
+  /** Returns the user ID for the current user. */
   long getUserId();
 }

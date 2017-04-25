@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.zaxxer.nuprocess.codec.NuCharsetEncoder;
 import com.zaxxer.nuprocess.codec.NuCharsetEncoderHandler;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
@@ -29,23 +28,25 @@ public final class ListeningCharsetEncoder {
 
   public interface EncoderListener {
     boolean onStdinReady(CharBuffer buffer);
+
     void onEncoderError(CoderResult result);
   }
 
   public ListeningCharsetEncoder(final EncoderListener listener, CharsetEncoder charsetEncoder) {
-    this.encoder = new NuCharsetEncoder(
-        new NuCharsetEncoderHandler() {
-          @Override
-          public boolean onStdinReady(CharBuffer buffer) {
-            return listener.onStdinReady(buffer);
-          }
+    this.encoder =
+        new NuCharsetEncoder(
+            new NuCharsetEncoderHandler() {
+              @Override
+              public boolean onStdinReady(CharBuffer buffer) {
+                return listener.onStdinReady(buffer);
+              }
 
-          @Override
-          public void onEncoderError(CoderResult result) {
-            listener.onEncoderError(result);
-          }
-        },
-        charsetEncoder);
+              @Override
+              public void onEncoderError(CoderResult result) {
+                listener.onEncoderError(result);
+              }
+            },
+            charsetEncoder);
   }
 
   public boolean onStdinReady(ByteBuffer buffer) {

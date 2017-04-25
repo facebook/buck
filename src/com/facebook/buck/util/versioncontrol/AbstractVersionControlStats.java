@@ -21,10 +21,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -36,5 +34,4 @@ interface AbstractVersionControlStats extends CommonVersionControlStats {
   /* The diff between base and current revision if it exists */
   @JsonIgnore
   Optional<String> getDiff();
-
 }

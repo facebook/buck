@@ -18,9 +18,7 @@ package com.facebook.buck.util.network;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
-
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 
 public class RemoteLogBuckConfig {
@@ -44,8 +42,10 @@ public class RemoteLogBuckConfig {
   }
 
   public OkHttpClient createOkHttpClient() {
-    long timeout = buckConfig.getLong(LOG_SECTION_NAME, REQUEST_TIMEOUT_MILLIS).orElse(
-        DEFAULT_REQUEST_TIMEOUT_MILLIS);
+    long timeout =
+        buckConfig
+            .getLong(LOG_SECTION_NAME, REQUEST_TIMEOUT_MILLIS)
+            .orElse(DEFAULT_REQUEST_TIMEOUT_MILLIS);
     return new OkHttpClient.Builder()
         .connectTimeout(timeout, TimeUnit.MILLISECONDS)
         .readTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -53,11 +53,10 @@ public class RemoteLogBuckConfig {
         .build();
   }
 
-  /**
-   * @return max. threads to be used for concurrent remote log requests.
-   */
+  /** @return max. threads to be used for concurrent remote log requests. */
   public int getMaxThreads() {
-    return buckConfig.getInteger(LOG_SECTION_NAME, REQUEST_MAX_THREADS).orElse(
-        DEFAULT_REQUEST_MAX_THREADS);
+    return buckConfig
+        .getInteger(LOG_SECTION_NAME, REQUEST_MAX_THREADS)
+        .orElse(DEFAULT_REQUEST_MAX_THREADS);
   }
 }

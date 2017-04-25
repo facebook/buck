@@ -21,7 +21,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.lang.reflect.Field;
 import java.util.Optional;
 
@@ -36,9 +35,9 @@ class TargetGraphVersionTransformations {
   }
 
   public static boolean isVersionRoot(TargetNode<?, ?> node) {
-    return (
-        node.getDescription() instanceof VersionRoot &&
-        ((VersionRoot<?>) node.getDescription()).isVersionRoot(node.getBuildTarget().getFlavors()));
+    return (node.getDescription() instanceof VersionRoot
+        && ((VersionRoot<?>) node.getDescription())
+            .isVersionRoot(node.getBuildTarget().getFlavors()));
   }
 
   public static Optional<TargetNode<VersionedAliasDescription.Arg, ?>> getVersionedNode(
@@ -71,12 +70,8 @@ class TargetGraphVersionTransformations {
     return ImmutableMap.of();
   }
 
-  public static <A, B extends Description<A>> Iterable<BuildTarget> getDeps(
-      TargetNode<A, B> node) {
+  public static <A, B extends Description<A>> Iterable<BuildTarget> getDeps(TargetNode<A, B> node) {
     return Iterables.concat(
-        node.getDeclaredDeps(),
-        node.getExtraDeps(),
-        getVersionedDeps(node).keySet());
+        node.getDeclaredDeps(), node.getExtraDeps(), getVersionedDeps(node).keySet());
   }
-
 }

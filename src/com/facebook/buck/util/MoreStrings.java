@@ -18,10 +18,8 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-
 import java.util.Arrays;
 import java.util.Optional;
-
 
 public final class MoreStrings {
 
@@ -47,32 +45,33 @@ public final class MoreStrings {
 
   public static int getLevenshteinDistance(String str1, String str2) {
 
-      char[] arr1 = str1.toCharArray();
-      char[] arr2 = str2.toCharArray();
-      int[][] levenshteinDist = new int [arr1.length + 1][arr2.length + 1];
+    char[] arr1 = str1.toCharArray();
+    char[] arr2 = str2.toCharArray();
+    int[][] levenshteinDist = new int[arr1.length + 1][arr2.length + 1];
 
-      for (int i = 0; i <= arr1.length; i++) {
-        levenshteinDist[i][0] = i;
-      }
+    for (int i = 0; i <= arr1.length; i++) {
+      levenshteinDist[i][0] = i;
+    }
 
+    for (int j = 1; j <= arr2.length; j++) {
+      levenshteinDist[0][j] = j;
+    }
+
+    for (int i = 1; i <= arr1.length; i++) {
       for (int j = 1; j <= arr2.length; j++) {
-        levenshteinDist[0][j] = j;
-      }
-
-      for (int i = 1; i <= arr1.length; i++) {
-        for (int j = 1; j <= arr2.length; j++) {
-          if (arr1[i - 1] == arr2[j - 1]) {
-            levenshteinDist[i][j] = levenshteinDist[i - 1][j - 1];
-          } else {
-            levenshteinDist[i][j] =
-              Math.min(levenshteinDist[i - 1][j] + 1,
+        if (arr1[i - 1] == arr2[j - 1]) {
+          levenshteinDist[i][j] = levenshteinDist[i - 1][j - 1];
+        } else {
+          levenshteinDist[i][j] =
+              Math.min(
+                  levenshteinDist[i - 1][j] + 1,
                   Math.min(levenshteinDist[i][j - 1] + 1, levenshteinDist[i - 1][j - 1] + 1));
-          }
         }
       }
-
-      return levenshteinDist[arr1.length][arr2.length];
     }
+
+    return levenshteinDist[arr1.length][arr2.length];
+  }
 
   public static String regexPatternForAny(String... values) {
     return regexPatternForAny(Arrays.asList(values));
@@ -91,15 +90,15 @@ public final class MoreStrings {
   }
 
   public static Optional<String> stripPrefix(String s, String prefix) {
-    return s.startsWith(prefix) ?
-        Optional.of(s.substring(prefix.length(), s.length())) :
-        Optional.empty();
+    return s.startsWith(prefix)
+        ? Optional.of(s.substring(prefix.length(), s.length()))
+        : Optional.empty();
   }
 
   public static Optional<String> stripSuffix(String s, String suffix) {
-    return s.endsWith(suffix) ?
-        Optional.of(s.substring(0, s.length() - suffix.length())) :
-        Optional.empty();
+    return s.endsWith(suffix)
+        ? Optional.of(s.substring(0, s.length() - suffix.length()))
+        : Optional.empty();
   }
 
   public static String truncatePretty(String data) {
@@ -110,16 +109,12 @@ public final class MoreStrings {
   }
 
   public static String truncateMiddle(
-      String data,
-      int keepFirstChars,
-      int keepLastChars,
-      String truncateMessage) {
+      String data, int keepFirstChars, int keepLastChars, String truncateMessage) {
     if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
       return data;
     }
-    return data.substring(0, keepFirstChars) +
-        truncateMessage +
-        data.substring(data.length() - keepLastChars);
+    return data.substring(0, keepFirstChars)
+        + truncateMessage
+        + data.substring(data.length() - keepLastChars);
   }
-
 }

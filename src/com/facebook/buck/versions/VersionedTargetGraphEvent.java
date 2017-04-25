@@ -16,18 +16,14 @@
 
 package com.facebook.buck.versions;
 
-
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BroadcastEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 
-/**
- * Base class for events about building up the versioned target graph.
- */
-public abstract class VersionedTargetGraphEvent
-    extends AbstractBuckEvent
+/** Base class for events about building up the versioned target graph. */
+public abstract class VersionedTargetGraphEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
 
   private VersionedTargetGraphEvent(EventKey eventKey) {
@@ -62,7 +58,6 @@ public abstract class VersionedTargetGraphEvent
     public String getEventName() {
       return "BuildVersionedTargetGraphStarted";
     }
-
   }
 
   public static class Finished extends VersionedTargetGraphEvent {
@@ -75,7 +70,6 @@ public abstract class VersionedTargetGraphEvent
     public String getEventName() {
       return "BuildVersionedTargetGraphFinished";
     }
-
   }
 
   public static class Cache extends VersionedTargetGraphEvent implements BroadcastEvent {
@@ -111,7 +105,5 @@ public abstract class VersionedTargetGraphEvent
     public String getEventName() {
       return eventName;
     }
-
   }
-
 }

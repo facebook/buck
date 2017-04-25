@@ -18,19 +18,17 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
- * Maintain a cache mapping class paths to class loaders that load from these class paths.  The
- * class loaders remain active until ClassLoaderCache itself is unloaded.
+ * Maintain a cache mapping class paths to class loaders that load from these class paths. The class
+ * loaders remain active until ClassLoaderCache itself is unloaded.
  */
 public final class ClassLoaderCache implements AutoCloseable {
 
@@ -40,8 +38,7 @@ public final class ClassLoaderCache implements AutoCloseable {
 
   private synchronized Map<ImmutableList<URL>, ClassLoader> getCacheForParent(
       @Nullable ClassLoader parentClassLoader) {
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        cache.get(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = cache.get(parentClassLoader);
 
     if (cacheForParent == null) {
       cacheForParent = new HashMap<>();
@@ -52,11 +49,9 @@ public final class ClassLoaderCache implements AutoCloseable {
   }
 
   public synchronized ClassLoader getClassLoaderForClassPath(
-      @Nullable ClassLoader parentClassLoader,
-      ImmutableList<URL> classPath) {
+      @Nullable ClassLoader parentClassLoader, ImmutableList<URL> classPath) {
 
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        getCacheForParent(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = getCacheForParent(parentClassLoader);
 
     ClassLoader classLoader = cacheForParent.get(classPath);
     if (classLoader == null) {
@@ -73,8 +68,7 @@ public final class ClassLoaderCache implements AutoCloseable {
       @Nullable ClassLoader parentClassLoader,
       ImmutableList<URL> classPath,
       ClassLoader injectedClassLoader) {
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        getCacheForParent(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = getCacheForParent(parentClassLoader);
 
     cacheForParent.put(classPath, injectedClassLoader);
   }

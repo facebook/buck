@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableMap;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -49,13 +48,11 @@ abstract class AbstractVersionedAliasDescription
       Arg args) {
     throw new IllegalStateException(
         String.format(
-            "%s: `versioned_alias()` rules cannot produce build rules",
-            params.getBuildTarget()));
+            "%s: `versioned_alias()` rules cannot produce build rules", params.getBuildTarget()));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableMap<Version, BuildTarget> versions;
   }
-
 }

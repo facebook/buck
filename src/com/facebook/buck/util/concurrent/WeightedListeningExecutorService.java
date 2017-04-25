@@ -20,11 +20,9 @@ import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -32,9 +30,9 @@ import javax.annotation.Nullable;
  * A {@link ListeningExecutorService} which gates execution using a {@link ListeningMultiSemaphore}
  * and allows resources to be assigned to submitted tasks.
  *
- * NOTE: If futures for submitted jobs are cancelled while they are running, it's possible that the
- * semaphore will be released for that cancelled job before it is finished, meaning more jobs may be
- * scheduled than expected.
+ * <p>NOTE: If futures for submitted jobs are cancelled while they are running, it's possible that
+ * the semaphore will be released for that cancelled job before it is finished, meaning more jobs
+ * may be scheduled than expected.
  */
 public class WeightedListeningExecutorService extends AbstractListeningExecutorService {
   private final ListeningMultiSemaphore semaphore;
@@ -50,7 +48,6 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     this.delegate = delegate;
   }
 
-
   public ListeningMultiSemaphore getSemaphore() {
     return semaphore;
   }
@@ -59,9 +56,10 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
    * Creates a new service that has different default resource amounts. Useful when you need to
    * propagate explicit default amounts when you submit the job through execute(),
    * Futures.transform() and similar calls.
+   *
    * @param newDefaultAmounts new default amounts
    * @return Service that uses the same semaphore and delegate but with the given default resource
-   * amounts.
+   *     amounts.
    */
   public WeightedListeningExecutorService withDefaultAmounts(ResourceAmounts newDefaultAmounts) {
     if (newDefaultAmounts.equals(defaultValues)) {
@@ -71,8 +69,7 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
   }
 
   private <T> ListenableFuture<T> submitWithSemaphore(
-      final Callable<T> callable,
-      final ResourceAmounts amounts) {
+      final Callable<T> callable, final ResourceAmounts amounts) {
     ListenableFuture<T> future =
         Futures.transformAsync(
             semaphore.acquire(amounts),
@@ -101,9 +98,7 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
   }
 
   public <T> ListenableFuture<T> submit(
-      final Runnable task,
-      @Nullable final T result,
-      ResourceAmounts amounts) {
+      final Runnable task, @Nullable final T result, ResourceAmounts amounts) {
     return submitWithSemaphore(
         () -> {
           task.run();
@@ -158,5 +153,4 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
   public final void execute(@Nonnull Runnable command) {
     submit(command);
   }
-
 }

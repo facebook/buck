@@ -21,12 +21,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.Optional;
 
-/**
- * Common functionality for uploading log entries in batches.
- */
+/** Common functionality for uploading log entries in batches. */
 public abstract class AbstractBatchingLogger implements BatchingLogger {
 
   public static final int DEFAULT_MIN_BATCH_SIZE = 1024 * 128; // This is pretty arbitrary.

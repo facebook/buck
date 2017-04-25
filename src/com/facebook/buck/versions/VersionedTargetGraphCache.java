@@ -23,23 +23,17 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.concurrent.ForkJoinPool;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 public class VersionedTargetGraphCache {
 
   private static final Logger LOG = Logger.get(VersionedTargetGraphCache.class);
 
-  @Nullable
-  private CachedVersionedTargetGraph cachedVersionedTargetGraph = null;
+  @Nullable private CachedVersionedTargetGraph cachedVersionedTargetGraph = null;
 
-  /**
-   * @return a new versioned target graph.
-   */
+  /** @return a new versioned target graph. */
   private TargetGraphAndBuildTargets createdVersionedTargetGraph(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
@@ -47,8 +41,7 @@ public class VersionedTargetGraphCache {
       throws VersionException, InterruptedException {
     return VersionedTargetGraphBuilder.transform(
         new VersionUniverseVersionSelector(
-            targetGraphAndBuildTargets.getTargetGraph(),
-            versionUniverses),
+            targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
         targetGraphAndBuildTargets,
         pool);
   }
@@ -62,11 +55,10 @@ public class VersionedTargetGraphCache {
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
         VersionedTargetGraphInputs.of(targetGraphAndBuildTargets, versionUniverses);
-    if (cachedVersionedTargetGraph != null &&
-        newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
+    if (cachedVersionedTargetGraph != null
+        && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
       return VersionedTargetGraphCacheResult.of(
-          ResultType.HIT,
-          cachedVersionedTargetGraph.getTargetGraphAndBuildTargets());
+          ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphAndBuildTargets());
     }
 
     // Build and cache new versioned target graph.
@@ -80,7 +72,7 @@ public class VersionedTargetGraphCache {
 
   /**
    * @return a versioned target graph, either generated from the parameters or retrieved from a
-   *         cache.
+   *     cache.
    */
   public VersionedTargetGraphCacheResult getVersionedTargetGraph(
       BuckEventBus eventBus,
@@ -108,32 +100,27 @@ public class VersionedTargetGraphCache {
       TargetGraphAndBuildTargets targetGraphAndBuildTargets)
       throws VersionException, InterruptedException {
     return getVersionedTargetGraph(
-        eventBus,
-        targetGraphAndBuildTargets,
-        new VersionBuckConfig(buckConfig).getVersionUniverses(),
-        new ForkJoinPool(buckConfig.getNumThreads()))
+            eventBus,
+            targetGraphAndBuildTargets,
+            new VersionBuckConfig(buckConfig).getVersionUniverses(),
+            new ForkJoinPool(buckConfig.getNumThreads()))
         .getTargetGraphAndBuildTargets();
   }
 
   /**
-   * A collection of anything which affects/changes how the versioned target graph is generated.
-   * If any of these items changes between runs, we cannot use the cached versioned target graph
-   * and must re-generate it.
+   * A collection of anything which affects/changes how the versioned target graph is generated. If
+   * any of these items changes between runs, we cannot use the cached versioned target graph and
+   * must re-generate it.
    */
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractVersionedTargetGraphInputs {
 
-    /**
-     * @return the un-versioned target graph to be transformed.
-     */
+    /** @return the un-versioned target graph to be transformed. */
     TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
 
-    /**
-     * @return the version universes used when generating the versioned target graph.
-     */
+    /** @return the version universes used when generating the versioned target graph. */
     ImmutableMap<String, VersionUniverse> getVersionUniverses();
-
   }
 
   /**
@@ -144,14 +131,10 @@ public class VersionedTargetGraphCache {
   @BuckStyleTuple
   interface AbstractCachedVersionedTargetGraph {
 
-    /**
-     * @return any inputs which, when changed, may produce a different versioned target graph.
-     */
+    /** @return any inputs which, when changed, may produce a different versioned target graph. */
     VersionedTargetGraphInputs getInputs();
 
-    /**
-     * @return a versioned target graph.
-     */
+    /** @return a versioned target graph. */
     TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
   }
 
@@ -159,25 +142,17 @@ public class VersionedTargetGraphCache {
   @BuckStyleTuple
   interface AbstractVersionedTargetGraphCacheResult {
 
-    /**
-     * @return the type of result.
-     */
+    /** @return the type of result. */
     ResultType getType();
 
-    /**
-     * @return a versioned target graph.
-     */
+    /** @return a versioned target graph. */
     TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
   }
 
-  /**
-   * The possible result types using the cache.
-   */
+  /** The possible result types using the cache. */
   public enum ResultType {
 
-    /**
-     * A miss in the cache due to the inputs changing.
-     */
+    /** A miss in the cache due to the inputs changing. */
     MISMATCH {
       @Override
       BuckEvent getEvent() {
@@ -190,9 +165,7 @@ public class VersionedTargetGraphCache {
       }
     },
 
-    /**
-     * A miss in the cache due to the cache being empty.
-     */
+    /** A miss in the cache due to the cache being empty. */
     EMPTY {
       @Override
       BuckEvent getEvent() {
@@ -205,9 +178,7 @@ public class VersionedTargetGraphCache {
       }
     },
 
-    /**
-     * A hit in the cache.
-     */
+    /** A hit in the cache. */
     HIT {
       @Override
       BuckEvent getEvent() {
@@ -222,8 +193,7 @@ public class VersionedTargetGraphCache {
     ;
 
     abstract BuckEvent getEvent();
+
     abstract String getDescription();
-
   }
-
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -38,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,18 +49,16 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Queries Watchman for changes to a path.
- */
+/** Queries Watchman for changes to a path. */
 public class WatchmanWatcher {
 
   // Action to take if Watchman indicates a fresh instance (which happens
   // both on the first buckd command as well as if Watchman needs to recrawl
   // for any reason).
   public enum FreshInstanceAction {
-      NONE,
-      POST_OVERFLOW_EVENT,
-      ;
+    NONE,
+    POST_OVERFLOW_EVENT,
+    ;
   };
 
   // The type of cursor used to communicate with Watchman
@@ -91,19 +87,17 @@ public class WatchmanWatcher {
         fileChangeEventBus,
         watchman.getWatchmanClient().get(),
         DEFAULT_TIMEOUT_MILLIS,
-        createQueries(
-            projectWatch,
-            ignorePaths,
-            watchman.getCapabilities()),
+        createQueries(projectWatch, ignorePaths, watchman.getCapabilities()),
         cursors);
   }
 
   @VisibleForTesting
-  WatchmanWatcher(EventBus fileChangeEventBus,
-                  WatchmanClient watchmanClient,
-                  long timeoutMillis,
-                  ImmutableMap<Path, WatchmanQuery> queries,
-                  Map<Path, WatchmanCursor> cursors) {
+  WatchmanWatcher(
+      EventBus fileChangeEventBus,
+      WatchmanClient watchmanClient,
+      long timeoutMillis,
+      ImmutableMap<Path, WatchmanQuery> queries,
+      Map<Path, WatchmanCursor> cursors) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.timeoutMillis = timeoutMillis;
@@ -119,8 +113,7 @@ public class WatchmanWatcher {
     ImmutableMap.Builder<Path, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
     for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
       watchmanQueryBuilder.put(
-          entry.getKey(),
-          createQuery(entry.getValue(), ignorePaths, watchmanCapabilities));
+          entry.getKey(), createQuery(entry.getValue(), ignorePaths, watchmanCapabilities));
     }
     return watchmanQueryBuilder.build();
   }
@@ -156,26 +149,18 @@ public class WatchmanWatcher {
             ignorePath = MorePaths.relativize(projectRoot, ignorePath);
           }
           if (watchmanCapabilities.contains(Capability.DIRNAME)) {
-            excludeAnyOf.add(
-                Lists.newArrayList(
-                    "dirname",
-                    ignorePath.toString()));
+            excludeAnyOf.add(Lists.newArrayList("dirname", ignorePath.toString()));
           } else {
             excludeAnyOf.add(
                 Lists.newArrayList(
-                    "match",
-                    ignorePath.toString() + File.separator + "*",
-                    "wholename"));
+                    "match", ignorePath.toString() + File.separator + "*", "wholename"));
           }
           break;
         case GLOB:
           String ignoreGlob = ignorePathOrGlob.getGlob();
           excludeAnyOf.add(
               Lists.newArrayList(
-                  "match",
-                  ignoreGlob,
-                  "wholename",
-                  ImmutableMap.of("includedotfiles", true)));
+                  "match", ignoreGlob, "wholename", ImmutableMap.of("includedotfiles", true)));
           break;
         default:
           throw new RuntimeException(
@@ -186,11 +171,7 @@ public class WatchmanWatcher {
     // Note that we use LinkedHashMap so insertion order is preserved. That
     // helps us write tests that don't depend on the undefined order of HashMap.
     Map<String, Object> sinceParams = new LinkedHashMap<>();
-    sinceParams.put(
-        "expression",
-        Lists.newArrayList(
-            "not",
-            excludeAnyOf));
+    sinceParams.put("expression", Lists.newArrayList("not", excludeAnyOf));
     sinceParams.put("empty_on_fresh_instance", true);
     sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
     if (watchPrefix.isPresent()) {
@@ -208,28 +189,25 @@ public class WatchmanWatcher {
   }
 
   /**
-   * Query Watchman for file change events. If too many events are pending or an error occurs
-   * an overflow event is posted to the EventBus signalling that events may have been lost
-   * (and so typically caches must be cleared to avoid inconsistency). Interruptions and
-   * IOExceptions are propagated to callers, but typically if overflow events are handled
-   * conservatively by subscribers then no other remedial action is required.
+   * Query Watchman for file change events. If too many events are pending or an error occurs an
+   * overflow event is posted to the EventBus signalling that events may have been lost (and so
+   * typically caches must be cleared to avoid inconsistency). Interruptions and IOExceptions are
+   * propagated to callers, but typically if overflow events are handled conservatively by
+   * subscribers then no other remedial action is required.
    *
-   * Any diagnostics posted by Watchman are added to watchmanDiagnosticCache.
+   * <p>Any diagnostics posted by Watchman are added to watchmanDiagnosticCache.
    */
-  public void postEvents(
-      BuckEventBus buckEventBus,
-      FreshInstanceAction freshInstanceAction
-  ) throws IOException, InterruptedException {
+  public void postEvents(BuckEventBus buckEventBus, FreshInstanceAction freshInstanceAction)
+      throws IOException, InterruptedException {
     // Speculatively set to false
     AtomicBoolean filesHaveChanged = new AtomicBoolean(false);
     for (Path cellPath : queries.keySet()) {
       WatchmanQuery query = queries.get(cellPath);
       WatchmanCursor cursor = cursors.get(cellPath);
       if (query != null && cursor != null) {
-        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-            buckEventBus,
-            PerfEventId.of("check_watchman"),
-            "cell", cellPath)) {
+        try (SimplePerfEvent.Scope ignored =
+            SimplePerfEvent.scope(
+                buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
           postEvents(buckEventBus, freshInstanceAction, cellPath, query, cursor, filesHaveChanged);
         }
       }
@@ -246,27 +224,25 @@ public class WatchmanWatcher {
       Path cellPath,
       WatchmanQuery query,
       WatchmanCursor cursor,
-      AtomicBoolean filesHaveChanged) throws IOException, InterruptedException {
+      AtomicBoolean filesHaveChanged)
+      throws IOException, InterruptedException {
     try {
       Optional<? extends Map<String, ? extends Object>> queryResponse;
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "query")) {
-        queryResponse = watchmanClient.queryWithTimeout(
-            TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-            query.toList(cursor.get()).toArray());
+        queryResponse =
+            watchmanClient.queryWithTimeout(
+                TimeUnit.MILLISECONDS.toNanos(timeoutMillis), query.toList(cursor.get()).toArray());
       }
 
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-          buckEventBus,
-          "process_response")) {
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(buckEventBus, "process_response")) {
         if (!queryResponse.isPresent()) {
           LOG.warn(
               "Could not get response from Watchman for query %s within %d ms",
-              query,
-              timeoutMillis);
+              query, timeoutMillis);
           postWatchEvent(
               WatchmanOverflowEvent.of(
-                  cellPath,
-                  "Query to Watchman timed out after " + timeoutMillis + "ms"));
+                  cellPath, "Query to Watchman timed out after " + timeoutMillis + "ms"));
           filesHaveChanged.set(true);
           return;
         }
@@ -276,9 +252,7 @@ public class WatchmanWatcher {
         if (error != null) {
           // This message is not de-duplicated via WatchmanDiagnostic.
           WatchmanWatcherException e = new WatchmanWatcherException(error);
-          LOG.error(
-              e,
-              "Error in Watchman output. Posting an overflow event to flush the caches");
+          LOG.error(e, "Error in Watchman output. Posting an overflow event to flush the caches");
           postWatchEvent(
               WatchmanOverflowEvent.of(cellPath, "Watchman Error occurred - " + e.getMessage()));
           throw e;
@@ -286,9 +260,8 @@ public class WatchmanWatcher {
 
         if (cursor.get().startsWith("c:")) {
           // Update the clockId
-          String newCursor = Optional
-              .ofNullable((String) response.get("clock"))
-              .orElse(Watchman.NULL_CLOCK);
+          String newCursor =
+              Optional.ofNullable((String) response.get("clock")).orElse(Watchman.NULL_CLOCK);
           LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
           cursor.set(newCursor);
         }

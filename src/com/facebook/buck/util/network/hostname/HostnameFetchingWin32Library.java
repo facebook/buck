@@ -22,8 +22,10 @@ import com.sun.jna.win32.StdCallLibrary;
 import com.sun.jna.win32.W32APIOptions;
 
 public interface HostnameFetchingWin32Library extends StdCallLibrary {
-  HostnameFetchingWin32Library INSTANCE = (HostnameFetchingWin32Library) Native.loadLibrary(
-      "kernel32", HostnameFetchingWin32Library.class, W32APIOptions.UNICODE_OPTIONS);
+  HostnameFetchingWin32Library INSTANCE =
+      (HostnameFetchingWin32Library)
+          Native.loadLibrary(
+              "kernel32", HostnameFetchingWin32Library.class, W32APIOptions.UNICODE_OPTIONS);
 
   int NAME_TYPE_DNS_HOSTNAME = 1;
 

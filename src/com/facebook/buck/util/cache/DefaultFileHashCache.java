@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.NoSuchFileException;
@@ -42,7 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nonnull;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
@@ -53,41 +51,38 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Path> buckOutPath;
 
-  @VisibleForTesting
-  final LoadingCache<Path, HashCodeAndFileType> loadingCache;
+  @VisibleForTesting final LoadingCache<Path, HashCodeAndFileType> loadingCache;
+
+  @VisibleForTesting final LoadingCache<Path, Long> sizeCache;
 
   @VisibleForTesting
-  final LoadingCache<Path, Long> sizeCache;
-
-  @VisibleForTesting
-  DefaultFileHashCache(
-      ProjectFilesystem projectFilesystem,
-      Optional<Path> buckOutPath) {
+  DefaultFileHashCache(ProjectFilesystem projectFilesystem, Optional<Path> buckOutPath) {
     this.projectFilesystem = projectFilesystem;
     this.buckOutPath = buckOutPath;
 
     this.loadingCache =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<Path, HashCodeAndFileType>() {
-              @Override
-              public HashCodeAndFileType load(@Nonnull Path path) throws Exception {
-                return getHashCodeAndFileType(path);
-              }
-            });
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<Path, HashCodeAndFileType>() {
+                  @Override
+                  public HashCodeAndFileType load(@Nonnull Path path) throws Exception {
+                    return getHashCodeAndFileType(path);
+                  }
+                });
 
     this.sizeCache =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<Path, Long>() {
-              @Override
-              public Long load(@Nonnull Path path) throws Exception {
-                return getPathSize(path);
-              }
-            });
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<Path, Long>() {
+                  @Override
+                  public Long load(@Nonnull Path path) throws Exception {
+                    return getPathSize(path);
+                  }
+                });
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem,
-      Path buckOutPath) {
+      ProjectFilesystem projectFilesystem, Path buckOutPath) {
     return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath));
   }
 
@@ -113,8 +108,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
-      allCaches.add(
-          DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
     }
 
     return allCaches.build();
@@ -130,10 +124,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
-      return HashCodeAndFileType.ofArchive(
-          getFileHashCode(path),
-          projectFilesystem,
-          path);
+      return HashCodeAndFileType.ofArchive(getFileHashCode(path), projectFilesystem, path);
     }
 
     return HashCodeAndFileType.ofFile(getFileHashCode(path));
@@ -153,8 +144,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
-    ImmutableSet<Path> children =
-        PathHashing.hashPath(hasher, this, projectFilesystem, path);
+    ImmutableSet<Path> children = PathHashing.hashPath(hasher, this, projectFilesystem, path);
     return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
   }
 
@@ -162,8 +152,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public boolean willGet(Path relativePath) {
     Preconditions.checkState(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    return loadingCache.getIfPresent(relativePath) != null ||
-        (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
+    return loadingCache.getIfPresent(relativePath) != null
+        || (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
   }
 
   private boolean isIgnored(Path path) {
@@ -204,9 +194,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     sizeCache.invalidateAll();
   }
 
-  /**
-   * @return The {@link com.google.common.hash.HashCode} of the contents of path.
-   */
+  /** @return The {@link com.google.common.hash.HashCode} of the contents of path. */
   @Override
   public HashCode get(Path relativePath) throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
@@ -270,16 +258,20 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     HashCodeAndFileType value;
 
     if (projectFilesystem.isDirectory(relativePath)) {
-      value = HashCodeAndFileType.ofDirectory(
-          hashCode,
-          projectFilesystem.getFilesUnderPath(relativePath).stream()
-              .map(relativePath::relativize)
-              .collect(MoreCollectors.toImmutableSet()));
+      value =
+          HashCodeAndFileType.ofDirectory(
+              hashCode,
+              projectFilesystem
+                  .getFilesUnderPath(relativePath)
+                  .stream()
+                  .map(relativePath::relativize)
+                  .collect(MoreCollectors.toImmutableSet()));
     } else if (relativePath.toString().endsWith(".jar")) {
-      value = HashCodeAndFileType.ofArchive(
-          hashCode,
-          projectFilesystem,
-          projectFilesystem.getPathRelativeToProjectRoot(relativePath).get());
+      value =
+          HashCodeAndFileType.ofArchive(
+              hashCode,
+              projectFilesystem,
+              projectFilesystem.getPathRelativeToProjectRoot(relativePath).get());
 
     } else {
       value = HashCodeAndFileType.ofFile(hashCode);
