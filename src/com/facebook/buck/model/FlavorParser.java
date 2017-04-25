@@ -20,13 +20,10 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/**
- * Parses a string containing one or more flavor names.
- */
+/** Parses a string containing one or more flavor names. */
 public class FlavorParser {
   private static final Logger LOG = Logger.get(FlavorParser.class);
   private static final ImmutableMap<String, String> DEPRECATED_FLAVORS =
@@ -35,29 +32,25 @@ public class FlavorParser {
   private final Set<String> deprecatedFlavorWarningShown = new ConcurrentSkipListSet<>();
 
   /**
-   * Given a comma-separated string of flavors, returns an iterable
-   * containing the separated names of the flavors inside.
+   * Given a comma-separated string of flavors, returns an iterable containing the separated names
+   * of the flavors inside.
    *
-   * Also maps deprecated flavor names to their supported names.
+   * <p>Also maps deprecated flavor names to their supported names.
    */
   public Iterable<String> parseFlavorString(String flavorString) {
-    return
-        Iterables.transform(
-            Splitter.on(",")
-                .omitEmptyStrings()
-                .trimResults()
-                .split(flavorString),
-            flavor -> {
-              String mapped = DEPRECATED_FLAVORS.get(flavor);
-              if (mapped != null) {
-                // Show a warning the first time a deprecated flavor is used.
-                if (deprecatedFlavorWarningShown.add(flavor)) {
-                  LOG.warn("Flavor %s is deprecated; use %s instead.", flavor, mapped);
-                }
-                return mapped;
-              } else {
-                return flavor;
-              }
-            });
+    return Iterables.transform(
+        Splitter.on(",").omitEmptyStrings().trimResults().split(flavorString),
+        flavor -> {
+          String mapped = DEPRECATED_FLAVORS.get(flavor);
+          if (mapped != null) {
+            // Show a warning the first time a deprecated flavor is used.
+            if (deprecatedFlavorWarningShown.add(flavor)) {
+              LOG.warn("Flavor %s is deprecated; use %s instead.", flavor, mapped);
+            }
+            return mapped;
+          } else {
+            return flavor;
+          }
+        });
   }
 }

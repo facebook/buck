@@ -17,22 +17,18 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Objects;
-
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * A pattern matches build targets that are all in the same directory.
- */
+/** A pattern matches build targets that are all in the same directory. */
 public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern {
 
   private final Path cellPath;
   private final Path pathWithinCell;
 
   /**
-   * @param pathWithinCell The base path of all valid build targets. It is expected to
-   *     match the value returned from a {@link BuildTarget#getBasePath()} call.
+   * @param pathWithinCell The base path of all valid build targets. It is expected to match the
+   *     value returned from a {@link BuildTarget#getBasePath()} call.
    */
   public ImmediateDirectoryBuildTargetPattern(Path cellPath, Path pathWithinCell) {
     this.cellPath = cellPath;
@@ -40,8 +36,8 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
   }
 
   /**
-   * @return true if the given target not null and has the same basePathWithSlash,
-   *         otherwise return false.
+   * @return true if the given target not null and has the same basePathWithSlash, otherwise return
+   *     false.
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
@@ -49,9 +45,8 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
       return false;
     }
 
-    return
-        Objects.equal(this.cellPath, target.getCellPath()) &&
-        Objects.equal(this.pathWithinCell, target.getBasePath());
+    return Objects.equal(this.cellPath, target.getCellPath())
+        && Objects.equal(this.pathWithinCell, target.getBasePath());
   }
 
   @Override
@@ -65,9 +60,8 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
       return false;
     }
     ImmediateDirectoryBuildTargetPattern that = (ImmediateDirectoryBuildTargetPattern) o;
-    return
-        Objects.equal(this.cellPath, that.cellPath) &&
-        Objects.equal(this.pathWithinCell, that.pathWithinCell);
+    return Objects.equal(this.cellPath, that.cellPath)
+        && Objects.equal(this.pathWithinCell, that.pathWithinCell);
   }
 
   @Override
@@ -79,5 +73,4 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
   public String toString() {
     return "+" + cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + ":";
   }
-
 }

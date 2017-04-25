@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Preconditions;
-
 import java.util.regex.Pattern;
 
 public interface Flavor extends Comparable<Flavor> {
@@ -31,9 +30,7 @@ public interface Flavor extends Comparable<Flavor> {
   String getName();
 
   default void check() {
-    Preconditions.checkArgument(
-        !getName().isEmpty(),
-        "Empty flavor name");
+    Preconditions.checkArgument(!getName().isEmpty(), "Empty flavor name");
     Preconditions.checkArgument(
         !INVALID_FLAVOR_CHARACTERS.matcher(getName()).find(),
         "Invalid characters in flavor name: " + getName());

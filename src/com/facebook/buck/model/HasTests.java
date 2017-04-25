@@ -18,12 +18,8 @@ package com.facebook.buck.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * A constructor arg of source rules with a list of their tests.
- */
+/** A constructor arg of source rules with a list of their tests. */
 public interface HasTests {
-  /**
-   * @return A list of tests of this target.
-   */
+  /** @return A list of tests of this target. */
   ImmutableSortedSet<BuildTarget> getTests();
 }

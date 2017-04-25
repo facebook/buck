@@ -18,9 +18,7 @@ package com.facebook.buck.model;
 
 import com.google.common.collect.ImmutableList;
 
-/**
- * Interface to define replacement behavior for @{link MacroFinder}.
- */
+/** Interface to define replacement behavior for @{link MacroFinder}. */
 public interface MacroReplacer {
   String replace(ImmutableList<String> args) throws MacroException;
 }

@@ -21,15 +21,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * A strongly typed representation of a build id.
- */
+/** A strongly typed representation of a build id. */
 @JsonSerialize(using = BuildId.BuildIdSerializer.class)
 public class BuildId implements Comparable<BuildId> {
 
@@ -85,9 +82,8 @@ public class BuildId implements Comparable<BuildId> {
 
     @Override
     public void serialize(
-        BuildId buildId,
-        JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException {
+        BuildId buildId, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+        throws IOException {
       jsonGenerator.writeString(buildId.id);
     }
   }

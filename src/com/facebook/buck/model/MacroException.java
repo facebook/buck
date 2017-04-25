@@ -26,5 +26,4 @@ public class MacroException extends Exception {
   public MacroException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

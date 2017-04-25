@@ -24,5 +24,4 @@ public class FlavorDomainException extends HumanReadableException {
   public FlavorDomainException(String msg) {
     super(msg);
   }
-
 }

@@ -23,16 +23,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Provides a named flavor abstraction on top of boolean flavors.
- */
+/** Provides a named flavor abstraction on top of boolean flavors. */
 public class FlavorDomain<T> {
 
   private final String name;
@@ -67,10 +64,7 @@ public class FlavorDomain<T> {
     Sets.SetView<Flavor> match = Sets.intersection(translation.keySet(), flavors);
     if (match.size() > 1) {
       throw new FlavorDomainException(
-          String.format(
-              "multiple \"%s\" flavors: %s",
-              name,
-              Joiner.on(", ").join(match)));
+          String.format("multiple \"%s\" flavors: %s", name, Joiner.on(", ").join(match)));
     }
 
     return Optional.ofNullable(Iterables.getFirst(match, null));
@@ -92,9 +86,7 @@ public class FlavorDomain<T> {
     }
 
     return Optional.of(
-        new AbstractMap.SimpleImmutableEntry<>(
-            flavor.get(),
-            translation.get(flavor.get())));
+        new AbstractMap.SimpleImmutableEntry<>(flavor.get(), translation.get(flavor.get())));
   }
 
   public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(BuildTarget buildTarget) {
@@ -131,9 +123,7 @@ public class FlavorDomain<T> {
     if (!value.isPresent()) {
       throw new HumanReadableException(
           "Build target '%s' did not specify required value for '%s', possible values:\n%s",
-          buildTarget,
-          name,
-          Joiner.on(", ").join(getFlavors()));
+          buildTarget, name, Joiner.on(", ").join(getFlavors()));
     }
     return value.get();
   }
@@ -141,21 +131,14 @@ public class FlavorDomain<T> {
   public T getValue(Flavor flavor) {
     T result = translation.get(flavor);
     if (result == null) {
-      throw new FlavorDomainException(
-          String.format(
-              "\"%s\" has no flavor \"%s\"",
-              name,
-              flavor));
+      throw new FlavorDomainException(String.format("\"%s\" has no flavor \"%s\"", name, flavor));
     }
     return result;
   }
 
-  /**
-   * Create a FlavorDomain from FlavorConvertible objects.
-   */
+  /** Create a FlavorDomain from FlavorConvertible objects. */
   public static <T extends FlavorConvertible> FlavorDomain<T> from(
-      String name,
-      Iterable<T> objects) {
+      String name, Iterable<T> objects) {
     ImmutableMap.Builder<Flavor, T> builder = ImmutableMap.builder();
     for (T value : objects) {
       builder.put(value.getFlavor(), value);
@@ -163,20 +146,15 @@ public class FlavorDomain<T> {
     return new FlavorDomain<>(name, builder.build());
   }
 
-  /**
-   * Create a FlavorDomain from array/varargs of FlavorConvertible objects.
-   */
+  /** Create a FlavorDomain from array/varargs of FlavorConvertible objects. */
   @SafeVarargs
   public static <T extends FlavorConvertible> FlavorDomain<T> of(String name, T... objects) {
     return from(name, Arrays.asList(objects));
   }
 
-  /**
-   * Create a FlavorDomain from FlavorConverbile Enum.
-   */
+  /** Create a FlavorDomain from FlavorConverbile Enum. */
   public static <E extends Enum<E> & FlavorConvertible> FlavorDomain<E> from(
-      String name,
-      Class<E> cls) {
+      String name, Class<E> cls) {
     return of(name, cls.getEnumConstants());
   }
 }

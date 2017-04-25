@@ -16,36 +16,33 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
-
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * A pattern that matches only one build target.
- */
+/** A pattern that matches only one build target. */
 public class SingletonBuildTargetPattern implements BuildTargetPattern {
 
   private final UnflavoredBuildTarget target;
 
   /**
-   * @param fullyQualifiedName The fully qualified name of valid target. It is expected to
-   *     match the value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
+   * @param fullyQualifiedName The fully qualified name of valid target. It is expected to match the
+   *     value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
   public SingletonBuildTargetPattern(Path cellPath, String fullyQualifiedName) {
 
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
-    target = UnflavoredBuildTarget.builder()
-        .setBaseName(fullyQualifiedName.substring(buildTarget, colon))
-        .setShortName(fullyQualifiedName.substring(colon + 1))
-        .setCellPath(cellPath)
-        .build();
+    target =
+        UnflavoredBuildTarget.builder()
+            .setBaseName(fullyQualifiedName.substring(buildTarget, colon))
+            .setShortName(fullyQualifiedName.substring(colon + 1))
+            .setCellPath(cellPath)
+            .build();
   }
 
   /**
-   * @return true if the given target not null and has the same fullyQualifiedName,
-   *     otherwise return false.
+   * @return true if the given target not null and has the same fullyQualifiedName, otherwise return
+   *     false.
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
@@ -53,9 +50,8 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
       return false;
     }
 
-    return
-        this.target.getCellPath().equals(target.getCellPath()) &&
-        this.target.equals(target.getUnflavoredBuildTarget());
+    return this.target.getCellPath().equals(target.getCellPath())
+        && this.target.equals(target.getUnflavoredBuildTarget());
   }
 
   @Override
@@ -81,5 +77,4 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
   public String toString() {
     return target.toString();
   }
-
 }

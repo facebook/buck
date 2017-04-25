@@ -18,23 +18,20 @@ package com.facebook.buck.model;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**
  * Simple type representing a pair of differently typed values.
  *
- * Used to represent pair-like structures in coerced values.
+ * <p>Used to represent pair-like structures in coerced values.
  */
 public class Pair<FIRST, SECOND> {
 
   private FIRST first;
   private SECOND second;
 
-  @Nullable
-  private WeakReference<Integer> hashCache = null;
-  @Nullable
-  private WeakReference<String> stringCache = null;
+  @Nullable private WeakReference<Integer> hashCache = null;
+  @Nullable private WeakReference<String> stringCache = null;
 
   public Pair(FIRST first, SECOND second) {
     this.first = first;
@@ -56,8 +53,7 @@ public class Pair<FIRST, SECOND> {
     }
 
     Pair<?, ?> that = (Pair<?, ?>) other;
-    return Objects.equals(this.first, that.first) &&
-        Objects.equals(this.second, that.second);
+    return Objects.equals(this.first, that.first) && Objects.equals(this.second, that.second);
   }
 
   @Override
@@ -99,5 +95,4 @@ public class Pair<FIRST, SECOND> {
     stringCache = new WeakReference<>(string);
     return string;
   }
-
 }

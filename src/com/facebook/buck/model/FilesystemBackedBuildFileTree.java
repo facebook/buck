@@ -22,7 +22,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -33,15 +32,16 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * Class to allow looking up parents and children of build files.
- * E.g. for a directory structure that looks like:
+ * Class to allow looking up parents and children of build files. E.g. for a directory structure
+ * that looks like:
+ *
  * <pre>
  *   foo/BUCK
  *   foo/bar/baz/BUCK
  *   foo/bar/qux/BUCK
  * </pre>
- * <p>
- * foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
+ *
+ * <p>foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
  */
 public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
@@ -52,48 +52,48 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
    * Cache for the base path of a given path. This is useful as many files may share common
    * ancestors before reaching a base path.
    */
-  private final LoadingCache<Path, Optional<Path>> basePathOfAncestorCache = CacheBuilder
-      .newBuilder()
-      .weakValues()
-      .build(new CacheLoader<Path, Optional<Path>>() {
-        @Override
-        public Optional<Path> load(Path filePath) throws Exception {
-          Path parent = filePath.getParent();
-          if (parent == null) {
-            return checkProjectRoot();
-          }
+  private final LoadingCache<Path, Optional<Path>> basePathOfAncestorCache =
+      CacheBuilder.newBuilder()
+          .weakValues()
+          .build(
+              new CacheLoader<Path, Optional<Path>>() {
+                @Override
+                public Optional<Path> load(Path filePath) throws Exception {
+                  Path parent = filePath.getParent();
+                  if (parent == null) {
+                    return checkProjectRoot();
+                  }
 
-          // If filePath names a directory with a build file, filePath is a base path.
-          // If filePath or any of its parents are in ignoredPaths, we should keep looking.
-          if (isBasePath(parent)) {
-            return Optional.of(parent);
-          }
+                  // If filePath names a directory with a build file, filePath is a base path.
+                  // If filePath or any of its parents are in ignoredPaths, we should keep looking.
+                  if (isBasePath(parent)) {
+                    return Optional.of(parent);
+                  }
 
-          // If filePath isn't root, keep looking.
-          if (parent.equals(projectFilesystem.getRootPath())) {
-            return checkProjectRoot();
-          }
+                  // If filePath isn't root, keep looking.
+                  if (parent.equals(projectFilesystem.getRootPath())) {
+                    return checkProjectRoot();
+                  }
 
-          return basePathOfAncestorCache.get(parent);
-        }
-      });
+                  return basePathOfAncestorCache.get(parent);
+                }
+              });
 
   public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem, String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.buildFileName = buildFileName;
-    this.pathExistenceCache = CacheBuilder.newBuilder().build(
-        new CacheLoader<Path, Boolean>() {
-          @Override
-          public Boolean load(Path key) throws Exception {
-            return FilesystemBackedBuildFileTree.this.projectFilesystem.isFile(key);
-          }
-        }
-    );
+    this.pathExistenceCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<Path, Boolean>() {
+                  @Override
+                  public Boolean load(Path key) throws Exception {
+                    return FilesystemBackedBuildFileTree.this.projectFilesystem.isFile(key);
+                  }
+                });
   }
 
-  /**
-   * @return paths relative to BuildTarget that contain their own build files.
-   */
+  /** @return paths relative to BuildTarget that contain their own build files. */
   @Override
   public Collection<Path> getChildPaths(BuildTarget target) {
     // Crawl the subdirectories of target's base path, looking for build files.
@@ -102,7 +102,9 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     final Path basePath = target.getBasePath();
     final ImmutableSet<PathOrGlobMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
     try {
-      projectFilesystem.walkRelativeFileTree(basePath, new SimpleFileVisitor<Path>() {
+      projectFilesystem.walkRelativeFileTree(
+          basePath,
+          new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
               for (PathOrGlobMatcher ignoredPath : ignoredPaths) {
@@ -129,9 +131,8 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   }
 
   /**
-   * Returns the base path for a given path. The base path is the nearest directory at or
-   * above filePath that contains a build file. If no base directory is found, returns an empty
-   * path.
+   * Returns the base path for a given path. The base path is the nearest directory at or above
+   * filePath that contains a build file. If no base directory is found, returns an empty path.
    */
   @Override
   public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
@@ -144,20 +145,18 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     return basePathOfAncestorCache.getUnchecked(filePath);
   }
 
-  /**
-   * Returns whether the given path is a directory containing a buck file, i.e. a base path.
-   */
+  /** Returns whether the given path is a directory containing a buck file, i.e. a base path. */
   private boolean isBasePath(Path filePath) {
-    return pathExistenceCache.getUnchecked(filePath.resolve(buildFileName)) &&
-        !isBuckOutput(filePath) &&
-        !projectFilesystem.isIgnored(filePath);
+    return pathExistenceCache.getUnchecked(filePath.resolve(buildFileName))
+        && !isBuckOutput(filePath)
+        && !projectFilesystem.isIgnored(filePath);
   }
 
   private Optional<Path> checkProjectRoot() {
     // No build file found in any directory, check the project root
     Path rootBuckFile = Paths.get(buildFileName);
-    if (pathExistenceCache.getUnchecked(rootBuckFile) &&
-        !projectFilesystem.isIgnored(rootBuckFile)) {
+    if (pathExistenceCache.getUnchecked(rootBuckFile)
+        && !projectFilesystem.isIgnored(rootBuckFile)) {
       return Optional.of(Paths.get(""));
     }
 
@@ -175,8 +174,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     Path sameFsBuckCache = projectFilesystem.getBuckPaths().getCacheDir();
 
     for (Path segment : path) {
-      if (sameFsBuckOut.equals(segment) ||
-          sameFsBuckCache.equals(segment)) {
+      if (sameFsBuckOut.equals(segment) || sameFsBuckCache.equals(segment)) {
         return true;
       }
     }

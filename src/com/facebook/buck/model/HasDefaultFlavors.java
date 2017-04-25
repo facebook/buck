@@ -18,13 +18,11 @@ package com.facebook.buck.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * A constructor arg of rules which have default flavors.
- */
+/** A constructor arg of rules which have default flavors. */
 public interface HasDefaultFlavors {
   /**
-   * @return If present, the default flavors with which to build this target if
-   * none are provided on the command line.
+   * @return If present, the default flavors with which to build this target if none are provided on
+   *     the command line.
    */
   ImmutableSortedSet<Flavor> getDefaultFlavors();
 }

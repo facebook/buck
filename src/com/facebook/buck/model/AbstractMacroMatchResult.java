@@ -18,15 +18,18 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractMacroMatchResult {
   String getMacroType();
+
   ImmutableList<String> getMacroInput();
+
   int getStartIndex();
+
   int getEndIndex();
+
   boolean isEscaped();
 }

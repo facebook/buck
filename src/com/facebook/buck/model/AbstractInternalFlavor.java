@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
 /**

@@ -26,13 +26,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Set;
 
-/**
- * Static helpers for working with build targets.
- */
+/** Static helpers for working with build targets. */
 public class BuildTargets {
 
   /** Utility class: do not instantiate. */
@@ -44,19 +41,18 @@ public class BuildTargets {
    * short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
-   * @param format {@link String#format} string for the path name.  It should contain one "%s",
-   *     which will be filled in with the rule's short name.  It should not start with a slash.
-   * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
-   * {@code target}.
+   * @param format {@link String#format} string for the path name. It should contain one "%s", which
+   *     will be filled in with the rule's short name. It should not start with a slash.
+   * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of {@code
+   *     target}.
    */
   public static Path getScratchPath(
-      ProjectFilesystem filesystem,
-      BuildTarget target,
-      String format) {
+      ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
-        !format.startsWith("/"),
-        "format string should not start with a slash");
-    return filesystem.getBuckPaths().getScratchDir()
+        !format.startsWith("/"), "format string should not start with a slash");
+    return filesystem
+        .getBuckPaths()
+        .getScratchDir()
         .resolve(target.getBasePath())
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
@@ -67,19 +63,18 @@ public class BuildTargets {
    * target short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
-   * @param format {@link String#format} string for the path name.  It should contain one "%s",
-   *     which will be filled in with the rule's short name.  It should not start with a slash.
+   * @param format {@link String#format} string for the path name. It should contain one "%s", which
+   *     will be filled in with the rule's short name. It should not start with a slash.
    * @return A {@link java.nio.file.Path} under buck-out/annotation, scoped to the base path of
-   * {@code target}.
+   *     {@code target}.
    */
   public static Path getAnnotationPath(
-      ProjectFilesystem filesystem,
-      BuildTarget target,
-      String format) {
+      ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
-        !format.startsWith("/"),
-        "format string should not start with a slash");
-    return filesystem.getBuckPaths().getAnnotationDir()
+        !format.startsWith("/"), "format string should not start with a slash");
+    return filesystem
+        .getBuckPaths()
+        .getAnnotationDir()
         .resolve(target.getBasePath())
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
@@ -90,16 +85,17 @@ public class BuildTargets {
    * the target short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
-   * @param format {@link String#format} string for the path name.  It should contain one "%s",
-   *     which will be filled in with the rule's short name.  It should not start with a slash.
-   * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of
-   * {@code target}.
+   * @param format {@link String#format} string for the path name. It should contain one "%s", which
+   *     will be filled in with the rule's short name. It should not start with a slash.
+   * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of {@code
+   *     target}.
    */
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
-        !format.startsWith("/"),
-        "format string should not start with a slash");
-    return filesystem.getBuckPaths().getGenDir()
+        !format.startsWith("/"), "format string should not start with a slash");
+    return filesystem
+        .getBuckPaths()
+        .getGenDir()
         .resolve(target.getBasePath())
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
@@ -107,14 +103,12 @@ public class BuildTargets {
   /**
    * Takes the {@link BuildTarget} for {@code hasBuildTarget} and derives a new {@link BuildTarget}
    * from it with the specified flavor.
+   *
    * @throws IllegalArgumentException if the original {@link BuildTarget} already has a flavor.
    */
   public static BuildTarget createFlavoredBuildTarget(
-      UnflavoredBuildTarget buildTarget,
-      Flavor flavor) {
-    return BuildTarget.builder(buildTarget)
-        .addFlavors(flavor)
-        .build();
+      UnflavoredBuildTarget buildTarget, Flavor flavor) {
+    return BuildTarget.builder(buildTarget).addFlavors(flavor).build();
   }
 
   public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
@@ -129,15 +123,12 @@ public class BuildTargets {
     return input -> input.getFlavors().contains(flavor);
   }
 
-
   /**
-   * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
-   * target to its dependencies.
+   * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent target to
+   * its dependencies.
    */
   public static ImmutableSortedSet<BuildTarget> propagateFlavorDomains(
-      BuildTarget target,
-      Iterable<FlavorDomain<?>> domains,
-      Iterable<BuildTarget> deps) {
+      BuildTarget target, Iterable<FlavorDomain<?>> domains, Iterable<BuildTarget> deps) {
 
     Set<Flavor> flavors = Sets.newHashSet();
 
@@ -150,10 +141,7 @@ public class BuildTargets {
           Sets.intersection(domain.getFlavors(), target.getFlavors()).immutableCopy();
 
       if (flavorSet.isEmpty()) {
-        throw new HumanReadableException(
-            "%s: no flavor for \"%s\"",
-            target,
-            domain.getName());
+        throw new HumanReadableException("%s: no flavor for \"%s\"", target, domain.getName());
       }
       flavors.addAll(flavorSet);
 
@@ -162,10 +150,7 @@ public class BuildTargets {
         if (domain.getFlavor(dep).isPresent()) {
           throw new HumanReadableException(
               "%s: dep %s already has flavor for \"%s\" : %s",
-              target,
-              dep,
-              domain.getName(),
-              flavorSet.toString());
+              target, dep, domain.getName(), flavorSet.toString());
         }
       }
     }
@@ -180,33 +165,28 @@ public class BuildTargets {
     return flavoredDeps.build();
   }
 
-
   /**
    * Propagate a build target's flavors in a certain domain to a list of other build targets.
    *
    * @param domain the flavor domain to be propagated.
    * @param buildTarget the build target containing the flavors to be propagated
-   * @param deps list of BuildTargets to propagate the flavors to.  If a target already contains
-   *             one or more flavors in domain, it is left unchanged.
+   * @param deps list of BuildTargets to propagate the flavors to. If a target already contains one
+   *     or more flavors in domain, it is left unchanged.
    * @return the list of BuildTargets with any flavors propagated.
    */
   public static FluentIterable<BuildTarget> propagateFlavorsInDomainIfNotPresent(
-      FlavorDomain<?> domain,
-      BuildTarget buildTarget,
-      FluentIterable<BuildTarget> deps) {
+      FlavorDomain<?> domain, BuildTarget buildTarget, FluentIterable<BuildTarget> deps) {
     if (domain.containsAnyOf(buildTarget.getFlavors())) {
-      FluentIterable<BuildTarget> targetsWithFlavorsAlready = deps.filter(
-          BuildTargets.containsFlavors(domain));
+      FluentIterable<BuildTarget> targetsWithFlavorsAlready =
+          deps.filter(BuildTargets.containsFlavors(domain));
 
-      FluentIterable<BuildTarget> targetsWithoutFlavors = deps.filter(
-          Predicates.not(BuildTargets.containsFlavors(domain)));
+      FluentIterable<BuildTarget> targetsWithoutFlavors =
+          deps.filter(Predicates.not(BuildTargets.containsFlavors(domain)));
 
-      deps = targetsWithFlavorsAlready
-          .append(
+      deps =
+          targetsWithFlavorsAlready.append(
               BuildTargets.propagateFlavorDomains(
-                  buildTarget,
-                  ImmutableSet.of(domain),
-                  targetsWithoutFlavors));
+                  buildTarget, ImmutableSet.of(domain), targetsWithoutFlavors));
     }
 
     return deps;

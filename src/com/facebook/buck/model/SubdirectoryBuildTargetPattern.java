@@ -17,14 +17,10 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Objects;
-
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * A pattern matches build targets that have the specified ancestor directory.
- */
+/** A pattern matches build targets that have the specified ancestor directory. */
 public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
 
   private final Path cellPath;
@@ -32,8 +28,7 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
 
   /**
    * @param pathWithinCell The base path of the build target in the ancestor directory. It is
-   *     expected to match the value returned from a {@link BuildTarget#getBasePath()}
-   *     call.
+   *     expected to match the value returned from a {@link BuildTarget#getBasePath()} call.
    */
   public SubdirectoryBuildTargetPattern(Path cellPath, Path pathWithinCell) {
     this.cellPath = cellPath;
@@ -41,9 +36,8 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
   }
 
   /**
-   *
-   * @return true if target not null and is under the directory basePathWithSlash,
-   *         otherwise return false.
+   * @return true if target not null and is under the directory basePathWithSlash, otherwise return
+   *     false.
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
@@ -75,8 +69,8 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
       return false;
     }
     SubdirectoryBuildTargetPattern that = (SubdirectoryBuildTargetPattern) o;
-    return Objects.equal(this.cellPath, that.cellPath) &&
-        Objects.equal(this.pathWithinCell, that.pathWithinCell);
+    return Objects.equal(this.cellPath, that.cellPath)
+        && Objects.equal(this.pathWithinCell, that.pathWithinCell);
   }
 
   @Override
@@ -88,5 +82,4 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
   public String toString() {
     return cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + "/...";
   }
-
 }

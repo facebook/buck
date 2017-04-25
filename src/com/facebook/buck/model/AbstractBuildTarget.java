@@ -28,18 +28,17 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import org.immutables.value.Value;
 
 @JsonAutoDetect(
-    fieldVisibility = JsonAutoDetect.Visibility.NONE,
-    getterVisibility = JsonAutoDetect.Visibility.NONE,
-    setterVisibility = JsonAutoDetect.Visibility.NONE)
+  fieldVisibility = JsonAutoDetect.Visibility.NONE,
+  getterVisibility = JsonAutoDetect.Visibility.NONE,
+  setterVisibility = JsonAutoDetect.Visibility.NONE
+)
 @BuckStyleImmutable
 @Value.Immutable(prehash = true)
 abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
@@ -133,27 +132,21 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
   }
 
   public static BuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
-    return BuildTarget.of(
-        unflavoredBuildTarget,
-        ImmutableSortedSet.of());
+    return BuildTarget.of(unflavoredBuildTarget, ImmutableSortedSet.of());
   }
 
   public static BuildTarget.Builder builder(BuildTarget buildTarget) {
-    return BuildTarget
-        .builder()
+    return BuildTarget.builder()
         .setUnflavoredBuildTarget(buildTarget.getUnflavoredBuildTarget())
         .addAllFlavors(buildTarget.getFlavors());
   }
 
   public static BuildTarget.Builder builder(UnflavoredBuildTarget buildTarget) {
-    return BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(buildTarget);
+    return BuildTarget.builder().setUnflavoredBuildTarget(buildTarget);
   }
 
   public static BuildTarget.Builder builder(Path cellPath, String baseName, String shortName) {
-    return BuildTarget
-        .builder()
+    return BuildTarget.builder()
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
   }
@@ -205,9 +198,7 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
 
   public BuildTarget withoutCell() {
     return BuildTarget.builder(
-        getUnflavoredBuildTarget().getCellPath(),
-        getBaseName(),
-        getShortName())
+            getUnflavoredBuildTarget().getCellPath(), getBaseName(), getShortName())
         .addAllFlavors(getFlavors())
         .build();
   }
