@@ -21,7 +21,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.Locale;
 
@@ -57,7 +56,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
         case DRY_RUN:
           isDryRun = true;
-          ++passCount;  // "pass" in the sense that it confirms the class can be loaded
+          ++passCount; // "pass" in the sense that it confirms the class can be loaded
           break;
 
         case DISABLED:
@@ -182,11 +181,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
   @Override
   public String toString() {
-    return String.format(
-        Locale.US,
-        "%s %s",
-        getShortStatusSummaryString(),
-        testCaseName);
+    return String.format(Locale.US, "%s %s", getShortStatusSummaryString(), testCaseName);
   }
 
   private String getShortStatusSummaryString() {

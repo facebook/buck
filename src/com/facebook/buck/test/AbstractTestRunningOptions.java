@@ -19,10 +19,8 @@ package com.facebook.buck.test;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable

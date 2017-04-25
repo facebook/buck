@@ -23,10 +23,8 @@ import com.facebook.buck.util.TimeFormat;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Locale;
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 public class TestResultSummary implements TestResultSummaryExternalInterface {
@@ -39,17 +37,13 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
 
   private final long time;
 
-  @Nullable
-  private final String message;
+  @Nullable private final String message;
 
-  @Nullable
-  private final String stacktrace;
+  @Nullable private final String stacktrace;
 
-  @Nullable
-  private final String stdOut;
+  @Nullable private final String stdOut;
 
-  @Nullable
-  private final String stdErr;
+  @Nullable private final String stdErr;
 
   public TestResultSummary(
       String testCaseName,
@@ -103,7 +97,7 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
 
   /**
    * For now "success" means "not failure", which introduces the least surprise for tests that have
-   * an assumption violation / failure.  Tests that fall into this category are still considered
+   * an assumption violation / failure. Tests that fall into this category are still considered
    * "successful" by buck, though other parts of the system (specifically, event listeners) can do
    * differently if they please.
    */
@@ -131,23 +125,27 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
   }
 
   @Override
-  @Nullable public String getStacktrace() {
+  @Nullable
+  public String getStacktrace() {
     return stacktrace;
   }
 
   @Override
-  @Nullable public String getStdOut() {
+  @Nullable
+  public String getStdOut() {
     return stdOut;
   }
 
   @Override
-  @Nullable public String getStdErr() {
+  @Nullable
+  public String getStdErr() {
     return stdErr;
   }
 
   @Override
   public String toString() {
-    return String.format("%s %s %s#%s()",
+    return String.format(
+        "%s %s %s#%s()",
         isSuccess() ? "PASS" : "FAIL",
         // Hard-coding US English is not great, but refactoring this class to take in a Locale
         // is a ton of work (we can't change this API, since toString() is called everywhere).
@@ -168,28 +166,18 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
 
     TestResultSummary that = (TestResultSummary) o;
 
-    return
-        testCaseName.equals(that.testCaseName) &&
-        testName.equals(that.testName) &&
-        type.equals(that.type) &&
-        time == that.time &&
-        Objects.equals(message, that.message) &&
-        Objects.equals(stacktrace, that.stacktrace) &&
-        Objects.equals(stdOut, that.stdOut) &&
-        Objects.equals(stdErr, that.stdErr);
+    return testCaseName.equals(that.testCaseName)
+        && testName.equals(that.testName)
+        && type.equals(that.type)
+        && time == that.time
+        && Objects.equals(message, that.message)
+        && Objects.equals(stacktrace, that.stacktrace)
+        && Objects.equals(stdOut, that.stdOut)
+        && Objects.equals(stdErr, that.stdErr);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        testCaseName,
-        testName,
-        type,
-        time,
-        message,
-        stacktrace,
-        stdOut,
-        stdErr);
+    return Objects.hash(testCaseName, testName, type, time, message, stacktrace, stdOut, stdErr);
   }
-
 }

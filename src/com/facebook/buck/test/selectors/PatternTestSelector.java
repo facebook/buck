@@ -20,12 +20,12 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * A {@link TestDescription} will match if this selector's class-part is a substring of the
- * {@link TestDescription}'s full class-name, or if this selector's class-name, when interpreted
- * as a java.util.regex regular-expression, matches the {@link TestDescription}'s full class-name.
+ * A {@link TestDescription} will match if this selector's class-part is a substring of the {@link
+ * TestDescription}'s full class-name, or if this selector's class-name, when interpreted as a
+ * java.util.regex regular-expression, matches the {@link TestDescription}'s full class-name.
  *
- * (The same rules apply for the method-name as well.  If this selector's class-part or method-part
- * are null, all class-names or method-names will match.)
+ * <p>(The same rules apply for the method-name as well. If this selector's class-part or
+ * method-part are null, all class-names or method-names will match.)
  */
 public class PatternTestSelector implements TestSelector {
 
@@ -37,23 +37,21 @@ public class PatternTestSelector implements TestSelector {
   @Nullable private final Pattern methodPattern;
 
   private PatternTestSelector(
-      boolean inclusive,
-      @Nullable Pattern classPattern,
-      @Nullable Pattern methodPattern) {
+      boolean inclusive, @Nullable Pattern classPattern, @Nullable Pattern methodPattern) {
     this.inclusive = inclusive;
     this.classPattern = classPattern;
     this.methodPattern = methodPattern;
   }
 
   /**
-   * Build a {@link PatternTestSelector} from the given String.  Selector strings should be of the form
-   * "[is-exclusive][class-part]#[method-part]".  If "[is-exclusive]" is a "!" then this selector
-   * will exclude tests, otherwise it will include tests.
+   * Build a {@link PatternTestSelector} from the given String. Selector strings should be of the
+   * form "[is-exclusive][class-part]#[method-part]". If "[is-exclusive]" is a "!" then this
+   * selector will exclude tests, otherwise it will include tests.
    *
-   * If the class-part (or method-part) are omitted, then all classes or methods will match.
+   * <p>If the class-part (or method-part) are omitted, then all classes or methods will match.
    * Consequently "#" means "include everything" and "!#" means "exclude everything".
    *
-   * If the selector string doesn't contain a "#" at all, it is interpreted as a class-part.
+   * <p>If the selector string doesn't contain a "#" at all, it is interpreted as a class-part.
    *
    * @param rawSelectorString An unparsed selector string.
    */
@@ -81,28 +79,25 @@ public class PatternTestSelector implements TestSelector {
 
     try {
       switch (parts.length) {
-        // "com.example.Test", "com.example.Test#"
+          // "com.example.Test", "com.example.Test#"
         case 1:
           classPattern = getPatternOrNull(parts[0]);
           break;
 
-        // "com.example.Test#testX", "#testX", "#"
+          // "com.example.Test#testX", "#testX", "#"
         case 2:
           classPattern = getPatternOrNull(parts[0]);
           methodPattern = getPatternOrNull(parts[1]);
           break;
 
-        // Invalid string, like "##"
+          // Invalid string, like "##"
         default:
-          throw new TestSelectorParseException(String.format(
-              "Test selector '%s' contains more than one '#'!",
-              rawSelectorString));
+          throw new TestSelectorParseException(
+              String.format("Test selector '%s' contains more than one '#'!", rawSelectorString));
       }
     } catch (PatternSyntaxException e) {
-      throw new TestSelectorParseException(String.format(
-          "Regular expression error in '%s': %s",
-          rawSelectorString,
-          e.getMessage()));
+      throw new TestSelectorParseException(
+          String.format("Regular expression error in '%s': %s", rawSelectorString, e.getMessage()));
     }
 
     return new PatternTestSelector(isInclusive, classPattern, methodPattern);
@@ -124,7 +119,8 @@ public class PatternTestSelector implements TestSelector {
     return builder.toString();
   }
 
-  @Nullable private static Pattern getPatternOrNull(String string) {
+  @Nullable
+  private static Pattern getPatternOrNull(String string) {
     if (string.isEmpty()) {
       return null;
     } else {
@@ -140,7 +136,8 @@ public class PatternTestSelector implements TestSelector {
     if (isMatchAnyClass() && isMatchAnyMethod()) {
       return isInclusive() ? "include everything else" : "exclude everything else";
     }
-    return String.format("%s class:%s method:%s",
+    return String.format(
+        "%s class:%s method:%s",
         isInclusive() ? "include" : "exclude",
         isMatchAnyClass() ? "<any>" : classPattern,
         isMatchAnyMethod() ? "<any>" : methodPattern);
@@ -163,8 +160,8 @@ public class PatternTestSelector implements TestSelector {
 
   @Override
   public boolean matches(TestDescription description) {
-    return matchesClassName(description.getClassName()) &&
-        matchesMethodName(description.getMethodName());
+    return matchesClassName(description.getClassName())
+        && matchesMethodName(description.getMethodName());
   }
 
   @Override
@@ -174,6 +171,7 @@ public class PatternTestSelector implements TestSelector {
     }
     return classPattern.matcher(className).find();
   }
+
   private boolean matchesMethodName(String methodName) {
     if (methodPattern == null) {
       return true;

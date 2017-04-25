@@ -41,9 +41,9 @@ public class SimpleTestSelector implements TestSelector {
 
   @Override
   public String getExplanation() {
-    return String.format("class:%s method:%s",
-        isMatchAnyClass() ? "<any>" : className,
-        isMatchAnyMethod() ? "<any>" : methodName);
+    return String.format(
+        "class:%s method:%s",
+        isMatchAnyClass() ? "<any>" : className, isMatchAnyMethod() ? "<any>" : methodName);
   }
 
   @Override
@@ -63,8 +63,8 @@ public class SimpleTestSelector implements TestSelector {
 
   @Override
   public boolean matches(TestDescription description) {
-    return matchesClassName(description.getClassName()) &&
-        matchesMethodName(description.getMethodName());
+    return matchesClassName(description.getClassName())
+        && matchesMethodName(description.getMethodName());
   }
 
   @Override
@@ -74,8 +74,9 @@ public class SimpleTestSelector implements TestSelector {
     }
     int indexOfInnerClassSeparator = this.className.indexOf('$');
     boolean outerClassMatches =
-        indexOfInnerClassSeparator != -1 &&
-        Objects.equals(this.className.substring(0, indexOfInnerClassSeparator), thatClassName);
+        indexOfInnerClassSeparator != -1
+            && Objects.equals(
+                this.className.substring(0, indexOfInnerClassSeparator), thatClassName);
     return outerClassMatches || Objects.equals(this.className, thatClassName);
   }
 

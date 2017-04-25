@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.test;
 
-
 public enum CoverageReportFormat {
   CSV,
   HTML,

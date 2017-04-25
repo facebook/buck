@@ -28,8 +28,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A collection of {@link PatternTestSelector} instances which, as a group, can decide whether or not to
- * include a given {@link TestDescription}.
+ * A collection of {@link PatternTestSelector} instances which, as a group, can decide whether or
+ * not to include a given {@link TestDescription}.
  */
 public class TestSelectorList {
 
@@ -37,27 +37,27 @@ public class TestSelectorList {
 
   /**
    * Test selector strings are parsed in two places: (i) by "buck test" when it is first run, to
-   * validate that the selectors make sense; and (ii) by the JUnitStep's JUnitRunner, which
-   * is what actually does the test selecting.
-   * <p>
-   * We keep a list of the raw selectors used to build out List of TestSelectors so that they can
-   * be passed from (i) to (ii).  This is expensive in that it wastes time re-parsing selectors, but
+   * validate that the selectors make sense; and (ii) by the JUnitStep's JUnitRunner, which is what
+   * actually does the test selecting.
+   *
+   * <p>We keep a list of the raw selectors used to build out List of TestSelectors so that they can
+   * be passed from (i) to (ii). This is expensive in that it wastes time re-parsing selectors, but
    * it means that if the input is an "@/tmp/long-list-of-tests.txt" then re-using that terse
    * argument keeps the "JUnitSteps" Junit java command line nice and short.
    */
   private final List<TestSelector> testSelectors;
+
   private final boolean defaultIsInclusive;
 
-  private TestSelectorList(
-      List<TestSelector> testSelectors,
-      boolean defaultIsInclusive) {
+  private TestSelectorList(List<TestSelector> testSelectors, boolean defaultIsInclusive) {
     this.testSelectors = testSelectors;
     this.defaultIsInclusive = defaultIsInclusive;
   }
 
   private TestSelector defaultSelector() {
     return defaultIsInclusive
-        ? PatternTestSelector.INCLUDE_EVERYTHING : PatternTestSelector.EXCLUDE_EVERYTHING;
+        ? PatternTestSelector.INCLUDE_EVERYTHING
+        : PatternTestSelector.EXCLUDE_EVERYTHING;
   }
 
   public TestSelector findSelector(TestDescription description) {
@@ -76,8 +76,8 @@ public class TestSelectorList {
   /**
    * Returns true if it is *possible* for the given classname to include tests.
    *
-   * Before we go through the hassle of loading a class, confirm that it's possible
-   * for it to run tests.
+   * <p>Before we go through the hassle of loading a class, confirm that it's possible for it to run
+   * tests.
    */
   public boolean possiblyIncludesClassName(String className) {
     for (TestSelector testSelector : testSelectors) {
@@ -124,13 +124,12 @@ public class TestSelectorList {
   }
 
   /**
-   * Build a new {@link TestSelectorList} from a list of strings, each of which is parsed by
-   * {@link PatternTestSelector}.
+   * Build a new {@link TestSelectorList} from a list of strings, each of which is parsed by {@link
+   * PatternTestSelector}.
    *
-   * If any of the selectors is an inclusive selector, everything else will be excluded.
+   * <p>If any of the selectors is an inclusive selector, everything else will be excluded.
    * Conversely, if all of the selectors are exclusive, then everything else will be included by
    * default.
-   *
    */
   public static class Builder {
 
@@ -150,8 +149,8 @@ public class TestSelectorList {
           File file = new File(pathString);
           loadFromFile(file);
         } catch (TestSelectorParseException | IOException e) {
-          String message = String.format("Error with test-selector '%s': %s",
-              rawSelector, e.getMessage());
+          String message =
+              String.format("Error with test-selector '%s': %s", rawSelector, e.getMessage());
           throw new RuntimeException(message, e);
         }
         return this;
@@ -201,10 +200,8 @@ public class TestSelectorList {
     }
 
     Builder loadFromFile(File file) throws IOException {
-      try (
-        FileReader tempReader = new FileReader(file);
-        BufferedReader in = new BufferedReader(tempReader)
-      ) {
+      try (FileReader tempReader = new FileReader(file);
+          BufferedReader in = new BufferedReader(tempReader)) {
         String line;
         int lineNumber = 1;
 
@@ -237,9 +234,7 @@ public class TestSelectorList {
         }
         selectorsToUse.add(testSelector);
       }
-      return new TestSelectorList(
-          selectorsToUse,
-          defaultIsInclusive);
+      return new TestSelectorList(selectorsToUse, defaultIsInclusive);
     }
   }
 }

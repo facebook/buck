@@ -19,10 +19,10 @@ package com.facebook.buck.test.selectors;
 /**
  * Errors specific to parsing test selectors.
  *
- * While this could reasonably be a subclass of
- * {@link com.facebook.buck.util.HumanReadableException} our desire to keep the dependencies of
- * this package to a minimum means we'll subclass {@link RuntimeException} instead and convert
- * to a {@link com.facebook.buck.util.HumanReadableException} elsewhere.
+ * <p>While this could reasonably be a subclass of {@link
+ * com.facebook.buck.util.HumanReadableException} our desire to keep the dependencies of this
+ * package to a minimum means we'll subclass {@link RuntimeException} instead and convert to a
+ * {@link com.facebook.buck.util.HumanReadableException} elsewhere.
  */
 @SuppressWarnings("serial")
 public class TestSelectorParseException extends RuntimeException {
