@@ -24,25 +24,22 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 public class TestSelectorsIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
   public void setupWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "test_selectors", temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_selectors", temporaryFolder);
     workspace.setUp();
   }
 
@@ -55,8 +52,8 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void shouldRunASingleTest() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "--all", "--filter", "com.example.clown.FlowerTest");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "--all", "--filter", "com.example.clown.FlowerTest");
     result.assertSuccess("The test passed");
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
@@ -105,8 +102,8 @@ public class TestSelectorsIntegrationTest {
   public void shouldFilterFromFile() throws IOException {
     Path testSelectorsFile = workspace.getPath("test-selectors.txt");
     String arg = String.format("@%s", testSelectorsFile.toAbsolutePath().toString());
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "--all", "--filter", arg);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "--all", "--filter", arg);
     result.assertSuccess();
   }
 
@@ -124,8 +121,8 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void assertNoSummariesForASingleTest() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "//test/com/example/clown:clown");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//test/com/example/clown:clown");
     assertNoTestSummaryShown(result);
   }
 
@@ -141,8 +138,7 @@ public class TestSelectorsIntegrationTest {
     assertThat(result.getStderr(), not(containsString("com.example.clown.CarTest")));
     assertThat(result.getStderr(), not(containsString("com.example.clown.FlowerTest")));
     assertThat(
-        result.getStderr(),
-        not(containsString("com.example.clown.PrimeMinisterialDecreeTest")));
+        result.getStderr(), not(containsString("com.example.clown.PrimeMinisterialDecreeTest")));
     assertThat(result.getStderr(), not(containsString("com.example.clown.ShoesTest")));
     assertThat(result.getStderr(), containsString("NO TESTS RAN"));
   }

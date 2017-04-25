@@ -23,7 +23,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.Computer;
@@ -36,16 +37,13 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class TimeoutTest {
 
   /**
    * Verify that we avoid the issue where adding a timeout causes tests to be run on different
    * thread to the one that they were created on.
    *
-   * https://github.com/junit-team/junit/issues/686
+   * <p>https://github.com/junit-team/junit/issues/686
    */
   @Test
   public void testsShouldRunOnTheThreadTheyAreCreatedOn() throws InitializationError {
@@ -60,23 +58,25 @@ public class TimeoutTest {
   private void doTestUsingThreadGuardedTestClass() throws InitializationError {
     Class<?> testClass = ThreadGuardedTest.class;
 
-    RunnerBuilder builder = new RunnerBuilder() {
-      @Override
-      public Runner runnerForClass(Class<?> clazz) throws Throwable {
-        return new BuckBlockJUnit4ClassRunner(clazz, /* defaultTestTimeoutMillis */ 500);
-      }
-    };
-    Runner suite = new Computer().getSuite(builder, new Class<?>[]{testClass});
+    RunnerBuilder builder =
+        new RunnerBuilder() {
+          @Override
+          public Runner runnerForClass(Class<?> clazz) throws Throwable {
+            return new BuckBlockJUnit4ClassRunner(clazz, /* defaultTestTimeoutMillis */ 500);
+          }
+        };
+    Runner suite = new Computer().getSuite(builder, new Class<?>[] {testClass});
     Request request = Request.runner(suite);
 
     final Set<Result> results = Sets.newHashSet();
     JUnitCore core = new JUnitCore();
-    core.addListener(new RunListener() {
-      @Override
-      public void testRunFinished(Result result) throws Exception {
-        results.add(result);
-      }
-    });
+    core.addListener(
+        new RunListener() {
+          @Override
+          public void testRunFinished(Result result) throws Exception {
+            results.add(result);
+          }
+        });
     core.run(request);
 
     Result result = Iterables.getOnlyElement(results);
@@ -85,15 +85,17 @@ public class TimeoutTest {
 
     // The order in which the tests were run doesn't matter. What matters is that we see our
     // expected messages.
-    Set<String> messages = result.getFailures().stream()
-        .map(Failure::getMessage)
-        .collect(MoreCollectors.toImmutableSet());
+    Set<String> messages =
+        result
+            .getFailures()
+            .stream()
+            .map(Failure::getMessage)
+            .collect(MoreCollectors.toImmutableSet());
     assertEquals(
-        "Should contain explicit call to fail() from failingTestsAreReported() and " +
-            "the timeout message from testsMayTimeOut().",
+        "Should contain explicit call to fail() from failingTestsAreReported() and "
+            + "the timeout message from testsMayTimeOut().",
         ImmutableSet.of(
-            "This is expected",
-            "test testsMayTimeOut timed out after 500 milliseconds"),
+            "This is expected", "test testsMayTimeOut timed out after 500 milliseconds"),
         messages);
   }
 

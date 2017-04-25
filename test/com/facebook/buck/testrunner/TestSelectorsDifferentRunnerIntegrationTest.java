@@ -22,38 +22,39 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class TestSelectorsDifferentRunnerIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldSelectOneTest() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "test_selectors_annotated_with_runwith", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "test_selectors_annotated_with_runwith", temporaryFolder);
     workspace.setUp();
 
     Path file = workspace.getPath("AnotherRunnerLogger.log");
     assertFalse("Log file shouldn't exist yet", Files.exists(file));
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "//test:broken", "--test-selectors", "TestA");
-    assertThat("We were expecting TestA to run!",
-        result.getStderr(), containsString("com.example.broken.TestA"));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//test:broken", "--test-selectors", "TestA");
+    assertThat(
+        "We were expecting TestA to run!",
+        result.getStderr(),
+        containsString("com.example.broken.TestA"));
     assertThat(
         "We were *not* expecting TestB to run; it should be filtered out!",
-        result.getStderr(), not(containsString("com.example.broken.TestB")));
+        result.getStderr(),
+        not(containsString("com.example.broken.TestB")));
 
     assertTrue("Log file should have been created by our custom runner!", Files.exists(file));
   }

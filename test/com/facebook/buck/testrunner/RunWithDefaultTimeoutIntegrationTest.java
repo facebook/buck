@@ -21,12 +21,12 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.builders.AnnotatedBuilder;
@@ -34,35 +34,32 @@ import org.junit.internal.builders.JUnit4Builder;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
-import java.io.IOException;
-
 public class RunWithDefaultTimeoutIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   /**
    * This test verifies that the default timeout declared in {@code .buckconfig} works in the
    * presence of the {@link RunWith} annotation.
-   * <p>
-   * We implement support for a default timeout declared in {@code .buckconfig} by implementing our
-   * own {@link BlockJUnit4ClassRunner}, {@link BuckBlockJUnit4ClassRunner}. We have tweaked our
+   *
+   * <p>We implement support for a default timeout declared in {@code .buckconfig} by implementing
+   * our own {@link BlockJUnit4ClassRunner}, {@link BuckBlockJUnit4ClassRunner}. We have tweaked our
    * JUnit runner to use a {@link JUnit4Builder} that creates a {@link BuckBlockJUnit4ClassRunner}
    * whenever a {@link JUnit4Builder} is requested.
-   * <p>
-   * However, we have a problem when the {@link RunWith} annotation is used. When {@link RunWith} is
-   * present, JUnit requests an {@link AnnotatedBuilder} instead of a {@link JUnit4Builder}.
+   *
+   * <p>However, we have a problem when the {@link RunWith} annotation is used. When {@link RunWith}
+   * is present, JUnit requests an {@link AnnotatedBuilder} instead of a {@link JUnit4Builder}.
    * Because Robolectric requires the use of {@link RunWith}, this situation is common in Android
    * testing.
-   * <p>
-   * To circumvent this issue, when possible, we create our own {@link AnnotatedBuilder} that
+   *
+   * <p>To circumvent this issue, when possible, we create our own {@link AnnotatedBuilder} that
    * delegates to the original {@link AnnotatedBuilder}, but inserts the timeout logic that we need.
    */
   @Test
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsLong() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "run_with_timeout", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatTakesTooLong");
@@ -73,8 +70,8 @@ public class RunWithDefaultTimeoutIntegrationTest {
   @Test
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsForever() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "run_with_timeout", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatRunsForever");
@@ -85,36 +82,38 @@ public class RunWithDefaultTimeoutIntegrationTest {
   @Test
   public void testRunWithLetsTimeoutAnnotationOverrideDefaultTimeout() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "run_with_timeout", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult testResult = workspace.runBuckCommand("test",
-        "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation");
+    ProcessResult testResult =
+        workspace.runBuckCommand(
+            "test", "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation");
     testResult.assertSuccess();
   }
 
   @Test
   public void testRunWithLetsTimeoutRuleOverrideDefaultTimeout() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "run_with_timeout", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult testResult = workspace.runBuckCommand("test",
-        "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule");
+    ProcessResult testResult =
+        workspace.runBuckCommand(
+            "test", "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule");
     testResult.assertSuccess();
   }
 
   @Test
   public void testAllTestsForRunWithAreRunOnTheSameThread() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "run_with_timeout", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult testResult = workspace.runBuckCommand("test",
-        "//:MultipleTestsThatExpectToBeAbleToReuseTheMainThread");
+    ProcessResult testResult =
+        workspace.runBuckCommand("test", "//:MultipleTestsThatExpectToBeAbleToReuseTheMainThread");
     testResult.assertSuccess();
   }
 }

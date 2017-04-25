@@ -22,28 +22,25 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ClassStatementsTest {
 
   public static final int BEFORE_CLASS_EXPECTED_RUNTIME = 250;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldFailWhenBeforeClassThrows() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "class_statements", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "class_statements", temporaryFolder);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
@@ -52,19 +49,24 @@ public class ClassStatementsTest {
     String stderr = result.getStderr();
     assertThat("Explanatory exception output is present", stderr, containsString("BOOM!"));
 
-    assertThat("Some tests still pass", stderr, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 3, 0, 0, "com.example.EverythingOKTest")));
+    assertThat(
+        "Some tests still pass",
+        stderr,
+        containsRegex(
+            createBuckTestOutputLineRegex("PASS", 3, 0, 0, "com.example.EverythingOKTest")));
 
-    assertThat(stderr, containsRegex(createBuckTestOutputLineRegex(
-        "FAIL", 0, 0, 1, "com.example.HasBeforeClassFailure")));
+    assertThat(
+        stderr,
+        containsRegex(
+            createBuckTestOutputLineRegex("FAIL", 0, 0, 1, "com.example.HasBeforeClassFailure")));
 
     Pattern failPattern = Pattern.compile("^FAIL +(\\d+)ms", Pattern.MULTILINE);
     Matcher matcher = failPattern.matcher(stderr);
     matcher.find();
     int actualRuntime = Integer.parseInt(matcher.group(1));
-    assertThat("Reasonable runtime was guessed",
+    assertThat(
+        "Reasonable runtime was guessed",
         actualRuntime,
         greaterThanOrEqualTo(BEFORE_CLASS_EXPECTED_RUNTIME));
   }
-
 }
