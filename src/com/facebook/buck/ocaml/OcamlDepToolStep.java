@@ -25,15 +25,11 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
 import java.nio.file.Path;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * This step runs ocamldep tool to compute dependencies among source files (*.mli and *.ml)
- */
+/** This step runs ocamldep tool to compute dependencies among source files (*.mli and *.ml) */
 public class OcamlDepToolStep extends ShellStep {
 
   private final ImmutableList<SourcePath> input;
@@ -61,8 +57,7 @@ public class OcamlDepToolStep extends ShellStep {
 
   @Override
   protected void addOptions(
-      ExecutionContext context,
-      ImmutableSet.Builder<ProcessExecutor.Option> options) {
+      ExecutionContext context, ImmutableSet.Builder<ProcessExecutor.Option> options) {
     // We need this else we get output with color codes which confuses parsing
     options.add(ProcessExecutor.Option.EXPECTING_STD_ERR);
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
@@ -73,13 +68,14 @@ public class OcamlDepToolStep extends ShellStep {
 
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
-    cmd
-        .addAll(ocamlDepTool.getCommandPrefix(resolver))
+    cmd.addAll(ocamlDepTool.getCommandPrefix(resolver))
         .add("-one-line")
         .add("-native")
         .addAll(flags)
-        .add("-ml-synonym").add(".re")
-        .add("-mli-synonym").add(".rei");
+        .add("-ml-synonym")
+        .add(".re")
+        .add("-mli-synonym")
+        .add(".rei");
 
     boolean previousFileWasReason = false;
 
@@ -89,11 +85,9 @@ public class OcamlDepToolStep extends ShellStep {
       String dotExt = "." + ext;
 
       boolean isImplementation =
-          dotExt.equals(OcamlCompilables.OCAML_ML) ||
-              dotExt.equals(OcamlCompilables.OCAML_RE);
+          dotExt.equals(OcamlCompilables.OCAML_ML) || dotExt.equals(OcamlCompilables.OCAML_RE);
       boolean isReason =
-          dotExt.equals(OcamlCompilables.OCAML_RE) ||
-              dotExt.equals(OcamlCompilables.OCAML_REI);
+          dotExt.equals(OcamlCompilables.OCAML_RE) || dotExt.equals(OcamlCompilables.OCAML_REI);
 
       if (isReason && !previousFileWasReason) {
         cmd.add("-pp").add("refmt");
@@ -104,7 +98,6 @@ public class OcamlDepToolStep extends ShellStep {
 
       // Note -impl and -intf must go after the -pp flag, if any.
       cmd.add(isImplementation ? "-impl" : "-intf");
-
 
       cmd.add(filePath);
 

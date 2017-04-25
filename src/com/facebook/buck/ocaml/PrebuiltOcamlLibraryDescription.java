@@ -31,16 +31,13 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Prebuilt OCaml library
- */
-public class PrebuiltOcamlLibraryDescription implements
-    Description<PrebuiltOcamlLibraryDescription.Arg>,
-    VersionPropagator<PrebuiltOcamlLibraryDescription.Arg> {
+/** Prebuilt OCaml library */
+public class PrebuiltOcamlLibraryDescription
+    implements Description<PrebuiltOcamlLibraryDescription.Arg>,
+        VersionPropagator<PrebuiltOcamlLibraryDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -70,22 +67,21 @@ public class PrebuiltOcamlLibraryDescription implements
     final Path libPath = target.getBasePath().resolve(libDir);
     final Path includeDir = libPath.resolve(args.includeDir.orElse(""));
 
-    final Optional<SourcePath> staticNativeLibraryPath = bytecodeOnly
-        ? Optional.empty()
-        : Optional.of(new PathSourcePath(
-          params.getProjectFilesystem(),
-          libPath.resolve(nativeLib)));
-    final SourcePath staticBytecodeLibraryPath = new PathSourcePath(
-        params.getProjectFilesystem(),
-        libPath.resolve(bytecodeLib));
+    final Optional<SourcePath> staticNativeLibraryPath =
+        bytecodeOnly
+            ? Optional.empty()
+            : Optional.of(
+                new PathSourcePath(params.getProjectFilesystem(), libPath.resolve(nativeLib)));
+    final SourcePath staticBytecodeLibraryPath =
+        new PathSourcePath(params.getProjectFilesystem(), libPath.resolve(bytecodeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
-        cLibs.stream()
+        cLibs
+            .stream()
             .map(input -> new PathSourcePath(params.getProjectFilesystem(), libPath.resolve(input)))
             .collect(MoreCollectors.toImmutableList());
 
-    final SourcePath bytecodeLibraryPath = new PathSourcePath(
-        params.getProjectFilesystem(),
-        libPath.resolve(bytecodeLib));
+    final SourcePath bytecodeLibraryPath =
+        new PathSourcePath(params.getProjectFilesystem(), libPath.resolve(bytecodeLib));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
@@ -111,5 +107,4 @@ public class PrebuiltOcamlLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Boolean> bytecodeOnly;
   }
-
 }

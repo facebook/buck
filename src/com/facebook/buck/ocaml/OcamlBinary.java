@@ -32,7 +32,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.util.stream.Stream;
 
 public class OcamlBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
@@ -47,23 +46,20 @@ public class OcamlBinary extends AbstractBuildRule implements BinaryBuildRule, H
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(
-            Preconditions.checkNotNull(binary.getSourcePathToOutput())))
+        .addArg(SourcePathArg.of(Preconditions.checkNotNull(binary.getSourcePathToOutput())))
         .build();
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(),
-        Preconditions.checkNotNull(binary.getSourcePathToOutput()));
+        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
   }
 
   // Since this rule doesn't actual generate the binary it references, and is just a wrapper for
@@ -73,4 +69,3 @@ public class OcamlBinary extends AbstractBuildRule implements BinaryBuildRule, H
     return Stream.of(binary.getBuildTarget());
   }
 }
-

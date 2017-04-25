@@ -28,30 +28,25 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Creates a debug launch script. The script will run OCaml debugger with
- * the target binary loaded. This works with bytecode and provides limited debugging
- * functionality like stepping, breakpoints, etc.
+ * Creates a debug launch script. The script will run OCaml debugger with the target binary loaded.
+ * This works with bytecode and provides limited debugging functionality like stepping, breakpoints,
+ * etc.
  */
 public class OcamlDebugLauncher extends AbstractBuildRule {
-  @AddToRuleKey
-  private final OcamlDebugLauncherStep.Args args;
+  @AddToRuleKey private final OcamlDebugLauncherStep.Args args;
 
-  public OcamlDebugLauncher(
-      BuildRuleParams params,
-      OcamlDebugLauncherStep.Args args) {
+  public OcamlDebugLauncher(BuildRuleParams params, OcamlDebugLauncherStep.Args args) {
     super(params);
     this.args = args;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(args.getOutput());
     return ImmutableList.of(
-      MkdirStep.of(getProjectFilesystem(), args.getOutput().getParent()),
-      new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args)
-    );
+        MkdirStep.of(getProjectFilesystem(), args.getOutput().getParent()),
+        new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args));
   }
 
   @Override

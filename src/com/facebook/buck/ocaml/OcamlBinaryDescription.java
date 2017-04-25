@@ -37,13 +37,12 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class OcamlBinaryDescription implements
-    Description<OcamlBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<OcamlBinaryDescription.Arg>,
-    VersionRoot<OcamlBinaryDescription.Arg> {
+public class OcamlBinaryDescription
+    implements Description<OcamlBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<OcamlBinaryDescription.Arg>,
+        VersionRoot<OcamlBinaryDescription.Arg> {
 
   private final OcamlBuckConfig ocamlBuckConfig;
 
@@ -66,21 +65,19 @@ public class OcamlBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
     ImmutableList<OcamlSource> srcs = args.srcs;
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
-    flags.addAll(OcamlDescriptionEnhancer.toStringWithMacrosArgs(
-            params.getBuildTarget(),
-            cellRoots,
-            resolver,
-            args.compilerFlags
-        ));
-    if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
-        args.warningsFlags.isPresent()) {
+    flags.addAll(
+        OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+            params.getBuildTarget(), cellRoots, resolver, args.compilerFlags));
+    if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.warningsFlags.isPresent()) {
       flags.addAll(StringArg.from("-w"));
-      flags.addAll(StringArg.from(ocamlBuckConfig.getWarningsFlags().orElse("") +
-          args.warningsFlags.orElse("")));
+      flags.addAll(
+          StringArg.from(
+              ocamlBuckConfig.getWarningsFlags().orElse("") + args.warningsFlags.orElse("")));
     }
     ImmutableList<String> linkerFlags = args.linkerFlags;
     return OcamlRuleBuilder.createBuildRule(
@@ -88,7 +85,7 @@ public class OcamlBinaryDescription implements
         params,
         resolver,
         srcs,
-         /*isLibrary*/ false,
+        /*isLibrary*/ false,
         args.bytecodeOnly.orElse(false),
         flags.build(),
         linkerFlags,
@@ -119,5 +116,4 @@ public class OcamlBinaryDescription implements
     public Optional<String> warningsFlags;
     public Optional<Boolean> bytecodeOnly;
   }
-
 }

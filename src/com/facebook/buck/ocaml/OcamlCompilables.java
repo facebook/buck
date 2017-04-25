@@ -19,14 +19,10 @@ package com.facebook.buck.ocaml;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * A set of OCaml related constants
- */
+/** A set of OCaml related constants */
 class OcamlCompilables {
 
-  /**
-   * Source files that can be preprocessed and compiled.
-   */
+  /** Source files that can be preprocessed and compiled. */
   public static final ImmutableSet<String> SOURCE_EXTENSIONS =
       ImmutableSet.of("ml", "re", "mli", "rei", "mly", "mll", "c");
 
@@ -61,13 +57,8 @@ class OcamlCompilables {
   protected static final String OCAML_CMTI = ".cmti";
   protected static final String OCAML_ANNOT = ".annot";
 
-  protected static final ImmutableList<String> DEFAULT_OCAML_FLAGS = ImmutableList.<String>builder()
-      .add("-absname")
-      .add("-g")
-      .add("-noautolink")
-      .build();
+  protected static final ImmutableList<String> DEFAULT_OCAML_FLAGS =
+      ImmutableList.<String>builder().add("-absname").add("-g").add("-noautolink").build();
 
-  private OcamlCompilables() {
-  }
-
+  private OcamlCompilables() {}
 }

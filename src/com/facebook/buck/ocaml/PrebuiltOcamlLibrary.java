@@ -31,27 +31,25 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final Optional<SourcePath> staticNativeLibraryPath;
-  @AddToRuleKey
-  private final SourcePath staticBytecodeLibraryPath;
-  @AddToRuleKey
-  private final ImmutableList<SourcePath> staticCLibraryPaths;
+  @AddToRuleKey private final Optional<SourcePath> staticNativeLibraryPath;
+  @AddToRuleKey private final SourcePath staticBytecodeLibraryPath;
+  @AddToRuleKey private final ImmutableList<SourcePath> staticCLibraryPaths;
+
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final SourcePath bytecodeLibraryPath;
+
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey(stringify = true)
   private final Path libPath;
+
   private final Path includeDir;
 
   public PrebuiltOcamlLibrary(
@@ -77,18 +75,11 @@ class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    argsBuilder.add(
-        SourcePathArg.of(
-            sourcePath));
+    argsBuilder.add(SourcePathArg.of(sourcePath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
-      argsBuilder.add(
-          SourcePathArg.of(
-              staticCLibraryPath));
+      argsBuilder.add(SourcePathArg.of(staticCLibraryPath));
     }
-    return NativeLinkableInput.of(
-        argsBuilder.build(),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+    return NativeLinkableInput.of(argsBuilder.build(), ImmutableSet.of(), ImmutableSet.of());
   }
 
   @Override
@@ -96,10 +87,7 @@ class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
     if (staticNativeLibraryPath.isPresent()) {
       return getLinkableInput(staticNativeLibraryPath.get());
     } else {
-      return NativeLinkableInput.of(
-          ImmutableList.of(),
-          ImmutableSet.of(),
-          ImmutableSet.of());
+      return NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
     }
   }
 

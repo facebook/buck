@@ -28,22 +28,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-/**
- * A build rule which preprocesses, compiles, and assembles an OCaml source.
- */
+/** A build rule which preprocesses, compiles, and assembles an OCaml source. */
 public class OcamlBuild extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final OcamlBuildContext ocamlContext;
-  @AddToRuleKey
-  private final Compiler cCompiler;
-  @AddToRuleKey
-  private final Compiler cxxCompiler;
-  @AddToRuleKey
-  private final boolean bytecodeOnly;
+  @AddToRuleKey private final OcamlBuildContext ocamlContext;
+  @AddToRuleKey private final Compiler cCompiler;
+  @AddToRuleKey private final Compiler cxxCompiler;
+  @AddToRuleKey private final boolean bytecodeOnly;
 
   public OcamlBuild(
       BuildRuleParams params,
@@ -62,8 +55,7 @@ public class OcamlBuild extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path baseArtifactDir = ocamlContext.getNativeOutput().getParent();
     buildableContext.recordArtifact(baseArtifactDir);
     if (!bytecodeOnly) {
@@ -73,18 +65,19 @@ public class OcamlBuild extends AbstractBuildRule {
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OcamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(
-            getProjectFilesystem(),
-            ocamlContext.getNativeOutput().getParent()))
-        .add(new OcamlBuildStep(
-            context.getSourcePathResolver(),
-            getProjectFilesystem(),
-            ocamlContext,
-            cCompiler.getEnvironment(context.getSourcePathResolver()),
-            cCompiler.getCommandPrefix(context.getSourcePathResolver()),
-            cxxCompiler.getEnvironment(context.getSourcePathResolver()),
-            cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
-            bytecodeOnly))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                getProjectFilesystem(), ocamlContext.getNativeOutput().getParent()))
+        .add(
+            new OcamlBuildStep(
+                context.getSourcePathResolver(),
+                getProjectFilesystem(),
+                ocamlContext,
+                cCompiler.getEnvironment(context.getSourcePathResolver()),
+                cCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                cxxCompiler.getEnvironment(context.getSourcePathResolver()),
+                cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                bytecodeOnly))
         .build();
   }
 

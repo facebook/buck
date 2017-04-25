@@ -31,14 +31,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * A compilation step for .ml and .mli files
- */
+/** A compilation step for .ml and .mli files */
 public class OcamlMLCompileStep extends ShellStep {
 
   public static class Args implements RuleKeyAppendable {
@@ -98,9 +95,7 @@ public class OcamlMLCompileStep extends ShellStep {
             OcamlCompilables.OCAML_ANNOT);
       } else if (outputStr.endsWith(OcamlCompilables.OCAML_CMI)) {
         return OcamlUtil.getExtensionVariants(
-            output,
-            OcamlCompilables.OCAML_CMI,
-            OcamlCompilables.OCAML_CMTI);
+            output, OcamlCompilables.OCAML_CMI, OcamlCompilables.OCAML_CMTI);
       } else {
         Preconditions.checkState(outputStr.endsWith(OcamlCompilables.OCAML_CMO));
         return OcamlUtil.getExtensionVariants(
@@ -129,29 +124,26 @@ public class OcamlMLCompileStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder()
-        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
-        .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
+    ImmutableList.Builder<String> cmd =
+        ImmutableList.<String>builder()
+            .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
+            .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
 
     if (args.stdlib.isPresent()) {
-        cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, args.stdlib.get());
+      cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, args.stdlib.get());
     }
 
     String ext = Files.getFileExtension(args.input.toString());
     String dotExt = "." + ext;
     boolean isImplementation =
-          dotExt.equals(OcamlCompilables.OCAML_ML) ||
-              dotExt.equals(OcamlCompilables.OCAML_RE);
+        dotExt.equals(OcamlCompilables.OCAML_ML) || dotExt.equals(OcamlCompilables.OCAML_RE);
     boolean isReason =
-        dotExt.equals(OcamlCompilables.OCAML_RE) ||
-            dotExt.equals(OcamlCompilables.OCAML_REI);
+        dotExt.equals(OcamlCompilables.OCAML_RE) || dotExt.equals(OcamlCompilables.OCAML_REI);
 
-    cmd
-        .add("-cc", args.cCompiler.get(0))
+    cmd.add("-cc", args.cCompiler.get(0))
         .addAll(
             MoreIterables.zipAndConcat(
-                Iterables.cycle("-ccopt"),
-                args.cCompiler.subList(1, args.cCompiler.size())))
+                Iterables.cycle("-ccopt"), args.cCompiler.subList(1, args.cCompiler.size())))
         .add("-c")
         .add("-annot")
         .add("-bin-annot")
@@ -159,15 +151,11 @@ public class OcamlMLCompileStep extends ShellStep {
         .addAll(Arg.stringify(args.flags, resolver));
 
     if (isReason && isImplementation) {
-      cmd.add("-pp").add("refmt")
-          .add("-intf-suffix").add("rei")
-          .add("-impl");
+      cmd.add("-pp").add("refmt").add("-intf-suffix").add("rei").add("-impl");
     }
     if (isReason && !isImplementation) {
-      cmd.add("-pp").add("refmt")
-          .add("-intf");
+      cmd.add("-pp").add("refmt").add("-intf");
     }
-
 
     cmd.add(args.input.toString());
     return cmd.build();

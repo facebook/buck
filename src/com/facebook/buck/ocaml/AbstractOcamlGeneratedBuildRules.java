@@ -21,15 +21,18 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractOcamlGeneratedBuildRules {
   public abstract ImmutableList<BuildRule> getRules();
+
   public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
+
   public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
+
   public abstract ImmutableList<SourcePath> getObjectFiles();
+
   public abstract BuildRule getBytecodeLink();
 }

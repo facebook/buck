@@ -32,15 +32,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * OCaml linking step. Dependencies and inputs should be topologically ordered
- */
+/** OCaml linking step. Dependencies and inputs should be topologically ordered */
 public class OcamlDebugLauncherStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -48,9 +45,7 @@ public class OcamlDebugLauncherStep implements Step {
   private final Args args;
 
   public OcamlDebugLauncherStep(
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
-      Args args) {
+      ProjectFilesystem filesystem, SourcePathResolver resolver, Args args) {
     this.filesystem = filesystem;
     this.resolver = resolver;
     this.args = args;
@@ -62,11 +57,8 @@ public class OcamlDebugLauncherStep implements Step {
     String debugCmdStr = getDebugCmd();
     String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 
-    WriteFileStep writeFile = new WriteFileStep(
-        filesystem,
-        debugLauncherScript,
-        args.getOutput(),
-        /* executable */ true);
+    WriteFileStep writeFile =
+        new WriteFileStep(filesystem, debugLauncherScript, args.getOutput(), /* executable */ true);
     return writeFile.execute(context);
   }
 
@@ -83,18 +75,20 @@ public class OcamlDebugLauncherStep implements Step {
     debugCmd.add("rlwrap");
     debugCmd.addAll(args.ocamlDebug.getCommandPrefix(resolver));
 
-    Iterable<String> includesBytecodeDirs = FluentIterable.from(args.ocamlInput)
-        .transformAndConcat(new Function<OcamlLibrary, Iterable<String>>() {
-                              @Override
-                              public Iterable<String> apply(OcamlLibrary input) {
-                                return input.getBytecodeIncludeDirs();
-                              }
-                            });
+    Iterable<String> includesBytecodeDirs =
+        FluentIterable.from(args.ocamlInput)
+            .transformAndConcat(
+                new Function<OcamlLibrary, Iterable<String>>() {
+                  @Override
+                  public Iterable<String> apply(OcamlLibrary input) {
+                    return input.getBytecodeIncludeDirs();
+                  }
+                });
 
-    ImmutableList<String> includesBytecodeFlags = ImmutableList.copyOf(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle(OcamlCompilables.OCAML_INCLUDE_FLAG),
-            includesBytecodeDirs));
+    ImmutableList<String> includesBytecodeFlags =
+        ImmutableList.copyOf(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle(OcamlCompilables.OCAML_INCLUDE_FLAG), includesBytecodeDirs));
 
     debugCmd.addAll(includesBytecodeFlags);
     debugCmd.addAll(args.bytecodeIncludeFlags);
@@ -136,8 +130,7 @@ public class OcamlDebugLauncherStep implements Step {
 
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink
-          .setReflectively("ocamlDebug", ocamlDebug)
+      sink.setReflectively("ocamlDebug", ocamlDebug)
           .setReflectively("bytecodeOutput", bytecodeOutput.toString())
           .setReflectively("flags", bytecodeIncludeFlags);
     }

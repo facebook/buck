@@ -22,18 +22,17 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
  * This step is run when `native_plugin=True` is set in an `ocaml_library` rule.
  *
- * This builds a `.cmxs` file from the corresponding `.cmo`/`cma` file that was
- * built as part of the static library compilation.
+ * <p>This builds a `.cmxs` file from the corresponding `.cmo`/`cma` file that was built as part of
+ * the static library compilation.
  *
- * `.cmxs` files are generally used as dynamically-linked plugins for
- * native-compiled ocaml. See the built-in `Dynlink` ocaml module for more info.
+ * <p>`.cmxs` files are generally used as dynamically-linked plugins for native-compiled ocaml. See
+ * the built-in `Dynlink` ocaml module for more info.
  */
 public class OcamlNativePluginStep extends ShellStep {
 
@@ -78,21 +77,21 @@ public class OcamlNativePluginStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder()
-      .addAll(ocamlCompilerCommandPrefix)
-      .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
+    ImmutableList.Builder<String> cmd =
+        ImmutableList.<String>builder()
+            .addAll(ocamlCompilerCommandPrefix)
+            .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
 
     if (stdlib.isPresent()) {
       cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, stdlib.get());
     }
 
-    return cmd
-      .addAll(OptionalCompat.asSet(Optional.of("-shared")))
-      .add("-o", output.toString())
-      .addAll(flags)
-      .addAll(ocamlInput)
-      .addAll(input.stream().map(Object::toString).iterator())
-      .build();
+    return cmd.addAll(OptionalCompat.asSet(Optional.of("-shared")))
+        .add("-o", output.toString())
+        .addAll(flags)
+        .addAll(ocamlInput)
+        .addAll(input.stream().map(Object::toString).iterator())
+        .build();
   }
 
   @Override

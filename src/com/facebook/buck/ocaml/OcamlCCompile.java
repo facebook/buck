@@ -27,29 +27,22 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 
-
 public class OcamlCCompile extends AbstractBuildRule {
-  @AddToRuleKey
-  private final OcamlCCompileStep.Args args;
+  @AddToRuleKey private final OcamlCCompileStep.Args args;
 
-  public OcamlCCompile(
-      BuildRuleParams params,
-      OcamlCCompileStep.Args args) {
+  public OcamlCCompile(BuildRuleParams params, OcamlCCompileStep.Args args) {
     super(params);
     this.args = args;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(args.output);
     return ImmutableList.of(
-      MkdirStep.of(getProjectFilesystem(), args.output.getParent()),
-      new OcamlCCompileStep(
-          context.getSourcePathResolver(),
-          getProjectFilesystem().getRootPath(),
-          args));
+        MkdirStep.of(getProjectFilesystem(), args.output.getParent()),
+        new OcamlCCompileStep(
+            context.getSourcePathResolver(), getProjectFilesystem().getRootPath(), args));
   }
 
   @Override

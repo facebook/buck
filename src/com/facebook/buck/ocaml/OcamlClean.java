@@ -26,36 +26,27 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * A build rule which cleans a target's build output folder.
- */
+/** A build rule which cleans a target's build output folder. */
 public class OcamlClean extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final OcamlBuildContext ocamlContext;
+  @AddToRuleKey private final OcamlBuildContext ocamlContext;
 
   private static final Logger LOG = Logger.get(OcamlClean.class);
 
-  public OcamlClean(
-      BuildRuleParams params,
-      OcamlBuildContext ocamlContext) {
+  public OcamlClean(BuildRuleParams params, OcamlBuildContext ocamlContext) {
     super(params);
     this.ocamlContext = ocamlContext;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
 
     Path bcDir = ocamlContext.getCompileBytecodeOutputDir();
     Path optDir = ocamlContext.getCompileNativeOutputDir();

@@ -21,12 +21,9 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-/**
- * A yacc step which processes .mly files and outputs .ml and mli files
- */
+/** A yacc step which processes .mly files and outputs .ml and mli files */
 public class OcamlYaccStep extends ShellStep {
 
   private final SourcePathResolver resolver;
@@ -35,10 +32,8 @@ public class OcamlYaccStep extends ShellStep {
     public final Tool yaccCompiler;
     public final Path output;
     public final Path input;
-    public Args(
-        Tool yaccCompiler,
-        Path output,
-        Path input) {
+
+    public Args(Tool yaccCompiler, Path output, Path input) {
       this.yaccCompiler = yaccCompiler;
       this.output = output;
       this.input = input;
@@ -66,5 +61,4 @@ public class OcamlYaccStep extends ShellStep {
         .add(args.input.toString())
         .build();
   }
-
 }

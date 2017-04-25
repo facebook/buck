@@ -26,32 +26,26 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class OcamlMLCompile extends AbstractBuildRule {
-  @AddToRuleKey
-  private final OcamlMLCompileStep.Args args;
+  @AddToRuleKey private final OcamlMLCompileStep.Args args;
 
-  public OcamlMLCompile(
-      BuildRuleParams params,
-      OcamlMLCompileStep.Args args) {
+  public OcamlMLCompile(BuildRuleParams params, OcamlMLCompileStep.Args args) {
     super(params);
     this.args = args;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     for (Path artifact : args.getAllOutputs()) {
       buildableContext.recordArtifact(artifact);
     }
     return ImmutableList.of(
-      MkdirStep.of(getProjectFilesystem(), args.output.getParent()),
-      new OcamlMLCompileStep(
-          getProjectFilesystem().getRootPath(), context.getSourcePathResolver(), args)
-    );
+        MkdirStep.of(getProjectFilesystem(), args.output.getParent()),
+        new OcamlMLCompileStep(
+            getProjectFilesystem().getRootPath(), context.getSourcePathResolver(), args));
   }
 
   @Override

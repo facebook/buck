@@ -30,14 +30,11 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * A step that preprocesses, compiles, and assembles OCaml sources.
- */
+/** A step that preprocesses, compiles, and assembles OCaml sources. */
 public class OcamlBuildStep implements Step {
 
   private final SourcePathResolver resolver;
@@ -70,16 +67,16 @@ public class OcamlBuildStep implements Step {
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
 
-    hasGeneratedSources = ocamlContext.getLexInput().size() > 0 ||
-        ocamlContext.getYaccInput().size() > 0;
+    hasGeneratedSources =
+        ocamlContext.getLexInput().size() > 0 || ocamlContext.getYaccInput().size() > 0;
 
-    this.depToolStep = new OcamlDepToolStep(
-        filesystem.getRootPath(),
-        this.ocamlContext.getSourcePathResolver(),
-        this.ocamlContext.getOcamlDepTool().get(),
-        ocamlContext.getMLInput(),
-        this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true)
-    );
+    this.depToolStep =
+        new OcamlDepToolStep(
+            filesystem.getRootPath(),
+            this.ocamlContext.getSourcePathResolver(),
+            this.ocamlContext.getOcamlDepTool().get(),
+            ocamlContext.getMLInput(),
+            this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
   }
 
   @Override
@@ -122,22 +119,18 @@ public class OcamlBuildStep implements Step {
     ImmutableList.Builder<Path> nativeLinkerInputs = ImmutableList.builder();
 
     if (!bytecodeOnly) {
-      StepExecutionResult mlCompileNativeExecutionResult = executeMLNativeCompilation(
-          context,
-          filesystem.getRootPath(),
-          sortedInput,
-          nativeLinkerInputs);
+      StepExecutionResult mlCompileNativeExecutionResult =
+          executeMLNativeCompilation(
+              context, filesystem.getRootPath(), sortedInput, nativeLinkerInputs);
       if (!mlCompileNativeExecutionResult.isSuccess()) {
         return mlCompileNativeExecutionResult;
       }
     }
 
     ImmutableList.Builder<Path> bytecodeLinkerInputs = ImmutableList.builder();
-    StepExecutionResult mlCompileBytecodeExecutionResult = executeMLBytecodeCompilation(
-        context,
-        filesystem.getRootPath(),
-        sortedInput,
-        bytecodeLinkerInputs);
+    StepExecutionResult mlCompileBytecodeExecutionResult =
+        executeMLBytecodeCompilation(
+            context, filesystem.getRootPath(), sortedInput, bytecodeLinkerInputs);
     if (!mlCompileBytecodeExecutionResult.isSuccess()) {
       return mlCompileBytecodeExecutionResult;
     }
@@ -152,33 +145,30 @@ public class OcamlBuildStep implements Step {
 
     if (!bytecodeOnly) {
       nativeLinkerInputs.addAll(cObjects);
-      StepExecutionResult nativeLinkExecutionResult = executeNativeLinking(
-          context,
-          nativeLinkerInputs.build());
+      StepExecutionResult nativeLinkExecutionResult =
+          executeNativeLinking(context, nativeLinkerInputs.build());
       if (!nativeLinkExecutionResult.isSuccess()) {
         return nativeLinkExecutionResult;
       }
     }
 
     bytecodeLinkerInputs.addAll(cObjects);
-    StepExecutionResult bytecodeLinkExecutionResult = executeBytecodeLinking(
-        context,
-        bytecodeLinkerInputs.build());
+    StepExecutionResult bytecodeLinkExecutionResult =
+        executeBytecodeLinking(context, bytecodeLinkerInputs.build());
     if (!bytecodeLinkExecutionResult.isSuccess()) {
       return bytecodeLinkExecutionResult;
     }
 
     if (!ocamlContext.isLibrary()) {
-      Step debugLauncher = new OcamlDebugLauncherStep(
-          filesystem,
-          resolver,
-          new OcamlDebugLauncherStep.Args(
-              ocamlContext.getOcamlDebug().get(),
-              ocamlContext.getBytecodeOutput(),
-              ocamlContext.getOcamlInput(),
-              ocamlContext.getBytecodeIncludeFlags()
-          )
-      );
+      Step debugLauncher =
+          new OcamlDebugLauncherStep(
+              filesystem,
+              resolver,
+              new OcamlDebugLauncherStep.Args(
+                  ocamlContext.getOcamlDebug().get(),
+                  ocamlContext.getBytecodeOutput(),
+                  ocamlContext.getOcamlInput(),
+                  ocamlContext.getBytecodeIncludeFlags()));
       return debugLauncher.execute(context);
     } else {
       return StepExecutionResult.SUCCESS;
@@ -186,8 +176,8 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeCCompilation(
-      ExecutionContext context,
-      ImmutableList.Builder<Path> linkerInputs) throws IOException, InterruptedException {
+      ExecutionContext context, ImmutableList.Builder<Path> linkerInputs)
+      throws IOException, InterruptedException {
 
     ImmutableList.Builder<String> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
@@ -198,18 +188,19 @@ public class OcamlBuildStep implements Step {
     for (SourcePath cSrc : ocamlContext.getCInput()) {
       Path outputPath = ocamlContext.getCOutput(resolver.getAbsolutePath(cSrc));
       linkerInputs.add(outputPath);
-      Step compileStep = new OcamlCCompileStep(
-          resolver,
-          filesystem.getRootPath(),
-          new OcamlCCompileStep.Args(
-              cCompilerEnvironment,
-              cCompiler,
-              ocamlContext.getOcamlCompiler().get(),
-              ocamlContext.getOcamlInteropIncludesDir(),
-              outputPath,
-              cSrc,
-              cCompileFlags.build(),
-              cxxPreprocessorInput.getIncludes()));
+      Step compileStep =
+          new OcamlCCompileStep(
+              resolver,
+              filesystem.getRootPath(),
+              new OcamlCCompileStep.Args(
+                  cCompilerEnvironment,
+                  cCompiler,
+                  ocamlContext.getOcamlCompiler().get(),
+                  ocamlContext.getOcamlInteropIncludesDir(),
+                  outputPath,
+                  cSrc,
+                  cCompileFlags.build(),
+                  cxxPreprocessorInput.getIncludes()));
       StepExecutionResult compileExecutionResult = compileStep.execute(context);
       if (!compileExecutionResult.isSuccess()) {
         return compileExecutionResult;
@@ -219,65 +210,67 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeNativeLinking(
-      ExecutionContext context,
-      ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
+      ExecutionContext context, ImmutableList<Path> linkerInputs)
+      throws IOException, InterruptedException {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
-    OcamlLinkStep linkStep = OcamlLinkStep.create(
-        filesystem.getRootPath(),
-        cxxCompilerEnvironment,
-        cxxCompiler,
-        ocamlContext.getOcamlCompiler().get().getCommandPrefix(resolver),
-        flags.build(),
-        ocamlContext.getOcamlInteropIncludesDir(),
-        ocamlContext.getNativeOutput(),
-        ocamlContext.getNativeLinkableInput().getArgs(),
-        ocamlContext.getCLinkableInput().getArgs(),
-        linkerInputs,
-        ocamlContext.isLibrary(),
-        /* isBytecode */ false,
-        resolver);
+    OcamlLinkStep linkStep =
+        OcamlLinkStep.create(
+            filesystem.getRootPath(),
+            cxxCompilerEnvironment,
+            cxxCompiler,
+            ocamlContext.getOcamlCompiler().get().getCommandPrefix(resolver),
+            flags.build(),
+            ocamlContext.getOcamlInteropIncludesDir(),
+            ocamlContext.getNativeOutput(),
+            ocamlContext.getNativeLinkableInput().getArgs(),
+            ocamlContext.getCLinkableInput().getArgs(),
+            linkerInputs,
+            ocamlContext.isLibrary(),
+            /* isBytecode */ false,
+            resolver);
     return linkStep.execute(context);
   }
 
   private StepExecutionResult executeBytecodeLinking(
-      ExecutionContext context,
-      ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
+      ExecutionContext context, ImmutableList<Path> linkerInputs)
+      throws IOException, InterruptedException {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
 
-    OcamlLinkStep linkStep = OcamlLinkStep.create(
-        filesystem.getRootPath(),
-        cxxCompilerEnvironment,
-        cxxCompiler,
-        ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(resolver),
-        flags.build(),
-        ocamlContext.getOcamlInteropIncludesDir(),
-        ocamlContext.getBytecodeOutput(),
-        ocamlContext.getBytecodeLinkableInput().getArgs(),
-        ocamlContext.getCLinkableInput().getArgs(),
-        linkerInputs,
-        ocamlContext.isLibrary(),
-        /* isBytecode */ true,
-        resolver);
+    OcamlLinkStep linkStep =
+        OcamlLinkStep.create(
+            filesystem.getRootPath(),
+            cxxCompilerEnvironment,
+            cxxCompiler,
+            ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(resolver),
+            flags.build(),
+            ocamlContext.getOcamlInteropIncludesDir(),
+            ocamlContext.getBytecodeOutput(),
+            ocamlContext.getBytecodeLinkableInput().getArgs(),
+            ocamlContext.getCLinkableInput().getArgs(),
+            linkerInputs,
+            ocamlContext.isLibrary(),
+            /* isBytecode */ true,
+            resolver);
     return linkStep.execute(context);
   }
 
   private ImmutableList<Arg> getCompileFlags(boolean isBytecode, boolean excludeDeps) {
-    String output = isBytecode ? ocamlContext.getCompileBytecodeOutputDir().toString() :
-        ocamlContext.getCompileNativeOutputDir().toString();
+    String output =
+        isBytecode
+            ? ocamlContext.getCompileBytecodeOutputDir().toString()
+            : ocamlContext.getCompileNativeOutputDir().toString();
     ImmutableList.Builder<Arg> flagBuilder = ImmutableList.builder();
     flagBuilder.addAll(
         StringArg.from(ocamlContext.getIncludeFlags(isBytecode, /* excludeDeps */ excludeDeps)));
     flagBuilder.addAll(ocamlContext.getFlags());
-    flagBuilder.add(
-        StringArg.of(OcamlCompilables.OCAML_INCLUDE_FLAG),
-        StringArg.of(output));
+    flagBuilder.add(StringArg.of(OcamlCompilables.OCAML_INCLUDE_FLAG), StringArg.of(output));
     return flagBuilder.build();
   }
 
@@ -285,8 +278,8 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context,
       Path workingDirectory,
       ImmutableList<Path> sortedInput,
-      ImmutableList.Builder<Path> linkerInputs
-  ) throws IOException, InterruptedException {
+      ImmutableList.Builder<Path> linkerInputs)
+      throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(filesystem, ocamlContext.getCompileNativeOutputDir())) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
@@ -296,30 +289,31 @@ public class OcamlBuildStep implements Step {
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
-      String outputFileName = inputFileName
-          .replaceFirst(OcamlCompilables.OCAML_ML_REGEX, OcamlCompilables.OCAML_CMX)
-          .replaceFirst(OcamlCompilables.OCAML_RE_REGEX, OcamlCompilables.OCAML_CMX)
-          .replaceFirst(OcamlCompilables.OCAML_MLI_REGEX, OcamlCompilables.OCAML_CMI)
-          .replaceFirst(OcamlCompilables.OCAML_REI_REGEX, OcamlCompilables.OCAML_CMI);
+      String outputFileName =
+          inputFileName
+              .replaceFirst(OcamlCompilables.OCAML_ML_REGEX, OcamlCompilables.OCAML_CMX)
+              .replaceFirst(OcamlCompilables.OCAML_RE_REGEX, OcamlCompilables.OCAML_CMX)
+              .replaceFirst(OcamlCompilables.OCAML_MLI_REGEX, OcamlCompilables.OCAML_CMI)
+              .replaceFirst(OcamlCompilables.OCAML_REI_REGEX, OcamlCompilables.OCAML_CMI);
       Path outputPath = ocamlContext.getCompileNativeOutputDir().resolve(outputFileName);
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<Arg> compileFlags = getCompileFlags(
-          /* isBytecode */ false,
-          /* excludeDeps */ false);
-      Step compileStep = new OcamlMLCompileStep(
-          workingDirectory,
-          resolver,
-          new OcamlMLCompileStep.Args(
-              filesystem::resolve,
-              cCompilerEnvironment,
-              cCompiler,
-              ocamlContext.getOcamlCompiler().get(),
-              ocamlContext.getOcamlInteropIncludesDir(),
-              outputPath,
-              inputOutput,
-              compileFlags));
+      final ImmutableList<Arg> compileFlags =
+          getCompileFlags(/* isBytecode */ false, /* excludeDeps */ false);
+      Step compileStep =
+          new OcamlMLCompileStep(
+              workingDirectory,
+              resolver,
+              new OcamlMLCompileStep.Args(
+                  filesystem::resolve,
+                  cCompilerEnvironment,
+                  cCompiler,
+                  ocamlContext.getOcamlCompiler().get(),
+                  ocamlContext.getOcamlInteropIncludesDir(),
+                  outputPath,
+                  inputOutput,
+                  compileFlags));
       StepExecutionResult compileExecutionResult = compileStep.execute(context);
       if (!compileExecutionResult.isSuccess()) {
         return compileExecutionResult;
@@ -332,8 +326,8 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context,
       Path workingDirectory,
       ImmutableList<Path> sortedInput,
-      ImmutableList.Builder<Path> linkerInputs
-  ) throws IOException, InterruptedException {
+      ImmutableList.Builder<Path> linkerInputs)
+      throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(filesystem, ocamlContext.getCompileBytecodeOutputDir())) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
@@ -343,30 +337,31 @@ public class OcamlBuildStep implements Step {
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
-      String outputFileName = inputFileName
-          .replaceFirst(OcamlCompilables.OCAML_ML_REGEX, OcamlCompilables.OCAML_CMO)
-          .replaceFirst(OcamlCompilables.OCAML_RE_REGEX, OcamlCompilables.OCAML_CMO)
-          .replaceFirst(OcamlCompilables.OCAML_MLI_REGEX, OcamlCompilables.OCAML_CMI)
-          .replaceFirst(OcamlCompilables.OCAML_REI_REGEX, OcamlCompilables.OCAML_CMI);
+      String outputFileName =
+          inputFileName
+              .replaceFirst(OcamlCompilables.OCAML_ML_REGEX, OcamlCompilables.OCAML_CMO)
+              .replaceFirst(OcamlCompilables.OCAML_RE_REGEX, OcamlCompilables.OCAML_CMO)
+              .replaceFirst(OcamlCompilables.OCAML_MLI_REGEX, OcamlCompilables.OCAML_CMI)
+              .replaceFirst(OcamlCompilables.OCAML_REI_REGEX, OcamlCompilables.OCAML_CMI);
       Path outputPath = ocamlContext.getCompileBytecodeOutputDir().resolve(outputFileName);
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<Arg> compileFlags = getCompileFlags(
-          /* isBytecode */ true,
-          /* excludeDeps */ false);
-      Step compileBytecodeStep = new OcamlMLCompileStep(
-          workingDirectory,
-          resolver,
-          new OcamlMLCompileStep.Args(
-              filesystem::resolve,
-              cCompilerEnvironment,
-              cCompiler,
-              ocamlContext.getOcamlBytecodeCompiler().get(),
-              ocamlContext.getOcamlInteropIncludesDir(),
-              outputPath,
-              inputOutput,
-              compileFlags));
+      final ImmutableList<Arg> compileFlags =
+          getCompileFlags(/* isBytecode */ true, /* excludeDeps */ false);
+      Step compileBytecodeStep =
+          new OcamlMLCompileStep(
+              workingDirectory,
+              resolver,
+              new OcamlMLCompileStep.Args(
+                  filesystem::resolve,
+                  cCompilerEnvironment,
+                  cCompiler,
+                  ocamlContext.getOcamlBytecodeCompiler().get(),
+                  ocamlContext.getOcamlInteropIncludesDir(),
+                  outputPath,
+                  inputOutput,
+                  compileFlags));
       StepExecutionResult compileExecutionResult = compileBytecodeStep.execute(context);
       if (!compileExecutionResult.isSuccess()) {
         return compileExecutionResult;
@@ -377,9 +372,7 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
       throws IOException, InterruptedException {
-    for (Step step : MakeCleanDirectoryStep.of(
-        filesystem,
-        ocamlContext.getGeneratedSourceDir())) {
+    for (Step step : MakeCleanDirectoryStep.of(filesystem, ocamlContext.getGeneratedSourceDir())) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
       if (!mkDirExecutionResult.isSuccess()) {
         return mkDirExecutionResult;
@@ -387,13 +380,14 @@ public class OcamlBuildStep implements Step {
     }
     for (SourcePath yaccSource : ocamlContext.getYaccInput()) {
       SourcePath output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
-      OcamlYaccStep yaccStep = new OcamlYaccStep(
-          workingDirectory,
-          resolver,
-          new OcamlYaccStep.Args(
-            ocamlContext.getYaccCompiler().get(),
-            resolver.getAbsolutePath(output),
-            resolver.getAbsolutePath(yaccSource)));
+      OcamlYaccStep yaccStep =
+          new OcamlYaccStep(
+              workingDirectory,
+              resolver,
+              new OcamlYaccStep.Args(
+                  ocamlContext.getYaccCompiler().get(),
+                  resolver.getAbsolutePath(output),
+                  resolver.getAbsolutePath(yaccSource)));
       StepExecutionResult yaccExecutionResult = yaccStep.execute(context);
       if (!yaccExecutionResult.isSuccess()) {
         return yaccExecutionResult;
@@ -401,13 +395,14 @@ public class OcamlBuildStep implements Step {
     }
     for (SourcePath lexSource : ocamlContext.getLexInput()) {
       SourcePath output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
-      OcamlLexStep lexStep = new OcamlLexStep(
-          workingDirectory,
-          resolver,
-          new OcamlLexStep.Args(
-            ocamlContext.getLexCompiler().get(),
-            resolver.getAbsolutePath(output),
-            resolver.getAbsolutePath(lexSource)));
+      OcamlLexStep lexStep =
+          new OcamlLexStep(
+              workingDirectory,
+              resolver,
+              new OcamlLexStep.Args(
+                  ocamlContext.getLexCompiler().get(),
+                  resolver.getAbsolutePath(output),
+                  resolver.getAbsolutePath(lexSource)));
       StepExecutionResult lexExecutionResult = lexStep.execute(context);
       if (!lexExecutionResult.isSuccess()) {
         return lexExecutionResult;
@@ -416,18 +411,14 @@ public class OcamlBuildStep implements Step {
     return StepExecutionResult.SUCCESS;
   }
 
-
   private ImmutableList<Path> sortDependency(
-      String depOutput,
-      ImmutableSet<Path> mlInput) { // NOPMD doesn't understand method reference
+      String depOutput, ImmutableSet<Path> mlInput) { // NOPMD doesn't understand method reference
     OcamlDependencyGraphGenerator graphGenerator = new OcamlDependencyGraphGenerator();
-    return
-        FluentIterable.from(graphGenerator.generate(depOutput))
-            .transform(Paths::get)
-            // The output of generate needs to be filtered as .cmo dependencies
-            // are generated as both .ml and .re files.
-            .filter(mlInput::contains)
-            .toList();
+    return FluentIterable.from(graphGenerator.generate(depOutput))
+        .transform(Paths::get)
+        // The output of generate needs to be filtered as .cmo dependencies
+        // are generated as both .ml and .re files.
+        .filter(mlInput::contains)
+        .toList();
   }
-
 }

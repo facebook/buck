@@ -28,13 +28,10 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Compilation step for C interoperability files.
- */
+/** Compilation step for C interoperability files. */
 public class OcamlCCompileStep extends ShellStep {
 
   private final SourcePathResolver resolver;
@@ -53,20 +50,19 @@ public class OcamlCCompileStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder()
-        .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
-        .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
+    ImmutableList.Builder<String> cmd =
+        ImmutableList.<String>builder()
+            .addAll(args.ocamlCompiler.getCommandPrefix(resolver))
+            .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
 
     if (args.stdlib.isPresent()) {
       cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, args.stdlib.get());
     }
 
-    return cmd
-        .add("-cc", args.cCompiler.get(0))
+    return cmd.add("-cc", args.cCompiler.get(0))
         .addAll(
             MoreIterables.zipAndConcat(
-                Iterables.cycle("-ccopt"),
-                args.cCompiler.subList(1, args.cCompiler.size())))
+                Iterables.cycle("-ccopt"), args.cCompiler.subList(1, args.cCompiler.size())))
         .add("-c")
         .add("-annot")
         .add("-bin-annot")
@@ -124,5 +120,4 @@ public class OcamlCCompileStep extends ShellStep {
       sink.setReflectively("includes", includes);
     }
   }
-
 }

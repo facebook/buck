@@ -28,7 +28,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
@@ -59,8 +58,8 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
     this.nativeCompileDeps = nativeCompileDeps;
     this.bytecodeCompileDeps = bytecodeCompileDeps;
     this.bytecodeLinkDeps = bytecodeLinkDeps;
-    staticLibraryTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(
-        compileParams.getBuildTarget());
+    staticLibraryTarget =
+        OcamlRuleBuilder.createStaticLibraryBuildTarget(compileParams.getBuildTarget());
   }
 
   private NativeLinkableInput getLinkableInput(boolean isBytecode) {
@@ -76,14 +75,10 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
             new ExplicitBuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
-                ? OcamlBuildContext.getBytecodeOutputPath(
-                    staticBuildTarget,
-                    getProjectFilesystem(),
-                    /* isLibrary */ true)
-                : OcamlBuildContext.getNativeOutputPath(
-                    staticBuildTarget,
-                    getProjectFilesystem(),
-                    /* isLibrary */ true))));
+                    ? OcamlBuildContext.getBytecodeOutputPath(
+                        staticBuildTarget, getProjectFilesystem(), /* isLibrary */ true)
+                    : OcamlBuildContext.getNativeOutputPath(
+                        staticBuildTarget, getProjectFilesystem(), /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
     for (SourcePath objFile : objFiles) {
@@ -106,9 +101,7 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
   @Override
   public Path getIncludeLibDir() {
     return OcamlBuildContext.getCompileNativeOutputDir(
-        staticLibraryTarget.getUnflavoredBuildTarget(),
-        getProjectFilesystem(),
-        true);
+        staticLibraryTarget.getUnflavoredBuildTarget(), getProjectFilesystem(), true);
   }
 
   @Override
@@ -130,5 +123,4 @@ class OcamlStaticLibrary extends NoopBuildRule implements OcamlLibrary {
   public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
     return bytecodeLinkDeps;
   }
-
 }
