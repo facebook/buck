@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -57,9 +56,8 @@ public class CsharpLibraryCompile extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     Path csc = new ExecutableFinder().getExecutable(CSC, context.getEnvironment());
-    DotnetFramework netFramework = DotnetFramework.resolveFramework(
-        context.getEnvironment(),
-        version);
+    DotnetFramework netFramework =
+        DotnetFramework.resolveFramework(context.getEnvironment(), version);
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(csc.toAbsolutePath().toString())

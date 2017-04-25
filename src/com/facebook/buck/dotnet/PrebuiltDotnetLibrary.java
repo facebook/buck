@@ -29,7 +29,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
@@ -38,31 +37,26 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
   private final SourcePath assembly;
 
   protected PrebuiltDotnetLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePath assembly) {
+      BuildRuleParams params, SourcePathResolver resolver, SourcePath assembly) {
     super(params, resolver);
 
     this.assembly = assembly;
 
     Path resolvedPath = resolver.getAbsolutePath(assembly);
-    this.output = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
-        .resolve(resolvedPath.getFileName());
+    this.output =
+        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
+            .resolve(resolvedPath.getFileName());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(RmStep.of(getProjectFilesystem(), output));
     steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
     steps.add(
-        CopyStep.forFile(
-            getProjectFilesystem(),
-            getResolver().getAbsolutePath(assembly),
-            output));
+        CopyStep.forFile(getProjectFilesystem(), getResolver().getAbsolutePath(assembly), output));
 
     return steps.build();
   }

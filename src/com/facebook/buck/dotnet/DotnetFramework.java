@@ -23,7 +23,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -50,8 +49,7 @@ public class DotnetFramework {
   }
 
   public static DotnetFramework resolveFramework(
-      ImmutableMap<String, String> env,
-      FrameworkVersion version) {
+      ImmutableMap<String, String> env, FrameworkVersion version) {
     return resolveFramework(FileSystems.getDefault(), env, version);
   }
 
@@ -61,9 +59,7 @@ public class DotnetFramework {
     if (!Files.exists(toReturn)) {
       throw new HumanReadableException(
           "Unable to find dll in framework version %s under %s: %s",
-          version,
-          frameworkDir,
-          dllName);
+          version, frameworkDir, dllName);
     }
 
     return toReturn;
@@ -90,14 +86,11 @@ public class DotnetFramework {
   // TODO(t8390117): Use official Win32 APIs to find the framework
   @VisibleForTesting
   static DotnetFramework resolveFramework(
-      FileSystem osFilesystem,
-      ImmutableMap<String, String> env,
-      FrameworkVersion version) {
+      FileSystem osFilesystem, ImmutableMap<String, String> env, FrameworkVersion version) {
 
     Path programFiles = findProgramFiles(osFilesystem, env);
-    Path baseDir = programFiles.resolve("Reference Assemblies")
-        .resolve("Microsoft")
-        .resolve("Framework");
+    Path baseDir =
+        programFiles.resolve("Reference Assemblies").resolve("Microsoft").resolve("Framework");
 
     Path frameworkDir;
     switch (version) {
@@ -112,21 +105,18 @@ public class DotnetFramework {
         frameworkDir = baseDir.resolve(".NETFramework").resolve(version.getDirName());
         break;
 
-      // Which we should never reach
+        // Which we should never reach
       default:
         throw new HumanReadableException("Unknown .net framework version: %s", version);
     }
 
     if (!Files.exists(frameworkDir)) {
       throw new HumanReadableException(
-          "Resolved framework dir for %s does not exist: %s",
-          version,
-          frameworkDir);
+          "Resolved framework dir for %s does not exist: %s", version, frameworkDir);
     }
     if (!Files.isDirectory(frameworkDir)) {
       throw new HumanReadableException(
-          "Resolved framework directory is not a directory: %s",
-          frameworkDir);
+          "Resolved framework directory is not a directory: %s", frameworkDir);
     }
 
     return new DotnetFramework(version, frameworkDir);

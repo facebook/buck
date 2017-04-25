@@ -30,7 +30,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class CsharpLibraryDescription implements Description<CsharpLibraryDescription.Arg> {
@@ -60,12 +59,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
     String suggestedOut = args.dllName.orElse(params.getBuildTarget().getShortName() + ".dll");
 
     return new CsharpLibrary(
-        params,
-        suggestedOut,
-        args.srcs,
-        refsAsRules.build(),
-        args.resources,
-        args.frameworkVer);
+        params, suggestedOut, args.srcs, refsAsRules.build(), args.resources, args.frameworkVer);
   }
 
   @SuppressFieldNotInitialized
