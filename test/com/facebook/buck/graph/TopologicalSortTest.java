@@ -21,10 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.List;
+import org.junit.Test;
 
 public class TopologicalSortTest {
 

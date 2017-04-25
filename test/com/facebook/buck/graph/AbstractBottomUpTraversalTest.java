@@ -19,12 +19,10 @@ package com.facebook.buck.graph;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import org.junit.Test;
 
 public class AbstractBottomUpTraversalTest {
 
@@ -53,18 +51,17 @@ public class AbstractBottomUpTraversalTest {
     mutableGraph.addEdge("D", "F");
     mutableGraph.addEdge("E", "F");
 
-    DirectedAcyclicGraph<String> immutableGraph =
-        new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> immutableGraph = new DirectedAcyclicGraph<>(mutableGraph);
 
     final List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
-      @Override
-      public void visit(String node) {
-        visitedNodes.add(node);
-      }
-    };
+          @Override
+          public void visit(String node) {
+            visitedNodes.add(node);
+          }
+        };
     traversal.traverse();
 
     assertEquals("F", visitedNodes.get(0));
@@ -98,29 +95,28 @@ public class AbstractBottomUpTraversalTest {
     mutableGraph.addEdge("Y", "Z");
     mutableGraph.addEdge("V", "A");
 
-    DirectedAcyclicGraph<String> immutableGraph =
-        new DirectedAcyclicGraph<String>(mutableGraph);
+    DirectedAcyclicGraph<String> immutableGraph = new DirectedAcyclicGraph<String>(mutableGraph);
 
     final List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
-      @Override
-      public void visit(String node) {
-        visitedNodes.add(node);
-      }
-    };
+          @Override
+          public void visit(String node) {
+            visitedNodes.add(node);
+          }
+        };
     traversal.traverse();
 
-    assertEquals("Z and A have no depdencies, so they should be visited first.",
+    assertEquals(
+        "Z and A have no depdencies, so they should be visited first.",
         ImmutableSet.of("Z", "A"),
         ImmutableSet.copyOf(visitedNodes.subList(0, 2)));
     assertEquals("Y", visitedNodes.get(2));
     assertEquals("X", visitedNodes.get(3));
     assertEquals("W", visitedNodes.get(4));
-    assertEquals("V should be visited last, after all of its dependencies.",
-        "V",
-        visitedNodes.get(5));
+    assertEquals(
+        "V should be visited last, after all of its dependencies.", "V", visitedNodes.get(5));
 
     assertEquals(nodes, ImmutableSet.copyOf(visitedNodes));
   }

@@ -22,11 +22,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
 
 public class AbstractBreadthFirstTraversalTest {
 
@@ -64,16 +62,8 @@ public class AbstractBreadthFirstTraversalTest {
 
     assertEquals(
         "Dependencies should be explored breadth-first, using lexicographic ordering to break ties",
-        ImmutableList.of(initialNode,
-            nodeF,
-            nodeG,
-            nodeH,
-            nodeI,
-            nodeD,
-            nodeE,
-            nodeB,
-            nodeC,
-            nodeA),
+        ImmutableList.of(
+            initialNode, nodeF, nodeG, nodeH, nodeI, nodeD, nodeE, nodeB, nodeC, nodeA),
         nodeTraversalOrder);
   }
 
@@ -107,19 +97,15 @@ public class AbstractBreadthFirstTraversalTest {
       @Override
       public ImmutableSet<FakeNode> visit(FakeNode node) {
         nodeTraversalOrder.add(node);
-        return ImmutableSet.copyOf(Iterables.filter(node.getDeps(),
-            input -> Integer.parseInt(input.getName()) % 2 == 0));
+        return ImmutableSet.copyOf(
+            Iterables.filter(node.getDeps(), input -> Integer.parseInt(input.getName()) % 2 == 0));
       }
     }.start();
 
     assertEquals(
-        "Dependencies should be explored breadth-first, only containing nodes whose node name is " +
-            "an even number",
-        ImmutableList.of(initialNode,
-            node6,
-            node8,
-            node4,
-            node2),
+        "Dependencies should be explored breadth-first, only containing nodes whose node name is "
+            + "an even number",
+        ImmutableList.of(initialNode, node6, node8, node4, node2),
         nodeTraversalOrder);
   }
 

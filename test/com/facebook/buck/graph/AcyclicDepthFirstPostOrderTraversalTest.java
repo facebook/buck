@@ -22,20 +22,17 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
 
-/**
- * Unit test for {@link AcyclicDepthFirstPostOrderTraversal}.
- */
+/** Unit test for {@link AcyclicDepthFirstPostOrderTraversal}. */
 public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /**
    * Verifies that a traversal of a well-formed DAG proceeds as expected.
+   *
    * <pre>
    *         A
    *       /   \
@@ -66,6 +63,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /**
    * Creates the following graph and verifies that the cycle is found.
+   *
    * <pre>
    *         A
    *       /   \
@@ -75,6 +73,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    *   \   /            |
    *     F --------------
    * </pre>
+   *
    * Note that there is a circular dependency from F -> C -> E -> F.
    */
   @Test
@@ -98,9 +97,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     }
   }
 
-  /**
-   * Ensures that a cycle is detected in a trivial graph of a single node that points to itself.
-   */
+  /** Ensures that a cycle is detected in a trivial graph of a single node that points to itself. */
   @Test
   public void testTrivialCycle() throws IOException, InterruptedException {
     Multimap<String, String> graph = LinkedListMultimap.create();
@@ -117,6 +114,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /**
    * Verifies that the reported cycle mentions only A, B, and D, but not C or E.
+   *
    * <pre>
    *         A <---|
    *       /       |
@@ -148,6 +146,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /**
    * Verifies that traverse() handles multiple initial nodes correctly.
+   *
    * <pre>
    *         A
    *       /
@@ -155,6 +154,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    *   / | \
    * C   D   E
    * </pre>
+   *
    * @throws CycleException
    */
   @Test

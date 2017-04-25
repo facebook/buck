@@ -21,10 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.Set;
+import org.junit.Test;
 
 public class MutableDirectedGraphTest {
 
@@ -112,9 +110,7 @@ public class MutableDirectedGraphTest {
     graph.addEdge("F", "F");
     assertEquals(
         ImmutableSet.of(
-            ImmutableSet.of("A", "B", "C"),
-            ImmutableSet.of("D", "E"),
-            ImmutableSet.of("F")),
+            ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F")),
         graph.findCycles());
   }
 

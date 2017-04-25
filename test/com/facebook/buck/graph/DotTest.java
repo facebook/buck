@@ -22,12 +22,10 @@ import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import org.junit.Test;
 
 public class DotTest {
 
@@ -43,12 +41,8 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot = new Dot<String>(
-        graph,
-        "the_graph",
-        Functions.identity(),
-        Functions.identity(),
-        output);
+    Dot<String> dot =
+        new Dot<String>(graph, "the_graph", Functions.identity(), Functions.identity(), output);
     dot.writeOutput();
 
     String dotGraph = output.toString();
@@ -82,12 +76,13 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot = new Dot<String>(
-        graph,
-        "the_graph",
-        Functions.identity(),
-        name -> name.equals("A") ? "android_library" : "java_library",
-        output);
+    Dot<String> dot =
+        new Dot<String>(
+            graph,
+            "the_graph",
+            Functions.identity(),
+            name -> name.equals("A") ? "android_library" : "java_library",
+            output);
     dot.writeOutput();
 
     String dotGraph = output.toString();
