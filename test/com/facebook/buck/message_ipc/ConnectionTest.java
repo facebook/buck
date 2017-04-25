@@ -22,35 +22,36 @@ import com.facebook.buck.shell.FakeWorkerProcess;
 import com.facebook.buck.shell.WorkerJobResult;
 import com.facebook.buck.shell.WorkerProcess;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class ConnectionTest {
 
   private interface RemoteInterface {
     String doString(String arg);
+
     int doInt(int arg);
+
     boolean doBoolean(String arg1, double arg2);
   }
 
   @Test
   public void testConnection() throws Exception {
     MessageSerializer messageSerializer = new MessageSerializer();
-    WorkerProcess workerProcess = new FakeWorkerProcess(
-        ImmutableMap.of(
-            "{\"type\":\"InvocationMessage\",\"name\":\"doString\",\"args\":[\"input\"]}",
-            WorkerJobResult.of(
-                0,
-                Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":\"output\"}"),
-                Optional.empty()),
-            "{\"type\":\"InvocationMessage\",\"name\":\"doInt\",\"args\":[4]}",
-            WorkerJobResult.of(
-                0,
-                Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":42}"),
-                Optional.empty())));
+    WorkerProcess workerProcess =
+        new FakeWorkerProcess(
+            ImmutableMap.of(
+                "{\"type\":\"InvocationMessage\",\"name\":\"doString\",\"args\":[\"input\"]}",
+                WorkerJobResult.of(
+                    0,
+                    Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":\"output\"}"),
+                    Optional.empty()),
+                "{\"type\":\"InvocationMessage\",\"name\":\"doInt\",\"args\":[4]}",
+                WorkerJobResult.of(
+                    0,
+                    Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":42}"),
+                    Optional.empty())));
     workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
@@ -68,13 +69,14 @@ public class ConnectionTest {
   @Test
   public void testConnectionWithMultipleArgs() throws Exception {
     MessageSerializer messageSerializer = new MessageSerializer();
-    WorkerProcess workerProcess = new FakeWorkerProcess(
-        ImmutableMap.of(
-            "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[\"input\",42.1234]}",
-            WorkerJobResult.of(
-                0,
-                Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":false}"),
-                Optional.empty())));
+    WorkerProcess workerProcess =
+        new FakeWorkerProcess(
+            ImmutableMap.of(
+                "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[\"input\",42.1234]}",
+                WorkerJobResult.of(
+                    0,
+                    Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":false}"),
+                    Optional.empty())));
     workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
@@ -89,13 +91,14 @@ public class ConnectionTest {
   @Test
   public void testPassingNull() throws Exception {
     MessageSerializer messageSerializer = new MessageSerializer();
-    WorkerProcess workerProcess = new FakeWorkerProcess(
-        ImmutableMap.of(
-            "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[null,42.1234]}",
-            WorkerJobResult.of(
-                0,
-                Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":true}"),
-                Optional.empty())));
+    WorkerProcess workerProcess =
+        new FakeWorkerProcess(
+            ImmutableMap.of(
+                "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[null,42.1234]}",
+                WorkerJobResult.of(
+                    0,
+                    Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":true}"),
+                    Optional.empty())));
     workerProcess.ensureLaunchAndHandshake();
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 

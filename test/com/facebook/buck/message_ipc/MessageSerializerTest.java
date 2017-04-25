@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -48,8 +47,7 @@ public class MessageSerializerTest {
 
   @Test
   public void testDeserializeInvocationMessageWithNullArgs() throws Exception {
-    String value =
-        "{\"type\":\"InvocationMessage\",\"name\":\"myMethod\",\"args\":[null,100500]}";
+    String value = "{\"type\":\"InvocationMessage\",\"name\":\"myMethod\",\"args\":[null,100500]}";
     MessageSerializer serializer = new MessageSerializer();
     InvocationMessage message = serializer.deserializeInvocation(value);
     assertThat(message.getMethodName(), Matchers.equalToObject("myMethod"));
@@ -70,15 +68,11 @@ public class MessageSerializerTest {
 
   @Test
   public void testDeserializeReturnResultMessage() throws Exception {
-    String value =
-        "{\"type\":\"ReturnResultMessage\",\"value\":[{\"some_value\":false}, 42]}";
+    String value = "{\"type\":\"ReturnResultMessage\",\"value\":[{\"some_value\":false}, 42]}";
     MessageSerializer serializer = new MessageSerializer();
     ReturnResultMessage message = serializer.deserializeResult(value);
     assertThat(
         message.getValue(),
-        Matchers.equalToObject(
-            ImmutableList.of(
-                ImmutableMap.of("some_value", false),
-                42)));
+        Matchers.equalToObject(ImmutableList.of(ImmutableMap.of("some_value", false), 42)));
   }
 }
