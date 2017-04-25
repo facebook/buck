@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event;
 
-
 import java.util.Optional;
 
 public class ExperimentEvent extends AbstractBuckEvent {
@@ -27,11 +26,7 @@ public class ExperimentEvent extends AbstractBuckEvent {
   private final Optional<String> content;
 
   public ExperimentEvent(
-      String tag,
-      String variant,
-      String propertyName,
-      Long value,
-      String content) {
+      String tag, String variant, String propertyName, Long value, String content) {
     super(EventKey.unique());
     this.tag = tag;
     this.variant = variant;
@@ -69,5 +64,4 @@ public class ExperimentEvent extends AbstractBuckEvent {
   public Optional<String> getContent() {
     return content;
   }
-
 }

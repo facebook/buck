@@ -18,8 +18,7 @@ package com.facebook.buck.event;
 
 import com.google.common.base.Objects;
 
-public abstract class UninstallEvent
-    extends AbstractBuckEvent
+public abstract class UninstallEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   private final String packageName;
 

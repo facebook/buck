@@ -16,8 +16,7 @@
 package com.facebook.buck.event;
 
 /**
- * BroadcastEvents represents events that are being broadcasted by
- * {@link com.facebook.buck.event.listener.BroadcastEventListener} to multiple event buses.
+ * BroadcastEvents represents events that are being broadcasted by {@link
+ * com.facebook.buck.event.listener.BroadcastEventListener} to multiple event buses.
  */
-public interface BroadcastEvent extends BuckEvent {
-}
+public interface BroadcastEvent extends BuckEvent {}

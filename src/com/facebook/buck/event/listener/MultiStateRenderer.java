@@ -20,8 +20,12 @@ import com.google.common.collect.ImmutableList;
 
 public interface MultiStateRenderer {
   String getExecutorCollectionLabel();
+
   int getExecutorCount();
+
   ImmutableList<Long> getSortedExecutorIds(boolean sortByTime);
+
   String renderStatusLine(long executorID, StringBuilder lineBuilder);
+
   String renderShortStatus(long executorID);
 }

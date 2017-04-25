@@ -17,8 +17,8 @@
 package com.facebook.buck.event;
 
 /**
- * Event that contains the duration of time Buck took to perform initializations before command
- * is about to be executed, starting from call to main().
+ * Event that contains the duration of time Buck took to perform initializations before command is
+ * about to be executed, starting from call to main().
  */
 public class BuckInitializationDurationEvent extends AbstractBuckEvent {
 
@@ -26,17 +26,13 @@ public class BuckInitializationDurationEvent extends AbstractBuckEvent {
 
   private final long duration;
 
-  /**
-   * @param duration Duration in milliseconds.
-   */
+  /** @param duration Duration in milliseconds. */
   public BuckInitializationDurationEvent(long duration) {
     super(EventKey.unique());
     this.duration = duration;
   }
 
-  /**
-   * @return Duration in milliseconds.
-   */
+  /** @return Duration in milliseconds. */
   public long getDuration() {
     return duration;
   }

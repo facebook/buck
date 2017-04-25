@@ -16,13 +16,12 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildId;
-
 import java.io.Closeable;
 
 /**
  * Thin wrapper around guava event bus.
  *
- * This interface exists only to break circular Buck target dependencies.
+ * <p>This interface exists only to break circular Buck target dependencies.
  */
 public interface BuckEventBus extends Closeable {
   void post(BuckEvent event);

@@ -18,9 +18,7 @@ package com.facebook.buck.event;
 
 import com.google.common.collect.ImmutableList;
 
-/**
- * Events tracking the start and stop of a buck command.
- */
+/** Events tracking the start and stop of a buck command. */
 public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final String commandName;
   private final ImmutableList<String> args;
@@ -68,10 +66,8 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     return String.format("%s, isDaemon: %b", commandName, isDaemon);
   }
 
-  public static Started started(String commandName,
-      ImmutableList<String> args,
-      boolean isDaemon,
-      long pid) {
+  public static Started started(
+      String commandName, ImmutableList<String> args, boolean isDaemon, long pid) {
     return new Started(commandName, args, isDaemon, pid);
   }
 
@@ -98,7 +94,8 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     private final int exitCode;
 
     private Finished(Started started, int exitCode) {
-      super(started.getEventKey(),
+      super(
+          started.getEventKey(),
           started.getCommandName(),
           started.getArgs(),
           started.isDaemon(),
@@ -116,11 +113,12 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     }
   }
 
-  public static class Interrupted extends CommandEvent implements BroadcastEvent{
+  public static class Interrupted extends CommandEvent implements BroadcastEvent {
     private final int exitCode;
 
     private Interrupted(Started started, int exitCode) {
-      super(started.getEventKey(),
+      super(
+          started.getEventKey(),
           started.getCommandName(),
           started.getArgs(),
           started.isDaemon(),

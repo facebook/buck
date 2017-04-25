@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,15 +38,11 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
       long currentTimeMs,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       BuildRuleThreadTracker buildRuleThreadTracker) {
-    this.threadInformationMap = getThreadInformationMap(
-        currentTimeMs,
-        runningStepsByThread,
-        buildRuleThreadTracker);
-    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
-        ansi,
-        formatTimeFunction,
-        currentTimeMs,
-        threadInformationMap);
+    this.threadInformationMap =
+        getThreadInformationMap(currentTimeMs, runningStepsByThread, buildRuleThreadTracker);
+    this.commonThreadStateRenderer =
+        new CommonThreadStateRenderer(
+            ansi, formatTimeFunction, currentTimeMs, threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
@@ -69,8 +64,10 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
       long elapsedTimeMs = 0;
       if (buildRuleEvent.isPresent()) {
         buildTarget = Optional.of(buildRuleEvent.get().getBuildRule().getBuildTarget());
-        elapsedTimeMs = currentTimeMs - buildRuleEvent.get().getTimestamp() +
-            buildRuleEvent.get().getDuration().getWallMillisDuration();
+        elapsedTimeMs =
+            currentTimeMs
+                - buildRuleEvent.get().getTimestamp()
+                + buildRuleEvent.get().getDuration().getWallMillisDuration();
       }
       threadInformationMapBuilder.put(
           threadId,

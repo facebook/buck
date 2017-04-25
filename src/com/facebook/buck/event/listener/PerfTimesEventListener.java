@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.eventbus.Subscribe;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -49,17 +48,14 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   /**
    * @param eventBus When we finish gather all data points, we will post the result as event back
-   *                 into event bus.
-   * @param executionEnvironment We need this in order to get Python_init_time, as it is provided
-   *                             by our Python wrapper.
+   *     into event bus.
+   * @param executionEnvironment We need this in order to get Python_init_time, as it is provided by
+   *     our Python wrapper.
    */
-  public PerfTimesEventListener(
-      BuckEventBus eventBus,
-      ExecutionEnvironment executionEnvironment) {
+  public PerfTimesEventListener(BuckEventBus eventBus, ExecutionEnvironment executionEnvironment) {
     this.eventBus = eventBus;
-    perfTimesStatsBuilder.setPythonTimeMs(Long.valueOf(executionEnvironment.getenv(
-        "BUCK_PYTHON_SPACE_INIT_TIME",
-        "0")));
+    perfTimesStatsBuilder.setPythonTimeMs(
+        Long.valueOf(executionEnvironment.getenv("BUCK_PYTHON_SPACE_INIT_TIME", "0")));
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 
@@ -116,9 +112,7 @@ public class PerfTimesEventListener implements BuckEventListener {
     eventBus.post(PerfTimesEvent.complete(perfTimesStatsBuilder.build()));
   }
 
-  /**
-   * Helper method, returns the time difference from last invocation of this method.
-   */
+  /** Helper method, returns the time difference from last invocation of this method. */
   private long getTimeDifferenceSinceLastEventToEvent(AbstractBuckEvent event) {
     long diff = event.getTimestamp() - buildPhasesLastEvent.get();
     buildPhasesLastEvent.set(event.getTimestamp());
@@ -142,18 +136,14 @@ public class PerfTimesEventListener implements BuckEventListener {
       return new PerfTimesEvent.Update(stats);
     }
 
-    /**
-     * This event is to be used when all of the steps of {@link PerfTimesStats} are present.
-     */
+    /** This event is to be used when all of the steps of {@link PerfTimesStats} are present. */
     static class Complete extends PerfTimesEvent {
       Complete(PerfTimesStats stats) {
         super(stats, "PerfTimesStatsEvent.Complete");
       }
     }
 
-    /**
-     * This event is to be used as an update, expect some of the fields to be empty.
-     */
+    /** This event is to be used as an update, expect some of the fields to be empty. */
     static class Update extends PerfTimesEvent {
       Update(PerfTimesStats stats) {
         super(stats, "PerfTimesStatsEvent.Update");

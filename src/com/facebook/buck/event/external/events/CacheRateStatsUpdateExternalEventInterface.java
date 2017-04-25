@@ -16,41 +16,29 @@
 
 package com.facebook.buck.event.external.events;
 
-/**
- * Sent to update the WebSocket clients about cache misses and errors.
- */
+/** Sent to update the WebSocket clients about cache misses and errors. */
 public interface CacheRateStatsUpdateExternalEventInterface extends BuckEventExternalInterface {
   String EVENT_NAME = "CacheRateStatsUpdateEvent";
 
-  /**
-   * @return number of cache misses.
-   */
+  /** @return number of cache misses. */
   int getCacheMissCount();
 
-  /**
-   * @return number of cache errors.
-   */
+  /** @return number of cache errors. */
   int getCacheErrorCount();
 
-  /**
-   * @return cache miss rate, in percent, as displayed on the buck console.
-   */
+  /** @return cache miss rate, in percent, as displayed on the buck console. */
   double getCacheMissRate();
 
-  /**
-   * @return cache error rate, in percent, as displayed on the buck console.
-   */
+  /** @return cache error rate, in percent, as displayed on the buck console. */
   double getCacheErrorRate();
 
   /**
-   * @return number of cache hits. This excludes
-   * {@link com.facebook.buck.artifact_cache.CacheResultType#IGNORED} and
-   * {@link com.facebook.buck.artifact_cache.CacheResultType#LOCAL_KEY_UNCHANGED_HIT} result types.
+   * @return number of cache hits. This excludes {@link
+   *     com.facebook.buck.artifact_cache.CacheResultType#IGNORED} and {@link
+   *     com.facebook.buck.artifact_cache.CacheResultType#LOCAL_KEY_UNCHANGED_HIT} result types.
    */
   int getCacheHitCount();
 
-  /**
-   * @return number of rules that have been processed.
-   */
+  /** @return number of rules that have been processed. */
   int getUpdatedRulesCount();
 }

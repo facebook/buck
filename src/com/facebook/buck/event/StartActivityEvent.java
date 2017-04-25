@@ -19,11 +19,8 @@ package com.facebook.buck.event;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 
-/**
- * Events for timing the starting of android events.
- */
-public abstract class StartActivityEvent
-    extends AbstractBuckEvent
+/** Events for timing the starting of android events. */
+public abstract class StartActivityEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   private final BuildTarget buildTarget;
   private final String activityName;

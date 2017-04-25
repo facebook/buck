@@ -17,20 +17,17 @@
 package com.facebook.buck.event.external.events;
 
 /**
- * Describes the progress made by buck with the operations described below.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes the progress made by buck with the operations described below. This type is intended to
+ * be used by external applications (like the Intellij Buck plugin) to deserialize events coming
+ * from the webserver.
  */
 public interface ProgressEventInterface extends BuckEventExternalInterface {
   // Sent when we make parsing progress
   String PARSING_PROGRESS_UPDATED = "ParsingProgressUpdated";
   // Sent when we make project generation progress
-  String PROJECT_GENERATION_PROGRESS_UPDATED =
-      "ProjectGenerationProgressUpdated";
+  String PROJECT_GENERATION_PROGRESS_UPDATED = "ProjectGenerationProgressUpdated";
   // Sent when we make build progress
   String BUILD_PROGRESS_UPDATED = "BuildProgressUpdated";
-  /**
-   * @return the current progress value for any of the build, parse or project generation events
-   */
+  /** @return the current progress value for any of the build, parse or project generation events */
   double getProgressValue();
 }

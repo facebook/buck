@@ -27,10 +27,9 @@ import com.facebook.buck.rules.BuildEvent;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
-
 /**
- * In charge for monitoring builds that store artifacts to the remote cache and computing
- * stateful cache upload stats.
+ * In charge for monitoring builds that store artifacts to the remote cache and computing stateful
+ * cache upload stats.
  */
 public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
@@ -48,13 +47,13 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
   private long totalUploadedBytes;
   private long totalNetworkTimeMillis;
 
-  public HttpArtifactCacheUploadListener (BuckEventBus eventBus, int uploadThreadCount) {
+  public HttpArtifactCacheUploadListener(BuckEventBus eventBus, int uploadThreadCount) {
     this.eventBus = eventBus;
     this.uploadThreadCount = uploadThreadCount;
     this.outstandingUploads = 0;
-    this.lastUploadStartMillis =  -1;
-    this.firstUploadMillis =  -1;
-    this.buildFinishMillis =  -1;
+    this.lastUploadStartMillis = -1;
+    this.firstUploadMillis = -1;
+    this.buildFinishMillis = -1;
     this.lastUploadFinishMillis = 0;
     this.hasCounterBeenSent = false;
     this.artifactCount = 0;
@@ -103,8 +102,10 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
   }
 
   private synchronized void sendCounterSnapshotIfFinished() {
-    if (!hasCounterBeenSent  && artifactCount > 0 && outstandingUploads == 0 &&
-        buildFinishMillis != -1) {
+    if (!hasCounterBeenSent
+        && artifactCount > 0
+        && outstandingUploads == 0
+        && buildFinishMillis != -1) {
       hasCounterBeenSent = true;
       CounterSnapshot snapshot = generateCounterSnapshot().build();
       eventBus.post(new CountersSnapshotEvent(Lists.newArrayList(snapshot)));
@@ -112,12 +113,12 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
   }
 
   private CounterSnapshot.Builder generateCounterSnapshot() {
-    CounterSnapshot.Builder builder = CounterSnapshot
-        .builder()
-        .setCategory("buck_http_cache_upload_stats")
-        .putValues("upload_thread_count", uploadThreadCount)
-        .putValues("artifact_count", artifactCount)
-        .putValues("total_uploaded_bytes", totalUploadedBytes);
+    CounterSnapshot.Builder builder =
+        CounterSnapshot.builder()
+            .setCategory("buck_http_cache_upload_stats")
+            .putValues("upload_thread_count", uploadThreadCount)
+            .putValues("artifact_count", artifactCount)
+            .putValues("total_uploaded_bytes", totalUploadedBytes);
 
     if (totalNetworkTimeMillis != -1) {
       builder.putValues("total_network_time_millis", totalNetworkTimeMillis);
@@ -125,12 +126,12 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
     if (totalNetworkTimeMillis > 0) {
       builder.putValues(
-          "average_bytes_per_second",
-          (1000 * totalUploadedBytes) / totalNetworkTimeMillis);
+          "average_bytes_per_second", (1000 * totalUploadedBytes) / totalNetworkTimeMillis);
     }
 
     if (buildFinishMillis != -1 && lastUploadFinishMillis != -1) {
-      builder.putValues("elapsed_upload_time_after_build_finished_millis",
+      builder.putValues(
+          "elapsed_upload_time_after_build_finished_millis",
           buildFinishMillis - lastUploadFinishMillis);
     }
 

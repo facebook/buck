@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AtomicDouble;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.annotation.Nullable;
 
 public class ProgressEstimator {
@@ -48,13 +46,11 @@ public class ProgressEstimator {
       "expectedNumberOfGeneratedProjectFiles";
   public static final String PROGRESS_ESTIMATIONS_JSON = ".progressestimations.json";
 
-  @Nullable
-  private String command;
+  @Nullable private String command;
 
   private BuckEventBus buckEventBus;
 
-  @Nullable
-  private Map<String, Map<String, Number>> expectationsStorage;
+  @Nullable private Map<String, Map<String, Number>> expectationsStorage;
 
   private final AtomicInteger numberOfParsedRules = new AtomicInteger(0);
   private final AtomicInteger numberOfParsedBUCKFiles = new AtomicInteger(0);
@@ -72,9 +68,7 @@ public class ProgressEstimator {
   private final AtomicDouble projectGenerationProgress = new AtomicDouble(-1.0);
   private final AtomicDouble buildProgress = new AtomicDouble(-1.0);
 
-  public ProgressEstimator(
-      Path storageFile,
-      BuckEventBus buckEventBus) {
+  public ProgressEstimator(Path storageFile, BuckEventBus buckEventBus) {
     this.storageFile = storageFile;
     this.command = null;
     this.buckEventBus = buckEventBus;
@@ -158,8 +152,8 @@ public class ProgressEstimator {
     preloadEstimationsFromStorageFile();
     Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
     if (commandEstimations != null) {
-      if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_RULES) &&
-          commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES)) {
+      if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_RULES)
+          && commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES)) {
         expectedNumberOfParsedRules.set(
             commandEstimations.get(EXPECTED_NUMBER_OF_PARSED_RULES).intValue());
         expectedNumberOfParsedBUCKFiles.set(
@@ -178,9 +172,10 @@ public class ProgressEstimator {
     if (Files.exists(storageFile)) {
       try {
         byte[] bytes = Files.readAllBytes(storageFile);
-        map = ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(bytes),
-            new TypeReference<HashMap<String, Map<String, Number>>>(){});
+        map =
+            ObjectMappers.READER.readValue(
+                ObjectMappers.createParser(bytes),
+                new TypeReference<HashMap<String, Map<String, Number>>>() {});
       } catch (Exception e) {
         LOG.warn("Unable to load progress estimations from file: " + e.getMessage());
       }
@@ -208,8 +203,7 @@ public class ProgressEstimator {
     Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
     if (commandEstimations != null) {
       commandEstimations.put(
-          EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES,
-          numberOfGeneratedProjectFiles);
+          EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES, numberOfGeneratedProjectFiles);
       saveEstimatedValues();
     }
   }
@@ -217,12 +211,8 @@ public class ProgressEstimator {
   private void updateEstimatedBuckFilesParsingValues(String aCommand) {
     Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
     if (commandEstimations != null) {
-      commandEstimations.put(
-          EXPECTED_NUMBER_OF_PARSED_RULES,
-          numberOfParsedRules);
-      commandEstimations.put(
-          EXPECTED_NUMBER_OF_PARSED_BUCK_FILES,
-          numberOfParsedBUCKFiles);
+      commandEstimations.put(EXPECTED_NUMBER_OF_PARSED_RULES, numberOfParsedRules);
+      commandEstimations.put(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES, numberOfParsedBUCKFiles);
       saveEstimatedValues();
     }
   }
@@ -234,9 +224,9 @@ public class ProgressEstimator {
     try {
       Files.createDirectories(storageFile.getParent());
     } catch (IOException e) {
-      LOG.warn("Unable to make path for storage %s: %s",
-          storageFile.toString(),
-          e.getLocalizedMessage());
+      LOG.warn(
+          "Unable to make path for storage %s: %s",
+          storageFile.toString(), e.getLocalizedMessage());
       return;
     }
     try {
@@ -247,8 +237,8 @@ public class ProgressEstimator {
   }
 
   /**
-   * @return Estimated progress of processing files stage. If return value is absent,
-   * it's impossible to compute the estimated progress.
+   * @return Estimated progress of processing files stage. If return value is absent, it's
+   *     impossible to compute the estimated progress.
    */
   public Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
     return wrapValueIntoOptional(processingFilesProgress.get());
@@ -270,10 +260,8 @@ public class ProgressEstimator {
     if (expectedNumberRules == 0.0 || expectedNumberOfBUCKFiles == 0.0) {
       newValue = -1.0;
     } else {
-      double rulesProgress = numberOfParsedRules.doubleValue() /
-          expectedNumberRules;
-      double filesProgress = numberOfParsedBUCKFiles.doubleValue() /
-          expectedNumberOfBUCKFiles;
+      double rulesProgress = numberOfParsedRules.doubleValue() / expectedNumberRules;
+      double filesProgress = numberOfParsedBUCKFiles.doubleValue() / expectedNumberOfBUCKFiles;
       newValue = Math.min((rulesProgress + filesProgress) / 2.0, 1.0);
       newValue = Math.floor(newValue * 100.0) / 100.0;
     }
@@ -285,8 +273,8 @@ public class ProgressEstimator {
   }
 
   /**
-   * @return Estimated progress of generating projects stage. If return value is absent,
-   * it's impossible to compute the estimated progress.
+   * @return Estimated progress of generating projects stage. If return value is absent, it's
+   *     impossible to compute the estimated progress.
    */
   public Optional<Double> getEstimatedProgressOfGeneratingProjectFiles() {
     return wrapValueIntoOptional(projectGenerationProgress.get());
@@ -310,8 +298,8 @@ public class ProgressEstimator {
   }
 
   /**
-   * @return Approximated progress of current build.
-   * Returns absent value if number of rules wasn't determined.
+   * @return Approximated progress of current build. Returns absent value if number of rules wasn't
+   *     determined.
    */
   public Optional<Double> getApproximateBuildProgress() {
     return wrapValueIntoOptional(buildProgress.get());

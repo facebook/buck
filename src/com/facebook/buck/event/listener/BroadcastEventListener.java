@@ -18,10 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BroadcastEvent;
 import com.facebook.buck.event.BuckEventBus;
-
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -37,8 +35,8 @@ public class BroadcastEventListener {
 
   public synchronized void broadcast(BroadcastEvent event) {
     if (eventBuses.isEmpty()) {
-      throw new RuntimeException("No available eventBus to broadcast event: " +
-          event.getEventName());
+      throw new RuntimeException(
+          "No available eventBus to broadcast event: " + event.getEventName());
     }
     for (BuckEventBus eventBus : eventBuses) {
       if (event.isConfigured()) {
@@ -62,9 +60,7 @@ public class BroadcastEventListener {
     BroadcastEventListener listener;
     BuckEventBus eventBus;
 
-    public BroadcastEventBusClosable (
-        BroadcastEventListener listener,
-        BuckEventBus bus) {
+    public BroadcastEventBusClosable(BroadcastEventListener listener, BuckEventBus bus) {
       this.listener = listener;
       this.eventBus = bus;
     }

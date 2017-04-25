@@ -80,5 +80,4 @@ public abstract class ProgressEvent extends AbstractBuckEvent implements Progres
       return BUILD_PROGRESS_UPDATED;
     }
   }
-
 }

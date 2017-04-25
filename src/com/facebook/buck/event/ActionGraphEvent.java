@@ -16,12 +16,8 @@
 
 package com.facebook.buck.event;
 
-
-/**
- * Base class for events about building up the action graph from the target graph.
- */
-public abstract class ActionGraphEvent
-    extends AbstractBuckEvent
+/** Base class for events about building up the action graph from the target graph. */
+public abstract class ActionGraphEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
 
   public ActionGraphEvent(EventKey eventKey) {
@@ -98,6 +94,7 @@ public abstract class ActionGraphEvent
 
     public static class Miss extends Cache {
       public final boolean cacheWasEmpty;
+
       public Miss(boolean cacheWasEmpty) {
         super("ActionGraphCacheMiss");
         this.cacheWasEmpty = cacheWasEmpty;

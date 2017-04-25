@@ -24,9 +24,7 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.RateLimiter;
 
-/**
- * Posts rate-limited cache rate update events for the WebSocket to consume.
- */
+/** Posts rate-limited cache rate update events for the WebSocket to consume. */
 public class CacheRateStatsListener implements BuckEventListener {
   private final CacheRateStatsKeeper cacheRateStatsKeeper;
   private final RateLimiter rateLimiter;

@@ -17,9 +17,9 @@
 package com.facebook.buck.event.external.events;
 
 /**
- * Describes the results of running test on a single build target.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes the results of running test on a single build target. This type is intended to be used
+ * by external applications (like the Intellij Buck plugin) to deserialize events coming from the
+ * webserver.
  */
 public interface IndividualTesEventFinishedExternalInterface<T> extends BuckEventExternalInterface {
   // Sent when an individual test's results are available

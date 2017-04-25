@@ -39,7 +39,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -67,20 +66,21 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private OptionalInt exitCode = OptionalInt.empty();
 
   public MachineReadableLoggerListener(
-      InvocationInfo info,
-      ProjectFilesystem filesystem,
-      ExecutorService executor) throws FileNotFoundException {
+      InvocationInfo info, ProjectFilesystem filesystem, ExecutorService executor)
+      throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
 
-    this.objectWriter = ObjectMappers.legacyCreate()
-        .copy()
-        .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
-        .writerWithView(JsonViews.MachineReadableLog.class);
+    this.objectWriter =
+        ObjectMappers.legacyCreate()
+            .copy()
+            .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
+            .writerWithView(JsonViews.MachineReadableLog.class);
 
-    this.outputStream = new BufferedOutputStream(
-        new FileOutputStream(getLogFilePath().toFile(), /* append */ true));
+    this.outputStream =
+        new BufferedOutputStream(
+            new FileOutputStream(getLogFilePath().toFile(), /* append */ true));
 
     writeToLog(PREFIX_INVOCATION_INFO, info);
   }
@@ -164,41 +164,46 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   private Path getLogFilePath() {
-    return filesystem.resolve(info.getLogDirectoryPath())
+    return filesystem
+        .resolve(info.getLogDirectoryPath())
         .resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
   }
 
   private void writeToLog(final String prefix, final Object obj) {
-    executor.submit(() -> {
-      try {
-        byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
-        outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
-        outputStream.write(serializedObj);
-        outputStream.write(NEWLINE);
-        outputStream.flush();
-      } catch (JsonProcessingException e) {
-        LOG.warn("Failed to process json for event type: %s ", prefix);
-      } catch (IOException e) {
-        LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
-      }
-    });
+    executor.submit(
+        () -> {
+          try {
+            byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
+            outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
+            outputStream.write(serializedObj);
+            outputStream.write(NEWLINE);
+            outputStream.flush();
+          } catch (JsonProcessingException e) {
+            LOG.warn("Failed to process json for event type: %s ", prefix);
+          } catch (IOException e) {
+            LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
+          }
+        });
   }
 
   @Override
   public void outputTrace(BuildId buildId) throws InterruptedException {
     // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
     // log lines will be overwritten as outputStream access is not thread safe.
-    @SuppressWarnings("unused") Future<?> unused = executor.submit(() -> {
-      try {
-        outputStream.write(
-            String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
-                .getBytes(Charsets.UTF_8));
+    @SuppressWarnings("unused")
+    Future<?> unused =
+        executor.submit(
+            () -> {
+              try {
+                outputStream.write(
+                    String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
+                        .getBytes(Charsets.UTF_8));
 
-        outputStream.close();
-      } catch (IOException e) {
-        LOG.warn("Failed to close output stream.");
-      }
-    });
+                outputStream.close();
+              } catch (IOException e) {
+                LOG.warn("Failed to close output stream.");
+              }
+            });
     executor.shutdown();
     // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
     // to complete.

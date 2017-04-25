@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
@@ -36,12 +35,13 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
   private final BufferedWriter bufferedWriter;
 
   public FileSerializationEventBusListener(Path outputPath) throws IOException {
-    this.bufferedWriter = Files.newBufferedWriter(
-        outputPath,
-        StandardCharsets.UTF_8,
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE,
-        StandardOpenOption.APPEND);
+    this.bufferedWriter =
+        Files.newBufferedWriter(
+            outputPath,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE,
+            StandardOpenOption.APPEND);
   }
 
   @Override
@@ -68,8 +68,7 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
     } catch (IOException e) {
       return String.format(
           "{\"errorType\":\"%s\",\"errorMessage\":\"%s\"}",
-          e.getClass().toString(),
-          e.getMessage().replace('"', '\''));
+          e.getClass().toString(), e.getMessage().replace('"', '\''));
     }
   }
 

@@ -16,21 +16,16 @@
 
 package com.facebook.buck.event.external.events;
 /**
- * Describes an install finished event sent by buck.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes an install finished event sent by buck. This type is intended to be used by external
+ * applications (like the Intellij Buck plugin) to deserialize events coming from the webserver.
  */
 public interface InstallFinishedEventExternalInterface extends BuckEventExternalInterface {
   // Sent when an install has finished
   String INSTALL_FINISHED = "InstallFinished";
 
-  /**
-   * @return the package name of the installed application.
-   */
+  /** @return the package name of the installed application. */
   String getPackageName();
 
-  /**
-   * @return the success status of the install action.
-   */
+  /** @return the success status of the install action. */
   boolean isSuccess();
 }

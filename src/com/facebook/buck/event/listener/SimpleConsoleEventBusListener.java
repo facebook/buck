@@ -35,7 +35,6 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Locale;
@@ -64,12 +63,13 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
 
-    this.testFormatter = new TestResultFormatter(
-        console.getAnsi(),
-        console.getVerbosity(),
-        summaryVerbosity,
-        locale,
-        Optional.of(testLogPath));
+    this.testFormatter =
+        new TestResultFormatter(
+            console.getAnsi(),
+            console.getVerbosity(),
+            summaryVerbosity,
+            locale,
+            Optional.of(testLogPath));
   }
 
   @Override
@@ -80,16 +80,16 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    this.parseTime.set(logEventPair(
-        "PARSING BUCK FILES",
-        /* suffix */ Optional.empty(),
-        clock.currentTimeMillis(),
-        0L,
-        buckFilesProcessing.values(),
-        getEstimatedProgressOfProcessingBuckFiles(),
-        lines));
+    this.parseTime.set(
+        logEventPair(
+            "PARSING BUCK FILES",
+            /* suffix */ Optional.empty(),
+            clock.currentTimeMillis(),
+            0L,
+            buckFilesProcessing.values(),
+            getEstimatedProgressOfProcessingBuckFiles(),
+            lines));
     printLines(lines);
-
   }
 
   @Override
@@ -101,15 +101,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     }
     long currentMillis = clock.currentTimeMillis();
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    long buildStartedTime = buildStarted != null
-        ? buildStarted.getTimestamp()
-        : Long.MAX_VALUE;
-    long buildFinishedTime = buildFinished != null
-        ? buildFinished.getTimestamp()
-        : currentMillis;
-    Collection<EventPair> processingEvents = getEventsBetween(buildStartedTime,
-        buildFinishedTime,
-        buckFilesProcessing.values());
+    long buildStartedTime = buildStarted != null ? buildStarted.getTimestamp() : Long.MAX_VALUE;
+    long buildFinishedTime = buildFinished != null ? buildFinished.getTimestamp() : currentMillis;
+    Collection<EventPair> processingEvents =
+        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesProcessing.values());
     long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
     logEventPair(
         "BUILDING",
@@ -151,9 +146,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
-    if (console.getVerbosity().isSilent() &&
-        !event.getLevel().equals(Level.WARNING) &&
-        !event.getLevel().equals(Level.SEVERE)) {
+    if (console.getVerbosity().isSilent()
+        && !event.getLevel().equals(Level.WARNING)
+        && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
@@ -211,29 +206,25 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
 
-    if (finished.getStatus() != BuildRuleStatus.SUCCESS ||
-        console.getVerbosity().isSilent()) {
+    if (finished.getStatus() != BuildRuleStatus.SUCCESS || console.getVerbosity().isSilent()) {
       return;
     }
 
     String jobsInfo = "";
     if (ruleCount.isPresent()) {
-      jobsInfo = String.format(
-          locale,
-          "%d/%d JOBS",
-          numRulesCompleted.get(),
-          ruleCount.get());
+      jobsInfo = String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get());
     }
-    String line = String.format(
-        locale,
-        "%s %s %s %s",
-        finished.getResultString(),
-        jobsInfo,
-        formatElapsedTime(finished.getDuration().getWallMillisDuration()),
-        finished.getBuildRule().getFullyQualifiedName());
+    String line =
+        String.format(
+            locale,
+            "%s %s %s %s",
+            finished.getResultString(),
+            jobsInfo,
+            formatElapsedTime(finished.getDuration().getWallMillisDuration()),
+            finished.getBuildRule().getFullyQualifiedName());
 
-    if (BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null)) ||
-        console.getVerbosity().shouldPrintBinaryRunInformation()) {
+    if (BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null))
+        || console.getVerbosity().shouldPrintBinaryRunInformation()) {
       console.getStdErr().println(line);
     }
   }

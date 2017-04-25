@@ -48,18 +48,14 @@ public abstract class DirCacheExperimentEvent extends AbstractBuckEvent {
     return description;
   }
 
-  /**
-   * This event tells you dir cache is in traditional read-write operation mode.
-   */
+  /** This event tells you dir cache is in traditional read-write operation mode. */
   public static class ReadWrite extends DirCacheExperimentEvent {
     public ReadWrite() {
       super("dirCacheReadWrite", "normal dir cache operation");
     }
   }
 
-  /**
-   * This event tells you dir cache is in traditional read only operation mode.
-   */
+  /** This event tells you dir cache is in traditional read only operation mode. */
   public static class ReadOnly extends DirCacheExperimentEvent {
     public ReadOnly() {
       super("dirCacheReadOnly", "readonly dir cache operation");
@@ -67,8 +63,8 @@ public abstract class DirCacheExperimentEvent extends AbstractBuckEvent {
   }
 
   /**
-   * This event tells you dir cache is in experimental mode when it propagates artifacts only
-   * from remote cache. Local artifacts are not stored.
+   * This event tells you dir cache is in experimental mode when it propagates artifacts only from
+   * remote cache. Local artifacts are not stored.
    */
   public static class PropagateOnly extends DirCacheExperimentEvent {
     public PropagateOnly() {

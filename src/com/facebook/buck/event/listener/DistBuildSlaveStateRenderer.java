@@ -22,7 +22,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.util.stream.LongStream;
 
 public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
@@ -31,9 +30,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   private final ImmutableList<BuildSlaveStatus> slaveStatuses;
 
   public DistBuildSlaveStateRenderer(
-      Ansi ansi,
-      long currentTimeMs,
-      ImmutableList<BuildSlaveStatus> slaveStatuses) {
+      Ansi ansi, long currentTimeMs, ImmutableList<BuildSlaveStatus> slaveStatuses) {
     this.ansi = ansi;
     this.currentTimeMs = currentTimeMs;
     this.slaveStatuses = slaveStatuses;
@@ -52,7 +49,8 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   @Override
   public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
     // TODO(shivanker): Implement 'sort by busyness' for Stampede BuildSlaves.
-    return LongStream.range(0, slaveStatuses.size()).boxed()
+    return LongStream.range(0, slaveStatuses.size())
+        .boxed()
         .collect(MoreCollectors.toImmutableList());
   }
 
@@ -71,10 +69,9 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
       }
 
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
-      columns.add(String.format(
-          "BUILT %d/%d JOBS",
-          status.getRulesFinishedCount(),
-          status.getTotalRulesCount()));
+      columns.add(
+          String.format(
+              "BUILT %d/%d JOBS", status.getRulesFinishedCount(), status.getTotalRulesCount()));
 
       if (status.getRulesFailureCount() != 0) {
         columns.add(String.format("%d JOBS FAILED", status.getRulesFailureCount()));
@@ -88,10 +85,9 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
       if (status.getCacheErrorsCount() != 0) {
         double cacheErrorRate =
             100 * (double) status.getCacheErrorsCount() / status.getTotalRulesCount();
-        columns.add(String.format(
-            "%d [%.1f%%] CACHE ERRORS",
-            status.getCacheErrorsCount(),
-            cacheErrorRate));
+        columns.add(
+            String.format(
+                "%d [%.1f%%] CACHE ERRORS", status.getCacheErrorsCount(), cacheErrorRate));
       }
 
       lineBuilder.append(
@@ -100,8 +96,8 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
 
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(lineBuilder.toString());
-    } else if (status.getTotalRulesCount() != 0 &&
-        status.getRulesSuccessCount() == status.getTotalRulesCount()) {
+    } else if (status.getTotalRulesCount() != 0
+        && status.getRulesSuccessCount() == status.getTotalRulesCount()) {
       return ansi.asSuccessText(lineBuilder.toString());
     } else {
       return lineBuilder.toString();
@@ -127,8 +123,8 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
 
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(glyph);
-    } else if (status.getTotalRulesCount() != 0 &&
-        status.getRulesSuccessCount() == status.getTotalRulesCount()) {
+    } else if (status.getTotalRulesCount() != 0
+        && status.getRulesSuccessCount() == status.getTotalRulesCount()) {
       return ansi.asSuccessText(glyph);
     } else {
       return glyph;

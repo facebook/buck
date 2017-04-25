@@ -26,7 +26,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -45,17 +44,16 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessagesByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       BuildRuleThreadTracker buildRuleThreadTracker) {
-    this.threadInformationMap = getThreadInformationMap(
-        currentTimeMs,
-        testSummariesByThread,
-        testStatusMessagesByThread,
-        runningStepsByThread,
-        buildRuleThreadTracker);
-    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
-        ansi,
-        formatTimeFunction,
-        currentTimeMs,
-        threadInformationMap);
+    this.threadInformationMap =
+        getThreadInformationMap(
+            currentTimeMs,
+            testSummariesByThread,
+            testStatusMessagesByThread,
+            runningStepsByThread,
+            buildRuleThreadTracker);
+    this.commonThreadStateRenderer =
+        new CommonThreadStateRenderer(
+            ansi, formatTimeFunction, currentTimeMs, threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
@@ -110,15 +108,21 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
 
   @Override
   public String renderStatusLine(long threadID, StringBuilder lineBuilder) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadID));
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadID));
     Optional<String> stepCategory = Optional.empty();
     Optional<? extends LeafEvent> runningStep = Optional.empty();
-    if (threadInformation.getTestStatusMessage().isPresent() &&
-        threadInformation.getTestStatusMessage().get()
-            .getTestStatusMessage().getLevel().intValue() >= MIN_LOG_LEVEL.intValue()) {
-      stepCategory = Optional.of(
-          threadInformation.getTestStatusMessage().get().getTestStatusMessage().getMessage());
+    if (threadInformation.getTestStatusMessage().isPresent()
+        && threadInformation
+                .getTestStatusMessage()
+                .get()
+                .getTestStatusMessage()
+                .getLevel()
+                .intValue()
+            >= MIN_LOG_LEVEL.intValue()) {
+      stepCategory =
+          Optional.of(
+              threadInformation.getTestStatusMessage().get().getTestStatusMessage().getMessage());
       runningStep = threadInformation.getTestStatusMessage();
     } else if (threadInformation.getTestSummary().isPresent()) {
       stepCategory = Optional.of(threadInformation.getTestSummary().get().getTestName());
@@ -139,8 +143,8 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
 
   @Override
   public String renderShortStatus(long threadId) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderShortStatus(
         threadInformation.getBuildTarget().isPresent(),
         /* renderSubtle = */ false,

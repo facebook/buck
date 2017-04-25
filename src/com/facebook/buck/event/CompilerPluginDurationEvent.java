@@ -19,11 +19,8 @@ package com.facebook.buck.event;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * Base class for events being reported by plugins to in-process compilers such as JSR199 javac.
- */
-public abstract class CompilerPluginDurationEvent
-    extends AbstractBuckEvent
+/** Base class for events being reported by plugins to in-process compilers such as JSR199 javac. */
+public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent
     implements WorkAdvanceEvent {
   private final BuildTarget buildTarget;
   private final String pluginName;
@@ -72,9 +69,7 @@ public abstract class CompilerPluginDurationEvent
     return new Started(buildTarget, pluginName, durationName, args);
   }
 
-  public static Finished finished(
-      Started startedEvent,
-      ImmutableMap<String, String> args) {
+  public static Finished finished(Started startedEvent, ImmutableMap<String, String> args) {
     return new Finished(startedEvent, args);
   }
 
@@ -94,9 +89,7 @@ public abstract class CompilerPluginDurationEvent
   }
 
   public static class Finished extends CompilerPluginDurationEvent {
-    public Finished(
-        Started startedEvent,
-        ImmutableMap<String, String> args) {
+    public Finished(Started startedEvent, ImmutableMap<String, String> args) {
       super(
           startedEvent.getEventKey(),
           startedEvent.getBuildTarget(),

@@ -95,13 +95,10 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     }
   }
 
-  /**
-   * This event is to be posted when Watchman does not report any altered files.
-   */
+  /** This event is to be posted when Watchman does not report any altered files. */
   public static class ZeroFileChanges extends WatchmanStatusEvent {
     public ZeroFileChanges() {
       super(EventKey.unique(), "WatchmanZeroFileChanges");
     }
   }
-
 }

@@ -26,14 +26,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Thin wrapper around guava event bus.
- */
+/** Thin wrapper around guava event bus. */
 public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus {
 
   private static final Logger LOG = Logger.get(BuckEventBus.class);
@@ -56,15 +53,13 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
 
   @VisibleForTesting
   public DefaultBuckEventBus(
-      Clock clock,
-      boolean async,
-      BuildId buildId,
-      int shutdownTimeoutMillis) {
+      Clock clock, boolean async, BuildId buildId, int shutdownTimeoutMillis) {
     this.clock = clock;
-    this.executorService = async ?
-        MostExecutors.newSingleThreadExecutor(
-            new CommandThreadFactory(BuckEventBus.class.getSimpleName())) :
-        MoreExecutors.newDirectExecutorService();
+    this.executorService =
+        async
+            ? MostExecutors.newSingleThreadExecutor(
+                new CommandThreadFactory(BuckEventBus.class.getSimpleName()))
+            : MoreExecutors.newDirectExecutorService();
     this.eventBus = new EventBus("buck-build-events");
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
@@ -72,8 +67,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   }
 
   private void dispatch(final BuckEvent event) {
-    executorService.submit(
-        () -> eventBus.post(event));
+    executorService.submit(() -> eventBus.post(event));
   }
 
   @Override
@@ -82,9 +76,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     dispatch(event);
   }
 
-  /**
-   * Post event to the EventBus using the timestamp given by atTime.
-   */
+  /** Post event to the EventBus using the timestamp given by atTime. */
   @Override
   public void post(BuckEvent event, BuckEvent atTime) {
     event.configure(
@@ -116,8 +108,8 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
    * An id that every event posted to this event bus will share. For long-running processes, like
    * the daemon, the build id makes it possible to distinguish when events come from different
    * invocations of Buck.
-   * <p>
-   * In practice, this should be a short string, because it may be sent over the wire frequently.
+   *
+   * <p>In practice, this should be a short string, because it may be sent over the wire frequently.
    */
   @Override
   public BuildId getBuildId() {
@@ -125,21 +117,23 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   }
 
   /**
-   * {@link ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)} is called
-   * to wait for events which have been posted, but which have been queued by the
-   * {@link EventBus}, to be delivered. This allows listeners to record or report as much
-   * information as possible. This aids debugging when close is called during exception processing.
+   * {@link ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)} is called to wait
+   * for events which have been posted, but which have been queued by the {@link EventBus}, to be
+   * delivered. This allows listeners to record or report as much information as possible. This aids
+   * debugging when close is called during exception processing.
    */
   @Override
   public void close() throws IOException {
     executorService.shutdown();
     try {
       if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
-        LOG.warn(Joiner.on(System.lineSeparator()).join(
-          "The BuckEventBus failed to shut down within the standard timeout.",
-          "Your build might have succeeded, but some messages were probably lost.",
-          "Here's some debugging information:",
-          executorService.toString()));
+        LOG.warn(
+            Joiner.on(System.lineSeparator())
+                .join(
+                    "The BuckEventBus failed to shut down within the standard timeout.",
+                    "Your build might have succeeded, but some messages were probably lost.",
+                    "Here's some debugging information:",
+                    executorService.toString()));
         executorService.shutdownNow();
       }
     } catch (InterruptedException e) {

@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
-
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.concurrent.ConcurrentMap;
@@ -44,15 +43,12 @@ public class LoadBalancerEventsListener implements BuckEventListener {
   private final ConcurrentMap<URI, ServerCounters> allServerCounters;
   private final IntegerCounter noHealthyServersCounter;
 
-
   public LoadBalancerEventsListener(CounterRegistry registry) {
     this.registry = registry;
     this.allServerCounters = Maps.newConcurrentMap();
 
-    noHealthyServersCounter = registry.newIntegerCounter(
-        COUNTER_CATEGORY,
-        "no_healthy_servers_count",
-        ImmutableMap.of());
+    noHealthyServersCounter =
+        registry.newIntegerCounter(COUNTER_CATEGORY, "no_healthy_servers_count", ImmutableMap.of());
   }
 
   @Subscribe
@@ -71,8 +67,9 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       }
 
       if (perServerData.getPingRequestLatencyMillis().isPresent()) {
-        counters.getPingRequestLatencyMillis().addSample(
-            perServerData.getPingRequestLatencyMillis().get());
+        counters
+            .getPingRequestLatencyMillis()
+            .addSample(perServerData.getPingRequestLatencyMillis().get());
       }
     }
   }
@@ -149,51 +146,40 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     private final IntegerCounter requestTimeoutCount;
 
     public ServerCounters(CounterRegistry registry, URI server) {
-      this.pingRequestLatencyMillis = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_latency_millis",
-          getTagsForServer(server));
-      this.pingRequestCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_count",
-          getTagsForServer(server));
-      this.pingRequestErrorCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_error_count",
-          getTagsForServer(server));
-      this.pingRequestTimeoutCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_timeout_count",
-          getTagsForServer(server));
-      this.serverNotHealthyCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "server_not_healthy_count",
-          getTagsForServer(server));
-      this.isBestServerCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "is_best_server_count",
-          getTagsForServer(server));
+      this.pingRequestLatencyMillis =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "ping_request_latency_millis", getTagsForServer(server));
+      this.pingRequestCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_count", getTagsForServer(server));
+      this.pingRequestErrorCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_error_count", getTagsForServer(server));
+      this.pingRequestTimeoutCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_timeout_count", getTagsForServer(server));
+      this.serverNotHealthyCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "server_not_healthy_count", getTagsForServer(server));
+      this.isBestServerCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "is_best_server_count", getTagsForServer(server));
 
-      this.requestSizeBytes = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "request_size_bytes",
-          getTagsForServer(server));
-      this.responseSizeBytes = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "response_size_bytes",
-          getTagsForServer(server));
-      this.requestCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_count",
-          getTagsForServer(server));
-      this.requestErrorCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_error_count",
-          getTagsForServer(server));
-      this.requestTimeoutCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_timeout_count",
-          getTagsForServer(server));
+      this.requestSizeBytes =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "request_size_bytes", getTagsForServer(server));
+      this.responseSizeBytes =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "response_size_bytes", getTagsForServer(server));
+      this.requestCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_count", getTagsForServer(server));
+      this.requestErrorCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_error_count", getTagsForServer(server));
+      this.requestTimeoutCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_timeout_count", getTagsForServer(server));
     }
 
     public IntegerCounter getIsBestServerCount() {

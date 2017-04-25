@@ -36,7 +36,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.util.Optional;
 
@@ -46,12 +45,11 @@ public class PublicAnnouncementManager {
 
   @VisibleForTesting
   static final String HEADER_MSG =
-      "**-------------------------------**\n" +
-          "**- Sticky Public Announcements -**\n" +
-          "**-------------------------------**";
+      "**-------------------------------**\n"
+          + "**- Sticky Public Announcements -**\n"
+          + "**-------------------------------**";
 
-  @VisibleForTesting
-  static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";
+  @VisibleForTesting static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";
 
   private Clock clock;
   private BuckEventBus eventBus;
@@ -77,57 +75,60 @@ public class PublicAnnouncementManager {
 
   public void getAndPostAnnouncements() {
     final ListenableFuture<ImmutableList<Announcement>> message =
-        service.submit(() -> {
-          Optional<ClientSideSlb> slb = logConfig.getFrontendConfig()
-              .tryCreatingClientSideSlb(clock, eventBus);
+        service.submit(
+            () -> {
+              Optional<ClientSideSlb> slb =
+                  logConfig.getFrontendConfig().tryCreatingClientSideSlb(clock, eventBus);
 
-          if (slb.isPresent()) {
-            try (FrontendService frontendService =
-                new FrontendService(ThriftOverHttpServiceConfig.of(
-                    new LoadBalancedService(
-                        slb.get(),
-                        logConfig.createOkHttpClient(),
-                        eventBus)))) {
-              AnnouncementRequest announcementRequest = new AnnouncementRequest();
-              announcementRequest.setBuckVersion(getBuckVersion());
-              announcementRequest.setRepository(repository);
-              FrontendRequest request = new FrontendRequest();
-              request.setType(FrontendRequestType.ANNOUNCEMENT);
-              request.setAnnouncementRequest(announcementRequest);
+              if (slb.isPresent()) {
+                try (FrontendService frontendService =
+                    new FrontendService(
+                        ThriftOverHttpServiceConfig.of(
+                            new LoadBalancedService(
+                                slb.get(), logConfig.createOkHttpClient(), eventBus)))) {
+                  AnnouncementRequest announcementRequest = new AnnouncementRequest();
+                  announcementRequest.setBuckVersion(getBuckVersion());
+                  announcementRequest.setRepository(repository);
+                  FrontendRequest request = new FrontendRequest();
+                  request.setType(FrontendRequestType.ANNOUNCEMENT);
+                  request.setAnnouncementRequest(announcementRequest);
 
-              FrontendResponse response = frontendService.makeRequest(request);
-              return ImmutableList.copyOf(response.announcementResponse.announcements);
-              } catch (IOException e) {
-              throw new HumanReadableException("Failed to perform request", e);
+                  FrontendResponse response = frontendService.makeRequest(request);
+                  return ImmutableList.copyOf(response.announcementResponse.announcements);
+                } catch (IOException e) {
+                  throw new HumanReadableException("Failed to perform request", e);
+                }
+              } else {
+                throw new HumanReadableException("Failed to establish connection to server.");
+              }
+            });
+
+    Futures.addCallback(
+        message,
+        new FutureCallback<ImmutableList<Announcement>>() {
+
+          @Override
+          public void onSuccess(ImmutableList<Announcement> announcements) {
+            LOG.info("Public announcements fetched successfully.");
+            if (!announcements.isEmpty()) {
+              String announcement = HEADER_MSG;
+              for (Announcement entry : announcements) {
+                announcement =
+                    announcement.concat(
+                        String.format(
+                            ANNOUNCEMENT_TEMPLATE,
+                            entry.getErrorMessage(),
+                            entry.getSolutionMessage()));
+              }
+              consoleEventBusListener.setPublicAnnouncements(eventBus, Optional.of(announcement));
             }
-          } else {
-            throw new HumanReadableException("Failed to establish connection to server.");
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            LOG.warn("Failed to get public announcements. Reason: %s", t.getMessage());
           }
         });
-
-    Futures.addCallback(message, new FutureCallback<ImmutableList<Announcement>>() {
-
-      @Override
-      public void onSuccess(ImmutableList<Announcement> announcements) {
-        LOG.info("Public announcements fetched successfully.");
-        if (!announcements.isEmpty()) {
-          String announcement = HEADER_MSG;
-          for (Announcement entry : announcements) {
-            announcement = announcement.concat(
-                String.format(
-                    ANNOUNCEMENT_TEMPLATE,
-                    entry.getErrorMessage(),
-                    entry.getSolutionMessage()));
-          }
-          consoleEventBusListener.setPublicAnnouncements(eventBus, Optional.of(announcement));
-        }
-      }
-
-      @Override
-      public void onFailure(Throwable t) {
-        LOG.warn("Failed to get public announcements. Reason: %s", t.getMessage());
-      }
-    });
   }
 
   private String getBuckVersion() {
