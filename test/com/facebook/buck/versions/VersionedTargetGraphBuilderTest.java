@@ -29,22 +29,20 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class VersionedTargetGraphBuilderTest {
 
   private static final ForkJoinPool POOL = new ForkJoinPool(1);
 
   private static String getVersionedTarget(
-      BuildTarget target,
-      ImmutableSortedMap<BuildTarget, Version> versions) {
-    return target.withAppendedFlavors(VersionedTargetGraphBuilder.getVersionedFlavor(versions))
+      BuildTarget target, ImmutableSortedMap<BuildTarget, Version> versions) {
+    return target
+        .withAppendedFlavors(VersionedTargetGraphBuilder.getVersionedFlavor(versions))
         .toString();
   }
 
@@ -55,9 +53,7 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   private static void assertEquals(TargetNode<?, ?> expected, TargetNode<?, ?> actual) {
-    assertThat(
-        actual.getBuildTarget(),
-        Matchers.equalTo(expected.getBuildTarget()));
+    assertThat(actual.getBuildTarget(), Matchers.equalTo(expected.getBuildTarget()));
     assertThat(
         String.format("%s: declared deps: ", expected.getBuildTarget()),
         actual.getDeclaredDeps(),
@@ -111,11 +107,8 @@ public class VersionedTargetGraphBuilderTest {
   public void rootWithDepOnRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionRootBuilder("//:root2")
-                .build(),
-            new VersionRootBuilder("//:root1")
-                .setDeps("//:root2")
-                .build());
+            new VersionRootBuilder("//:root2").build(),
+            new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
@@ -133,29 +126,20 @@ public class VersionedTargetGraphBuilderTest {
   public void versionedSubGraph() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
-            new VersionedAliasBuilder("//:versioned")
-                .setVersions("1.0", "//:dep")
-                .build(),
-            new VersionRootBuilder("//:root")
-                .setDeps("//:versioned")
-                .build());
+            new VersionPropagatorBuilder("//:dep").build(),
+            new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
+            new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph,
-                ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
-            new VersionRootBuilder("//:root")
-                .setDeps("//:dep")
-                .build());
+            new VersionPropagatorBuilder("//:dep").build(),
+            new VersionRootBuilder("//:root").setDeps("//:dep").build());
     assertEquals(expectedTargetGraph, versionedGraph);
   }
 
@@ -163,35 +147,22 @@ public class VersionedTargetGraphBuilderTest {
   public void versionedSubGraphWithDepOnRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionRootBuilder("//:dep_root")
-                .build(),
-            new VersionPropagatorBuilder("//:dep")
-                .setDeps("//:dep_root")
-                .build(),
-            new VersionedAliasBuilder("//:versioned")
-                .setVersions("1.0", "//:dep")
-                .build(),
-            new VersionRootBuilder("//:root")
-                .setDeps("//:versioned")
-                .build());
+            new VersionRootBuilder("//:dep_root").build(),
+            new VersionPropagatorBuilder("//:dep").setDeps("//:dep_root").build(),
+            new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
+            new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph,
-                ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionRootBuilder("//:dep_root")
-                .build(),
-            new VersionPropagatorBuilder("//:dep")
-                .setDeps("//:dep_root")
-                .build(),
-            new VersionRootBuilder("//:root")
-                .setDeps("//:dep")
-                .build());
+            new VersionRootBuilder("//:dep_root").build(),
+            new VersionPropagatorBuilder("//:dep").setDeps("//:dep_root").build(),
+            new VersionRootBuilder("//:root").setDeps("//:dep").build());
     assertEquals(expectedTargetGraph, versionedGraph);
   }
 
@@ -199,44 +170,25 @@ public class VersionedTargetGraphBuilderTest {
   public void versionedSubGraphWithDepAnotherVersionedSubGraph() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep2")
-                .build(),
-            new VersionedAliasBuilder("//:versioned2")
-                .setVersions("1.0", "//:dep2")
-                .build(),
-            new VersionRootBuilder("//:root2")
-                .setDeps("//:versioned2")
-                .build(),
-            new VersionPropagatorBuilder("//:dep1")
-                .setDeps("//:root2")
-                .build(),
-            new VersionedAliasBuilder("//:versioned1")
-                .setVersions("1.0", "//:dep1")
-                .build(),
-            new VersionRootBuilder("//:root1")
-                .setDeps("//:versioned1")
-                .build());
+            new VersionPropagatorBuilder("//:dep2").build(),
+            new VersionedAliasBuilder("//:versioned2").setVersions("1.0", "//:dep2").build(),
+            new VersionRootBuilder("//:root2").setDeps("//:versioned2").build(),
+            new VersionPropagatorBuilder("//:dep1").setDeps("//:root2").build(),
+            new VersionedAliasBuilder("//:versioned1").setVersions("1.0", "//:dep1").build(),
+            new VersionRootBuilder("//:root1").setDeps("//:versioned1").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph,
-                ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))));
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep2")
-                .build(),
-            new VersionRootBuilder("//:root2")
-                .setDeps("//:dep2")
-                .build(),
-            new VersionPropagatorBuilder("//:dep1")
-                .setDeps("//:root2")
-                .build(),
-            new VersionRootBuilder("//:root1")
-                .setDeps("//:dep1")
-                .build());
+            new VersionPropagatorBuilder("//:dep2").build(),
+            new VersionRootBuilder("//:root2").setDeps("//:dep2").build(),
+            new VersionPropagatorBuilder("//:dep1").setDeps("//:root2").build(),
+            new VersionRootBuilder("//:root1").setDeps("//:dep1").build());
     assertEquals(expectedTargetGraph, versionedGraph);
   }
 
@@ -244,29 +196,20 @@ public class VersionedTargetGraphBuilderTest {
   public void versionedSubGraphWithVersionedFlavor() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
-            new VersionedAliasBuilder("//:versioned")
-                .setVersions("1.0", "//:dep")
-                .build(),
-            new VersionPropagatorBuilder("//:a")
-                .setDeps("//:versioned")
-                .build(),
-            new VersionRootBuilder("//:root")
-                .setDeps("//:a")
-                .build());
+            new VersionPropagatorBuilder("//:dep").build(),
+            new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
+            new VersionPropagatorBuilder("//:a").setDeps("//:versioned").build(),
+            new VersionRootBuilder("//:root").setDeps("//:a").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph,
-                ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
+            new VersionPropagatorBuilder("//:dep").build(),
             new VersionPropagatorBuilder(getVersionedTarget("//:a", "//:versioned", "1.0"))
                 .setDeps("//:dep")
                 .build(),
@@ -280,16 +223,10 @@ public class VersionedTargetGraphBuilderTest {
   public void versionedSubGraphWithConstraints() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:v2")
-                .build(),
-            new VersionPropagatorBuilder("//:v1")
-                .build(),
-            new VersionedAliasBuilder("//:dep")
-                .setVersions("1.0", "//:v1", "2.0", "//:v2")
-                .build(),
-            new VersionPropagatorBuilder("//:lib")
-                .setDeps("//:dep")
-                .build(),
+            new VersionPropagatorBuilder("//:v2").build(),
+            new VersionPropagatorBuilder("//:v1").build(),
+            new VersionedAliasBuilder("//:dep").setVersions("1.0", "//:v1", "2.0", "//:v2").build(),
+            new VersionPropagatorBuilder("//:lib").setDeps("//:dep").build(),
             new VersionRootBuilder("//:a")
                 .setDeps("//:lib")
                 .setVersionedDeps("//:dep", ExactConstraint.of(Version.of("1.0")))
@@ -316,8 +253,7 @@ public class VersionedTargetGraphBuilderTest {
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:v1")
-                .build(),
+            new VersionPropagatorBuilder("//:v1").build(),
             new VersionPropagatorBuilder(getVersionedTarget("//:lib", "//:dep", "1.0"))
                 .setDeps("//:v1")
                 .build(),
@@ -325,8 +261,7 @@ public class VersionedTargetGraphBuilderTest {
                 .setDeps(getVersionedTarget("//:lib", "//:dep", "1.0"))
                 .setVersionedDeps("//:v1", ExactConstraint.of(Version.of("1.0")))
                 .build(),
-            new VersionPropagatorBuilder("//:v2")
-                .build(),
+            new VersionPropagatorBuilder("//:v2").build(),
             new VersionPropagatorBuilder(getVersionedTarget("//:lib", "//:dep", "2.0"))
                 .setDeps("//:v2")
                 .build(),
@@ -341,29 +276,20 @@ public class VersionedTargetGraphBuilderTest {
   public void explicitNonRootTreatedAsRoot() throws Exception {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
-            new VersionedAliasBuilder("//:versioned")
-                .setVersions("1.0", "//:dep")
-                .build(),
-            new VersionPropagatorBuilder("//:root")
-                .setDeps("//:versioned")
-                .build());
+            new VersionPropagatorBuilder("//:dep").build(),
+            new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep").build(),
+            new VersionPropagatorBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph,
-                ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
-            new VersionPropagatorBuilder("//:dep")
-                .build(),
-            new VersionPropagatorBuilder("//:root")
-                .setDeps("//:dep")
-                .build());
+            new VersionPropagatorBuilder("//:dep").build(),
+            new VersionPropagatorBuilder("//:root").setDeps("//:dep").build());
     assertEquals(expectedTargetGraph, versionedGraph);
   }
 
@@ -374,9 +300,7 @@ public class VersionedTargetGraphBuilderTest {
             new VersionPropagatorBuilder("//:root2")
                 .setTests(ImmutableSortedSet.of(BuildTargetFactory.newInstance("//:test")))
                 .build(),
-            new VersionRootBuilder("//:root1")
-                .setDeps("//:root2")
-                .build());
+            new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(
             POOL,
@@ -389,5 +313,4 @@ public class VersionedTargetGraphBuilderTest {
     TargetGraph versionedGraph = builder.build();
     assertEquals(graph, versionedGraph);
   }
-
 }

@@ -28,16 +28,13 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.concurrent.ForkJoinPool;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.concurrent.ForkJoinPool;
-
 public class VersionedTargetGraphCacheTest {
 
-  private static final BuckEventBus BUS =
-      new DefaultBuckEventBus(new FakeClock(0), new BuildId());
+  private static final BuckEventBus BUS = new DefaultBuckEventBus(new FakeClock(0), new BuildId());
   private static final ForkJoinPool POOL = new ForkJoinPool(1);
 
   @Test
@@ -108,8 +105,7 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertHit(
-      VersionedTargetGraphCacheResult result,
-      TargetGraphAndBuildTargets previousGraph) {
+      VersionedTargetGraphCacheResult result, TargetGraphAndBuildTargets previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.HIT));
     assertThat(result.getTargetGraphAndBuildTargets(), Matchers.is(previousGraph));
   }
@@ -119,10 +115,8 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertMismatch(
-      VersionedTargetGraphCacheResult result,
-      TargetGraphAndBuildTargets previousGraph) {
+      VersionedTargetGraphCacheResult result, TargetGraphAndBuildTargets previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.MISMATCH));
     assertThat(result.getTargetGraphAndBuildTargets(), Matchers.not(Matchers.is(previousGraph)));
   }
-
 }

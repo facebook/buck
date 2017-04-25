@@ -19,7 +19,6 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
 public class FixedTargetNodeTranslator extends TargetNodeTranslator {
@@ -46,5 +45,4 @@ public class FixedTargetNodeTranslator extends TargetNodeTranslator {
   public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(BuildTarget target) {
     return Optional.empty();
   }
-
 }

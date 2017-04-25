@@ -26,27 +26,22 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class VersionPropagatorBuilder
-    extends
-    AbstractNodeBuilder<
-        VersionPropagatorBuilder.Arg,
-        VersionPropagatorBuilder.VersionPropagatorDescription,
+    extends AbstractNodeBuilder<
+        VersionPropagatorBuilder.Arg, VersionPropagatorBuilder.VersionPropagatorDescription,
         BuildRule> {
 
   public VersionPropagatorBuilder(BuildTarget target) {
-    super(
-        new VersionPropagatorDescription(),
-        target);
+    super(new VersionPropagatorDescription(), target);
   }
 
   public VersionPropagatorBuilder(String target) {
@@ -81,8 +76,7 @@ public class VersionPropagatorBuilder
   public VersionPropagatorBuilder setVersionedDeps(String target, Constraint constraint) {
     return setVersionedDeps(
         new AbstractMap.SimpleEntry<>(
-            BuildTargetFactory.newInstance(target),
-            Optional.of(constraint)));
+            BuildTargetFactory.newInstance(target), Optional.of(constraint)));
   }
 
   public VersionPropagatorBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
@@ -103,7 +97,6 @@ public class VersionPropagatorBuilder
     public ImmutableSortedSet<BuildTarget> getTests() {
       return tests;
     }
-
   }
 
   public static class VersionPropagatorDescription implements VersionPropagator<Arg> {
@@ -119,10 +112,9 @@ public class VersionPropagatorBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args) throws NoSuchBuildTargetException {
+        A args)
+        throws NoSuchBuildTargetException {
       throw new IllegalStateException();
     }
-
   }
-
 }

@@ -19,7 +19,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.util.Map;
 
 /**
@@ -30,8 +29,7 @@ public class NaiveVersionSelector implements VersionSelector {
 
   @Override
   public ImmutableMap<BuildTarget, Version> resolve(
-      BuildTarget root,
-      ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
       throws VersionException {
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
@@ -39,5 +37,4 @@ public class NaiveVersionSelector implements VersionSelector {
     }
     return selectedVersions.build();
   }
-
 }

@@ -27,11 +27,9 @@ import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class QueryTargetTranslatorTest {
 
@@ -48,10 +46,7 @@ public class QueryTargetTranslatorTest {
     QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
-            PATTERN,
-            translator,
-            Query.of("deps(//:a)")),
+            CELL_PATH_RESOLVER, PATTERN, translator, Query.of("deps(//:a)")),
         Matchers.equalTo(Optional.of(Query.of("deps(//:b)"))));
   }
 
@@ -61,11 +56,7 @@ public class QueryTargetTranslatorTest {
     QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
-            PATTERN,
-            translator,
-            Query.of("$declared_deps")),
+            CELL_PATH_RESOLVER, PATTERN, translator, Query.of("$declared_deps")),
         Matchers.equalTo(Optional.empty()));
   }
-
 }

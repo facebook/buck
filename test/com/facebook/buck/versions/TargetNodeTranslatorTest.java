@@ -36,11 +36,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class TargetNodeTranslatorTest {
 
@@ -66,6 +64,7 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -73,18 +72,11 @@ public class TargetNodeTranslatorTest {
           }
         };
     Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
+    assertThat(translated.get().getBuildTarget(), Matchers.equalTo(d));
+    assertThat(translated.get().getDeclaredDeps(), Matchers.equalTo(ImmutableSet.of(d)));
+    assertThat(translated.get().getExtraDeps(), Matchers.equalTo(ImmutableSet.of(d)));
     assertThat(
-        translated.get().getBuildTarget(),
-        Matchers.equalTo(d));
-    assertThat(
-        translated.get().getDeclaredDeps(),
-        Matchers.equalTo(ImmutableSet.of(d)));
-    assertThat(
-        translated.get().getExtraDeps(),
-        Matchers.equalTo(ImmutableSet.of(d)));
-    assertThat(
-        translated.get().getConstructorArg().deps,
-        Matchers.equalTo(ImmutableSortedSet.of(d)));
+        translated.get().getConstructorArg().deps, Matchers.equalTo(ImmutableSortedSet.of(d)));
     assertThat(
         translated.get().getConstructorArg().exportedDeps,
         Matchers.equalTo(ImmutableSortedSet.of(d)));
@@ -106,6 +98,7 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -118,19 +111,16 @@ public class TargetNodeTranslatorTest {
 
   @Test
   public void selectedVersions() {
-    TargetNode<VersionPropagatorBuilder.Arg, ?> node =
-        new VersionPropagatorBuilder("//:a")
-            .build();
+    TargetNode<VersionPropagatorBuilder.Arg, ?> node = new VersionPropagatorBuilder("//:a").build();
     final ImmutableMap<BuildTarget, Version> selectedVersions =
-        ImmutableMap.of(
-            BuildTargetFactory.newInstance("//:b"),
-            Version.of("1.0"));
+        ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
         new TargetNodeTranslator(ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -141,8 +131,7 @@ public class TargetNodeTranslatorTest {
         translator.translateNode(node);
     assertTrue(translated.isPresent());
     assertThat(
-        translated.get().getSelectedVersions(),
-        Matchers.equalTo(Optional.of(selectedVersions)));
+        translated.get().getSelectedVersions(), Matchers.equalTo(Optional.of(selectedVersions)));
   }
 
   @Test
@@ -155,6 +144,7 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -176,6 +166,7 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -184,9 +175,7 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER,
-            PATTERN,
-            new DefaultBuildTargetSourcePath(a)),
+            CELL_PATH_RESOLVER, PATTERN, new DefaultBuildTargetSourcePath(a)),
         Matchers.equalTo(Optional.of(new DefaultBuildTargetSourcePath(b))));
   }
 
@@ -200,6 +189,7 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
@@ -214,10 +204,8 @@ public class TargetNodeTranslatorTest {
         Matchers.equalTo(
             Optional.of(
                 SourceWithFlags.of(
-                    new DefaultBuildTargetSourcePath(b),
-                    ImmutableList.of("-flag")))));
+                    new DefaultBuildTargetSourcePath(b), ImmutableList.of("-flag")))));
   }
-
 
   @Test
   public void translateTargetTranslator() {
@@ -227,6 +215,7 @@ public class TargetNodeTranslatorTest {
           public Class<Integer> getTranslatableClass() {
             return Integer.class;
           }
+
           @Override
           public Optional<Integer> translateTargets(
               CellPathResolver cellPathResolver,
@@ -237,12 +226,8 @@ public class TargetNodeTranslatorTest {
           }
         };
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(
-            ImmutableList.of(integerTranslator),
-            ImmutableMap.of());
+        new FixedTargetNodeTranslator(ImmutableList.of(integerTranslator), ImmutableMap.of());
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12),
-        Matchers.equalTo(Optional.of(0)));
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12), Matchers.equalTo(Optional.of(0)));
   }
-
 }

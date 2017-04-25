@@ -23,7 +23,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -35,9 +34,7 @@ public class VersionUniverseVersionSelectorTest {
   @Test
   public void validImplication() throws Exception {
     TargetNode<?, ?> root =
-        new VersionRootBuilder("//:root")
-            .setVersionUniverse("universe")
-            .build();
+        new VersionRootBuilder("//:root").setVersionUniverse("universe").build();
     BuildTarget versioned1 = BuildTargetFactory.newInstance("//:versioned1");
     BuildTarget versioned2 = BuildTargetFactory.newInstance("//:versioned2");
     VersionUniverseVersionSelector selector =
@@ -55,17 +52,13 @@ public class VersionUniverseVersionSelectorTest {
             ImmutableMap.of(
                 versioned1, ImmutableSet.of(ONE, TWO),
                 versioned2, ImmutableSet.of(ONE, TWO)));
-    assertThat(
-        versions,
-        Matchers.equalTo(ImmutableMap.of(versioned1, ONE, versioned2, ONE)));
+    assertThat(versions, Matchers.equalTo(ImmutableMap.of(versioned1, ONE, versioned2, ONE)));
   }
 
   @Test
   public void unusedImplication() throws Exception {
     TargetNode<?, ?> root =
-        new VersionRootBuilder("//:root")
-            .setVersionUniverse("universe")
-            .build();
+        new VersionRootBuilder("//:root").setVersionUniverse("universe").build();
     BuildTarget versioned1 = BuildTargetFactory.newInstance("//:versioned1");
     BuildTarget versioned2 = BuildTargetFactory.newInstance("//:versioned2");
     VersionUniverseVersionSelector selector =
@@ -83,16 +76,12 @@ public class VersionUniverseVersionSelectorTest {
             ImmutableMap.of(
                 versioned1, ImmutableSet.of(ONE, TWO),
                 versioned2, ImmutableSet.of(ONE, TWO)));
-    assertThat(
-        versions,
-        Matchers.equalTo(ImmutableMap.of(versioned1, ONE, versioned2, ONE)));
+    assertThat(versions, Matchers.equalTo(ImmutableMap.of(versioned1, ONE, versioned2, ONE)));
   }
 
   @Test
   public void firstConfiguredVersionUniverseUsedByDefault() throws VersionException {
-    TargetNode<?, ?> root =
-        new VersionRootBuilder("//:root")
-            .build();
+    TargetNode<?, ?> root = new VersionRootBuilder("//:root").build();
     VersionUniverseVersionSelector selector =
         new VersionUniverseVersionSelector(
             TargetGraphFactory.newInstance(root),
@@ -101,9 +90,6 @@ public class VersionUniverseVersionSelectorTest {
                 VersionUniverse.of(ImmutableMap.of()),
                 "universe2",
                 VersionUniverse.of(ImmutableMap.of())));
-    assertThat(
-        selector.getVersionUniverse(root).get().getKey(),
-        Matchers.equalTo("universe1"));
+    assertThat(selector.getVersionUniverse(root).get().getKey(), Matchers.equalTo("universe1"));
   }
-
 }

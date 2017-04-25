@@ -22,7 +22,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
 public class VersionedTargetGraphFactory {
@@ -45,5 +44,4 @@ public class VersionedTargetGraphFactory {
     return newInstance(
         nodes.stream().collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
   }
-
 }

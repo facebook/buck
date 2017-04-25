@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -84,5 +83,4 @@ public class VersionMatchedCollectionTest {
   public void testGetOnlyMatchingValueThrowsOnNoMatches() {
     System.out.println(COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, Version.of("3.0"))));
   }
-
 }

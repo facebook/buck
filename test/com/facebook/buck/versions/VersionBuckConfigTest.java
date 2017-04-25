@@ -21,7 +21,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -29,8 +28,7 @@ import org.junit.Test;
 
 public class VersionBuckConfigTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void simple() {
@@ -58,8 +56,7 @@ public class VersionBuckConfigTest {
                 "universe2",
                 VersionUniverse.of(
                     ImmutableMap.of(
-                        BuildTargetFactory.newInstance("//foo:bar"),
-                        Version.of("2"))))));
+                        BuildTargetFactory.newInstance("//foo:bar"), Version.of("2"))))));
   }
 
   @Test
@@ -69,12 +66,10 @@ public class VersionBuckConfigTest {
             FakeBuckConfig.builder()
                 .setSections(
                     ImmutableMap.of(
-                        "version_universes",
-                        ImmutableMap.of("invalid", "//hello:world")))
+                        "version_universes", ImmutableMap.of("invalid", "//hello:world")))
                 .build());
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("must specify version selections as a comma-separated");
     config.getVersionUniverses();
   }
-
 }

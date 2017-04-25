@@ -31,15 +31,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class VersionRootBuilder extends AbstractNodeBuilder<
-    VersionRootBuilder.Arg,
-    VersionRootBuilder.VersionRootDescription,
-    BuildRule> {
+public class VersionRootBuilder
+    extends AbstractNodeBuilder<
+        VersionRootBuilder.Arg, VersionRootBuilder.VersionRootDescription, BuildRule> {
 
   public VersionRootBuilder(BuildTarget target) {
     super(new VersionRootDescription(), target);
@@ -86,8 +84,7 @@ public class VersionRootBuilder extends AbstractNodeBuilder<
   public VersionRootBuilder setVersionedDeps(String target, Constraint constraint) {
     return setVersionedDeps(
         new AbstractMap.SimpleEntry<>(
-            BuildTargetFactory.newInstance(target),
-            Optional.of(constraint)));
+            BuildTargetFactory.newInstance(target), Optional.of(constraint)));
   }
 
   public static class Arg extends AbstractDescriptionArg {
@@ -110,7 +107,8 @@ public class VersionRootBuilder extends AbstractNodeBuilder<
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args) throws NoSuchBuildTargetException {
+        A args)
+        throws NoSuchBuildTargetException {
       throw new IllegalStateException();
     }
 
@@ -118,7 +116,5 @@ public class VersionRootBuilder extends AbstractNodeBuilder<
     public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
       return true;
     }
-
   }
-
 }
