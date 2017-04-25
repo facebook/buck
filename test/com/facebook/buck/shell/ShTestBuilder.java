@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -52,5 +51,4 @@ public class ShTestBuilder
     arg.resources = resources;
     return this;
   }
-
 }

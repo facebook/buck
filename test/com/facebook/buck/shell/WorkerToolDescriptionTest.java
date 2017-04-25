@@ -34,10 +34,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Optional;
+import org.junit.Test;
 
 public class WorkerToolDescriptionTest {
   @Test
@@ -59,16 +57,15 @@ public class WorkerToolDescriptionTest {
     assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
   }
 
-  private static WorkerTool createWorkerTool(Integer maxWorkers)
-      throws NoSuchBuildTargetException {
+  private static WorkerTool createWorkerTool(Integer maxWorkers) throws NoSuchBuildTargetException {
     TargetGraph targetGraph = TargetGraph.EMPTY;
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRule shBinaryRule = new ShBinaryBuilder(
-        BuildTargetFactory.newInstance("//:my_exe"))
-        .setMain(new FakeSourcePath("bin/exe"))
-        .build(resolver);
+    BuildRule shBinaryRule =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
+            .setMain(new FakeSourcePath("bin/exe"))
+            .build(resolver);
 
     WorkerToolDescription.Arg args = new WorkerToolDescription.Arg();
     args.env = ImmutableMap.of();
@@ -77,14 +74,15 @@ public class WorkerToolDescriptionTest {
     args.maxWorkers = Optional.of(maxWorkers);
     args.persistent = Optional.empty();
 
-    Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription(
-        FakeBuckConfig.builder().build());
+    Description<WorkerToolDescription.Arg> workerToolDescription =
+        new WorkerToolDescription(FakeBuckConfig.builder().build());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//arbitrary:target").build();
-    return (WorkerTool) workerToolDescription.createBuildRule(
-        targetGraph,
-        params,
-        resolver,
-        TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
-        args);
+    return (WorkerTool)
+        workerToolDescription.createBuildRule(
+            targetGraph,
+            params,
+            resolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            args);
   }
 }

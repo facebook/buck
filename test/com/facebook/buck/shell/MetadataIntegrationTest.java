@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.file.attribute.PosixFilePermission.GROUP_READ;
 import static java.nio.file.attribute.PosixFilePermission.OTHERS_READ;
@@ -32,39 +31,32 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class MetadataIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testMetadataPermissions() throws InterruptedException, IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "metadata_permissions",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "metadata_permissions", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand(
-        "build",
-        "//:test");
+    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", "//:test");
     buildResult.assertSuccess();
 
     // Check permissions on metadata.type
@@ -78,9 +70,7 @@ public class MetadataIntegrationTest {
     Files.setPosixFilePermissions(
         fs.getPathForRelativeExistingPath(metadataType),
         EnumSet.of(OWNER_READ, GROUP_READ, OTHERS_READ));
-    ProjectWorkspace.ProcessResult buildResult2 = workspace.runBuckCommand(
-        "build",
-        "//:test");
+    ProjectWorkspace.ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:test");
     buildResult2.assertSuccess();
   }
 }

@@ -18,16 +18,14 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ExportFileIntegrationTest {
 
@@ -36,8 +34,8 @@ public class ExportFileIntegrationTest {
   @Test
   public void exportFileWillPopulateDepsCorrectlyWhenSourceParameterIsASourcePath()
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "export_file_source_path_dep", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "export_file_source_path_dep", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:file");
@@ -53,5 +51,4 @@ public class ExportFileIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:dir");
     assertTrue(Files.exists(output.resolve("file.txt")));
   }
-
 }

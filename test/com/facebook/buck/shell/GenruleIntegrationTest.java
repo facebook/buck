@@ -25,18 +25,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.CharStreams;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -44,14 +39,15 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class GenruleIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   // When these tests fail, the failures contain buck output that is easy to confuse with the output
   // of the instance of buck that's running the test. This prepends each line with "> ".
@@ -64,10 +60,12 @@ public class GenruleIntegrationTest {
 
   @Test
   public void testIfCommandExitsZeroThenGenruleFails() throws IOException {
-    assumeTrue("This genrule uses the 'bash' argument, which is not supported on Windows. ",
+    assumeTrue(
+        "This genrule uses the 'bash' argument, which is not supported on Windows. ",
         Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_failing_command", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_failing_command", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:fail", "--verbose", "10");
@@ -84,9 +82,9 @@ public class GenruleIntegrationTest {
 
     // "(?s)" enables multiline matching for ".*". Parens have to be escaped.
     String outputPattern =
-        "(?s).*BUILD FAILED: //:fail failed with exit code 1:(?s).*" +
-        "\\(cd .*/buck-out/gen/fail__srcs && " +
-        "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)(?s).*";
+        "(?s).*BUILD FAILED: //:fail failed with exit code 1:(?s).*"
+            + "\\(cd .*/buck-out/gen/fail__srcs && "
+            + "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)(?s).*";
 
     assertTrue(
         "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),
@@ -95,8 +93,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleWithEmptyOutParameterFails() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_empty_out", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_empty_out", temporaryFolder);
     workspace.setUp();
 
     exception.expect(HumanReadableException.class);
@@ -108,22 +107,24 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleWithAbsoluteOutParameterFails() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_absolute_out", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_absolute_out", temporaryFolder);
     workspace.setUp();
 
     exception.expect(HumanReadableException.class);
     exception.expectMessage(
-        "The 'out' parameter of genrule //:genrule is '/tmp/file', " +
-            "which is not a valid file name.");
+        "The 'out' parameter of genrule //:genrule is '/tmp/file', "
+            + "which is not a valid file name.");
 
     workspace.runBuckCommand("build", "//:genrule");
   }
 
   @Test
   public void genruleDirectoryOutput() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_directory_output", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_directory_output", temporaryFolder);
     workspace.setUp();
     workspace.enableDirCache();
 
@@ -149,8 +150,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleWithBigCommand() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_big_command", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_big_command", temporaryFolder);
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//:big").assertSuccess();
@@ -165,15 +167,14 @@ public class GenruleIntegrationTest {
       expectedOutput.append("X");
     }
     expectedOutput.append(System.lineSeparator());
-    assertThat(
-        workspace.getFileContents(outputPath),
-        equalTo(expectedOutput.toString()));
+    assertThat(workspace.getFileContents(outputPath), equalTo(expectedOutput.toString()));
   }
 
   @Test
   public void genruleDirectoryOutputIsCleanedBeforeBuildAndCacheFetch() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_directory_output_cleaned", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_directory_output_cleaned", temporaryFolder);
     workspace.setUp();
     workspace.enableDirCache();
 
@@ -212,8 +213,8 @@ public class GenruleIntegrationTest {
         Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/two")));
     assertTrue(
         "output of mkdir_another should still exist",
-        Files.isRegularFile(workspace.resolve(
-                "buck-out/gen/mkdir_another/another_directory/file")));
+        Files.isRegularFile(
+            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
 
     workspace.copyFile("BUCK.1", "BUCK");
     workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
@@ -227,15 +228,16 @@ public class GenruleIntegrationTest {
         Files.isRegularFile(workspace.resolve("buck-out/gen/mkdir/directory/two")));
     assertTrue(
         "output of mkdir_another should still exist",
-        Files.isRegularFile(workspace.resolve(
-                "buck-out/gen/mkdir_another/another_directory/file")));
+        Files.isRegularFile(
+            workspace.resolve("buck-out/gen/mkdir_another/another_directory/file")));
     assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
   }
 
   @Test
   public void genruleCleansEntireOutputDirectory() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_robust_cleaning", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_robust_cleaning", temporaryFolder);
     workspace.setUp();
 
     workspace.copyFile("BUCK.1", "BUCK");
@@ -243,9 +245,7 @@ public class GenruleIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:write");
     assertTrue(
-        "write should be built",
-        Files.isRegularFile(
-            workspace.resolve("buck-out/gen/write/one")));
+        "write should be built", Files.isRegularFile(workspace.resolve("buck-out/gen/write/one")));
 
     workspace.copyFile("BUCK.2", "BUCK");
     workspace.runBuckCommand("build", "//:write").assertSuccess();
@@ -261,8 +261,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleDirectorySourcePath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_directory_source_path", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_directory_source_path", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:cpdir");
@@ -275,10 +276,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void twoGenrulesWithTheSameOutputFileShouldNotOverwriteOneAnother() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "genrule_overwrite",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_overwrite", temporaryFolder);
     workspace.setUp();
 
     // The two genrules run in this test have the same inputs and same output name
@@ -299,8 +299,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void executableGenrule() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_executable", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_executable", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("run", "//:binary");
@@ -309,10 +310,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleZipOutputsAreScrubbed() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "genrule_zip_scrubber",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_zip_scrubber", temporaryFolder);
     workspace.setUp();
 
     Path outputOne = workspace.buildAndReturnOutput("//:genrule-one");
@@ -323,10 +323,9 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleZipOutputsExtendedTimestampsAreScrubbed() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "genrule_zip_scrubber",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_zip_scrubber", temporaryFolder);
     workspace.setUp();
 
     Path outputOne = workspace.buildAndReturnOutput("//:extended-time-one");
@@ -336,35 +335,40 @@ public class GenruleIntegrationTest {
   }
 
   private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {
-    try (
-        ZipFile zipOne = new ZipFile(zipPathOne.toFile());
+    try (ZipFile zipOne = new ZipFile(zipPathOne.toFile());
         ZipFile zipTwo = new ZipFile(zipPathTwo.toFile())) {
-      Enumeration<? extends ZipEntry> entriesOne = zipOne.entries(),
-          entriesTwo = zipTwo.entries();
+      Enumeration<? extends ZipEntry> entriesOne = zipOne.entries(), entriesTwo = zipTwo.entries();
 
       while (entriesOne.hasMoreElements()) {
         assertTrue(entriesTwo.hasMoreElements());
-        ZipEntry entryOne = entriesOne.nextElement(),
-            entryTwo = entriesTwo.nextElement();
+        ZipEntry entryOne = entriesOne.nextElement(), entryTwo = entriesTwo.nextElement();
         assertEquals(zipEntryDebugString(entryOne), zipEntryDebugString(entryTwo));
         assertEquals(zipEntryData(zipOne, entryOne), zipEntryData(zipTwo, entryTwo));
       }
       assertFalse(entriesTwo.hasMoreElements());
     }
     assertEquals(
-        new String(Files.readAllBytes(zipPathOne)),
-        new String(Files.readAllBytes(zipPathTwo)));
+        new String(Files.readAllBytes(zipPathOne)), new String(Files.readAllBytes(zipPathTwo)));
   }
 
   private String zipEntryDebugString(ZipEntry entryOne) {
-    return "<ZE name=" + entryOne.getName() + " crc=" + entryOne.getCrc() +
-        " comment=" + entryOne.getComment() + " size=" + entryOne.getSize() +
-        " atime=" + entryOne.getLastAccessTime() + " mtime=" + entryOne.getLastModifiedTime() +
-        " ctime=" + entryOne.getCreationTime();
+    return "<ZE name="
+        + entryOne.getName()
+        + " crc="
+        + entryOne.getCrc()
+        + " comment="
+        + entryOne.getComment()
+        + " size="
+        + entryOne.getSize()
+        + " atime="
+        + entryOne.getLastAccessTime()
+        + " mtime="
+        + entryOne.getLastModifiedTime()
+        + " ctime="
+        + entryOne.getCreationTime();
   }
 
   private String zipEntryData(ZipFile zip, ZipEntry entry) throws IOException {
     return CharStreams.toString(new InputStreamReader(zip.getInputStream(entry)));
   }
-
 }

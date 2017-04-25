@@ -21,9 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class GenruleBuilder
@@ -73,5 +71,4 @@ public class GenruleBuilder
     arg.srcs = Optional.ofNullable(srcs).orElse(ImmutableList.of());
     return this;
   }
-
 }

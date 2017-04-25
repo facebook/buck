@@ -35,21 +35,19 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
 
-public class FakeWorkerBuilder extends AbstractNodeBuilder<
-    Object, FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
+public class FakeWorkerBuilder
+    extends AbstractNodeBuilder<
+        Object, FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
 
   public FakeWorkerBuilder(BuildTarget target) {
     this(target, FakeWorkerTool::new);
   }
 
-  public FakeWorkerBuilder(
-      BuildTarget target,
-      Function<BuildRuleParams, BuildRule> create) {
+  public FakeWorkerBuilder(BuildTarget target, Function<BuildRuleParams, BuildRule> create) {
     super(new FakeWorkerDescription(create), target);
   }
 
@@ -60,6 +58,7 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
     public FakeWorkerTool(BuildRuleParams params) {
       super(params);
     }
+
     @Override
     public Tool getTool() {
       return tool;
@@ -89,7 +88,6 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
     public HashCode getInstanceKey() {
       return hashCode;
     }
-
   }
 
   private static class FakeTool implements Tool {
@@ -137,10 +135,9 @@ public class FakeWorkerBuilder extends AbstractNodeBuilder<
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args) throws NoSuchBuildTargetException {
+        A args)
+        throws NoSuchBuildTargetException {
       return create.apply(params);
     }
   }
 }
-
-

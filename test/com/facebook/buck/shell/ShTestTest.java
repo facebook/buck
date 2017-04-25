@@ -35,12 +35,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class ShTestTest extends EasyMockSupport {
 
@@ -61,26 +59,24 @@ public class ShTestTest extends EasyMockSupport {
     BuildRule dep = new FakeBuildRule("//:dep", pathResolver);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setExtraDeps(ImmutableSortedSet.of(extraDep))
-            .build(),
-        ruleFinder,
-        new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.of(),
-        /* env */ ImmutableMap.of(),
-        /* resources */ ImmutableSortedSet.of(),
-        Optional.empty(),
-        /* runTestSeparately */ false,
-        /* labels */ ImmutableSet.of(),
-        /* contacts */ ImmutableSet.of());
+    ShTest shTest =
+        new ShTest(
+            new FakeBuildRuleParamsBuilder(target)
+                .setDeclaredDeps(ImmutableSortedSet.of(dep))
+                .setExtraDeps(ImmutableSortedSet.of(extraDep))
+                .build(),
+            ruleFinder,
+            new FakeSourcePath("run_test.sh"),
+            /* args */ ImmutableList.of(),
+            /* env */ ImmutableMap.of(),
+            /* resources */ ImmutableSortedSet.of(),
+            Optional.empty(),
+            /* runTestSeparately */ false,
+            /* labels */ ImmutableSet.of(),
+            /* contacts */ ImmutableSet.of());
 
     assertThat(
         shTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
-        containsInAnyOrder(
-            dep.getBuildTarget(),
-            extraDep.getBuildTarget()));
+        containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
-
 }

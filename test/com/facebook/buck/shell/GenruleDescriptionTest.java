@@ -27,13 +27,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -42,22 +42,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Map;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
-    Map<String, Object> instance = ImmutableMap.of(
-        "srcs", ImmutableList.of(":baz", "//biz:baz"),
-        "out", "AndroidManifest.xml",
-        "cmd", "$(exe //bin:executable) $(location :arg)");
+    Map<String, Object> instance =
+        ImmutableMap.of(
+            "srcs", ImmutableList.of(":baz", "//biz:baz"),
+            "out", "AndroidManifest.xml",
+            "cmd", "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
@@ -87,12 +86,10 @@ public class GenruleDescriptionTest {
                 createCellRoots(projectFilesystem));
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
-        ImmutableSet.of(
-            "//foo:baz",
-            "//biz:baz",
-            "//bin:executable",
-            "//foo:arg"),
-        targetNode.getExtraDeps().stream()
+        ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),
+        targetNode
+            .getExtraDeps()
+            .stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
   }

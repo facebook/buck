@@ -37,26 +37,21 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class WorkerProcessTest {
 
-  @Rule
-  public TemporaryPaths temporaryPaths = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   private ProcessExecutorParams createDummyParams() {
-    return ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of())
-        .build();
+    return ProcessExecutorParams.builder().setCommand(ImmutableList.of()).build();
   }
 
   @Test
@@ -72,20 +67,18 @@ public class WorkerProcessTest {
     Optional<String> stdout = Optional.of("my stdout");
     Optional<String> stderr = Optional.of("my stderr");
 
-    WorkerProcess process = new WorkerProcess(
-        new FakeProcessExecutor(),
-        createDummyParams(),
-        filesystem,
-        tmpPath);
-    process.setProtocol(new FakeWorkerProcessProtocol() {
-      @Override
-      public int receiveCommandResponse(int messageID) throws IOException {
-        // simulate the external tool and write the stdout and stderr files
-        filesystem.writeContentsToPath(stdout.get(), stdoutPath);
-        filesystem.writeContentsToPath(stderr.get(), stderrPath);
-        return super.receiveCommandResponse(messageID);
-      }
-    });
+    WorkerProcess process =
+        new WorkerProcess(new FakeProcessExecutor(), createDummyParams(), filesystem, tmpPath);
+    process.setProtocol(
+        new FakeWorkerProcessProtocol() {
+          @Override
+          public int receiveCommandResponse(int messageID) throws IOException {
+            // simulate the external tool and write the stdout and stderr files
+            filesystem.writeContentsToPath(stdout.get(), stdoutPath);
+            filesystem.writeContentsToPath(stderr.get(), stderrPath);
+            return super.receiveCommandResponse(messageID);
+          }
+        });
 
     WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
     assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
@@ -96,11 +89,12 @@ public class WorkerProcessTest {
   public void testClose() throws IOException {
     FakeWorkerProcessProtocol protocol = new FakeWorkerProcessProtocol();
 
-    WorkerProcess process = new WorkerProcess(
-        new FakeProcessExecutor(),
-        createDummyParams(),
-        new FakeProjectFilesystem(),
-        Paths.get("tmp").toAbsolutePath().normalize());
+    WorkerProcess process =
+        new WorkerProcess(
+            new FakeProcessExecutor(),
+            createDummyParams(),
+            new FakeProjectFilesystem(),
+            Paths.get("tmp").toAbsolutePath().normalize());
     process.setProtocol(protocol);
 
     assertFalse(protocol.isClosed());
@@ -110,10 +104,8 @@ public class WorkerProcessTest {
 
   @Test(timeout = 20 * 1000)
   public void testDoesNotBlockOnLargeStderr() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "worker_process",
-        temporaryPaths);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "worker_process", temporaryPaths);
     workspace.setUp();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(workspace.getDestPath());
     Console console = new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty());
@@ -123,14 +115,15 @@ public class WorkerProcessTest {
     } else {
       script = "./script.py";
     }
-    WorkerProcess workerProcess = new WorkerProcess(
-        new DefaultProcessExecutor(console),
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of(script))
-            .setDirectory(workspace.getDestPath())
-            .build(),
-        projectFilesystem,
-        temporaryPaths.newFolder());
+    WorkerProcess workerProcess =
+        new WorkerProcess(
+            new DefaultProcessExecutor(console),
+            ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of(script))
+                .setDirectory(workspace.getDestPath())
+                .build(),
+            projectFilesystem,
+            temporaryPaths.newFolder());
     try {
       workerProcess.ensureLaunchAndHandshake();
       fail("Handshake should have failed");

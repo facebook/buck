@@ -33,9 +33,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,14 +41,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.junit.Test;
 
 public class ShellStepTest {
 
   private static final ImmutableList<String> ARGS = ImmutableList.of("bash", "-c", "echo $V1 $V2");
 
-  private static final ImmutableMap<String, String> ENV = ImmutableMap.of(
-      "V1", "two words",
-      "V2", "$foo'bar'");
+  private static final ImmutableMap<String, String> ENV =
+      ImmutableMap.of(
+          "V1", "two words",
+          "V2", "$foo'bar'");
 
   private static final Path PATH = Paths.get("/tmp/a b");
   private static final String ERROR_MSG = "some syntax error\ncompilation failed\n";
@@ -60,36 +59,35 @@ public class ShellStepTest {
   private static final int EXIT_SUCCESS = 0;
 
   private static ExecutionContext createContext(
-      ImmutableMap<ProcessExecutorParams, FakeProcess> processes,
-      final Console console) throws IOException {
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setConsole(console)
-        .setProcessExecutor(new FakeProcessExecutor(processes, console))
-        .build();
+      ImmutableMap<ProcessExecutorParams, FakeProcess> processes, final Console console)
+      throws IOException {
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setConsole(console)
+            .setProcessExecutor(new FakeProcessExecutor(processes, console))
+            .build();
 
-    context.getBuckEventBus().register(new Object() {
-      @Subscribe
-      public void logEvent(ConsoleEvent event) throws IOException {
-        if (event.getLevel().equals(Level.WARNING)) {
-          console.getStdErr().write(event.getMessage().getBytes(Charsets.UTF_8));
-        }
-      }
-    });
+    context
+        .getBuckEventBus()
+        .register(
+            new Object() {
+              @Subscribe
+              public void logEvent(ConsoleEvent event) throws IOException {
+                if (event.getLevel().equals(Level.WARNING)) {
+                  console.getStdErr().write(event.getMessage().getBytes(Charsets.UTF_8));
+                }
+              }
+            });
 
     return context;
   }
 
   private static ProcessExecutorParams createParams() {
-    return ProcessExecutorParams
-        .builder()
-        .setCommand(ImmutableList.of("test"))
-        .build();
+    return ProcessExecutorParams.builder().setCommand(ImmutableList.of("test")).build();
   }
 
   private static ShellStep createCommand(
-      ImmutableMap<String, String> env,
-      ImmutableList<String> cmd,
-      Path workingDirectory) {
+      ImmutableMap<String, String> env, ImmutableList<String> cmd, Path workingDirectory) {
     return createCommand(
         env,
         cmd,
@@ -101,12 +99,7 @@ public class ShellStepTest {
 
   private static ShellStep createCommand(boolean shouldPrintStdErr, boolean shouldPrintStdOut) {
     return createCommand(
-        ENV,
-        ARGS,
-        null,
-        shouldPrintStdErr,
-        shouldPrintStdOut,
-        /* stdin */ Optional.empty());
+        ENV, ARGS, null, shouldPrintStdErr, shouldPrintStdOut, /* stdin */ Optional.empty());
   }
 
   private static ShellStep createCommand(
@@ -117,32 +110,34 @@ public class ShellStepTest {
       final boolean shouldPrintStdOut,
       final Optional<String> stdin) {
     workingDirectory =
-        workingDirectory == null ?
-            Paths.get(".").toAbsolutePath().normalize() :
-            workingDirectory;
+        workingDirectory == null ? Paths.get(".").toAbsolutePath().normalize() : workingDirectory;
 
     return new ShellStep(workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
         return env;
       }
+
       @Override
       public String getShortName() {
-         return cmd.get(0);
+        return cmd.get(0);
       }
+
       @Override
       protected Optional<String> getStdin(ExecutionContext context) {
         return stdin;
       }
+
       @Override
-      protected ImmutableList<String> getShellCommandInternal(
-          ExecutionContext context) {
+      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         return cmd;
       }
+
       @Override
       protected boolean shouldPrintStderr(Verbosity verbosity) {
         return shouldPrintStdErr;
       }
+
       @Override
       protected boolean shouldPrintStdout(Verbosity verbosity) {
         return shouldPrintStdOut;
@@ -154,49 +149,41 @@ public class ShellStepTest {
   public void testDescriptionWithEnvironment() {
     Path workingDirectory = Paths.get(".").toAbsolutePath().normalize();
     ShellStep command = createCommand(ENV, ARGS, null);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProcessExecutor(new FakeProcessExecutor())
-        .build();
-    String template = Platform.detect() == Platform.WINDOWS ?
-        "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")" :
-        "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
+    ExecutionContext context =
+        TestExecutionContext.newBuilder().setProcessExecutor(new FakeProcessExecutor()).build();
+    String template =
+        Platform.detect() == Platform.WINDOWS
+            ? "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")"
+            : "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
     assertEquals(
-        String.format(
-            template,
-            Escaper.escapeAsBashString(workingDirectory)),
+        String.format(template, Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
 
   @Test
   public void testDescriptionWithEnvironmentAndPath() {
     ShellStep command = createCommand(ENV, ARGS, PATH);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProcessExecutor(new FakeProcessExecutor())
-        .build();
-    String template = Platform.detect() == Platform.WINDOWS ?
-        "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")" :
-        "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
+    ExecutionContext context =
+        TestExecutionContext.newBuilder().setProcessExecutor(new FakeProcessExecutor()).build();
+    String template =
+        Platform.detect() == Platform.WINDOWS
+            ? "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")"
+            : "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
     assertEquals(
-        String.format(template, Escaper.escapeAsBashString(PATH)),
-        command.getDescription(context));
+        String.format(template, Escaper.escapeAsBashString(PATH)), command.getDescription(context));
   }
 
   @Test
   public void testDescriptionWithPath() {
     ShellStep command = createCommand(ImmutableMap.of(), ARGS, PATH);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProcessExecutor(new FakeProcessExecutor())
-        .build();
-    String template = Platform.detect() == Platform.WINDOWS ?
-        "(cd %s && bash -c \"echo $V1 $V2\")" : "(cd %s && bash -c 'echo $V1 $V2')";
+    ExecutionContext context =
+        TestExecutionContext.newBuilder().setProcessExecutor(new FakeProcessExecutor()).build();
+    String template =
+        Platform.detect() == Platform.WINDOWS
+            ? "(cd %s && bash -c \"echo $V1 $V2\")"
+            : "(cd %s && bash -c 'echo $V1 $V2')";
     assertEquals(
-        String.format(
-            template,
-            Escaper.escapeAsBashString(PATH)),
-        command.getDescription(context));
+        String.format(template, Escaper.escapeAsBashString(PATH)), command.getDescription(context));
   }
 
   @Test
@@ -204,16 +191,14 @@ public class ShellStepTest {
 
     Path workingDirectory = Paths.get(".").toAbsolutePath().normalize();
     ShellStep command = createCommand(ImmutableMap.of(), ARGS, null);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProcessExecutor(new FakeProcessExecutor())
-        .build();
-    String expectedDescription = Platform.detect() == Platform.WINDOWS ?
-        "(cd %s && bash -c \"echo $V1 $V2\")" : "(cd %s && bash -c 'echo $V1 $V2')";
+    ExecutionContext context =
+        TestExecutionContext.newBuilder().setProcessExecutor(new FakeProcessExecutor()).build();
+    String expectedDescription =
+        Platform.detect() == Platform.WINDOWS
+            ? "(cd %s && bash -c \"echo $V1 $V2\")"
+            : "(cd %s && bash -c 'echo $V1 $V2')";
     assertEquals(
-        String.format(
-            expectedDescription,
-            Escaper.escapeAsBashString(workingDirectory)),
+        String.format(expectedDescription, Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
 
@@ -275,11 +260,13 @@ public class ShellStepTest {
   @Test
   public void processEnvironmentIsUnionOfContextAndStepEnvironments() {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setEnvironment(ImmutableMap.of(
-                "CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE",
-                "PWD", "/wrong-pwd"))
-        .build();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setEnvironment(
+                ImmutableMap.of(
+                    "CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE",
+                    "PWD", "/wrong-pwd"))
+            .build();
     Map<String, String> subProcessEnvironment = new HashMap<>();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
     command.setProcessEnvironment(context, subProcessEnvironment, new File("/right-pwd"));
@@ -292,19 +279,21 @@ public class ShellStepTest {
         ImmutableMap.<String, String>builder()
             .putAll(actualProcessEnvironment)
             .put("PWD", new File("/right-pwd").getPath())
-            .putAll(ENV).build());
+            .putAll(ENV)
+            .build());
   }
 
   @Test
   public void testStdinGetsToProcessWhenPresent() throws Exception {
     final Optional<String> stdin = Optional.of("hello world!");
-    ShellStep command = createCommand(
-        ImmutableMap.of(),
-        ImmutableList.of("cat", "-"),
-        null,
-        /*shouldPrintStdErr*/ true,
-        /*shouldPrintStdOut*/ true,
-        stdin);
+    ShellStep command =
+        createCommand(
+            ImmutableMap.of(),
+            ImmutableList.of("cat", "-"),
+            null,
+            /*shouldPrintStdErr*/ true,
+            /*shouldPrintStdOut*/ true,
+            stdin);
     ProcessExecutorParams params = createParams();
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
@@ -316,13 +305,14 @@ public class ShellStepTest {
   @Test
   public void testStdinDoesNotGetToProcessWhenAbsent() throws Exception {
     final Optional<String> stdin = Optional.empty();
-    ShellStep command = createCommand(
-        ImmutableMap.of(),
-        ImmutableList.of("cat", "-"),
-        null,
-        /*shouldPrintStdErr*/ true,
-        /*shouldPrintStdOut*/ true,
-        stdin);
+    ShellStep command =
+        createCommand(
+            ImmutableMap.of(),
+            ImmutableList.of("cat", "-"),
+            null,
+            /*shouldPrintStdErr*/ true,
+            /*shouldPrintStdOut*/ true,
+            stdin);
     ProcessExecutorParams params = createParams();
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
@@ -330,5 +320,4 @@ public class ShellStepTest {
     command.launchAndInteractWithProcess(context, params);
     assertEquals("", process.getOutput());
   }
-
 }

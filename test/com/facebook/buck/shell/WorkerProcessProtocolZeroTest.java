@@ -28,22 +28,19 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class WorkerProcessProtocolZeroTest {
 
-  @Rule
-  public TemporaryPaths temporaryPaths = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   private ProcessExecutor fakeProcessExecutor;
   private ProcessExecutor.LaunchedProcess fakeLaunchedProcess;
@@ -64,55 +61,53 @@ public class WorkerProcessProtocolZeroTest {
   @Test
   public void testSendHandshake() throws IOException {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        new JsonWriter(jsonSentToWorkerProcess),
-        dummyJsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            new JsonWriter(jsonSentToWorkerProcess),
+            dummyJsonReader,
+            newTempFile());
 
     int handshakeID = 123;
     protocol.sendHandshake(handshakeID);
-    String expectedJson = String.format(
-        "[{\"id\":%d,\"type\":\"handshake\",\"protocol_version\":\"0\",\"capabilities\":[]}",
-        handshakeID);
+    String expectedJson =
+        String.format(
+            "[{\"id\":%d,\"type\":\"handshake\",\"protocol_version\":\"0\",\"capabilities\":[]}",
+            handshakeID);
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.containsString(expectedJson));
   }
 
   @Test
   public void testSendCommand() throws IOException {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        new JsonWriter(jsonSentToWorkerProcess),
-        dummyJsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            new JsonWriter(jsonSentToWorkerProcess),
+            dummyJsonReader,
+            newTempFile());
 
     int messageID = 123;
     Path argsPath = Paths.get("args");
     Path stdoutPath = Paths.get("stdout");
     Path stderrPath = Paths.get("stderr");
     protocol.sendCommand(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
-    String expectedJson = String.format(
-        "{\"id\":%d,\"type\":\"command\"," +
-        "\"args_path\":\"%s\",\"stdout_path\":\"%s\",\"stderr_path\":\"%s\"}",
-        messageID,
-        argsPath.toString(),
-        stdoutPath.toString(),
-        stderrPath.toString());
+    String expectedJson =
+        String.format(
+            "{\"id\":%d,\"type\":\"command\","
+                + "\"args_path\":\"%s\",\"stdout_path\":\"%s\",\"stderr_path\":\"%s\"}",
+            messageID, argsPath.toString(), stdoutPath.toString(), stderrPath.toString());
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.containsString(expectedJson));
   }
 
   private JsonReader createMockJsonReaderForReceiveHandshake(
-      int handshakeID,
-      String type,
-      String protocolVersion) throws IOException {
-    String jsonToBeRead = String.format(
-        "[{\"id\":%d,\"type\":\"%s\",\"protocol_version\":\"%s\",\"capabilities\":[]}",
-        handshakeID,
-        type,
-        protocolVersion);
+      int handshakeID, String type, String protocolVersion) throws IOException {
+    String jsonToBeRead =
+        String.format(
+            "[{\"id\":%d,\"type\":\"%s\",\"protocol_version\":\"%s\",\"capabilities\":[]}",
+            handshakeID, type, protocolVersion);
     return new JsonReader(new StringReader(jsonToBeRead));
   }
 
@@ -121,12 +116,9 @@ public class WorkerProcessProtocolZeroTest {
     int handshakeID = 123;
     JsonReader jsonReader = createMockJsonReaderForReceiveHandshake(handshakeID, "handshake", "0");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     protocol.receiveHandshake(handshakeID);
   }
@@ -135,12 +127,13 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveHandshakeWithMalformedJSON() throws IOException {
     String malformedJson = "=^..^= meow";
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        new JsonReader(new StringReader(malformedJson)),
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            dummyJsonWriter,
+            new JsonReader(new StringReader(malformedJson)),
+            newTempFile());
 
     try {
       protocol.receiveHandshake(123);
@@ -153,17 +146,12 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveHandshakeWithIncorrectID() throws IOException {
     int handshakeID = 123;
     int differentHandshakeID = 456;
-    JsonReader jsonReader = createMockJsonReaderForReceiveHandshake(
-        differentHandshakeID,
-        "handshake",
-        "0");
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveHandshake(differentHandshakeID, "handshake", "0");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveHandshake(handshakeID);
@@ -172,50 +160,38 @@ public class WorkerProcessProtocolZeroTest {
           e.getMessage(),
           Matchers.containsString(
               String.format(
-                  "Expected handshake response's \"id\" value to be \"%d\"",
-                  handshakeID)));
+                  "Expected handshake response's \"id\" value to be \"%d\"", handshakeID)));
     }
   }
 
   @Test
   public void testReceiveHandshakeWithIncorrectType() throws IOException {
     int handshakeID = 123;
-    JsonReader jsonReader = createMockJsonReaderForReceiveHandshake(
-        handshakeID,
-        "INCORRECT MESSAGE TYPE",
-        "0");
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveHandshake(handshakeID, "INCORRECT MESSAGE TYPE", "0");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveHandshake(handshakeID);
     } catch (HumanReadableException e) {
       assertThat(
           e.getMessage(),
-          Matchers.containsString(
-              "Expected handshake response's \"type\" to be \"handshake\""));
+          Matchers.containsString("Expected handshake response's \"type\" to be \"handshake\""));
     }
   }
 
   @Test
   public void testReceiveHandshakeWithIncorrectProtocolVersion() throws IOException {
     int handshakeID = 123;
-    JsonReader jsonReader = createMockJsonReaderForReceiveHandshake(
-        handshakeID,
-        "handshake",
-        "BAD PROTOCOL VERSION");
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveHandshake(handshakeID, "handshake", "BAD PROTOCOL VERSION");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveHandshake(handshakeID);
@@ -228,14 +204,9 @@ public class WorkerProcessProtocolZeroTest {
   }
 
   private JsonReader createMockJsonReaderForReceiveCommandResponse(
-      int messageID,
-      String type,
-      int exitCode) throws IOException {
-    String jsonToBeRead = String.format(
-        "{\"id\":%d,\"type\":\"%s\",\"exit_code\":%d}",
-        messageID,
-        type,
-        exitCode);
+      int messageID, String type, int exitCode) throws IOException {
+    String jsonToBeRead =
+        String.format("{\"id\":%d,\"type\":\"%s\",\"exit_code\":%d}", messageID, type, exitCode);
     return new JsonReader(new StringReader(jsonToBeRead));
   }
 
@@ -244,12 +215,9 @@ public class WorkerProcessProtocolZeroTest {
     int messageID = 123;
     JsonReader jsonReader = createMockJsonReaderForReceiveCommandResponse(messageID, "result", 0);
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -258,12 +226,13 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveCommandResponseWithMalformedJSON() throws IOException {
     String malformedJson = "><(((('> blub";
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        new JsonReader(new StringReader(malformedJson)),
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            dummyJsonWriter,
+            new JsonReader(new StringReader(malformedJson)),
+            newTempFile());
 
     try {
       protocol.receiveCommandResponse(123);
@@ -276,17 +245,12 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveCommandResponseWithIncorrectMessageID() throws IOException {
     int messageID = 123;
     int differentMessageID = 456;
-    JsonReader jsonReader = createMockJsonReaderForReceiveCommandResponse(
-        differentMessageID,
-        "result",
-        0);
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveCommandResponse(differentMessageID, "result", 0);
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveCommandResponse(messageID);
@@ -301,24 +265,18 @@ public class WorkerProcessProtocolZeroTest {
   @Test
   public void testReceiveCommandResponseWithInvalidType() throws IOException {
     int messageID = 123;
-    JsonReader jsonReader = createMockJsonReaderForReceiveCommandResponse(
-        messageID,
-        "INVALID RESPONSE TYPE",
-        0);
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveCommandResponse(messageID, "INVALID RESPONSE TYPE", 0);
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveCommandResponse(messageID);
     } catch (HumanReadableException e) {
       assertThat(
-          e.getMessage(),
-          Matchers.containsString("Expected response's \"type\" to be one of"));
+          e.getMessage(), Matchers.containsString("Expected response's \"type\" to be one of"));
     }
   }
 
@@ -335,12 +293,9 @@ public class WorkerProcessProtocolZeroTest {
     JsonReader reader = new JsonReader(new StringReader("[]"));
     reader.beginArray();
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        writer,
-        reader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, writer, reader, newTempFile());
 
     protocol.close();
 
@@ -358,12 +313,9 @@ public class WorkerProcessProtocolZeroTest {
 
     JsonReader reader = new JsonReader(new StringReader("invalid JSON"));
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        writer,
-        reader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, writer, reader, newTempFile());
 
     try {
       protocol.close();
@@ -385,19 +337,17 @@ public class WorkerProcessProtocolZeroTest {
     Path stderrPath = Paths.get("err");
 
     int messageId = 123;
-    JsonReader jsonReader = createMockJsonReaderForReceiveCommand(
-        messageId,
-        "command",
-        argsPath.toString(),
-        stdoutPath.toString(),
-        stderrPath.toString());
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveCommand(
+            messageId,
+            "command",
+            argsPath.toString(),
+            stdoutPath.toString(),
+            stderrPath.toString());
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     WorkerProcessCommand command = protocol.receiveCommand(messageId);
     assertThat(command.getArgsPath(), Matchers.equalToObject(argsPath));
@@ -409,19 +359,19 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveCommandWithMalformedJSON() throws IOException {
     String malformedJson = "><(((('> blub";
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        new JsonReader(new StringReader(malformedJson)),
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            dummyJsonWriter,
+            new JsonReader(new StringReader(malformedJson)),
+            newTempFile());
 
     try {
       protocol.receiveCommand(123);
     } catch (HumanReadableException e) {
       assertThat(
-          e.getMessage(),
-          Matchers.containsString("Error receiving command from external process"));
+          e.getMessage(), Matchers.containsString("Error receiving command from external process"));
     }
   }
 
@@ -429,19 +379,13 @@ public class WorkerProcessProtocolZeroTest {
   public void testReceiveCommandWithIncorrectMessageID() throws IOException {
     int messageID = 123;
     int differentMessageID = 456;
-    JsonReader jsonReader = createMockJsonReaderForReceiveCommand(
-        differentMessageID,
-        "command",
-        "/path/to/args",
-        "/path/to/stdout",
-        "/path/to/stderr");
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveCommand(
+            differentMessageID, "command", "/path/to/args", "/path/to/stdout", "/path/to/stderr");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveCommand(messageID);
@@ -456,84 +400,75 @@ public class WorkerProcessProtocolZeroTest {
   @Test
   public void testReceiveCommandWithInvalidType() throws IOException {
     int messageID = 123;
-    JsonReader jsonReader = createMockJsonReaderForReceiveCommand(
-        messageID,
-        "INVALID RESPONSE TYPE",
-        "/path/to/args",
-        "/path/to/stdout",
-        "/path/to/stderr");
+    JsonReader jsonReader =
+        createMockJsonReaderForReceiveCommand(
+            messageID,
+            "INVALID RESPONSE TYPE",
+            "/path/to/args",
+            "/path/to/stdout",
+            "/path/to/stderr");
 
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        dummyJsonWriter,
-        jsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
 
     try {
       protocol.receiveCommand(messageID);
     } catch (HumanReadableException e) {
       assertThat(
-          e.getMessage(),
-          Matchers.containsString("Expected command's \"type\" to be \"command\""));
+          e.getMessage(), Matchers.containsString("Expected command's \"type\" to be \"command\""));
     }
   }
 
   private JsonReader createMockJsonReaderForReceiveCommand(
-      int messageID,
-      String type,
-      String argsPath,
-      String stdoutPath,
-      String stderrPath) throws IOException {
-    String jsonToBeRead = String.format(
-        "{" +
-            "\"id\":%d," +
-            "\"type\":\"%s\"," +
-            "\"args_path\":\"%s\"," +
-            "\"stdout_path\":\"%s\"," +
-            "\"stderr_path\":\"%s\"" +
-            "}",
-        messageID,
-        type,
-        argsPath,
-        stdoutPath,
-        stderrPath);
+      int messageID, String type, String argsPath, String stdoutPath, String stderrPath)
+      throws IOException {
+    String jsonToBeRead =
+        String.format(
+            "{"
+                + "\"id\":%d,"
+                + "\"type\":\"%s\","
+                + "\"args_path\":\"%s\","
+                + "\"stdout_path\":\"%s\","
+                + "\"stderr_path\":\"%s\""
+                + "}",
+            messageID, type, argsPath, stdoutPath, stderrPath);
     return new JsonReader(new StringReader(jsonToBeRead));
   }
 
   @Test
   public void testSendCommandResponse() throws IOException {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        new JsonWriter(jsonSentToWorkerProcess),
-        dummyJsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            new JsonWriter(jsonSentToWorkerProcess),
+            dummyJsonReader,
+            newTempFile());
 
     int messageID = 123;
     protocol.sendCommandResponse(messageID, "result", 0);
-    String expectedJson = String.format(
-        "{\"id\":%d,\"type\":\"result\",\"exit_code\":0}",
-        messageID);
+    String expectedJson =
+        String.format("{\"id\":%d,\"type\":\"result\",\"exit_code\":0}", messageID);
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.containsString(expectedJson));
   }
 
   @Test
   public void testSendCommandResponseWithWrongType() throws IOException {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
-    WorkerProcessProtocol protocol = new WorkerProcessProtocolZero(
-        fakeProcessExecutor,
-        fakeLaunchedProcess,
-        new JsonWriter(jsonSentToWorkerProcess),
-        dummyJsonReader,
-        newTempFile());
+    WorkerProcessProtocol protocol =
+        new WorkerProcessProtocolZero(
+            fakeProcessExecutor,
+            fakeLaunchedProcess,
+            new JsonWriter(jsonSentToWorkerProcess),
+            dummyJsonReader,
+            newTempFile());
     try {
       protocol.sendCommandResponse(123, "WRONG_TYPE", 1);
     } catch (HumanReadableException e) {
       assertThat(
-          e.getMessage(),
-          Matchers.containsString("Expected response's \"type\" to be one of"));
+          e.getMessage(), Matchers.containsString("Expected response's \"type\" to be one of"));
     }
   }
 }

@@ -20,16 +20,14 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class WorkerProcessPoolTest {
   @Test
@@ -43,11 +41,11 @@ public class WorkerProcessPoolTest {
       tasks[i] = new Thread(new BorrowWorkerProcessWithoutReturning(pool, createdWorkers));
     }
 
-    for (Thread thread: tasks) {
+    for (Thread thread : tasks) {
       thread.start();
     }
 
-    for (Thread thread: tasks) {
+    for (Thread thread : tasks) {
       thread.join(100);
     }
 
@@ -61,18 +59,18 @@ public class WorkerProcessPoolTest {
     final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = {
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
     };
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -94,7 +92,7 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -113,7 +111,7 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -122,7 +120,7 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -149,9 +147,7 @@ public class WorkerProcessPoolTest {
     t.join();
 
     assertThat(usedWorkers.size(), Matchers.is(3));
-    assertThat(
-        new HashSet<>(usedWorkers.values()).size(),
-        Matchers.is(2));
+    assertThat(new HashSet<>(usedWorkers.values()).size(), Matchers.is(2));
   }
 
   @Test
@@ -218,8 +214,7 @@ public class WorkerProcessPoolTest {
     private final Set<WorkerProcess> createdWorkers;
 
     public BorrowWorkerProcessWithoutReturning(
-        WorkerProcessPool pool,
-        Set<WorkerProcess> createdWorkers) {
+        WorkerProcessPool pool, Set<WorkerProcess> createdWorkers) {
       this.pool = pool;
       this.createdWorkers = createdWorkers;
     }
@@ -237,8 +232,7 @@ public class WorkerProcessPoolTest {
     private final Map<Runnable, WorkerProcess> usedWorkers;
 
     public BorrowAndReturnWorkerProcess(
-        WorkerProcessPool pool,
-        Map<Runnable, WorkerProcess> usedWorkers) {
+        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
       this.pool = pool;
       this.usedWorkers = usedWorkers;
     }
@@ -257,8 +251,7 @@ public class WorkerProcessPoolTest {
     private final Map<Runnable, WorkerProcess> usedWorkers;
 
     public BorrowAndKillWorkerProcess(
-        WorkerProcessPool pool,
-        Map<Runnable, WorkerProcess> usedWorkers) {
+        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
       this.pool = pool;
       this.usedWorkers = usedWorkers;
     }

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class ShBinaryBuilder
     extends AbstractNodeBuilder<ShBinaryDescription.Arg, ShBinaryDescription, ShBinary> {
 
@@ -44,5 +43,4 @@ public class ShBinaryBuilder
     arg.resources = resources;
     return this;
   }
-
 }

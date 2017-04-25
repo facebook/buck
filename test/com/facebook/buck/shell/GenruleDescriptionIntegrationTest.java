@@ -26,89 +26,63 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class GenruleDescriptionIntegrationTest {
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws Exception {
 
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_classpath_filtering", temporaryFolder).setUp();
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+                this, "genrule_classpath_filtering", temporaryFolder)
+            .setUp();
   }
 
   @Test
   public void classpathMacro() throws Exception {
     expectGenruleOutput(
         ":echo_all",
-        ImmutableList.of(
-            "//:lib_a",
-            "//:lib_b",
-            "//:lib_d",
-            "//annotations:proc-lib"));
+        ImmutableList.of("//:lib_a", "//:lib_b", "//:lib_d", "//annotations:proc-lib"));
   }
 
   @Test
   public void depsFromClasspathMacroAreFilteredByDep() throws Exception {
-    expectGenruleOutput(
-        ":echo_with_ap_dep_is_proc",
-        ImmutableList.of(
-            "//:lib_b"));
+    expectGenruleOutput(":echo_with_ap_dep_is_proc", ImmutableList.of("//:lib_b"));
   }
 
   @Test
   public void depsFromClasspathMacroAreFilteredByAnnotationProcessor() throws Exception {
-    expectGenruleOutput(
-        ":echo_with_annotation_processor_is_proc",
-        ImmutableList.of(
-            "//:lib_b"));
+    expectGenruleOutput(":echo_with_annotation_processor_is_proc", ImmutableList.of("//:lib_b"));
   }
 
   @Test
   public void depsFromClasspathMacroAreFilteredByPlugin() throws Exception {
-    expectGenruleOutput(
-        ":echo_with_plugin_is_proc",
-        ImmutableList.of(
-            "//:lib_d"));
+    expectGenruleOutput(":echo_with_plugin_is_proc", ImmutableList.of("//:lib_d"));
   }
 
   @Test
   public void classpathMacroDepthLimited() throws Exception {
-    expectGenruleOutput(
-        ":echo_classpath_0",
-        ImmutableList.of("//:lib_a"));
+    expectGenruleOutput(":echo_classpath_0", ImmutableList.of("//:lib_a"));
     expectGenruleOutput(
         ":echo_classpath_1",
-        ImmutableList.of("//:lib_a",
-            "//:lib_b",
-            "//:lib_d",
-            "//annotations:proc-lib"));
+        ImmutableList.of("//:lib_a", "//:lib_b", "//:lib_d", "//annotations:proc-lib"));
   }
 
   @Test
   public void depsFromSetAreFilteredByKind() throws Exception {
-    expectGenruleOutput(
-        ":echo_with_kind_is_binary",
-        ImmutableList.of(
-            "//:app"));
-    expectGenruleOutput(
-        ":echo_with_kind_is_library",
-        ImmutableList.of(
-            "//:lib_a",
-            "//:lib_b"));
+    expectGenruleOutput(":echo_with_kind_is_binary", ImmutableList.of("//:app"));
+    expectGenruleOutput(":echo_with_kind_is_library", ImmutableList.of("//:lib_a", "//:lib_b"));
   }
 
   @Test
@@ -126,11 +100,7 @@ public class GenruleDescriptionIntegrationTest {
 
   @Test
   public void depsFromDepsQueryWithDep1() throws Exception {
-    expectOutputPathsGenruleOutput(
-        ":echo_with_deps_1",
-        ImmutableList.of(
-            ":app",
-            ":lib_a"));
+    expectOutputPathsGenruleOutput(":echo_with_deps_1", ImmutableList.of(":app", ":lib_a"));
   }
 
   @Test
@@ -150,10 +120,7 @@ public class GenruleDescriptionIntegrationTest {
   public void filteredFromSet() throws Exception {
     expectOutputPathsGenruleOutput(
         ":echo_from_filtered_set",
-        ImmutableList.of(
-            "//annotations:proc-lib",
-            "//:app",
-            "//:lib_a"));
+        ImmutableList.of("//annotations:proc-lib", "//:app", "//:lib_a"));
   }
 
   @Test
@@ -202,50 +169,41 @@ public class GenruleDescriptionIntegrationTest {
   public void testQueryResultsReflectTransitiveChanges() throws Exception {
     Assume.assumeFalse(Platform.detect().equals(Platform.WINDOWS));
     // Assert the query result starts empty
-    expectGenruleOutput(
-        ":echo_with_has_debug_flag",
-        ImmutableList.of());
+    expectGenruleOutput(":echo_with_has_debug_flag", ImmutableList.of());
 
     // Now edit the annotation processor target and add the flag
     workspace.replaceFileContents("annotations/BUCK", "#placeholder", "extra_arguments=['-g']");
 
     // Assert that the query output updates
-    expectGenruleOutput(
-        ":echo_with_has_debug_flag",
-        ImmutableList.of(
-            "//annotations:proc-lib"));
+    expectGenruleOutput(":echo_with_has_debug_flag", ImmutableList.of("//annotations:proc-lib"));
   }
 
   @Test
   public void testQueryCanBeTheOnlyThingReferencingAFile() throws Exception {
     // Assert the query can find the target even though it's the only reference to it
+    expectGenruleOutput(":ensure_parsing_if_this_is_only_ref", ImmutableList.of("//other:other"));
+  }
+
+  private void expectOutputPathsGenruleOutput(String genrule, List<String> expectedOutputs)
+      throws Exception {
     expectGenruleOutput(
-        ":ensure_parsing_if_this_is_only_ref",
-        ImmutableList.of("//other:other"));
+        genrule,
+        expectedOutputs
+            .stream()
+            .map(this::getOutputFile)
+            .map(Path::toString)
+            .collect(Collectors.toList()));
   }
 
-  private void expectOutputPathsGenruleOutput(
-      String genrule,
-      List<String> expectedOutputs)
-      throws Exception {
-    expectGenruleOutput(genrule, expectedOutputs.stream()
-        .map(this::getOutputFile)
-        .map(Path::toString)
-        .collect(Collectors.toList()));
-  }
-
-  private void expectGenruleOutput(
-      String genrule,
-      List<String> expectedOutputs)
-      throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", genrule);
+  private void expectGenruleOutput(String genrule, List<String> expectedOutputs) throws Exception {
+    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
     buildResult.assertSuccess();
 
     String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
-    List<String> actualOutput = Arrays.stream(outputFileContents.split("\\s"))
-        .map(String::trim)
-        .collect(Collectors.toList());
+    List<String> actualOutput =
+        Arrays.stream(outputFileContents.split("\\s"))
+            .map(String::trim)
+            .collect(Collectors.toList());
     assertEquals(expectedOutputs, actualOutput);
   }
 

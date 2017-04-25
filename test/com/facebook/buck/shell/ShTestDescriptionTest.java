@@ -39,11 +39,9 @@ import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Path;
 
 public class ShTestDescriptionTest {
 
@@ -62,9 +60,7 @@ public class ShTestDescriptionTest {
             .setArgs(ImmutableList.of("$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
-    assertThat(
-        shTest.getBuildDeps(),
-        Matchers.contains(dep));
+    assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getArgs(), pathResolver),
         Matchers.contains(pathResolver.getAbsolutePath(dep.getSourcePathToOutput()).toString()));
@@ -85,9 +81,7 @@ public class ShTestDescriptionTest {
             .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
-    assertThat(
-        shTest.getBuildDeps(),
-        Matchers.contains(dep));
+    assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getEnv(), pathResolver),
         Matchers.equalTo(
@@ -105,9 +99,7 @@ public class ShTestDescriptionTest {
     // Create a test rule without resources attached.
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithoutResources =
-        new ShTestBuilder(target)
-            .build(resolver, filesystem);
+    ShTest shTestWithoutResources = new ShTestBuilder(target).build(resolver, filesystem);
     RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
 
     // Create a rule with a resource attached.
@@ -130,12 +122,8 @@ public class ShTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     TargetNode<?, ?> shTestWithResources =
-        new ShTestBuilder(target)
-            .setResources(ImmutableSortedSet.of(resource))
-            .build();
-    assertThat(
-        shTestWithResources.getInputs(),
-        Matchers.hasItem(resource));
+        new ShTestBuilder(target).setResources(ImmutableSortedSet.of(resource)).build();
+    assertThat(shTestWithResources.getInputs(), Matchers.hasItem(resource));
   }
 
   private RuleKey getRuleKey(BuildRule rule) {
@@ -151,5 +139,4 @@ public class ShTestDescriptionTest {
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);
   }
-
 }
