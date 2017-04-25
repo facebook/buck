@@ -23,7 +23,6 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -31,8 +30,7 @@ import org.junit.Test;
 
 public class UserInputTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void testAsk() throws Exception {
@@ -44,8 +42,7 @@ public class UserInputTest {
     String questionString = "question";
     String response = input.ask(questionString);
     assertThat(
-        outputStream.getContentsAsString(Charsets.UTF_8),
-        Matchers.containsString(questionString));
+        outputStream.getContentsAsString(Charsets.UTF_8), Matchers.containsString(questionString));
     assertThat(response, Matchers.equalTo(cannedAnswer));
   }
 
@@ -60,54 +57,37 @@ public class UserInputTest {
 
   @Test
   public void parseRange() {
-    assertThat(
-        UserInput.parseRange("0"),
-        Matchers.contains(0)
-    );
+    assertThat(UserInput.parseRange("0"), Matchers.contains(0));
 
-    assertThat(
-        UserInput.parseRange("32"),
-        Matchers.contains(32)
-    );
+    assertThat(UserInput.parseRange("32"), Matchers.contains(32));
 
-    assertThat(
-        UserInput.parseRange("2 3"),
-        Matchers.contains(2, 3)
-    );
+    assertThat(UserInput.parseRange("2 3"), Matchers.contains(2, 3));
 
-    assertThat(
-        UserInput.parseRange("2, 3"),
-        Matchers.contains(2, 3)
-    );
+    assertThat(UserInput.parseRange("2, 3"), Matchers.contains(2, 3));
 
-    assertThat(
-        UserInput.parseRange("0-3"),
-        Matchers.contains(0, 1, 2, 3)
-    );
+    assertThat(UserInput.parseRange("0-3"), Matchers.contains(0, 1, 2, 3));
   }
 
   @Test
   public void parseOneInteractive() throws Exception {
     UserInputFixture fixture = new UserInputFixture("1");
     assertThat(
-        fixture.getUserInput().selectRange(
-            "selectrangequery",
-            ImmutableList.of("a", "b", "c"),
-            Functions.identity()),
+        fixture
+            .getUserInput()
+            .selectRange("selectrangequery", ImmutableList.of("a", "b", "c"), Functions.identity()),
         Matchers.contains("b"));
-
   }
 
   @Test
   public void parseRangeInteractive() throws Exception {
     UserInputFixture fixture = new UserInputFixture("1, 2-4, 9");
     assertThat(
-        fixture.getUserInput().selectRange(
-            "selectrangequery",
-            ImmutableList.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"),
-            Functions.identity()),
+        fixture
+            .getUserInput()
+            .selectRange(
+                "selectrangequery",
+                ImmutableList.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"),
+                Functions.identity()),
         Matchers.contains("b", "c", "d", "e", "j"));
-
   }
-
 }

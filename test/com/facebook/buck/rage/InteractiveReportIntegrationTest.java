@@ -34,12 +34,6 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,34 +42,36 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class InteractiveReportIntegrationTest {
 
-  private static final String BUILD_PATH = "buck-out/log/" +
-      "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
-  private static final String DEPS_PATH = "buck-out/log/" +
-        "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+  private static final String BUILD_PATH =
+      "buck-out/log/" + "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
+  private static final String DEPS_PATH =
+      "buck-out/log/"
+          + "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
   private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
-  private static final ImmutableMap<String, String> TIMESTAMPS = ImmutableMap.of(
-      BUILD_PATH, "2016-06-21T16:16:24.00Z",
-      DEPS_PATH, "2016-06-21T16:18:51.00Z"
-  );
+  private static final ImmutableMap<String, String> TIMESTAMPS =
+      ImmutableMap.of(
+          BUILD_PATH, "2016-06-21T16:16:24.00Z",
+          DEPS_PATH, "2016-06-21T16:18:51.00Z");
 
   private ProjectWorkspace traceWorkspace;
   private String tracePath1;
   private String tracePath2;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
   public void setUp() throws Exception {
     tracePath1 = BUILD_PATH + "file.trace";
     tracePath2 = DEPS_PATH + "file.trace";
-    traceWorkspace  = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "report",
-        temporaryFolder);
+    traceWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
     traceWorkspace.setUp();
     traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
     traceWorkspace.writeContentsToPath(new String(new char[64 * 1024]), tracePath2);
@@ -84,24 +80,23 @@ public class InteractiveReportIntegrationTest {
     for (Map.Entry<String, String> timestampEntry : TIMESTAMPS.entrySet()) {
       for (Path path : filesystem.getDirectoryContents(Paths.get(timestampEntry.getKey()))) {
         filesystem.setLastModifiedTime(
-            path,
-            FileTime.from(Instant.parse(timestampEntry.getValue())));
+            path, FileTime.from(Instant.parse(timestampEntry.getValue())));
       }
     }
   }
 
   @Test
   public void testReport() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "report", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
     workspace.setUp();
 
-    DefectSubmitResult report = createDefectReport(
-        workspace,
-        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+    DefectSubmitResult report =
+        createDefectReport(
+            workspace, new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
 
-    Path reportFile = workspace.asCell().getFilesystem().resolve(
-        report.getReportSubmitLocation().get());
+    Path reportFile =
+        workspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");
@@ -111,11 +106,11 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testTraceInReport() throws Exception {
-    DefectSubmitResult report = createDefectReport(
-        traceWorkspace,
-        new ByteArrayInputStream("1\nreport text\n".getBytes("UTF-8")));
-    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportSubmitLocation().get());
+    DefectSubmitResult report =
+        createDefectReport(
+            traceWorkspace, new ByteArrayInputStream("1\nreport text\n".getBytes("UTF-8")));
+    Path reportFile =
+        traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists(tracePath1);
@@ -123,11 +118,11 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testTraceRespectReportSize() throws Exception {
-    DefectSubmitResult report = createDefectReport(
-        traceWorkspace,
-        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
-    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportSubmitLocation().get());
+    DefectSubmitResult report =
+        createDefectReport(
+            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+    Path reportFile =
+        traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     // The second command was more recent, so its file should be included.
@@ -137,11 +132,11 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testLocalConfigurationReport() throws Exception {
-    DefectSubmitResult report = createDefectReport(
-        traceWorkspace,
-        new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
-    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportSubmitLocation().get());
+    DefectSubmitResult report =
+        createDefectReport(
+            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
+    Path reportFile =
+        traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     assertThat(
@@ -151,11 +146,11 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testWatchmanDiagReport() throws Exception {
-    DefectSubmitResult report = createDefectReport(
-        traceWorkspace,
-        new ByteArrayInputStream("0,1\nreport text\n\n\n".getBytes("UTF-8")));
-    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportSubmitLocation().get());
+    DefectSubmitResult report =
+        createDefectReport(
+            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n\n\n".getBytes("UTF-8")));
+    Path reportFile =
+        traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     assertThat(
@@ -176,22 +171,19 @@ public class InteractiveReportIntegrationTest {
   }
 
   private static DefectSubmitResult createDefectReport(
-      ProjectWorkspace workspace,
-      ByteArrayInputStream inputStream)
-    throws IOException, InterruptedException {
+      ProjectWorkspace workspace, ByteArrayInputStream inputStream)
+      throws IOException, InterruptedException {
     ProjectFilesystem filesystem = workspace.asCell().getFilesystem();
     RageConfig rageConfig = RageConfig.of(workspace.asCell().getBuckConfig());
     Clock clock = new DefaultClock();
     ExtraInfoCollector extraInfoCollector = Optional::empty;
     TestConsole console = new TestConsole();
-    DefectReporter defectReporter = new DefaultDefectReporter(filesystem,
-        rageConfig,
-        BuckEventBusFactory.newInstance(clock),
-        clock);
-    WatchmanDiagReportCollector watchmanDiagReportCollector = new WatchmanDiagReportCollector(
-        filesystem,
-        WATCHMAN_DIAG_COMMAND,
-        createFakeWatchmanDiagProcessExecutor(console));
+    DefectReporter defectReporter =
+        new DefaultDefectReporter(
+            filesystem, rageConfig, BuckEventBusFactory.newInstance(clock), clock);
+    WatchmanDiagReportCollector watchmanDiagReportCollector =
+        new WatchmanDiagReportCollector(
+            filesystem, WATCHMAN_DIAG_COMMAND, createFakeWatchmanDiagProcessExecutor(console));
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,

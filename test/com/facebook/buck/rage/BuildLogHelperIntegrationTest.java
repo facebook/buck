@@ -27,20 +27,18 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class BuildLogHelperIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void findsLogFiles() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "report", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();
@@ -48,16 +46,20 @@ public class BuildLogHelperIntegrationTest {
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
-    ImmutableMap<BuildId, String> buildIdToCommandMap = buildLogs.stream()
-        .collect(MoreCollectors.toImmutableMap(
-            e -> e.getBuildId().get(),
-            e -> e.getCommandArgs().get()));
+    ImmutableMap<BuildId, String> buildIdToCommandMap =
+        buildLogs
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(
+                    e -> e.getBuildId().get(), e -> e.getCommandArgs().get()));
 
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(
-            ImmutableMap.of(new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"), "build buck",
-                new BuildId("3f874373-f040-448f-964d-e2eb459de37f"), "autodeps")
-        ));
+            ImmutableMap.of(
+                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
+                "build buck",
+                new BuildId("3f874373-f040-448f-964d-e2eb459de37f"),
+                "autodeps")));
   }
 }
