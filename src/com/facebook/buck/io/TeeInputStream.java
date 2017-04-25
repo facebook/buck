@@ -22,10 +22,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Wraps a source {@link InputStream}, writing to a destination {@link OutputStream}
- * any bytes read from this object.
+ * Wraps a source {@link InputStream}, writing to a destination {@link OutputStream} any bytes read
+ * from this object.
  *
- * Does not close either the InputStream or the OutputStream automatically.
+ * <p>Does not close either the InputStream or the OutputStream automatically.
  */
 public class TeeInputStream extends FilterInputStream {
   private final OutputStream outputStream;

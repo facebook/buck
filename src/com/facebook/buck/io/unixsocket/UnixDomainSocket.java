@@ -16,47 +16,44 @@
 
 /*
 
- Copyright 2004-2015, Martian Software, Inc.
+Copyright 2004-2015, Martian Software, Inc.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
- http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
- */
+*/
 
 package com.facebook.buck.io.unixsocket;
 
 import com.facebook.buck.io.Transport;
 import com.sun.jna.LastErrorException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import java.nio.file.Path;
-import java.nio.ByteBuffer;
-
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
 
 /**
  * Implements a {@link Socket} backed by a native Unix domain socket.
  *
- * Instances of this class always return {@code null} for
- * {@link Socket#getInetAddress()}, {@link Socket#getLocalAddress()},
- * {@link Socket#getLocalSocketAddress()}, {@link Socket#getRemoteSocketAddress()}.
+ * <p>Instances of this class always return {@code null} for {@link Socket#getInetAddress()}, {@link
+ * Socket#getLocalAddress()}, {@link Socket#getLocalSocketAddress()}, {@link
+ * Socket#getRemoteSocketAddress()}.
  *
- * If not explicitly closed, will close the file descriptor when finalized.
+ * <p>If not explicitly closed, will close the file descriptor when finalized.
  *
- * Caller is responsible for closing the streams returned from
- * {@link #getInputStream()} and {@link #getOutputStream()}.
+ * <p>Caller is responsible for closing the streams returned from {@link #getInputStream()} and
+ * {@link #getOutputStream()}.
  */
 public class UnixDomainSocket extends Socket implements Transport {
   private final ReferenceCountedFileDescriptor fd;
@@ -64,16 +61,13 @@ public class UnixDomainSocket extends Socket implements Transport {
   private final OutputStream os;
   private boolean isConnected;
 
-  /**
-   * Creates a Unix domain socket bound to a path.
-   */
+  /** Creates a Unix domain socket bound to a path. */
   public static UnixDomainSocket createSocketWithPath(Path path) throws IOException {
     int fd = -1;
     try {
-      fd = UnixDomainSocketLibrary.socket(
-          UnixDomainSocketLibrary.PF_LOCAL,
-          UnixDomainSocketLibrary.SOCK_STREAM,
-          0);
+      fd =
+          UnixDomainSocketLibrary.socket(
+              UnixDomainSocketLibrary.PF_LOCAL, UnixDomainSocketLibrary.SOCK_STREAM, 0);
       UnixDomainSocketLibrary.SockaddrUn address =
           new UnixDomainSocketLibrary.SockaddrUn(path.toString());
       UnixDomainSocketLibrary.connect(fd, address, address.size());
@@ -86,9 +80,7 @@ public class UnixDomainSocket extends Socket implements Transport {
     }
   }
 
-  /**
-   * Creates a Unix domain socket backed by a native file descriptor.
-   */
+  /** Creates a Unix domain socket backed by a native file descriptor. */
   private UnixDomainSocket(ReferenceCountedFileDescriptor fd) {
     this.fd = fd;
     this.is = new UnixDomainSocketInputStream();
@@ -224,8 +216,13 @@ public class UnixDomainSocket extends Socket implements Transport {
         int ret = UnixDomainSocketLibrary.write(fdToWrite, buf, buf.remaining());
         if (ret != buf.remaining()) {
           // This shouldn't happen with standard blocking Unix domain sockets.
-          throw new IOException("Could not write " + buf.remaining() + " bytes as requested " +
-                                "(wrote " + ret + " bytes instead)");
+          throw new IOException(
+              "Could not write "
+                  + buf.remaining()
+                  + " bytes as requested "
+                  + "(wrote "
+                  + ret
+                  + " bytes instead)");
         }
       } catch (LastErrorException e) {
         throw new IOException(e);

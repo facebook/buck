@@ -44,7 +44,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -88,32 +87,25 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
-/**
- * An injectable service for interacting with the filesystem relative to the project root.
- */
+/** An injectable service for interacting with the filesystem relative to the project root. */
 public class ProjectFilesystem {
 
-  /**
-   * Controls the behavior of how the source should be treated when copying.
-   */
+  /** Controls the behavior of how the source should be treated when copying. */
   public enum CopySourceMode {
-    /**
-     * Copy the single source file into the destination path.
-     */
+    /** Copy the single source file into the destination path. */
     FILE,
 
     /**
-     * Treat the source as a directory and copy each file inside it
-     * to the destination path, which must be a directory.
+     * Treat the source as a directory and copy each file inside it to the destination path, which
+     * must be a directory.
      */
     DIRECTORY_CONTENTS_ONLY,
 
     /**
-     * Treat the source as a directory. Copy the directory and its
-     * contents to the destination path, which must be a directory.
+     * Treat the source as a directory. Copy the directory and its contents to the destination path,
+     * which must be a directory.
      */
     DIRECTORY_AND_CONTENTS,
   }
@@ -121,8 +113,7 @@ public class ProjectFilesystem {
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
 
-  @VisibleForTesting
-  static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
+  @VisibleForTesting static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   private final Path projectRoot;
   private final BuckPaths buckPaths;
@@ -130,16 +121,13 @@ public class ProjectFilesystem {
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
 
-  /**
-   * Supplier that returns an absolute path that is guaranteed to exist.
-   */
+  /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
 
   private final ProjectFilesystemDelegate delegate;
 
   // Defaults to false, and so paths should be valid.
-  @VisibleForTesting
-  protected boolean ignoreValidityOfPaths;
+  @VisibleForTesting protected boolean ignoreValidityOfPaths;
 
   public ProjectFilesystem(Path root) {
     this(root, new Config());
@@ -153,26 +141,21 @@ public class ProjectFilesystem {
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(
-              ("Failed to resolve project root [%s]." +
-                  "Check if it exists and has the right permissions."),
+              ("Failed to resolve project root [%s]."
+                  + "Check if it exists and has the right permissions."),
               path.toAbsolutePath()),
           e);
     }
   }
 
   /**
-   * This constructor is restricted to {@code protected} because it is generally best to let
-   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, AutoSparseConfig)}
-   * create an appropriate delegate. Currently, the only case in which we need to override this
-   * behavior is in unit tests.
+   * This constructor is restricted to {@code protected} because it is generally best to let {@link
+   * ProjectFilesystemDelegateFactory#newInstance(Path, String, AutoSparseConfig)} create an
+   * appropriate delegate. Currently, the only case in which we need to override this behavior is in
+   * unit tests.
    */
   protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
-    this(
-        root.getFileSystem(),
-        root,
-        ImmutableSet.of(),
-        getDefaultBuckPaths(root),
-        delegate);
+    this(root.getFileSystem(), root, ImmutableSet.of(), getDefaultBuckPaths(root), delegate);
   }
 
   public ProjectFilesystem(Path root, Config config) {
@@ -184,9 +167,7 @@ public class ProjectFilesystem {
         ProjectFilesystemDelegateFactory.newInstance(
             root,
             config.getValue("version_control", "hg_cmd").orElse("hg"),
-            AutoSparseConfig.of(config)
-        )
-    );
+            AutoSparseConfig.of(config)));
   }
 
   /**
@@ -211,48 +192,52 @@ public class ProjectFilesystem {
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
     this.ignoreValidityOfPaths = false;
-    this.blackListedPaths = FluentIterable.from(blackListedPaths)
-        .append(
-            FluentIterable.from(
-                // "Path" is Iterable, so avoid adding each segment.
-                // We use the default value here because that's what we've always done.
-                ImmutableSet.of(
-                    getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
-                .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                .transform(PathOrGlobMatcher::new))
-        .toSet();
+    this.blackListedPaths =
+        FluentIterable.from(blackListedPaths)
+            .append(
+                FluentIterable.from(
+                        // "Path" is Iterable, so avoid adding each segment.
+                        // We use the default value here because that's what we've always done.
+                        ImmutableSet.of(
+                            getCacheDir(
+                                root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
+                    .append(ImmutableSet.of(buckPaths.getTrashDir()))
+                    .transform(PathOrGlobMatcher::new))
+            .toSet();
     this.buckPaths = buckPaths;
 
-    this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
-        .filter(matcher -> matcher.getType() == PathOrGlobMatcher.Type.PATH)
-        .transform(matcher -> {
-          Path path = matcher.getPath();
-          ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
-              ImmutableSet.of(path),
-              root);
-          if (filtered.isEmpty()) {
-            return path;
-          }
-          return Iterables.getOnlyElement(filtered);
-        })
-        // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
-        // really don't end up ignoring it in reality (see extractIgnorePaths).
-        .append(ImmutableSet.of(buckPaths.getBuckOut()))
-        .transform(PathOrGlobMatcher::new)
-        .append(
-            Iterables.filter(
-                this.blackListedPaths,
-                input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
-        .toSet();
-    this.tmpDir = Suppliers.memoize(() -> {
-      Path relativeTmpDir = ProjectFilesystem.this.buckPaths.getTmpDir();
-      try {
-        mkdirs(relativeTmpDir);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      return relativeTmpDir;
-    });
+    this.blackListedDirectories =
+        FluentIterable.from(this.blackListedPaths)
+            .filter(matcher -> matcher.getType() == PathOrGlobMatcher.Type.PATH)
+            .transform(
+                matcher -> {
+                  Path path = matcher.getPath();
+                  ImmutableSet<Path> filtered =
+                      MorePaths.filterForSubpaths(ImmutableSet.of(path), root);
+                  if (filtered.isEmpty()) {
+                    return path;
+                  }
+                  return Iterables.getOnlyElement(filtered);
+                })
+            // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
+            // really don't end up ignoring it in reality (see extractIgnorePaths).
+            .append(ImmutableSet.of(buckPaths.getBuckOut()))
+            .transform(PathOrGlobMatcher::new)
+            .append(
+                Iterables.filter(
+                    this.blackListedPaths, input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
+            .toSet();
+    this.tmpDir =
+        Suppliers.memoize(
+            () -> {
+              Path relativeTmpDir = ProjectFilesystem.this.buckPaths.getTmpDir();
+              try {
+                mkdirs(relativeTmpDir);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+              return relativeTmpDir;
+            });
   }
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
@@ -286,11 +271,8 @@ public class ProjectFilesystem {
     return Iterables.getOnlyElement(filtered);
   }
 
-
   private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
-      final Path root,
-      Config config,
-      final BuckPaths buckPaths) {
+      final Path root, Config config, final BuckPaths buckPaths) {
     ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
 
     builder.add(new PathOrGlobMatcher(root, ".idea"));
@@ -306,28 +288,29 @@ public class ProjectFilesystem {
     Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
     builder.add(new PathOrGlobMatcher(cacheDir));
 
-    builder.addAll(FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
-        .transform(new Function<String, PathOrGlobMatcher>() {
-          @Nullable
-          @Override
-          public PathOrGlobMatcher apply(String input) {
-            // We don't really want to ignore the output directory when doing things like filesystem
-            // walks, so return null
-            if (buckPaths.getBuckOut().toString().equals(input)) {
-              return null; //root.getFileSystem().getPathMatcher("glob:**");
-            }
+    builder.addAll(
+        FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
+            .transform(
+                new Function<String, PathOrGlobMatcher>() {
+                  @Nullable
+                  @Override
+                  public PathOrGlobMatcher apply(String input) {
+                    // We don't really want to ignore the output directory when doing things like filesystem
+                    // walks, so return null
+                    if (buckPaths.getBuckOut().toString().equals(input)) {
+                      return null; //root.getFileSystem().getPathMatcher("glob:**");
+                    }
 
-            if (GLOB_CHARS.matcher(input).find()) {
-              return new PathOrGlobMatcher(
-                  root.getFileSystem().getPathMatcher("glob:" + input),
-                  input);
-            }
-            return new PathOrGlobMatcher(root, input);
-          }
-        })
-        // And now remove any null patterns
-        .filter(Objects::nonNull)
-        .toList());
+                    if (GLOB_CHARS.matcher(input).find()) {
+                      return new PathOrGlobMatcher(
+                          root.getFileSystem().getPathMatcher("glob:" + input), input);
+                    }
+                    return new PathOrGlobMatcher(root, input);
+                  }
+                })
+            // And now remove any null patterns
+            .filter(Objects::nonNull)
+            .toList());
 
     return builder.build();
   }
@@ -339,11 +322,7 @@ public class ProjectFilesystem {
   public ProjectFilesystem replaceBlacklistedPaths(
       ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
     return new ProjectFilesystem(
-        projectRoot.getFileSystem(),
-        projectRoot,
-        blackListedPaths,
-        buckPaths,
-        delegate);
+        projectRoot.getFileSystem(), projectRoot, blackListedPaths, buckPaths, delegate);
   }
 
   /**
@@ -365,16 +344,12 @@ public class ProjectFilesystem {
     return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
   }
 
-  /**
-   * Construct a relative path between the project root and a given path.
-   */
+  /** Construct a relative path between the project root and a given path. */
   public Path relativize(Path path) {
     return projectRoot.relativize(path);
   }
 
-  /**
-   * @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore.
-   */
+  /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
   public ImmutableSet<PathOrGlobMatcher> getIgnorePaths() {
     return blackListedDirectories;
   }
@@ -387,12 +362,11 @@ public class ProjectFilesystem {
     return projectRoot.resolve(pathRelativeToProjectRoot);
   }
 
-
   /**
    * @param path Absolute path or path relative to the project root.
    * @return If {@code path} is relative, it is returned. If it is absolute and is inside the
-   *         project root, it is relativized to the project root and returned. Otherwise an absent
-   *         value is returned.
+   *     project root, it is relativized to the project root and returned. Otherwise an absent value
+   *     is returned.
    */
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
     path = MorePaths.normalize(path);
@@ -446,7 +420,8 @@ public class ProjectFilesystem {
   /**
    * Deletes a file specified by its path relative to the project root.
    *
-   * Ignores the failure if the file does not exist.
+   * <p>Ignores the failure if the file does not exist.
+   *
    * @param pathRelativeToProjectRoot path to the file
    * @return {@code true} if the file was deleted, {@code false} if it did not exist
    */
@@ -456,19 +431,19 @@ public class ProjectFilesystem {
 
   /**
    * Deletes a file specified by its path relative to the project root.
+   *
    * @param pathRelativeToProjectRoot path to the file
    */
   public void deleteFileAtPath(Path pathRelativeToProjectRoot) throws IOException {
     Files.delete(getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
-  public Properties readPropertiesFile(Path propertiesFile)
-      throws IOException {
+  public Properties readPropertiesFile(Path propertiesFile) throws IOException {
     Properties properties = new Properties();
     if (exists(propertiesFile)) {
       try (BufferedReader reader =
-               new BufferedReader(
-                   new InputStreamReader(newFileInputStream(propertiesFile), Charsets.UTF_8))) {
+          new BufferedReader(
+              new InputStreamReader(newFileInputStream(propertiesFile), Charsets.UTF_8))) {
         properties.load(reader);
       }
       return properties;
@@ -477,12 +452,9 @@ public class ProjectFilesystem {
     }
   }
 
-  /**
-   * Checks whether there is a normal file at the specified path.
-   */
+  /** Checks whether there is a normal file at the specified path. */
   public boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.isRegularFile(
-        getPathForRelativePath(pathRelativeToProjectRoot), options);
+    return Files.isRegularFile(getPathForRelativePath(pathRelativeToProjectRoot), options);
   }
 
   public boolean isHidden(Path pathRelativeToProjectRoot) throws IOException {
@@ -490,35 +462,33 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to
-   * the project root.
+   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
+   * project root.
    */
   public void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot,
-      final FileVisitor<Path> fileVisitor) throws IOException {
-    walkRelativeFileTree(pathRelativeToProjectRoot,
-        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-        fileVisitor);
+      Path pathRelativeToProjectRoot, final FileVisitor<Path> fileVisitor) throws IOException {
+    walkRelativeFileTree(
+        pathRelativeToProjectRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), fileVisitor);
   }
 
-  /**
-   * Walks a project-root relative file tree with a visitor and visit options.
-   */
+  /** Walks a project-root relative file tree with a visitor and visit options. */
   public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
-      final FileVisitor<Path> fileVisitor) throws IOException {
+      final FileVisitor<Path> fileVisitor)
+      throws IOException {
 
-    FileVisitor<Path> relativizingVisitor = new FileVisitor<Path>() {
+    FileVisitor<Path> relativizingVisitor =
+        new FileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(
-              Path dir, BasicFileAttributes attrs) throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
             return fileVisitor.preVisitDirectory(relativize(dir), attrs);
           }
 
           @Override
-          public FileVisitResult visitFile(
-              Path file, BasicFileAttributes attrs) throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
             return fileVisitor.visitFile(relativize(file), attrs);
           }
 
@@ -533,27 +503,17 @@ public class ProjectFilesystem {
           }
         };
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    walkFileTree(
-        rootPath,
-        visitOptions,
-        relativizingVisitor);
+    walkFileTree(rootPath, visitOptions, relativizingVisitor);
   }
 
-  /**
-   * Allows {@link Files#walkFileTree} to be faked in tests.
-   */
+  /** Allows {@link Files#walkFileTree} to be faked in tests. */
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
     root = getPathForRelativePath(root);
-    walkFileTree(
-        root,
-        EnumSet.noneOf(FileVisitOption.class),
-        fileVisitor);
+    walkFileTree(root, EnumSet.noneOf(FileVisitOption.class), fileVisitor);
   }
 
-  public void walkFileTree(
-      Path root,
-      Set<FileVisitOption> options,
-      FileVisitor<Path> fileVisitor) throws IOException {
+  public void walkFileTree(Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor)
+      throws IOException {
     new FileTreeWalker(root, options, fileVisitor).walk();
   }
 
@@ -562,18 +522,16 @@ public class ProjectFilesystem {
   }
 
   public ImmutableSet<Path> getFilesUnderPath(
-      Path pathRelativeToProjectRoot,
-      Predicate<Path> predicate) throws IOException {
+      Path pathRelativeToProjectRoot, Predicate<Path> predicate) throws IOException {
     return getFilesUnderPath(
-        pathRelativeToProjectRoot,
-        predicate,
-        EnumSet.of(FileVisitOption.FOLLOW_LINKS));
+        pathRelativeToProjectRoot, predicate, EnumSet.of(FileVisitOption.FOLLOW_LINKS));
   }
 
   public ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
       final Predicate<Path> predicate,
-      EnumSet<FileVisitOption> visitOptions) throws IOException {
+      EnumSet<FileVisitOption> visitOptions)
+      throws IOException {
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     walkRelativeFileTree(
         pathRelativeToProjectRoot,
@@ -590,16 +548,12 @@ public class ProjectFilesystem {
     return paths.build();
   }
 
-  /**
-   * Allows {@link Files#isDirectory} to be faked in tests.
-   */
+  /** Allows {@link Files#isDirectory} to be faked in tests. */
   public boolean isDirectory(Path child, LinkOption... linkOptions) {
     return Files.isDirectory(resolve(child), linkOptions);
   }
 
-  /**
-   * Allows {@link Files#isExecutable} to be faked in tests.
-   */
+  /** Allows {@link Files#isExecutable} to be faked in tests. */
   public boolean isExecutable(Path child) {
     return delegate.isExecutable(child);
   }
@@ -607,7 +561,7 @@ public class ProjectFilesystem {
   /**
    * Allows {@link java.io.File#listFiles} to be faked in tests.
    *
-   * // @deprecated Replaced by {@link #getDirectoryContents}
+   * <p>// @deprecated Replaced by {@link #getDirectoryContents}
    */
   public File[] listFiles(Path pathRelativeToProjectRoot) throws IOException {
     Collection<Path> paths = getDirectoryContents(pathRelativeToProjectRoot);
@@ -616,8 +570,7 @@ public class ProjectFilesystem {
     return Collections2.transform(paths, Path::toFile).toArray(result);
   }
 
-  public ImmutableCollection<Path> getDirectoryContents(Path pathToUse)
-      throws IOException {
+  public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
     Path path = getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
@@ -634,18 +587,13 @@ public class ProjectFilesystem {
 
   /**
    * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
-   * ordered in descending last modified time order. This will not obey the results of
-   * {@link #isIgnored(Path)}.
+   * ordered in descending last modified time order. This will not obey the results of {@link
+   * #isIgnored(Path)}.
    */
   public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
-      Path pathRelativeToProjectRoot,
-      String globPattern)
-      throws IOException {
+      Path pathRelativeToProjectRoot, String globPattern) throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return PathListing.listMatchingPaths(
-        path,
-        globPattern,
-        getLastModifiedTimeFetcher());
+    return PathListing.listMatchingPaths(path, globPattern, getLastModifiedTimeFetcher());
   }
 
   public FileTime getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
@@ -653,9 +601,7 @@ public class ProjectFilesystem {
     return Files.getLastModifiedTime(path);
   }
 
-  /**
-   * Sets the last modified time for the given path.
-   */
+  /** Sets the last modified time for the given path. */
   public Path setLastModifiedTime(Path pathRelativeToProjectRoot, FileTime time)
       throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
@@ -671,25 +617,22 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Resolves the relative path against the project root and then calls
-   * {@link Files#createDirectories(java.nio.file.Path,
-   *            java.nio.file.attribute.FileAttribute[])}
+   * Resolves the relative path against the project root and then calls {@link
+   * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     Files.createDirectories(resolve(pathRelativeToProjectRoot));
   }
 
-  /**
-   * Creates a new file relative to the project root.
-   */
+  /** Creates a new file relative to the project root. */
   public Path createNewFile(Path pathRelativeToProjectRoot) throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
     return Files.createFile(path);
   }
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *  {@link #createParentDirs(java.nio.file.Path)}.
+   * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
+   * #createParentDirs(java.nio.file.Path)}.
    */
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     Path file = getPathForRelativePath(pathRelativeToProjectRoot);
@@ -708,19 +651,16 @@ public class ProjectFilesystem {
 
   /**
    * Writes each line in {@code lines} with a trailing newline to a file at the specified path.
-   * <p>
-   * The parent path of {@code pathRelativeToProjectRoot} must exist.
+   *
+   * <p>The parent path of {@code pathRelativeToProjectRoot} must exist.
    */
   public void writeLinesToPath(
-      Iterable<String> lines,
-      Path pathRelativeToProjectRoot,
-      FileAttribute<?>... attrs)
+      Iterable<String> lines, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
     try (Writer writer =
-             new BufferedWriter(
-                 new OutputStreamWriter(
-                     newFileOutputStream(pathRelativeToProjectRoot, attrs),
-                     Charsets.UTF_8))) {
+        new BufferedWriter(
+            new OutputStreamWriter(
+                newFileOutputStream(pathRelativeToProjectRoot, attrs), Charsets.UTF_8))) {
       for (String line : lines) {
         writer.write(line);
         writer.write('\n');
@@ -729,53 +669,41 @@ public class ProjectFilesystem {
   }
 
   public void writeContentsToPath(
-      String contents,
-      Path pathRelativeToProjectRoot,
-      FileAttribute<?>... attrs)
+      String contents, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
     writeBytesToPath(contents.getBytes(Charsets.UTF_8), pathRelativeToProjectRoot, attrs);
   }
 
   public void writeBytesToPath(
-      byte[] bytes,
-      Path pathRelativeToProjectRoot,
-      FileAttribute<?>... attrs) throws IOException {
+      byte[] bytes, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs) throws IOException {
     // No need to buffer writes when writing a single piece of data.
     try (OutputStream outputStream =
-             newUnbufferedFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs)) {
+        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs)) {
       outputStream.write(bytes);
     }
   }
 
-  public OutputStream newFileOutputStream(
-      Path pathRelativeToProjectRoot,
-      FileAttribute<?>... attrs)
+  public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
     return newFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs);
   }
 
   public OutputStream newFileOutputStream(
-      Path pathRelativeToProjectRoot,
-      boolean append,
-      FileAttribute<?>... attrs)
+      Path pathRelativeToProjectRoot, boolean append, FileAttribute<?>... attrs)
       throws IOException {
     return new BufferedOutputStream(
         newUnbufferedFileOutputStream(pathRelativeToProjectRoot, append, attrs));
   }
 
   public OutputStream newUnbufferedFileOutputStream(
-      Path pathRelativeToProjectRoot,
-      boolean append,
-      FileAttribute<?>... attrs)
+      Path pathRelativeToProjectRoot, boolean append, FileAttribute<?>... attrs)
       throws IOException {
     return Channels.newOutputStream(
         Files.newByteChannel(
             getPathForRelativePath(pathRelativeToProjectRoot),
-            append ?
-                ImmutableSet.of(
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND) :
-                ImmutableSet.of(
+            append
+                ? ImmutableSet.of(StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+                : ImmutableSet.of(
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING,
                     StandardOpenOption.WRITE),
@@ -783,38 +711,24 @@ public class ProjectFilesystem {
   }
 
   public <A extends BasicFileAttributes> A readAttributes(
-      Path pathRelativeToProjectRoot,
-      Class<A> type,
-      LinkOption... options)
-      throws IOException {
-    return Files.readAttributes(
-        getPathForRelativePath(pathRelativeToProjectRoot), type, options);
+      Path pathRelativeToProjectRoot, Class<A> type, LinkOption... options) throws IOException {
+    return Files.readAttributes(getPathForRelativePath(pathRelativeToProjectRoot), type, options);
   }
 
-  public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
-      throws IOException {
+  public InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException {
     return new BufferedInputStream(
         Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
-  /**
-   * @param inputStream Source of the bytes. This method does not close this stream.
-   */
+  /** @param inputStream Source of the bytes. This method does not close this stream. */
   public void copyToPath(
-      InputStream inputStream,
-      Path pathRelativeToProjectRoot,
-      CopyOption... options)
+      InputStream inputStream, Path pathRelativeToProjectRoot, CopyOption... options)
       throws IOException {
-    Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot),
-        options);
+    Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot), options);
   }
 
-  /**
-   * Copies a file to an output stream.
-   */
-  public void copyToOutputStream(
-      Path pathRelativeToProjectRoot,
-      OutputStream out)
+  /** Copies a file to an output stream. */
+  public void copyToOutputStream(Path pathRelativeToProjectRoot, OutputStream out)
       throws IOException {
     Files.copy(getPathForRelativePath(pathRelativeToProjectRoot), out);
   }
@@ -845,8 +759,8 @@ public class ProjectFilesystem {
    * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
-   * // @deprecated PRefero operation on {@code Path}s directly, replaced by
-   *  {@link #readFirstLine(java.nio.file.Path)}
+   * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
+   * #readFirstLine(java.nio.file.Path)}
    */
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
     return readFirstLine(projectRoot.getFileSystem().getPath(pathRelativeToProjectRoot));
@@ -863,8 +777,8 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Attempts to read the first line of the specified file. If the file does not exist, is empty,
-   * or encounters an error while being read, {@link Optional#empty()} is returned. Otherwise, an
+   * Attempts to read the first line of the specified file. If the file does not exist, is empty, or
+   * encounters an error while being read, {@link Optional#empty()} is returned. Otherwise, an
    * {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLineFromFile(Path file) {
@@ -884,8 +798,8 @@ public class ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operation on {@code Path}s directly, replaced by
-   *  {@link Files#newInputStream(java.nio.file.Path, java.nio.file.OpenOption...)}.
+   * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
+   * Files#newInputStream(java.nio.file.Path, java.nio.file.OpenOption...)}.
    */
   public InputStream getInputStreamForRelativePath(Path path) throws IOException {
     Path file = getPathForRelativePath(path);
@@ -905,10 +819,7 @@ public class ProjectFilesystem {
     source = getPathForRelativePath(source);
     switch (sourceMode) {
       case FILE:
-        Files.copy(
-            resolve(source),
-            resolve(target),
-            StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(resolve(source), resolve(target), StandardCopyOption.REPLACE_EXISTING);
         break;
       case DIRECTORY_CONTENTS_ONLY:
         MoreFiles.copyRecursively(resolve(source), resolve(target));
@@ -921,7 +832,6 @@ public class ProjectFilesystem {
 
   public void move(Path source, Path target, CopyOption... options) throws IOException {
     Files.move(resolve(source), resolve(target), options);
-
   }
 
   public void copyFolder(Path source, Path target) throws IOException {
@@ -932,8 +842,7 @@ public class ProjectFilesystem {
     copy(source, target, CopySourceMode.FILE);
   }
 
-  public void createSymLink(Path symLink, Path realFile, boolean force)
-      throws IOException {
+  public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
     symLink = resolve(symLink);
     if (force) {
       Files.deleteIfExists(symLink);
@@ -955,8 +864,8 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Returns the set of POSIX file permissions, or the empty set if the underlying file system
-   * does not support POSIX file attributes.
+   * Returns the set of POSIX file permissions, or the empty set if the underlying file system does
+   * not support POSIX file attributes.
    */
   public Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
     Path resolvedPath = getPathForRelativePath(path);
@@ -967,17 +876,12 @@ public class ProjectFilesystem {
     }
   }
 
-  /**
-   * Returns true if the file under {@code path} exists and is a symbolic
-   * link, false otherwise.
-   */
+  /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
   public boolean isSymLink(Path path) {
     return delegate.isSymlink(path);
   }
 
-  /**
-   * Returns the target of the specified symbolic link.
-   */
+  /** Returns the target of the specified symbolic link. */
   public Path readSymLink(Path path) throws IOException {
     return Files.readSymbolicLink(getPathForRelativePath(path));
   }
@@ -1021,9 +925,7 @@ public class ProjectFilesystem {
     // information as 0100 in the field typically used in zip implementations for
     // POSIX file permissions.  We'll use this information when unzipping.
     if (isExecutable(path)) {
-      mode |=
-          MorePosixFilePermissions.toMode(
-              EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
     }
 
     if (isDirectory(path)) {
@@ -1064,10 +966,7 @@ public class ProjectFilesystem {
   @Override
   public String toString() {
     return String.format(
-        "%s (projectRoot=%s, blackListedPaths=%s",
-        super.toString(),
-        projectRoot,
-        blackListedPaths);
+        "%s (projectRoot=%s, blackListedPaths=%s", super.toString(), projectRoot, blackListedPaths);
   }
 
   @Override
@@ -1097,10 +996,7 @@ public class ProjectFilesystem {
    * Returns a relative path whose parent directory is guaranteed to exist. The path will be under
    * {@code buck-out}, so it is safe to write to.
    */
-  public Path createTempFile(
-      String prefix,
-      String suffix,
-      FileAttribute<?>... attrs)
+  public Path createTempFile(String prefix, String suffix, FileAttribute<?>... attrs)
       throws IOException {
     return createTempFile(tmpDir.get(), prefix, suffix, attrs);
   }
@@ -1111,11 +1007,7 @@ public class ProjectFilesystem {
    * is resolved.
    */
   public Path createTempFile(
-      Path directory,
-      String prefix,
-      String suffix,
-      FileAttribute<?>... attrs)
-      throws IOException {
+      Path directory, String prefix, String suffix, FileAttribute<?>... attrs) throws IOException {
     Path tmp = Files.createTempFile(resolve(directory), prefix, suffix, attrs);
     return getPathRelativeToProjectRoot(tmp).orElse(tmp);
   }
@@ -1140,13 +1032,11 @@ public class ProjectFilesystem {
   /**
    * FileTreeWalker is used to walk files similar to Files.walkFileTree.
    *
-   * It has two major differences from walkFileTree.
-   * 1. It ignores files and directories ignored by this ProjectFilesystem.
-   * 2. The walk is in a deterministic order.
+   * <p>It has two major differences from walkFileTree. 1. It ignores files and directories ignored
+   * by this ProjectFilesystem. 2. The walk is in a deterministic order.
    *
-   * And it has two minor differences.
-   * 1. It doesn't accept a depth limit.
-   * 2. It doesn't handle the presence of a security manager the same way.
+   * <p>And it has two minor differences. 1. It doesn't accept a depth limit. 2. It doesn't handle
+   * the presence of a security manager the same way.
    */
   private class FileTreeWalker {
     private final FileVisitor<Path> visitor;
@@ -1154,10 +1044,7 @@ public class ProjectFilesystem {
     private final boolean followLinks;
     private ArrayDeque<DirWalkState> state;
 
-    FileTreeWalker(
-        Path root,
-        Set<FileVisitOption> options,
-        FileVisitor<Path> pathFileVisitor) {
+    FileTreeWalker(Path root, Set<FileVisitOption> options, FileVisitor<Path> pathFileVisitor) {
       this.followLinks = options.contains(FileVisitOption.FOLLOW_LINKS);
       this.visitor = pathFileVisitor;
       this.root = root;
@@ -1166,7 +1053,7 @@ public class ProjectFilesystem {
 
     private ImmutableList<Path> getContents(Path root) throws IOException {
       try (DirectoryStream<Path> stream =
-               Files.newDirectoryStream(root, input -> !isIgnored(relativize(input)))) {
+          Files.newDirectoryStream(root, input -> !isIgnored(relativize(input)))) {
         return FluentIterable.from(stream).toSortedList(Comparator.naturalOrder());
       }
     }
@@ -1178,10 +1065,7 @@ public class ProjectFilesystem {
       UnmodifiableIterator<Path> iter;
       @Nullable IOException ioe = null;
 
-      DirWalkState(
-          Path directory,
-          BasicFileAttributes attributes,
-          boolean isRootSentinel) {
+      DirWalkState(Path directory, BasicFileAttributes attributes, boolean isRootSentinel) {
         this.dir = directory;
         this.attrs = attributes;
         if (isRootSentinel) {

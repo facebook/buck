@@ -21,8 +21,6 @@ import java.nio.channels.FileChannel;
 
 public interface FileContentsScrubber extends FileScrubber {
 
-  /**
-   * Override this method to perform the content modification.
-   */
+  /** Override this method to perform the content modification. */
   void scrubFile(FileChannel file) throws IOException, ScrubException;
 }

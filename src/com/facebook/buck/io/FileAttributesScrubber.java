@@ -17,14 +17,12 @@ package com.facebook.buck.io;
 
 import java.nio.file.Path;
 
-/**
- * Created by beefon on 06/06/2016.
- */
+/** Created by beefon on 06/06/2016. */
 public interface FileAttributesScrubber extends FileScrubber {
   /**
-   * Override this method to perform the modification of the file attributes
-   * (modification date, creation date, etc.)
-   * WARNING: You should not delete, rename or move the file, as the the behaviour is undefined.
+   * Override this method to perform the modification of the file attributes (modification date,
+   * creation date, etc.) WARNING: You should not delete, rename or move the file, as the the
+   * behaviour is undefined.
    */
   void scrubFileWithPath(Path path);
 }

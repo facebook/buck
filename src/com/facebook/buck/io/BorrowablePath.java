@@ -19,19 +19,15 @@ package com.facebook.buck.io;
 import java.nio.file.Path;
 
 /**
- * Instance holds a path and instruction on how you can treat the contents referred by the path.
- * It does not force the policy by any means.
+ * Instance holds a path and instruction on how you can treat the contents referred by the path. It
+ * does not force the policy by any means.
  */
 public class BorrowablePath {
   public enum Behaviour {
-    /**
-     * You should NOT borrow the path. It may be used in other places.
-     */
+    /** You should NOT borrow the path. It may be used in other places. */
     NOT_BORROWABLE,
 
-    /**
-     * You can borrow the path's contents.
-     */
+    /** You can borrow the path's contents. */
     BORROWABLE,
   }
 
@@ -53,15 +49,13 @@ public class BorrowablePath {
 
   /**
    * @return false if you can NOT borrow (move without copying) the contents of the path; Otherwise
-   * returns true, believing that you know better what you are doing.
+   *     returns true, believing that you know better what you are doing.
    */
   public boolean canBorrow() {
     return behaviour == Behaviour.BORROWABLE;
   }
 
-  /**
-   * @return referenced path.
-   */
+  /** @return referenced path. */
   public Path getPath() {
     return path;
   }

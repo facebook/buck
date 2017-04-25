@@ -25,18 +25,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-/**
- * Common functions that are done with a {@link ProjectFilesystem}.
- */
+/** Common functions that are done with a {@link ProjectFilesystem}. */
 public class MoreProjectFilesystems {
   /** Utility class: do not instantiate. */
   private MoreProjectFilesystems() {}
 
   /**
-   * Creates a symlink at
-   * {@code projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot)} that
-   * points to {@code projectFilesystem.getRootPath().resolve(pathToExistingFileUnderProjectRoot)}
-   * using a relative symlink.
+   * Creates a symlink at {@code
+   * projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot)} that points to
+   * {@code projectFilesystem.getRootPath().resolve(pathToExistingFileUnderProjectRoot)} using a
+   * relative symlink.
    *
    * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
    * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
@@ -45,32 +43,28 @@ public class MoreProjectFilesystems {
   public static Path createRelativeSymlink(
       Path pathToDesiredLinkUnderProjectRoot,
       Path pathToExistingFileUnderProjectRoot,
-      ProjectFilesystem projectFilesystem) throws IOException {
+      ProjectFilesystem projectFilesystem)
+      throws IOException {
     return MorePaths.createRelativeSymlink(
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem.getRootPath());
   }
 
-  /**
-   * @return Whether the input path directs to a file in the buck generated files folder.
-   */
+  /** @return Whether the input path directs to a file in the buck generated files folder. */
   public static boolean isGeneratedFile(
-      ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot) {
+      ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
     return pathRelativeToProjectRoot.startsWith(filesystem.getBuckPaths().getGenDir());
   }
 
   public static boolean fileContentsDiffer(
-      InputStream contents,
-      Path path,
-      ProjectFilesystem projectFilesystem) throws IOException {
+      InputStream contents, Path path, ProjectFilesystem projectFilesystem) throws IOException {
     try {
       // Hash the contents of the file at path so we don't have to pull the whole thing into memory.
       MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
       byte[] pathDigest;
       try (InputStream is = projectFilesystem.newFileInputStream(path)) {
-          pathDigest = inputStreamDigest(is, sha1);
+        pathDigest = inputStreamDigest(is, sha1);
       }
       // Hash 'contents' and see if the two differ.
       sha1.reset();

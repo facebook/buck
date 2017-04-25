@@ -27,7 +27,6 @@ import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -48,10 +47,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  public WatchmanTransportClient(
-      Console console,
-      Clock clock,
-      Transport transport) {
+  public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
     this.console = console;
     this.clock = clock;
@@ -61,28 +57,19 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   @Override
-  public Optional<Map<String, Object>> queryWithTimeout(
-      long timeoutNanos,
-      Object... query)
-    throws IOException, InterruptedException {
-    return queryListWithTimeout(
-        timeoutNanos,
-        ImmutableList.copyOf(query));
+  public Optional<Map<String, Object>> queryWithTimeout(long timeoutNanos, Object... query)
+      throws IOException, InterruptedException {
+    return queryListWithTimeout(timeoutNanos, ImmutableList.copyOf(query));
   }
 
   private Optional<Map<String, Object>> queryListWithTimeout(
-      long timeoutNanos,
-      final List<Object> query)
-    throws IOException, InterruptedException {
-    ListenableFuture<Optional<Map<String, Object>>> future = listeningExecutorService.submit(
-        () -> sendWatchmanQuery(query));
+      long timeoutNanos, final List<Object> query) throws IOException, InterruptedException {
+    ListenableFuture<Optional<Map<String, Object>>> future =
+        listeningExecutorService.submit(() -> sendWatchmanQuery(query));
     try {
       long startTimeNanos = clock.nanoTime();
-      Optional<Map<String, Object>> result = waitForQueryNotifyingUserIfSlow(
-          future,
-          timeoutNanos,
-          POLL_TIME_NANOS,
-          query);
+      Optional<Map<String, Object>> result =
+          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, POLL_TIME_NANOS, query);
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
       return result;
@@ -106,16 +93,15 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       ListenableFuture<Optional<Map<String, Object>>> future,
       long timeoutNanos,
       long pollTimeNanos,
-      List<Object> query) throws InterruptedException, ExecutionException {
+      List<Object> query)
+      throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {
       return future.get(Math.min(timeoutNanos, pollTimeNanos), TimeUnit.NANOSECONDS);
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
-        console.getStdErr().getRawStream().format(
-            "Waiting for Watchman query [%s]...\n",
-            query);
+        console.getStdErr().getRawStream().format("Waiting for Watchman query [%s]...\n", query);
         try {
           return future.get(remainingNanos, TimeUnit.NANOSECONDS);
         } catch (TimeoutException te) {
@@ -125,17 +111,18 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       LOG.warn(
           "Watchman did not respond within %d ms, disabling.",
           TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      console.getStdErr().getRawStream().format(
-          "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
-          TimeUnit.NANOSECONDS.toMillis(timeoutNanos),
-          query);
+      console
+          .getStdErr()
+          .getRawStream()
+          .format(
+              "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
+              TimeUnit.NANOSECONDS.toMillis(timeoutNanos), query);
       return Optional.empty();
     }
   }
 
   @SuppressWarnings("unchecked")
-  private Optional<Map<String, Object>> sendWatchmanQuery(List<Object> query)
-      throws IOException {
+  private Optional<Map<String, Object>> sendWatchmanQuery(List<Object> query) throws IOException {
     LOG.debug("Sending query: %s", query);
     bserSerializer.serializeToStream(query, transport.getOutputStream());
     Object response = bserDeserializer.deserializeBserValue(transport.getInputStream());

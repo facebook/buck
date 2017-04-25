@@ -21,9 +21,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * An abstraction for IPC via messages.
- * Messages are sent via an output stream ({@link #getOutputStream()})
- * and received via an input stream ({@link #getInputStream()})
+ * An abstraction for IPC via messages. Messages are sent via an output stream ({@link
+ * #getOutputStream()}) and received via an input stream ({@link #getInputStream()})
  */
 public interface Transport extends Closeable {
   /**

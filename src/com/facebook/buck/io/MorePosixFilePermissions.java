@@ -19,7 +19,6 @@ package com.facebook.buck.io;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 
@@ -45,9 +44,7 @@ public class MorePosixFilePermissions {
           PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
           PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE);
 
-  /**
-   * Convert a set of posix file permissions the unix bit representation (e.g. 0644).
-   */
+  /** Convert a set of posix file permissions the unix bit representation (e.g. 0644). */
   public static long toMode(Set<PosixFilePermission> permissions) {
     long mode = 0;
 
@@ -61,9 +58,7 @@ public class MorePosixFilePermissions {
     return mode;
   }
 
-  /**
-   * Convert a unix bit representation (e.g. 0644) into a set of posix file permissions.
-   */
+  /** Convert a unix bit representation (e.g. 0644) into a set of posix file permissions. */
   public static ImmutableSet<PosixFilePermission> fromMode(long mode) {
     ImmutableSet.Builder<PosixFilePermission> permissions = ImmutableSet.builder();
 
@@ -77,8 +72,8 @@ public class MorePosixFilePermissions {
   }
 
   /**
-   * Return a new set of permissions which include execute permission for each of the
-   * roles that already have read permissions (e.g. 0606 =&gt; 0707).
+   * Return a new set of permissions which include execute permission for each of the roles that
+   * already have read permissions (e.g. 0606 =&gt; 0707).
    */
   public static ImmutableSet<PosixFilePermission> addExecutePermissionsIfReadable(
       Set<PosixFilePermission> permissions) {
@@ -99,5 +94,4 @@ public class MorePosixFilePermissions {
 
     return newPermissions.build();
   }
-
 }

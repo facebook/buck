@@ -30,13 +30,12 @@ import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * {@link ProjectFilesystemDelegateFactory} mediates the creation of a
- * {@link ProjectFilesystemDelegate} for a {@link ProjectFilesystem} root.
+ * {@link ProjectFilesystemDelegateFactory} mediates the creation of a {@link
+ * ProjectFilesystemDelegate} for a {@link ProjectFilesystem} root.
  */
 public final class ProjectFilesystemDelegateFactory {
 
@@ -45,13 +44,9 @@ public final class ProjectFilesystemDelegateFactory {
   /** Utility class: do not instantiate. */
   private ProjectFilesystemDelegateFactory() {}
 
-  /**
-   * Must always create a new delegate for the specified {@code root}.
-   */
+  /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
-      Path root,
-      String hgCmd,
-      AutoSparseConfig autoSparseConfig) {
+      Path root, String hgCmd, AutoSparseConfig autoSparseConfig) {
     Optional<EdenClient> client = tryToCreateEdenClient();
 
     if (client.isPresent()) {
@@ -71,16 +66,11 @@ public final class ProjectFilesystemDelegateFactory {
       // We can't access BuckConfig because that class requires a
       // ProjectFileSystem, which we are in the process of building
       // Access the required info from the Config instead
-      HgCmdLineInterface hgCmdLine = new HgCmdLineInterface(
-          new PrintStreamProcessExecutorFactory(),
-          root,
-          hgCmd,
-          ImmutableMap.of()
-      );
-      AutoSparseState autoSparseState = AbstractAutoSparseFactory.getAutoSparseState(
-          root,
-          hgCmdLine,
-          autoSparseConfig);
+      HgCmdLineInterface hgCmdLine =
+          new HgCmdLineInterface(
+              new PrintStreamProcessExecutorFactory(), root, hgCmd, ImmutableMap.of());
+      AutoSparseState autoSparseState =
+          AbstractAutoSparseFactory.getAutoSparseState(root, hgCmdLine, autoSparseConfig);
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
         return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);

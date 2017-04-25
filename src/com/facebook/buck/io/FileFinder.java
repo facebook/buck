@@ -18,30 +18,25 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-
 import javax.annotation.Nullable;
 
-/**
- * Methods for finding files.
- */
+/** Methods for finding files. */
 public class FileFinder {
 
   /**
    * Combines prefixes, base, and suffixes to create a set of file names.
+   *
    * @param prefixes set of prefixes. May be null or empty.
    * @param base base name. May be empty.
    * @param suffixes set of suffixes. May be null or empty.
    * @return a set containing all combinations of prefix, base, and suffix.
    */
   public static ImmutableSet<String> combine(
-      @Nullable Set<String> prefixes,
-      String base,
-      @Nullable Set<String> suffixes) {
+      @Nullable Set<String> prefixes, String base, @Nullable Set<String> suffixes) {
 
     ImmutableSet<String> suffixedSet;
     if (suffixes == null || suffixes.isEmpty()) {
@@ -70,8 +65,8 @@ public class FileFinder {
   /**
    * Tries to find a file with one of a number of possible names in a search path.
    *
-   * Returns the first match found. Search tries all paths in the search paths in order, looking for
-   * any matching names in each path.
+   * <p>Returns the first match found. Search tries all paths in the search paths in order, looking
+   * for any matching names in each path.
    *
    * @param possibleNames file names to look for.
    * @param searchPaths directories to search.
@@ -79,9 +74,7 @@ public class FileFinder {
    * @return returns the first match found, if any.
    */
   public static Optional<Path> getOptionalFile(
-      Set<String> possibleNames,
-      Iterable<Path> searchPaths,
-      Predicate<Path> filter) {
+      Set<String> possibleNames, Iterable<Path> searchPaths, Predicate<Path> filter) {
 
     return RichStream.from(searchPaths)
         .flatMap(searchPath -> possibleNames.stream().map(searchPath::resolve))
@@ -89,8 +82,6 @@ public class FileFinder {
         .findFirst();
   }
 
-  /**
-   * Constructor hidden; there is no reason to instantiate this class.
-   */
+  /** Constructor hidden; there is no reason to instantiate this class. */
   private FileFinder() {}
 }

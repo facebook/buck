@@ -16,17 +16,14 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Throwables;
 import com.google.common.base.Preconditions;
-
+import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Class is intended to provide Paths to be used by cache
- */
+/** Class is intended to provide Paths to be used by cache */
 public abstract class LazyPath {
   private static final Logger LOG = Logger.get(LazyPath.class);
   private AtomicReference<Path> path = new AtomicReference<>();
@@ -34,22 +31,25 @@ public abstract class LazyPath {
 
   /**
    * Creates an instance with given path.
+   *
    * @param path The path that get()/getUnchecked() methods should return.
    * @return Instance that always returns the given path. It means there is no laziness.
    */
   public static LazyPath ofInstance(final Path path) {
-    LazyPath instance = new LazyPath() {
-      @Override
-      protected Path create() throws IOException {
-        return path;
-      }
-    };
+    LazyPath instance =
+        new LazyPath() {
+          @Override
+          protected Path create() throws IOException {
+            return path;
+          }
+        };
     instance.path.set(path);
     return instance;
   }
 
   /**
    * On first access it will invoke the given supplier to obtain the value of the Path.
+   *
    * @return Memoized path.
    * @throws IOException
    */
@@ -62,8 +62,12 @@ public abstract class LazyPath {
           path.set(result);
         } catch (IOException e) {
           exception = Optional.of(e);
-          LOG.warn("Failed to initialize lazy path, exception: " + e.toString() + "\n" +
-          "StackTrace: " + Throwables.getStackTraceAsString(e));
+          LOG.warn(
+              "Failed to initialize lazy path, exception: "
+                  + e.toString()
+                  + "\n"
+                  + "StackTrace: "
+                  + Throwables.getStackTraceAsString(e));
           throw e;
         }
       }
@@ -73,6 +77,7 @@ public abstract class LazyPath {
 
   /**
    * Does not invoke the path supplier, assuming it was invoked previously.
+   *
    * @return Memoized path.
    */
   public Path getUnchecked() {
@@ -97,8 +102,11 @@ public abstract class LazyPath {
         if (!exception.isPresent()) {
           return "Lazy path uninitialized";
         } else {
-          return "Lazy path failed to initialize: " + exception.get().toString() + "\n" +
-              "Stacktrace: \n" + Throwables.getStackTraceAsString(exception.get());
+          return "Lazy path failed to initialize: "
+              + exception.get().toString()
+              + "\n"
+              + "Stacktrace: \n"
+              + Throwables.getStackTraceAsString(exception.get());
         }
       } else {
         return result.toString();

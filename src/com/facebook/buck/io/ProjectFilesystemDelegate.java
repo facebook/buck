@@ -18,7 +18,6 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
