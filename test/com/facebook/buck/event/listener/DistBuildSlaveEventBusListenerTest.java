@@ -33,6 +33,8 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -41,8 +43,10 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.Capture;
@@ -191,7 +195,7 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildSlaveStatus expectedStatus = new BuildSlaveStatus();
     expectedStatus.setStampedeId(stampedeId);
     expectedStatus.setRunId(runId);
-    expectedStatus.setRulesStartedCount(2);
+    expectedStatus.setRulesStartedCount(1);
     expectedStatus.setRulesFinishedCount(5);
     expectedStatus.setRulesSuccessCount(3);
     expectedStatus.setRulesFailureCount(1);
@@ -210,7 +214,11 @@ public class DistBuildSlaveEventBusListenerTest {
     replay(distBuildServiceMock);
     setUpDistBuildSlaveEventBusListener();
 
-    FakeBuildRule fakeRule = new FakeBuildRule("//some:target");
+    RuleKey fakeRuleKey = new RuleKey("aaaa");
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//some:target");
+    FakeRuleKeyFactory fakeRuleKeyFactory =
+        new FakeRuleKeyFactory(ImmutableMap.of(fakeTarget, fakeRuleKey));
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget.getFullyQualifiedName());
     BuildRuleDurationTracker tracker = new BuildRuleDurationTracker();
 
     BuildRuleEvent.Started started1 = BuildRuleEvent.started(fakeRule, tracker);
@@ -221,12 +229,16 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildRuleEvent.Started started6 = BuildRuleEvent.started(fakeRule, tracker);
     BuildRuleEvent.Started started7 = BuildRuleEvent.started(fakeRule, tracker);
 
+    BuildRuleEvent.Suspended suspended3 = BuildRuleEvent.suspended(started3, fakeRuleKeyFactory);
+    BuildRuleEvent.Resumed resumed3 = BuildRuleEvent.resumed(fakeRule, tracker, fakeRuleKeyFactory);
+    BuildRuleEvent.Suspended suspended7 = BuildRuleEvent.suspended(started7, fakeRuleKeyFactory);
+
     eventBus.post(started1);
     eventBus.post(started2);
     eventBus.post(
         BuildRuleEvent.finished(
             started1,
-            BuildRuleKeys.of(new RuleKey("aaaa")),
+            BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.hit("buckcache"),
             Optional.empty(),
@@ -238,7 +250,7 @@ public class DistBuildSlaveEventBusListenerTest {
     eventBus.post(
         BuildRuleEvent.finished(
             started2,
-            BuildRuleKeys.of(new RuleKey("aaaa")),
+            BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.empty(),
@@ -246,12 +258,13 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
+    eventBus.post(suspended3);
     eventBus.post(started4);
     eventBus.post(started5);
     eventBus.post(
         BuildRuleEvent.finished(
             started5,
-            BuildRuleKeys.of(new RuleKey("aaaa")),
+            BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.FAIL,
             CacheResult.error("buckcache", "connection error"),
             Optional.empty(),
@@ -262,7 +275,7 @@ public class DistBuildSlaveEventBusListenerTest {
     eventBus.post(
         BuildRuleEvent.finished(
             started4,
-            BuildRuleKeys.of(new RuleKey("aaaa")),
+            BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.CANCELED,
             CacheResult.ignored(),
             Optional.empty(),
@@ -272,10 +285,11 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty()));
     eventBus.post(started6);
     eventBus.post(started7);
+    eventBus.post(resumed3);
     eventBus.post(
         BuildRuleEvent.finished(
             started6,
-            BuildRuleKeys.of(new RuleKey("aaaa")),
+            BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.ignored(),
             Optional.empty(),
@@ -283,6 +297,7 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
+    eventBus.post(suspended7);
 
     listener.close();
     verify(distBuildServiceMock);

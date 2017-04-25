@@ -231,12 +231,21 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     }
   }
 
-  /**
-   * TODO(shivanker): Add support for keeping track of suspended rules.
-   *
-   * @Subscribe public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {}
-   * @Subscribe public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {}
-   */
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
+    synchronized (statusLock) {
+      status.setRulesStartedCount(status.getRulesStartedCount() + 1);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
+    synchronized (statusLock) {
+      status.setRulesStartedCount(status.getRulesStartedCount() - 1);
+    }
+  }
 
   /**
    * TODO(shivanker): Add support for keeping track of cache uploads.
