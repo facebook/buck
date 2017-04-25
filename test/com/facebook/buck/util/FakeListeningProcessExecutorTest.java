@@ -16,39 +16,34 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
-
 import com.google.common.collect.ImmutableMultimap;
-
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
-
-/**
- * Tests for {@link FakeListeningProcessExecutor}.
- */
+/** Tests for {@link FakeListeningProcessExecutor}. */
 public class FakeListeningProcessExecutorTest {
 
   @Test
   public void echoTextReceivedOnStdout() throws Exception {
     CapturingListener listener = new CapturingListener();
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand("echo", "Hello");
-    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
-        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder().putAll(
-            params,
-            FakeListeningProcessState.ofStdout("Hello\n"),
-            FakeListeningProcessState.ofExit(0)
-        ).build());
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(
+            ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+                .putAll(
+                    params,
+                    FakeListeningProcessState.ofStdout("Hello\n"),
+                    FakeListeningProcessState.ofExit(0))
+                .build());
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo("Hello\n"));
@@ -58,18 +53,18 @@ public class FakeListeningProcessExecutorTest {
   @Test
   public void catTextSentToStdinReceivedOnStdout() throws Exception {
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand("cat");
-    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
-        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder().putAll(
-            params,
-            FakeListeningProcessState.ofExpectedStdin("Meow\n"),
-            FakeListeningProcessState.ofExpectStdinClosed(),
-            FakeListeningProcessState.ofStdout("Meow\n"),
-            FakeListeningProcessState.ofExit(0)
-        ).build());
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(
+            ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+                .putAll(
+                    params,
+                    FakeListeningProcessState.ofExpectedStdin("Meow\n"),
+                    FakeListeningProcessState.ofExpectStdinClosed(),
+                    FakeListeningProcessState.ofStdout("Meow\n"),
+                    FakeListeningProcessState.ofExit(0))
+                .build());
     StdinWritingListener listener = new StdinWritingListener("Meow\n");
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     process.wantWrite();
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
@@ -80,15 +75,13 @@ public class FakeListeningProcessExecutorTest {
   @Test
   public void processFailureExitCodeNotZero() throws Exception {
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand("false");
-    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
-        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder().putAll(
-            params,
-            FakeListeningProcessState.ofExit(1)
-        ).build());
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(
+            ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+                .putAll(params, FakeListeningProcessState.ofExit(1))
+                .build());
     CapturingListener listener = new CapturingListener();
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, not(equalTo(0)));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
@@ -98,16 +91,16 @@ public class FakeListeningProcessExecutorTest {
   @Test
   public void fakeProcessTimeout() throws Exception {
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand("sleep", "50");
-    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
-        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder().putAll(
-            params,
-            FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(50)),
-            FakeListeningProcessState.ofExit(0)
-        ).build());
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(
+            ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+                .putAll(
+                    params,
+                    FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(50)),
+                    FakeListeningProcessState.ofExit(0))
+                .build());
     CapturingListener listener = new CapturingListener();
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process, 100, TimeUnit.MILLISECONDS);
     assertThat(returnCode, equalTo(Integer.MIN_VALUE));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));

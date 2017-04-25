@@ -38,9 +38,7 @@ public class MoreStringsForTests {
     }
   }
 
-  /**
-   * A cross-platform matcher for a string with newlines.
-   */
+  /** A cross-platform matcher for a string with newlines. */
   public static Matcher<String> equalToIgnoringPlatformNewlines(String expectedText) {
     return new IsEqualIgnoringPlatformNewlines(expectedText);
   }

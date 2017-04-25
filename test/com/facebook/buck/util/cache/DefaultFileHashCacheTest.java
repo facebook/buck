@@ -31,12 +31,6 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.hamcrest.Matchers;
-import org.hamcrest.junit.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -48,14 +42,16 @@ import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import org.hamcrest.Matchers;
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DefaultFileHashCacheTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void whenPathIsPutCacheContainsPath() {
@@ -74,10 +70,7 @@ public class DefaultFileHashCacheTest {
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.loadingCache.put(path, value);
-    assertEquals(
-        "Cache should contain hash",
-        value.getHashCode(),
-        cache.get(path));
+    assertEquals("Cache should contain hash", value.getHashCode(), cache.get(path));
   }
 
   @Test
@@ -165,8 +158,8 @@ public class DefaultFileHashCacheTest {
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("SomeClass.class");
     String memberContents = "Some contents";
-    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
-        filesystem.newFileOutputStream(abiJarPath))) {
+    try (CustomJarOutputStream jar =
+        ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
       jar.setEntryHashingEnabled(true);
       jar.writeEntry(
           memberPath.toString(),
@@ -180,16 +173,15 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test(expected = NoSuchFileException.class)
-  public void whenJarMemberWithoutHashInManifestIsQueriedThenThrow()
-      throws IOException {
+  public void whenJarMemberWithoutHashInManifestIsQueriedThenThrow() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
 
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("Unhashed.txt");
     String memberContents = "Some contents";
-    try (CustomJarOutputStream jar = ZipOutputStreams.newJarOutputStream(
-        filesystem.newFileOutputStream(abiJarPath))) {
+    try (CustomJarOutputStream jar =
+        ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
       jar.setEntryHashingEnabled(true);
       jar.writeEntry(
           "SomeClass.class",
@@ -228,11 +220,9 @@ public class DefaultFileHashCacheTest {
     Path abiJarPath = Paths.get("empty-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
 
-    try (CustomZipOutputStream jar = ZipOutputStreams.newOutputStream(
-        filesystem.newFileOutputStream(abiJarPath))) {
-      jar.writeEntry(
-          JarFile.MANIFEST_NAME,
-          new ByteArrayInputStream(new byte[0]));
+    try (CustomZipOutputStream jar =
+        ZipOutputStreams.newOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
+      jar.writeEntry(JarFile.MANIFEST_NAME, new ByteArrayInputStream(new byte[0]));
       jar.writeEntry(
           memberPath.toString(),
           new ByteArrayInputStream("Contents".getBytes(StandardCharsets.UTF_8)));
@@ -256,9 +246,7 @@ public class DefaultFileHashCacheTest {
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    assertThat(
-        cache.getSize(input),
-        Matchers.equalTo(123L));
+    assertThat(cache.getSize(input), Matchers.equalTo(123L));
   }
 
   @Test
@@ -269,9 +257,7 @@ public class DefaultFileHashCacheTest {
     filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
     filesystem.writeBytesToPath(new byte[123], input.resolve("file2"));
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    assertThat(
-        cache.getSize(input),
-        Matchers.equalTo(246L));
+    assertThat(cache.getSize(input), Matchers.equalTo(246L));
   }
 
   @Test
@@ -294,9 +280,8 @@ public class DefaultFileHashCacheTest {
     Path otherFile = Paths.get("file.txt");
     filesystem.writeContentsToPath("data", buckOutFile);
     filesystem.writeContentsToPath("other data", otherFile);
-    DefaultFileHashCache cache = new DefaultFileHashCache(
-        filesystem,
-        Optional.of(Paths.get("buck-out")));
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(filesystem, Optional.of(Paths.get("buck-out")));
     assertTrue(cache.willGet(filesystem.getPath("buck-out/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("file.txt")));
   }

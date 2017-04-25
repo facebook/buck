@@ -23,13 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class WeightedListeningExecutorServiceTest {
 
@@ -38,8 +36,7 @@ public class WeightedListeningExecutorServiceTest {
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
             new ListeningMultiSemaphore(
-                ResourceAmounts.of(1, 0, 0, 0),
-                ResourceAllocationFairness.FAIR),
+                ResourceAmounts.of(1, 0, 0, 0), ResourceAllocationFairness.FAIR),
             ResourceAmounts.of(1, 0, 0, 0),
             newDirectExecutorService());
     AtomicBoolean first = submitSetBool(service, ResourceAmounts.of(1, 0, 0, 0));
@@ -52,15 +49,16 @@ public class WeightedListeningExecutorServiceTest {
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
             new ListeningMultiSemaphore(
-                ResourceAmounts.of(1, 0, 0, 0),
-                ResourceAllocationFairness.FAIR),
+                ResourceAmounts.of(1, 0, 0, 0), ResourceAllocationFairness.FAIR),
             ResourceAmounts.of(1, 0, 0, 0),
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
     service.submit(
         new Runnable() {
           @Override
           public void run() {
-            while (true) {/* block forever */}
+            while (true) {
+              /* block forever */
+            }
           }
         },
         ResourceAmounts.of(1, 0, 0, 0));
@@ -70,15 +68,13 @@ public class WeightedListeningExecutorServiceTest {
 
   @Test
   public void cancelled() {
-    ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(
-        ResourceAmounts.of(1, 0, 0, 0),
-        ResourceAllocationFairness.FAIR);
+    ListeningMultiSemaphore semaphore =
+        new ListeningMultiSemaphore(
+            ResourceAmounts.of(1, 0, 0, 0), ResourceAllocationFairness.FAIR);
     ExplicitRunExecutorService wrappedService = new ExplicitRunExecutorService();
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
-            semaphore,
-            ResourceAmounts.of(1, 0, 0, 0),
-            wrappedService);
+            semaphore, ResourceAmounts.of(1, 0, 0, 0), wrappedService);
     final AtomicBoolean flag = new AtomicBoolean(false);
     ListenableFuture<Void> future =
         service.submit(
@@ -99,8 +95,7 @@ public class WeightedListeningExecutorServiceTest {
   }
 
   private AtomicBoolean submitSetBool(
-      WeightedListeningExecutorService service,
-      ResourceAmounts amounts) {
+      WeightedListeningExecutorService service, ResourceAmounts amounts) {
     final AtomicBoolean bool = new AtomicBoolean(false);
     service.submit(
         new Callable<Void>() {
@@ -113,5 +108,4 @@ public class WeightedListeningExecutorServiceTest {
         amounts);
     return bool;
   }
-
 }

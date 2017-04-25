@@ -25,20 +25,17 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ChromeTraceParserIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem projectFilesystem;
   private ChromeTraceParser parser;
@@ -48,66 +45,59 @@ public class ChromeTraceParserIntegrationTest {
   public void setUp() throws IOException {
     projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     parser = new ChromeTraceParser(projectFilesystem);
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "chrome_trace_parser",
-        tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "chrome_trace_parser", tmp);
     workspace.setUp();
   }
 
   @Test
   public void shouldNotCrashOnEmptyTrace() throws IOException {
-    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers = ImmutableSet.of(
-        ChromeTraceParser.COMMAND);
-    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results = parser.parse(
-        Paths.get("empty_trace.json"),
-        matchers);
+    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers =
+        ImmutableSet.of(ChromeTraceParser.COMMAND);
+    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results =
+        parser.parse(Paths.get("empty_trace.json"), matchers);
     assertEquals(ImmutableMap.of(), results);
   }
 
   @Test
   public void canParseCommandFromTrace() throws IOException {
-    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers = ImmutableSet.of(
-        ChromeTraceParser.COMMAND);
-    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results = parser.parse(
-        Paths.get("build_trace_with_command.json"),
-        matchers);
+    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers =
+        ImmutableSet.of(ChromeTraceParser.COMMAND);
+    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results =
+        parser.parse(Paths.get("build_trace_with_command.json"), matchers);
     String expectedQuery = "buck query deps(fb4a, 1)";
     assertEquals(ImmutableMap.of(ChromeTraceParser.COMMAND, expectedQuery), results);
-    assertEquals(Optional.of(expectedQuery), ChromeTraceParser.getResultForMatcher(
-        ChromeTraceParser.COMMAND,
-        results));
+    assertEquals(
+        Optional.of(expectedQuery),
+        ChromeTraceParser.getResultForMatcher(ChromeTraceParser.COMMAND, results));
   }
 
   @Test
   public void canApplyMultipleMatchersToTrace() throws IOException {
-    ChromeTraceParser.ChromeTraceEventMatcher<Integer> meaningOfLifeMatcher = (json, name) -> {
-      if (!"meaningOfLife".equals(name)) {
-        return Optional.empty();
-      }
+    ChromeTraceParser.ChromeTraceEventMatcher<Integer> meaningOfLifeMatcher =
+        (json, name) -> {
+          if (!"meaningOfLife".equals(name)) {
+            return Optional.empty();
+          }
 
-      JsonElement argsEl = json.get("args");
-      if (argsEl == null ||
-          !argsEl.isJsonObject() ||
-          argsEl.getAsJsonObject().get("is") == null ||
-          !argsEl.getAsJsonObject().get("is").isJsonPrimitive()) {
-        return Optional.empty();
-      }
+          JsonElement argsEl = json.get("args");
+          if (argsEl == null
+              || !argsEl.isJsonObject()
+              || argsEl.getAsJsonObject().get("is") == null
+              || !argsEl.getAsJsonObject().get("is").isJsonPrimitive()) {
+            return Optional.empty();
+          }
 
-      int value = argsEl.getAsJsonObject().get("is").getAsInt();
-      return Optional.of(value);
-    };
+          int value = argsEl.getAsJsonObject().get("is").getAsInt();
+          return Optional.of(value);
+        };
 
-    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers = ImmutableSet.of(
-        ChromeTraceParser.COMMAND,
-        meaningOfLifeMatcher);
-    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results = parser.parse(
-        Paths.get("build_trace_with_multiple_features.json"),
-        matchers);
+    Set<ChromeTraceParser.ChromeTraceEventMatcher<?>> matchers =
+        ImmutableSet.of(ChromeTraceParser.COMMAND, meaningOfLifeMatcher);
+    Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results =
+        parser.parse(Paths.get("build_trace_with_multiple_features.json"), matchers);
     assertEquals(
         ImmutableMap.of(
-            ChromeTraceParser.COMMAND, "buck query deps(fb4a, 1)",
-            meaningOfLifeMatcher, 42),
+            ChromeTraceParser.COMMAND, "buck query deps(fb4a, 1)", meaningOfLifeMatcher, 42),
         results);
   }
 }

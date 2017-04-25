@@ -21,15 +21,11 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.IOException;
 import java.util.Collection;
-
 import javax.annotation.concurrent.GuardedBy;
 
-/**
- * Fake implementation of {@link ScribeLogger} which records logged lines to memory.
- */
+/** Fake implementation of {@link ScribeLogger} which records logged lines to memory. */
 public final class FakeScribeLogger extends ScribeLogger {
   // Keep the lines in the order in which they were written.
   @GuardedBy("this")
@@ -54,6 +50,5 @@ public final class FakeScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException {}
 }

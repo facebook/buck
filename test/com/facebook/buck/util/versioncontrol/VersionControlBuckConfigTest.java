@@ -24,10 +24,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Optional;
+import org.junit.Test;
 
 public class VersionControlBuckConfigTest {
   private static final String HG_CMD = "myhg";
@@ -36,41 +34,49 @@ public class VersionControlBuckConfigTest {
 
   @Test
   public void givenHgCmdInConfigThenReturnHgCmdFromConfig() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of(VersionControlBuckConfig.HG_CMD_SETTING_KEY, HG_CMD))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(VersionControlBuckConfig.HG_CMD_SETTING_KEY, HG_CMD)))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(HG_CMD, is(equalTo(config.getHgCmd())));
   }
 
   @Test
   public void givenHgCmdNotInConfigThenReturnDefault() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of())).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(VersionControlBuckConfig.HG_CMD_DEFAULT, is(equalTo(config.getHgCmd())));
   }
 
   @Test
   public void givenGenerateStatisticsInConfigThenReturnGenerateStatisticsFromConfig() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of(
-                VersionControlBuckConfig.GENERATE_STATISTICS_KEY, GENERATE_STATISTICS))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(
+                        VersionControlBuckConfig.GENERATE_STATISTICS_KEY, GENERATE_STATISTICS)))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(GENERATE_STATISTICS_RESULT, is(equalTo(config.shouldGenerateStatistics())));
   }
 
   @Test
   public void givenGenerateStatisticsNotInConfigThenReturnDefault() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of())).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(
         VersionControlBuckConfig.GENERATE_STATISTICS_DEFAULT,
@@ -79,45 +85,43 @@ public class VersionControlBuckConfigTest {
 
   @Test
   public void givenNoPregeneratedStatsReturnsNothing() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            VersionControlBuckConfig.VC_SECTION_KEY,
-            ImmutableMap.of())).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
-    assertThat(
-        config.getPregeneratedVersionControlStats(),
-        is(equalTo(Optional.empty())));
+    assertThat(config.getPregeneratedVersionControlStats(), is(equalTo(Optional.empty())));
   }
 
   @Test
   public void givenCompletePregeneratedStatsReturnsSomething() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                VersionControlBuckConfig.VC_SECTION_KEY,
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
                 ImmutableMap.of(
-                    VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00",
-                    VersionControlBuckConfig.PREGENERATED_BASE_BOOKMARKS, "remote/master",
-                    VersionControlBuckConfig.PREGENERATED_BASE_REVISION_ID, "b47",
-                    VersionControlBuckConfig.PREGENERATED_BASE_REVISION_TIMESTAMP, "0")))
-        .build();
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(
+                        VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00",
+                        VersionControlBuckConfig.PREGENERATED_BASE_BOOKMARKS, "remote/master",
+                        VersionControlBuckConfig.PREGENERATED_BASE_REVISION_ID, "b47",
+                        VersionControlBuckConfig.PREGENERATED_BASE_REVISION_TIMESTAMP, "0")))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
-    assertThat(
-        config.getPregeneratedVersionControlStats().isPresent(),
-        is(equalTo(true)));
+    assertThat(config.getPregeneratedVersionControlStats().isPresent(), is(equalTo(true)));
   }
 
   @Test(expected = HumanReadableException.class)
   public void givenIncompletePregeneratedStatsThrowsException() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                VersionControlBuckConfig.VC_SECTION_KEY,
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
                 ImmutableMap.of(
-                    VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00")))
-        .build();
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(
+                        VersionControlBuckConfig.PREGENERATED_CURRENT_REVISION_ID, "f00")))
+            .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     config.getPregeneratedVersionControlStats();
   }
-
 }

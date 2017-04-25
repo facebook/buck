@@ -34,12 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,11 +41,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class WatchmanWatcherIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Watchman watchman;
   private EventBus eventBus;
@@ -61,9 +58,7 @@ public class WatchmanWatcherIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
 
     // Create an empty watchman config file.
-    Files.write(
-        tmp.getRoot().resolve(".watchmanconfig"),
-        new byte[0]);
+    Files.write(tmp.getRoot().resolve(".watchmanconfig"), new byte[0]);
 
     watchman =
         Watchman.build(
@@ -124,17 +119,14 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             ImmutableMap.of(
-                tmp.getRoot(),
-                ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+                tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,
             ImmutableMap.of(
                 tmp.getRoot(),
                 new WatchmanCursor(
-                    new StringBuilder("n:buckd")
-                        .append(UUID.randomUUID())
-                        .toString())));
+                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())));
 
     // Clear out the initial overflow event.
     watcher.postEvents(
@@ -161,7 +153,5 @@ public class WatchmanWatcherIntegrationTest {
     public ImmutableList<WatchmanEvent> getEvents() {
       return ImmutableList.copyOf(events);
     }
-
   }
-
 }

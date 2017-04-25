@@ -18,7 +18,6 @@ package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,12 +31,11 @@ public final class FakeFailingScribeLogger extends ScribeLogger {
 
   @Override
   public ListenableFuture<Void> log(String category, Iterable<String> lines) {
-    return failLogging.compareAndSet(false, true) ?
-        Futures.immediateFuture(null) :
-        Futures.immediateFailedFuture(new IOException());
+    return failLogging.compareAndSet(false, true)
+        ? Futures.immediateFuture(null)
+        : Futures.immediateFailedFuture(new IOException());
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException {}
 }

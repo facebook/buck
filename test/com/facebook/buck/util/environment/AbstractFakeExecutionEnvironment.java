@@ -17,16 +17,11 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Test utility implementation of {@link ExecutionEnvironment} based
- * on an immutable value type.
- */
+/** Test utility implementation of {@link ExecutionEnvironment} based on an immutable value type. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment {
@@ -59,9 +54,7 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   }
 
   private static String getWithDefault(
-      Map<String, String> values,
-      String key,
-      String defaultValue) {
+      Map<String, String> values, String key, String defaultValue) {
     String result = values.get(key);
     if (result != null) {
       return result;

@@ -20,11 +20,9 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AsyncCloseableTest {
 
@@ -33,8 +31,7 @@ public class AsyncCloseableTest {
     ListeningExecutorService directExecutor = MoreExecutors.newDirectExecutorService();
     final AtomicBoolean didClose = new AtomicBoolean(false);
     try (AsyncCloseable asyncCloseable = new AsyncCloseable(directExecutor)) {
-      asyncCloseable.closeAsync(
-          () -> didClose.set(true));
+      asyncCloseable.closeAsync(() -> didClose.set(true));
     }
     assertThat(didClose.get(), Matchers.is(true));
   }

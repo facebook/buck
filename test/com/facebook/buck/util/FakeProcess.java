@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,9 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
-/**
- * Fake implementation of {@link java.lang.Process}.
- */
+/** Fake implementation of {@link java.lang.Process}. */
 public class FakeProcess extends Process {
   private final int exitValue;
   private final OutputStream outputStream;
@@ -43,10 +40,7 @@ public class FakeProcess extends Process {
     this(exitValue, "", "");
   }
 
-  public FakeProcess(
-      int exitValue,
-      String stdout,
-      String stderr) {
+  public FakeProcess(int exitValue, String stdout, String stderr) {
     this(exitValue, stdout, stderr, Optional.empty());
   }
 
@@ -64,16 +58,8 @@ public class FakeProcess extends Process {
   }
 
   public FakeProcess(
-      int exitValue,
-      OutputStream outputStream,
-      InputStream inputStream,
-      InputStream errorStream) {
-    this(
-        exitValue,
-        outputStream,
-        inputStream,
-        errorStream,
-        Optional.empty());
+      int exitValue, OutputStream outputStream, InputStream inputStream, InputStream errorStream) {
+    this(exitValue, outputStream, inputStream, errorStream, Optional.empty());
   }
 
   public FakeProcess(
@@ -149,16 +135,12 @@ public class FakeProcess extends Process {
     }
   }
 
-  /**
-   * Returns true if {@link #destroy()} was called on this object, false otherwise.
-   */
+  /** Returns true if {@link #destroy()} was called on this object, false otherwise. */
   public boolean isDestroyed() {
     return isDestroyed;
   }
 
-  /**
-   * Returns what has been written to {@link #getOutputStream()} so far.
-   */
+  /** Returns what has been written to {@link #getOutputStream()} so far. */
   public String getOutput() {
     return outputMirror.toString();
   }

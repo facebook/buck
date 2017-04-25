@@ -15,11 +15,10 @@
  */
 package com.facebook.buck.util;
 
-import java.io.StringReader;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.io.StringReader;
 import org.junit.Test;
 
 public class LineFetcherTest {
@@ -29,7 +28,7 @@ public class LineFetcherTest {
 
   @Test
   public void testUnterminateLineIsReadAsSingleLine() throws Exception {
-    String[] expected = { TEST_LINE_1 };
+    String[] expected = {TEST_LINE_1};
     verifyLineFetcherResponses(TEST_LINE_1, expected);
   }
 
@@ -49,7 +48,7 @@ public class LineFetcherTest {
   }
 
   private void verifyLineEndingBehaviour(String lineEnding) throws Exception {
-    String[] expected = { TEST_LINE_1, TEST_LINE_2 };
+    String[] expected = {TEST_LINE_1, TEST_LINE_2};
     verifyLineFetcherResponses(TEST_LINE_1 + lineEnding + TEST_LINE_2, expected);
   }
 
@@ -78,19 +77,15 @@ public class LineFetcherTest {
     verifyLineEndingAtSpecificPlace(LineFetcher.BUFFER_LENGTH * 3, "\r");
   }
 
-
   private void verifyLineEndingAtSpecificPlace(int lineEndLocation, String lineEnding)
-    throws Exception {
-    StringBuilder builder = new StringBuilder(
-        lineEndLocation +
-        lineEnding.length() +
-        TEST_LINE_2.length()
-    );
+      throws Exception {
+    StringBuilder builder =
+        new StringBuilder(lineEndLocation + lineEnding.length() + TEST_LINE_2.length());
     for (int i = 0; i < lineEndLocation; i++) {
       builder.append('X');
     }
 
-    String[] expected = { builder.toString(), TEST_LINE_2 };
+    String[] expected = {builder.toString(), TEST_LINE_2};
 
     builder.append(lineEnding);
     builder.append(TEST_LINE_2);
@@ -105,14 +100,11 @@ public class LineFetcherTest {
         assertEquals(
             "Mismatch in expected and actual response from LineFetcher",
             expectedResponses[i],
-            fetcher.readLine()
-        );
+            fetcher.readLine());
       }
 
       assertNull(
-          "LineFetcher had unexpected data after it should have finished",
-          fetcher.readLine()
-      );
+          "LineFetcher had unexpected data after it should have finished", fetcher.readLine());
     }
   }
 }

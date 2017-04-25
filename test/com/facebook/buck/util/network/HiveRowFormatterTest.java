@@ -20,12 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import org.junit.Test;
 
-import java.util.ArrayList;
-
-public class HiveRowFormatterTest  {
+public class HiveRowFormatterTest {
 
   @Test
   public void creatingRowWithoutColumns() {
@@ -36,44 +34,33 @@ public class HiveRowFormatterTest  {
   @Test
   public void creatingWithSingleColumn() {
     String text = "My Column";
-    assertEquals(
-        text,
-        HiveRowFormatter.newFormatter().appendString(text).build());
+    assertEquals(text, HiveRowFormatter.newFormatter().appendString(text).build());
   }
 
   @Test
   public void creatingWithTwoColumns() {
     String col1 = "My Column";
     String col2 = "My Second Column";
-    String hiveRow = HiveRowFormatter.newFormatter()
-        .appendString(col1)
-        .appendString(col2)
-        .build();
+    String hiveRow = HiveRowFormatter.newFormatter().appendString(col1).appendString(col2).build();
     assertEquals("My Column\001My Second Column", hiveRow);
   }
 
   @Test
   public void creatingForbiddenCharacters() {
-    String[] forbidden = new String[] { "\n", "\r", "\001", "\002" };
-    String[] escaped = new String[] { "\\n", "\\r", "\\001", "\\002" };
+    String[] forbidden = new String[] {"\n", "\r", "\001", "\002"};
+    String[] escaped = new String[] {"\\n", "\\r", "\\001", "\\002"};
     for (int i = 0; i < forbidden.length; ++i) {
       String col = "My Column " + forbidden[i];
-      String hiveRow = HiveRowFormatter.newFormatter()
-          .appendString(col)
-          .build();
+      String hiveRow = HiveRowFormatter.newFormatter().appendString(col).build();
       assertEquals("My Column " + escaped[i], hiveRow);
     }
   }
 
   @Test
   public void creatingWithIterable() {
-    ArrayList<String> elements = Lists.newArrayList(
-        "My Element",
-        "My Second Element",
-        "My last element");
-    String hiveRow = HiveRowFormatter.newFormatter()
-        .appendStringIterable(elements)
-        .build();
+    ArrayList<String> elements =
+        Lists.newArrayList("My Element", "My Second Element", "My last element");
+    String hiveRow = HiveRowFormatter.newFormatter().appendStringIterable(elements).build();
     for (String e : elements) {
       assertTrue(hiveRow.contains(e));
     }

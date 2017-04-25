@@ -22,12 +22,10 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MoreCollectorsTest {
 
@@ -35,8 +33,7 @@ public class MoreCollectorsTest {
   public void toImmutableListPreservesInsertionOrder() {
     ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 7, 1);
     Assert.assertEquals(
-        sampleInput,
-        sampleInput.stream().collect(MoreCollectors.toImmutableList()));
+        sampleInput, sampleInput.stream().collect(MoreCollectors.toImmutableList()));
   }
 
   @Test
@@ -52,9 +49,9 @@ public class MoreCollectorsTest {
     ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 7, 1);
     Assert.assertEquals(
         ImmutableMap.of(4, 4, 2, 2, 3, 3, 7, 7, 1, 1),
-        sampleInput.stream().collect(MoreCollectors.toImmutableMap(
-            Function.identity(),
-            Function.identity())));
+        sampleInput
+            .stream()
+            .collect(MoreCollectors.toImmutableMap(Function.identity(), Function.identity())));
   }
 
   @Test
@@ -62,9 +59,7 @@ public class MoreCollectorsTest {
     ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 7, 1);
     Assert.assertEquals(
         ImmutableMap.of(5, 6, 3, 4, 4, 5, 8, 9, 2, 3),
-        sampleInput.stream().collect(MoreCollectors.toImmutableMap(
-            x -> x + 1,
-            x -> x + 2)));
+        sampleInput.stream().collect(MoreCollectors.toImmutableMap(x -> x + 1, x -> x + 2)));
   }
 
   @Test
@@ -75,8 +70,9 @@ public class MoreCollectorsTest {
         sampleInput.stream().collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())));
     Assert.assertEquals(
         ImmutableSortedSet.copyOf(Ordering.natural().reverse(), sampleInput),
-        sampleInput.stream().collect(
-            MoreCollectors.toImmutableSortedSet(Ordering.natural().reverse())));
+        sampleInput
+            .stream()
+            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural().reverse())));
   }
 
   @Test
@@ -85,9 +81,9 @@ public class MoreCollectorsTest {
     AtomicInteger i = new AtomicInteger(0);
     Assert.assertEquals(
         ImmutableMultimap.of(4, 1, 2, 2, 3, 3, 1, 4, 2, 5),
-        sampleInput.stream().collect(MoreCollectors.toImmutableMultimap(
-            x -> x,
-            x -> i.addAndGet(1))));
+        sampleInput
+            .stream()
+            .collect(MoreCollectors.toImmutableMultimap(x -> x, x -> i.addAndGet(1))));
   }
 
   @Test
@@ -96,8 +92,8 @@ public class MoreCollectorsTest {
     AtomicInteger i = new AtomicInteger(0);
     Assert.assertEquals(
         ImmutableListMultimap.of(4, 1, 2, 2, 3, 3, 1, 4, 2, 5),
-        sampleInput.stream().collect(MoreCollectors.toImmutableListMultimap(
-            x -> x,
-            x -> i.addAndGet(1))));
+        sampleInput
+            .stream()
+            .collect(MoreCollectors.toImmutableListMultimap(x -> x, x -> i.addAndGet(1))));
   }
 }

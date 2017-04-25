@@ -47,25 +47,22 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
   }
 
   @Override
-  public String commonAncestor(
-      String revisionIdOne,
-      String revisionIdTwo) throws VersionControlCommandFailedException, InterruptedException {
+  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException {
     return versionControlStats.getBranchedFromMasterRevisionId();
   }
 
   @Override
-  public Pair<String, Long> commonAncestorAndTS(
-      String revisionIdOne,
-      String revisionIdTwo) throws VersionControlCommandFailedException, InterruptedException {
+  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException {
     return new Pair<>(
         versionControlStats.getBranchedFromMasterRevisionId(),
         versionControlStats.getBranchedFromMasterTS());
   }
 
   @Override
-  public String diffBetweenRevisions(
-      String baseRevision,
-      String tipRevision) throws VersionControlCommandFailedException, InterruptedException {
+  public String diffBetweenRevisions(String baseRevision, String tipRevision)
+      throws VersionControlCommandFailedException, InterruptedException {
     if (!versionControlStats.getDiff().isPresent()) {
       throw new VersionControlCommandFailedException("");
     }
@@ -81,10 +78,11 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
   @Override
   public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
       throws InterruptedException, VersionControlCommandFailedException {
-    return versionControlStats.getBaseBookmarks().stream()
+    return versionControlStats
+        .getBaseBookmarks()
+        .stream()
         .collect(
             MoreCollectors.toImmutableMap(
-                x -> x,
-                x -> versionControlStats.getBranchedFromMasterRevisionId()));
+                x -> x, x -> versionControlStats.getBranchedFromMasterRevisionId()));
   }
 }

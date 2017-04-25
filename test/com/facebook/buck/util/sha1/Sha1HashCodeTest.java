@@ -24,7 +24,6 @@ import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import org.junit.Test;
 
 public class Sha1HashCodeTest {
@@ -58,30 +57,33 @@ public class Sha1HashCodeTest {
     Hasher hasher2 = sha1.update(hasher1);
     assertSame(hasher1, hasher2);
 
-    HashCode expectedHash = Hashing.sha1().newHasher()
-        .putBytes(new byte[] {
-            (byte) 0xa0,
-            (byte) 0x02,
-            (byte) 0xb3,
-            (byte) 0x9a,
-            (byte) 0xf2,
-            (byte) 0x04,
-            (byte) 0xcd,
-            (byte) 0xfa,
-            (byte) 0xa5,
-            (byte) 0xfd,
-            (byte) 0xb6,
-            (byte) 0x78,
-            (byte) 0x16,
-            (byte) 0xb1,
-            (byte) 0x38,
-            (byte) 0x67,
-            (byte) 0xc3,
-            (byte) 0x2a,
-            (byte) 0xc5,
-            (byte) 0x2c,
-        })
-        .hash();
+    HashCode expectedHash =
+        Hashing.sha1()
+            .newHasher()
+            .putBytes(
+                new byte[] {
+                  (byte) 0xa0,
+                  (byte) 0x02,
+                  (byte) 0xb3,
+                  (byte) 0x9a,
+                  (byte) 0xf2,
+                  (byte) 0x04,
+                  (byte) 0xcd,
+                  (byte) 0xfa,
+                  (byte) 0xa5,
+                  (byte) 0xfd,
+                  (byte) 0xb6,
+                  (byte) 0x78,
+                  (byte) 0x16,
+                  (byte) 0xb1,
+                  (byte) 0x38,
+                  (byte) 0x67,
+                  (byte) 0xc3,
+                  (byte) 0x2a,
+                  (byte) 0xc5,
+                  (byte) 0x2c,
+                })
+            .hash();
     HashCode observedHash = hasher1.hash();
     assertEquals(expectedHash, observedHash);
   }
@@ -111,28 +113,29 @@ public class Sha1HashCodeTest {
   @Test
   @SuppressWarnings("PMD.UseAssertEqualsInsteadOfAssertTrue")
   public void testFromTrustedBytesWithValidInput() {
-    byte[] bytes = new byte[] {
-        (byte) 0xa0,
-        (byte) 0x02,
-        (byte) 0xb3,
-        (byte) 0x9a,
-        (byte) 0xf2,
-        (byte) 0x04,
-        (byte) 0xcd,
-        (byte) 0xfa,
-        (byte) 0xa5,
-        (byte) 0xfd,
-        (byte) 0xb6,
-        (byte) 0x78,
-        (byte) 0x16,
-        (byte) 0xb1,
-        (byte) 0x38,
-        (byte) 0x67,
-        (byte) 0xc3,
-        (byte) 0x2a,
-        (byte) 0xc5,
-        (byte) 0x2c,
-    };
+    byte[] bytes =
+        new byte[] {
+          (byte) 0xa0,
+          (byte) 0x02,
+          (byte) 0xb3,
+          (byte) 0x9a,
+          (byte) 0xf2,
+          (byte) 0x04,
+          (byte) 0xcd,
+          (byte) 0xfa,
+          (byte) 0xa5,
+          (byte) 0xfd,
+          (byte) 0xb6,
+          (byte) 0x78,
+          (byte) 0x16,
+          (byte) 0xb1,
+          (byte) 0x38,
+          (byte) 0x67,
+          (byte) 0xc3,
+          (byte) 0x2a,
+          (byte) 0xc5,
+          (byte) 0x2c,
+        };
     Sha1HashCode hashCodeFromRawBytes = Sha1HashCode.fromBytes(bytes);
     assertEquals(
         "firstFourBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
@@ -154,12 +157,10 @@ public class Sha1HashCodeTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testFromTrustedBytes() {
-    byte[] bytes = new byte[] {
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
-    };
+    byte[] bytes =
+        new byte[] {
+          (byte) 0xfa, (byte) 0xce, (byte) 0xb0, (byte) 0x0c,
+        };
     Sha1HashCode.fromBytes(bytes);
   }
 }

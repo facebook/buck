@@ -21,17 +21,13 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-
-import org.junit.Test;
-
 import java.util.HashMap;
+import org.junit.Test;
 
 public class ImmutableMapWithNullValuesTest {
   @Test
   public void emptyInsertionOrder() {
-    assertEquals(
-        ImmutableMap.of(),
-        ImmutableMapWithNullValues.Builder.insertionOrder().build());
+    assertEquals(ImmutableMap.of(), ImmutableMapWithNullValues.Builder.insertionOrder().build());
   }
 
   @Test
@@ -43,47 +39,45 @@ public class ImmutableMapWithNullValuesTest {
 
   @Test
   public void justNullsInsertionOrder() {
-    ImmutableMapWithNullValues<Integer, String> map = ImmutableMapWithNullValues.Builder
-        .<Integer, String>insertionOrder()
-        .put(2, null)
-        .put(1, null)
-        .build();
+    ImmutableMapWithNullValues<Integer, String> map =
+        ImmutableMapWithNullValues.Builder.<Integer, String>insertionOrder()
+            .put(2, null)
+            .put(1, null)
+            .build();
     assertEquals(
-        new HashMap<Integer, String>() {{
-          put(2, null);
-          put(1, null);
-        }},
+        new HashMap<Integer, String>() {
+          {
+            put(2, null);
+            put(1, null);
+          }
+        },
         map);
-    assertEquals(
-        ImmutableList.of(2, 1),
-        ImmutableList.copyOf(map.keySet()));
+    assertEquals(ImmutableList.of(2, 1), ImmutableList.copyOf(map.keySet()));
   }
 
   @Test
   public void mixedNullsInsertionOrder() {
-    ImmutableMapWithNullValues<Integer, String> map = ImmutableMapWithNullValues.Builder
-        .<Integer, String>insertionOrder()
-        .put(2, null)
-        .put(1, "one")
-        .put(3, "three")
-        .build();
+    ImmutableMapWithNullValues<Integer, String> map =
+        ImmutableMapWithNullValues.Builder.<Integer, String>insertionOrder()
+            .put(2, null)
+            .put(1, "one")
+            .put(3, "three")
+            .build();
     assertEquals(
-        new HashMap<Integer, String>() {{
-          put(2, null);
-          put(1, "one");
-          put(3, "three");
-        }},
+        new HashMap<Integer, String>() {
+          {
+            put(2, null);
+            put(1, "one");
+            put(3, "three");
+          }
+        },
         map);
-    assertEquals(
-        ImmutableList.of(2, 1, 3),
-        ImmutableList.copyOf(map.keySet()));
+    assertEquals(ImmutableList.of(2, 1, 3), ImmutableList.copyOf(map.keySet()));
   }
 
   @Test
   public void emptySorted() {
-    assertEquals(
-        ImmutableSortedMap.of(),
-        ImmutableMapWithNullValues.Builder.sorted().build());
+    assertEquals(ImmutableSortedMap.of(), ImmutableMapWithNullValues.Builder.sorted().build());
   }
 
   @Test
@@ -95,39 +89,39 @@ public class ImmutableMapWithNullValuesTest {
 
   @Test
   public void justNullsSorted() {
-    ImmutableMapWithNullValues<Integer, String> map = ImmutableMapWithNullValues.Builder
-        .<Integer, String>sorted()
-        .put(2, null)
-        .put(1, null)
-        .build();
+    ImmutableMapWithNullValues<Integer, String> map =
+        ImmutableMapWithNullValues.Builder.<Integer, String>sorted()
+            .put(2, null)
+            .put(1, null)
+            .build();
     assertEquals(
-        new HashMap<Integer, String>() {{
-          put(2, null);
-          put(1, null);
-        }},
+        new HashMap<Integer, String>() {
+          {
+            put(2, null);
+            put(1, null);
+          }
+        },
         map);
-    assertEquals(
-        ImmutableList.of(1, 2),
-        ImmutableList.copyOf(map.keySet()));
+    assertEquals(ImmutableList.of(1, 2), ImmutableList.copyOf(map.keySet()));
   }
 
   @Test
   public void mixedNullsSorted() {
-    ImmutableMapWithNullValues<Integer, String> map = ImmutableMapWithNullValues.Builder
-        .<Integer, String>sorted()
-        .put(2, null)
-        .put(1, "one")
-        .put(3, "three")
-        .build();
+    ImmutableMapWithNullValues<Integer, String> map =
+        ImmutableMapWithNullValues.Builder.<Integer, String>sorted()
+            .put(2, null)
+            .put(1, "one")
+            .put(3, "three")
+            .build();
     assertEquals(
-        new HashMap<Integer, String>() {{
-          put(2, null);
-          put(1, "one");
-          put(3, "three");
-        }},
+        new HashMap<Integer, String>() {
+          {
+            put(2, null);
+            put(1, "one");
+            put(3, "three");
+          }
+        },
         map);
-    assertEquals(
-        ImmutableList.of(1, 2, 3),
-        ImmutableList.copyOf(map.keySet()));
+    assertEquals(ImmutableList.of(1, 2, 3), ImmutableList.copyOf(map.keySet()));
   }
 }

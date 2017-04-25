@@ -20,9 +20,6 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -32,22 +29,23 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.regex.Pattern;
+import org.junit.Test;
 
 public class LicenseCheckTest {
 
   // Files where we're okay with the license not being the normal Facebook apache one. We also
   // exclude all files under "test/**/testdata/"
-  private static final ImmutableSet<Path> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
-      // Because it's not originally our code.
-      Paths.get("src/com/facebook/buck/jvm/java/coverage/ReportGenerator.java"),
-      Paths.get("src/com/facebook/buck/util/WindowsCreateProcessEscape.java"),
-      Paths.get(
-          "test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
+  private static final ImmutableSet<Path> NON_APACHE_LICENSE_WHITELIST =
+      ImmutableSet.of(
+          // Because it's not originally our code.
+          Paths.get("src/com/facebook/buck/jvm/java/coverage/ReportGenerator.java"),
+          Paths.get("src/com/facebook/buck/util/WindowsCreateProcessEscape.java"),
+          Paths.get("test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
 
-  private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST = ImmutableSet.of(
-      // Ignore the generated parsing files for the plugin
-      Paths.get("src/com/facebook/buck/intellij/ideabuck/gen/")
-  );
+  private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST =
+      ImmutableSet.of(
+          // Ignore the generated parsing files for the plugin
+          Paths.get("src/com/facebook/buck/intellij/ideabuck/gen/"));
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
@@ -57,14 +55,15 @@ public class LicenseCheckTest {
 
   private static class JavaCopyrightVisitor extends SimpleFileVisitor<Path> {
 
-    private static final Pattern LICENSE_FRAGMENT = Pattern.compile(
-        // TODO(simons): This is very lame.
-        // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
-        // part of the copyright.
-        "^/\\\\*.*?" +
-        "\\\\* Copyright 20\\d\\d-present Facebook, Inc\\..*?" +
-        "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\); you may.*",
-        Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern LICENSE_FRAGMENT =
+        Pattern.compile(
+            // TODO(simons): This is very lame.
+            // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
+            // part of the copyright.
+            "^/\\\\*.*?"
+                + "\\\\* Copyright 20\\d\\d-present Facebook, Inc\\..*?"
+                + "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\); you may.*",
+            Pattern.MULTILINE | Pattern.DOTALL);
 
     private static final Path TEST_DATA = Paths.get("testdata");
 
@@ -76,18 +75,18 @@ public class LicenseCheckTest {
 
     @Override
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-      if (!"java".equals(MorePaths.getFileExtension(file)) ||
+      if (!"java".equals(MorePaths.getFileExtension(file))
+          ||
           // Ignore dangling symlinks.
-          !Files.exists(file) ||
-          NON_APACHE_LICENSE_WHITELIST.contains(file)) {
+          !Files.exists(file)
+          || NON_APACHE_LICENSE_WHITELIST.contains(file)) {
         return FileVisitResult.CONTINUE;
       }
 
       try {
         String asString = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
 
-        assertTrue("Check license of: " + file,
-            LICENSE_FRAGMENT.matcher(asString).matches());
+        assertTrue("Check license of: " + file, LICENSE_FRAGMENT.matcher(asString).matches());
       } catch (IOException e) {
         fail("Unable to read: " + file);
       }
@@ -105,7 +104,5 @@ public class LicenseCheckTest {
       }
       return FileVisitResult.CONTINUE;
     }
-
   }
-
 }

@@ -26,26 +26,18 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Test;
 
 public class HostnameFetchingTest {
   @Test
   public void fetchedHostnameMatchesCommandLineHostname() throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-    ProcessExecutor.Result result = executor.launchAndExecute(
-        ProcessExecutorParams.ofCommand("hostname"));
-    assumeThat(
-        "hostname returns success",
-        result.getExitCode(),
-        equalTo(0));
+    ProcessExecutor.Result result =
+        executor.launchAndExecute(ProcessExecutorParams.ofCommand("hostname"));
+    assumeThat("hostname returns success", result.getExitCode(), equalTo(0));
     String expectedHostname = result.getStdout().orElse("").trim();
-    assumeThat(
-        "hostname returns non-empty string",
-        expectedHostname,
-        not(emptyString()));
+    assumeThat("hostname returns non-empty string", expectedHostname, not(emptyString()));
     assertThat(
         "fetched hostname should equal hostname returned from CLI",
         HostnameFetching.getHostname(),

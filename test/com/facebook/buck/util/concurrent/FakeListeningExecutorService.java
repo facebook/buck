@@ -18,7 +18,6 @@ package com.facebook.buck.util.concurrent;
 
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -61,7 +60,5 @@ public class FakeListeningExecutorService extends AbstractListeningExecutorServi
    * method is overridden).
    */
   @Override
-  public void execute(Runnable command) {
-  }
-
+  public void execute(Runnable command) {}
 }

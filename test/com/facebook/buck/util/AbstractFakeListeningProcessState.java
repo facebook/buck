@@ -17,23 +17,21 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractFakeListeningProcessState {
   public enum Type {
-      EXPECT_STDIN,
-      EXPECT_STDIN_CLOSED,
-      STDOUT,
-      STDERR,
-      WAIT,
-      EXIT
+    EXPECT_STDIN,
+    EXPECT_STDIN_CLOSED,
+    STDOUT,
+    STDERR,
+    WAIT,
+    EXIT
   }
 
   public static FakeListeningProcessState ofExpectedStdin(String expectedStdin) {
@@ -44,9 +42,7 @@ abstract class AbstractFakeListeningProcessState {
   }
 
   public static FakeListeningProcessState ofExpectStdinClosed() {
-    return FakeListeningProcessState.builder()
-        .setType(Type.EXPECT_STDIN_CLOSED)
-        .build();
+    return FakeListeningProcessState.builder().setType(Type.EXPECT_STDIN_CLOSED).build();
   }
 
   public static FakeListeningProcessState ofStdout(String stdout) {
@@ -57,31 +53,26 @@ abstract class AbstractFakeListeningProcessState {
   }
 
   public static FakeListeningProcessState ofStdoutBytes(ByteBuffer stdout) {
-    return FakeListeningProcessState.builder()
-        .setType(Type.STDOUT)
-        .setStdout(stdout)
-        .build();
+    return FakeListeningProcessState.builder().setType(Type.STDOUT).setStdout(stdout).build();
   }
 
   public static FakeListeningProcessState ofWaitNanos(long waitNanos) {
-    return FakeListeningProcessState.builder()
-        .setType(Type.WAIT)
-        .setWaitNanos(waitNanos)
-        .build();
+    return FakeListeningProcessState.builder().setType(Type.WAIT).setWaitNanos(waitNanos).build();
   }
 
   public static FakeListeningProcessState ofExit(int exitCode) {
-    return FakeListeningProcessState.builder()
-        .setType(Type.EXIT)
-        .setExitCode(exitCode)
-        .build();
+    return FakeListeningProcessState.builder().setType(Type.EXIT).setExitCode(exitCode).build();
   }
 
   public abstract Type getType();
 
   public abstract Optional<ByteBuffer> getExpectedStdin();
+
   public abstract Optional<ByteBuffer> getStdout();
+
   public abstract Optional<ByteBuffer> getStderr();
+
   public abstract Optional<Long> getWaitNanos();
+
   public abstract Optional<Integer> getExitCode();
 }

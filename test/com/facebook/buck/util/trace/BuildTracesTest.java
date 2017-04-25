@@ -29,46 +29,44 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
 
 public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForId() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
+    FakeProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
     projectFilesystem.writeContentsToPath(
-        "[\n" +
-            "  {\n" +
-            "    \"cat\": \"buck\",\n" +
-            "    \"pid\": 0,\n" +
-            "    \"ts\": 0,\n" +
-            "    \"ph\": \"M\",\n" +
-            "    \"args\": {\n" +
-            "      \"name\": \"buck\"\n" +
-            "    },\n" +
-            "    \"name\": \"process_name\",\n" +
-            "    \"tid\": 0\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"cat\": \"buck\",\n" +
-            "    \"name\": \"build\",\n" +
-            "    \"ph\": \"B\",\n" +
-            "    \"pid\": 0,\n" +
-            "    \"tid\": 1,\n" +
-            "    \"ts\": 5621911884918,\n" +
-            "    \"args\": {\n" +
-            "      \"command_args\": \"buck\"\n" +
-            "    }\n" +
-            "  }\n" +
-            "]",
+        "[\n"
+            + "  {\n"
+            + "    \"cat\": \"buck\",\n"
+            + "    \"pid\": 0,\n"
+            + "    \"ts\": 0,\n"
+            + "    \"ph\": \"M\",\n"
+            + "    \"args\": {\n"
+            + "      \"name\": \"buck\"\n"
+            + "    },\n"
+            + "    \"name\": \"process_name\",\n"
+            + "    \"tid\": 0\n"
+            + "  },\n"
+            + "  {\n"
+            + "    \"cat\": \"buck\",\n"
+            + "    \"name\": \"build\",\n"
+            + "    \"ph\": \"B\",\n"
+            + "    \"pid\": 0,\n"
+            + "    \"tid\": 1,\n"
+            + "    \"ts\": 5621911884918,\n"
+            + "    \"args\": {\n"
+            + "      \"command_args\": \"buck\"\n"
+            + "    }\n"
+            + "  }\n"
+            + "]",
         projectFilesystem.getBuckPaths().getTraceDir().resolve("build.a.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
@@ -86,26 +84,26 @@ public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForJsonWithoutName() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    FakeProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.writeContentsToPath(
-        "[" +
-            "{" +
-            "\"cat\":\"buck\"," +
-            "\"ph\":\"B\"," +
-            "\"pid\":0," +
-            "\"tid\":1," +
-            "\"ts\":5621911884918," +
-            "\"args\":{\"command_args\":\"buck\"}" +
-            "}" +
-            "]",
+        "["
+            + "{"
+            + "\"cat\":\"buck\","
+            + "\"ph\":\"B\","
+            + "\"pid\":0,"
+            + "\"tid\":1,"
+            + "\"ts\":5621911884918,"
+            + "\"args\":{\"command_args\":\"buck\"}"
+            + "}"
+            + "]",
         projectFilesystem.getBuckPaths().getTraceDir().resolve("build.b.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
     assertEquals(
-        "BuildTraces should not be able to extract the command because there is no name " +
-            "attribute.",
+        "BuildTraces should not be able to extract the command because there is no name "
+            + "attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(FileTime.fromMillis(2000L), traceAttributes.getLastModifiedTime());
@@ -113,25 +111,25 @@ public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForJsonWithoutCommandArgs() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    FakeProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.writeContentsToPath(
-        "[" +
-            "{" +
-            "\"cat\":\"buck\"," +
-            "\"ph\":\"B\"," +
-            "\"pid\":0," +
-            "\"tid\":1," +
-            "\"ts\":5621911884918" +
-            "}" +
-            "]",
+        "["
+            + "{"
+            + "\"cat\":\"buck\","
+            + "\"ph\":\"B\","
+            + "\"pid\":0,"
+            + "\"tid\":1,"
+            + "\"ts\":5621911884918"
+            + "}"
+            + "]",
         projectFilesystem.getBuckPaths().getTraceDir().resolve("build.c.trace"));
 
     BuildTraces helper = new BuildTraces(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
     assertEquals(
-        "BuildTraces should not be able to extract the command because there is no " +
-            "command_args attribute.",
+        "BuildTraces should not be able to extract the command because there is no "
+            + "command_args attribute.",
         Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(FileTime.fromMillis(2000L), traceAttributes.getLastModifiedTime());
@@ -168,8 +166,8 @@ public class BuildTracesTest {
 
   @Test(expected = HumanReadableException.class)
   public void testInputsForTracesThrowsWhenEmpty() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    FakeProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getInputsForTraces("nonexistent");
@@ -177,8 +175,8 @@ public class BuildTracesTest {
 
   @Test(expected = HumanReadableException.class)
   public void testTraceAttributesThrowsWhenEmpty() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
+    FakeProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");
@@ -208,19 +206,17 @@ public class BuildTracesTest {
   }
 
   private static Path getNewTraceFilePath(
-      ProjectFilesystem fs,
-      String commandName,
-      String buildId,
-      int seconds) {
-    InvocationInfo info = InvocationInfo.of(
-        new BuildId(buildId),
-        false,
-        false,
-        commandName,
-        new String[0],
-        new String[0],
-        fs.getBuckPaths().getLogDir())
-        .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
+      ProjectFilesystem fs, String commandName, String buildId, int seconds) {
+    InvocationInfo info =
+        InvocationInfo.of(
+                new BuildId(buildId),
+                false,
+                false,
+                commandName,
+                new String[0],
+                new String[0],
+                fs.getBuckPaths().getLogDir())
+            .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }
 }

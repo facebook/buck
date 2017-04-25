@@ -33,16 +33,6 @@ import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedExceptio
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,6 +45,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AutoSparseIntegrationTest {
   /*
@@ -94,11 +92,12 @@ public class AutoSparseIntegrationTest {
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
     repoPath = explodeRepoZip();
-    repoCmdline = new DelegatingVersionControlCmdLineInterface(
-        repoPath,
-        new TestProcessExecutorFactory(),
-        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
-        ImmutableMap.of());
+    repoCmdline =
+        new DelegatingVersionControlCmdLineInterface(
+            repoPath,
+            new TestProcessExecutorFactory(),
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+            ImmutableMap.of());
   }
 
   @Before
@@ -114,22 +113,21 @@ public class AutoSparseIntegrationTest {
 
   @Test
   public void testAutosparseDisabled() {
-    ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath, false, ImmutableList.of());
+    ProjectFilesystemDelegate delegate = createDelegate(repoPath, false, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
   public void testAutosparseEnabledHgSubdir() {
-    ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath.resolve("not_hidden_subdir"), true, ImmutableList.of());
+    ProjectFilesystemDelegate delegate =
+        createDelegate(repoPath.resolve("not_hidden_subdir"), true, ImmutableList.of());
     Assume.assumeTrue(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
   public void testAutosparseEnabledNotHgDir() {
-    ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath.getParent(), true, ImmutableList.of());
+    ProjectFilesystemDelegate delegate =
+        createDelegate(repoPath.getParent(), true, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
@@ -198,8 +196,7 @@ public class AutoSparseIntegrationTest {
 
   @Test
   public void testMaterialize() throws IOException {
-    ProjectFilesystemDelegate delegate = createDelegate(
-        repoPath, true, ImmutableList.of("subdir"));
+    ProjectFilesystemDelegate delegate = createDelegate(repoPath, true, ImmutableList.of("subdir"));
     // Touch various files, these should be part of the profile
     delegate.exists(repoPath.resolve("file1"));
     delegate.exists(repoPath.resolve("file2"));
@@ -210,20 +207,21 @@ public class AutoSparseIntegrationTest {
 
     delegate.ensureConcreteFilesExist(BuckEventBusFactory.newInstance(new FakeClock(0)));
 
-    List<String> lines = Files.readAllLines(
-        repoPath.resolve(".hg/sparse"),
-        Charset.forName(System.getProperty("file.encoding", "UTF-8"))
-    );
-    List<String> expected = ImmutableList.of(
-        "%include sparse_profile",
-        "[include]",
-        "file1",
-        "file2",
-        "not_hidden_subdir",
-        "subdir/file_in_subdir",
-        "[exclude]",
-        ""  // sparse always writes a newline at the end
-    );
+    List<String> lines =
+        Files.readAllLines(
+            repoPath.resolve(".hg/sparse"),
+            Charset.forName(System.getProperty("file.encoding", "UTF-8")));
+    List<String> expected =
+        ImmutableList.of(
+            "%include sparse_profile",
+            "[include]",
+            "file1",
+            "file2",
+            "not_hidden_subdir",
+            "subdir/file_in_subdir",
+            "[exclude]",
+            "" // sparse always writes a newline at the end
+            );
     Assert.assertEquals(expected, lines);
   }
 
@@ -237,10 +235,8 @@ public class AutoSparseIntegrationTest {
     Throwable exception = null;
     try {
       Path exportFile = Files.createTempFile("buck_autosparse_rules", "");
-      try (Writer writer =
-               new BufferedWriter(
-                   new FileWriter(exportFile.toFile()))) {
-        writer.write("[include]\n");  // deliberately mostly empty
+      try (Writer writer = new BufferedWriter(new FileWriter(exportFile.toFile()))) {
+        writer.write("[include]\n"); // deliberately mostly empty
       }
       ((HgCmdLineInterface) repoCmdline).exportHgSparseRules(exportFile);
     } catch (VersionControlCommandFailedException | InterruptedException | IOException e) {
@@ -254,11 +250,8 @@ public class AutoSparseIntegrationTest {
   }
 
   private static ProjectFilesystemDelegate createDelegate(
-      Path root,
-      boolean enableAutosparse,
-      ImmutableList<String> autosparseIgnore) {
-    String hgCmd = new VersionControlBuckConfig(
-        FakeBuckConfig.builder().build()).getHgCmd();
+      Path root, boolean enableAutosparse, ImmutableList<String> autosparseIgnore) {
+    String hgCmd = new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd();
     return ProjectFilesystemDelegateFactory.newInstance(
         root, hgCmd, AutoSparseConfig.of(enableAutosparse, autosparseIgnore));
   }
@@ -274,9 +267,7 @@ public class AutoSparseIntegrationTest {
     Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
 
     Unzip.extractZipFile(
-        hgRepoZipCopyPath,
-        repoPath,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        hgRepoZipCopyPath, repoPath, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return repoPath;
   }

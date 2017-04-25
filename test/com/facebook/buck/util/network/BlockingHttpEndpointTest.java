@@ -19,8 +19,6 @@ package com.facebook.buck.util.network;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +28,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
 
 public class BlockingHttpEndpointTest {
 
@@ -40,22 +39,19 @@ public class BlockingHttpEndpointTest {
   }
 
   @Test
-  public void whenRequestServiceTerminatesThenExceptionNotThrownByClose()
-      throws IOException {
+  public void whenRequestServiceTerminatesThenExceptionNotThrownByClose() throws IOException {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(0), "Foo");
     endpoint.close();
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
-    assertThat("Shutdown should not take a long time.",
-        durationMillis,
-        lessThanOrEqualTo(timeoutMillis));
+    assertThat(
+        "Shutdown should not take a long time.", durationMillis, lessThanOrEqualTo(timeoutMillis));
   }
 
   @Test
-  public void whenRequestServiceTimesOutCloseStillWorks()
-      throws IOException {
+  public void whenRequestServiceTimesOutCloseStillWorks() throws IOException {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(timeoutMillis), "Foo");
@@ -63,7 +59,8 @@ public class BlockingHttpEndpointTest {
     // We'd like to test the Logger output here, but there's not a clean way to do that.
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
-    assertThat("Shutdown should not take a long time.",
+    assertThat(
+        "Shutdown should not take a long time.",
         durationMillis,
         lessThanOrEqualTo(timeoutMillis * 30));
   }
@@ -98,8 +95,7 @@ public class BlockingHttpEndpointTest {
     }
 
     @Override
-    public void disconnect() {
-    }
+    public void disconnect() {}
 
     @Override
     public boolean usingProxy() {
@@ -107,7 +103,6 @@ public class BlockingHttpEndpointTest {
     }
 
     @Override
-    public void connect() throws IOException {
-    }
+    public void connect() throws IOException {}
   }
 }

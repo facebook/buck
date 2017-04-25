@@ -24,28 +24,26 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.google.common.eventbus.Subscribe;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class PerfStatsTrackingTest {
   @Test
   public void probingMemoryPostsToTheEventBus() throws Exception {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     final BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
-    eventBus.register(new Object() {
-      @Subscribe
-      public void event(BuckEvent event) {
-        events.add(event);
-      }
-    });
-    try (PerfStatsTrackingForTest perfStatsTracking = new PerfStatsTrackingForTest(
-        eventBus,
-        FakeInvocationInfoFactory.create())) {
+    eventBus.register(
+        new Object() {
+          @Subscribe
+          public void event(BuckEvent event) {
+            events.add(event);
+          }
+        });
+    try (PerfStatsTrackingForTest perfStatsTracking =
+        new PerfStatsTrackingForTest(eventBus, FakeInvocationInfoFactory.create())) {
 
       perfStatsTracking.runOneIteration();
       // The BuckEventBus runs on a separate thread, give it a moment to push the event.
@@ -55,16 +53,15 @@ public class PerfStatsTrackingTest {
       PerfStatsTracking.MemoryPerfStatsEvent memoryEvent =
           (PerfStatsTracking.MemoryPerfStatsEvent) event;
       assertThat(memoryEvent.getTotalMemoryBytes(), Matchers.greaterThan(0L));
-      assertThat(memoryEvent.getMaxMemoryBytes(),
+      assertThat(
+          memoryEvent.getMaxMemoryBytes(),
           Matchers.greaterThanOrEqualTo(memoryEvent.getTotalMemoryBytes()));
       assertThat(memoryEvent.getCurrentMemoryBytesUsageByPool().size(), Matchers.greaterThan(0));
     }
   }
 
   private static class PerfStatsTrackingForTest extends PerfStatsTracking {
-    public PerfStatsTrackingForTest(
-        BuckEventBus eventBus,
-        InvocationInfo invocationInfo) {
+    public PerfStatsTrackingForTest(BuckEventBus eventBus, InvocationInfo invocationInfo) {
       super(eventBus, invocationInfo);
     }
 

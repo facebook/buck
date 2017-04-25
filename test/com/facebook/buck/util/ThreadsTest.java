@@ -21,14 +21,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.util.concurrent.Runnables;
-
+import java.lang.Thread.State;
 import org.junit.Test;
 
-import java.lang.Thread.State;
-
-/**
- * Unit tests for {@link Threads} class.
- */
+/** Unit tests for {@link Threads} class. */
 public class ThreadsTest {
 
   @Test
@@ -53,5 +49,4 @@ public class ThreadsTest {
   public void testNamedThreadWithNullJob() {
     assertNotNull(Threads.namedThread("test", null));
   }
-
 }

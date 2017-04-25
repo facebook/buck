@@ -18,14 +18,13 @@ package com.facebook.buck.util;
 
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessHandler;
-
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FakeNuProcess implements NuProcess {
   final int pid;
-  int  exitCode;
+  int exitCode;
   final AtomicBoolean running = new AtomicBoolean(true);
 
   public FakeNuProcess(int pid) {
@@ -54,16 +53,13 @@ public class FakeNuProcess implements NuProcess {
   }
 
   @Override
-  public void wantWrite() {
-  }
+  public void wantWrite() {}
 
   @Override
-  public void writeStdin(ByteBuffer buffer) {
-  }
+  public void writeStdin(ByteBuffer buffer) {}
 
   @Override
-  public void closeStdin(boolean force) {
-  }
+  public void closeStdin(boolean force) {}
 
   @Override
   public boolean hasPendingWrites() {
@@ -71,10 +67,8 @@ public class FakeNuProcess implements NuProcess {
   }
 
   @Override
-  public void destroy(boolean force) {
-  }
+  public void destroy(boolean force) {}
 
   @Override
-  public void setProcessHandler(NuProcessHandler processHandler) {
-  }
+  public void setProcessHandler(NuProcessHandler processHandler) {}
 }

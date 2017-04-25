@@ -19,15 +19,13 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class RichStreamTest {
   @Test
@@ -59,32 +57,25 @@ public class RichStreamTest {
   @Test
   public void concat() {
     List<String> result =
-        RichStream.of("a", "b")
-            .concat(Stream.of("c", "d"))
-            .collect(Collectors.toList());
+        RichStream.of("a", "b").concat(Stream.of("c", "d")).collect(Collectors.toList());
     Assert.assertEquals(ImmutableList.of("a", "b", "c", "d"), result);
   }
 
   @Test
   public void filterCast() {
-    List<String> result = RichStream.of("a", new Object(), "b", 1)
-        .filter(String.class)
-        .collect(Collectors.toList());
+    List<String> result =
+        RichStream.of("a", new Object(), "b", 1).filter(String.class).collect(Collectors.toList());
     Assert.assertEquals(ImmutableList.of("a", "b"), result);
   }
 
   @Test
   public void immutableList() {
-    Assert.assertEquals(
-        ImmutableList.of("a", "b"),
-        RichStream.of("a", "b").toImmutableList());
+    Assert.assertEquals(ImmutableList.of("a", "b"), RichStream.of("a", "b").toImmutableList());
   }
 
   @Test
   public void immutableSet() {
-    Assert.assertEquals(
-        ImmutableSet.of("a", "b"),
-        RichStream.of("a", "b").toImmutableSet());
+    Assert.assertEquals(ImmutableSet.of("a", "b"), RichStream.of("a", "b").toImmutableSet());
   }
 
   @Test
@@ -118,8 +109,7 @@ public class RichStreamTest {
   public void fromSupplierOfIterable() {
     Assert.assertEquals(
         ImmutableList.of("a", "b"),
-        RichStream.fromSupplierOfIterable(() -> ImmutableList.of(
-            "a",
-            "b")).collect(Collectors.toList()));
+        RichStream.fromSupplierOfIterable(() -> ImmutableList.of("a", "b"))
+            .collect(Collectors.toList()));
   }
 }

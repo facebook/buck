@@ -18,18 +18,15 @@ package com.facebook.buck.util.environment;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Properties;
+import org.junit.Test;
 
 public class DefaultExecutionEnvironmentTest {
   @Test
   public void getUsernameUsesSuppliedEnvironment() {
     String name = "TEST_USER_PLEASE_IGNORE";
-    DefaultExecutionEnvironment environment = new DefaultExecutionEnvironment(
-        ImmutableMap.of("USER", name),
-        System.getProperties());
+    DefaultExecutionEnvironment environment =
+        new DefaultExecutionEnvironment(ImmutableMap.of("USER", name), System.getProperties());
     assertEquals("Username should match test data.", name, environment.getUsername());
   }
 
@@ -39,10 +36,7 @@ public class DefaultExecutionEnvironmentTest {
     Properties properties = new Properties();
     properties.setProperty("user.name", name);
     DefaultExecutionEnvironment environment =
-        new DefaultExecutionEnvironment(
-            ImmutableMap.of(),
-            properties);
+        new DefaultExecutionEnvironment(ImmutableMap.of(), properties);
     assertEquals("Username should match test data.", name, environment.getUsername());
   }
-
 }

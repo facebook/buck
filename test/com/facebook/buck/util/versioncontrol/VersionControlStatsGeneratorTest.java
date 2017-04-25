@@ -23,21 +23,20 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.Optional;
+import org.junit.Test;
 
 public class VersionControlStatsGeneratorTest {
 
-  private final VersionControlStats expected = VersionControlStats.builder()
-      .setCurrentRevisionId("f00")
-      .setBranchedFromMasterRevisionId("b47")
-      .setBranchedFromMasterTS(0L)
-      .setBaseBookmarks(ImmutableSet.of("remote/master"))
-      .setDiff("this is not really a valid diff but whatever")
-      .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
-      .build();
+  private final VersionControlStats expected =
+      VersionControlStats.builder()
+          .setCurrentRevisionId("f00")
+          .setBranchedFromMasterRevisionId("b47")
+          .setBranchedFromMasterTS(0L)
+          .setBaseBookmarks(ImmutableSet.of("remote/master"))
+          .setDiff("this is not really a valid diff but whatever")
+          .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
+          .build();
 
   private final VersionControlCmdLineInterface versionControlCmdLineInterface =
       new FakeVersionControlCmdLineInterface(expected);
@@ -53,11 +52,8 @@ public class VersionControlStatsGeneratorTest {
         actual.get().getBranchedFromMasterRevisionId(),
         is(equalTo(expected.getBranchedFromMasterRevisionId())));
     assertThat(
-        actual.get().getBranchedFromMasterTS(),
-        is(equalTo(expected.getBranchedFromMasterTS())));
-    assertThat(
-        actual.get().getBaseBookmarks(),
-        is(equalTo(expected.getBaseBookmarks())));
+        actual.get().getBranchedFromMasterTS(), is(equalTo(expected.getBranchedFromMasterTS())));
+    assertThat(actual.get().getBaseBookmarks(), is(equalTo(expected.getBaseBookmarks())));
   }
 
   @Test
@@ -84,9 +80,8 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void fastModeDoesNotReturnChangedFilesAndDiffIfTheyAreGenerated() throws Exception {
-    VersionControlStatsGenerator versionControlStatsGenerator = new VersionControlStatsGenerator(
-        versionControlCmdLineInterface,
-        Optional.empty());
+    VersionControlStatsGenerator versionControlStatsGenerator =
+        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
     Optional<VersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
@@ -105,9 +100,8 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void pregeneratedDoesNotReturnStatsIfTheyAreGenerated() throws Exception {
-    VersionControlStatsGenerator versionControlStatsGenerator = new VersionControlStatsGenerator(
-        versionControlCmdLineInterface,
-        Optional.empty());
+    VersionControlStatsGenerator versionControlStatsGenerator =
+        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
     Optional<VersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
@@ -116,11 +110,12 @@ public class VersionControlStatsGeneratorTest {
 
   @Test
   public void pregeneratedModeReturnsStats() throws Exception {
-    PregeneratedVersionControlStats pregenerated = PregeneratedVersionControlStats.of(
-        expected.getCurrentRevisionId(),
-        expected.getBaseBookmarks(),
-        expected.getBranchedFromMasterRevisionId(),
-        expected.getBranchedFromMasterTS());
+    PregeneratedVersionControlStats pregenerated =
+        PregeneratedVersionControlStats.of(
+            expected.getCurrentRevisionId(),
+            expected.getBaseBookmarks(),
+            expected.getBranchedFromMasterRevisionId(),
+            expected.getBranchedFromMasterTS());
 
     Optional<VersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
@@ -131,30 +126,23 @@ public class VersionControlStatsGeneratorTest {
         actual.get().getBranchedFromMasterRevisionId(),
         is(equalTo(expected.getBranchedFromMasterRevisionId())));
     assertThat(
-        actual.get().getBranchedFromMasterTS(),
-        is(equalTo(expected.getBranchedFromMasterTS())));
-    assertThat(
-        actual.get().getBaseBookmarks(),
-        is(equalTo(expected.getBaseBookmarks())));
+        actual.get().getBranchedFromMasterTS(), is(equalTo(expected.getBranchedFromMasterTS())));
+    assertThat(actual.get().getBaseBookmarks(), is(equalTo(expected.getBaseBookmarks())));
   }
 
   @Test
   public void pregeneratedStatsHavePrecedence() throws Exception {
-    PregeneratedVersionControlStats pregenerated = PregeneratedVersionControlStats.of(
-        "cafe",
-        ImmutableSet.of("remote/master", "remote/another"),
-        "babe",
-        1L);
+    PregeneratedVersionControlStats pregenerated =
+        PregeneratedVersionControlStats.of(
+            "cafe", ImmutableSet.of("remote/master", "remote/another"), "babe", 1L);
     Optional<VersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(
-        actual.get().getCurrentRevisionId(),
-        is(not(equalTo(expected.getCurrentRevisionId()))));
+        actual.get().getCurrentRevisionId(), is(not(equalTo(expected.getCurrentRevisionId()))));
     assertThat(
-        actual.get().getCurrentRevisionId(),
-        is(equalTo(pregenerated.getCurrentRevisionId())));
+        actual.get().getCurrentRevisionId(), is(equalTo(pregenerated.getCurrentRevisionId())));
     assertThat(
         actual.get().getBranchedFromMasterRevisionId(),
         is(not(equalTo(expected.getBranchedFromMasterRevisionId()))));
@@ -164,12 +152,7 @@ public class VersionControlStatsGeneratorTest {
     assertThat(
         actual.get().getBranchedFromMasterTS(),
         is(not(equalTo(expected.getBranchedFromMasterTS()))));
-    assertThat(
-        actual.get().getBaseBookmarks(),
-        is(not(equalTo(expected.getBaseBookmarks()))));
-    assertThat(
-        actual.get().getBaseBookmarks(),
-        is(equalTo(pregenerated.getBaseBookmarks())));
+    assertThat(actual.get().getBaseBookmarks(), is(not(equalTo(expected.getBaseBookmarks()))));
+    assertThat(actual.get().getBaseBookmarks(), is(equalTo(pregenerated.getBaseBookmarks())));
   }
-
 }

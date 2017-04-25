@@ -24,17 +24,15 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MoreSuppliersTest {
   @Test
@@ -104,13 +102,10 @@ public class MoreSuppliersTest {
 
       Assert.assertEquals("should only have been called once", 1, delegate.getTimesCalled());
       Assert.assertThat(
-          "all result items are the same",
-          ImmutableSet.copyOf(results),
-          Matchers.hasSize(1));
+          "all result items are the same", ImmutableSet.copyOf(results), Matchers.hasSize(1));
 
       Preconditions.checkState(
-          threadPool.shutdownNow().isEmpty(),
-          "All jobs should have completed");
+          threadPool.shutdownNow().isEmpty(), "All jobs should have completed");
       Preconditions.checkState(
           threadPool.awaitTermination(10, TimeUnit.SECONDS),
           "Thread pool should terminate in a reasonable amount of time");

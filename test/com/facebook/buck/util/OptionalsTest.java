@@ -23,14 +23,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Optional;
 import org.junit.Test;
 
-import java.util.Optional;
-
-/**
- * Unit test for {@link Optionals}.
- */
+/** Unit test for {@link Optionals}. */
 public class OptionalsTest {
 
   @Test
@@ -55,9 +51,7 @@ public class OptionalsTest {
 
   @Test
   public void testCompare() {
-    assertThat(
-        Optionals.<Integer>compare(Optional.empty(), Optional.empty()),
-        equalTo(0));
+    assertThat(Optionals.<Integer>compare(Optional.empty(), Optional.empty()), equalTo(0));
 
     assertThat(Optionals.compare(Optional.empty(), Optional.of(1)), lessThan(0));
     assertThat(Optionals.compare(Optional.of(1), Optional.empty()), greaterThan(0));

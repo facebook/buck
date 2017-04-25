@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 
 public class CommandSplitterTest {
@@ -38,8 +37,7 @@ public class CommandSplitterTest {
     CommandSplitter commandSplitter = new CommandSplitter(ImmutableList.of("some", "command"));
 
     assertEquals(
-        ImmutableList.of(
-            ImmutableList.of("some", "command", "argument1")),
+        ImmutableList.of(ImmutableList.of("some", "command", "argument1")),
         commandSplitter.getCommandsForArguments(ImmutableList.of("argument1")));
   }
 
@@ -89,8 +87,7 @@ public class CommandSplitterTest {
             ImmutableList.of("a", "b", "cc"),
             ImmutableList.of("a", "d", "e"),
             ImmutableList.of("a", "f")),
-        commandSplitter.getCommandsForArguments(
-            ImmutableList.of("b", "cc", "d", "e", "f")));
+        commandSplitter.getCommandsForArguments(ImmutableList.of("b", "cc", "d", "e", "f")));
   }
 
   @Test
@@ -112,5 +109,4 @@ public class CommandSplitterTest {
                 "c",
                 "d")));
   }
-
 }

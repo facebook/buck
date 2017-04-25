@@ -20,14 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import org.ini4j.Ini;
-import org.ini4j.Profile.Section;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import org.ini4j.Ini;
+import org.ini4j.Profile.Section;
+import org.junit.Test;
 
 /**
  * Unit test to verify expectations about how the API for {@link Ini} works, as many of its methods
@@ -36,19 +34,24 @@ import java.io.StringReader;
 public class IniTest {
 
   @Test
-  public void testSecondaryLoadOverridesOriginalDefs()
-      throws IOException {
+  public void testSecondaryLoadOverridesOriginalDefs() throws IOException {
     Ini ini = new Ini();
-    Reader originalInput = new StringReader(Joiner.on("\n").join(
-        "[alias]",
-        "  buck = //src/com/facebook/buck/cli:cli",
-        "[cache]",
-        "  mode = dir"));
-    Reader overrideInput = new StringReader(Joiner.on("\n").join(
-        "[alias]",
-        "  test_util = //test/com/facebook/buck/util:util",
-        "[cache]",
-        "  mode ="));
+    Reader originalInput =
+        new StringReader(
+            Joiner.on("\n")
+                .join(
+                    "[alias]",
+                    "  buck = //src/com/facebook/buck/cli:cli",
+                    "[cache]",
+                    "  mode = dir"));
+    Reader overrideInput =
+        new StringReader(
+            Joiner.on("\n")
+                .join(
+                    "[alias]",
+                    "  test_util = //test/com/facebook/buck/util:util",
+                    "[cache]",
+                    "  mode ="));
     ini.load(originalInput);
     ini.load(overrideInput);
 

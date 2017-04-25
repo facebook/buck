@@ -21,10 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Test;
 
 public class PkillProcessManagerTest {
 
@@ -34,12 +32,9 @@ public class PkillProcessManagerTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkill0Params,
-            new FakeProcess(0)));
-    PkillProcessManager processManager = new PkillProcessManager(
-        processExecutor);
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkill0Params, new FakeProcess(0)));
+    PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     assertTrue(processManager.isProcessRunning("processName"));
     assertTrue(processExecutor.isProcessLaunched(pkill0Params));
   }
@@ -50,12 +45,9 @@ public class PkillProcessManagerTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkill0Params,
-            new FakeProcess(1)));
-    PkillProcessManager processManager = new PkillProcessManager(
-        processExecutor);
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkill0Params, new FakeProcess(1)));
+    PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     assertFalse(processManager.isProcessRunning("processName"));
     assertTrue(processExecutor.isProcessLaunched(pkill0Params));
   }
@@ -67,10 +59,8 @@ public class PkillProcessManagerTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkill0Params,
-            new FakeProcess(49152)));
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkill0Params, new FakeProcess(49152)));
     PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     processManager.isProcessRunning("processName");
   }
@@ -81,10 +71,8 @@ public class PkillProcessManagerTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkillParams,
-            new FakeProcess(0)));
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkillParams, new FakeProcess(0)));
     PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     processManager.killProcess("processName");
     assertTrue(processExecutor.isProcessLaunched(pkillParams));
@@ -96,26 +84,21 @@ public class PkillProcessManagerTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkillParams,
-            new FakeProcess(1)));
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkillParams, new FakeProcess(1)));
     PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     processManager.killProcess("processName");
     assertTrue(processExecutor.isProcessLaunched(pkillParams));
   }
 
   @Test(expected = HumanReadableException.class)
-  public void killProcessThrowsWithUnexpectedExitCode()
-      throws IOException, InterruptedException {
+  public void killProcessThrowsWithUnexpectedExitCode() throws IOException, InterruptedException {
     ProcessExecutorParams pkillParams =
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(
-            pkillParams,
-            new FakeProcess(64738)));
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(pkillParams, new FakeProcess(64738)));
     PkillProcessManager processManager = new PkillProcessManager(processExecutor);
     processManager.killProcess("processName");
   }

@@ -18,12 +18,9 @@ package com.facebook.buck.util;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.Nullable;
 
-/**
- * A fake for {@link ProcessHelper}.
- */
+/** A fake for {@link ProcessHelper}. */
 public class FakeProcessHelper extends ProcessHelper {
 
   private long currentPid = 0;

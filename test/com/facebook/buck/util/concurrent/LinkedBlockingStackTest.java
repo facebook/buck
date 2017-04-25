@@ -23,19 +23,16 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
-
 public class LinkedBlockingStackTest {
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void worksAsAStack() throws InterruptedException {
