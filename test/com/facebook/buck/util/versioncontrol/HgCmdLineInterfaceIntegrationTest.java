@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Pair;
@@ -41,7 +42,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -121,8 +121,8 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Before
-  public void setUp() {
-    assumeHgInstalled();
+  public void setUp() throws InterruptedException {
+    assumeTrue(repoTwoCmdLine.isSupportedVersionControlSystem());
   }
 
   @Test
@@ -259,15 +259,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testCreateCmdLineInterfaceUsingHgSubDir()
-      throws VersionControlCommandFailedException, InterruptedException {
-    VersionControlCmdLineInterface subDirCmdLineInterface =
-        makeCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR));
-
-    assertThat(subDirCmdLineInterface instanceof HgCmdLineInterface, is(true));
-  }
-
-  @Test
   public void testTimestamp() throws VersionControlCommandFailedException, InterruptedException {
     assertThat(MASTER_THREE_TS, is(equalTo(repoThreeCmdLine.timestampSeconds(MASTER_THREE_ID))));
   }
@@ -285,7 +276,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void testExtractRawManifestNoChanges()
       throws VersionControlCommandFailedException, InterruptedException, IOException {
-    HgCmdLineInterface hgCmdLineInterface = (HgCmdLineInterface) repoTwoCmdLine;
+    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
     String path = hgCmdLineInterface.extractRawManifest();
     List<String> lines =
         Files.readAllLines(
@@ -306,8 +297,7 @@ public class HgCmdLineInterfaceIntegrationTest {
     Path localReposPath = explodeReposZip(localTempFolder);
     Files.delete(localReposPath.resolve(REPO_TWO_DIR + "/file1"));
 
-    HgCmdLineInterface hgCmdLineInterface =
-        (HgCmdLineInterface) makeCmdLine(localReposPath.resolve(REPO_TWO_DIR));
+    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(localReposPath.resolve(REPO_TWO_DIR));
 
     String path = hgCmdLineInterface.extractRawManifest();
     List<String> lines =
@@ -327,7 +317,7 @@ public class HgCmdLineInterfaceIntegrationTest {
       throws VersionControlCommandFailedException, InterruptedException, IOException {
     // Use a subdir of the repository
     HgCmdLineInterface hgCmdLineInterface =
-        (HgCmdLineInterface) makeCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR + "/subdir"));
+        makeHgCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR + "/subdir"));
     Path result = hgCmdLineInterface.getHgRoot();
     // Use toRealPath to follow the pecularities of the OS X tempdir system, which uses a
     // /var -> /private/var symlink.
@@ -347,11 +337,6 @@ public class HgCmdLineInterfaceIntegrationTest {
             ImmutableMap.of());
     Path result = hgCmdLineInterface.getHgRoot();
     assertNull(result);
-  }
-
-  private static void assumeHgInstalled() {
-    // If Mercurial is not installed on the build box, then skip tests.
-    Assume.assumeTrue(repoTwoCmdLine instanceof HgCmdLineInterface);
   }
 
   private static Path explodeReposZip() throws InterruptedException, IOException {
@@ -378,6 +363,14 @@ public class HgCmdLineInterfaceIntegrationTest {
     return new DelegatingVersionControlCmdLineInterface(
         repoRootDir,
         new TestProcessExecutorFactory(),
+        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        ImmutableMap.of());
+  }
+
+  private static HgCmdLineInterface makeHgCmdLine(Path repoRootDir) {
+    return new HgCmdLineInterface(
+        new TestProcessExecutorFactory(),
+        repoRootDir,
         new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
         ImmutableMap.of());
   }
