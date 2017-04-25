@@ -32,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 /**
@@ -43,8 +42,7 @@ import java.nio.file.Path;
 public class GwtModule extends AbstractBuildRule {
 
   private final Path outputFile;
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> filesForGwtModule;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;
   private final SourcePathRuleFinder ruleFinder;
 
   GwtModule(
@@ -54,17 +52,17 @@ public class GwtModule extends AbstractBuildRule {
     super(params);
     this.ruleFinder = ruleFinder;
     BuildTarget target = params.getBuildTarget();
-    this.outputFile = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        target,
-        "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
+    this.outputFile =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            target,
+            "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
