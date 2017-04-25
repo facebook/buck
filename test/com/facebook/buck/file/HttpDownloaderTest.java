@@ -26,11 +26,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.google.common.io.BaseEncoding;
-
-import org.easymock.Capture;
-import org.easymock.EasyMock;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
@@ -42,8 +37,10 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.net.ssl.HttpsURLConnection;
+import org.easymock.Capture;
+import org.easymock.EasyMock;
+import org.junit.Test;
 
 public class HttpDownloaderTest {
 
@@ -60,23 +57,22 @@ public class HttpDownloaderTest {
   }
 
   @Test
-  public void shouldReturnFalseIfTryingBasicAuthOverHttp()
-      throws IOException, URISyntaxException {
+  public void shouldReturnFalseIfTryingBasicAuthOverHttp() throws IOException, URISyntaxException {
     final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
     EasyMock.replay(connection);
 
     HttpDownloader downloader = getDownloader(connection);
     PasswordAuthentication credentials = new PasswordAuthentication("not", "used".toCharArray());
-    boolean result = downloader.fetch(
-        eventBus, new URI("http://example.com"), Optional.of(credentials), neverUsed);
+    boolean result =
+        downloader.fetch(
+            eventBus, new URI("http://example.com"), Optional.of(credentials), neverUsed);
     assertFalse(result);
 
     EasyMock.verify(connection);
   }
 
   @Test
-  public void shouldAddAuthenticationHeader()
-      throws IOException, URISyntaxException {
+  public void shouldAddAuthenticationHeader() throws IOException, URISyntaxException {
 
     Capture<String> capturedAuth = EasyMock.newCapture();
 
@@ -88,8 +84,9 @@ public class HttpDownloaderTest {
 
     HttpDownloader downloader = getDownloader(connection);
     PasswordAuthentication credentials = new PasswordAuthentication("foo", "bar".toCharArray());
-    boolean result = downloader.fetch(
-        eventBus, new URI("https://example.com"), Optional.of(credentials), neverUsed);
+    boolean result =
+        downloader.fetch(
+            eventBus, new URI("https://example.com"), Optional.of(credentials), neverUsed);
     assertFalse(result);
 
     EasyMock.verify(connection);
@@ -97,13 +94,11 @@ public class HttpDownloaderTest {
     Matcher m = Pattern.compile("^Basic (.*)$").matcher(capturedAuth.getValue());
     assertTrue(m.matches());
     assertEquals(
-        "foo:bar",
-        new String(BaseEncoding.base64().decode(m.group(1)), StandardCharsets.UTF_8));
+        "foo:bar", new String(BaseEncoding.base64().decode(m.group(1)), StandardCharsets.UTF_8));
   }
 
   @Test
-  public void shouldReturnFalseIfTheStatusCodeIsNot200()
-      throws IOException, URISyntaxException {
+  public void shouldReturnFalseIfTheStatusCodeIsNot200() throws IOException, URISyntaxException {
     final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
     EasyMock.expect(connection.getResponseCode()).andStubReturn(HTTP_FORBIDDEN);
     EasyMock.replay(connection);

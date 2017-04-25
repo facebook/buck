@@ -22,7 +22,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.google.common.io.Files;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import org.eclipse.jetty.server.handler.MovedContextHandler;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,11 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
 
 public class HttpDownloaderIntegrationTest {
 

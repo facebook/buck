@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 

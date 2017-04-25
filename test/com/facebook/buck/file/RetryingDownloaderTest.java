@@ -20,20 +20,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-
-/**
- * Tests {@link RetryingDownloader} functionality.
- */
+/** Tests {@link RetryingDownloader} functionality. */
 public class RetryingDownloaderTest {
 
   private BuckEventBus fakeEventBus;
@@ -69,10 +65,7 @@ public class RetryingDownloaderTest {
 
     EasyMock.replay(downloader);
 
-    assertFalse(RetryingDownloader.from(downloader, 3).fetch(
-        fakeEventBus,
-        fakeUri,
-        fakePath));
+    assertFalse(RetryingDownloader.from(downloader, 3).fetch(fakeEventBus, fakeUri, fakePath));
   }
 
   @Test
@@ -89,7 +82,8 @@ public class RetryingDownloaderTest {
   @Test(expected = RetryingDownloader.RetryingDownloaderException.class)
   public void fetchThrowsAfterMaxRetries() throws Exception {
     EasyMock.expect(downloader.fetch(fakeEventBus, fakeUri, fakePath))
-        .andThrow(new IOException()).times(4);
+        .andThrow(new IOException())
+        .times(4);
 
     EasyMock.replay(downloader);
 
