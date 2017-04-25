@@ -16,12 +16,11 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.SupportedTargetTypeRegistry;
+import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 
 public class DefaultAggregationModuleFactory implements AggregationModuleFactory {
@@ -35,8 +34,7 @@ public class DefaultAggregationModuleFactory implements AggregationModuleFactory
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public AggregationModule createAggregationModule(
-      Path moduleBasePath,
-      ImmutableSet<TargetNode<?, ?>> targetNodes) {
+      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes) {
     AggregationContext context = new AggregationContext();
 
     for (TargetNode<?, ?> targetNode : targetNodes) {

@@ -17,13 +17,10 @@ package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Set;
 
-/**
- * Builds {@link IjModule}s out of {@link TargetNode}s.
- */
+/** Builds {@link IjModule}s out of {@link TargetNode}s. */
 public interface IjModuleFactory {
   /**
    * Create an {@link IjModule} form the supplied parameters.
@@ -33,7 +30,5 @@ public interface IjModuleFactory {
    * @return nice shiny new module.
    */
   IjModule createModule(
-      Path moduleBasePath,
-      ImmutableSet<TargetNode<?, ?>> targetNodes,
-      Set<Path> excludes);
+      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes);
 }

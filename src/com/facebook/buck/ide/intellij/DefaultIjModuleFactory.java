@@ -16,10 +16,10 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleFactory;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -28,7 +28,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,33 +40,28 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private final SupportedTargetTypeRegistry typeRegistry;
 
   public DefaultIjModuleFactory(
-      ProjectFilesystem projectFilesystem,
-      SupportedTargetTypeRegistry typeRegistry) {
+      ProjectFilesystem projectFilesystem, SupportedTargetTypeRegistry typeRegistry) {
     this.projectFilesystem = projectFilesystem;
     this.typeRegistry = typeRegistry;
   }
 
   @Override
   public IjModule createModule(
-      Path moduleBasePath,
-      ImmutableSet<TargetNode<?, ?>> targetNodes,
-      Set<Path> excludes) {
+      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
-        moduleBasePath,
-        ImmutableSortedSet.copyOf(targetNodes),
-        excludes);
+        moduleBasePath, ImmutableSortedSet.copyOf(targetNodes), excludes);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private IjModule createModuleUsingSortedTargetNodes(
-      Path moduleBasePath,
-      ImmutableSortedSet<TargetNode<?, ?>> targetNodes,
-      Set<Path> excludes) {
+      Path moduleBasePath, ImmutableSortedSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
-    ImmutableSet<BuildTarget> moduleBuildTargets = targetNodes.stream()
-        .map(TargetNode::getBuildTarget)
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<BuildTarget> moduleBuildTargets =
+        targetNodes
+            .stream()
+            .map(TargetNode::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet());
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
@@ -82,15 +76,14 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     }
 
     if (seenTypes.size() > 1) {
-      LOG.debug(
-          "Multiple types at the same path. Path: %s, types: %s",
-          moduleBasePath,
-          seenTypes);
+      LOG.debug("Multiple types at the same path. Path: %s, types: %s", moduleBasePath, seenTypes);
     }
 
     if (context.isAndroidFacetBuilderPresent()) {
-      context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
-          IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
+      context
+          .getOrCreateAndroidFacetBuilder()
+          .setGeneratedSourcePath(
+              IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
     }
 
     excludes

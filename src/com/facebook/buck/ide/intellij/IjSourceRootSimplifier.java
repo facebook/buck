@@ -29,9 +29,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import org.immutables.value.Value;
 
 /**
  * Groups {@link IjFolder}s into sets which are of the same type and belong to the same package
@@ -62,11 +60,9 @@ public class IjSourceRootSimplifier {
    * @return simplified set of {@link IjFolder}s.
    */
   public ImmutableSet<IjFolder> simplify(
-      SimplificationLimit limit,
-      ImmutableSet<IjFolder> folders) {
+      SimplificationLimit limit, ImmutableSet<IjFolder> folders) {
     PackagePathCache packagePathCache = new PackagePathCache(folders, javaPackageFinder);
-    BottomUpPathMerger walker =
-        new BottomUpPathMerger(folders, limit.getValue(), packagePathCache);
+    BottomUpPathMerger walker = new BottomUpPathMerger(folders, limit.getValue(), packagePathCache);
 
     return walker.getMergedFolders();
   }
@@ -88,11 +84,8 @@ public class IjSourceRootSimplifier {
     // Efficient package prefix lookup.
     private PackagePathCache packagePathCache;
 
-
     public BottomUpPathMerger(
-        Iterable<IjFolder> foldersToWalk,
-        int limit,
-        PackagePathCache packagePathCache) {
+        Iterable<IjFolder> foldersToWalk, int limit, PackagePathCache packagePathCache) {
       this.tree = new MutableDirectedGraph<>();
       this.packagePathCache = packagePathCache;
       this.mergePathsMap = new HashMap<>();
@@ -162,14 +155,13 @@ public class IjSourceRootSimplifier {
       if (currentFolder != null) {
         mergeDistination = currentFolder;
       } else {
-        mergeDistination =
-            findBestChildToAggregateTo(presentChildren)
-              .createCopyWith(currentPath);
+        mergeDistination = findBestChildToAggregateTo(presentChildren).createCopyWith(currentPath);
       }
 
-      boolean allChildrenCanBeMerged = presentChildren
-          .stream()
-          .allMatch(input -> canMerge(mergeDistination, input, packagePathCache));
+      boolean allChildrenCanBeMerged =
+          presentChildren
+              .stream()
+              .allMatch(input -> canMerge(mergeDistination, input, packagePathCache));
       if (!allChildrenCanBeMerged) {
         return Optional.empty();
       }
@@ -197,11 +189,10 @@ public class IjSourceRootSimplifier {
   }
 
   /**
-   * Find a child which can be used as the aggregation point for the other folders.
-   * The order of preference is;
-   * - AndroidResource - because there should be only one
-   * - SourceFolder - because most things should merge into it
-   * - First Child - because no other folders significantly affect aggregation.
+   * Find a child which can be used as the aggregation point for the other folders. The order of
+   * preference is; - AndroidResource - because there should be only one - SourceFolder - because
+   * most things should merge into it - First Child - because no other folders significantly affect
+   * aggregation.
    */
   private static IjFolder findBestChildToAggregateTo(Iterable<IjFolder> children) {
     Iterator<IjFolder> childIterator = children.iterator();
@@ -223,13 +214,11 @@ public class IjSourceRootSimplifier {
   }
 
   private static boolean canMerge(
-      IjFolder parent,
-      IjFolder child,
-      PackagePathCache packagePathCache) {
+      IjFolder parent, IjFolder child, PackagePathCache packagePathCache) {
     Preconditions.checkArgument(child.getPath().startsWith(parent.getPath()));
 
     if (!child.canMergeWith(parent)) {
-        return false;
+      return false;
     }
 
     if (parent.getWantsPackagePrefix()) {
@@ -252,22 +241,21 @@ public class IjSourceRootSimplifier {
   }
 
   /**
-   * Hierarchical path cache. If the path a/b/c/d has package c/d it assumes that
-   * a/b/c has the package c/.
+   * Hierarchical path cache. If the path a/b/c/d has package c/d it assumes that a/b/c has the
+   * package c/.
    */
   private static class PackagePathCache {
     JavaPackagePathCache delegate;
 
     public PackagePathCache(
-        ImmutableSet<IjFolder> startingFolders,
-        JavaPackageFinder javaPackageFinder) {
+        ImmutableSet<IjFolder> startingFolders, JavaPackageFinder javaPackageFinder) {
       delegate = new JavaPackagePathCache();
       for (IjFolder startingFolder : startingFolders) {
         if (!startingFolder.getWantsPackagePrefix()) {
           continue;
         }
-        Path path = startingFolder.getInputs().stream().findFirst()
-            .orElse(lookupPath(startingFolder));
+        Path path =
+            startingFolder.getInputs().stream().findFirst().orElse(lookupPath(startingFolder));
         delegate.insert(path, javaPackageFinder.findJavaPackageFolder(path));
       }
     }
@@ -280,5 +268,4 @@ public class IjSourceRootSimplifier {
       return delegate.lookup(lookupPath(folder));
     }
   }
-
 }

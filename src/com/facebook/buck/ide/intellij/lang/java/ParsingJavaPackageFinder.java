@@ -24,16 +24,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Optional;
 
-/**
- * Finds the package for a given file by looking at its contents first.
- */
+/** Finds the package for a given file by looking at its contents first. */
 public abstract class ParsingJavaPackageFinder {
 
   /**
@@ -44,7 +41,7 @@ public abstract class ParsingJavaPackageFinder {
    * @param projectFilesystem filesystem.
    * @param filesToParse set of files to parse.
    * @param fallbackPackageFinder package finder to use when the package can't be inferred from
-   *                              source.
+   *     source.
    * @return the described PackageFinder.
    */
   public static JavaPackageFinder preparse(
@@ -54,9 +51,9 @@ public abstract class ParsingJavaPackageFinder {
       JavaPackageFinder fallbackPackageFinder) {
     JavaPackagePathCache packagePathCache = new JavaPackagePathCache();
     for (Path path : ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)) {
-      Optional<String> packageNameFromSource = Optionals.bind(
-          projectFilesystem.readFileIfItExists(path),
-          javaFileParser::getPackageNameFromSource);
+      Optional<String> packageNameFromSource =
+          Optionals.bind(
+              projectFilesystem.readFileIfItExists(path), javaFileParser::getPackageNameFromSource);
       if (packageNameFromSource.isPresent()) {
         Path javaPackagePath = findPackageFolderWithJavaPackage(packageNameFromSource.get());
         packagePathCache.insert(path, javaPackagePath);
@@ -74,8 +71,7 @@ public abstract class ParsingJavaPackageFinder {
     private JavaPackagePathCache packagePathCache;
 
     public CacheBasedPackageFinder(
-        JavaPackageFinder fallbackPackageFinder,
-        JavaPackagePathCache packagePathCache) {
+        JavaPackageFinder fallbackPackageFinder, JavaPackagePathCache packagePathCache) {
       this.fallbackPackageFinder = fallbackPackageFinder;
       this.packagePathCache = packagePathCache;
     }
@@ -84,8 +80,8 @@ public abstract class ParsingJavaPackageFinder {
     public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
       Optional<Path> packageFolder = packagePathCache.lookup(pathRelativeToProjectRoot);
       if (!packageFolder.isPresent()) {
-        packageFolder = Optional.of(
-            fallbackPackageFinder.findJavaPackageFolder(pathRelativeToProjectRoot));
+        packageFolder =
+            Optional.of(fallbackPackageFinder.findJavaPackageFolder(pathRelativeToProjectRoot));
       }
       return packageFolder.get();
     }

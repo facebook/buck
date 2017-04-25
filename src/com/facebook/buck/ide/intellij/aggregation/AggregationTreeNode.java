@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,7 +31,7 @@ import java.util.Objects;
 /**
  * A node in {@link AggregationTree}.
  *
- * May point to a module or null if not module is present.
+ * <p>May point to a module or null if not module is present.
  */
 class AggregationTreeNode {
 
@@ -89,8 +88,8 @@ class AggregationTreeNode {
   }
 
   /**
-   * Adding a new child doing all necessary adjustments to the structure of the nodes to keep
-   * the tree valid.
+   * Adding a new child doing all necessary adjustments to the structure of the nodes to keep the
+   * tree valid.
    */
   public void addChild(Path newNodePathComponents, AggregationModule module, Path moduleBasePath) {
     Path firstPathComponent = newNodePathComponents.getName(0);
@@ -100,14 +99,11 @@ class AggregationTreeNode {
           replaceCurrentModule(childPathComponents, module, moduleBasePath);
         } else if (newNodePathComponents.startsWith(childPathComponents)) {
           putNewNodeAfterChild(newNodePathComponents, childPathComponents, module, moduleBasePath);
-        } else  if (childPathComponents.startsWith(newNodePathComponents)) {
+        } else if (childPathComponents.startsWith(newNodePathComponents)) {
           putNewNodeBeforeChild(newNodePathComponents, childPathComponents, module, moduleBasePath);
         } else {
           addModuleWithCommonSubpath(
-              newNodePathComponents,
-              childPathComponents,
-              module,
-              moduleBasePath);
+              newNodePathComponents, childPathComponents, module, moduleBasePath);
         }
         return;
       }
@@ -117,9 +113,7 @@ class AggregationTreeNode {
   }
 
   private void replaceCurrentModule(
-      Path childPathComponents,
-      AggregationModule module,
-      Path moduleBasePath) {
+      Path childPathComponents, AggregationModule module, Path moduleBasePath) {
     AggregationTreeNode child = children.get(childPathComponents);
     child.setModule(module);
     child.setModuleBasePath(moduleBasePath);
@@ -128,20 +122,14 @@ class AggregationTreeNode {
   /**
    * Covers the following situation:
    *
-   * new node location:
-   * a/b/c/d/e
+   * <p>new node location: a/b/c/d/e
    *
-   * existing node location:
-   * a/b/c
+   * <p>existing node location: a/b/c
    *
-   * This should result in:
-   * a/b/c (existing) -> d/e (new)
+   * <p>This should result in: a/b/c (existing) -> d/e (new)
    */
   private void putNewNodeAfterChild(
-      Path newNodePath,
-      Path childPath,
-      AggregationModule module,
-      Path moduleBasePath) {
+      Path newNodePath, Path childPath, AggregationModule module, Path moduleBasePath) {
     AggregationTreeNode existingChild = children.get(childPath);
     existingChild.addChild(childPath.relativize(newNodePath), module, moduleBasePath);
   }
@@ -149,20 +137,14 @@ class AggregationTreeNode {
   /**
    * Covers the following situation:
    *
-   * new node location:
-   * a/b/c
+   * <p>new node location: a/b/c
    *
-   * existing node location:
-   * a/b/c/d/e
+   * <p>existing node location: a/b/c/d/e
    *
-   * This should result in:
-   * a/b/c (new) -> d/e (existing)
+   * <p>This should result in: a/b/c (new) -> d/e (existing)
    */
   private void putNewNodeBeforeChild(
-      Path newNodePath,
-      Path childPath,
-      AggregationModule module,
-      Path moduleBasePath) {
+      Path newNodePath, Path childPath, AggregationModule module, Path moduleBasePath) {
     AggregationTreeNode newChild = new AggregationTreeNode(module, moduleBasePath);
     AggregationTreeNode existingChild = children.get(childPath);
 
@@ -174,14 +156,11 @@ class AggregationTreeNode {
   /**
    * Covers the following situation:
    *
-   * new node location:
-   * a/b/c/d/e
+   * <p>new node location: a/b/c/d/e
    *
-   * existing node location:
-   * a/b/c/f/g
+   * <p>existing node location: a/b/c/f/g
    *
-   * This should result in:
-   * a/b/c (artificial) -> d/e (new), f/g (existing)
+   * <p>This should result in: a/b/c (artificial) -> d/e (new), f/g (existing)
    */
   private void addModuleWithCommonSubpath(
       Path newNodePathComponents,
@@ -201,17 +180,15 @@ class AggregationTreeNode {
 
   private static Path findCommonPath(Path path1, Path path2) {
     int nameIndex = 1;
-    while (nameIndex <= path1.getNameCount() &&
-        nameIndex <= path2.getNameCount() &&
-        path1.subpath(0, nameIndex).equals(path2.subpath(0, nameIndex))) {
+    while (nameIndex <= path1.getNameCount()
+        && nameIndex <= path2.getNameCount()
+        && path1.subpath(0, nameIndex).equals(path2.subpath(0, nameIndex))) {
       nameIndex++;
     }
     return path1.subpath(0, nameIndex - 1);
   }
 
-  /**
-   * Collects nodes located at a path with the provided length.
-   */
+  /** Collects nodes located at a path with the provided length. */
   public Collection<AggregationTreeNode> collectNodes(int minimumPathDepth) {
     ImmutableList.Builder<AggregationTreeNode> result = ImmutableList.builder();
     collectNodes(minimumPathDepth, result);
@@ -235,15 +212,12 @@ class AggregationTreeNode {
     }
   }
 
-  /**
-   * Removes a child and promotes its children to the current node.
-   */
+  /** Removes a child and promotes its children to the current node. */
   public void removeChild(Path childPath) {
     AggregationTreeNode childNode = getChild(childPath);
 
     Map<Path, AggregationTreeNode> nodesToKeep = new HashMap<>();
-    for (Map.Entry<Path, AggregationTreeNode> grandChild :
-        childNode.children.entrySet()) {
+    for (Map.Entry<Path, AggregationTreeNode> grandChild : childNode.children.entrySet()) {
       nodesToKeep.put(childPath.resolve(grandChild.getKey()), grandChild.getValue());
     }
     children.remove(childPath);
@@ -255,24 +229,26 @@ class AggregationTreeNode {
     return children
         .entrySet()
         .stream()
-        .filter(e -> e.getValue().getModule() != null &&
-            moduleType.equals(e.getValue().getModule().getModuleType()))
+        .filter(
+            e ->
+                e.getValue().getModule() != null
+                    && moduleType.equals(e.getValue().getModule().getModuleType()))
         .map(Map.Entry::getKey)
         .collect(MoreCollectors.toImmutableSet());
   }
 
   public ImmutableSet<Path> getChildrenPathsByModuleTypeOrTag(
-      IjModuleType moduleType,
-      String aggregationTag) {
+      IjModuleType moduleType, String aggregationTag) {
     return children
         .entrySet()
         .stream()
         .filter(e -> e.getValue().getModule() != null)
-        .filter(e -> {
-          String childAggregationTag = e.getValue().getModule().getAggregationTag();
-          return Objects.equals(aggregationTag, childAggregationTag) ||
-              moduleType.equals(e.getValue().getModule().getModuleType());
-        })
+        .filter(
+            e -> {
+              String childAggregationTag = e.getValue().getModule().getAggregationTag();
+              return Objects.equals(aggregationTag, childAggregationTag)
+                  || moduleType.equals(e.getValue().getModule().getModuleType());
+            })
         .map(Map.Entry::getKey)
         .collect(MoreCollectors.toImmutableSet());
   }

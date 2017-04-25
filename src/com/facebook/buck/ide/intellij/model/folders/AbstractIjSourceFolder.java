@@ -17,18 +17,20 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
   public abstract String getType();
+
   public abstract String getUrl();
+
   public abstract boolean getIsTestSource();
+
   public abstract boolean getIsAndroidResources();
+
   @Nullable
   public abstract String getPackagePrefix();
 

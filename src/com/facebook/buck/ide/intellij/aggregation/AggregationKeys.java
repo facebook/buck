@@ -21,6 +21,5 @@ public class AggregationKeys {
   public static final String MODULE_TYPE = "type";
   public static final String JAVA_LANGUAGE_LEVEL = "language_level";
 
-  private AggregationKeys() {
-  }
+  private AggregationKeys() {}
 }

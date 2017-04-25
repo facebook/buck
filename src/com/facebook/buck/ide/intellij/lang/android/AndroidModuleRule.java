@@ -16,9 +16,9 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.TargetNode;
 
@@ -37,7 +37,8 @@ public abstract class AndroidModuleRule<T> extends BaseIjModuleRule<T> {
 
   @Override
   public void apply(TargetNode<T, ?> target, ModuleBuildContext context) {
-    context.getOrCreateAndroidFacetBuilder()
+    context
+        .getOrCreateAndroidFacetBuilder()
         .setAndroidLibrary(isAndroidLibrary)
         .setAutogenerateSources(projectConfig.isAutogenerateAndroidFacetSourcesEnabled());
   }

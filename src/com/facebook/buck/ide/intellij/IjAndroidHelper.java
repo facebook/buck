@@ -18,7 +18,6 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,15 +26,14 @@ public final class IjAndroidHelper {
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
    * Android module. It contains files such as R.java, BuildConfig.java, and Manifest.java.
-   * <p>
-   * By default, IntelliJ generates its gen/ directories in our source tree, which would likely
+   *
+   * <p>By default, IntelliJ generates its gen/ directories in our source tree, which would likely
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
   public static String getAndroidGenDir(ProjectFilesystem filesystem) {
     return MorePaths.pathWithUnixSeparators(
-        filesystem.getBuckPaths().getBuckOut().resolve("android")
-    );
+        filesystem.getBuckPaths().getBuckOut().resolve("android"));
   }
 
   public static Path getAndroidGenPath(ProjectFilesystem filesystem) {
@@ -47,14 +45,9 @@ public final class IjAndroidHelper {
   }
 
   public static Path createAndroidGenPath(
-      ProjectFilesystem projectFilesystem,
-      Path moduleBasePath) {
-    return Paths
-        .get(getAndroidGenDir(projectFilesystem))
-        .resolve(moduleBasePath)
-        .resolve("gen");
+      ProjectFilesystem projectFilesystem, Path moduleBasePath) {
+    return Paths.get(getAndroidGenDir(projectFilesystem)).resolve(moduleBasePath).resolve("gen");
   }
 
-  private IjAndroidHelper() {
-  }
+  private IjAndroidHelper() {}
 }

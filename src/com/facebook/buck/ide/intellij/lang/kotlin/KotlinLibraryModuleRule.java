@@ -16,10 +16,10 @@
 package com.facebook.buck.ide.intellij.lang.kotlin;
 
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.rules.Description;
@@ -41,12 +41,8 @@ public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescr
 
   @Override
   public void apply(
-      TargetNode<KotlinLibraryDescription.Arg, ?> target,
-      ModuleBuildContext context) {
-    addDepsAndSources(
-        target,
-        false /* wantsPackagePrefix */,
-        context);
+      TargetNode<KotlinLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
+    addDepsAndSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override

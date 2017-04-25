@@ -18,14 +18,11 @@ package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public interface IjLibraryFactoryResolver {
-  /**
-   * Does it get an absolute path? Does it get a relative path? Who knows!
-   */
+  /** Does it get an absolute path? Does it get a relative path? Who knows! */
   Path getPath(SourcePath path);
 
   /**

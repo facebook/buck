@@ -16,23 +16,21 @@
 package com.facebook.buck.ide.intellij.lang.java;
 
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
-public class JavaBinaryModuleRule
-    extends BaseIjModuleRule<JavaBinaryDescription.Args> {
+public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription.Args> {
 
   public JavaBinaryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -47,21 +45,17 @@ public class JavaBinaryModuleRule
   }
 
   @Override
-  public void apply(
-      TargetNode<JavaBinaryDescription.Args, ?> target,
-      ModuleBuildContext context) {
+  public void apply(TargetNode<JavaBinaryDescription.Args, ?> target, ModuleBuildContext context) {
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
     saveMetaInfDirectoryForIntellijPlugin(target, context);
   }
 
   private void saveMetaInfDirectoryForIntellijPlugin(
-      TargetNode<JavaBinaryDescription.Args, ?> target,
-      ModuleBuildContext context) {
+      TargetNode<JavaBinaryDescription.Args, ?> target, ModuleBuildContext context) {
     Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
     for (BuildTarget dep : target.getBuildDeps()) {
       Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
-      if (metaInfDirectory.isPresent() &&
-          intellijLibraries.contains(dep.getFullyQualifiedName())) {
+      if (metaInfDirectory.isPresent() && intellijLibraries.contains(dep.getFullyQualifiedName())) {
         context.setMetaInfDirectory(metaInfDirectory.get());
         break;
       }
@@ -73,8 +67,7 @@ public class JavaBinaryModuleRule
     Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
     for (BuildTarget dep : targetNode.getBuildDeps()) {
       Optional<Path> metaInfDirectory = targetNode.getConstructorArg().metaInfDirectory;
-      if (metaInfDirectory.isPresent() &&
-          intellijLibraries.contains(dep.getFullyQualifiedName())) {
+      if (metaInfDirectory.isPresent() && intellijLibraries.contains(dep.getFullyQualifiedName())) {
         return IjModuleType.INTELLIJ_PLUGIN_MODULE;
       }
     }

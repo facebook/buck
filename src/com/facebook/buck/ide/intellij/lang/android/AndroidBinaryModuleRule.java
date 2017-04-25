@@ -16,18 +16,17 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
-public class AndroidBinaryModuleRule
-    extends AndroidModuleRule<AndroidBinaryDescription.Arg> {
+public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDescription.Arg> {
 
   public AndroidBinaryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -43,8 +42,7 @@ public class AndroidBinaryModuleRule
 
   @Override
   public void apply(
-      TargetNode<AndroidBinaryDescription.Arg, ?> target,
-      ModuleBuildContext context) {
+      TargetNode<AndroidBinaryDescription.Arg, ?> target, ModuleBuildContext context) {
     super.apply(target, context);
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
 

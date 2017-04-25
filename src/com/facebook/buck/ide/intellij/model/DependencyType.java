@@ -17,25 +17,20 @@
 package com.facebook.buck.ide.intellij.model;
 
 import com.google.common.base.Preconditions;
-
 import java.util.Map;
 
 public enum DependencyType {
   /**
-   * The current {@link IjModule} depends on the other element from test code only. This
-   * only happens if a particular module contains both test and production code and only code in
-   * the test folders needs to reference the other element.
+   * The current {@link IjModule} depends on the other element from test code only. This only
+   * happens if a particular module contains both test and production code and only code in the test
+   * folders needs to reference the other element.
    */
   TEST,
-  /**
-   * The current {@link IjModule} depends on the other element from production (non-test)
-   * code.
-   */
+  /** The current {@link IjModule} depends on the other element from production (non-test) code. */
   PROD,
   /**
    * This dependency means that the other element contains a compiled counterpart to this element.
-   * This is used when the current element uses BUCK features which cannot be expressed in
-   * IntelliJ.
+   * This is used when the current element uses BUCK features which cannot be expressed in IntelliJ.
    */
   COMPILED_SHADOW,
   ;

@@ -24,14 +24,11 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Represents a graph of IjModules and the dependencies between them.
- */
+/** Represents a graph of IjModules and the dependencies between them. */
 public class IjModuleGraph {
 
   private ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps;
@@ -47,8 +44,7 @@ public class IjModuleGraph {
   }
 
   public ImmutableSet<IjModule> getModules() {
-    return deps
-        .keySet()
+    return deps.keySet()
         .stream()
         .filter(dep -> dep instanceof IjModule)
         .map(IjModule.class::cast)
@@ -56,8 +52,7 @@ public class IjModuleGraph {
   }
 
   public ImmutableSet<IjLibrary> getLibraries() {
-    return deps
-        .keySet()
+    return deps.keySet()
         .stream()
         .filter(node -> node instanceof IjLibrary)
         .map(IjLibrary.class::cast)
@@ -70,24 +65,24 @@ public class IjModuleGraph {
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return deps
-        .keySet()
+    return deps.keySet()
         .stream()
         .filter(dep -> dep instanceof IjModule)
         .map(module -> (IjModule) module)
-        .collect(MoreCollectors.toImmutableMap(k -> k,
-            input -> Preconditions.checkNotNull(deps.get(input))));
+        .collect(
+            MoreCollectors.toImmutableMap(
+                k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
   }
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return deps
-        .keySet()
+    return deps.keySet()
         .stream()
         .filter(dep -> dep instanceof IjLibrary)
         .map(library -> (IjLibrary) library)
-        .collect(MoreCollectors.toImmutableMap(k -> k,
-            input -> Preconditions.checkNotNull(deps.get(input))));
+        .collect(
+            MoreCollectors.toImmutableMap(
+                k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
   }
 
   private static void checkNamesAreUnique(
@@ -99,6 +94,4 @@ public class IjModuleGraph {
       names.add(name);
     }
   }
-
-
 }

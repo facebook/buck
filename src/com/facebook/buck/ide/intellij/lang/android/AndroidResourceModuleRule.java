@@ -16,24 +16,22 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
-import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public class AndroidResourceModuleRule
-    extends AndroidModuleRule<AndroidResourceDescription.Arg> {
+public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResourceDescription.Arg> {
 
   public AndroidResourceModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -49,8 +47,7 @@ public class AndroidResourceModuleRule
 
   @Override
   public void apply(
-      TargetNode<AndroidResourceDescription.Arg, ?> target,
-      ModuleBuildContext context) {
+      TargetNode<AndroidResourceDescription.Arg, ?> target, ModuleBuildContext context) {
     super.apply(target, context);
 
     IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
@@ -70,9 +67,7 @@ public class AndroidResourceModuleRule
       List<String> excludedResourcePaths = projectConfig.getExcludedResourcePaths();
 
       for (Path resourceFolder : resourceFolders) {
-        context.addSourceFolder(
-            new AndroidResourceFolder(resourceFolder)
-        );
+        context.addSourceFolder(new AndroidResourceFolder(resourceFolder));
 
         excludedResourcePaths
             .stream()

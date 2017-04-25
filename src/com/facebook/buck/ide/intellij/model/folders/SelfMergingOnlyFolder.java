@@ -17,19 +17,13 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * Base class for folders which can only be merged with other instances holding
- * equal data.
- */
+/** Base class for folders which can only be merged with other instances holding equal data. */
 public abstract class SelfMergingOnlyFolder extends InclusiveFolder {
 
   public SelfMergingOnlyFolder(
-      Path path,
-      boolean wantsPackagePrefix,
-      ImmutableSortedSet<Path> inputs) {
+      Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);
   }
 
@@ -49,8 +43,6 @@ public abstract class SelfMergingOnlyFolder extends InclusiveFolder {
     }
 
     throw new IllegalArgumentException(
-        "Can not merge two " +
-            getClass().getSimpleName() +
-            "s with different paths");
+        "Can not merge two " + getClass().getSimpleName() + "s with different paths");
   }
 }

@@ -25,16 +25,12 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Represents a single IntelliJ module.
- */
+/** Represents a single IntelliJ module. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjModule implements IjProjectElement {
@@ -50,31 +46,25 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
-   * corresponding .iml file is located.
+   *     corresponding .iml file is located.
    */
   public abstract Path getModuleBasePath();
 
-  /**
-   * @return paths to various directories the module is responsible for.
-   */
+  /** @return paths to various directories the module is responsible for. */
   public abstract ImmutableSet<IjFolder> getFolders();
 
   /**
    * @return map of {@link BuildTarget}s the module depends on and information on whether it's a
-   *         test-only dependency or not.
+   *     test-only dependency or not.
    */
   public abstract ImmutableMap<BuildTarget, DependencyType> getDependencies();
 
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
-  /**
-   * @return a set of classpaths that the module requires to index correctly.
-   */
+  /** @return a set of classpaths that the module requires to index correctly. */
   public abstract ImmutableSet<Path> getExtraClassPathDependencies();
 
-  /**
-   * @return Folders which contain the generated source code.
-   */
+  /** @return Folders which contain the generated source code. */
   public abstract ImmutableSet<IjFolder> getGeneratedSourceCodeFolders();
 
   public abstract Optional<String> getLanguageLevel();
@@ -83,9 +73,7 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract Optional<Path> getMetaInfDirectory();
 
-  /**
-   * @return path where the XML describing the module to IntelliJ will be written to.
-   */
+  /** @return path where the XML describing the module to IntelliJ will be written to. */
   @Value.Derived
   public Path getModuleImlFilePath() {
     return getModuleBasePath().resolve(getName() + ".iml");
@@ -104,8 +92,7 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   @Value.Check
   protected void checkDependencyConsistency() {
-    for (Map.Entry<BuildTarget, DependencyType> entry :
-        getDependencies().entrySet()) {
+    for (Map.Entry<BuildTarget, DependencyType> entry : getDependencies().entrySet()) {
       BuildTarget depBuildTarget = entry.getKey();
       DependencyType dependencyType = entry.getValue();
       boolean isSelfDependency = getTargets().contains(depBuildTarget);
@@ -113,15 +100,15 @@ abstract class AbstractIjModule implements IjProjectElement {
       if (dependencyType.equals(DependencyType.COMPILED_SHADOW)) {
         Preconditions.checkArgument(
             isSelfDependency,
-            "Target %s is a COMPILED_SHADOW dependency of module %s and therefore should be part" +
-                "of its target set.",
+            "Target %s is a COMPILED_SHADOW dependency of module %s and therefore should be part"
+                + "of its target set.",
             depBuildTarget,
             getName());
       } else {
         Preconditions.checkArgument(
             !isSelfDependency,
-            "Target %s is a regular dependency of module %s and therefore should not be part of " +
-                "its target set.",
+            "Target %s is a regular dependency of module %s and therefore should not be part of "
+                + "its target set.",
             depBuildTarget,
             getName());
       }
@@ -131,8 +118,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Override
   public void addAsDependency(
       DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder) {
-    Preconditions.checkArgument(
-        !dependencyType.equals(DependencyType.COMPILED_SHADOW));
+    Preconditions.checkArgument(!dependencyType.equals(DependencyType.COMPILED_SHADOW));
     IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
     if (dependencyType.equals(DependencyType.TEST)) {
       scope = IjDependencyListBuilder.Scope.TEST;

@@ -17,12 +17,9 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A path which contains a set of sources we wish to present to IntelliJ.
- */
+/** A path which contains a set of sources we wish to present to IntelliJ. */
 public abstract class IjFolder implements Comparable<IjFolder> {
 
   private static final ImmutableSortedSet<Path> EMPTY_INPUTS = ImmutableSortedSet.of();
@@ -43,34 +40,24 @@ public abstract class IjFolder implements Comparable<IjFolder> {
     this(path, wantsPackagePrefix, EMPTY_INPUTS);
   }
 
-
   IjFolder(Path path) {
     this(path, false);
   }
 
-  /**
-   * @return name IntelliJ would use to refer to this type of folder.
-   */
+  /** @return name IntelliJ would use to refer to this type of folder. */
   public abstract String getIjName();
 
-  /**
-   * @return path that this folder represents relative to the project root.
-   */
+  /** @return path that this folder represents relative to the project root. */
   public Path getPath() {
     return path;
   }
 
-  /**
-   * @return set of input files corresponding to this folder.
-   */
+  /** @return set of input files corresponding to this folder. */
   public ImmutableSortedSet<Path> getInputs() {
     return inputs;
   }
 
-  /**
-   * @return a IJFolderFactory to create new instances of the folder class.
-   */
-
+  /** @return a IJFolderFactory to create new instances of the folder class. */
   protected abstract IJFolderFactory getFactory();
 
   /**
@@ -86,9 +73,8 @@ public abstract class IjFolder implements Comparable<IjFolder> {
    * Used to make IntelliJ ignore the package name-&gt;folder structure convention and assume the
    * given package prefix. An example of a scenario this makes possible to achieve is having
    * java/src/Foo.java declare the package "org.bar" (instead of having the path to the file be
-   * java/org/bar/Foo.java).
-   * The main effect of this is the elimination of IntelliJ warnings about incorrect package
-   * prefixes and having it use the correct package when creating new files.
+   * java/org/bar/Foo.java). The main effect of this is the elimination of IntelliJ warnings about
+   * incorrect package prefixes and having it use the correct package when creating new files.
    *
    * @return whether to generate package prefix for this folder.
    */
@@ -97,10 +83,10 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   }
 
   public boolean canMergeWith(IjFolder other) {
-    return other != null &&
-        getClass().equals(other.getClass()) &&
-        getWantsPackagePrefix() == other.getWantsPackagePrefix() &&
-        getPath().startsWith(other.getPath());
+    return other != null
+        && getClass().equals(other.getClass())
+        && getWantsPackagePrefix() == other.getWantsPackagePrefix()
+        && getPath().startsWith(other.getPath());
   }
 
   public IjFolder merge(IjFolder otherFolder) {
@@ -108,11 +94,11 @@ public abstract class IjFolder implements Comparable<IjFolder> {
       return this;
     }
 
-    return getFactory().create(
-        otherFolder.getPath(),
-        getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix(),
-        combineInputs(this, otherFolder)
-    );
+    return getFactory()
+        .create(
+            otherFolder.getPath(),
+            getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix(),
+            combineInputs(this, otherFolder));
   }
 
   @Override
@@ -131,33 +117,30 @@ public abstract class IjFolder implements Comparable<IjFolder> {
     }
 
     IjFolder otherFolder = (IjFolder) other;
-    return getPath().equals(otherFolder.getPath()) &&
-          (getWantsPackagePrefix() == otherFolder.getWantsPackagePrefix()) &&
-          getInputs().equals(otherFolder.getInputs());
+    return getPath().equals(otherFolder.getPath())
+        && (getWantsPackagePrefix() == otherFolder.getWantsPackagePrefix())
+        && getInputs().equals(otherFolder.getInputs());
   }
 
   @Override
   public int hashCode() {
-    return (getPath().hashCode() << 31) |
-           (getWantsPackagePrefix() ? 0x8000 : 0) |
-           inputsHash;
+    return (getPath().hashCode() << 31) | (getWantsPackagePrefix() ? 0x8000 : 0) | inputsHash;
   }
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() +
-            " for " +
-            getPath().toString() +
-            (wantsPackagePrefix ? " wanting a package prefix" : "") +
-            " covering " +
-            getInputs();
+    return getClass().getSimpleName()
+        + " for "
+        + getPath().toString()
+        + (wantsPackagePrefix ? " wanting a package prefix" : "")
+        + " covering "
+        + getInputs();
   }
 
   public static ImmutableSortedSet<Path> combineInputs(IjFolder first, IjFolder second) {
     return ImmutableSortedSet.<Path>naturalOrder()
-              .addAll(first.getInputs())
-              .addAll(second.getInputs())
-              .build();
+        .addAll(first.getInputs())
+        .addAll(second.getInputs())
+        .build();
   }
-
 }

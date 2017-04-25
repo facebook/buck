@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -64,10 +63,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   @Override
   public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
-    BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
-        targetNode.getBuildTarget());
-    Optional<BuildRule> dummyRDotJavaRule =
-        buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
+    BuildTarget dummyRDotJavaTarget =
+        AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(targetNode.getBuildTarget());
+    Optional<BuildRule> dummyRDotJavaRule = buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
     if (dummyRDotJavaRule.isPresent()) {
       requiredBuildTargets.add(dummyRDotJavaTarget);
       return Optional.of(
@@ -77,8 +75,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   }
 
   @Override
-  public Path getAndroidManifestPath(
-      TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
+  public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
     return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().manifest);
   }
 
@@ -86,9 +83,10 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
-    Optional<Path> defaultAndroidManifestPath = projectConfig.getAndroidManifest()
-        .map(Path::toAbsolutePath);
-    return manifestPath.map(sourcePathResolver::getAbsolutePath)
+    Optional<Path> defaultAndroidManifestPath =
+        projectConfig.getAndroidManifest().map(Path::toAbsolutePath);
+    return manifestPath
+        .map(sourcePathResolver::getAbsolutePath)
         .map(Optional::of)
         .orElse(defaultAndroidManifestPath);
   }
@@ -96,32 +94,24 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getProguardConfigPath(
       TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-    return targetNode
-        .getConstructorArg()
-        .proguardConfig.map(this::getRelativePathAndRecordRule);
+    return targetNode.getConstructorArg().proguardConfig.map(this::getRelativePathAndRecordRule);
   }
 
   @Override
   public Optional<Path> getAndroidResourcePath(
       TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-    return AndroidResourceDescription.getResDirectoryForProject(
-        buildRuleResolver,
-        targetNode)
+    return AndroidResourceDescription.getResDirectoryForProject(buildRuleResolver, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }
 
   @Override
-  public Optional<Path> getAssetsPath(
-      TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
-    return AndroidResourceDescription.getAssetsDirectoryForProject(
-        buildRuleResolver,
-        targetNode)
+  public Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+    return AndroidResourceDescription.getAssetsDirectoryForProject(buildRuleResolver, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }
 
   @Override
-  public Optional<Path> getAnnotationOutputPath(
-      TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+  public Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode) {
     AnnotationProcessingParams annotationProcessingParams =
         targetNode
             .getConstructorArg()
@@ -139,8 +129,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
-        OptionalCompat.asSet(ruleFinder.getRule(sourcePath)
-            .map(BuildRule::getBuildTarget)));
+        OptionalCompat.asSet(ruleFinder.getRule(sourcePath).map(BuildRule::getBuildTarget)));
     return sourcePathResolver.getRelativePath(sourcePath);
   }
 }

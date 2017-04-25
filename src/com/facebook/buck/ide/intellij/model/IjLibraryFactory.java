@@ -17,21 +17,17 @@
 package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.rules.TargetNode;
-
 import java.util.Optional;
 
-/**
- * Interface for building {@link IjLibrary} objects from {@link TargetNode}s.
- */
+/** Interface for building {@link IjLibrary} objects from {@link TargetNode}s. */
 public abstract class IjLibraryFactory {
 
   /**
    * Creates an IjLibrary.
    *
    * @param target target to create it from.
-   * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or
-   *   if the target's output is a .jar an instance is returned.
+   * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or if
+   *     the target's output is a .jar an instance is returned.
    */
   public abstract Optional<IjLibrary> getLibrary(TargetNode<?, ?> target);
-
 }

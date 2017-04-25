@@ -21,14 +21,17 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
 /**
- * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the
- * {@link IjModule} being constructed.
+ * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the {@link
+ * IjModule} being constructed.
  *
  * @param <T> TargetNode type.
  */
 public interface IjModuleRule<T> {
   Class<? extends Description<?>> getDescriptionClass();
+
   void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
+
   IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
+
   void applyDuringAggregation(AggregationContext context, TargetNode<T, ?> targetNode);
 }

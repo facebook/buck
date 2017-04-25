@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-
 import java.util.Collection;
 import java.util.Optional;
 
@@ -37,9 +36,7 @@ public class JavaLibraryRuleHelper {
   }
 
   public static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
-      IjProjectConfig projectConfig,
-      TargetNode<T, ?> targetNode,
-      ModuleBuildContext context) {
+      IjProjectConfig projectConfig, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
     if (projectConfig.isExcludeArtifactsEnabled()) {
       return;
     }
@@ -53,8 +50,7 @@ public class JavaLibraryRuleHelper {
   }
 
   public static <T extends JavaLibraryDescription.Arg> Optional<String> getLanguageLevel(
-      IjProjectConfig projectConfig,
-      TargetNode<T, ?> targetNode) {
+      IjProjectConfig projectConfig, TargetNode<T, ?> targetNode) {
 
     JavaLibraryDescription.Arg arg = targetNode.getConstructorArg();
 
@@ -63,8 +59,8 @@ public class JavaLibraryRuleHelper {
       String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
       String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
       boolean languageLevelsAreDifferent =
-          !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
-              !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
+          !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel))
+              || !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
       if (languageLevelsAreDifferent) {
         return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.source.get()));
       }
@@ -73,6 +69,5 @@ public class JavaLibraryRuleHelper {
     return Optional.empty();
   }
 
-  private JavaLibraryRuleHelper() {
-  }
+  private JavaLibraryRuleHelper() {}
 }

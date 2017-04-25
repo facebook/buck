@@ -23,14 +23,11 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * Calculates the transitive closure of exported deps for every node in a {@link TargetGraph}.
- */
+/** Calculates the transitive closure of exported deps for every node in a {@link TargetGraph}. */
 public class ExportedDepsClosureResolver {
 
   private TargetGraph targetGraph;
@@ -43,8 +40,8 @@ public class ExportedDepsClosureResolver {
 
   /**
    * @param buildTarget target to process.
-   * @return the set of {@link BuildTarget}s that must be appended to the
-   *         dependencies of a node Y if node Y depends on X.
+   * @return the set of {@link BuildTarget}s that must be appended to the dependencies of a node Y
+   *     if node Y depends on X.
    */
   public ImmutableSet<BuildTarget> getExportedDepsClosure(BuildTarget buildTarget) {
     if (index.containsKey(buildTarget)) {
@@ -62,16 +59,14 @@ public class ExportedDepsClosureResolver {
       exportedDeps = arg.exportedDeps;
     }
 
-    ImmutableSet<BuildTarget> exportedDepsClosure = exportedDeps
-        .stream()
-        .flatMap(target ->
-            Stream.concat(
-                Stream.of(target),
-                getExportedDepsClosure(target).stream()))
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<BuildTarget> exportedDepsClosure =
+        exportedDeps
+            .stream()
+            .flatMap(
+                target -> Stream.concat(Stream.of(target), getExportedDepsClosure(target).stream()))
+            .collect(MoreCollectors.toImmutableSet());
 
     index.put(buildTarget, exportedDepsClosure);
     return exportedDepsClosure;
   }
-
 }

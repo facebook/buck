@@ -19,14 +19,12 @@ package com.facebook.buck.ide.intellij.aggregation;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Collection;
 
 class ModuleAggregator {
 
-  private ModuleAggregator() {
-  }
+  private ModuleAggregator() {}
 
   public static AggregationModule aggregate(
       AggregationModule rootModule,
@@ -37,12 +35,12 @@ class ModuleAggregator {
         ImmutableSet.<TargetNode<?, ?>>builder().addAll(rootModule.getTargets());
     modulesToAggregate.forEach(module -> targets.addAll(module.getTargets()));
 
-    ImmutableSet.Builder<Path> excludesBuilder =
-        ImmutableSet.<Path>builder().addAll(excludes);
-    modulesToAggregate.forEach(module -> {
-      Path modulePath = rootModule.getModuleBasePath().relativize(module.getModuleBasePath());
-      module.getExcludes().stream().map(modulePath::resolve).forEach(excludesBuilder::add);
-    });
+    ImmutableSet.Builder<Path> excludesBuilder = ImmutableSet.<Path>builder().addAll(excludes);
+    modulesToAggregate.forEach(
+        module -> {
+          Path modulePath = rootModule.getModuleBasePath().relativize(module.getModuleBasePath());
+          module.getExcludes().stream().map(modulePath::resolve).forEach(excludesBuilder::add);
+        });
 
     return AggregationModule.builder()
         .from(rootModule)

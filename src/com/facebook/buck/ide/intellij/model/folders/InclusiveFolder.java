@@ -17,12 +17,9 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A path which contains a set of sources we wish to present to IntelliJ.
- */
+/** A path which contains a set of sources we wish to present to IntelliJ. */
 public abstract class InclusiveFolder extends IjFolder {
 
   private static final String FOLDER_IJ_NAME = "sourceFolder";
@@ -39,9 +36,7 @@ public abstract class InclusiveFolder extends IjFolder {
     super(path);
   }
 
-  /**
-   * @return name IntelliJ would use to refer to this type of folder.
-   */
+  /** @return name IntelliJ would use to refer to this type of folder. */
   @Override
   public String getIjName() {
     return FOLDER_IJ_NAME;

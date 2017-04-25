@@ -20,12 +20,9 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Represents the dependencies of an {@link IjModule} in a form intended to be consumable by the
@@ -33,9 +30,7 @@ import javax.annotation.Nullable;
  */
 public class IjDependencyListBuilder {
 
-  /**
-   * Set of scopes supported by IntelliJ for the "orderEntry" element.
-   */
+  /** Set of scopes supported by IntelliJ for the "orderEntry" element. */
   public enum Scope {
     COMPILE("COMPILE"),
     PROVIDED("PROVIDED"),
@@ -43,6 +38,7 @@ public class IjDependencyListBuilder {
     TEST("TEST");
 
     private final String value;
+
     Scope(String value) {
       this.value = value;
     }
@@ -53,14 +49,13 @@ public class IjDependencyListBuilder {
     }
   }
 
-  /**
-   * Set of types supported by IntelliJ for the "orderEntry" element.
-   */
+  /** Set of types supported by IntelliJ for the "orderEntry" element. */
   public enum Type {
     MODULE("module"),
     LIBRARY("library");
 
     private final String value;
+
     Type(String value) {
       this.value = value;
     }
@@ -85,10 +80,11 @@ public class IjDependencyListBuilder {
    */
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractDependencyEntry
-      implements Comparable<AbstractDependencyEntry> {
+  abstract static class AbstractDependencyEntry implements Comparable<AbstractDependencyEntry> {
     protected abstract Optional<DependencyEntryData> getData();
+
     protected abstract Type getType();
+
     protected abstract SortOrder getSortOrder();
 
     @Nullable
@@ -138,7 +134,9 @@ public class IjDependencyListBuilder {
   @BuckStyleImmutable
   abstract static class AbstractDependencyEntryData {
     public abstract String getName();
+
     public abstract Scope getScope();
+
     public abstract boolean getExported();
   }
 
@@ -153,7 +151,8 @@ public class IjDependencyListBuilder {
         DependencyEntry.builder()
             .setType(Type.MODULE)
             .setSortOrder(SortOrder.MODULE)
-            .setData(DependencyEntryData.builder()
+            .setData(
+                DependencyEntryData.builder()
                     .setName(name)
                     .setScope(scope)
                     .setExported(exported)
@@ -166,7 +165,8 @@ public class IjDependencyListBuilder {
         DependencyEntry.builder()
             .setType(Type.LIBRARY)
             .setSortOrder(SortOrder.COMPILED_SHADOW)
-            .setData(DependencyEntryData.builder()
+            .setData(
+                DependencyEntryData.builder()
                     .setName(name)
                     .setScope(Scope.PROVIDED)
                     .setExported(true)
@@ -179,7 +179,8 @@ public class IjDependencyListBuilder {
         DependencyEntry.builder()
             .setType(Type.LIBRARY)
             .setSortOrder(SortOrder.LIBRARY)
-            .setData(DependencyEntryData.builder()
+            .setData(
+                DependencyEntryData.builder()
                     .setName(name)
                     .setScope(scope)
                     .setExported(exported)

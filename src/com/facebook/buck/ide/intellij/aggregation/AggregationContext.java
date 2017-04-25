@@ -17,7 +17,6 @@
 package com.facebook.buck.ide.intellij.aggregation;
 
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,10 +25,10 @@ public class AggregationContext {
   /**
    * Contains arbitrary information that defines the type of the module.
    *
-   * This information is used to distinguish modules of different types. If two modules contain
+   * <p>This information is used to distinguish modules of different types. If two modules contain
    * the same data in module info they can be aggregated into one module.
    *
-   * Build targets can provide different data depending on their type. For example, Java modules
+   * <p>Build targets can provide different data depending on their type. For example, Java modules
    * can put Java language level in this map to avoid aggregating modules with different language
    * levels into one module.
    */

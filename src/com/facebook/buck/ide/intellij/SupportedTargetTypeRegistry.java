@@ -46,29 +46,27 @@ import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class SupportedTargetTypeRegistry {
-  /**
-   * These target types are mapped onto .iml module files.
-   */
+  /** These target types are mapped onto .iml module files. */
   private static final ImmutableSet<Class<? extends Description<?>>>
-      SUPPORTED_MODULE_DESCRIPTION_CLASSES = ImmutableSet.of(
-          AndroidBinaryDescription.class,
-          AndroidLibraryDescription.class,
-          AndroidResourceDescription.class,
-          CxxLibraryDescription.class,
-          JavaBinaryDescription.class,
-          JavaLibraryDescription.class,
-          JavaTestDescription.class,
-          RobolectricTestDescription.class,
-          GroovyLibraryDescription.class,
-          GroovyTestDescription.class,
-          KotlinLibraryDescription.class,
-          KotlinTestDescription.class);
+      SUPPORTED_MODULE_DESCRIPTION_CLASSES =
+          ImmutableSet.of(
+              AndroidBinaryDescription.class,
+              AndroidLibraryDescription.class,
+              AndroidResourceDescription.class,
+              CxxLibraryDescription.class,
+              JavaBinaryDescription.class,
+              JavaLibraryDescription.class,
+              JavaTestDescription.class,
+              RobolectricTestDescription.class,
+              GroovyLibraryDescription.class,
+              GroovyTestDescription.class,
+              KotlinLibraryDescription.class,
+              KotlinTestDescription.class);
 
   public static boolean isTargetTypeSupported(Class<?> descriptionClass) {
     return SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(descriptionClass);
@@ -85,35 +83,23 @@ public class SupportedTargetTypeRegistry {
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
-    addToIndex(new AndroidBinaryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new AndroidLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new AndroidResourceModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
+    addToIndex(
+        new AndroidBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(
+        new AndroidLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(
+        new AndroidResourceModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new RobolectricTestModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
-    addToIndex(new GroovyLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
+    addToIndex(
+        new RobolectricTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(
+        new GroovyLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new GroovyTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new KotlinLibraryModuleRule(
-        projectFilesystem,
-        moduleFactoryResolver,
-        projectConfig));
+    addToIndex(
+        new KotlinLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
 
     Preconditions.checkState(areTargetTypesEqual(moduleRuleIndex.keySet()));

@@ -20,12 +20,9 @@ import com.facebook.infer.annotation.PropagatesNullable;
 
 public final class JavaLanguageLevelHelper {
 
-  private JavaLanguageLevelHelper() {
-  }
+  private JavaLanguageLevelHelper() {}
 
-  /**
-   * Ensures that source level has format "majorVersion.minorVersion".
-   */
+  /** Ensures that source level has format "majorVersion.minorVersion". */
   public static String normalizeSourceLevel(String jdkVersion) {
     if (jdkVersion.length() == 1) {
       return "1." + jdkVersion;

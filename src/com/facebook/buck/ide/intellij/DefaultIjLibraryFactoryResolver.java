@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -58,8 +57,7 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
     if (rule.isPresent()) {
       requiredBuildTargets.add(rule.get().getBuildTarget());
     }
-    return projectFilesystem.getRootPath().relativize(
-        sourcePathResolver.getAbsolutePath(path));
+    return projectFilesystem.getRootPath().relativize(sourcePathResolver.getAbsolutePath(path));
   }
 
   @Override

@@ -16,21 +16,19 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /**
  * Represents a module during aggregation.
  *
- * This module is used only for aggregation and discarded after. It contains a minimal information
- * necessary to create {@link IjModule}.
+ * <p>This module is used only for aggregation and discarded after. It contains a minimal
+ * information necessary to create {@link IjModule}.
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -40,21 +38,19 @@ abstract class AbstractAggregationModule {
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
-   * corresponding .iml file is located.
+   *     corresponding .iml file is located.
    */
   public abstract Path getModuleBasePath();
 
   /**
    * Uniquely identifies the type of this module for aggregation purpose.
    *
-   * Modules with the same aggregation tag can be aggregated into one module.
+   * <p>Modules with the same aggregation tag can be aggregated into one module.
    */
   public abstract String getAggregationTag();
 
   public abstract IjModuleType getModuleType();
 
-  /**
-   * A set of paths that need to be excluded from the final {@link IjModule}.
-   */
+  /** A set of paths that need to be excluded from the final {@link IjModule}. */
   public abstract ImmutableSet<Path> getExcludes();
 }

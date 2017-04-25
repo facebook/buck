@@ -34,7 +34,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -51,8 +50,8 @@ public final class IjModuleGraphFactory {
    *
    * @param targetGraph graph whose nodes will be converted to {@link IjModule}s.
    * @return map which for every BuildTarget points to the corresponding IjModule. Multiple
-   * BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which
-   * can't be prepresented in IntelliJ are missing from this mapping.
+   *     BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which can't be
+   *     prepresented in IntelliJ are missing from this mapping.
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       ProjectFilesystem projectFilesystem,
@@ -61,23 +60,26 @@ public final class IjModuleGraphFactory {
       AggregationModuleFactory aggregationModuleFactory,
       final int minimumPathDepth) {
 
-    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap = targetGraph.getNodes()
-        .stream()
-        .filter(input -> SupportedTargetTypeRegistry.isTargetTypeSupported(
-            input.getDescription().getClass()))
-        // IntelliJ doesn't support referring to source files which aren't below the root of the
-        // project. Filter out those cases proactively, so that we don't try to resolve files
-        // relative to the wrong ProjectFilesystem.
-        // Maybe one day someone will fix this.
-        .filter(targetNode -> isInRootCell(projectFilesystem, targetNode))
-        .collect(
-            MoreCollectors.toImmutableListMultimap(
-                targetNode -> targetNode.getBuildTarget().getBasePath(),
-                targetNode -> targetNode));
+    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
+        targetGraph
+            .getNodes()
+            .stream()
+            .filter(
+                input ->
+                    SupportedTargetTypeRegistry.isTargetTypeSupported(
+                        input.getDescription().getClass()))
+            // IntelliJ doesn't support referring to source files which aren't below the root of the
+            // project. Filter out those cases proactively, so that we don't try to resolve files
+            // relative to the wrong ProjectFilesystem.
+            // Maybe one day someone will fix this.
+            .filter(targetNode -> isInRootCell(projectFilesystem, targetNode))
+            .collect(
+                MoreCollectors.toImmutableListMultimap(
+                    targetNode -> targetNode.getBuildTarget().getBasePath(),
+                    targetNode -> targetNode));
 
-    AggregationTree aggregationTree = createAggregationTree(
-        aggregationModuleFactory,
-        baseTargetPathMultimap);
+    AggregationTree aggregationTree =
+        createAggregationTree(aggregationModuleFactory, baseTargetPathMultimap);
 
     aggregationTree.aggregateModules(minimumPathDepth);
 
@@ -87,13 +89,17 @@ public final class IjModuleGraphFactory {
         .getModules()
         .stream()
         .filter(aggregationModule -> !aggregationModule.getTargets().isEmpty())
-        .forEach(aggregationModule -> {
-          IjModule module = moduleFactory.createModule(
-              aggregationModule.getModuleBasePath(),
-              aggregationModule.getTargets(),
-              aggregationModule.getExcludes());
-          module.getTargets().forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
-        });
+        .forEach(
+            aggregationModule -> {
+              IjModule module =
+                  moduleFactory.createModule(
+                      aggregationModule.getModuleBasePath(),
+                      aggregationModule.getTargets(),
+                      aggregationModule.getExcludes());
+              module
+                  .getTargets()
+                  .forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+            });
 
     return moduleByBuildTarget.build();
   }
@@ -101,24 +107,25 @@ public final class IjModuleGraphFactory {
   private static AggregationTree createAggregationTree(
       AggregationModuleFactory aggregationModuleFactory,
       ImmutableListMultimap<Path, TargetNode<?, ?>> targetNodesByBasePath) {
-    Map<Path, AggregationModule> pathToAggregationModuleMap = targetNodesByBasePath
-        .asMap()
-        .entrySet()
-        .stream()
-        .collect(
-            MoreCollectors.toImmutableMap(
-                Map.Entry::getKey,
-                pathWithTargetNode -> aggregationModuleFactory.createAggregationModule(
-                    pathWithTargetNode.getKey(),
-                    ImmutableSet.copyOf(pathWithTargetNode.getValue()))));
+    Map<Path, AggregationModule> pathToAggregationModuleMap =
+        targetNodesByBasePath
+            .asMap()
+            .entrySet()
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(
+                    Map.Entry::getKey,
+                    pathWithTargetNode ->
+                        aggregationModuleFactory.createAggregationModule(
+                            pathWithTargetNode.getKey(),
+                            ImmutableSet.copyOf(pathWithTargetNode.getValue()))));
 
     Path rootPath = Paths.get("");
 
     AggregationModule rootAggregationModule = pathToAggregationModuleMap.get(rootPath);
     if (rootAggregationModule == null) {
-      rootAggregationModule = aggregationModuleFactory.createAggregationModule(
-          rootPath,
-          ImmutableSet.of());
+      rootAggregationModule =
+          aggregationModuleFactory.createAggregationModule(rootPath, ImmutableSet.of());
     }
 
     AggregationTree aggregationTree = new AggregationTree(rootAggregationModule);
@@ -138,9 +145,9 @@ public final class IjModuleGraphFactory {
    * @param libraryFactory library factory.
    * @param moduleFactory module factory.
    * @return module graph corresponding to the supplied {@link TargetGraph}. Multiple targets from
-   * the same base path are mapped to a single module, therefore an IjModuleGraph edge
-   * exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
-   * nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
+   *     the same base path are mapped to a single module, therefore an IjModuleGraph edge exists
+   *     between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of nodes (Ta, Tb)
+   *     and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
       final ProjectFilesystem projectFilesystem,
@@ -179,35 +186,36 @@ public final class IjModuleGraphFactory {
             depElements = ImmutableSet.of();
           }
         } else {
-          depElements = Stream
-              .concat(
-                  exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
-                  Stream.of(depBuildTarget))
-              .filter(input -> {
-                TargetNode<?, ?> targetNode = targetGraph.get(input);
-                // IntelliJ doesn't support referring to source files which aren't below the root of
-                // the project. Filter out those cases proactively, so that we don't try to resolve
-                // files relative to the wrong ProjectFilesystem.
-                // Maybe one day someone will fix this.
-                return isInRootCell(projectFilesystem, targetNode);
-              })
-              .filter(
-                  input -> {
-                    // The exported deps closure can contain references back to targets contained
-                    // in the module, so filter those out.
-                    return !module.getTargets().contains(input);
-                  })
-              .map(
-                  depTarget-> {
-                    IjModule depModule = rulesToModules.get(depTarget);
-                    if (depModule != null) {
-                      return depModule;
-                    }
-                    TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
-                    return libraryFactory.getLibrary(targetNode).orElse(null);
-                  })
-              .filter(Objects::nonNull)
-              .collect(MoreCollectors.toImmutableSet());
+          depElements =
+              Stream.concat(
+                      exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
+                      Stream.of(depBuildTarget))
+                  .filter(
+                      input -> {
+                        TargetNode<?, ?> targetNode = targetGraph.get(input);
+                        // IntelliJ doesn't support referring to source files which aren't below the root of
+                        // the project. Filter out those cases proactively, so that we don't try to resolve
+                        // files relative to the wrong ProjectFilesystem.
+                        // Maybe one day someone will fix this.
+                        return isInRootCell(projectFilesystem, targetNode);
+                      })
+                  .filter(
+                      input -> {
+                        // The exported deps closure can contain references back to targets contained
+                        // in the module, so filter those out.
+                        return !module.getTargets().contains(input);
+                      })
+                  .map(
+                      depTarget -> {
+                        IjModule depModule = rulesToModules.get(depTarget);
+                        if (depModule != null) {
+                          return depModule;
+                        }
+                        TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+                        return libraryFactory.getLibrary(targetNode).orElse(null);
+                      })
+                  .filter(Objects::nonNull)
+                  .collect(MoreCollectors.toImmutableSet());
         }
 
         for (IjProjectElement depElement : depElements) {
@@ -217,15 +225,17 @@ public final class IjModuleGraphFactory {
       }
 
       if (!module.getExtraClassPathDependencies().isEmpty()) {
-        IjLibrary extraClassPathLibrary = IjLibrary.builder()
-            .setClassPaths(module.getExtraClassPathDependencies())
-            .setTargets(ImmutableSet.of())
-            .setName("library_" + module.getName() + "_extra_classpath")
-            .build();
+        IjLibrary extraClassPathLibrary =
+            IjLibrary.builder()
+                .setClassPaths(module.getExtraClassPathDependencies())
+                .setTargets(ImmutableSet.of())
+                .setName("library_" + module.getName() + "_extra_classpath")
+                .build();
         moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
       }
 
-      moduleDeps.keySet()
+      moduleDeps
+          .keySet()
           .stream()
           .filter(dep -> dep instanceof IjLibrary)
           .map(library -> (IjLibrary) library)
@@ -240,11 +250,9 @@ public final class IjModuleGraphFactory {
   }
 
   private static boolean isInRootCell(
-      ProjectFilesystem projectFilesystem,
-      TargetNode<?, ?> targetNode) {
+      ProjectFilesystem projectFilesystem, TargetNode<?, ?> targetNode) {
     return targetNode.getFilesystem().equals(projectFilesystem);
   }
 
-  private IjModuleGraphFactory() {
-  }
+  private IjModuleGraphFactory() {}
 }

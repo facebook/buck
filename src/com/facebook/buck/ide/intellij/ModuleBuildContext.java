@@ -19,8 +19,8 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
-import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
@@ -30,15 +30,12 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Holds all of the mutable state required during {@link IjModule} creation.
- */
+/** Holds all of the mutable state required during {@link IjModule} creation. */
 public class ModuleBuildContext {
 
   private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
@@ -135,8 +132,8 @@ public class ModuleBuildContext {
   }
 
   /**
-   * Adds a source folder to the context. If a folder with the same path has already been added
-   * the types of the two folders will be merged.
+   * Adds a source folder to the context. If a folder with the same path has already been added the
+   * types of the two folders will be merged.
    *
    * @param folder folder to add/merge.
    */
@@ -150,13 +147,12 @@ public class ModuleBuildContext {
   }
 
   private IjFolder mergeAllowingTestToBePromotedToSource(IjFolder from, IjFolder to) {
-    if ((from instanceof TestFolder && to instanceof SourceFolder) ||
-        (to instanceof TestFolder && from instanceof SourceFolder)) {
+    if ((from instanceof TestFolder && to instanceof SourceFolder)
+        || (to instanceof TestFolder && from instanceof SourceFolder)) {
       return new SourceFolder(
           to.getPath(),
           from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),
-          IjFolder.combineInputs(from, to)
-      );
+          IjFolder.combineInputs(from, to));
     }
 
     Preconditions.checkArgument(from.getClass() == to.getClass());
@@ -164,26 +160,21 @@ public class ModuleBuildContext {
     return from.merge(to);
   }
 
-  public void addDeps(
-      Iterable<BuildTarget> buildTargets,
-      DependencyType dependencyType) {
+  public void addDeps(Iterable<BuildTarget> buildTargets, DependencyType dependencyType) {
     addDeps(ImmutableSet.of(), buildTargets, dependencyType);
   }
 
   public void addCompileShadowDep(BuildTarget buildTarget) {
-    DependencyType.putWithMerge(
-        dependencyTypeMap,
-        buildTarget,
-        DependencyType.COMPILED_SHADOW);
+    DependencyType.putWithMerge(dependencyTypeMap, buildTarget, DependencyType.COMPILED_SHADOW);
   }
 
   /**
-   * Record a dependency on a {@link BuildTarget}. The dependency's type will be merged if
-   * multiple {@link TargetNode}s refer to it or if multiple TargetNodes include sources from
-   * the same directory.
+   * Record a dependency on a {@link BuildTarget}. The dependency's type will be merged if multiple
+   * {@link TargetNode}s refer to it or if multiple TargetNodes include sources from the same
+   * directory.
    *
-   * @param sourcePaths the {@link Path}s to sources which need this dependency to build.
-   *                    Can be empty.
+   * @param sourcePaths the {@link Path}s to sources which need this dependency to build. Can be
+   *     empty.
    * @param buildTargets the {@link BuildTarget}s to depend on
    * @param dependencyType what is the dependency needed for.
    */
@@ -219,9 +210,9 @@ public class ModuleBuildContext {
     Map<BuildTarget, DependencyType> result = new HashMap<>(dependencyTypeMap);
     for (Path path : dependencyOriginMap.keySet()) {
       DependencyType dependencyType =
-          Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder ?
-              DependencyType.TEST :
-              DependencyType.PROD;
+          Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder
+              ? DependencyType.TEST
+              : DependencyType.PROD;
       for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {
         DependencyType.putWithMerge(result, buildTarget, dependencyType);
       }

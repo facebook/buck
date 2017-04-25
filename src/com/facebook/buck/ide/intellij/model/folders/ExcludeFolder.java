@@ -17,20 +17,18 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A path which contains a set of sources we wish to present to IntelliJ.
- */
+/** A path which contains a set of sources we wish to present to IntelliJ. */
 public class ExcludeFolder extends IjFolder {
 
-  public static final IJFolderFactory FACTORY = (path, wantsPrefix, inputs) -> {
-    if (wantsPrefix) {
-      throw new IllegalArgumentException("ExcludeFolder does not support prefixes");
-    }
-    return new ExcludeFolder(path, inputs);
-  };
+  public static final IJFolderFactory FACTORY =
+      (path, wantsPrefix, inputs) -> {
+        if (wantsPrefix) {
+          throw new IllegalArgumentException("ExcludeFolder does not support prefixes");
+        }
+        return new ExcludeFolder(path, inputs);
+      };
 
   private static final String FOLDER_IJ_NAME = "excludeFolder";
 
@@ -47,9 +45,7 @@ public class ExcludeFolder extends IjFolder {
     return FACTORY;
   }
 
-  /**
-   * @return name IntelliJ would use to refer to this type of folder.
-   */
+  /** @return name IntelliJ would use to refer to this type of folder. */
   @Override
   public String getIjName() {
     return FOLDER_IJ_NAME;

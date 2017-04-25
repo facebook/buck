@@ -21,19 +21,16 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.rules.TargetNode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
- */
+/** Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project. */
 public interface IjModuleFactoryResolver {
   /**
    * @param targetNode node to generate the path to
-   * @return  the project-relative path to a directory structure under which the R.class file can
-   *     be found (the structure will be the same as the package path of the R class). A path
-   *     should be returned only if the given TargetNode requires the R.class to compile.
+   * @return the project-relative path to a directory structure under which the R.class file can be
+   *     found (the structure will be the same as the package path of the R class). A path should be
+   *     returned only if the given TargetNode requires the R.class to compile.
    */
   Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode);
 
@@ -71,7 +68,7 @@ public interface IjModuleFactoryResolver {
   /**
    * @param targetNode node which may use annotation processors.
    * @return path to the annotation processor output if any annotation proceessors are configured
-   *        for the given node.
+   *     for the given node.
    */
   Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
 }

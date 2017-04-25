@@ -22,16 +22,12 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
-
-import org.stringtemplate.v4.ST;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.stringtemplate.v4.ST;
 
-/**
- * Writes the serialized representations of IntelliJ project components to disk.
- */
+/** Writes the serialized representations of IntelliJ project components to disk. */
 public class IjProjectWriter {
 
   private IjProjectTemplateDataPreparer projectDataPreparer;
@@ -69,34 +65,22 @@ public class IjProjectWriter {
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
 
+    moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
+    moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
     moduleContents.add(
-        "contentRoot",
-        projectDataPreparer.getContentRoot(module));
-    moduleContents.add(
-        "dependencies",
-        projectDataPreparer.getDependencies(module));
-    moduleContents.add(
-        "generatedSourceFolders",
-        projectDataPreparer.getGeneratedSourceFolders(module));
-    moduleContents.add(
-        "androidFacet",
-        projectDataPreparer.getAndroidProperties(module));
-    moduleContents.add(
-        "sdk",
-        module.getModuleType().getSdkName(projectConfig).orElse(null));
-    moduleContents.add(
-        "sdkType",
-        module.getModuleType().getSdkType(projectConfig));
+        "generatedSourceFolders", projectDataPreparer.getGeneratedSourceFolders(module));
+    moduleContents.add("androidFacet", projectDataPreparer.getAndroidProperties(module));
+    moduleContents.add("sdk", module.getModuleType().getSdkName(projectConfig).orElse(null));
+    moduleContents.add("sdkType", module.getModuleType().getSdkType(projectConfig));
     moduleContents.add(
         "languageLevel",
         JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(
             module.getLanguageLevel().orElse(null)));
-    moduleContents.add(
-        "moduleType",
-        module.getModuleType().getImlModuleType());
+    moduleContents.add("moduleType", module.getModuleType().getImlModuleType());
     moduleContents.add(
         "metaInfDirectory",
-        module.getMetaInfDirectory()
+        module
+            .getMetaInfDirectory()
             .map((dir) -> module.getModuleBasePath().relativize(dir))
             .orElse(null));
 
@@ -104,9 +88,8 @@ public class IjProjectWriter {
     return path;
   }
 
-  private void writeProjectSettings(
-      IJProjectCleaner cleaner,
-      IjProjectConfig projectConfig) throws IOException {
+  private void writeProjectSettings(IJProjectCleaner cleaner, IjProjectConfig projectConfig)
+      throws IOException {
 
     Optional<String> sdkName = projectConfig.getProjectJdkName();
     Optional<String> sdkType = projectConfig.getProjectJdkType();
@@ -136,10 +119,8 @@ public class IjProjectWriter {
     if (languageLevelFromConfig.isPresent()) {
       return languageLevelFromConfig.get();
     } else {
-      String languageLevel = projectConfig
-          .getJavaBuckConfig()
-          .getDefaultJavacOptions()
-          .getSourceLevel();
+      String languageLevel =
+          projectConfig.getJavaBuckConfig().getDefaultJavacOptions().getSourceLevel();
       return JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(languageLevel);
     }
   }
@@ -155,16 +136,16 @@ public class IjProjectWriter {
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
     contents.add("name", library.getName());
     contents.add(
-        "binaryJar",
-        library.getBinaryJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
+        "binaryJar", library.getBinaryJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
     contents.add(
         "classPaths",
-        library.getClassPaths().stream()
+        library
+            .getClassPaths()
+            .stream()
             .map(MorePaths::pathWithUnixSeparators)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
-        "sourceJar",
-        library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
+        "sourceJar", library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
     contents.add("javadocUrl", library.getJavadocUrl().orElse(null));
     //TODO(mkosiba): support res and assets for aar.
 

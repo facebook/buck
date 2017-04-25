@@ -20,14 +20,11 @@ import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-
-import org.stringtemplate.v4.ST;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
+import org.stringtemplate.v4.ST;
 
 public class PregeneratedCodeWriter {
 
@@ -37,7 +34,8 @@ public class PregeneratedCodeWriter {
 
   public PregeneratedCodeWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
-      IjProjectConfig projectConfig, ProjectFilesystem projectFilesystem) {
+      IjProjectConfig projectConfig,
+      ProjectFilesystem projectFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
@@ -53,9 +51,8 @@ public class PregeneratedCodeWriter {
     }
   }
 
-  private void writeClassesGeneratedByIdea(
-      IjModule module,
-      IJProjectCleaner cleaner) throws IOException {
+  private void writeClassesGeneratedByIdea(IjModule module, IJProjectCleaner cleaner)
+      throws IOException {
     Optional<IjModuleAndroidFacet> androidFacet = module.getAndroidFacet();
     if (!androidFacet.isPresent()) {
       return;
@@ -73,19 +70,10 @@ public class PregeneratedCodeWriter {
         "BuildConfig",
         "  public final static boolean DEBUG = Boolean.parseBoolean(null);");
 
-    writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        cleaner,
-        packageName.get(),
-        "R",
-        null);
+    writeGeneratedByIdeaClassToFile(androidFacet.get(), cleaner, packageName.get(), "R", null);
 
     writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        cleaner,
-        packageName.get(),
-        "Manifest",
-        null);
+        androidFacet.get(), cleaner, packageName.get(), "Manifest", null);
   }
 
   private void writeGeneratedByIdeaClassToFile(
@@ -93,26 +81,28 @@ public class PregeneratedCodeWriter {
       IJProjectCleaner cleaner,
       String packageName,
       String className,
-      @Nullable String content) throws IOException {
+      @Nullable String content)
+      throws IOException {
 
-    ST contents = StringTemplateFile.GENERATED_BY_IDEA_CLASS.getST()
-        .add("package", packageName)
-        .add("className", className)
-        .add("content", content);
+    ST contents =
+        StringTemplateFile.GENERATED_BY_IDEA_CLASS
+            .getST()
+            .add("package", packageName)
+            .add("className", className)
+            .add("content", content);
 
-    Path fileToWrite = androidFacet
-        .getGeneratedSourcePath()
-        .resolve(packageName.replace('.', '/'))
-        .resolve(className + ".java");
+    Path fileToWrite =
+        androidFacet
+            .getGeneratedSourcePath()
+            .resolve(packageName.replace('.', '/'))
+            .resolve(className + ".java");
 
     cleaner.doNotDelete(fileToWrite);
 
     StringTemplateFile.writeToFile(projectFilesystem, contents, fileToWrite);
   }
 
-  private Optional<String> getResourcePackage(
-      IjModule module,
-      IjModuleAndroidFacet androidFacet) {
+  private Optional<String> getResourcePackage(IjModule module, IjModuleAndroidFacet androidFacet) {
     Optional<String> packageName = androidFacet.getPackageName();
     if (!packageName.isPresent()) {
       packageName = projectDataPreparer.getFirstResourcePackageFromDependencies(module);

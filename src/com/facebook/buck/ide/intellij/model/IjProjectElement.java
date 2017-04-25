@@ -20,21 +20,15 @@ import com.facebook.buck.ide.intellij.IjDependencyListBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * Common interface shared between {@link IjModule} and {@link IjLibrary}.
- */
+/** Common interface shared between {@link IjModule} and {@link IjLibrary}. */
 public interface IjProjectElement {
 
-  /**
-   * @return unique string identifying the element. This will be used by modules to refer to it.
-   */
+  /** @return unique string identifying the element. This will be used by modules to refer to it. */
   String getName();
 
-  /**
-   * @return set of targets this element corresponds to in the IntelliJ project.
-   */
+  /** @return set of targets this element corresponds to in the IntelliJ project. */
   ImmutableSet<BuildTarget> getTargets();
 
-  void addAsDependency(DependencyType dependencyType,
-      IjDependencyListBuilder dependencyListBuilder);
+  void addAsDependency(
+      DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder);
 }

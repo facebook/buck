@@ -19,12 +19,9 @@ package com.facebook.buck.ide.intellij.lang.android;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A path which contains a set of sources we wish to present to IntelliJ.
- */
+/** A path which contains a set of sources we wish to present to IntelliJ. */
 public class AndroidResourceFolder extends SelfMergingOnlyFolder {
 
   public static final IJFolderFactory FACTORY =

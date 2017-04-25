@@ -16,10 +16,10 @@
 package com.facebook.buck.ide.intellij.lang.java;
 
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
+import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
@@ -41,10 +41,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg
 
   @Override
   public void apply(TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
-    addDepsAndTestSources(
-        target,
-        true /* wantsPackagePrefix */,
-        context);
+    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 

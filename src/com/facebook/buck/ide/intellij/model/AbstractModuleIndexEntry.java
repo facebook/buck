@@ -17,19 +17,18 @@
 package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.io.File;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractModuleIndexEntry implements Comparable<ModuleIndexEntry> {
   public abstract String getFileUrl();
+
   public abstract Path getFilePath();
+
   @Nullable
   public abstract String getGroup();
 
@@ -42,8 +41,6 @@ abstract class AbstractModuleIndexEntry implements Comparable<ModuleIndexEntry> 
     return getFilePath()
         .toString()
         .replace(File.separatorChar, ' ')
-        .compareTo(o.getFilePath()
-            .toString()
-            .replace(File.separatorChar, ' '));
+        .compareTo(o.getFilePath().toString().replace(File.separatorChar, ' '));
   }
 }

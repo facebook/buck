@@ -19,13 +19,13 @@ package com.facebook.buck.ide.intellij.model;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractContentRoot implements Comparable<ContentRoot> {
   public abstract String getUrl();
+
   public abstract ImmutableSortedSet<IjSourceFolder> getFolders();
 
   @Override

@@ -22,7 +22,6 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,19 +32,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
 
 /**
  * A tree that is responsible for managing and aggregating modules.
  *
- * The tree accepts an arbitrary number of modules each of which is located at a specific
+ * <p>The tree accepts an arbitrary number of modules each of which is located at a specific
  * location.
- * <p/>
- * The tree can aggregate the modules by merging modules with the same aggregation tag
- * into one module. The aggregation happens at some specific level.
- * <p/>
- * This data structure is based on a <a href="https://en.wikipedia.org/wiki/Trie">prefix tree</a>.
+ *
+ * <p>The tree can aggregate the modules by merging modules with the same aggregation tag into one
+ * module. The aggregation happens at some specific level.
+ *
+ * <p>This data structure is based on a <a href="https://en.wikipedia.org/wiki/Trie">prefix
+ * tree</a>.
  */
 public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
 
@@ -73,8 +72,8 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
 
     try {
       Iterable<AggregationTreeNode> nodesToTraverse =
-          new AcyclicDepthFirstPostOrderTraversal<>(this).traverse(collectStartingNodes(
-              minimumPathDepth));
+          new AcyclicDepthFirstPostOrderTraversal<>(this)
+              .traverse(collectStartingNodes(minimumPathDepth));
       for (AggregationTreeNode node : nodesToTraverse) {
         aggregateModules(node);
       }
@@ -86,7 +85,8 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
   /**
    * Make sure aggregation nodes are present at the starting locations of aggregation.
    *
-   * Creates artificial nodes if some nodes are not present. These nodes contain only module paths.
+   * <p>Creates artificial nodes if some nodes are not present. These nodes contain only module
+   * paths.
    */
   private void createStartingNodes(AggregationTreeNode node, int depth) {
     if (depth <= 0) {
@@ -111,33 +111,34 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
    * Analyzes node's children and returns the best aggregation tag (the one with the maximum number
    * of modules).
    *
-   * The following modules are excluded from this logic:
-   * - modules with UNKNOWN type because it can be aggregated into all other modules,
-   * - modules with types that explicitly prohibit aggregation.
+   * <p>The following modules are excluded from this logic: - modules with UNKNOWN type because it
+   * can be aggregated into all other modules, - modules with types that explicitly prohibit
+   * aggregation.
    */
   private @Nullable String findBestAggregationTag(AggregationTreeNode node) {
     Map<String, Integer> typeCount = new HashMap<>();
 
-    node.getChildren().forEach(n -> {
-      AggregationModule module = n.getModule();
-      if (module == null) {
-        return;
-      }
-      if (IjModuleType.UNKNOWN_MODULE.equals(module.getModuleType()) ||
-          !module.getModuleType().canBeAggregated()) {
-        return;
-      }
-      String aggregationTag = module.getAggregationTag();
-      Integer count = typeCount.get(aggregationTag);
-      typeCount.put(aggregationTag, count == null ? 1 : count + 1);
-    });
+    node.getChildren()
+        .forEach(
+            n -> {
+              AggregationModule module = n.getModule();
+              if (module == null) {
+                return;
+              }
+              if (IjModuleType.UNKNOWN_MODULE.equals(module.getModuleType())
+                  || !module.getModuleType().canBeAggregated()) {
+                return;
+              }
+              String aggregationTag = module.getAggregationTag();
+              Integer count = typeCount.get(aggregationTag);
+              typeCount.put(aggregationTag, count == null ? 1 : count + 1);
+            });
 
     if (typeCount.isEmpty()) {
       return null;
     }
 
-    return Collections
-        .max(typeCount.entrySet(), Comparator.comparingInt(Map.Entry::getValue))
+    return Collections.max(typeCount.entrySet(), Comparator.comparingInt(Map.Entry::getValue))
         .getKey();
   }
 
@@ -178,49 +179,47 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
       }
       rootModuleType = IjModuleType.UNKNOWN_MODULE;
     } else {
-      modulePathsToAggregate = parentNode.getChildrenPathsByModuleTypeOrTag(
-          IjModuleType.UNKNOWN_MODULE,
-          aggregationTag);
+      modulePathsToAggregate =
+          parentNode.getChildrenPathsByModuleTypeOrTag(IjModuleType.UNKNOWN_MODULE, aggregationTag);
 
       if (rootModuleType == null) {
-        rootModuleType = parentNode
-            .getChild(modulePathsToAggregate.iterator().next())
-            .getModule()
-            .getModuleType();
+        rootModuleType =
+            parentNode
+                .getChild(modulePathsToAggregate.iterator().next())
+                .getModule()
+                .getModuleType();
       }
     }
 
     ImmutableSet<Path> excludes = findExcludes(parentNode, modulePathsToAggregate);
 
-    List<AggregationModule> modulesToAggregate = modulePathsToAggregate
-        .stream()
-        .map(parentNode::getChild)
-        .map(AggregationTreeNode::getModule)
-        .collect(Collectors.toList());
+    List<AggregationModule> modulesToAggregate =
+        modulePathsToAggregate
+            .stream()
+            .map(parentNode::getChild)
+            .map(AggregationTreeNode::getModule)
+            .collect(Collectors.toList());
 
     modulePathsToAggregate.forEach(parentNode::removeChild);
 
     if (nodeModule == null) {
-      parentNode.setModule(ModuleAggregator.aggregate(
-          moduleBasePath,
-          rootModuleType,
-          aggregationTag == null ?
-              modulesToAggregate.iterator().next().getAggregationTag() :
-              aggregationTag,
-          modulesToAggregate,
-          excludes));
+      parentNode.setModule(
+          ModuleAggregator.aggregate(
+              moduleBasePath,
+              rootModuleType,
+              aggregationTag == null
+                  ? modulesToAggregate.iterator().next().getAggregationTag()
+                  : aggregationTag,
+              modulesToAggregate,
+              excludes));
     } else {
-      parentNode.setModule(ModuleAggregator.aggregate(
-          nodeModule,
-          modulesToAggregate,
-          excludes));
+      parentNode.setModule(ModuleAggregator.aggregate(nodeModule, modulesToAggregate, excludes));
     }
     LOG.info("Module after aggregation: %s", parentNode.getModule());
   }
 
   private ImmutableSet<Path> findExcludes(
-      AggregationTreeNode parentNode,
-      ImmutableSet<Path> modulePathsToAggregate) {
+      AggregationTreeNode parentNode, ImmutableSet<Path> modulePathsToAggregate) {
     return parentNode
         .getChildrenPaths()
         .stream()
@@ -231,12 +230,14 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
   public Collection<AggregationModule> getModules() {
     try {
       List<AggregationModule> result = new ArrayList<>();
-      new AcyclicDepthFirstPostOrderTraversal<>(this).traverse(
-          Collections.singleton(rootNode)).forEach(node -> {
-            if (node.getModule() != null) {
-              result.add(node.getModule());
-            }
-      });
+      new AcyclicDepthFirstPostOrderTraversal<>(this)
+          .traverse(Collections.singleton(rootNode))
+          .forEach(
+              node -> {
+                if (node.getModule() != null) {
+                  result.add(node.getModule());
+                }
+              });
       return result;
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new IllegalStateException("Cycle detected despite using a tree", e);
