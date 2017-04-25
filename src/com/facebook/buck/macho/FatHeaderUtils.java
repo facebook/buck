@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import java.nio.ByteBuffer;
 
 public class FatHeaderUtils {
@@ -24,8 +23,7 @@ public class FatHeaderUtils {
 
   public static FatHeader createFromBuffer(ByteBuffer buffer) {
     return FatHeader.of(
-        UnsignedInteger.fromIntBits(buffer.getInt()),
-        UnsignedInteger.fromIntBits(buffer.getInt()));
+        UnsignedInteger.fromIntBits(buffer.getInt()), UnsignedInteger.fromIntBits(buffer.getInt()));
   }
 
   public static boolean isFatHeaderMagic(UnsignedInteger magic) {

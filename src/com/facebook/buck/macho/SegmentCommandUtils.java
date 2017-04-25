@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -33,8 +32,9 @@ public class SegmentCommandUtils {
   private SegmentCommandUtils() {}
 
   /**
-   * VM size field of the SegmentCommand needs to be aligned. This method returns the alignment
-   * for the given value.
+   * VM size field of the SegmentCommand needs to be aligned. This method returns the alignment for
+   * the given value.
+   *
    * @param value The value that needs to be aligned.
    * @return Aligned value.
    */
@@ -43,16 +43,14 @@ public class SegmentCommandUtils {
      * According to lld sources, different CPU architectures have different code alignment (see
      * links below):
      *
-     *   - x86_64 has 2Kb code alignment
-     *   - x86 has 2Kb code alignment
-     *   - arm64 has 4Kb code alignment
-     *   - arm has 4Kb code alignment
+     * <p>- x86_64 has 2Kb code alignment - x86 has 2Kb code alignment - arm64 has 4Kb code
+     * alignment - arm has 4Kb code alignment
      *
-     * Since Mach O file does not have this information, but sections have to be aligned (even
+     * <p>Since Mach O file does not have this information, but sections have to be aligned (even
      * though not all of them appear to be aligned), we will align to 32Kb. Thus, it potentially
      * should cover all possible alignments and even more that needed.
      *
-     * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_x86_64.cpp
+     * <p>https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_x86_64.cpp
      * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_x86.cpp
      * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_arm64.cpp
      * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_arm.cpp
@@ -64,6 +62,7 @@ public class SegmentCommandUtils {
   /**
    * This method returns the amount of bytes that segment command is taking. Segment's section bytes
    * are laid out in binary after the segment command header.
+   *
    * @param segmentCommand Command which header size is being determined
    * @return The size of the segment command header, after which the sections are present.
    */
@@ -78,25 +77,26 @@ public class SegmentCommandUtils {
 
   /**
    * Updates the given command in the given buffer with the new given command.
+   *
    * @param buffer The buffer which holds all data.
-   * @param old The old command that needs to be updated with the contents of the new command
-   *                in the given buffer.
+   * @param old The old command that needs to be updated with the contents of the new command in the
+   *     given buffer.
    * @param updated The updated command, which bytes will be used to override the old commad.
    * @throws IOException
    */
   public static void updateSegmentCommand(
-      ByteBuffer buffer,
-      SegmentCommand old,
-      SegmentCommand updated) {
+      ByteBuffer buffer, SegmentCommand old, SegmentCommand updated) {
     Preconditions.checkArgument(
-        old.getLoadCommandCommonFields().getOffsetInBinary() ==
-            updated.getLoadCommandCommonFields().getOffsetInBinary());
+        old.getLoadCommandCommonFields().getOffsetInBinary()
+            == updated.getLoadCommandCommonFields().getOffsetInBinary());
     Preconditions.checkArgument(
-        old.getLoadCommandCommonFields().getCmd().equals(
-            updated.getLoadCommandCommonFields().getCmd()));
+        old.getLoadCommandCommonFields()
+            .getCmd()
+            .equals(updated.getLoadCommandCommonFields().getCmd()));
     Preconditions.checkArgument(
-        old.getLoadCommandCommonFields().getCmdsize().equals(
-            updated.getLoadCommandCommonFields().getCmdsize()));
+        old.getLoadCommandCommonFields()
+            .getCmdsize()
+            .equals(updated.getLoadCommandCommonFields().getCmdsize()));
     buffer.position(old.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(
         updated,
@@ -106,13 +106,13 @@ public class SegmentCommandUtils {
 
   /**
    * Enumerates the sections in the given segment command by calling the given callback.
+   *
    * @param buffer The buffer which holds all data.
    * @param magicInfo Mach Header Magic info.
    * @param segmentCommand The SegmentCommand which Sections should be enumerated.
    * @param callback The Function object which should be called on each Section. The argument of the
-   *                 function is the Section object. If Function returns Boolean.TRUE then
-   *                 enumeration will continue; otherwise enumeration will stop and callback will
-   *                 not be called anymore.
+   *     function is the Section object. If Function returns Boolean.TRUE then enumeration will
+   *     continue; otherwise enumeration will stop and callback will not be called anymore.
    * @throws IOException
    */
   public static void enumerateSectionsInSegmentLoadCommand(
@@ -120,10 +120,12 @@ public class SegmentCommandUtils {
       MachoMagicInfo magicInfo,
       SegmentCommand segmentCommand,
       NulTerminatedCharsetDecoder decoder,
-      Function<Section, Boolean> callback) throws IOException {
+      Function<Section, Boolean> callback)
+      throws IOException {
     final int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
-    final int sectionsOffset = segmentCommand.getLoadCommandCommonFields().getOffsetInBinary() +
-        SegmentCommandUtils.getSegmentCommandHeaderSize(segmentCommand);
+    final int sectionsOffset =
+        segmentCommand.getLoadCommandCommonFields().getOffsetInBinary()
+            + SegmentCommandUtils.getSegmentCommandHeaderSize(segmentCommand);
     for (int i = 0; i < segmentCommand.getNsects().intValue(); i++) {
       int offsetInBinary = sectionsOffset + sectionHeaderSize * i;
       buffer.position(offsetInBinary);
@@ -137,8 +139,7 @@ public class SegmentCommandUtils {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public static SegmentCommand createFromBuffer(
-      ByteBuffer buffer,
-      NulTerminatedCharsetDecoder decoder) {
+      ByteBuffer buffer, NulTerminatedCharsetDecoder decoder) {
     LoadCommandCommonFields fields = LoadCommandCommonFieldsUtils.createFromBuffer(buffer);
     Preconditions.checkArgument(SegmentCommand.VALID_CMD_VALUES.contains(fields.getCmd()));
     boolean is64Bit = fields.getCmd().equals(SegmentCommand.LC_SEGMENT_64);
@@ -148,13 +149,12 @@ public class SegmentCommandUtils {
       segname = decoder.decodeString(buffer);
     } catch (CharacterCodingException e) {
       throw new HumanReadableException(
-          e,
-          "Cannot read segname for SegmentCommand at %d", fields.getOffsetInBinary());
+          e, "Cannot read segname for SegmentCommand at %d", fields.getOffsetInBinary());
     }
     buffer.position(
-        fields.getOffsetInBinary() +
-        LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE +
-        SegmentCommand.SEGNAME_SIZE_IN_BYTES);
+        fields.getOffsetInBinary()
+            + LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE
+            + SegmentCommand.SEGNAME_SIZE_IN_BYTES);
     return SegmentCommand.of(
         fields,
         segname,
@@ -169,9 +169,7 @@ public class SegmentCommandUtils {
   }
 
   public static void writeCommandToBuffer(
-      SegmentCommand command,
-      ByteBuffer buffer,
-      boolean is64Bit) {
+      SegmentCommand command, ByteBuffer buffer, boolean is64Bit) {
     LoadCommandCommonFieldsUtils.writeCommandToBuffer(command.getLoadCommandCommonFields(), buffer);
     byte[] segnameStringBytes = command.getSegname().getBytes(StandardCharsets.UTF_8);
     buffer

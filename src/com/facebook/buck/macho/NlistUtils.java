@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -36,6 +35,7 @@ public class NlistUtils {
 
   /**
    * Reads Nlist entry for the given architecture from the buffer at the current position.
+   *
    * @param buffer ByteBuffer with data, must be positioned properly.
    * @param is64Bit Indicator if architecture is 32 or 64 bits.
    * @return Nlist entry
@@ -52,6 +52,7 @@ public class NlistUtils {
 
   /**
    * Writes the given Nlist to the buffer at the current position.
+   *
    * @param nlist The Nlist instance to write to the buffer.
    * @param buffer ByteBuffer with data, must be positioned/resized properly.
    * @param is64Bit Indicator if architecture is 32 or 64 bits.
@@ -71,6 +72,7 @@ public class NlistUtils {
 
   /**
    * Takes existing Nlist entry and updates it with the new entry.
+   *
    * @param buffer The buffer which holds all data.
    * @param original existing Nlist entry that needs to be updated in the buffer.
    * @param updated new Nlist entry that should replace old entry.
@@ -78,10 +80,7 @@ public class NlistUtils {
    * @throws IOException
    */
   public static void updateNlistEntry(
-      ByteBuffer buffer,
-      Nlist original,
-      Nlist updated,
-      boolean is64Bit) {
+      ByteBuffer buffer, Nlist original, Nlist updated, boolean is64Bit) {
     Preconditions.checkArgument(original.getOffsetInBinary() == updated.getOffsetInBinary());
     buffer.position(updated.getOffsetInBinary());
     writeNlistToBuffer(updated, buffer, is64Bit);

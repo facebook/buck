@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -62,7 +61,8 @@ public class ObjectPathsAbsolutifier {
       String newCompDir,
       ProjectFilesystem filesystem,
       ImmutableSet<Path> knownRoots,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder)
+      throws IOException {
     Path compDir = Paths.get(newCompDir);
     Preconditions.checkArgument(compDir.isAbsolute());
     Preconditions.checkArgument(compDir.equals(filesystem.getRootPath()));
@@ -105,79 +105,71 @@ public class ObjectPathsAbsolutifier {
   private Optional<Pair<LinkEditDataCommand, ByteBuffer>> getCodeSignatureDataToRelocate() {
 
     buffer.position(0);
-    ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        nulTerminatedCharsetDecoder,
-        SymTabCommand.class);
+    ImmutableList<SymTabCommand> symTabCommands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer, nulTerminatedCharsetDecoder, SymTabCommand.class);
     Preconditions.checkArgument(symTabCommands.size() <= 1, "Found more that one SymTabCommand");
     if (symTabCommands.size() == 0) {
-      LOG.verbose("SymTabCommand was not found, so there is no need to work with " +
-          "LinkEditDataCommand to fix code sign, as string table was not found");
+      LOG.verbose(
+          "SymTabCommand was not found, so there is no need to work with "
+              + "LinkEditDataCommand to fix code sign, as string table was not found");
       return Optional.empty();
     }
 
     buffer.position(0);
     ImmutableList<LinkEditDataCommand> linkEditDataCommands =
         LoadCommandUtils.findLoadCommandsWithClass(
-            buffer,
-            nulTerminatedCharsetDecoder,
-            LinkEditDataCommand.class);
-    ImmutableList<LinkEditDataCommand> codeSignatureCommands = FluentIterable
-        .from(linkEditDataCommands)
-        .filter(input -> input.getLoadCommandCommonFields().getCmd()
-            .equals(LinkEditDataCommand.LC_CODE_SIGNATURE))
-        .toList();
+            buffer, nulTerminatedCharsetDecoder, LinkEditDataCommand.class);
+    ImmutableList<LinkEditDataCommand> codeSignatureCommands =
+        FluentIterable.from(linkEditDataCommands)
+            .filter(
+                input ->
+                    input
+                        .getLoadCommandCommonFields()
+                        .getCmd()
+                        .equals(LinkEditDataCommand.LC_CODE_SIGNATURE))
+            .toList();
     if (codeSignatureCommands.size() == 0) {
       LOG.verbose("LinkEditDataCommand for code signature was not found");
       return Optional.empty();
     }
     Preconditions.checkArgument(
-        codeSignatureCommands.size() == 1,
-        "Found more than one LC_CODE_SIGNATURE");
+        codeSignatureCommands.size() == 1, "Found more than one LC_CODE_SIGNATURE");
 
     SymTabCommand symTabCommand = symTabCommands.get(0);
     LinkEditDataCommand codeSignatureCommand = codeSignatureCommands.get(0);
 
-    if (symTabCommand.getStroff().intValue() >=
-        codeSignatureCommand.getDataoff().intValue()) {
-      LOG.verbose("String table location > Code signature data location. " +
-          "Skipping code signature relocation.");
+    if (symTabCommand.getStroff().intValue() >= codeSignatureCommand.getDataoff().intValue()) {
+      LOG.verbose(
+          "String table location > Code signature data location. "
+              + "Skipping code signature relocation.");
       return Optional.empty();
     }
     Preconditions.checkArgument(
-        symTabCommand.getStroff().plus(symTabCommand.getStrsize()).intValue() <
-            codeSignatureCommand.getDataoff().intValue(),
+        symTabCommand.getStroff().plus(symTabCommand.getStrsize()).intValue()
+            < codeSignatureCommand.getDataoff().intValue(),
         "String table offset+size overlaps with code signature, something is wrong!");
 
     byte[] contents = new byte[codeSignatureCommand.getDatasize().intValue()];
-    Preconditions.checkArgument(
-        contents.length > 0,
-        "Contents of code signature is 0 bytes");
+    Preconditions.checkArgument(contents.length > 0, "Contents of code signature is 0 bytes");
     buffer.position(codeSignatureCommand.getDataoff().intValue());
     buffer.get(contents);
 
     return Optional.of(
-        new Pair<>(
-            codeSignatureCommand,
-            ByteBuffer.wrap(contents).order(buffer.order())));
+        new Pair<>(codeSignatureCommand, ByteBuffer.wrap(contents).order(buffer.order())));
   }
 
   private void updateBinaryUuid() {
     buffer.position(0);
-    ImmutableList<UUIDCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        nulTerminatedCharsetDecoder,
-        UUIDCommand.class);
+    ImmutableList<UUIDCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer, nulTerminatedCharsetDecoder, UUIDCommand.class);
     Preconditions.checkArgument(
-        commands.size() == 1,
-        "Found %d UUIDCommands, expected 1", commands.size());
+        commands.size() == 1, "Found %d UUIDCommands, expected 1", commands.size());
 
     UUIDCommand uuidCommand = commands.get(0);
     UUIDCommand updatedCommand = uuidCommand.withUuid(UUID.randomUUID());
-    UUIDCommandUtils.updateUuidCommand(
-        buffer,
-        uuidCommand,
-        updatedCommand);
+    UUIDCommandUtils.updateUuidCommand(buffer, uuidCommand, updatedCommand);
   }
 
   private int updateStringTableContents(final MachoMagicInfo magicInfo) throws IOException {
@@ -186,22 +178,19 @@ public class ObjectPathsAbsolutifier {
 
   private SymTabCommand getSymTabCommand() {
     buffer.position(0);
-    ImmutableList<SymTabCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        nulTerminatedCharsetDecoder,
-        SymTabCommand.class);
+    ImmutableList<SymTabCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer, nulTerminatedCharsetDecoder, SymTabCommand.class);
     Preconditions.checkArgument(
-        commands.size() == 1,
-        "Found %d SymTabCommands, expected 1", commands.size());
+        commands.size() == 1, "Found %d SymTabCommands, expected 1", commands.size());
     return commands.get(0);
   }
 
   private void updateLinkeditSegment(Optional<LinkEditDataCommand> updatedCodeSignatureCommand) {
     buffer.position(0);
-    ImmutableList<SegmentCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        nulTerminatedCharsetDecoder,
-        SegmentCommand.class);
+    ImmutableList<SegmentCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer, nulTerminatedCharsetDecoder, SegmentCommand.class);
 
     for (SegmentCommand segmentCommand : commands) {
       if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
@@ -213,7 +202,8 @@ public class ObjectPathsAbsolutifier {
 
   private Optional<LinkEditDataCommand> restoreOriginalCodeSignatureData(
       Optional<Pair<LinkEditDataCommand, ByteBuffer>> codeSignatureData,
-      int stringTableSizeIncrease) throws IOException {
+      int stringTableSizeIncrease)
+      throws IOException {
     if (!codeSignatureData.isPresent()) {
       LOG.info("Code had no code signature to relocate, skipping code signature update");
       return Optional.empty();
@@ -231,17 +221,16 @@ public class ObjectPathsAbsolutifier {
     SymTabCommand symTabCommand = getSymTabCommand();
 
     /**
-     * Code signature is aligned right after SymTabCommand's string table. Thus it is incorrect
-     * to just take previous code signature position and move it to the new place. We need to
-     * calculate new position by aligning the position of the first byte after string table.
+     * Code signature is aligned right after SymTabCommand's string table. Thus it is incorrect to
+     * just take previous code signature position and move it to the new place. We need to calculate
+     * new position by aligning the position of the first byte after string table.
      */
-    int unalignedCodeSignatureOffset = symTabCommand.getStroff().intValue() +
-        symTabCommand.getStrsize().intValue();
-    int alignedCodeSignatureOffset = LinkEditDataCommandUtils.alignCodeSignatureOffsetValue(
-        unalignedCodeSignatureOffset);
-    LinkEditDataCommand updated = command.withDataoff(
-        UnsignedInteger.fromIntBits(
-            alignedCodeSignatureOffset));
+    int unalignedCodeSignatureOffset =
+        symTabCommand.getStroff().intValue() + symTabCommand.getStrsize().intValue();
+    int alignedCodeSignatureOffset =
+        LinkEditDataCommandUtils.alignCodeSignatureOffsetValue(unalignedCodeSignatureOffset);
+    LinkEditDataCommand updated =
+        command.withDataoff(UnsignedInteger.fromIntBits(alignedCodeSignatureOffset));
     updateFileSizeTo(updated.getDataoff().plus(updated.getDatasize()).intValue());
     LOG.verbose("Re-positioning code signature to " + updated.getDataoff().intValue());
     buffer.position(updated.getDataoff().intValue());
@@ -253,8 +242,7 @@ public class ObjectPathsAbsolutifier {
   }
 
   private void processLinkeditSegmentCommand(
-      SegmentCommand original,
-      Optional<LinkEditDataCommand> updatedCodeSignatureCommand) {
+      SegmentCommand original, Optional<LinkEditDataCommand> updatedCodeSignatureCommand) {
     SymTabCommand symTabCommand = getSymTabCommand();
     int fileSize = symTabCommand.getStroff().intValue() + symTabCommand.getStrsize().intValue();
     if (updatedCodeSignatureCommand.isPresent()) {
@@ -269,16 +257,14 @@ public class ObjectPathsAbsolutifier {
     fileSize -= original.getFileoff().intValue();
 
     UnsignedLong updatedFileSize = UnsignedLong.valueOf(fileSize);
-    UnsignedLong updatedVmSize = UnsignedLong.fromLongBits(
-        SegmentCommandUtils.alignValue(
-            updatedFileSize.intValue()));
+    UnsignedLong updatedVmSize =
+        UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(updatedFileSize.intValue()));
     SegmentCommand updated = original.withFilesize(updatedFileSize).withVmsize(updatedVmSize);
     SegmentCommandUtils.updateSegmentCommand(buffer, original, updated);
   }
 
-  private int processSymTabCommand(
-      MachoMagicInfo magicInfo,
-      SymTabCommand symTabCommand) throws IOException {
+  private int processSymTabCommand(MachoMagicInfo magicInfo, SymTabCommand symTabCommand)
+      throws IOException {
     UnsignedInteger originalStringTableSize = symTabCommand.getStrsize();
 
     HashMap<Path, Path> originalToUpdatedPathMap = new HashMap<>();
@@ -288,14 +274,11 @@ public class ObjectPathsAbsolutifier {
     boolean lastEntryWasContinuation = false;
 
     for (int idx = 0; idx < symTabCommand.getNsyms().intValue(); idx++) {
-      Nlist nlist = SymTabCommandUtils.getNlistAtIndex(
-          buffer,
-          symTabCommand,
-          idx,
-          magicInfo.is64Bit());
+      Nlist nlist =
+          SymTabCommandUtils.getNlistAtIndex(buffer, symTabCommand, idx, magicInfo.is64Bit());
 
-      final boolean stabIsSourceOrHeaderFile = nlist.getN_type().equals(Stab.N_SO) ||
-          nlist.getN_type().equals(Stab.N_SOL);
+      final boolean stabIsSourceOrHeaderFile =
+          nlist.getN_type().equals(Stab.N_SO) || nlist.getN_type().equals(Stab.N_SOL);
       final boolean stabIsObjectFile = nlist.getN_type().equals(Stab.N_OSO);
 
       if (!stabIsSourceOrHeaderFile && !stabIsObjectFile) {
@@ -320,17 +303,15 @@ public class ObjectPathsAbsolutifier {
         continue;
       }
 
-      if (SymTabCommandUtils.stringTableEntryStartsWithSlash(buffer, symTabCommand, nlist) &&
-          !stabIsObjectFile) {
+      if (SymTabCommandUtils.stringTableEntryStartsWithSlash(buffer, symTabCommand, nlist)
+          && !stabIsObjectFile) {
         // already absolute, skipping
         continue;
       }
 
-      String stringPath = SymTabCommandUtils.getStringTableEntryForNlist(
-          buffer,
-          symTabCommand,
-          nlist,
-          nulTerminatedCharsetDecoder);
+      String stringPath =
+          SymTabCommandUtils.getStringTableEntryForNlist(
+              buffer, symTabCommand, nlist, nulTerminatedCharsetDecoder);
 
       Path absolutePath = getAbsolutePath(stringPath);
       // absolutePathString is the string that will be used as a value inside binary. It may be
@@ -354,8 +335,8 @@ public class ObjectPathsAbsolutifier {
             getAbsolutePath(filesystem.getRootPath().toString()).relativize(absolutePath);
         Path unsanitizedAbsolutePath = getUnsanitizedAbsolutePath(relativePath);
         absolutePathString = unsanitizedAbsolutePath.toString();
-        if (absolutePath.toFile().exists() &&
-            relativePath.startsWith(filesystem.getBuckPaths().getGenDir().toString())) {
+        if (absolutePath.toFile().exists()
+            && relativePath.startsWith(filesystem.getBuckPaths().getGenDir().toString())) {
           originalToUpdatedPathMap.put(absolutePath, unsanitizedAbsolutePath);
         } else {
           Optional<String> archiveEntryName = getArchiveEntryNameFromPath(absolutePath);
@@ -371,12 +352,9 @@ public class ObjectPathsAbsolutifier {
         absolutePathString += "/";
       }
 
-      symTabCommand = updateSymTabCommandByUpdatingNlistEntry(
-          magicInfo,
-          symTabCommand,
-          nlist,
-          absolutePath,
-          absolutePathString);
+      symTabCommand =
+          updateSymTabCommandByUpdatingNlistEntry(
+              magicInfo, symTabCommand, nlist, absolutePath, absolutePathString);
     }
 
     unsanitizeObjectFiles(ImmutableMap.copyOf(originalToUpdatedPathMap));
@@ -388,33 +366,26 @@ public class ObjectPathsAbsolutifier {
       SymTabCommand symTabCommand,
       Nlist nlist,
       Path absolutePath,
-      String absolutePathString) throws IOException {
+      String absolutePathString)
+      throws IOException {
     extendFileSizeToFitNewString(absolutePathString);
 
-    UnsignedInteger newEntryLocation = SymTabCommandUtils.insertNewStringTableEntry(
-        buffer,
-        symTabCommand,
-        absolutePathString);
+    UnsignedInteger newEntryLocation =
+        SymTabCommandUtils.insertNewStringTableEntry(buffer, symTabCommand, absolutePathString);
     LOG.debug("Inserted new string table entry at %s", newEntryLocation);
 
     updateNlistEntryWithNewContentsLocation(
-        buffer,
-        magicInfo,
-        nlist,
-        absolutePath,
-        newEntryLocation);
+        buffer, magicInfo, nlist, absolutePath, newEntryLocation);
     LOG.debug("Updated nlist entry to use new string table entry");
 
-    symTabCommand = SymTabCommandUtils.updateSymTabCommand(
-        buffer,
-        symTabCommand,
-        absolutePathString);
+    symTabCommand =
+        SymTabCommandUtils.updateSymTabCommand(buffer, symTabCommand, absolutePathString);
     LOG.debug("Updated SymTabCommand");
     return symTabCommand;
   }
 
-  private void unsanitizeObjectFiles(
-      ImmutableMap<Path, Path> originalToUpdatedPathMap) throws IOException {
+  private void unsanitizeObjectFiles(ImmutableMap<Path, Path> originalToUpdatedPathMap)
+      throws IOException {
     for (Map.Entry<Path, Path> entry : originalToUpdatedPathMap.entrySet()) {
       Path source = entry.getKey();
       if (Files.isDirectory(source)) {
@@ -432,10 +403,7 @@ public class ObjectPathsAbsolutifier {
 
       if (destination.getFileName().toString().endsWith(".o")) {
         CompDirReplacer.replaceCompDirInFile(
-            destination,
-            oldCompDir,
-            newCompDir,
-            nulTerminatedCharsetDecoder);
+            destination, oldCompDir, newCompDir, nulTerminatedCharsetDecoder);
       } else if (destination.getFileName().toString().endsWith(".a")) {
         fixCompDirInStaticLibrary(destination);
       }
@@ -443,10 +411,8 @@ public class ObjectPathsAbsolutifier {
   }
 
   private void fixCompDirInStaticLibrary(Path destination) throws IOException {
-    FileChannel channel = FileChannel.open(
-        destination,
-        StandardOpenOption.READ,
-        StandardOpenOption.WRITE);
+    FileChannel channel =
+        FileChannel.open(destination, StandardOpenOption.READ, StandardOpenOption.WRITE);
     ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
     if (!UnixArchive.checkHeader(buffer)) {
       LOG.warn("Static library at %s has wrong header, skipping", destination);
@@ -484,8 +450,7 @@ public class ObjectPathsAbsolutifier {
 
   private Path getUnsanitizedAbsolutePath(Path relativePath) {
     return filesystem
-        .resolve(
-            filesystem.getBuckPaths().getScratchDir().resolve(relativePath))
+        .resolve(filesystem.getBuckPaths().getScratchDir().resolve(relativePath))
         .normalize();
   }
 

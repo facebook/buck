@@ -18,10 +18,8 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -31,16 +29,28 @@ abstract class AbstractSection {
   public static final int LENGTH_OF_STRING_FIELDS_IN_BYTES = 16;
 
   public abstract int getOffsetInBinary();
-  public abstract String getSectname();             // 128 bit / 16 bytes
-  public abstract String getSegname();              // 128 bit / 16 bytes
-  public abstract UnsignedLong getAddr();           // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract UnsignedLong getSize();           // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract UnsignedInteger getOffset();      // 32 bit
-  public abstract UnsignedInteger getAlign();       // 32 bit
-  public abstract UnsignedInteger getReloff();      // 32 bit
-  public abstract UnsignedInteger getNreloc();      // 32 bit
-  public abstract UnsignedInteger getFlags();       // 32 bit
-  public abstract UnsignedInteger getReserved1();   // 32 bit
-  public abstract UnsignedInteger getReserved2();   // 32 bit
-  public abstract Optional<UnsignedInteger> getReserved3();   // 32 bit, only present on 64 bit arch
+
+  public abstract String getSectname(); // 128 bit / 16 bytes
+
+  public abstract String getSegname(); // 128 bit / 16 bytes
+
+  public abstract UnsignedLong getAddr(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract UnsignedLong getSize(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract UnsignedInteger getOffset(); // 32 bit
+
+  public abstract UnsignedInteger getAlign(); // 32 bit
+
+  public abstract UnsignedInteger getReloff(); // 32 bit
+
+  public abstract UnsignedInteger getNreloc(); // 32 bit
+
+  public abstract UnsignedInteger getFlags(); // 32 bit
+
+  public abstract UnsignedInteger getReserved1(); // 32 bit
+
+  public abstract UnsignedInteger getReserved2(); // 32 bit
+
+  public abstract Optional<UnsignedInteger> getReserved3(); // 32 bit, only present on 64 bit arch
 }

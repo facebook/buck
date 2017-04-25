@@ -19,7 +19,6 @@ import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -37,15 +36,10 @@ public class CompDirReplacer {
   private final NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder;
 
   public static void replaceCompDirInFile(
-      Path path,
-      String oldCompDir,
-      String newCompDir,
-      NulTerminatedCharsetDecoder decoder) throws IOException {
+      Path path, String oldCompDir, String newCompDir, NulTerminatedCharsetDecoder decoder)
+      throws IOException {
     try (FileChannel file =
-             FileChannel.open(
-                 path,
-                 StandardOpenOption.READ,
-                 StandardOpenOption.WRITE)) {
+        FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       ByteBuffer byteBuffer = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
       CompDirReplacer compDirReplacer = new CompDirReplacer(byteBuffer, decoder);
       compDirReplacer.replaceCompDir(oldCompDir, newCompDir);
@@ -53,31 +47,23 @@ public class CompDirReplacer {
   }
 
   public CompDirReplacer(
-      ByteBuffer byteBuffer,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
+      ByteBuffer byteBuffer, NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
     this.buffer = byteBuffer;
     this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 
   private void processThinBinary(
-      final MachoMagicInfo magicInfo,
-      final String oldCompDir,
-      final String updatedCompDir) {
+      final MachoMagicInfo magicInfo, final String oldCompDir, final String updatedCompDir) {
     buffer.position(0);
     ImmutableList<SegmentCommand> segmentCommands =
         LoadCommandUtils.findLoadCommandsWithClass(
-            buffer,
-            nulTerminatedCharsetDecoder,
-            SegmentCommand.class);
+            buffer, nulTerminatedCharsetDecoder, SegmentCommand.class);
     Preconditions.checkArgument(
         segmentCommands.size() == 1,
-        "Found %d SegmentCommands, expected 1", segmentCommands.size());
+        "Found %d SegmentCommands, expected 1",
+        segmentCommands.size());
 
-    processSectionsInSegmentCommand(
-        segmentCommands.get(0),
-        magicInfo,
-        oldCompDir,
-        updatedCompDir);
+    processSectionsInSegmentCommand(segmentCommands.get(0), magicInfo, oldCompDir, updatedCompDir);
   }
 
   private void processSectionsInSegmentCommand(
@@ -98,11 +84,9 @@ public class CompDirReplacer {
   }
 
   private Boolean updateCompDirInSection(
-      Section section,
-      String oldCompDir,
-      String updatedCompDir) {
-    if (section.getSegname().equals(CommandSegmentSectionNames.SEGMENT_NAME_DWARF) &&
-        section.getSectname().equals(CommandSegmentSectionNames.SECTION_NAME_DEBUG_STR)) {
+      Section section, String oldCompDir, String updatedCompDir) {
+    if (section.getSegname().equals(CommandSegmentSectionNames.SEGMENT_NAME_DWARF)
+        && section.getSectname().equals(CommandSegmentSectionNames.SECTION_NAME_DEBUG_STR)) {
       findAndUpdateCompDirInDebugSection(section, oldCompDir, updatedCompDir);
       return false;
     }
@@ -110,9 +94,7 @@ public class CompDirReplacer {
   }
 
   private void findAndUpdateCompDirInDebugSection(
-      Section section,
-      String oldCompDir,
-      String updatedCompDir) {
+      Section section, String oldCompDir, String updatedCompDir) {
     final long maximumValidOffset = section.getOffset().longValue() + section.getSize().longValue();
     int offset = section.getOffset().intValue();
     while (offset < maximumValidOffset) {
@@ -138,11 +120,10 @@ public class CompDirReplacer {
   public void replaceCompDir(String oldCompDir, String updatedCompDir) throws IOException {
     Preconditions.checkArgument(
         oldCompDir.length() >= updatedCompDir.length(),
-        "Updated compdir length must be less or equal to old compdir length as replace is " +
-            "performed in place");
+        "Updated compdir length must be less or equal to old compdir length as replace is "
+            + "performed in place");
     Preconditions.checkArgument(
-        !oldCompDir.equals(updatedCompDir),
-        "Updated compdir must be different from old compdir");
+        !oldCompDir.equals(updatedCompDir), "Updated compdir must be different from old compdir");
 
     MachoMagicInfo magicInfo = MachoMagicInfoUtils.getMachMagicInfo(buffer);
     if (!magicInfo.isValidMachMagic()) {

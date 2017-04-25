@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.util.Optional;
@@ -38,14 +37,14 @@ public class SectionUtils {
   /**
    * Creates a section for the given architecture by reading the provided byte buffer from its
    * current position.
+   *
    * @param buffer Buffer with data, must be positioned properly.
    * @param is64Bit Indicator if architecture is 64 or 32 bit.
    * @return Section object
    */
   public static Section createFromBuffer(
-      ByteBuffer buffer,
-      boolean is64Bit,
-      NulTerminatedCharsetDecoder decoder) throws CharacterCodingException {
+      ByteBuffer buffer, boolean is64Bit, NulTerminatedCharsetDecoder decoder)
+      throws CharacterCodingException {
 
     int offset = buffer.position();
     String sectname = decoder.decodeString(buffer);
@@ -65,8 +64,6 @@ public class SectionUtils {
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
-        is64Bit ?
-            Optional.of(UnsignedInteger.fromIntBits(buffer.getInt())) :
-            Optional.empty());
+        is64Bit ? Optional.of(UnsignedInteger.fromIntBits(buffer.getInt())) : Optional.empty());
   }
 }
