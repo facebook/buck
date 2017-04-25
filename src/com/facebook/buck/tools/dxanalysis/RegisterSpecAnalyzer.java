@@ -20,7 +20,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -28,42 +31,32 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import javax.annotation.Nullable;
-
 /**
- * A static analyzer to find uses of reference equality checks on the RegisterSpec class,
- * including its superclasses, interfaces, superclass interfaces, interface superinterfaces...
+ * A static analyzer to find uses of reference equality checks on the RegisterSpec class, including
+ * its superclasses, interfaces, superclass interfaces, interface superinterfaces...
  */
 public class RegisterSpecAnalyzer {
 
   // TODO(or_not): Infer this automatically.
-  private static final ImmutableSet<String> RISKY_TYPES = ImmutableSet.of(
-      "com/android/dx/rop/code/RegisterSpec",
-      "com/android/dx/rop/type/TypeBearer",
-      "com/android/dx/util/ToHuman",
-      "java/lang/Comparable",
-      "java/lang/Object");
+  private static final ImmutableSet<String> RISKY_TYPES =
+      ImmutableSet.of(
+          "com/android/dx/rop/code/RegisterSpec",
+          "com/android/dx/rop/type/TypeBearer",
+          "com/android/dx/util/ToHuman",
+          "java/lang/Comparable",
+          "java/lang/Object");
 
-  /**
-   * All classes under analysis.
-   */
+  /** All classes under analysis. */
   private final ImmutableMap<String, ClassNode> allClasses;
 
-  /**
-   * Log of messages.
-   */
+  /** Log of messages. */
   private List<String> log = new ArrayList<>();
 
   public RegisterSpecAnalyzer(ImmutableMap<String, ClassNode> allClasses) {
     this.allClasses = allClasses;
   }
 
-  public static RegisterSpecAnalyzer analyze(
-      ImmutableMap<String, ClassNode> allClasses) {
+  public static RegisterSpecAnalyzer analyze(ImmutableMap<String, ClassNode> allClasses) {
     RegisterSpecAnalyzer analyzer = new RegisterSpecAnalyzer(allClasses);
     analyzer.go();
     return analyzer;
@@ -140,8 +133,8 @@ public class RegisterSpecAnalyzer {
       Preconditions.checkState(val2 instanceof String);
       // If both are risky, report.
       if (RISKY_TYPES.contains(val1) && RISKY_TYPES.contains(val2)) {
-        log.add(String.format((Locale) null, "RegisterSpec comparison: %s.%s",
-                className, methodName));
+        log.add(
+            String.format((Locale) null, "RegisterSpec comparison: %s.%s", className, methodName));
       }
     }
   }

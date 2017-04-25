@@ -19,45 +19,33 @@ package com.facebook.buck.tools.dxanalysis;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 public class StaticStateAnalyzer {
   private final MutabilityAnalyzer mutabilityAnalyzer;
   private final ImmutableMap<String, ClassNode> allClasses;
 
-  /**
-   * Only set once in go().
-   */
-  @Nullable
-  private ImmutableSet<String> unsafeClasses;
+  /** Only set once in go(). */
+  @Nullable private ImmutableSet<String> unsafeClasses;
 
-
-  /**
-   * Log of messages.
-   */
+  /** Log of messages. */
   private List<String> log = new ArrayList<>();
 
-
   public static StaticStateAnalyzer analyze(
-      ImmutableMap<String, ClassNode> allClasses,
-      MutabilityAnalyzer mutabilityAnalyzer) {
+      ImmutableMap<String, ClassNode> allClasses, MutabilityAnalyzer mutabilityAnalyzer) {
     StaticStateAnalyzer analyzer = new StaticStateAnalyzer(allClasses, mutabilityAnalyzer);
     analyzer.go();
     return analyzer;
   }
 
   private StaticStateAnalyzer(
-      ImmutableMap<String, ClassNode> allClasses,
-      MutabilityAnalyzer mutabilityAnalyzer) {
+      ImmutableMap<String, ClassNode> allClasses, MutabilityAnalyzer mutabilityAnalyzer) {
     this.allClasses = allClasses;
     this.mutabilityAnalyzer = mutabilityAnalyzer;
   }

@@ -20,84 +20,62 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
 public class MutabilityAnalyzer {
-  /**
-   *  Deeply immutable "sorts" of types.  See {@link org.objectweb.asm.Type#getSort()}.
-   */
-  static final ImmutableSet<Integer> IMMUTABLE_TYPE_SORTS = ImmutableSet.of(
-      Type.BOOLEAN,
-      Type.BYTE,
-      Type.CHAR,
-      Type.DOUBLE,
-      Type.FLOAT,
-      Type.INT,
-      Type.LONG,
-      Type.SHORT);
+  /** Deeply immutable "sorts" of types. See {@link org.objectweb.asm.Type#getSort()}. */
+  static final ImmutableSet<Integer> IMMUTABLE_TYPE_SORTS =
+      ImmutableSet.of(
+          Type.BOOLEAN,
+          Type.BYTE,
+          Type.CHAR,
+          Type.DOUBLE,
+          Type.FLOAT,
+          Type.INT,
+          Type.LONG,
+          Type.SHORT);
 
-  /**
-   * External classes that are final and deeply immutable.
-   */
-  private static final ImmutableSet<String> EXTERNAL_IMMUTABLE_CLASSES = ImmutableSet.of(
-      "java/lang/String",
-      "java/lang/Integer"
-  );
+  /** External classes that are final and deeply immutable. */
+  private static final ImmutableSet<String> EXTERNAL_IMMUTABLE_CLASSES =
+      ImmutableSet.of("java/lang/String", "java/lang/Integer");
 
-  /**
-   * NonExternal classes that are non-final but have no inherent mutability.
-   */
-  public static final ImmutableSet<String> EXTERNAL_IMMUTABLE_BASE_CLASSES = ImmutableSet.of(
-      "java/lang/Object",
-      "java/lang/Enum"
-  );
+  /** NonExternal classes that are non-final but have no inherent mutability. */
+  public static final ImmutableSet<String> EXTERNAL_IMMUTABLE_BASE_CLASSES =
+      ImmutableSet.of("java/lang/Object", "java/lang/Enum");
 
-  /**
-   * All classes under analysis.
-   */
+  /** All classes under analysis. */
   private final ImmutableMap<String, ClassNode> allClasses;
 
   /**
-   * Any class that is definitely mutable.  All subclasses become mutable as well.
-   * Superclasses are marked has having mutable descendents.
+   * Any class that is definitely mutable. All subclasses become mutable as well. Superclasses are
+   * marked has having mutable descendents.
    */
   private final Set<String> trulyMutableClasses;
 
   /**
-   * Classes that have truly mutable descendents.  Having a field of one of these types
-   * makes you truly mutable, but extending one does not.
+   * Classes that have truly mutable descendents. Having a field of one of these types makes you
+   * truly mutable, but extending one does not.
    */
   private final Set<String> classesWithMutableDescendents;
 
-  /**
-   * Only set once in go().
-   */
-  @Nullable
-  private ImmutableSet<String> immutableClasses;
+  /** Only set once in go(). */
+  @Nullable private ImmutableSet<String> immutableClasses;
 
-  /**
-   * True iff we made progress during this round.
-   */
+  /** True iff we made progress during this round. */
   private boolean madeProgress;
 
-  /**
-   * Log of messages.
-   */
+  /** Log of messages. */
   private List<String> log = new ArrayList<>();
 
-  public static MutabilityAnalyzer analyze(
-      ImmutableMap<String, ClassNode> allClasses) {
+  public static MutabilityAnalyzer analyze(ImmutableMap<String, ClassNode> allClasses) {
     MutabilityAnalyzer analyzer = new MutabilityAnalyzer(allClasses);
     analyzer.go();
     return analyzer;
@@ -125,8 +103,7 @@ public class MutabilityAnalyzer {
     if (type.getSort() != Type.OBJECT) {
       return false;
     }
-    if (Sets.union(EXTERNAL_IMMUTABLE_CLASSES, immutableClasses)
-        .contains(type.getInternalName())) {
+    if (Sets.union(EXTERNAL_IMMUTABLE_CLASSES, immutableClasses).contains(type.getInternalName())) {
       return true;
     }
     return false;
@@ -143,10 +120,11 @@ public class MutabilityAnalyzer {
       }
     }
 
-    immutableClasses = ImmutableSet.copyOf(
-        Sets.difference(
-            allClasses.keySet(),
-            Sets.union(trulyMutableClasses, classesWithMutableDescendents)));
+    immutableClasses =
+        ImmutableSet.copyOf(
+            Sets.difference(
+                allClasses.keySet(),
+                Sets.union(trulyMutableClasses, classesWithMutableDescendents)));
   }
 
   private void markClassTrulyMutable(String className) {
@@ -253,5 +231,4 @@ public class MutabilityAnalyzer {
       markClassTrulyMutable(klass.name);
     }
   }
-
 }
