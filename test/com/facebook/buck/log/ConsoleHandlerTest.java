@@ -21,20 +21,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeOutputStream;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link ConsoleHandler}.
- */
+/** Unit tests for {@link ConsoleHandler}. */
 public class ConsoleHandlerTest {
   private FakeOutputStream outputStream;
   private ConcurrentHashMap<Long, String> threadIdToCommandId;
@@ -49,27 +45,28 @@ public class ConsoleHandlerTest {
     commandIdToConsoleWriter = new ConcurrentHashMap<>();
     commandIdToLevel = new ConcurrentHashMap<>();
 
-    state = new ConsoleHandlerState() {
-      @Override
-      public Level getLogLevel(String commandId) {
-        return commandIdToLevel.get(commandId);
-      }
+    state =
+        new ConsoleHandlerState() {
+          @Override
+          public Level getLogLevel(String commandId) {
+            return commandIdToLevel.get(commandId);
+          }
 
-      @Override
-      public ConsoleHandlerState.Writer getWriter(String commandId) {
-        return commandIdToConsoleWriter.get(commandId);
-      }
+          @Override
+          public ConsoleHandlerState.Writer getWriter(String commandId) {
+            return commandIdToConsoleWriter.get(commandId);
+          }
 
-      @Override
-      public Iterable<ConsoleHandlerState.Writer> getAllAvailableWriters() {
-        return commandIdToConsoleWriter.values();
-      }
+          @Override
+          public Iterable<ConsoleHandlerState.Writer> getAllAvailableWriters() {
+            return commandIdToConsoleWriter.values();
+          }
 
-      @Override
-      public String threadIdToCommandId(long threadId) {
-        return threadIdToCommandId.get(threadId);
-      }
-    };
+          @Override
+          public String threadIdToCommandId(long threadId) {
+            return threadIdToCommandId.get(threadId);
+          }
+        };
   }
 
   // We use a custom formatter so the test doesn't depend on locale, clock, or timezone.
@@ -82,44 +79,48 @@ public class ConsoleHandlerTest {
 
   @Test
   public void consoleHandlerDoesNotWriteBelowLevelToStream() {
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
     publishAndFlush(handler, new LogRecord(Level.FINE, "Shh.."));
     assertThat(outputStream.size(), equalTo(0));
   }
 
   @Test
   public void consoleHandlerWritesAtLevelToStream() throws IOException {
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
     publishAndFlush(handler, new LogRecord(Level.INFO, "Hello"));
     assertThat(outputStream.toString("UTF-8"), equalTo("Hello"));
   }
 
   @Test
   public void consoleHandlerDoesNotFlushBelowSevere() {
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
     handler.publish(new LogRecord(Level.INFO, "Info"));
     assertThat(outputStream.getLastFlushSize(), equalTo(0));
   }
 
   @Test
   public void consoleHandlerFlushesSevere() {
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
     handler.publish(new LogRecord(Level.SEVERE, "Severe"));
     assertThat(outputStream.getLastFlushSize(), equalTo(6));
   }
@@ -128,11 +129,12 @@ public class ConsoleHandlerTest {
   public void consoleHandlerCanChangeOutputStreamWithoutClosing() throws IOException {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
     publishAndFlush(handler, new LogRecord(Level.INFO, "Stream 1"));
     assertThat(outputStream1.toString("UTF-8"), equalTo("Stream 1"));
 
@@ -167,11 +169,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
@@ -194,11 +197,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(49153L, "commandIdForOutputStream2");
@@ -222,11 +226,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     registerOutputStream("commandIdForOutputStream2", outputStream2);
@@ -248,11 +253,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
@@ -282,11 +288,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
@@ -312,11 +319,12 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConsoleHandler handler = new ConsoleHandler(
-        ConsoleHandler.utf8OutputStreamWriter(outputStream1),
-        new MessageOnlyFormatter(),
-        Level.INFO,
-        state);
+    ConsoleHandler handler =
+        new ConsoleHandler(
+            ConsoleHandler.utf8OutputStreamWriter(outputStream1),
+            new MessageOnlyFormatter(),
+            Level.INFO,
+            state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
