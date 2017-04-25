@@ -20,17 +20,12 @@ import com.facebook.buck.util.trace.BuildTraces;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
-
-import org.eclipse.jetty.server.Request;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
-
 import javax.annotation.Nullable;
+import org.eclipse.jetty.server.Request;
 
-/**
- * HTTP handler for requests to the {@code /trace} path.
- */
+/** HTTP handler for requests to the {@code /trace} path. */
 public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   private final BuildTraces buildTraces;

@@ -19,16 +19,14 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.Maps;
-
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Set;
 
 @SuppressWarnings("serial")
 public class StreamingWebSocketServlet extends WebSocketServlet {

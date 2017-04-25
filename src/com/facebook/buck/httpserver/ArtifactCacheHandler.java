@@ -28,32 +28,26 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
-/**
- * Implements a really simple cache server on top of the local dircache.
- */
+/** Implements a really simple cache server on top of the local dircache. */
 public class ArtifactCacheHandler extends AbstractHandler {
   private static final Logger LOG = Logger.get(ArtifactCacheHandler.class);
 
   private final ProjectFilesystem projectFilesystem;
   private Optional<ArtifactCache> artifactCache;
 
-  public ArtifactCacheHandler(
-      ProjectFilesystem projectFilesystem) {
+  public ArtifactCacheHandler(ProjectFilesystem projectFilesystem) {
     this.artifactCache = Optional.empty();
     this.projectFilesystem = projectFilesystem;
   }
@@ -63,10 +57,8 @@ public class ArtifactCacheHandler extends AbstractHandler {
   }
 
   @Override
-  public void handle(String target,
-      Request baseRequest,
-      HttpServletRequest request,
-      HttpServletResponse response)
+  public void handle(
+      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     try {
       int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -105,10 +97,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
     Path temp = null;
     try {
       projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
-      temp = projectFilesystem.createTempFile(
-          projectFilesystem.getBuckPaths().getScratchDir(),
-          "outgoing_rulekey",
-          ".tmp");
+      temp =
+          projectFilesystem.createTempFile(
+              projectFilesystem.getBuckPaths().getScratchDir(), "outgoing_rulekey", ".tmp");
       CacheResult fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
       if (!fetchResult.getType().isSuccess()) {
         return HttpServletResponse.SC_NOT_FOUND;
@@ -144,17 +135,16 @@ public class ArtifactCacheHandler extends AbstractHandler {
     Path temp = null;
     try {
       projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
-      temp = projectFilesystem.createTempFile(
-          projectFilesystem.getBuckPaths().getScratchDir(),
-          "incoming_upload",
-          ".tmp");
+      temp =
+          projectFilesystem.createTempFile(
+              projectFilesystem.getBuckPaths().getScratchDir(), "incoming_upload", ".tmp");
 
       StoreResponseReadResult storeRequest;
       try (DataInputStream requestInputData = new DataInputStream(baseRequest.getInputStream());
-           OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
-        storeRequest = HttpArtifactCacheBinaryProtocol.readStoreRequest(
-            requestInputData,
-            tempFileOutputStream);
+          OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
+        storeRequest =
+            HttpArtifactCacheBinaryProtocol.readStoreRequest(
+                requestInputData, tempFileOutputStream);
       }
 
       if (!storeRequest.getActualHashCode().equals(storeRequest.getExpectedHashCode())) {
@@ -162,18 +152,19 @@ public class ArtifactCacheHandler extends AbstractHandler {
         return HttpServletResponse.SC_NOT_ACCEPTABLE;
       }
 
-      artifactCache.get().store(
-          ArtifactInfo.builder()
-              .setRuleKeys(storeRequest.getRuleKeys())
-              .setMetadata(storeRequest.getMetadata())
-              .build(),
-          BorrowablePath.borrowablePath(temp));
+      artifactCache
+          .get()
+          .store(
+              ArtifactInfo.builder()
+                  .setRuleKeys(storeRequest.getRuleKeys())
+                  .setMetadata(storeRequest.getMetadata())
+                  .build(),
+              BorrowablePath.borrowablePath(temp));
       return HttpServletResponse.SC_ACCEPTED;
     } finally {
       if (temp != null) {
         projectFilesystem.deleteFileAtPathIfExists(temp);
       }
     }
-
   }
 }

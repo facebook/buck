@@ -22,19 +22,17 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyListData;
 import com.google.template.soy.data.SoyMapData;
-
-import org.eclipse.jetty.server.Request;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.eclipse.jetty.server.Request;
 
 public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
-  private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
-      "build\\.(?:[\\d\\-\\.]+\\.)?" + BuildTraces.TRACE_ID_PATTERN + "\\.trace");
+  private static final Pattern TRACE_FILE_NAME_PATTERN =
+      Pattern.compile("build\\.(?:[\\d\\-\\.]+\\.)?" + BuildTraces.TRACE_ID_PATTERN + "\\.trace");
 
   private final BuildTraces buildTraces;
 

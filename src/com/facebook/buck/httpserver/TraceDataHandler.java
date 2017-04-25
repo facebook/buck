@@ -20,10 +20,6 @@ import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.net.MediaType;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,20 +27,18 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
-/**
- * HTTP handler for requests to the {@code /tracedata} path.
- */
+/** HTTP handler for requests to the {@code /tracedata} path. */
 class TraceDataHandler extends AbstractHandler {
 
   static final Pattern ID_PATTERN = Pattern.compile("/([0-9a-zA-Z-]+)");
 
-  @VisibleForTesting
-  static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
+  @VisibleForTesting static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
 
   private final BuildTraces buildTraces;
 
@@ -53,10 +47,8 @@ class TraceDataHandler extends AbstractHandler {
   }
 
   @Override
-  public void handle(String target,
-      Request baseRequest,
-      HttpServletRequest request,
-      HttpServletResponse response)
+  public void handle(
+      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     if ("GET".equals(baseRequest.getMethod())) {
       doGet(baseRequest, response);
@@ -102,8 +94,7 @@ class TraceDataHandler extends AbstractHandler {
       } else {
         isFirst = false;
       }
-      try (
-          InputStream input = traceStreams.next();
+      try (InputStream input = traceStreams.next();
           InputStreamReader inputStreamReader = new InputStreamReader(input)) {
         CharStreams.copy(inputStreamReader, responseWriter);
       }
