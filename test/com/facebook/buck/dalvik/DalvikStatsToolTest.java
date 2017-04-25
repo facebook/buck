@@ -24,13 +24,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.objectweb.asm.ClassReader;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,70 +32,74 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Set;
-
 import javax.tools.JavaCompiler;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.ClassReader;
 
-/**
- * Tests for {@link DalvikStatsTool}.
- */
+/** Tests for {@link DalvikStatsTool}. */
 public class DalvikStatsToolTest {
 
   private static final String TARGETED_JAVA_VERSION = "6";
 
-  private static final String TEST_CLASS = createSource(
-    "package test;",
-    "",
-    "import java.lang.StringBuilder;",
-    "",
-    "public class TestClass {",
-    "",
-    "  public String get() {",
-    "    StringBuilder sb = new StringBuilder();",
-    "    sb.append(\"foo\");",
-    "    return sb.toString();",
-    "  }",
-    "}");
+  private static final String TEST_CLASS =
+      createSource(
+          "package test;",
+          "",
+          "import java.lang.StringBuilder;",
+          "",
+          "public class TestClass {",
+          "",
+          "  public String get() {",
+          "    StringBuilder sb = new StringBuilder();",
+          "    sb.append(\"foo\");",
+          "    return sb.toString();",
+          "  }",
+          "}");
 
-  private static final String TEST_CLASS_WITH_INNER = createSource(
-      "package test;",
-      "",
-      "public class TestClassWithInner {",
-      "",
-      "  private long startTime;",
-      "",
-      "  public TestClassWithInner() {",
-      "    startTime = System.currentTimeMillis();",
-      "  }",
-      "",
-      "  public Object get() {",
-      "    return new Object() {",
-      "      public String toString() {",
-      "        return Long.toString(startTime);",
-      "      }",
-      "    };",
-      "  }",
-      "}");
+  private static final String TEST_CLASS_WITH_INNER =
+      createSource(
+          "package test;",
+          "",
+          "public class TestClassWithInner {",
+          "",
+          "  private long startTime;",
+          "",
+          "  public TestClassWithInner() {",
+          "    startTime = System.currentTimeMillis();",
+          "  }",
+          "",
+          "  public Object get() {",
+          "    return new Object() {",
+          "      public String toString() {",
+          "        return Long.toString(startTime);",
+          "      }",
+          "    };",
+          "  }",
+          "}");
 
-  private static final String TEST_CLASS_WITH_FIELDS = createSource(
-      "package test;",
-      "",
-      "public class TestClassWithFields {",
-      "",
-      "  private long f1;",
-      "",
-      "  public TestClassWithFields() {",
-      "    System.out.println(new Inner().f2);",
-      "  }",
-      "",
-      "  public static class Inner {",
-      "    public Object f2;",
-      "  }",
-      "}");
+  private static final String TEST_CLASS_WITH_FIELDS =
+      createSource(
+          "package test;",
+          "",
+          "public class TestClassWithFields {",
+          "",
+          "  private long f1;",
+          "",
+          "  public TestClassWithFields() {",
+          "    System.out.println(new Inner().f2);",
+          "  }",
+          "",
+          "  public static class Inner {",
+          "    public Object f2;",
+          "  }",
+          "}");
 
-  @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
   private File outputDir;
 
@@ -170,22 +167,20 @@ public class DalvikStatsToolTest {
         statsOuter.fieldReferences,
         "java/lang/System.out:Ljava/io/PrintStream;",
         "test/TestClassWithFields.f1:J",
-        "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;"
-        );
+        "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;");
 
     File classFileInner = new File(outputDir, "test/TestClassWithFields$Inner.class");
     InputStream inputStreamInner = new FileInputStream(classFileInner);
     DalvikStatsTool.Stats statsInner = DalvikStatsTool.getEstimate(inputStreamInner);
     assertReferences(
-        statsInner.fieldReferences,
-        "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;");
+        statsInner.fieldReferences, "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;");
   }
 
   /**
-   * Verifies that we count the MULTIANEWARRAY instruction (used in UsesMultiANewArray) as
-   * a call to Array.newInstance(Class, int...dims).  We do this by also measuring a class
-   * that uses MULTIANEWARRAY and calls Array.newInstance explicitly, and verify that the
-   * two classes have the same number of methodReferences.
+   * Verifies that we count the MULTIANEWARRAY instruction (used in UsesMultiANewArray) as a call to
+   * Array.newInstance(Class, int...dims). We do this by also measuring a class that uses
+   * MULTIANEWARRAY and calls Array.newInstance explicitly, and verify that the two classes have the
+   * same number of methodReferences.
    */
   @Test
   public void testMultiANewArray() throws IOException {
@@ -216,30 +211,28 @@ public class DalvikStatsToolTest {
 
     compileSources(outputDir, usesMultiANewArray, usesMultiANewArrayAndExplicitArrayCall);
 
-    ClassReader usesImplicitOnly = new ClassReader(
-        Files.newInputStream(
-            new File(outputDir, "UsesMultiANewArray.class").toPath()));
+    ClassReader usesImplicitOnly =
+        new ClassReader(
+            Files.newInputStream(new File(outputDir, "UsesMultiANewArray.class").toPath()));
     DalvikStatsTool.Stats implicitStats = DalvikStatsTool.getEstimateInternal(usesImplicitOnly);
 
-    ClassReader usesBoth = new ClassReader(Files.newInputStream(
-        new File(outputDir, "UsesMultiANewArrayAndExplicitArrayCall.class").toPath()));
+    ClassReader usesBoth =
+        new ClassReader(
+            Files.newInputStream(
+                new File(outputDir, "UsesMultiANewArrayAndExplicitArrayCall.class").toPath()));
     DalvikStatsTool.Stats bothStats = DalvikStatsTool.getEstimateInternal(usesBoth);
 
     assertEquals(implicitStats.methodReferences.size(), bothStats.methodReferences.size());
   }
 
-
-  /**
-   * A file object used to represent source coming from a string.
-   */
+  /** A file object used to represent source coming from a string. */
   public class JavaSourceFromString extends SimpleJavaFileObject {
 
-    /**
-     * The source code of this "file".
-     */
+    /** The source code of this "file". */
     final String code;
     /**
      * Constructs a new JavaSourceFromString.
+     *
      * @param name the name of the compilation unit represented by this file object
      * @param code the source code for the compilation unit represented by this file object
      */
@@ -252,17 +245,14 @@ public class DalvikStatsToolTest {
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return code;
     }
-
   }
+
   private static String createSource(String... args) {
     return Joiner.on("\n").join(args);
   }
 
-  private static void assertReferences(
-      Set<?> references,
-      String... methods) {
-    Set<String> actual = Sets.newHashSet(
-        Iterables.transform(references, Object::toString));
+  private static void assertReferences(Set<?> references, String... methods) {
+    Set<String> actual = Sets.newHashSet(Iterables.transform(references, Object::toString));
     Set<String> expected = Sets.newHashSet(methods);
 
     Set<String> onlyInActual = Sets.difference(actual, expected);

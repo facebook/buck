@@ -23,49 +23,56 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.stream.StreamSupport;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.stream.StreamSupport;
-
 public class FirstOrderTest {
 
-  private static final ImmutableList<Class<?>> KNOWN_TYPES = ImmutableList.of(
-      DependencyEnum.class,
-      AnnotationDependency.class,
-      DependencyInterface.class,
-      DependencyBase.class,
-      Dependency.class,
-      DerivedInterface.class,
-      Derived.class);
+  private static final ImmutableList<Class<?>> KNOWN_TYPES =
+      ImmutableList.of(
+          DependencyEnum.class,
+          AnnotationDependency.class,
+          DependencyInterface.class,
+          DependencyBase.class,
+          Dependency.class,
+          DerivedInterface.class,
+          Derived.class);
 
   private static final ImmutableList<ClassNode> KNOWN_CLASS_NODES =
-      KNOWN_TYPES.stream()
+      KNOWN_TYPES
+          .stream()
           .map(FirstOrderTest::loadClassNode)
           .collect(MoreCollectors.toImmutableList());
 
-  enum DependencyEnum { DEFAULT }
+  enum DependencyEnum {
+    DEFAULT
+  }
+
   @Retention(RetentionPolicy.RUNTIME)
   @interface AnnotationDependency {
     DependencyEnum dependencyEnum() default DependencyEnum.DEFAULT;
   }
+
   interface DependencyInterface {}
+
   static class DependencyBase {}
+
   static class Dependency extends DependencyBase implements DependencyInterface {}
+
   interface DerivedInterface extends DependencyInterface {}
+
   static class Derived implements DerivedInterface {}
 
   @Test
   public void testHasBase() {
-    class TestClass extends Dependency {
-    }
+    class TestClass extends Dependency {}
 
     DependencyCheck.checkThat(TestClass.class)
         .doesNotDependOn(DependencyEnum.class)
@@ -96,8 +103,7 @@ public class FirstOrderTest {
   public void testHasParameter() {
     class TestClass {
       @SuppressWarnings("unused")
-      void doSomething(Dependency dependency) {
-      }
+      void doSomething(Dependency dependency) {}
     }
 
     DependencyCheck.checkThat(TestClass.class)
@@ -130,8 +136,7 @@ public class FirstOrderTest {
   @Test
   public void testHasAnnotation() {
     class TestClass {
-      @AnnotationDependency()
-      int x;
+      @AnnotationDependency() int x;
     }
 
     DependencyCheck.checkThat(TestClass.class)
@@ -197,8 +202,7 @@ public class FirstOrderTest {
   }
 
   private static ImmutableList<ClassNode> loadAndMergeClasses(
-      Iterable<? extends Class<?>> classes,
-      Iterable<ClassNode> alreadyLoaded) {
+      Iterable<? extends Class<?>> classes, Iterable<ClassNode> alreadyLoaded) {
     ImmutableList.Builder<ClassNode> builder = ImmutableList.builder();
 
     builder.addAll(alreadyLoaded);
@@ -240,16 +244,14 @@ public class FirstOrderTest {
     DependencyCheck dependsOn(Class<?> type) {
       String name = Type.getType(type).getInternalName();
       assertTrue(
-          "Expected name '" + name + "' not found in list: " + typeNames,
-          typeNames.contains(name));
+          "Expected name '" + name + "' not found in list: " + typeNames, typeNames.contains(name));
       return this;
     }
 
     DependencyCheck doesNotDependOn(Class<?> type) {
       String name = Type.getType(type).getInternalName();
       assertFalse(
-          "Unexpected name '" + name + "' found in list: " + typeNames,
-          typeNames.contains(name));
+          "Unexpected name '" + name + "' found in list: " + typeNames, typeNames.contains(name));
       return this;
     }
   }
