@@ -53,23 +53,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 
-/**
- * A build rule which compiles one or more Swift sources into a Swift module.
- */
+/** A build rule which compiles one or more Swift sources into a Swift module. */
 class SwiftCompile extends AbstractBuildRule {
 
   private static final String INCLUDE_FLAG = "-I";
 
-  @AddToRuleKey
-  private final Tool swiftCompiler;
+  @AddToRuleKey private final Tool swiftCompiler;
 
-  @AddToRuleKey
-  private final String moduleName;
+  @AddToRuleKey private final String moduleName;
 
   @AddToRuleKey(stringify = true)
   private final Path outputPath;
@@ -77,11 +72,9 @@ class SwiftCompile extends AbstractBuildRule {
   private final Path modulePath;
   private final Path objectPath;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  @AddToRuleKey
-  private final ImmutableList<String> compilerFlags;
+  @AddToRuleKey private final ImmutableList<String> compilerFlags;
 
   private final Path headerPath;
   private final CxxPlatform cxxPlatform;
@@ -104,7 +97,8 @@ class SwiftCompile extends AbstractBuildRule {
       Iterable<SourcePath> srcs,
       ImmutableList<String> compilerFlags,
       Optional<Boolean> enableObjcInterop,
-      Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
+      Optional<SourcePath> bridgingHeader)
+      throws NoSuchBuildTargetException {
     super(params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
@@ -143,37 +137,39 @@ class SwiftCompile extends AbstractBuildRule {
 
     if (bridgingHeader.isPresent()) {
       compilerCommand.add(
-          "-import-objc-header",
-          resolver.getRelativePath(bridgingHeader.get()).toString());
+          "-import-objc-header", resolver.getRelativePath(bridgingHeader.get()).toString());
     }
 
     final Function<FrameworkPath, Path> frameworkPathToSearchPath =
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     compilerCommand.addAll(
-        frameworks.stream()
+        frameworks
+            .stream()
             .map(frameworkPathToSearchPath::apply)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 
     compilerCommand.addAll(
-        MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),
-            getSwiftIncludeArgs(resolver)));
-    compilerCommand.addAll(MoreIterables.zipAndConcat(
-        Iterables.cycle(INCLUDE_FLAG),
-        getBuildDeps().stream()
-            .filter(SwiftCompile.class::isInstance)
-            .map(BuildRule::getSourcePathToOutput)
-            .map(input -> resolver.getAbsolutePath(input).toString())
-            .collect(MoreCollectors.toImmutableSet())));
+        MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
+    compilerCommand.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle(INCLUDE_FLAG),
+            getBuildDeps()
+                .stream()
+                .filter(SwiftCompile.class::isInstance)
+                .map(BuildRule::getSourcePathToOutput)
+                .map(input -> resolver.getAbsolutePath(input).toString())
+                .collect(MoreCollectors.toImmutableSet())));
 
     Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
     if (configFlags.isPresent()) {
       compilerCommand.addAll(configFlags.get());
     }
-    boolean hasMainEntry = srcs.stream()
-        .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
-        .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
+    boolean hasMainEntry =
+        srcs.stream()
+            .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
+            .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerCommand.add(
         "-c",
@@ -195,15 +191,12 @@ class SwiftCompile extends AbstractBuildRule {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
-        projectFilesystem.getRootPath(),
-        ImmutableMap.of(),
-        compilerCommand.build());
+        projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
         MkdirStep.of(getProjectFilesystem(), outputPath),
@@ -218,10 +211,8 @@ class SwiftCompile extends AbstractBuildRule {
   /**
    * @return the arguments to add to the preprocessor command line to include the given header packs
    *     in preprocessor search path.
-   *
-   * We can't use CxxHeaders.getArgs() because
-   * 1. we don't need the system include roots.
-   * 2. swift doesn't like spaces after the "-I" flag.
+   *     <p>We can't use CxxHeaders.getArgs() because 1. we don't need the system include roots. 2.
+   *     swift doesn't like spaces after the "-I" flag.
    */
   @VisibleForTesting
   ImmutableList<String> getSwiftIncludeArgs(SourcePathResolver resolver) {
@@ -250,11 +241,12 @@ class SwiftCompile extends AbstractBuildRule {
 
     if (bridgingHeader.isPresent()) {
       for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
-        Path headerPath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-            getProjectFilesystem(),
-            BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
-            headerVisibility,
-            cxxPlatform.getFlavor());
+        Path headerPath =
+            CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                getProjectFilesystem(),
+                BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
+                headerVisibility,
+                cxxPlatform.getFlavor());
 
         headerMaps.add(headerPath.toString());
       }

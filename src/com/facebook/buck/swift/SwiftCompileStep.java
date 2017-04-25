@@ -26,14 +26,11 @@ import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-/**
- * A step that compiles Swift sources to a single module.
- */
+/** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftCompileStep.class);
@@ -43,9 +40,7 @@ class SwiftCompileStep implements Step {
   private final ImmutableList<String> compilerCommand;
 
   SwiftCompileStep(
-      Path compilerCwd,
-      Map<String, String> compilerEnvironment,
-      Iterable<String> compilerCommand) {
+      Path compilerCwd, Map<String, String> compilerEnvironment, Iterable<String> compilerCommand) {
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.compilerCommand = ImmutableList.copyOf(compilerCommand);

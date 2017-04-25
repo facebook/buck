@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -64,17 +63,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class SwiftLibraryDescription implements
-    Description<SwiftLibraryDescription.Arg>,
-    Flavored {
+public class SwiftLibraryDescription implements Description<SwiftLibraryDescription.Arg>, Flavored {
 
   static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
 
-  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      SWIFT_COMPANION_FLAVOR,
-      SWIFT_COMPILE_FLAVOR,
-      LinkerMapMode.NO_LINKER_MAP.getFlavor());
+  private static final Set<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(
+          SWIFT_COMPANION_FLAVOR, SWIFT_COMPILE_FLAVOR, LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -96,7 +92,6 @@ public class SwiftLibraryDescription implements
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Swift Library Type", Type.class);
-
 
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -125,15 +120,13 @@ public class SwiftLibraryDescription implements
         ImmutableSet.of(
             // Missing: swift-companion
             // Missing: swift-compile
-            cxxPlatformFlavorDomain
-        )
-    );
+            cxxPlatformFlavorDomain));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    ImmutableSet<Flavor> currentUnsupportedFlavors = ImmutableSet.copyOf(Sets.filter(
-        flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));
+    ImmutableSet<Flavor> currentUnsupportedFlavors =
+        ImmutableSet.copyOf(Sets.filter(flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));
     if (currentUnsupportedFlavors.isEmpty()) {
       return true;
     }
@@ -146,7 +139,8 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
@@ -156,16 +150,20 @@ public class SwiftLibraryDescription implements
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
-        buildTarget);
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform =
+        cxxPlatformFlavorDomain.getFlavorAndValue(buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
-        params.getExtraDeps().get()
+        params
+            .getExtraDeps()
+            .get()
             .stream()
-            .filter(input ->
-                !input.getBuildTarget()
-                    .getUnflavoredBuildTarget()
-                    .equals(buildTarget.getUnflavoredBuildTarget()))
+            .filter(
+                input ->
+                    !input
+                        .getBuildTarget()
+                        .getUnflavoredBuildTarget()
+                        .equals(buildTarget.getUnflavoredBuildTarget()))
             .collect(MoreCollectors.toImmutableSortedSet());
     params = params.copyReplacingExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
@@ -182,10 +180,10 @@ public class SwiftLibraryDescription implements
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
         Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
         flavors.remove(type.get().getKey());
-        BuildTarget target = BuildTarget
-            .builder(params.getBuildTarget().getUnflavoredBuildTarget())
-            .addAllFlavors(flavors)
-            .build();
+        BuildTarget target =
+            BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
+                .addAllFlavors(flavors)
+                .build();
         if (flavoredLinkerMapMode.isPresent()) {
           target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
         }
@@ -203,40 +201,47 @@ public class SwiftLibraryDescription implements
                 flavoredLinkerMapMode);
           case STATIC:
           case MACH_O_BUNDLE:
-          // TODO(tho@uber.com) create build rule for other types.
+            // TODO(tho@uber.com) create build rule for other types.
         }
         throw new RuntimeException("unhandled library build type");
       }
 
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
-      final Function<BuildRule, BuildRule> requireSwiftCompile = input -> {
-        try {
-          Preconditions.checkArgument(input instanceof SwiftLibrary);
-          return ((SwiftLibrary) input).requireSwiftCompileRule(cxxPlatform.getFlavor());
-        } catch (NoSuchBuildTargetException e) {
-          throw new HumanReadableException(e,
-              "Could not find SwiftCompile with target %s", buildTarget);
-        }
-      };
-      params = params.copyAppendingExtraDeps(
-          params.getBuildDeps().stream()
-              .filter(SwiftLibrary.class::isInstance)
-              .map(requireSwiftCompile)
-              .collect(MoreCollectors.toImmutableSet()));
+      final Function<BuildRule, BuildRule> requireSwiftCompile =
+          input -> {
+            try {
+              Preconditions.checkArgument(input instanceof SwiftLibrary);
+              return ((SwiftLibrary) input).requireSwiftCompileRule(cxxPlatform.getFlavor());
+            } catch (NoSuchBuildTargetException e) {
+              throw new HumanReadableException(
+                  e, "Could not find SwiftCompile with target %s", buildTarget);
+            }
+          };
+      params =
+          params.copyAppendingExtraDeps(
+              params
+                  .getBuildDeps()
+                  .stream()
+                  .filter(SwiftLibrary.class::isInstance)
+                  .map(requireSwiftCompile)
+                  .collect(MoreCollectors.toImmutableSet()));
 
-      params = params.copyAppendingExtraDeps(
-          params.getBuildDeps().stream()
-              .filter(CxxLibrary.class::isInstance)
-              .map(input -> {
-                BuildTarget companionTarget = input.getBuildTarget().withAppendedFlavors(
-                    SWIFT_COMPANION_FLAVOR);
-                return resolver.getRuleOptional(companionTarget)
-                    .map(requireSwiftCompile);
-              })
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(MoreCollectors.toImmutableSortedSet()));
+      params =
+          params.copyAppendingExtraDeps(
+              params
+                  .getBuildDeps()
+                  .stream()
+                  .filter(CxxLibrary.class::isInstance)
+                  .map(
+                      input -> {
+                        BuildTarget companionTarget =
+                            input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
+                        return resolver.getRuleOptional(companionTarget).map(requireSwiftCompile);
+                      })
+                  .filter(Optional::isPresent)
+                  .map(Optional::get)
+                  .collect(MoreCollectors.toImmutableSortedSet()));
 
       return new SwiftCompile(
           cxxPlatform,
@@ -245,9 +250,7 @@ public class SwiftLibraryDescription implements
           swiftPlatform.get().getSwiftc(),
           args.frameworks,
           args.moduleName.orElse(buildTarget.getShortName()),
-          BuildTargets.getGenPath(
-              params.getProjectFilesystem(),
-              buildTarget, "%s"),
+          BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s"),
           args.srcs,
           args.compilerFlags,
           args.enableObjcInterop,
@@ -274,55 +277,56 @@ public class SwiftLibraryDescription implements
       SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
       Optional<String> soname,
-      Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
+      Optional<LinkerMapMode> flavoredLinkerMapMode)
+      throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
-    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        soname,
-        buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
-        cxxPlatform);
-    Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
-        params.getProjectFilesystem(),
-        buildTarget,
-        sharedLibrarySoname);
+    String sharedLibrarySoname =
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
+    Path sharedLibOutput =
+        CxxDescriptionEnhancer.getSharedLibraryPath(
+            params.getProjectFilesystem(), buildTarget, sharedLibrarySoname);
 
-    SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
-        new SwiftRuntimeNativeLinkable(swiftPlatform);
+    SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(swiftPlatform);
 
-    BuildTarget requiredBuildTarget = buildTarget
-        .withoutFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-        .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
-        .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
+    BuildTarget requiredBuildTarget =
+        buildTarget
+            .withoutFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
+            .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
 
-    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
-        .from(swiftRuntimeLinkable.getNativeLinkableInput(
+    NativeLinkableInput.Builder inputBuilder =
+        NativeLinkableInput.builder()
+            .from(
+                swiftRuntimeLinkable.getNativeLinkableInput(
+                    cxxPlatform, Linker.LinkableDepType.SHARED))
+            .addAllArgs(rule.getAstLinkArgs())
+            .addArgs(rule.getFileListLinkArg());
+    return resolver.addToIndex(
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            cxxBuckConfig,
             cxxPlatform,
-            Linker.LinkableDepType.SHARED))
-        .addAllArgs(rule.getAstLinkArgs())
-        .addArgs(rule.getFileListLinkArg());
-    return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        cxxBuckConfig,
-        cxxPlatform,
-        LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
-        resolver,
-        sourcePathResolver,
-        ruleFinder,
-        buildTarget,
-        Linker.LinkType.SHARED,
-        Optional.of(sharedLibrarySoname),
-        sharedLibOutput,
-        Linker.LinkableDepType.SHARED,
-        /* thinLto */ false,
-        RichStream.from(params.getBuildDeps())
-            .filter(NativeLinkable.class)
-            .concat(RichStream.of(swiftRuntimeLinkable))
-            .collect(MoreCollectors.toImmutableSet()),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        inputBuilder.build()));
+            LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
+            resolver,
+            sourcePathResolver,
+            ruleFinder,
+            buildTarget,
+            Linker.LinkType.SHARED,
+            Optional.of(sharedLibrarySoname),
+            sharedLibOutput,
+            Linker.LinkableDepType.SHARED,
+            /* thinLto */ false,
+            RichStream.from(params.getBuildDeps())
+                .filter(NativeLinkable.class)
+                .concat(RichStream.of(swiftRuntimeLinkable))
+                .collect(MoreCollectors.toImmutableSet()),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            inputBuilder.build()));
   }
 
   public <A extends CxxLibraryDescription.Arg> Optional<BuildRule> createCompanionBuildRule(
@@ -330,14 +334,17 @@ public class SwiftLibraryDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
-      boolean hasSwiftSource = !SwiftDescriptions.filterSwiftSources(
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
-          args.srcs).isEmpty();
-      return hasSwiftSource ?
-          Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
+      boolean hasSwiftSource =
+          !SwiftDescriptions.filterSwiftSources(
+                  new SourcePathResolver(new SourcePathRuleFinder(resolver)), args.srcs)
+              .isEmpty();
+      return hasSwiftSource
+          ? Optional.of(
+              resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
           : Optional.empty();
     }
 
@@ -357,8 +364,8 @@ public class SwiftLibraryDescription implements
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
-    return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR) ||
-        buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
+    return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR)
+        || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
   @SuppressFieldNotInitialized
@@ -375,5 +382,4 @@ public class SwiftLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<NativeLinkable.Linkage> preferredLinkage;
   }
-
 }
