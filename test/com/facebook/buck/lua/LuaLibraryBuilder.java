@@ -22,15 +22,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class LuaLibraryBuilder
     extends AbstractNodeBuilder<LuaLibraryDescription.Arg, LuaLibraryDescription, LuaLibrary> {
 
-  public LuaLibraryBuilder(
-      LuaLibraryDescription description,
-      BuildTarget target) {
+  public LuaLibraryBuilder(LuaLibraryDescription description, BuildTarget target) {
     super(description, target);
   }
 
@@ -52,5 +49,4 @@ public class LuaLibraryBuilder
     arg.srcs = SourceList.ofNamedSources(srcs);
     return this;
   }
-
 }

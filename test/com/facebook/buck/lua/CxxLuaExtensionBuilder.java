@@ -21,20 +21,14 @@ import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-
 import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
-    extends
-    AbstractCxxSourceBuilder<
-        CxxLuaExtensionDescription.Arg,
-        CxxLuaExtensionDescription,
-        CxxLuaExtension,
+    extends AbstractCxxSourceBuilder<
+        CxxLuaExtensionDescription.Arg, CxxLuaExtensionDescription, CxxLuaExtension,
         CxxLuaExtensionBuilder> {
 
-  public CxxLuaExtensionBuilder(
-      CxxLuaExtensionDescription description,
-      BuildTarget target) {
+  public CxxLuaExtensionBuilder(CxxLuaExtensionDescription description, BuildTarget target) {
     super(description, target);
   }
 
@@ -60,5 +54,4 @@ public class CxxLuaExtensionBuilder
     arg.baseModule = Optional.of(baseModule);
     return this;
   }
-
 }

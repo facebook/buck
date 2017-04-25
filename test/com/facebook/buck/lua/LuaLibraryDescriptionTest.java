@@ -19,9 +19,9 @@ package com.facebook.buck.lua;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -29,7 +29,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -49,8 +48,7 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "some/foo.lua",
-                new FakeSourcePath("some/foo.lua"))));
+                "some/foo.lua", new FakeSourcePath("some/foo.lua"))));
   }
 
   @Test
@@ -67,8 +65,7 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "some/bar.lua",
-                new FakeSourcePath("foo.lua"))));
+                "some/bar.lua", new FakeSourcePath("foo.lua"))));
   }
 
   @Test
@@ -86,8 +83,6 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "blah/foo.lua",
-                new FakeSourcePath("some/foo.lua"))));
+                "blah/foo.lua", new FakeSourcePath("some/foo.lua"))));
   }
-
 }

@@ -26,11 +26,9 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -40,9 +38,7 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
 
   @Value.Default
   public Tool getLua() {
-    return new CommandTool.Builder()
-        .addArg("lua")
-        .build();
+    return new CommandTool.Builder().addArg("lua").build();
   }
 
   @Override
@@ -91,5 +87,4 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   public NativeLinkStrategy getNativeLinkStrategy() {
     return NativeLinkStrategy.SEPARATE;
   }
-
 }
