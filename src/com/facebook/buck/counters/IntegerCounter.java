@@ -17,7 +17,6 @@
 package com.facebook.buck.counters;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
 public class IntegerCounter extends Counter {

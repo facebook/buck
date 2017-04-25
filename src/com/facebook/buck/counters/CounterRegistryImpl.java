@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -43,9 +42,7 @@ public class CounterRegistryImpl implements CounterRegistry {
   private final ScheduledFuture<?> flushCountersFuture;
   private final Set<Counter> counters;
 
-  public CounterRegistryImpl(
-      ScheduledExecutorService service,
-      BuckEventBus eventBus) {
+  public CounterRegistryImpl(ScheduledExecutorService service, BuckEventBus eventBus) {
     this(service, eventBus, FIRST_FLUSH_INTERVAL_MILLIS, FLUSH_INTERVAL_MILLIS);
   }
 
@@ -56,42 +53,38 @@ public class CounterRegistryImpl implements CounterRegistry {
       long flushIntervalMillis) {
     this.counters = Sets.newLinkedHashSet();
     this.eventBus = eventBus;
-    flushCountersFuture = service.scheduleAtFixedRate(
-        this::flushCounters,
-      /* initialDelay */ firstFlushIntervalMillis,
-      /* period */ flushIntervalMillis,
-      /* unit */ TimeUnit.MILLISECONDS);
+    flushCountersFuture =
+        service.scheduleAtFixedRate(
+            this::flushCounters,
+            /* initialDelay */ firstFlushIntervalMillis,
+            /* period */ flushIntervalMillis,
+            /* unit */ TimeUnit.MILLISECONDS);
     eventBus.register(this);
   }
 
   @Override
   public IntegerCounter newIntegerCounter(
       String category, String name, ImmutableMap<String, String> tags) {
-    return registerCounter(
-        new IntegerCounter(category, name, tags));
+    return registerCounter(new IntegerCounter(category, name, tags));
   }
 
   @Override
   public SamplingCounter newSamplingCounter(
       String category, String name, ImmutableMap<String, String> tags) {
-    return registerCounter(
-        new SamplingCounter(category, name, tags));
+    return registerCounter(new SamplingCounter(category, name, tags));
   }
 
   @Override
   public TagSetCounter newTagSetCounter(
       String category, String name, ImmutableMap<String, String> tags) {
-    return registerCounter(
-        new TagSetCounter(category, name, tags));
+    return registerCounter(new TagSetCounter(category, name, tags));
   }
 
   @Override
   public void registerCounters(Collection<Counter> countersToRegister) {
     synchronized (this) {
       Preconditions.checkState(
-          counters.addAll(countersToRegister),
-          "Duplicate counters=[%s]",
-          countersToRegister);
+          counters.addAll(countersToRegister), "Duplicate counters=[%s]", countersToRegister);
     }
   }
 
@@ -124,13 +117,11 @@ public class CounterRegistryImpl implements CounterRegistry {
       }
     }
 
-    ImmutableList<CounterSnapshot> presentSnapshots = snapshots.stream()
-        .flatMap(Optionals::toStream)
-        .collect(MoreCollectors.toImmutableList());
+    ImmutableList<CounterSnapshot> presentSnapshots =
+        snapshots.stream().flatMap(Optionals::toStream).collect(MoreCollectors.toImmutableList());
     if (!presentSnapshots.isEmpty()) {
       CountersSnapshotEvent event = new CountersSnapshotEvent(presentSnapshots);
       eventBus.post(event);
     }
   }
-
 }
