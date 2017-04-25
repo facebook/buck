@@ -38,12 +38,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Collection;
 
-/**
- * A query expression for user-defined query functions.
- */
+/** A query expression for user-defined query functions. */
 public class FunctionExpression extends QueryExpression {
   QueryFunction function;
   ImmutableList<Argument> args;
@@ -70,8 +67,10 @@ public class FunctionExpression extends QueryExpression {
 
   @Override
   public String toString() {
-    return function.getName() +
-        "(" + Joiner.on(", ").join(Iterables.transform(args, Object::toString)) + ")";
+    return function.getName()
+        + "("
+        + Joiner.on(", ").join(Iterables.transform(args, Object::toString))
+        + ")";
   }
 
   @Override

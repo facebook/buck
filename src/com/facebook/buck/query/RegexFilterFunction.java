@@ -21,13 +21,12 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * An abstract class that provides generic regex filter functionality.
- * The actual expressions to filter are defined in the subclasses.
+ * An abstract class that provides generic regex filter functionality. The actual expressions to
+ * filter are defined in the subclasses.
  */
 abstract class RegexFilterFunction implements QueryFunction {
 
@@ -36,16 +35,12 @@ abstract class RegexFilterFunction implements QueryFunction {
   protected abstract String getPattern(ImmutableList<Argument> args);
 
   protected abstract String getStringToFilter(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      QueryTarget target)
+      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target)
       throws QueryException, InterruptedException;
 
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor)
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     Pattern compiledPattern;
     try {

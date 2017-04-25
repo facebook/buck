@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -84,7 +83,7 @@ class BinaryOperatorExpression extends QueryExpression {
         case MINUS:
           lhsValue.removeAll(rhsValue);
           break;
-        //$CASES-OMITTED$
+          //$CASES-OMITTED$
         default:
           throw new IllegalStateException("operator=" + operator);
       }

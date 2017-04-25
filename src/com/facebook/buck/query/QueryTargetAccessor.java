@@ -18,17 +18,16 @@ package com.facebook.buck.query;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 
@@ -36,11 +35,10 @@ public class QueryTargetAccessor {
 
   private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
-  private QueryTargetAccessor() { }
+  private QueryTargetAccessor() {}
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TargetNode<T, ?> node,
-      String attribute) {
+      TargetNode<T, ?> node, String attribute) {
     try {
       final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
       Class<?> constructorArgClass = node.getConstructorArg().getClass();
@@ -56,8 +54,7 @@ public class QueryTargetAccessor {
               builder.add(extractBuildTargetContainer((BuildTarget) value));
             }
           },
-          node.getConstructorArg()
-      );
+          node.getConstructorArg());
       return builder.build();
     } catch (NoSuchFieldException e) {
       // Ignore if the field does not exist in this rule.
@@ -65,13 +62,9 @@ public class QueryTargetAccessor {
     }
   }
 
-  /**
-   * Filters the objects in the given attribute that satisfy the given predicate.
-   */
+  /** Filters the objects in the given attribute that satisfy the given predicate. */
   public static <T> ImmutableSet<Object> filterAttributeContents(
-      TargetNode<T, ?> node,
-      String attribute,
-      final Predicate<Object> predicate) {
+      TargetNode<T, ?> node, String attribute, final Predicate<Object> predicate) {
     try {
       final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
       Class<?> constructorArgClass = node.getConstructorArg().getClass();
@@ -83,8 +76,7 @@ public class QueryTargetAccessor {
               builder.add(value);
             }
           },
-          node.getConstructorArg()
-      );
+          node.getConstructorArg());
       return builder.build();
     } catch (NoSuchFieldException e) {
       // Ignore if the field does not exist in this rule.

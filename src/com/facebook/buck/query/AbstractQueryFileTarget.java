@@ -17,10 +17,8 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @Value.Immutable

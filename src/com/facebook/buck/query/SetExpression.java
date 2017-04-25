@@ -34,25 +34,22 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Collection;
 
 /**
- * A set(word, ..., word) expression, which computes the union of zero or more
- * target patterns separated by whitespace.  This is intended to support the
- * use-case in which a set of labels written to a file by a previous query
- * expression can be modified externally, then used as input to another query,
- * like so:
+ * A set(word, ..., word) expression, which computes the union of zero or more target patterns
+ * separated by whitespace. This is intended to support the use-case in which a set of labels
+ * written to a file by a previous query expression can be modified externally, then used as input
+ * to another query, like so:
  *
  * <pre>
  * % buck query 'allpaths(foo, bar)' | grep ... | sed ... | awk ... >file
  * % buck query "kind(qux_library, set($(<file)))"
  * </pre>
  *
- * <p>The grammar currently restricts the operands of set() to being zero or
- * more words (target patterns), with no intervening punctuation.  In principle
- * this could be extended to arbitrary expressions without grammatical
- * ambiguity, but this seems excessively general for now.
+ * <p>The grammar currently restricts the operands of set() to being zero or more words (target
+ * patterns), with no intervening punctuation. In principle this could be extended to arbitrary
+ * expressions without grammatical ambiguity, but this seems excessively general for now.
  *
  * <pre>expr ::= SET '(' WORD * ')'</pre>
  */

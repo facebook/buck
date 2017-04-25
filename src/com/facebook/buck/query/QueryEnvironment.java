@@ -35,40 +35,34 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.annotation.Nullable;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
  *
- * The query language is documented at docs/command/query.soy
+ * <p>The query language is documented at docs/command/query.soy
  */
 public interface QueryEnvironment {
 
-  /**
-   * Type of an argument of a user-defined query function.
-   */
+  /** Type of an argument of a user-defined query function. */
   enum ArgumentType {
-    EXPRESSION, WORD, INTEGER,
+    EXPRESSION,
+    WORD,
+    INTEGER,
   }
 
-  /**
-   * Value of an argument of a user-defined query function.
-   */
+  /** Value of an argument of a user-defined query function. */
   class Argument {
 
     private final ArgumentType type;
 
-    @Nullable
-    private final QueryExpression expression;
+    @Nullable private final QueryExpression expression;
 
-    @Nullable
-    private final String word;
+    @Nullable private final String word;
 
     private final int integer;
 
@@ -114,10 +108,14 @@ public interface QueryEnvironment {
     @Override
     public String toString() {
       switch (type) {
-        case WORD: return "'" + word + "'";
-        case EXPRESSION: return Preconditions.checkNotNull(expression).toString();
-        case INTEGER: return Integer.toString(integer);
-        default: throw new IllegalStateException();
+        case WORD:
+          return "'" + word + "'";
+        case EXPRESSION:
+          return Preconditions.checkNotNull(expression).toString();
+        case INTEGER:
+          return Integer.toString(integer);
+        default:
+          throw new IllegalStateException();
       }
     }
 
@@ -127,8 +125,10 @@ public interface QueryEnvironment {
     }
 
     public boolean equalTo(Argument other) {
-      return type.equals(other.type) && integer == other.integer &&
-          Objects.equals(expression, other.expression) && Objects.equals(word, other.word);
+      return type.equals(other.type)
+          && integer == other.integer
+          && Objects.equals(expression, other.expression)
+          && Objects.equals(word, other.word);
     }
 
     @Override
@@ -146,46 +146,41 @@ public interface QueryEnvironment {
     }
   }
 
-  /**
-   * A user-defined query function.
-   */
+  /** A user-defined query function. */
   interface QueryFunction {
-    /**
-     * Name of the function as it appears in the query language.
-     */
+    /** Name of the function as it appears in the query language. */
     String getName();
 
     /**
      * The number of arguments that are required. The rest is optional.
      *
-     * <p>This should be greater than or equal to zero and at smaller than or equal to the length
-     * of the list returned by {@link #getArgumentTypes}.
+     * <p>This should be greater than or equal to zero and at smaller than or equal to the length of
+     * the list returned by {@link #getArgumentTypes}.
      */
     int getMandatoryArguments();
 
-    /**
-     * The types of the arguments of the function.
-     */
+    /** The types of the arguments of the function. */
     ImmutableList<ArgumentType> getArgumentTypes();
 
     /**
      * Called when a user-defined function is to be evaluated.
+     *
      * @param env the query environment this function is evaluated in.
-     * @param args the input arguments. These are type-checked against the specification returned
-     *     by {@link #getArgumentTypes} and {@link #getMandatoryArguments}*/
+     * @param args the input arguments. These are type-checked against the specification returned by
+     *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
+     */
     ImmutableSet<QueryTarget> eval(
-        QueryEnvironment env,
-        ImmutableList<Argument> args,
-        ListeningExecutorService executor) throws QueryException, InterruptedException;
+        QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+        throws QueryException, InterruptedException;
   }
 
   /**
-   * Returns the set of target nodes in the graph for the specified target
-   * pattern, in 'buck build' syntax.
+   * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
+   * syntax.
    */
   ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-      String pattern,
-      ListeningExecutorService executor) throws QueryException, InterruptedException;
+      String pattern, ListeningExecutorService executor)
+      throws QueryException, InterruptedException;
 
   /** Returns the direct forward dependencies of the specified targets. */
   ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
@@ -194,11 +189,9 @@ public interface QueryEnvironment {
   /**
    * Applies {@code action} to each forward dependencies of the specified targets.
    *
-   * Might apply more than once to the same target, so {@code action} should be idempotent.
+   * <p>Might apply more than once to the same target, so {@code action} should be idempotent.
    */
-  default void forEachFwdDep(
-      Iterable<QueryTarget> targets,
-      Consumer<? super QueryTarget> action)
+  default void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
       throws QueryException, InterruptedException {
     getFwdDeps(targets).forEach(action);
   }
@@ -210,26 +203,21 @@ public interface QueryEnvironment {
   Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
 
   /**
-   * Returns the forward transitive closure of all of the targets in
-   * "targets".  Callers must ensure that {@link #buildTransitiveClosure}
-   * has been called for the relevant subgraph.
+   * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
+   * that {@link #buildTransitiveClosure} has been called for the relevant subgraph.
    */
   Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException, InterruptedException;
 
   /**
-   * Construct the dependency graph for a depth-bounded forward transitive closure
-   * of all nodes in "targetNodes".  The identity of the calling expression is
-   * required to produce error messages.
+   * Construct the dependency graph for a depth-bounded forward transitive closure of all nodes in
+   * "targetNodes". The identity of the calling expression is required to produce error messages.
    *
-   * <p>If a larger transitive closure was already built, returns it to
-   * improve incrementality, since all depth-constrained methods filter it
-   * after it is built anyway.
+   * <p>If a larger transitive closure was already built, returns it to improve incrementality,
+   * since all depth-constrained methods filter it after it is built anyway.
    */
   void buildTransitiveClosure(
-      Set<QueryTarget> targetNodes,
-      int maxDepth,
-      ListeningExecutorService executor)
+      Set<QueryTarget> targetNodes, int maxDepth, ListeningExecutorService executor)
       throws InterruptedException, QueryException;
 
   String getTargetKind(QueryTarget target) throws InterruptedException, QueryException;
@@ -239,13 +227,11 @@ public interface QueryEnvironment {
       throws InterruptedException, QueryException;
 
   /** Returns the build files that define the given targets. */
-  ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
-      throws QueryException;
+  ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
   ImmutableSet<QueryTarget> getFileOwners(
-      ImmutableList<String> files,
-      ListeningExecutorService executor)
+      ImmutableList<String> files, ListeningExecutorService executor)
       throws InterruptedException, QueryException;
 
   /** Returns the existing targets in the value of `attribute` of the given `target`. */
@@ -254,14 +240,10 @@ public interface QueryEnvironment {
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target,
-      String attribute,
-      final Predicate<Object> predicate)
+      QueryTarget target, String attribute, final Predicate<Object> predicate)
       throws InterruptedException, QueryException;
 
-  /**
-   * Returns the set of query functions implemented by this query environment.
-   */
+  /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction> getFunctions();
 
   /** List of the default query functions. */
@@ -278,14 +260,10 @@ public interface QueryEnvironment {
           new LabelsFunction(),
           new OwnerFunction(),
           new RdepsFunction(),
-          new TestsOfFunction()
-          );
+          new TestsOfFunction());
 
-  /**
-   * @return the {@link QueryTarget}s expanded from the given variable {@code name}.
-   */
+  /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
   default ImmutableSet<QueryTarget> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
 }
-

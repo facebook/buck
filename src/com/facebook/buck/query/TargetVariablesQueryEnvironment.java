@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Set;
 
 /**
@@ -34,16 +33,14 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   private final QueryEnvironment delegate;
 
   public TargetVariablesQueryEnvironment(
-      ImmutableMap<String, ImmutableSet<QueryTarget>> targetVariables,
-      QueryEnvironment delegate) {
+      ImmutableMap<String, ImmutableSet<QueryTarget>> targetVariables, QueryEnvironment delegate) {
     this.targetVariables = targetVariables;
     this.delegate = delegate;
   }
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-      String pattern,
-      ListeningExecutorService executor)
+      String pattern, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return delegate.getTargetsMatchingPattern(pattern, executor);
   }
@@ -73,9 +70,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
 
   @Override
   public void buildTransitiveClosure(
-      Set<QueryTarget> targetNodes,
-      int maxDepth,
-      ListeningExecutorService executor)
+      Set<QueryTarget> targetNodes, int maxDepth, ListeningExecutorService executor)
       throws InterruptedException, QueryException {
     delegate.buildTransitiveClosure(targetNodes, maxDepth, executor);
   }
@@ -92,15 +87,13 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
-      throws QueryException {
+  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException {
     return delegate.getBuildFiles(targets);
   }
 
   @Override
   public ImmutableSet<QueryTarget> getFileOwners(
-      ImmutableList<String> files,
-      ListeningExecutorService executor)
+      ImmutableList<String> files, ListeningExecutorService executor)
       throws InterruptedException, QueryException {
     return delegate.getFileOwners(files, executor);
   }
@@ -113,9 +106,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target,
-      String attribute,
-      Predicate<Object> predicate)
+      QueryTarget target, String attribute, Predicate<Object> predicate)
       throws InterruptedException, QueryException {
     return delegate.filterAttributeContents(target, attribute, predicate);
   }
@@ -133,5 +124,4 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
     }
     return delegate.resolveTargetVariable(name);
   }
-
 }

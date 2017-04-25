@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Collection;
 
 /**
@@ -63,9 +62,10 @@ public final class TargetLiteral extends QueryExpression {
   @Override
   public String toString() {
     // Keep predicate consistent with Lexer.scanWord!
-    boolean needsQuoting = Lexer.isReservedWord(pattern) ||
-        pattern.isEmpty() ||
-        "$-*".indexOf(pattern.charAt(0)) != -1;
+    boolean needsQuoting =
+        Lexer.isReservedWord(pattern)
+            || pattern.isEmpty()
+            || "$-*".indexOf(pattern.charAt(0)) != -1;
     return needsQuoting ? ("\"" + pattern + "\"") : pattern;
   }
 

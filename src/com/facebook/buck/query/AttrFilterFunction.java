@@ -26,8 +26,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * A attrfilter(attribute, value, argument) filter expression, which computes the subset
- * of nodes in 'argument' whose 'attribute' contains the given value.
+ * A attrfilter(attribute, value, argument) filter expression, which computes the subset of nodes in
+ * 'argument' whose 'attribute' contains the given value.
  *
  * <pre>expr ::= ATTRFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
@@ -36,8 +36,7 @@ public class AttrFilterFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  public AttrFilterFunction() {
-  }
+  public AttrFilterFunction() {}
 
   @Override
   public String getName() {
@@ -56,9 +55,7 @@ public class AttrFilterFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor)
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
@@ -75,5 +72,4 @@ public class AttrFilterFunction implements QueryFunction {
     }
     return result.build();
   }
-
 }

@@ -32,8 +32,7 @@ public class OwnerFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD);
 
-  public OwnerFunction() {
-  }
+  public OwnerFunction() {}
 
   @Override
   public String getName() {
@@ -52,11 +51,9 @@ public class OwnerFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
 
     return env.getFileOwners(ImmutableList.of(args.get(0).getWord()), executor);
   }
-
 }

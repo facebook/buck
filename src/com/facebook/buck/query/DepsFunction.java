@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -53,19 +52,17 @@ import java.util.function.Consumer;
  * traversal. If the 'next_expr' is absent, the default 'first_order_deps()' function is used.
  *
  * <pre>expr ::= DEPS '(' expr ')'</pre>
+ *
  * <pre>       | DEPS '(' expr ',' INTEGER ')'</pre>
+ *
  * <pre>       | DEPS '(' expr ',' INTEGER ',' expr ')'</pre>
  */
 public class DepsFunction implements QueryFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
-      ImmutableList.of(
-          ArgumentType.EXPRESSION,
-          ArgumentType.INTEGER,
-          ArgumentType.EXPRESSION);
+      ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.INTEGER, ArgumentType.EXPRESSION);
 
-  public DepsFunction() {
-  }
+  public DepsFunction() {}
 
   @Override
   public String getName() {
@@ -92,24 +89,25 @@ public class DepsFunction implements QueryFunction {
     for (QueryTarget target : targets) {
       Set<QueryTarget> deps =
           depsExpression.eval(
-              new TargetVariablesQueryEnvironment(ImmutableMap.of(
-                  FirstOrderDepsFunction.NAME,
-                  ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target)))), env),
+              new TargetVariablesQueryEnvironment(
+                  ImmutableMap.of(
+                      FirstOrderDepsFunction.NAME,
+                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target)))),
+                  env),
               executor);
       deps.forEach(consumer);
     }
   }
 
   /**
-   * Evaluates to the dependencies of the argument.
-   * Breadth first search from the given argument until there are no more unvisited nodes in the
-   * transitive closure or the maximum depth (if supplied) is reached.
+   * Evaluates to the dependencies of the argument. Breadth first search from the given argument
+   * until there are no more unvisited nodes in the transitive closure or the maximum depth (if
+   * supplied) is reached.
    */
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression> deps =
@@ -170,14 +168,10 @@ public class DepsFunction implements QueryFunction {
 
     @Override
     public ImmutableSet<QueryTarget> eval(
-        QueryEnvironment env,
-        ImmutableList<Argument> args,
-        ListeningExecutorService executor)
+        QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
         throws QueryException, InterruptedException {
       Preconditions.checkArgument(args.size() == 0);
       return env.resolveTargetVariable(getName());
     }
-
   }
-
 }
