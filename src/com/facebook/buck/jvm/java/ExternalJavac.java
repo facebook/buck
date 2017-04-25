@@ -243,7 +243,7 @@ public class ExternalJavac implements Javac {
       BuildTarget invokingRule,
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> workingDirectory)
-      throws IOException {
+      throws InterruptedException, IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();

@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -74,8 +75,6 @@ public class OwnersReportTest {
     }
   }
 
-  private ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-
   private TargetNode<?, ?> createTargetNode(BuildTarget buildTarget, ImmutableSet<Path> inputs) {
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
     FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
@@ -95,6 +94,13 @@ public class OwnersReportTest {
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() throws InterruptedException {
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
   @Test

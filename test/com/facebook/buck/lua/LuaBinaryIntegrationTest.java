@@ -312,7 +312,7 @@ public class LuaBinaryIntegrationTest {
     assertThat(luaBinaryResult.getStderr(), containsString("extension.h"));
   }
 
-  private LuaBuckConfig getLuaBuckConfig() throws IOException {
+  private LuaBuckConfig getLuaBuckConfig() throws InterruptedException, IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

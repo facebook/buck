@@ -102,7 +102,7 @@ public class DistBuildLogStateTrackerTest {
    */
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);

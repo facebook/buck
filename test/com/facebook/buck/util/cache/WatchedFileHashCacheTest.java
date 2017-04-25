@@ -102,7 +102,8 @@ public class WatchedFileHashCacheTest {
   }
 
   @Test
-  public void directoryHashChangesWhenFileInsideDirectoryChanges() throws IOException {
+  public void directoryHashChangesWhenFileInsideDirectoryChanges()
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
     tmp.newFolder("foo", "bar");

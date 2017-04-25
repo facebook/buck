@@ -99,7 +99,8 @@ public class CxxPlatformUtils {
     return DefaultCxxPlatforms.build(Platform.detect(), new FakeProjectFilesystem(), config);
   }
 
-  public static CxxPlatform getDefaultPlatform(Path root) throws IOException {
+  private static CxxPlatform getDefaultPlatform(Path root)
+      throws InterruptedException, IOException {
     Config rawConfig = Configs.createDefaultConfig(root);
     BuckConfig buckConfig =
         new BuckConfig(
@@ -114,7 +115,7 @@ public class CxxPlatformUtils {
   }
 
   public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)
-      throws IOException {
+      throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform defaultPlatform = getDefaultPlatform(root);

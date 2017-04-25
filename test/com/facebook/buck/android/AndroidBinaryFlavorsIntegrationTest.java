@@ -43,7 +43,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

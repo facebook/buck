@@ -73,7 +73,7 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFilesInRoot() throws IOException {
+  public void testCreateRelativeSymlinkToFilesInRoot() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
@@ -101,7 +101,7 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFileInRoot() throws IOException {
+  public void testCreateRelativeSymlinkToFileInRoot() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
@@ -130,7 +130,8 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFilesOfVaryingDepth() throws IOException {
+  public void testCreateRelativeSymlinkToFilesOfVaryingDepth()
+      throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFolder("foo", "bar", "baz");
     tmp.newFile("foo/bar/baz/biz.txt");

@@ -51,7 +51,7 @@ public class AppleLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testAppleLibraryBuildsSomething() throws IOException {
+  public void testAppleLibraryBuildsSomething() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -69,7 +69,8 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithDefaultsInConfigBuildsSomething() throws IOException {
+  public void testAppleLibraryWithDefaultsInConfigBuildsSomething()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -93,7 +94,8 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithDefaultsInRuleBuildsSomething() throws IOException {
+  public void testAppleLibraryWithDefaultsInRuleBuildsSomething()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -114,7 +116,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForWatchOS() throws IOException {
+  public void testAppleLibraryBuildsForWatchOS() throws InterruptedException, IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -133,7 +135,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForWatchSimulator() throws IOException {
+  public void testAppleLibraryBuildsForWatchSimulator() throws InterruptedException, IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHSIMULATOR));
 
@@ -154,7 +156,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForAppleTVOS() throws IOException {
+  public void testAppleLibraryBuildsForAppleTVOS() throws InterruptedException, IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
 
     ProjectWorkspace workspace =
@@ -174,7 +176,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForAppleTVSimulator() throws IOException {
+  public void testAppleLibraryBuildsForAppleTVSimulator() throws InterruptedException, IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
 
@@ -195,7 +197,8 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
+  public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -215,7 +218,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryHeaderSymlinkTree() throws IOException {
+  public void testAppleLibraryHeaderSymlinkTree() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
@@ -559,7 +562,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
+  public void testAppleLibraryExportedHeaderSymlinkTree() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
@@ -586,7 +589,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryIsHermetic() throws IOException {
+  public void testAppleLibraryIsHermetic() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_is_hermetic", tmp);

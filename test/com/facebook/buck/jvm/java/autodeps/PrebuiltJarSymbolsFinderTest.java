@@ -64,7 +64,7 @@ public class PrebuiltJarSymbolsFinderTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void extractSymbolsFromBinaryJar() throws IOException {
+  public void extractSymbolsFromBinaryJar() throws InterruptedException, IOException {
     ImmutableSet<String> entries =
         ImmutableSet.of(
             "META-INF/",
@@ -101,7 +101,7 @@ public class PrebuiltJarSymbolsFinderTest {
   }
 
   @Test
-  public void contentsOfBinaryJarShouldAffectRuleKey() throws IOException {
+  public void contentsOfBinaryJarShouldAffectRuleKey() throws InterruptedException, IOException {
     // The path to the JAR file to use as the binaryJar of the PrebuiltJarSymbolsFinder.
     final Path relativePathToJar = Paths.get("common.jar");
     final Path absolutePathToJar = tmp.getRoot().resolve(relativePathToJar);
@@ -133,7 +133,7 @@ public class PrebuiltJarSymbolsFinderTest {
                     BuildTargetFactory.newInstance("//foo:rule"),
                     finder,
                     new ProjectFilesystem(tmp.getRoot()));
-          } catch (IOException e) {
+          } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
           }
           RuleKey ruleKey =
@@ -164,7 +164,7 @@ public class PrebuiltJarSymbolsFinderTest {
   }
 
   @Test
-  public void generatedBinaryJarShouldNotAffectRuleKey() {
+  public void generatedBinaryJarShouldNotAffectRuleKey() throws InterruptedException {
     SourcePathResolver pathResolver = null;
     SourcePathRuleFinder ruleFinder = null;
 
@@ -199,7 +199,7 @@ public class PrebuiltJarSymbolsFinderTest {
   }
 
   private PrebuiltJarSymbolsFinder createFinderForFileWithEntries(
-      String jarFileName, Iterable<String> entries) throws IOException {
+      String jarFileName, Iterable<String> entries) throws InterruptedException, IOException {
     Clock clock = new FakeClock(1);
     Path jarFile = tmp.newFile(jarFileName);
     try (OutputStream stream =

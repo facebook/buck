@@ -23,12 +23,18 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import org.junit.Before;
 import org.junit.Test;
 
 public class VisibilityPatternParserTest {
 
   private final VisibilityPatternParser parser = new VisibilityPatternParser();
-  private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() throws InterruptedException {
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+  }
 
   @Test
   public void visibilityParserCanHandleSpecialCasedPublicVisibility()

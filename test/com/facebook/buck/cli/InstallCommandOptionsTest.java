@@ -43,7 +43,7 @@ public class InstallCommandOptionsTest {
   }
 
   private AdbOptions getAdbOptions(boolean multiInstallModeConfig, String... args)
-      throws CmdLineException, IOException {
+      throws CmdLineException, InterruptedException, IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[adb]", "multi_install_mode = " + multiInstallModeConfig));
@@ -146,7 +146,8 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException, IOException {
+  public void testInstallCommandOptionsMultiInstallMode()
+      throws CmdLineException, InterruptedException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
@@ -161,7 +162,8 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsAdbThreads() throws CmdLineException, IOException {
+  public void testInstallCommandOptionsAdbThreads()
+      throws CmdLineException, InterruptedException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
@@ -176,7 +178,8 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testMultiInstallModeFromBuckConfig() throws CmdLineException, IOException {
+  public void testMultiInstallModeFromBuckConfig()
+      throws CmdLineException, InterruptedException, IOException {
     AdbOptions options = getAdbOptions(true);
     assertTrue(options.isMultiInstallModeEnabled());
 

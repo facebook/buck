@@ -354,11 +354,11 @@ public class HgCmdLineInterfaceIntegrationTest {
     Assume.assumeTrue(repoTwoCmdLine instanceof HgCmdLineInterface);
   }
 
-  private static Path explodeReposZip() throws IOException {
+  private static Path explodeReposZip() throws InterruptedException, IOException {
     return explodeReposZip(tempFolder.getRoot().toPath());
   }
 
-  private static Path explodeReposZip(Path destination) throws IOException {
+  private static Path explodeReposZip(Path destination) throws InterruptedException, IOException {
     Path testDataDir = TestDataHelper.getTestDataDirectory(HgCmdLineInterfaceIntegrationTest.class);
     Path hgRepoZipPath = testDataDir.resolve(HG_REPOS_ZIP);
 

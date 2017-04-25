@@ -44,7 +44,8 @@ public class AccumulateClassNamesStepTest {
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnJarFile() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnJarFile()
+      throws InterruptedException, IOException {
     // Create a JAR file.
     String name = "example.jar";
     File jarFile = tmp.newFile(name);
@@ -82,7 +83,8 @@ public class AccumulateClassNamesStepTest {
   }
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnDirectory() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnDirectory()
+      throws InterruptedException, IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);

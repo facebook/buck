@@ -42,14 +42,14 @@ public class XzStepTest {
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testXzStepDefaultDestinationFile() {
+  public void testXzStepDefaultDestinationFile() throws InterruptedException {
     final Path sourceFile = Paths.get("/path/to/source.file");
     XzStep step = new XzStep(new ProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
     assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 
   @Test
-  public void testXzStep() throws IOException {
+  public void testXzStep() throws InterruptedException, IOException {
     final Path sourceFile =
         TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
     final File destinationFile = tmp.newFile("xzstep.data.xz");

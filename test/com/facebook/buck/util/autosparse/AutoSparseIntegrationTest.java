@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -112,82 +111,82 @@ public class AutoSparseIntegrationTest {
   }
 
   @Test
-  public void testAutosparseDisabled() {
+  public void testAutosparseDisabled() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate(repoPath, false, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
-  public void testAutosparseEnabledHgSubdir() {
+  public void testAutosparseEnabledHgSubdir() throws InterruptedException {
     ProjectFilesystemDelegate delegate =
         createDelegate(repoPath.resolve("not_hidden_subdir"), true, ImmutableList.of());
     Assume.assumeTrue(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
-  public void testAutosparseEnabledNotHgDir() {
+  public void testAutosparseEnabledNotHgDir() throws InterruptedException {
     ProjectFilesystemDelegate delegate =
         createDelegate(repoPath.getParent(), true, ImmutableList.of());
     Assume.assumeFalse(delegate instanceof AutoSparseProjectFilesystemDelegate);
   }
 
   @Test
-  public void testRelativePath() {
+  public void testRelativePath() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Path path = delegate.getPathForRelativePath(Paths.get("subdir/file_in_subdir"));
     Assert.assertEquals(path, repoPath.resolve("subdir/file_in_subdir"));
   }
 
   @Test
-  public void testExecutableFile() {
+  public void testExecutableFile() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeTrue(delegate.isExecutable(repoPath.resolve("file1")));
   }
 
   @Test
-  public void testNotExecutableFile() {
+  public void testNotExecutableFile() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeFalse(delegate.isExecutable(repoPath.resolve("file2")));
   }
 
   @Test
-  public void testExecutableNotExisting() {
+  public void testExecutableNotExisting() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeFalse(delegate.isExecutable(repoPath.resolve("nonsuch")));
   }
 
   @Test
-  public void testSymlink() {
+  public void testSymlink() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeTrue(delegate.isSymlink(repoPath.resolve("file3")));
   }
 
   @Test
-  public void testNotSymLink() {
+  public void testNotSymLink() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeFalse(delegate.isSymlink(repoPath.resolve("file2")));
   }
 
   @Test
-  public void testSymlinkNotExisting() {
+  public void testSymlinkNotExisting() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeFalse(delegate.isSymlink(repoPath.resolve("nonsuch")));
   }
 
   @Test
-  public void testExists() {
+  public void testExists() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeTrue(delegate.exists(repoPath.resolve("file1")));
   }
 
   @Test
-  public void testNotExists() {
+  public void testNotExists() throws InterruptedException {
     ProjectFilesystemDelegate delegate = createDelegate();
     Assume.assumeFalse(delegate.exists(repoPath.resolve("nonsuch")));
   }
 
   @Test
-  public void testExistsUntracked() throws FileNotFoundException, IOException {
+  public void testExistsUntracked() throws InterruptedException, IOException {
     ProjectFilesystemDelegate delegate = createDelegate();
     File newFile = repoPath.resolve("newFile").toFile();
     new FileOutputStream(newFile).close();
@@ -195,7 +194,7 @@ public class AutoSparseIntegrationTest {
   }
 
   @Test
-  public void testMaterialize() throws IOException {
+  public void testMaterialize() throws InterruptedException, IOException {
     ProjectFilesystemDelegate delegate = createDelegate(repoPath, true, ImmutableList.of("subdir"));
     // Touch various files, these should be part of the profile
     delegate.exists(repoPath.resolve("file1"));
@@ -245,18 +244,19 @@ public class AutoSparseIntegrationTest {
     Assume.assumeNoException(exception);
   }
 
-  private static ProjectFilesystemDelegate createDelegate() {
+  private static ProjectFilesystemDelegate createDelegate() throws InterruptedException {
     return createDelegate(repoPath, true, ImmutableList.of());
   }
 
   private static ProjectFilesystemDelegate createDelegate(
-      Path root, boolean enableAutosparse, ImmutableList<String> autosparseIgnore) {
+      Path root, boolean enableAutosparse, ImmutableList<String> autosparseIgnore)
+      throws InterruptedException {
     String hgCmd = new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd();
     return ProjectFilesystemDelegateFactory.newInstance(
         root, hgCmd, AutoSparseConfig.of(enableAutosparse, autosparseIgnore));
   }
 
-  private static Path explodeRepoZip() throws IOException {
+  private static Path explodeRepoZip() throws InterruptedException, IOException {
     Path testDataDir = TestDataHelper.getTestDataDirectory(AutoSparseIntegrationTest.class);
     // Use a real path to resolve funky symlinks (I'm looking at you, OS X).
     Path destination = tempFolder.getRoot().toPath().toRealPath();

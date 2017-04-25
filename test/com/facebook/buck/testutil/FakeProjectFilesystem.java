@@ -220,11 +220,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return new FakeProjectFilesystem(tempDir);
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem() {
+  public static ProjectFilesystem createJavaOnlyFilesystem() throws InterruptedException {
     return createJavaOnlyFilesystem("/opt/src/buck");
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) {
+  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath)
+      throws InterruptedException {
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
 
     Configuration configuration = isWindows ? Configuration.windows() : Configuration.unix();

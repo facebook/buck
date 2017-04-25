@@ -49,7 +49,7 @@ public class JsRulesIntegrationTest {
   private Path genPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     // worker tool does not work on windows
     assumeFalse(Platform.detect() == Platform.WINDOWS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
@@ -154,7 +154,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void androidApplicationsContainsJsAndResources() throws IOException {
+  public void androidApplicationsContainsJsAndResources() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app");

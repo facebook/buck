@@ -78,7 +78,7 @@ public class TrimUberRDotJavaTest {
 
   private void doTrimingTest(
       Optional<String> keepResourcePattern, String rDotJavaContentsAfterFiltering)
-      throws IOException, InterruptedException {
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

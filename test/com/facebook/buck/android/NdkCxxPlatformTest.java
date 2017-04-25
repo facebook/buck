@@ -261,7 +261,7 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
-  public void headerVerificationWhitelistsNdkRoot() throws IOException {
+  public void headerVerificationWhitelistsNdkRoot() throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     String dir = "android-ndk-r9c";
     Path root = tmp.newFolder(dir);

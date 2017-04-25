@@ -106,7 +106,7 @@ public class KotlinBuckConfigTest {
 
   @Test
   public void testFindsKotlinCompilerInConfigWithRelativePath()
-      throws HumanReadableException, IOException {
+      throws HumanReadableException, InterruptedException, IOException {
     // Get faux kotlinc binary location in project
     Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
@@ -165,7 +165,7 @@ public class KotlinBuckConfigTest {
 
   @Test
   public void testFindsKotlinRuntimeInConfigWithRelativePath()
-      throws HumanReadableException, IOException {
+      throws HumanReadableException, InterruptedException, IOException {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
     BuckConfig buckConfig =

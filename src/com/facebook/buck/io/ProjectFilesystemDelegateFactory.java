@@ -46,7 +46,7 @@ public final class ProjectFilesystemDelegateFactory {
 
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
-      Path root, String hgCmd, AutoSparseConfig autoSparseConfig) {
+      Path root, String hgCmd, AutoSparseConfig autoSparseConfig) throws InterruptedException {
     Optional<EdenClient> client = tryToCreateEdenClient();
 
     if (client.isPresent()) {

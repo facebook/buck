@@ -81,7 +81,7 @@ public class GenruleTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void newFakeFilesystem() {
+  public void newFakeFilesystem() throws InterruptedException {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 

@@ -94,13 +94,14 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
-  public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws IOException {
+  public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi()
+      throws InterruptedException, IOException {
     setUpProjectWorkspaceForScenario("abi");
     workspace.enableDirCache();
 

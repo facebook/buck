@@ -34,7 +34,7 @@ public class NdkLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
-  public void cxxLibraryDep() throws IOException {
+  public void cxxLibraryDep() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace1 =
@@ -56,7 +56,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void sourceFilesChangeTargetHash() throws IOException {
+  public void sourceFilesChangeTargetHash() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =
@@ -87,7 +87,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void ndkLibraryOwnsItsSources() throws IOException {
+  public void ndkLibraryOwnsItsSources() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =

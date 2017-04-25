@@ -73,7 +73,8 @@ public class JarDirectoryStepTest {
   @Rule public TemporaryPaths folder = new TemporaryPaths();
 
   @Test
-  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries() throws IOException {
+  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries()
+      throws InterruptedException, IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path first = createZip(zipup.resolve("a.zip"), "example.txt");
@@ -101,7 +102,8 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotifyEventBusWhenDuplicateClassesAreFound() throws IOException {
+  public void shouldNotifyEventBusWhenDuplicateClassesAreFound()
+      throws InterruptedException, IOException {
     Path jarDirectory = folder.newFolder("jarDir");
 
     Path first =
@@ -135,7 +137,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldFailIfMainClassMissing() throws IOException {
+  public void shouldFailIfMainClassMissing() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path zip = createZip(zipup.resolve("a.zip"), "com/example/Main.class");
@@ -159,7 +161,8 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded() throws IOException {
+  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded()
+      throws InterruptedException, IOException {
     Path zipup = folder.newFolder();
 
     Path first = createZip(zipup.resolve("first.zip"), "dir/example.txt", "dir/root1file.txt");
@@ -192,7 +195,8 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars() throws IOException {
+  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars()
+      throws InterruptedException, IOException {
     String expected = "1.4";
     // Write the manifest, setting the implementation version
     Path tmp = folder.newFolder();
@@ -240,7 +244,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void jarsShouldContainDirectoryEntries() throws IOException {
+  public void jarsShouldContainDirectoryEntries() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     Path subdir = zipup.resolve("dir/subdir");
@@ -274,7 +278,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotMergeManifestsIfRequested() throws IOException {
+  public void shouldNotMergeManifestsIfRequested() throws InterruptedException, IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -284,7 +288,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldMergeManifestsIfAsked() throws IOException {
+  public void shouldMergeManifestsIfAsked() throws InterruptedException, IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -299,7 +303,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldSortManifestAttributesAndEntries() throws IOException {
+  public void shouldSortManifestAttributesAndEntries() throws InterruptedException, IOException {
     Manifest fromJar =
         createManifestWithExampleSection(ImmutableMap.of("foo", "bar", "baz", "waz"));
     Manifest fromUser =
@@ -324,7 +328,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotIncludeFilesInBlacklist() throws IOException {
+  public void shouldNotIncludeFilesInBlacklist() throws InterruptedException, IOException {
     Path zipup = folder.newFolder();
     Path first =
         createZip(
@@ -350,7 +354,8 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotIncludeFilesInClassesToRemoveFromJar() throws IOException {
+  public void shouldNotIncludeFilesInClassesToRemoveFromJar()
+      throws InterruptedException, IOException {
     Path zipup = folder.newFolder();
     Path first =
         createZip(
@@ -381,7 +386,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void timesAreSanitized() throws IOException {
+  public void timesAreSanitized() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     // Create a jar file with a file and a directory.
@@ -508,13 +513,15 @@ public class JarDirectoryStepTest {
   }
 
   private Manifest jarDirectoryAndReadManifest(
-      Manifest fromJar, Manifest fromUser, boolean mergeEntries) throws IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
+      throws InterruptedException, IOException {
     byte[] contents = jarDirectoryAndReadManifestContents(fromJar, fromUser, mergeEntries);
     return new Manifest(new ByteArrayInputStream(contents));
   }
 
   private byte[] jarDirectoryAndReadManifestContents(
-      Manifest fromJar, Manifest fromUser, boolean mergeEntries) throws IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
+      throws InterruptedException, IOException {
     // Create a jar with a manifest we'd expect to see merged.
     Path originalJar = folder.newFile("unexpected.jar");
     JarOutputStream ignored = new JarOutputStream(Files.newOutputStream(originalJar), fromJar);

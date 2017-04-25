@@ -38,12 +38,11 @@ public class ResTableTypeSpecTest {
   private static final String APK_NAME = "example.apk";
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
-  private ProjectFilesystem filesystem;
   private Path apkPath;
 
   @Before
-  public void setUp() throws IOException {
-    filesystem =
+  public void setUp() throws InterruptedException, IOException {
+    ProjectFilesystem filesystem =
         new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }

@@ -210,7 +210,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void xCellCxxLibraryBuildsShouldBeHermetic() throws IOException {
+  public void xCellCxxLibraryBuildsShouldBeHermetic() throws InterruptedException, IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
@@ -237,7 +237,7 @@ public class InterCellIntegrationTest {
   }
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
-      throws IOException {
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     final Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
@@ -549,7 +549,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellAndroidLibrary() throws IOException {
+  public void testCrossCellAndroidLibrary() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =

@@ -239,7 +239,8 @@ public class Unzip {
   }
 
   public static ImmutableList<Path> extractZipFile(
-      Path zipFile, final Path destination, ExistingFileMode existingFileMode) throws IOException {
+      Path zipFile, final Path destination, ExistingFileMode existingFileMode)
+      throws InterruptedException, IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return extractZipFile(

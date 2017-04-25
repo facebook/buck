@@ -97,7 +97,8 @@ public class StackedDownloaderTest {
   }
 
   @Test
-  public void createDownloadersForEachEntryInTheMavenRepositoriesSection() throws IOException {
+  public void createDownloadersForEachEntryInTheMavenRepositoriesSection()
+      throws InterruptedException, IOException {
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
     Configuration configuration = isWindows ? Configuration.windows() : Configuration.unix();
     FileSystem vfs = Jimfs.newFileSystem(configuration);

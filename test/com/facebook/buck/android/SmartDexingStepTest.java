@@ -58,7 +58,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
   /** Tests whether pseudo rule cache detection is working properly. */
   @Test
-  public void testDxPseudoRuleCaching() throws IOException {
+  public void testDxPseudoRuleCaching() throws InterruptedException, IOException {
     File testIn = new File(tmpDir.getRoot(), "testIn");
     try (ZipOutputStream zipOut =
         new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(testIn)))) {
@@ -95,7 +95,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutput() throws IOException {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutput()
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -132,7 +133,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
   @Test
   public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression()
-      throws IOException {
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -167,7 +168,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexOutput() throws IOException {
+  public void testCreateDxStepForDxPseudoRuleWithDexOutput()
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -194,7 +196,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() throws IOException {
+  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput()
+      throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -225,7 +228,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
+  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() throws InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ImmutableList<Path> filesToDex =

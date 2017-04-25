@@ -98,7 +98,7 @@ public class AppleCxxPlatformsTest {
   private Path developerDir;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     developerDir = projectFilesystem.getPath("/Developer");

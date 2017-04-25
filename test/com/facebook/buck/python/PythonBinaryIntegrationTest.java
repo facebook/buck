@@ -98,7 +98,7 @@ public class PythonBinaryIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);
     workspace.setUp();
     String pexFlags = pexDirectory ? "--directory" : "";
@@ -322,14 +322,14 @@ public class PythonBinaryIntegrationTest {
    * both a linkable root and an excluded rule, causing an internal omnibus failure.
    */
   @Test
-  public void omnibusExcludedNativeLinkableRoot() throws IOException {
+  public void omnibusExcludedNativeLinkableRoot() throws InterruptedException, IOException {
     assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
     workspace
         .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
         .assertSuccess();
   }
 
-  private PythonBuckConfig getPythonBuckConfig() throws IOException {
+  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

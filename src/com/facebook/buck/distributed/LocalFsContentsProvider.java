@@ -40,7 +40,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
 
   private final DirArtifactCache dirCache;
 
-  public LocalFsContentsProvider(Path cacheDirAbsPath) throws IOException {
+  public LocalFsContentsProvider(Path cacheDirAbsPath) throws InterruptedException, IOException {
     Preconditions.checkArgument(
         Files.isDirectory(cacheDirAbsPath),
         "The cache directory must exist. cacheDirAbsPath=[%s]",

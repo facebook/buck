@@ -35,7 +35,7 @@ public class LogFileHandlerTest {
   private Path logDir;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "LogFileHandlerTest", temporaryFolder);

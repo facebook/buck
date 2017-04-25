@@ -180,7 +180,8 @@ public class DirectHeaderMapTest {
   }
 
   @Test
-  public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
+  public void testRuleKeyDoesNotChangeIfLinkTargetsChange()
+      throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(buildRule);

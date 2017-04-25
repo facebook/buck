@@ -399,7 +399,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testSuccessfulStepExecution() throws IOException {
+  public void testSuccessfulStepExecution() throws InterruptedException, IOException {
     final Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
@@ -462,7 +462,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
-    public FakeProjectFileSystem() {
+    public FakeProjectFileSystem() throws InterruptedException {
       super(Paths.get(".").toAbsolutePath());
     }
 

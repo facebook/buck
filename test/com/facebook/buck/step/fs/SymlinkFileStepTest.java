@@ -44,7 +44,7 @@ public class SymlinkFileStepTest {
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testAbsoluteSymlinkFiles() throws IOException {
+  public void testAbsoluteSymlinkFiles() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();

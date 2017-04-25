@@ -91,7 +91,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return new DefaultFileHashCache(projectFilesystem, Optional.empty());
   }
 
-  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches() {
+  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches()
+      throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
       if (!root.toFile().exists()) {

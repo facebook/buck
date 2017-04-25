@@ -40,7 +40,7 @@ public class HeaderMapStepTest {
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testHeaderMap() throws IOException {
+  public void testHeaderMap() throws InterruptedException, IOException {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 

@@ -77,7 +77,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheCreation() throws IOException {
+  public void testCacheCreation() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
 
     dirArtifactCache =
@@ -90,7 +90,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheFetchMiss() throws IOException {
+  public void testCacheFetchMiss() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -120,7 +120,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreAndFetchHit() throws IOException {
+  public void testCacheStoreAndFetchHit() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -163,7 +163,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreOverwrite() throws IOException {
+  public void testCacheStoreOverwrite() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -203,7 +203,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoresAndFetchHits() throws IOException {
+  public void testCacheStoresAndFetchHits() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -303,7 +303,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoresAndBorrowsPaths() throws IOException {
+  public void testCacheStoresAndBorrowsPaths() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -352,7 +352,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testNoStoreMisses() throws IOException {
+  public void testNoStoreMisses() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -440,7 +440,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteNothing() throws IOException {
+  public void testDeleteNothing() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = cacheDir.resolve("x");
     Path fileY = cacheDir.resolve("y");
@@ -466,7 +466,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteNothingAbsentLimit() throws IOException {
+  public void testDeleteNothingAbsentLimit() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = cacheDir.resolve("x");
     Path fileY = cacheDir.resolve("y");
@@ -492,7 +492,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteSome() throws IOException {
+  public void testDeleteSome() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
 
     Path fileW = cacheDir.resolve("11").resolve("11").resolve("w");
@@ -538,7 +538,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDirectoryCleanerPathSelector() throws IOException {
+  public void testDirectoryCleanerPathSelector() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
 
     dirArtifactCache =
@@ -559,7 +559,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteAfterStoreIfFull() throws IOException {
+  public void testDeleteAfterStoreIfFull() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -656,7 +656,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreMultipleKeys() throws IOException {
+  public void testCacheStoreMultipleKeys() throws InterruptedException, IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 

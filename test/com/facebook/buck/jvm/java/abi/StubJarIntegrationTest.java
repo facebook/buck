@@ -44,7 +44,7 @@ public class StubJarIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void createWorkspace() throws IOException {
+  public void createWorkspace() throws InterruptedException, IOException {
     Path dir = TestDataHelper.getTestDataDirectory(this);
     testDataDir = dir.resolve("sample").toAbsolutePath();
 

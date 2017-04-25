@@ -200,7 +200,7 @@ public class DistBuildFileHashesIntegrationTest {
   }
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
-      throws IOException {
+      throws InterruptedException, IOException {
     ActionGraphCache cache = new ActionGraphCache(new BroadcastEventListener());
     ActionGraphAndResolver actionGraphAndResolver =
         cache.getActionGraph(BuckEventBusFactory.newInstance(), true, false, targetGraph, KEY_SEED);

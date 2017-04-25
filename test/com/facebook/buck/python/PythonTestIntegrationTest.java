@@ -64,7 +64,7 @@ public class PythonTestIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
@@ -199,7 +199,7 @@ public class PythonTestIntegrationTest {
             >= 0);
   }
 
-  private PythonBuckConfig getPythonBuckConfig() throws IOException {
+  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

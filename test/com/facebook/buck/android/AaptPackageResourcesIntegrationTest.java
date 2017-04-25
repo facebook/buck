@@ -50,7 +50,7 @@ public class AaptPackageResourcesIntegrationTest {
   private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -58,7 +58,7 @@ public class AaptPackageResourcesIntegrationTest {
   }
 
   @Test
-  public void testEditingLayoutChangesPackageHash() throws IOException {
+  public void testEditingLayoutChangesPackageHash() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
 
@@ -84,13 +84,13 @@ public class AaptPackageResourcesIntegrationTest {
   }
 
   @Test
-  public void testIgnoredFileIsIgnoredByAapt() throws IOException {
+  public void testIgnoredFileIsIgnoredByAapt() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_deps_resource_with_ignored_file").assertSuccess();
   }
 
   @Test
-  public void testAaptPackageIsScrubbed() throws IOException {
+  public void testAaptPackageIsScrubbed() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
     Path aaptOutput =

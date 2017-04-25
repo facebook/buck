@@ -293,7 +293,7 @@ public class SymlinkTreeTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void resolveDuplicateRelativePaths() throws IOException {
+  public void resolveDuplicateRelativePaths() throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));

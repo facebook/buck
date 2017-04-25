@@ -36,7 +36,7 @@ public class CalculateAbiFromClassesStepTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
-  public void shouldCalculateAbiFromAStubJar() throws IOException {
+  public void shouldCalculateAbiFromAStubJar() throws InterruptedException, IOException {
     Path outDir = temp.newFolder().toAbsolutePath();
     ProjectFilesystem filesystem = new ProjectFilesystem(outDir);
 

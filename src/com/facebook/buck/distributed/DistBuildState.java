@@ -97,7 +97,7 @@ public class DistBuildState {
       BuildJobState jobState,
       Cell rootCell,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
-      throws IOException {
+      throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
     ImmutableMap.Builder<Path, DistBuildCellParams> cellParams = ImmutableMap.builder();

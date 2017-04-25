@@ -44,15 +44,14 @@ import org.junit.rules.TemporaryFolder;
 
 public class RuleKeyLoggerListenerTest {
 
-  private TemporaryFolder tempDirectory;
   private ProjectFilesystem projectFilesystem;
   private ExecutorService outputExecutor;
   private InvocationInfo info;
   private BuildRuleDurationTracker durationTracker;
 
   @Before
-  public void setUp() throws IOException {
-    tempDirectory = new TemporaryFolder();
+  public void setUp() throws InterruptedException, IOException {
+    TemporaryFolder tempDirectory = new TemporaryFolder();
     tempDirectory.create();
     projectFilesystem = new ProjectFilesystem(tempDirectory.getRoot().toPath());
     outputExecutor =

@@ -40,7 +40,8 @@ import org.junit.Test;
 
 public class CopyResourcesStepTest {
   @Test
-  public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
+  public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory()
+      throws InterruptedException {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -100,7 +101,8 @@ public class CopyResourcesStepTest {
   }
 
   @Test
-  public void testAddResourceCommandsWithBuildFileParentOfJavaPackage() {
+  public void testAddResourceCommandsWithBuildFileParentOfJavaPackage()
+      throws InterruptedException {
     // Files:
     // android/java/src/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -158,7 +160,7 @@ public class CopyResourcesStepTest {
   }
 
   @Test
-  public void testAddResourceCommandsWithBuildFileInJavaPackage() {
+  public void testAddResourceCommandsWithBuildFileInJavaPackage() throws InterruptedException {
     // Files:
     // android/java/src/com/facebook/BUCK
     // android/java/src/com/facebook/base/data.json

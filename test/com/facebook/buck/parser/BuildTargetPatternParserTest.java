@@ -28,16 +28,23 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.FileSystem;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class BuildTargetPatternParserTest {
 
-  private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-  private final FileSystem vfs = filesystem.getRootPath().getFileSystem();
+  private ProjectFilesystem filesystem;
+  private FileSystem vfs;
 
   @Rule public ExpectedException exception = ExpectedException.none();
+
+  @Before
+  public void setUp() throws InterruptedException {
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    vfs = filesystem.getRootPath().getFileSystem();
+  }
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
@@ -90,7 +97,7 @@ public class BuildTargetPatternParserTest {
   }
 
   @Test
-  public void visibilityCanContainCrossCellReference() {
+  public void visibilityCanContainCrossCellReference() throws InterruptedException {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument();
 

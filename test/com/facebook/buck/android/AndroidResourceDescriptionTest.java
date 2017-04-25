@@ -52,7 +52,7 @@ public class AndroidResourceDescriptionTest {
   @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
-  public void testNonAssetFilesAndDirsAreIgnored() throws IOException {
+  public void testNonAssetFilesAndDirsAreIgnored() throws InterruptedException, IOException {
     tmpFolder.newFolder("res");
 
     tmpFolder.newFile("res/image.png");

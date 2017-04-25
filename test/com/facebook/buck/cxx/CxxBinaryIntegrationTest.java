@@ -584,7 +584,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryWithDepsEmitsAllTheDependenciesResultsDirs() throws IOException {
+  public void testInferCxxBinaryWithDepsEmitsAllTheDependenciesResultsDirs()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.setupCxxSandboxing(sandboxSources);
@@ -691,7 +692,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void inferShouldBeAbleToUseMultipleXCell() throws IOException {
+  public void inferShouldBeAbleToUseMultipleXCell() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     final Path rootWorkspacePath = tmp.getRoot();
@@ -743,7 +744,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
-      throws IOException {
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -864,7 +865,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCaptureAllCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
-      throws IOException {
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -951,7 +952,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithDiamondDepsHasRuntimeDepsOfAllCaptureRulesWhenCacheHits()
-      throws IOException {
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -1084,7 +1085,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithDiamondDepsEmitsAllTransitiveCaptureRulesOnce()
-      throws IOException {
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.setupCxxSandboxing(sandboxSources);
@@ -1161,7 +1162,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
+  public void testInferCxxBinarySkipsBlacklistedFiles() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         InferHelper.setupCxxInferWorkspace(this, tmp, Optional.of(".*one\\.c"));
@@ -1215,7 +1216,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified() throws IOException {
+  public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.setupCxxSandboxing(sandboxSources);
@@ -1266,7 +1268,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
+  public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -1315,7 +1318,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
+  public void testInferCxxBinaryMergesAllReportsOfDependencies()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.setupCxxSandboxing(sandboxSources);
@@ -1341,7 +1345,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies() throws IOException {
+  public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.setupCxxSandboxing(sandboxSources);
@@ -1903,7 +1908,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void resolveHeadersBehindSymlinkTreesInError() throws IOException {
+  public void resolveHeadersBehindSymlinkTreesInError() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "resolved", tmp);
     workspace.setUp();
@@ -1933,7 +1938,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void ndkCxxPlatforms() throws IOException {
+  public void ndkCxxPlatforms() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);

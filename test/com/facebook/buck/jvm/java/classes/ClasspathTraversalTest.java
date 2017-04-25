@@ -42,7 +42,8 @@ import org.junit.rules.TemporaryFolder;
 public class ClasspathTraversalTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private Map<FileLike, String> traverse(Collection<File> files) throws IOException {
+  private Map<FileLike, String> traverse(Collection<File> files)
+      throws InterruptedException, IOException {
     Collection<Path> paths =
         files.stream().map(File::toPath).collect(MoreCollectors.toImmutableList());
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
@@ -64,7 +65,8 @@ public class ClasspathTraversalTest {
     return completeList.build();
   }
 
-  private void verifyFileLike(int expectedFiles, File... paths) throws IOException {
+  private void verifyFileLike(int expectedFiles, File... paths)
+      throws InterruptedException, IOException {
     int fileLikeCount = 0;
     for (Map.Entry<FileLike, String> entry : traverse(Lists.newArrayList(paths)).entrySet()) {
       assertEquals(
@@ -77,7 +79,7 @@ public class ClasspathTraversalTest {
   }
 
   @Test
-  public void testDirectoryAndFile() throws IOException {
+  public void testDirectoryAndFile() throws InterruptedException, IOException {
     File notADirectory = tempDir.newFile("not_a_directory.txt");
     Files.write("not_a_directory.txt", notADirectory, Charsets.UTF_8);
     File yesADir = tempDir.newFolder("is_a_directory");
@@ -93,7 +95,7 @@ public class ClasspathTraversalTest {
   }
 
   @Test
-  public void testZip() throws IOException {
+  public void testZip() throws InterruptedException, IOException {
     String[] files = {"test/foo.txt", "bar.txt", "test/baz.txt"};
     File file = tempDir.newFile("test.zip");
     try (ZipOutputStream zipOut =

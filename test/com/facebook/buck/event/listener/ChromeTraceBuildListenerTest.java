@@ -117,7 +117,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testDeleteFiles() throws IOException {
+  public void testDeleteFiles() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     String tracePath = invocationInfo.getLogDirectoryPath().resolve("build.trace").toString();
@@ -163,7 +163,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testBuildJson() throws IOException {
+  public void testBuildJson() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     BuildId buildId = new BuildId("ChromeTraceBuildListenerTestBuildId");
@@ -467,7 +467,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testOutputFailed() throws IOException {
+  public void testOutputFailed() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
     assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
 
@@ -494,7 +494,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void outputFileUsesCurrentTime() throws IOException {
+  public void outputFileUsesCurrentTime() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
@@ -513,7 +513,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void canCompressTraces() throws IOException {
+  public void canCompressTraces() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =

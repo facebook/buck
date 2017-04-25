@@ -39,7 +39,7 @@ public class ChunkUtilsTest {
   private Path apkPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     filesystem =
         new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));

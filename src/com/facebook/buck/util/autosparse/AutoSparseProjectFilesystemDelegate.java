@@ -45,7 +45,8 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
   /** Delegate to forward requests to for files that are outside of the hg root. */
   private final ProjectFilesystemDelegate delegate;
 
-  public AutoSparseProjectFilesystemDelegate(AutoSparseState autoSparseState, Path projectRoot) {
+  public AutoSparseProjectFilesystemDelegate(AutoSparseState autoSparseState, Path projectRoot)
+      throws InterruptedException {
     this.autoSparseState = autoSparseState;
     this.scRoot = autoSparseState.getSCRoot();
     this.delegate = new DefaultProjectFilesystemDelegate(projectRoot);

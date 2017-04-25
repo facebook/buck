@@ -123,7 +123,7 @@ public class StubJarTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void createTempFilesystem() throws IOException {
+  public void createTempFilesystem() throws InterruptedException, IOException {
     File out = temp.newFolder();
     filesystem = new ProjectFilesystem(out.toPath());
   }
@@ -1630,7 +1630,8 @@ public class StubJarTest {
   }
 
   @Test
-  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
+  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles()
+      throws InterruptedException, IOException {
     JarPaths paths =
         createFullAndStubJars(
             EMPTY_CLASSPATH,

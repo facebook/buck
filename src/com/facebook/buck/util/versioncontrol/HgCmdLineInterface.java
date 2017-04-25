@@ -24,8 +24,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,7 +130,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private final String hgCmd;
   private final ImmutableMap<String, String> environment;
 
-  private final Supplier<Path> hgRoot;
+  @Nullable private Optional<Path> hgRoot;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
@@ -143,27 +141,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
     this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
-    this.hgRoot =
-        Suppliers.memoize(
-            new Supplier<Path>() {
-              @Override
-              @Nullable
-              public Path get() {
-                try {
-                  Path root = Paths.get(executeCommand(ROOT_COMMAND));
-                  LOG.verbose("Set hg root to %s", root);
-                  return root;
-                } catch (VersionControlCommandFailedException | InterruptedException e) {
-                  LOG.verbose("Unable to obtain a hg root for %s", projectRoot);
-                  return null;
-                }
-              }
-            });
   }
 
   @Override
   public boolean isSupportedVersionControlSystem() {
-    return true; // Mercurial is supported
+    return true;
   }
 
   @Override
@@ -296,8 +278,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Nullable
-  public Path getHgRoot() {
-    return hgRoot.get();
+  public Path getHgRoot() throws InterruptedException {
+    if (hgRoot == null) {
+      try {
+        hgRoot = Optional.of(Paths.get(executeCommand(ROOT_COMMAND)));
+      } catch (VersionControlCommandFailedException e) {
+        hgRoot = Optional.empty();
+      }
+    }
+    return hgRoot.orElse(null);
   }
 
   public void exportHgSparseRules(Path exportFile)

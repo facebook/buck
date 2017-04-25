@@ -55,7 +55,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

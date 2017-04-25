@@ -45,7 +45,7 @@ import org.junit.Test;
 public class JUnitStepTest {
 
   @Test
-  public void testGetShellCommand() throws IOException {
+  public void testGetShellCommand() throws InterruptedException, IOException {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
@@ -123,7 +123,7 @@ public class JUnitStepTest {
   }
 
   @Test
-  public void testGetEnvironmentVariables() {
+  public void testGetEnvironmentVariables() throws InterruptedException {
     BuildId pretendBuildId = new BuildId("pretend-build-id");
     Path modulePath = Paths.get("module/submodule");
 
@@ -160,7 +160,7 @@ public class JUnitStepTest {
   }
 
   @Test
-  public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() {
+  public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() throws InterruptedException {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);

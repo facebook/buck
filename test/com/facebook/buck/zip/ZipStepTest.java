@@ -59,7 +59,7 @@ public class ZipStepTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -254,9 +254,9 @@ public class ZipStepTest {
   }
 
   /**
-   * Tests a couple bugs: 1) {@link com.facebook.buck.zip.OverwritingZipOutputStream} was writing
-   * uncompressed zip entries incorrectly. 2) {@link ZipStep} wasn't setting the output size when
-   * writing uncompressed entries.
+   * Tests a couple bugs: 1) {@link com.facebook.buck.zip.OverwritingZipOutputStreamImpl} was
+   * writing uncompressed zip entries incorrectly. 2) {@link ZipStep} wasn't setting the output size
+   * when writing uncompressed entries.
    */
   @Test
   public void minCompressionWritesCorrectZipFile() throws IOException {
@@ -322,7 +322,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipMaintainsExecutablePermissions() throws IOException {
+  public void zipMaintainsExecutablePermissions() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     Path parent = tmp.newFolder("zipstep");

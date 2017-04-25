@@ -40,7 +40,8 @@ public class GroovyBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided() {
+  public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided()
+      throws InterruptedException {
     thrown.expectMessage(
         allOf(
             containsString("Unable to locate groovy compiler"),
@@ -54,7 +55,8 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
+  public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath()
+      throws InterruptedException {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     Path invalidDir = Paths.get(invalidPath);
     Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
@@ -68,7 +70,7 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void byDefaultFindGroovycFromGroovyHome() {
+  public void byDefaultFindGroovycFromGroovyHome() throws InterruptedException {
     String systemGroovyHome = System.getenv("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
@@ -82,7 +84,7 @@ public class GroovyBuckConfigTest {
   }
 
   @Test
-  public void explicitConfigurationOverridesTheEnvironment() {
+  public void explicitConfigurationOverridesTheEnvironment() throws InterruptedException {
     String systemGroovyHome = System.getenv("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
@@ -99,7 +101,8 @@ public class GroovyBuckConfigTest {
 
   private GroovyBuckConfig createGroovyConfig(
       ImmutableMap<String, String> environment,
-      ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
+      ImmutableMap<String, ImmutableMap<String, String>> rawConfig)
+      throws InterruptedException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     Config config = new Config(RawConfig.of(rawConfig));
     BuckConfig buckConfig =

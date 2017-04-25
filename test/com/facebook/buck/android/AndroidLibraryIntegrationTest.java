@@ -45,7 +45,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testAndroidLibraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
@@ -54,7 +55,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable();
     ProcessResult result =
@@ -73,7 +75,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidScalaLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_using_transitive_empty_res");
@@ -82,7 +85,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryCompilation() throws IOException {
+  public void testAndroidScalaLibraryCompilation() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
@@ -90,7 +93,8 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() throws IOException {
+  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
   }

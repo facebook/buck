@@ -74,7 +74,7 @@ public abstract class DistBuildFactory {
       int coordinatorPort,
       Optional<StampedeId> stampedeId,
       Optional<Path> globalCacheDir)
-      throws IOException {
+      throws InterruptedException, IOException {
     DistBuildState state =
         DistBuildState.load(
             Optional.of(params.getBuckConfig()),

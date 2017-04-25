@@ -46,7 +46,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testPrebuiltAppleFrameworkBuildsSomething() throws IOException {
+  public void testPrebuiltAppleFrameworkBuildsSomething() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

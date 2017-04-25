@@ -100,7 +100,8 @@ public class ApkGenruleTest {
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-  public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
+  public void testCreateAndRunApkGenrule()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
     BuildRuleResolver ruleResolver =

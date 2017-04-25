@@ -68,8 +68,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -150,7 +148,7 @@ public class ProjectWorkspace {
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private final Path templatePath;
   private final Path destPath;
-  private final Supplier<ProjectFilesystemAndConfig> projectFilesystemAndConfig;
+  @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
 
   private static class ProjectFilesystemAndConfig {
     private final ProjectFilesystem projectFilesystem;
@@ -166,21 +164,6 @@ public class ProjectWorkspace {
   ProjectWorkspace(Path templateDir, final Path targetFolder) {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
-    this.projectFilesystemAndConfig =
-        Suppliers.memoize(
-            new Supplier<ProjectFilesystemAndConfig>() {
-              @Override
-              public ProjectFilesystemAndConfig get() {
-                Config config = null;
-                try {
-                  config = Configs.createDefaultConfig(targetFolder);
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-                return new ProjectFilesystemAndConfig(
-                    new ProjectFilesystem(targetFolder, config), config);
-              }
-            });
   }
 
   /**
@@ -295,8 +278,18 @@ public class ProjectWorkspace {
     writeContentsToPath(contents.toString(), ".buckconfig.local");
   }
 
-  public BuckPaths getBuckPaths() {
-    return projectFilesystemAndConfig.get().projectFilesystem.getBuckPaths();
+  private ProjectFilesystemAndConfig getProjectFilesystemAndConfig()
+      throws InterruptedException, IOException {
+    if (projectFilesystemAndConfig == null) {
+      Config config = Configs.createDefaultConfig(destPath);
+      projectFilesystemAndConfig =
+          new ProjectFilesystemAndConfig(new ProjectFilesystem(destPath, config), config);
+    }
+    return projectFilesystemAndConfig;
+  }
+
+  public BuckPaths getBuckPaths() throws InterruptedException, IOException {
+    return getProjectFilesystemAndConfig().projectFilesystem.getBuckPaths();
   }
 
   public ProcessResult runBuckBuild(String... args) throws IOException {
@@ -570,8 +563,8 @@ public class ProjectWorkspace {
    * @see ChromeTraceParser#parse(Path, Set)
    */
   public Map<ChromeTraceEventMatcher<?>, Object> parseTraceFromMostRecentBuckInvocation(
-      Set<ChromeTraceEventMatcher<?>> matchers) throws IOException {
-    ProjectFilesystem projectFilesystem = projectFilesystemAndConfig.get().projectFilesystem;
+      Set<ChromeTraceEventMatcher<?>> matchers) throws InterruptedException, IOException {
+    ProjectFilesystem projectFilesystem = getProjectFilesystemAndConfig().projectFilesystem;
     ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
     return parser.parse(
         projectFilesystem.getBuckPaths().getLogDir().resolve("build.trace"), matchers);
@@ -688,7 +681,7 @@ public class ProjectWorkspace {
   }
 
   public Cell asCell() throws IOException, InterruptedException {
-    ProjectFilesystemAndConfig filesystemAndConfig = projectFilesystemAndConfig.get();
+    ProjectFilesystemAndConfig filesystemAndConfig = getProjectFilesystemAndConfig();
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
 

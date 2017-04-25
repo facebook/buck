@@ -65,7 +65,7 @@ public class ExportFileTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
-  public void createFixtures() {
+  public void createFixtures() throws InterruptedException {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
   }

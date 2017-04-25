@@ -46,12 +46,12 @@ public class AndroidReactNativeLibraryIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @BeforeClass
-  public static void setupOnce() throws IOException {
+  public static void setupOnce() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
   }
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_rn", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());

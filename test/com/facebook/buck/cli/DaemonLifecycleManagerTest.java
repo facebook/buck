@@ -36,7 +36,7 @@ public class DaemonLifecycleManagerTest {
   private DaemonLifecycleManager daemonLifecycleManager;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
     daemonLifecycleManager = new DaemonLifecycleManager();
   }

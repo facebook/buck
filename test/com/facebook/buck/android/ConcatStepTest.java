@@ -37,7 +37,7 @@ public class ConcatStepTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
-  public void testConcatFiles() throws IOException {
+  public void testConcatFiles() throws InterruptedException, IOException {
     // Create three files containing "foo", "bar", and "baz"
     // and see if they are correctly concatenated.
     File dest = temp.newFile();

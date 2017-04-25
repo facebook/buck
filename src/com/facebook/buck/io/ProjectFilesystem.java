@@ -129,11 +129,12 @@ public class ProjectFilesystem {
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting protected boolean ignoreValidityOfPaths;
 
-  public ProjectFilesystem(Path root) {
+  public ProjectFilesystem(Path root) throws InterruptedException {
     this(root, new Config());
   }
 
-  public static ProjectFilesystem createNewOrThrowHumanReadableException(Path path) {
+  public static ProjectFilesystem createNewOrThrowHumanReadableException(Path path)
+      throws InterruptedException {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
@@ -158,7 +159,7 @@ public class ProjectFilesystem {
     this(root.getFileSystem(), root, ImmutableSet.of(), getDefaultBuckPaths(root), delegate);
   }
 
-  public ProjectFilesystem(Path root, Config config) {
+  public ProjectFilesystem(Path root, Config config) throws InterruptedException {
     this(
         root.getFileSystem(),
         root,

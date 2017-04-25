@@ -40,7 +40,8 @@ public class GenAidlIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
-  public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected() throws IOException {
+  public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);
@@ -59,7 +60,7 @@ public class GenAidlIntegrationTest {
   }
 
   @Test
-  public void rootDirectoryDoesntChangeBuild() throws IOException {
+  public void rootDirectoryDoesntChangeBuild() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);

@@ -64,7 +64,7 @@ public class MaterializerProjectFileHashCacheTest {
 
   private void testMaterializeDirectoryHelper(
       boolean materializeDuringPreloading, MaterializeFunction materializeFunction)
-      throws IOException {
+      throws InterruptedException, IOException {
     // Scenario:
     // file hash entries for:
     // /a - folder
@@ -157,7 +157,7 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeDirectory() throws IOException {
+  public void testMaterializeDirectory() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(false, (m, p) -> m.get(p));
@@ -170,7 +170,7 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeDuringPreloadingDirectory() throws IOException {
+  public void testMaterializeDuringPreloadingDirectory() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(true, (m, p) -> m.preloadAllFiles());
@@ -183,12 +183,12 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadDirectory() throws IOException {
+  public void testPreloadDirectory() throws InterruptedException, IOException {
     testMaterializeDirectoryHelper(false, (m, p) -> m.preloadAllFiles());
   }
 
   @Test
-  public void testPreloadThenMaterializeDirectory() throws IOException {
+  public void testPreloadThenMaterializeDirectory() throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(
@@ -207,7 +207,7 @@ public class MaterializerProjectFileHashCacheTest {
 
   private Path testEntryForRealFile(
       boolean materializeDuringPreloading, MaterializeFunction materializeFunction)
-      throws IOException {
+      throws InterruptedException, IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
@@ -235,7 +235,7 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeRealFileSetsContents() throws IOException {
+  public void testMaterializeRealFileSetsContents() throws InterruptedException, IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -248,7 +248,8 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeRealFileDuringPreloadingSetsContents() throws IOException {
+  public void testMaterializeRealFileDuringPreloadingSetsContents()
+      throws InterruptedException, IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -262,7 +263,7 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadRealFileTouchesFile() throws IOException {
+  public void testPreloadRealFileTouchesFile() throws InterruptedException, IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
@@ -273,18 +274,18 @@ public class MaterializerProjectFileHashCacheTest {
     assertThat(realFile.toFile().length(), Matchers.equalTo(0L));
   }
 
-  public void testSymlinkToFileWithinExternalDirectory(MaterializeFunction materializeFunction)
-      throws IOException {
+  private void testSymlinkToFileWithinExternalDirectory(MaterializeFunction materializeFunction)
+      throws InterruptedException, IOException {
     testSymlinkToFileWithinExternalDirectory(
         EXAMPLE_HASHCODE, EXAMPLE_HASHCODE, materializeFunction, 1);
   }
 
-  public void testSymlinkToFileWithinExternalDirectory(
+  private void testSymlinkToFileWithinExternalDirectory(
       HashCode fileHashEntryHashCode,
       HashCode actualHashCode,
       MaterializeFunction materializeFunction,
       int expectCallsToGetHashMethod)
-      throws IOException {
+      throws InterruptedException, IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  symlink root: /project/linktoexternaldir -> /externalDir
@@ -330,7 +331,8 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testPreloadSymlinkToFileWithinExternalDirectory() throws IOException {
+  public void testPreloadSymlinkToFileWithinExternalDirectory()
+      throws InterruptedException, IOException {
     testSymlinkToFileWithinExternalDirectory(
         EXAMPLE_HASHCODE,
         EXAMPLE_HASHCODE,
@@ -339,13 +341,14 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeSymlinkToFileWithinExternalDirectory() throws IOException {
-    testSymlinkToFileWithinExternalDirectory(
-        (fileMaterializer, symlink) -> fileMaterializer.get(symlink));
+  public void testMaterializeSymlinkToFileWithinExternalDirectory()
+      throws InterruptedException, IOException {
+    testSymlinkToFileWithinExternalDirectory(MaterializerProjectFileHashCache::get);
   }
 
   @Test
-  public void testPreloadMaterializeSymlinkToFileWithinExternalDirectory() throws IOException {
+  public void testPreloadMaterializeSymlinkToFileWithinExternalDirectory()
+      throws InterruptedException, IOException {
     testSymlinkToFileWithinExternalDirectory(
         (fileMaterializer, symlink) -> {
           fileMaterializer.preloadAllFiles();
@@ -354,12 +357,13 @@ public class MaterializerProjectFileHashCacheTest {
   }
 
   @Test
-  public void testMaterializeSymlinkWithDifferentHashCodeThrowsException() throws IOException {
+  public void testMaterializeSymlinkWithDifferentHashCodeThrowsException()
+      throws InterruptedException, IOException {
     thrown.expect(RuntimeException.class);
     testSymlinkToFileWithinExternalDirectory(
         EXAMPLE_HASHCODE, /* fileHashEntryHashCode */
         EXAMPLE_HASHCODE_TWO, /* actualHashCode */
-        (fileMaterializer, symlink) -> fileMaterializer.get(symlink),
+        MaterializerProjectFileHashCache::get,
         1);
   }
 

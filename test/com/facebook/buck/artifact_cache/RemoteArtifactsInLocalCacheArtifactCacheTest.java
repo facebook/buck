@@ -86,7 +86,7 @@ public class RemoteArtifactsInLocalCacheArtifactCacheTest {
     private InMemoryArtifactCache remoteCache;
     private ArtifactCache cacheUnderTest;
 
-    public Fixture() throws IOException {
+    public Fixture() throws InterruptedException, IOException {
       ProjectFilesystem tmp = FakeProjectFilesystem.createJavaOnlyFilesystem();
       artifact = tmp.createNewFile(tmp.resolve("artifact"));
       result = tmp.createNewFile(tmp.resolve("result"));

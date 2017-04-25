@@ -80,7 +80,7 @@ public class ProjectFilesystemTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -312,7 +312,8 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
+  public void testWalkFileTreeWhenProjectRootIsWorkingDir()
+      throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
@@ -533,7 +534,7 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePaths() throws IOException {
+  public void testExtractIgnorePaths() throws InterruptedException, IOException {
     Config config =
         ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
@@ -560,7 +561,7 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePathsWithCacheDir() throws IOException {
+  public void testExtractIgnorePathsWithCacheDir() throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
@@ -575,7 +576,8 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem() throws IOException {
+  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem()
+      throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
@@ -602,7 +604,8 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws IOException {
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual()
+      throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
     assertThat(
@@ -612,7 +615,7 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void getPathReturnsPathWithCorrectFilesystem() throws IOException {
+  public void getPathReturnsPathWithCorrectFilesystem() throws InterruptedException, IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);

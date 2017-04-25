@@ -102,7 +102,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void libraryBuildPathIsSoName() throws IOException {
+  public void libraryBuildPathIsSoName() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.LINUX);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
@@ -197,7 +197,8 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
+  public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
@@ -284,7 +285,8 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:lib_header#default,shared").assertSuccess();
   }
 
-  private void assumeSymLinkTreeWithHeaderMap(Path rootPath) throws IOException {
+  private void assumeSymLinkTreeWithHeaderMap(Path rootPath)
+      throws InterruptedException, IOException {
     // We can only disable symlink trees if header map is supported.
     CxxPreprocessables.HeaderMode headerMode =
         CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
@@ -292,7 +294,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithHeadersSymlink() throws IOException {
+  public void buildWithHeadersSymlink() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();
@@ -309,7 +311,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithoutPublicHeadersSymlink() throws IOException {
+  public void buildWithoutPublicHeadersSymlink() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();
@@ -329,7 +331,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithoutPrivateHeadersSymlink() throws IOException {
+  public void buildWithoutPrivateHeadersSymlink() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();
@@ -348,7 +350,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithoutHeadersSymlink() throws IOException {
+  public void buildWithoutHeadersSymlink() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();

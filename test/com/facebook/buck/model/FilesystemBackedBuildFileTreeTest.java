@@ -41,7 +41,8 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
-  public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
+  public void testCanConstructBuildFileTreeFromFilesystemOnOsX()
+      throws InterruptedException, IOException {
     Path tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
 
@@ -71,7 +72,8 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
+  public void testCanConstructBuildFileTreeFromFilesystem()
+      throws InterruptedException, IOException {
     Path tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
 
@@ -114,7 +116,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void respectsIgnorePaths() throws IOException {
+  public void respectsIgnorePaths() throws InterruptedException, IOException {
     Path tempDir = tmp.getRoot();
     Path fooBuck = tempDir.resolve("foo/BUCK");
     Path fooBarBuck = tempDir.resolve("foo/bar/BUCK");
@@ -138,7 +140,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void rootBasePath() throws IOException {
+  public void rootBasePath() throws InterruptedException, IOException {
     Path root = tmp.getRoot();
     Files.createFile(root.resolve("BUCK"));
     Files.createDirectory(root.resolve("foo"));
@@ -152,7 +154,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void missingBasePath() throws IOException {
+  public void missingBasePath() throws InterruptedException, IOException {
     Path root = tmp.getRoot();
     Files.createDirectory(root.resolve("foo"));
     Files.createFile(root.resolve("foo/BUCK"));
@@ -165,7 +167,8 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
+  public void shouldIgnoreBuckOutputDirectoriesByDefault()
+      throws InterruptedException, IOException {
     Path root = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
 
@@ -185,7 +188,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
+  public void shouldIgnoreBuckCacheDirectoriesByDefault() throws InterruptedException, IOException {
     Path root = tmp.getRoot();
 
     Path cacheDir = root.resolve("buck-out/cache");

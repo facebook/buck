@@ -36,7 +36,7 @@ public class MultipleResourcePackageIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -44,7 +44,7 @@ public class MultipleResourcePackageIntegrationTest {
   }
 
   @Test
-  public void testRDotJavaFilesPerPackage() throws IOException {
+  public void testRDotJavaFilesPerPackage() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();
 

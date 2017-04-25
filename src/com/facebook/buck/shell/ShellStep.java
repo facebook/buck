@@ -200,7 +200,7 @@ public abstract class ShellStep implements Step {
   }
 
   @SuppressWarnings("unused")
-  protected Optional<String> getStdin(ExecutionContext context) {
+  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
     return Optional.empty();
   }
 

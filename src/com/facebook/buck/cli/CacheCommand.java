@@ -200,7 +200,8 @@ public class CacheCommand extends AbstractCommand {
       RuleKey ruleKey,
       Path artifact,
       CacheResult success,
-      StringBuilder resultString) {
+      StringBuilder resultString)
+      throws InterruptedException {
 
     String buckTarget = "Unknown Target";
     ImmutableMap<String, String> metadata = success.getMetadata();
@@ -280,7 +281,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     @Override
-    public ArtifactRunner call() throws Exception {
+    public ArtifactRunner call() throws InterruptedException {
       statusString = "Fetching";
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly

@@ -327,7 +327,7 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
-  private ProjectFilesystem createProjectFilesystem() {
+  private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
     return new ProjectFilesystem(tmp.getRoot());
   }
 }

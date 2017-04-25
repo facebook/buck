@@ -62,7 +62,7 @@ public class JavaLibrarySymbolsFinderTest {
           JavacOptions.builder().setSourceLevel("7").setTargetLevel("7").build());
 
   @Test
-  public void extractSymbolsFromSrcs() throws IOException {
+  public void extractSymbolsFromSrcs() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
@@ -90,7 +90,7 @@ public class JavaLibrarySymbolsFinderTest {
 
   @Test
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws IOException {
+  public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
     final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());

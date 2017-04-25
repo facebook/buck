@@ -25,7 +25,7 @@ public class TestArtifactCaches {
   private TestArtifactCaches() {}
 
   public static ArtifactCache createDirCacheForTest(Path filesystemRoot, Path cacheDir)
-      throws IOException {
+      throws InterruptedException, IOException {
     return new DirArtifactCache(
         "dir",
         new ProjectFilesystem(filesystemRoot),

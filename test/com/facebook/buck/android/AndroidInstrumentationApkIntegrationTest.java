@@ -33,7 +33,7 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
-  public void testCxxLibraryDep() throws IOException {
+  public void testCxxLibraryDep() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 

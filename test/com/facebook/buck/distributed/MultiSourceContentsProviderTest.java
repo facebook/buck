@@ -44,7 +44,7 @@ public class MultiSourceContentsProviderTest {
   }
 
   @Test
-  public void inlineContentProviderTakesPrecedence() throws IOException {
+  public void inlineContentProviderTakesPrecedence() throws InterruptedException, IOException {
     EasyMock.replay(mockProvider);
     MultiSourceContentsProvider provider =
         new MultiSourceContentsProvider(mockProvider, Optional.empty());
@@ -60,7 +60,7 @@ public class MultiSourceContentsProviderTest {
   }
 
   @Test
-  public void serverIsUsedWhenInlineIsMissing() throws IOException {
+  public void serverIsUsedWhenInlineIsMissing() throws InterruptedException, IOException {
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
     entry.setHashCode("1234");
     Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");

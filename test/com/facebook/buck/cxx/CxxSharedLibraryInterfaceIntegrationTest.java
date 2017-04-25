@@ -49,7 +49,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CxxSharedLibraryInterfaceIntegrationTest {
 
-  private static Optional<ImmutableList<Flavor>> getNdkPlatforms() {
+  private static Optional<ImmutableList<Flavor>> getNdkPlatforms() throws InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
@@ -90,7 +90,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
   }
 
   @Parameterized.Parameters(name = "type={0},platform={1}")
-  public static Collection<Object[]> data() {
+  public static Collection<Object[]> data() throws InterruptedException {
     List<Flavor> platforms = new ArrayList<>();
 
     // Test the system platform.

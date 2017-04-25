@@ -99,7 +99,7 @@ public class NdkCxxPlatformIntegrationTest {
     return workspace;
   }
 
-  private Path getNdkRoot() {
+  private Path getNdkRoot() throws InterruptedException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
@@ -114,12 +114,12 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
   }
 
   @Test
-  public void runtimeSupportsStl() throws IOException {
+  public void runtimeSupportsStl() throws InterruptedException, IOException {
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -128,7 +128,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void changedPlatformTarget() throws IOException {
+  public void changedPlatformTarget() throws InterruptedException, IOException {
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -153,7 +153,8 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
+  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized()
+      throws InterruptedException, IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
     workspace.writeContentsToPath(
         "[ndk]\n"

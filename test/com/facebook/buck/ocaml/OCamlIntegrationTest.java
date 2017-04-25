@@ -64,7 +64,7 @@ public class OCamlIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void checkOcamlIsConfigured() throws IOException {
+  public void checkOcamlIsConfigured() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ocaml", tmp);
     workspace.setUp();
@@ -409,7 +409,7 @@ public class OCamlIntegrationTest {
   }
 
   @Test
-  public void testCppLibraryDependency() throws IOException {
+  public void testCppLibraryDependency() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ocaml", tmp);
     workspace.setUp();

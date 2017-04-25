@@ -46,7 +46,7 @@ public class LocalFsContentsProviderTest {
   }
 
   @Test
-  public void testGettingNonExistentFile() throws IOException {
+  public void testGettingNonExistentFile() throws InterruptedException, IOException {
     LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir);
     Assert.assertFalse(Files.isRegularFile(targetAbsPath));
     provider.materializeFileContents(entry, targetAbsPath);
@@ -54,7 +54,7 @@ public class LocalFsContentsProviderTest {
   }
 
   @Test
-  public void testGettingExistentFile() throws IOException {
+  public void testGettingExistentFile() throws InterruptedException, IOException {
     LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir);
     Assert.assertFalse(Files.isRegularFile(targetAbsPath));
 

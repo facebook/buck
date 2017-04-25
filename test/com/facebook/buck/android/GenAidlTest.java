@@ -57,7 +57,7 @@ import org.junit.Test;
 public class GenAidlTest {
 
   @Test
-  public void testSimpleGenAidlRule() throws IOException {
+  public void testSimpleGenAidlRule() throws InterruptedException, IOException {
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 

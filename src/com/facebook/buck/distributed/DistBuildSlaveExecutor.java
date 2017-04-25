@@ -199,7 +199,8 @@ public class DistBuildSlaveExecutor {
     return cachingBuildEngineDelegate;
   }
 
-  private StackedFileHashCache createStackOfDefaultFileHashCache() throws IOException {
+  private StackedFileHashCache createStackOfDefaultFileHashCache()
+      throws InterruptedException, IOException {
     ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
 
@@ -353,7 +354,8 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private StackedFileHashCaches createStackedFileHashesAndPreload() throws IOException {
+  private StackedFileHashCaches createStackedFileHashesAndPreload()
+      throws InterruptedException, IOException {
     StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();
     // Used for rule key computations.
     StackedFileHashCache remoteStackedFileHashCache =

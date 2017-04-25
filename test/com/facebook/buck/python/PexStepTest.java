@@ -113,7 +113,7 @@ public class PexStepTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCommandStdin() throws IOException {
+  public void testCommandStdin() throws InterruptedException, IOException {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),

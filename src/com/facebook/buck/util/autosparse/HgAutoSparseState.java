@@ -84,7 +84,7 @@ public class HgAutoSparseState implements AutoSparseState {
   }
 
   @Override
-  public Path getSCRoot() {
+  public Path getSCRoot() throws InterruptedException {
     return Preconditions.checkNotNull(hgCmdLine.getHgRoot());
   }
 

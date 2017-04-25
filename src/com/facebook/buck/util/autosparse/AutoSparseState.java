@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  */
 public interface AutoSparseState {
   /** @return The root path of the working copy this state tracks. */
-  Path getSCRoot();
+  Path getSCRoot() throws InterruptedException;
 
   /**
    * Query the source control manifest for information on a file.

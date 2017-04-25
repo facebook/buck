@@ -84,7 +84,8 @@ public class JavacExecutionContextSerializer {
       JavacEventSink eventSink,
       PrintStream stdErr,
       ClassLoaderCache classLoaderCache,
-      Console console) {
+      Console console)
+      throws InterruptedException {
 
     Verbosity verbosity =
         Verbosity.valueOf((String) Preconditions.checkNotNull(data.get(VERBOSITY)));

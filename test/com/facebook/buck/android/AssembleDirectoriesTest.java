@@ -51,7 +51,7 @@ public class AssembleDirectoriesTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     context = TestExecutionContext.newInstance();
   }

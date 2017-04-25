@@ -52,7 +52,7 @@ public class NdkLibraryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver =

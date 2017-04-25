@@ -56,7 +56,7 @@ public class RecordingFileHashLoaderTest {
   private static final HashCode EXAMPLE_HASHCODE = HashCode.fromString("1234");
 
   @Test
-  public void testRecordsDirectSymlinkToFile() throws IOException {
+  public void testRecordsDirectSymlinkToFile() throws InterruptedException, IOException {
     // Scenario:
     // /project/linktoexternal -> /externalDir/externalfile
     // => create direct link: /project/linktoexternal -> /externalDir/externalfile
@@ -95,7 +95,8 @@ public class RecordingFileHashLoaderTest {
   }
 
   @Test
-  public void testRecordsSymlinkToFileWithinExternalDirectory() throws IOException {
+  public void testRecordsSymlinkToFileWithinExternalDirectory()
+      throws InterruptedException, IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     // Scenario:
@@ -136,7 +137,8 @@ public class RecordingFileHashLoaderTest {
   }
 
   @Test
-  public void testRecordsDirectoryAndRecursivelyRecordsChildren() throws IOException {
+  public void testRecordsDirectoryAndRecursivelyRecordsChildren()
+      throws InterruptedException, IOException {
     // Scenario:
     // /a - folder
     // /a/b - folder

@@ -60,7 +60,7 @@ public class AppleBinaryIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }

@@ -87,7 +87,7 @@ public class CxxPrecompiledHeaderRuleTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);

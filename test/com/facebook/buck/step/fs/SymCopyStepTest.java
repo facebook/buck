@@ -39,7 +39,7 @@ public class SymCopyStepTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
     context = TestExecutionContext.newInstance();
   }

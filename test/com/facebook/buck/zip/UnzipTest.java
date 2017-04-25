@@ -54,7 +54,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testExtractZipFile() throws IOException {
+  public void testExtractZipFile() throws InterruptedException, IOException {
 
     try (Zip zip = new Zip(zipFile, true)) {
       zip.add("1.bin", DUMMY_FILE_CONTENTS);
@@ -87,7 +87,7 @@ public class UnzipTest {
 
   @Test
   public void testExtractZipFilePreservesExecutePermissionsAndModificationTime()
-      throws IOException {
+      throws InterruptedException, IOException {
 
     // getFakeTime returs time with some non-zero millis. By doing division and multiplication by
     // 1000 we get rid of that.
@@ -121,7 +121,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testExtractSymlink() throws IOException {
+  public void testExtractSymlink() throws InterruptedException, IOException {
     assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
 
     // Create a simple zip archive using apache's commons-compress to store executable info.
@@ -146,7 +146,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testExtractWeirdIndex() throws IOException {
+  public void testExtractWeirdIndex() throws InterruptedException, IOException {
 
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/baz"));
@@ -169,7 +169,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testNonCanonicalPaths() throws IOException {
+  public void testNonCanonicalPaths() throws InterruptedException, IOException {
     String names[] = {
       "foo/./", "foo/./bar/", "foo/./bar/baz.cpp", "foo/./bar/baz.h",
     };
@@ -199,7 +199,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testParentDirPaths() throws IOException {
+  public void testParentDirPaths() throws InterruptedException, IOException {
 
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       // It seems very unlikely that a zip file would contain ".." paths, but handle it anyways.

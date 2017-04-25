@@ -47,7 +47,7 @@ public class StackedFileHashCacheTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void usesFirstCacheAbsolutePath() throws IOException {
+  public void usesFirstCacheAbsolutePath() throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     Path path = Paths.get("world.txt");
@@ -61,7 +61,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesFirstCache() throws IOException {
+  public void usesFirstCache() throws InterruptedException, IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     Path path = Paths.get("world.txt");
@@ -108,7 +108,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheAbsolutePath() throws IOException {
+  public void usesSecondCacheAbsolutePath() throws InterruptedException, IOException {
     Path path = Paths.get("world.txt");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -127,7 +127,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCache() throws IOException {
+  public void usesSecondCache() throws InterruptedException, IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmp.getRoot()));
 
@@ -144,7 +144,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheForArchivePathAbsolutePath() throws IOException {
+  public void usesSecondCacheForArchivePathAbsolutePath() throws InterruptedException, IOException {
     Path path = Paths.get("world.jar");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -167,7 +167,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheForArchivePath() throws IOException {
+  public void usesSecondCacheForArchivePath() throws InterruptedException, IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmp.getRoot()));
 
@@ -206,7 +206,8 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheForArchiveMemberPathAbsolutePath() throws IOException {
+  public void skipsFirstCacheForArchiveMemberPathAbsolutePath()
+      throws InterruptedException, IOException {
     Path fullPath = Paths.get("world.jar");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     writeJarWithHashes(filesystem, filesystem.resolve(fullPath));
@@ -219,7 +220,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheForArchiveMemberPath() throws IOException {
+  public void skipsFirstCacheForArchiveMemberPath() throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
@@ -232,7 +233,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnoredAbsolutePath() throws IOException {
+  public void skipsFirstCacheBecauseIgnoredAbsolutePath() throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.txt");
     Path path = Paths.get("world.txt");
     Path fullPath = tmp.getRoot().resolve(path);
@@ -245,7 +246,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnored() throws IOException {
+  public void skipsFirstCacheBecauseIgnored() throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.txt");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
     Path path = filesystem.getPath("world.txt");
@@ -257,7 +258,8 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPathAbsolutePath() throws IOException {
+  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPathAbsolutePath()
+      throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.jar");
     Path fullPath = Paths.get("world.jar");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
@@ -271,7 +273,8 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPath() throws IOException {
+  public void skipsFirstCacheBecauseIgnoredForArchiveMemberPath()
+      throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.jar");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
     Path path = filesystem.getPath("world.jar");

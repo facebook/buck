@@ -118,7 +118,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   private JavaBuckConfig testJavaBuckConfig;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
@@ -1369,7 +1369,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()
-        throws IOException, NoSuchBuildTargetException {
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
       BuildContext buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
@@ -1389,7 +1389,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       return options;
     }
 
-    // TODO(simons): Actually generate a java library rule, rather than an android one.
     private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);

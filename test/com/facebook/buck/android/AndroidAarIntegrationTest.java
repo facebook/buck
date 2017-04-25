@@ -46,13 +46,13 @@ public class AndroidAarIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
-  public void testBuildAndroidAar() throws IOException {
+  public void testBuildAndroidAar() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseA", tmp);
     workspace.setUp();
@@ -82,7 +82,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testBuildConfigNotIncludedInAarByDefault() throws IOException {
+  public void testBuildConfigNotIncludedInAarByDefault() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
@@ -109,7 +109,8 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testBuildConfigValuesTakenFromAarRule()
-      throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
+      throws ClassNotFoundException, IllegalAccessException, InterruptedException, IOException,
+          NoSuchFieldException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
@@ -158,7 +159,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testCxxLibraryDependent() throws IOException {
+  public void testCxxLibraryDependent() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -185,7 +186,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testNativeLibraryDependent() throws IOException {
+  public void testNativeLibraryDependent() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -212,7 +213,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testEmptyExceptManifest() throws IOException {
+  public void testEmptyExceptManifest() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

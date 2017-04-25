@@ -57,7 +57,7 @@ public class JavaBuckConfigTest {
   private ProjectFilesystem defaultFilesystem;
 
   @Before
-  public void setUpDefaultFilesystem() {
+  public void setUpDefaultFilesystem() throws InterruptedException {
     defaultFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
   }
 

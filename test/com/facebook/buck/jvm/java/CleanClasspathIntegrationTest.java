@@ -43,7 +43,8 @@ public class CleanClasspathIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testJavaLibraryRuleDoesNotIncludeItsOwnOldOutputOnTheClasspath() throws IOException {
+  public void testJavaLibraryRuleDoesNotIncludeItsOwnOldOutputOnTheClasspath()
+      throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "classpath_corruption_regression", tmp);

@@ -112,7 +112,7 @@ public class PexStep extends ShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin(ExecutionContext context) {
+  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap<Path, Path> resolvedModules;
     try {
@@ -178,7 +178,7 @@ public class PexStep extends ShellStep {
   }
 
   private ImmutableMap<Path, Path> getExpandedSourcePaths(ImmutableMap<Path, Path> paths)
-      throws IOException {
+      throws InterruptedException, IOException {
     ImmutableMap.Builder<Path, Path> sources = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<Path, Path> ent : paths.entrySet()) {

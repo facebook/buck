@@ -30,7 +30,7 @@ import org.junit.Test;
 public class UnzipStepTest {
 
   @Test
-  public void testGetShortName() {
+  public void testGetShortName() throws InterruptedException {
     Path zipFile = Paths.get("the/zipfile.zip");
     Path outputDirectory = Paths.get("an/output/dir");
     UnzipStep unzipStep = new UnzipStep(createJavaOnlyFilesystem(), zipFile, outputDirectory);

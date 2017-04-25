@@ -27,13 +27,13 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   private final InlineContentsProvider inlineProvider;
 
   public MultiSourceContentsProvider(DistBuildService service, Optional<Path> localCacheAbsPath)
-      throws IOException {
+      throws InterruptedException, IOException {
     this(new ServerContentsProvider(service), localCacheAbsPath);
   }
 
   public MultiSourceContentsProvider(
       FileContentsProvider serverContentProvider, Optional<Path> localCacheAbsPath)
-      throws IOException {
+      throws InterruptedException, IOException {
     this.inlineProvider = new InlineContentsProvider();
     if (localCacheAbsPath.isPresent()) {
       this.localFsProvider = Optional.of(new LocalFsContentsProvider(localCacheAbsPath.get()));

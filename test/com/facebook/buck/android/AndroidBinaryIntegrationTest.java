@@ -97,7 +97,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
@@ -278,7 +278,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDxFindsReferencedResources() throws IOException {
+  public void testDxFindsReferencedResources() throws InterruptedException, IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());

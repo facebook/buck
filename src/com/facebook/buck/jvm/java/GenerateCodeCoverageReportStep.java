@@ -172,7 +172,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
    * ReportGenerator.java needs a class-directory to work with, so if we instead have a jar file we
    * extract it first.
    */
-  private void populateClassesDir(Path outputJar, Path classesDir) {
+  private void populateClassesDir(Path outputJar, Path classesDir) throws InterruptedException {
     try {
       Preconditions.checkState(
           filesystem.exists(outputJar), String.valueOf(outputJar) + " does not exist");

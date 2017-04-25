@@ -61,7 +61,8 @@ public class BuckConfigTest {
    * the value appears multiple times.
    */
   @Test
-  public void testGetBasePathToAliasMap() throws IOException, NoSuchBuildTargetException {
+  public void testGetBasePathToAliasMap()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader1 =
         new StringReader(
             Joiner.on('\n')
@@ -102,7 +103,8 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorThrowsForMalformedBuildTarget() throws IOException {
+  public void testConstructorThrowsForMalformedBuildTarget()
+      throws InterruptedException, IOException {
     Reader reader = new StringReader(Joiner.on('\n').join("[alias]", "fb4a   = :fb4a"));
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.replay(projectFilesystem);
@@ -118,7 +120,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorWithNonExistentBasePath() throws IOException {
+  public void testConstructorWithNonExistentBasePath() throws InterruptedException, IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[alias]", "katana = //java/com/example:fb4a"));
 
@@ -127,7 +129,8 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetBuildTargetForAlias() throws IOException, NoSuchBuildTargetException {
+  public void testGetBuildTargetForAlias()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -177,7 +180,7 @@ public class BuckConfigTest {
 
   @Test
   public void testGetBuildTargetListResolvesAliases()
-      throws IOException, NoSuchBuildTargetException {
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -233,7 +236,8 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testReferentialAliases() throws IOException, NoSuchBuildTargetException {
+  public void testReferentialAliases()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -264,7 +268,8 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testUnresolvedAliasThrows() throws IOException, NoSuchBuildTargetException {
+  public void testUnresolvedAliasThrows()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[alias]", "foo = //java/com/example:foo", "bar = food"));
@@ -277,7 +282,8 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testDuplicateAliasDefinitionThrows() throws IOException, NoSuchBuildTargetException {
+  public void testDuplicateAliasDefinitionThrows()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -296,7 +302,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testExcludedLabels() throws IOException {
+  public void testExcludedLabels() throws InterruptedException, IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[test]", "excluded_labels = windows, linux"));
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
@@ -340,7 +346,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetDefaultTestTimeoutMillis() throws IOException {
+  public void testGetDefaultTestTimeoutMillis() throws InterruptedException, IOException {
     assertEquals(0L, FakeBuckConfig.builder().build().getDefaultTestTimeoutMillis());
 
     Reader reader = new StringReader(Joiner.on('\n').join("[test]", "timeout = 54321"));
@@ -349,7 +355,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetMaxTraces() throws IOException {
+  public void testGetMaxTraces() throws InterruptedException, IOException {
     assertEquals(25, FakeBuckConfig.builder().build().getMaxTraces());
 
     Reader reader = new StringReader(Joiner.on('\n').join("[log]", "max_traces = 42"));
@@ -586,7 +592,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGettingResourceAmountsPerRuleType() throws IOException {
+  public void testGettingResourceAmountsPerRuleType() throws InterruptedException, IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -601,7 +607,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testInvalidResourceAmountsConfiguration() throws IOException {
+  public void testInvalidResourceAmountsConfiguration() throws InterruptedException, IOException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
@@ -626,7 +632,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetMap() throws IOException {
+  public void testGetMap() throws InterruptedException, IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[section]", "args_map = key0=>val0,key1=>val1"));
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);

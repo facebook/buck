@@ -26,15 +26,16 @@ public class AssumeAndroidPlatform {
 
   private AssumeAndroidPlatform() {}
 
-  public static void assumeNdkIsAvailable() {
+  public static void assumeNdkIsAvailable() throws InterruptedException {
     assumeNotNull(getAndroidDirectoryResolver().getNdkOrAbsent().orElse(null));
   }
 
-  public static void assumeSdkIsAvailable() {
+  public static void assumeSdkIsAvailable() throws InterruptedException {
     assumeNotNull(getAndroidDirectoryResolver().getSdkOrAbsent().orElse(null));
   }
 
-  private static AndroidDirectoryResolver getAndroidDirectoryResolver() {
+  private static AndroidDirectoryResolver getAndroidDirectoryResolver()
+      throws InterruptedException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     return new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),

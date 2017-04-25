@@ -65,7 +65,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testDxCommandNoOptimizeNoJumbo() throws IOException {
+  public void testDxCommandNoOptimizeNoJumbo() throws InterruptedException, IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -90,7 +90,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testDxCommandOptimizeNoJumbo() throws IOException {
+  public void testDxCommandOptimizeNoJumbo() throws InterruptedException, IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -113,7 +113,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testDxCommandNoOptimizeForceJumbo() throws IOException {
+  public void testDxCommandNoOptimizeForceJumbo() throws InterruptedException, IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -141,7 +141,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testVerbose3AddsStatisticsFlag() throws IOException {
+  public void testVerbose3AddsStatisticsFlag() throws InterruptedException, IOException {
     // Context with --verbose 3.
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -169,7 +169,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testVerbose10AddsVerboseFlagToDx() throws IOException {
+  public void testVerbose10AddsVerboseFlagToDx() throws InterruptedException, IOException {
     // Context with --verbose 10.
     try (ExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -199,7 +199,7 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testOverridenMaxHeapSize() throws IOException {
+  public void testOverridenMaxHeapSize() throws InterruptedException, IOException {
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 

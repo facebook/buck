@@ -32,7 +32,7 @@ public class JavacErrorParserTest {
   JavacErrorParser javacErrorParser;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     JavaPackageFinder javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.of("/src/"));

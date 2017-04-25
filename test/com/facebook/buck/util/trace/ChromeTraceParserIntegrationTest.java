@@ -42,7 +42,7 @@ public class ChromeTraceParserIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     parser = new ChromeTraceParser(projectFilesystem);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "chrome_trace_parser", tmp);

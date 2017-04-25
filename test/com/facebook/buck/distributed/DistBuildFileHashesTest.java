@@ -29,6 +29,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
@@ -60,6 +61,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,13 +84,14 @@ public class DistBuildFileHashesTest {
     protected HashCode writtenHashCode;
     protected String writtenContents;
 
-    public SingleFileFixture(TemporaryFolder tempDir) throws Exception {
+    public SingleFileFixture(TemporaryFolder tempDir)
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       super(tempDir);
     }
 
     @Override
     protected void setUpRules(BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
-        throws Exception {
+        throws IOException, NoSuchBuildTargetException {
       javaSrcPath = getPath("src", "A.java");
 
       projectFilesystem.createParentDirs(javaSrcPath);
@@ -198,13 +201,15 @@ public class DistBuildFileHashesTest {
     protected Path archiveMemberPath;
     protected HashCode archiveMemberHash;
 
-    private ArchiveFilesFixture(Path firstFolder, Path secondFolder) throws Exception {
+    private ArchiveFilesFixture(Path firstFolder, Path secondFolder)
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       super(new ProjectFilesystem(firstFolder), new ProjectFilesystem(secondFolder));
       this.firstFolder = firstFolder;
       this.secondFolder = secondFolder;
     }
 
-    public static ArchiveFilesFixture create(TemporaryFolder archiveTempDir) throws Exception {
+    public static ArchiveFilesFixture create(TemporaryFolder archiveTempDir)
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       return new ArchiveFilesFixture(
           archiveTempDir.newFolder("first").toPath().toRealPath(),
           archiveTempDir.newFolder("second").toPath().toRealPath());
@@ -212,7 +217,7 @@ public class DistBuildFileHashesTest {
 
     @Override
     protected void setUpRules(BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
-        throws Exception {
+        throws IOException, NoSuchBuildTargetException {
       archivePath = getPath("src", "archive.jar");
       archiveMemberPath = getPath("Archive.class");
 
@@ -236,7 +241,7 @@ public class DistBuildFileHashesTest {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
       MoreFiles.deleteRecursively(firstFolder);
       MoreFiles.deleteRecursively(secondFolder);
     }
@@ -287,7 +292,8 @@ public class DistBuildFileHashesTest {
 
           @Override
           protected void setUpRules(
-              BuildRuleResolver resolver, SourcePathResolver sourcePathResolver) throws Exception {
+              BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
+              throws IOException, NoSuchBuildTargetException {
             Path firstPath = javaFs.getPath("src", "A.java");
 
             projectFilesystem.createParentDirs(firstPath);
@@ -347,7 +353,8 @@ public class DistBuildFileHashesTest {
     protected final SourcePathResolver sourcePathResolver;
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
-    public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
+    public Fixture(ProjectFilesystem first, ProjectFilesystem second)
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       projectFilesystem = first;
       javaFs = projectFilesystem.getRootPath().getFileSystem();
 
@@ -376,7 +383,8 @@ public class DistBuildFileHashesTest {
               rootCell);
     }
 
-    public Fixture(TemporaryFolder tempDir) throws Exception {
+    public Fixture(TemporaryFolder tempDir)
+        throws InterruptedException, IOException, NoSuchBuildTargetException {
       this(
           new ProjectFilesystem(tempDir.newFolder("first").toPath().toRealPath()),
           new ProjectFilesystem(tempDir.newFolder("second").toPath().toRealPath()));
@@ -387,9 +395,10 @@ public class DistBuildFileHashesTest {
     }
 
     protected abstract void setUpRules(
-        BuildRuleResolver resolver, SourcePathResolver sourcePathResolver) throws Exception;
+        BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
+        throws IOException, NoSuchBuildTargetException;
 
-    private StackedFileHashCache createFileHashCache() {
+    private StackedFileHashCache createFileHashCache() throws InterruptedException {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
       cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
       cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));

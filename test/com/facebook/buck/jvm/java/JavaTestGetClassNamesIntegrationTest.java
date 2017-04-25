@@ -44,7 +44,7 @@ public class JavaTestGetClassNamesIntegrationTest {
   private SourcePathResolver resolver;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "java_test_get_class_names", temporaryFolder);

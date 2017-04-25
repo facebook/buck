@@ -56,7 +56,7 @@ public class ActionGraphCacheIntegrationTest {
 
   @Test
   public void specifyingSkipActionGraphCacheDoesNotInvalidateTheActionGraphCache()
-      throws IOException {
+      throws InterruptedException, IOException {
     try (TestContext context = new TestContext()) {
       workspace
           .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
@@ -141,7 +141,8 @@ public class ActionGraphCacheIntegrationTest {
             }
           };
 
-  private ActionGraphCacheStatus getActionGraphCacheStatus() throws IOException {
+  private ActionGraphCacheStatus getActionGraphCacheStatus()
+      throws InterruptedException, IOException {
     Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results =
         workspace.parseTraceFromMostRecentBuckInvocation(
             ImmutableSet.of(ACTION_GRAPH_CACHE_STATUS_MATCHER));

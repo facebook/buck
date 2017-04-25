@@ -45,7 +45,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
    * various depth levels into an empty output directory.
    */
   @Test
-  public void testSymlinkFilesIntoDirectory() throws IOException {
+  public void testSymlinkFilesIntoDirectory() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_files_into_directory", tmp);
     workspace.setUp();

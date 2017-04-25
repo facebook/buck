@@ -61,7 +61,7 @@ public class AndroidResourceFilterIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @BeforeClass
-  public static void findBuildToolsVersion() {
+  public static void findBuildToolsVersion() throws InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver =
@@ -78,7 +78,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -198,7 +198,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
-  public void testStringArtifactsAreCached() throws IOException {
+  public void testStringArtifactsAreCached() throws InterruptedException, IOException {
     Assume.assumeFalse(true);
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();

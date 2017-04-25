@@ -48,7 +48,7 @@ public class EstimateDexWeightStepTest {
               .build());
 
   @Test
-  public void testExecuteEstimateDexWeightStep() throws IOException {
+  public void testExecuteEstimateDexWeightStep() throws InterruptedException, IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -74,7 +74,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testGetBeforeExecuteThrowsException() {
+  public void testGetBeforeExecuteThrowsException() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =
@@ -83,7 +83,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test
-  public void testGetShortName() {
+  public void testGetShortName() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =
@@ -92,7 +92,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test
-  public void testGetDescription() {
+  public void testGetDescription() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =

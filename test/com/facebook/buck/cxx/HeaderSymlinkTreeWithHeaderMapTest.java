@@ -172,7 +172,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange() throws IOException {
+  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange()
+      throws InterruptedException, IOException {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
     DefaultFileHashCache hashCache =

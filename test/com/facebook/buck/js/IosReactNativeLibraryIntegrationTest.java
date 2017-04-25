@@ -51,7 +51,7 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());

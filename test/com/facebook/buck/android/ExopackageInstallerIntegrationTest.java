@@ -83,7 +83,7 @@ public class ExopackageInstallerIntegrationTest {
   private String apkVersionCode;
 
   @Before
-  public void setUp() throws Throwable {
+  public void setUp() throws Exception {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     filesystem = new ProjectFilesystem(tmpFolder.getRoot());
     executionContext = TestExecutionContext.newInstance();
