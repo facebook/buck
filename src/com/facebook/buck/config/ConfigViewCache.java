@@ -20,14 +20,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
  * A cache for views of some Config.
  *
- * This class is useful if the ConfigViews memoize certain values that may be expensive to compute.
+ * <p>This class is useful if the ConfigViews memoize certain values that may be expensive to
+ * compute.
  *
  * @param <T> Config type
  */
@@ -36,8 +36,7 @@ public final class ConfigViewCache<T> {
   private final LoadingCache<Class<? extends ConfigView<T>>, ? extends ConfigView<T>> cache;
 
   public ConfigViewCache(T delegate) {
-    this.cache = CacheBuilder.newBuilder().build(
-        new ConfigViewCacheLoader<>(delegate));
+    this.cache = CacheBuilder.newBuilder().build(new ConfigViewCacheLoader<>(delegate));
   }
 
   public <V extends ConfigView<T>> V getView(Class<V> viewClass) {
@@ -49,8 +48,8 @@ public final class ConfigViewCache<T> {
     }
   }
 
-  private static class ConfigViewCacheLoader<T> extends
-      CacheLoader<Class<? extends ConfigView<T>>, ConfigView<T>> {
+  private static class ConfigViewCacheLoader<T>
+      extends CacheLoader<Class<? extends ConfigView<T>>, ConfigView<T>> {
     private final T delegate;
 
     private ConfigViewCacheLoader(T delegate) {
@@ -63,25 +62,18 @@ public final class ConfigViewCache<T> {
       try {
         builderMethod = key.getMethod("of", this.delegate.getClass());
       } catch (NoSuchMethodException e) {
-        throw new IllegalStateException(
-            "missing factory method of(Config) for config view",
-            e);
+        throw new IllegalStateException("missing factory method of(Config) for config view", e);
       }
 
       try {
         return key.cast(builderMethod.invoke(null, this.delegate));
       } catch (InvocationTargetException e) {
-        throw new IllegalStateException(
-            "of() should not throw.",
-            e);
+        throw new IllegalStateException("of() should not throw.", e);
       } catch (IllegalAccessException e) {
-        throw new IllegalStateException(
-            "of() should be public.",
-            e);
+        throw new IllegalStateException("of() should be public.", e);
       } catch (ClassCastException e) {
         throw new IllegalStateException(
-            "factory method should create correct ConfigView instance.",
-            e);
+            "factory method should create correct ConfigView instance.", e);
       }
     }
   }

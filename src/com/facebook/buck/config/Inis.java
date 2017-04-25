@@ -18,13 +18,11 @@ package com.facebook.buck.config;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.io.Reader;
 import org.ini4j.Config;
 import org.ini4j.Ini;
 import org.ini4j.Profile;
-
-import java.io.IOException;
-import java.io.Reader;
 
 class Inis {
 
@@ -54,7 +52,6 @@ class Inis {
     }
 
     return sectionsToEntries.build();
-
   }
 
   private static void validateIni(Ini ini) {
@@ -64,13 +61,11 @@ class Inis {
       for (String propertyName : section.keySet()) {
         if (section.getAll(propertyName).size() > 1) {
           throw new HumanReadableException(
-              "Duplicate definition for %s in the [%s] section of your .buckconfig or " +
-                  ".buckconfig.local.",
-              propertyName,
-              sectionName);
+              "Duplicate definition for %s in the [%s] section of your .buckconfig or "
+                  + ".buckconfig.local.",
+              propertyName, sectionName);
         }
       }
     }
   }
-
 }

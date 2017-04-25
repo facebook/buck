@@ -31,18 +31,16 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
  * Hierarcical configuration of cell/section/key/value quadruples.
  *
- * This class only implements the simple construction/storage/retrieval of these values. Other
+ * <p>This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
  */
 @Value.Immutable(singleton = true, builder = false, copy = false)
@@ -57,17 +55,15 @@ abstract class AbstractCellConfig {
    */
   public RawConfig getForCell(RelativeCellName cellName) {
     RawConfig config = Optional.ofNullable(getValues().get(cellName)).orElse(RawConfig.of());
-    RawConfig starConfig = Optional
-      .ofNullable(getValues().get(RelativeCellName.ALL_CELLS_SPECIAL_NAME))
-      .orElse(RawConfig.of());
-    return RawConfig.builder()
-      .putAll(starConfig)
-      .putAll(config)
-      .build();
+    RawConfig starConfig =
+        Optional.ofNullable(getValues().get(RelativeCellName.ALL_CELLS_SPECIAL_NAME))
+            .orElse(RawConfig.of());
+    return RawConfig.builder().putAll(starConfig).putAll(config).build();
   }
 
   /**
    * Translates the 'cell name'->override map into a 'Path'->override map.
+   *
    * @param pathMapping a map containing paths to all of the cells we want to query.
    * @return 'Path'->override map
    */
@@ -87,20 +83,19 @@ abstract class AbstractCellConfig {
       pathsWithOverrides.add(pathMapping.get(cellWithOverride));
     }
 
-
     ImmutableMultimap<Path, RelativeCellName> pathToRelativeName =
         Multimaps.index(pathMapping.keySet(), Functions.forMap(pathMapping));
 
     for (Path pathWithOverrides : pathsWithOverrides.build()) {
-      ImmutableCollection<RelativeCellName> namesForPath = pathToRelativeName.get(
-          pathWithOverrides);
+      ImmutableCollection<RelativeCellName> namesForPath =
+          pathToRelativeName.get(pathWithOverrides);
       if (namesForPath.size() > 1) {
         throw new MalformedOverridesException(
-            String.format("Configuration override is ambiguous: cell rooted at %s is reachable " +
-                "as [%s]. Please override the config by placing a .buckconfig.local file in the " +
-                "cell's root folder.",
-                pathWithOverrides,
-                Joiner.on(',').join(namesForPath)));
+            String.format(
+                "Configuration override is ambiguous: cell rooted at %s is reachable "
+                    + "as [%s]. Please override the config by placing a .buckconfig.local file in the "
+                    + "cell's root folder.",
+                pathWithOverrides, Joiner.on(',').join(namesForPath)));
       }
     }
 
@@ -133,28 +128,28 @@ abstract class AbstractCellConfig {
   /**
    * A builder for {@link CellConfig}s.
    *
-   * Unless otherwise stated, duplicate keys overwrites earlier ones.
+   * <p>Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
     private Map<RelativeCellName, RawConfig.Builder> values = Maps.newLinkedHashMap();
 
-    /**
-     * Put a single value.
-     */
+    /** Put a single value. */
     public Builder put(RelativeCellName cell, String section, String key, String value) {
       requireCell(cell).put(section, key, value);
       return this;
     }
 
     public CellConfig build() {
-      return values.entrySet().stream().collect(collectingAndThen(
-          toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().build()),
-          CellConfig::of));
+      return values
+          .entrySet()
+          .stream()
+          .collect(
+              collectingAndThen(
+                  toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().build()),
+                  CellConfig::of));
     }
 
-    /**
-     * Get a section or create it if it doesn't exist.
-     */
+    /** Get a section or create it if it doesn't exist. */
     private RawConfig.Builder requireCell(RelativeCellName cellName) {
       RawConfig.Builder cell = values.get(cellName);
       if (cell == null) {
