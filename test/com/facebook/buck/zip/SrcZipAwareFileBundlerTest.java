@@ -19,9 +19,9 @@ package com.facebook.buck.zip;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -33,10 +33,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,11 +40,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SrcZipAwareFileBundlerTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   ProjectFilesystem filesystem;
   Path src;
   Path dest;
@@ -70,11 +67,10 @@ public class SrcZipAwareFileBundlerTest {
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath);
     bundler.copy(
         filesystem,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
         immutableStepList,
         dest,
         immutableSortedSet);
@@ -107,8 +103,9 @@ public class SrcZipAwareFileBundlerTest {
       }
     }
 
-    return  bundledFilesCollection;
+    return bundledFilesCollection;
   }
+
   @Test
   public void shouldBundleFilesIfInputIsADirectory() throws IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
@@ -127,9 +124,9 @@ public class SrcZipAwareFileBundlerTest {
     for (Path path : bundledFilesCollection) {
       Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
-          subDirectoryFile1.endsWith(relativePath) ||
-              subDirectoryFile2.endsWith(relativePath) ||
-              subDirectoryFile3.endsWith(relativePath));
+          subDirectoryFile1.endsWith(relativePath)
+              || subDirectoryFile2.endsWith(relativePath)
+              || subDirectoryFile3.endsWith(relativePath));
     }
   }
 
@@ -151,9 +148,9 @@ public class SrcZipAwareFileBundlerTest {
     for (Path path : bundledFilesCollection) {
       Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
-          subDirectoryFile1.endsWith(relativePath) ||
-              subDirectoryFile2.endsWith(relativePath) ||
-              subDirectoryFile3.endsWith(relativePath));
+          subDirectoryFile1.endsWith(relativePath)
+              || subDirectoryFile2.endsWith(relativePath)
+              || subDirectoryFile3.endsWith(relativePath));
     }
   }
 
@@ -170,8 +167,8 @@ public class SrcZipAwareFileBundlerTest {
         ImmutableSortedSet.of(
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))
-        ));
+            new PathSourcePath(
+                filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
   }
 
   @Test
@@ -187,8 +184,8 @@ public class SrcZipAwareFileBundlerTest {
         ImmutableSortedSet.of(
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))
-        ));
+            new PathSourcePath(
+                filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 
@@ -197,9 +194,9 @@ public class SrcZipAwareFileBundlerTest {
     for (Path path : bundledFilesCollection) {
       Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
-          subDirectoryFile1.getFileName().equals(relativePath) ||
-              subDirectoryFile2.getFileName().equals(relativePath) ||
-              subDirectoryFile3.getFileName().equals(relativePath));
+          subDirectoryFile1.getFileName().equals(relativePath)
+              || subDirectoryFile2.getFileName().equals(relativePath)
+              || subDirectoryFile3.getFileName().equals(relativePath));
     }
   }
 }

@@ -23,12 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
-
-import org.apache.commons.compress.archivers.zip.ZipUtil;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,11 +31,14 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ZipScrubberStepIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void modificationTimes() throws Exception {
@@ -77,5 +74,4 @@ public class ZipScrubberStepIntegrationTest {
       }
     }
   }
-
 }

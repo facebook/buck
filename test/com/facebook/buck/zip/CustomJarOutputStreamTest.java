@@ -19,10 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +28,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import org.junit.Before;
+import org.junit.Test;
 
 public class CustomJarOutputStreamTest {
   private ByteArrayOutputStream out;
@@ -47,11 +45,9 @@ public class CustomJarOutputStreamTest {
   @Test
   public void entriesAreWrittenAsTheyAreEncounteredWithManifestLast() throws IOException {
     writer.writeEntry(
-        "Z",
-        new ByteArrayInputStream("Z's contents".getBytes(StandardCharsets.UTF_8)));
+        "Z", new ByteArrayInputStream("Z's contents".getBytes(StandardCharsets.UTF_8)));
     writer.writeEntry(
-        "A",
-        new ByteArrayInputStream("A's contents".getBytes(StandardCharsets.UTF_8)));
+        "A", new ByteArrayInputStream("A's contents".getBytes(StandardCharsets.UTF_8)));
     writer.close();
 
     try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
@@ -71,9 +67,8 @@ public class CustomJarOutputStreamTest {
   public void manifestContainsEntryHashesOfHashedEntries() throws IOException {
     String entryName = "A";
     InputStream contents = new ByteArrayInputStream("contents".getBytes(StandardCharsets.UTF_8));
-    try (HashingInputStream hashingContents = new HashingInputStream(
-        Hashing.murmur3_128(),
-        contents)) {
+    try (HashingInputStream hashingContents =
+        new HashingInputStream(Hashing.murmur3_128(), contents)) {
       writer.writeEntry(entryName, hashingContents);
       writer.close();
 
@@ -86,8 +81,7 @@ public class CustomJarOutputStreamTest {
 
         String expectedHash = hashingContents.hash().toString();
         assertEquals(
-            expectedHash,
-            manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
+            expectedHash, manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
       }
     }
   }
