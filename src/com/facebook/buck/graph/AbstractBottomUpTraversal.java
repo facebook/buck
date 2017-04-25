@@ -29,7 +29,7 @@ public abstract class AbstractBottomUpTraversal<T, E extends Throwable> {
   }
 
   public final void traverse() throws E {
-    Iterable<T> roots  = graph.getNodesWithNoIncomingEdges();
+    Iterable<T> roots = graph.getNodesWithNoIncomingEdges();
     GraphTraversable<T> graphTraversable = node -> graph.getOutgoingNodesFor(node).iterator();
     try {
       for (T node : new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable).traverse(roots)) {

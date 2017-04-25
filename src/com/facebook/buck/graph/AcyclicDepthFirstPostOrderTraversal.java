@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -30,8 +29,9 @@ import java.util.Set;
 
 /**
  * Performs a depth-first, post-order traversal over a DAG.
- * <p>
- * If a cycle is encountered, a {@link CycleException} is thrown by {@link #traverse(Iterable)}.
+ *
+ * <p>If a cycle is encountered, a {@link CycleException} is thrown by {@link #traverse(Iterable)}.
+ *
  * @param <T> the type of node in the graph
  */
 public class AcyclicDepthFirstPostOrderTraversal<T> {
@@ -44,6 +44,7 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
 
   /**
    * Performs a depth-first, post-order traversal over a DAG.
+   *
    * @param initialNodes The nodes from which to perform the traversal. Not allowed to contain
    *     {@code null}.
    * @throws CycleException if a cycle is found while performing the traversal.
@@ -109,14 +110,15 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
   private class Explorable {
     private final T node;
     private final Iterator<T> children;
+
     Explorable(T node) {
       this.node = node;
       this.children = traversable.findChildren(node);
     }
   }
 
-  private CycleException createCycleException(T collisionNode,
-      Iterable<Explorable> currentExploration) {
+  private CycleException createCycleException(
+      T collisionNode, Iterable<Explorable> currentExploration) {
     Deque<T> chain = new LinkedList<>();
     chain.add(collisionNode);
 
@@ -131,7 +133,8 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
       }
     }
 
-    Preconditions.checkState(foundStartOfCycle,
+    Preconditions.checkState(
+        foundStartOfCycle,
         "Start of cycle %s should appear in traversal history %s.",
         collisionNode,
         chain);

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -32,8 +31,7 @@ public class TopologicalSort {
 
   private TopologicalSort() {}
 
-  public static <T extends Comparable<?>> ImmutableList<T> sort(
-      TraversableGraph<T> graph) {
+  public static <T extends Comparable<?>> ImmutableList<T> sort(TraversableGraph<T> graph) {
 
     // AtomicInteger is used to decrement the integer value in-place.
     Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = new HashMap<>();
@@ -51,8 +49,8 @@ public class TopologicalSort {
         T node = toExplore.remove();
         Preconditions.checkState(
             !visitedNodes.contains(node),
-            "The queue of nodes to explore should not contain a node that has already been" +
-                " visited.");
+            "The queue of nodes to explore should not contain a node that has already been"
+                + " visited.");
 
         level.add(node);
         visitedNodes.add(node);

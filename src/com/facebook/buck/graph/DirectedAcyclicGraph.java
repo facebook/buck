@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
-
 import java.util.Objects;
 
 public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
@@ -68,9 +67,9 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
     }
 
     DirectedAcyclicGraph<?> that = (DirectedAcyclicGraph<?>) other;
-    return Objects.equals(this.nodes, that.nodes) &&
-        Objects.equals(this.outgoingEdges, that.outgoingEdges) &&
-        Objects.equals(this.incomingEdges, that.incomingEdges);
+    return Objects.equals(this.nodes, that.nodes)
+        && Objects.equals(this.outgoingEdges, that.outgoingEdges)
+        && Objects.equals(this.incomingEdges, that.incomingEdges);
   }
 
   @Override

@@ -19,14 +19,11 @@ package com.facebook.buck.graph;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-/**
- * Performs a breadth-first traversal of dependencies of a graph node.
- */
+/** Performs a breadth-first traversal of dependencies of a graph node. */
 public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Throwable> {
 
   private final Queue<Node> toExplore;
@@ -63,9 +60,7 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
   }
 
   /** Override this method with any logic that should be run when {@link #start()} completes. */
-  protected void onComplete() throws E {
-
-  }
+  protected void onComplete() throws E {}
 
   /**
    * To perform a full traversal of the the {@code initialNode}'s transitive dependencies, this
@@ -75,5 +70,4 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
    * @return The set of direct dependencies to visit after visiting this node.
    */
   public abstract Iterable<Node> visit(Node node) throws E;
-
 }

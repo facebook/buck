@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -35,14 +34,17 @@ public class Dot<T> {
   private static final Map<String, String> typeColors;
 
   static {
-    typeColors = new ImmutableMap.Builder<String, String>() {{
-      put("android_aar", "springgreen2");
-      put("android_library", "springgreen3");
-      put("android_resource", "springgreen1");
-      put("android_prebuilt_aar", "olivedrab3");
-      put("java_library", "indianred1");
-      put("prebuilt_jar", "mediumpurple1");
-    }}.build();
+    typeColors =
+        new ImmutableMap.Builder<String, String>() {
+          {
+            put("android_aar", "springgreen2");
+            put("android_library", "springgreen3");
+            put("android_resource", "springgreen1");
+            put("android_prebuilt_aar", "olivedrab3");
+            put("java_library", "indianred1");
+            put("prebuilt_jar", "mediumpurple1");
+          }
+        }.build();
   }
 
   public Dot(
@@ -69,10 +71,9 @@ public class Dot<T> {
         String sourceType = nodeToTypeName.apply(node);
 
         try {
-          output.append(String.format(
-              "  %s [style=filled,color=%s];\n",
-              source,
-              Dot.colorFromType(sourceType)));
+          output.append(
+              String.format(
+                  "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -114,14 +115,12 @@ public class Dot<T> {
             }
             String source = nodeToName.apply(node);
             String sourceType = nodeToTypeName.apply(node);
-            builder.add(String.format(
-                "  %s [style=filled,color=%s];\n",
-                source,
-                Dot.colorFromType(sourceType)));
-            ImmutableSortedSet<T> nodes = ImmutableSortedSet.copyOf(
-                Sets.filter(
-                    graph.getOutgoingNodesFor(node),
-                    nodesToFilter::contains));
+            builder.add(
+                String.format(
+                    "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
+            ImmutableSortedSet<T> nodes =
+                ImmutableSortedSet.copyOf(
+                    Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains));
             for (T sink : nodes) {
               String sinkName = nodeToName.apply(sink);
               builder.add(String.format("  %s -> %s;\n", source, sinkName));
@@ -141,10 +140,9 @@ public class Dot<T> {
           }
           String source = nodeToName.apply(node);
           String sourceType = nodeToTypeName.apply(node);
-          sortedSetBuilder.add(String.format(
-              "  %s [style=filled,color=%s];\n",
-              source,
-              Dot.colorFromType(sourceType)));
+          sortedSetBuilder.add(
+              String.format(
+                  "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
           for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
             String sinkName = nodeToName.apply(sink);
             sortedSetBuilder.add(String.format("  %s -> %s;\n", source, sinkName));

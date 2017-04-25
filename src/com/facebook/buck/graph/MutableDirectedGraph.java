@@ -24,7 +24,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -36,43 +35,38 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a directed graph with unweighted edges. For a given source and sink node pair, there
- * is at most one directed edge connecting them in the graph.
- * The graph is not required to be connected or acyclic.
+ * is at most one directed edge connecting them in the graph. The graph is not required to be
+ * connected or acyclic.
+ *
  * @param <T> the type of object stored as nodes in this graph
  */
 public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /**
    * It is possible to have a node in the graph without any edges, which is why we must maintain a
-   * separate collection for nodes in the graph, rather than just using the keySet of
-   * {@link #outgoingEdges}.
+   * separate collection for nodes in the graph, rather than just using the keySet of {@link
+   * #outgoingEdges}.
    */
   private final Set<T> nodes;
 
   /**
-   * Represents the edges in the graph.
-   * Keys are source nodes; values are corresponding sync nodes.
+   * Represents the edges in the graph. Keys are source nodes; values are corresponding sync nodes.
    */
   private final SetMultimap<T, T> outgoingEdges;
 
   /**
-   * Represents the edges in the graph.
-   * Keys are sink nodes; values are corresponding source nodes.
+   * Represents the edges in the graph. Keys are sink nodes; values are corresponding source nodes.
    */
   private final SetMultimap<T, T> incomingEdges;
 
   private MutableDirectedGraph(
-      Set<T> nodes,
-      SetMultimap<T, T> outgoingEdges,
-      SetMultimap<T, T> incomingEdges) {
+      Set<T> nodes, SetMultimap<T, T> outgoingEdges, SetMultimap<T, T> incomingEdges) {
     this.nodes = nodes;
     this.outgoingEdges = outgoingEdges;
     this.incomingEdges = incomingEdges;
   }
 
-  /**
-   * Creates a new graph with no nodes or edges.
-   */
+  /** Creates a new graph with no nodes or edges. */
   public MutableDirectedGraph() {
     this(new HashSet<T>(), HashMultimap.create(), HashMultimap.create());
   }
@@ -104,16 +98,12 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     return outgoingEdges.containsEntry(source, sink);
   }
 
-  /**
-   * Adds the specified node to the graph.
-   */
+  /** Adds the specified node to the graph. */
   public boolean addNode(T node) {
     return nodes.add(node);
   }
 
-  /**
-   * Removes the specified node from the graph.
-   */
+  /** Removes the specified node from the graph. */
   public boolean removeNode(T node) {
     boolean isRemoved = nodes.remove(node);
     Set<T> nodesReachableFromTheSpecifiedNode = outgoingEdges.removeAll(node);
@@ -136,8 +126,8 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /**
    * Removes the edge between {@code source} and {@code sink}. This does not remove {@code source}
-   * or {@code sink} from the graph. Note that this may leave either {@code source} or
-   * {@code sink} as unconnected nodes in the graph.
+   * or {@code sink} from the graph. Note that this may leave either {@code source} or {@code sink}
+   * as unconnected nodes in the graph.
    */
   public void removeEdge(T source, T sink) {
     outgoingEdges.remove(source, sink);
@@ -168,10 +158,11 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
-    Set<Set<T>> cycles = Sets.filter(findStronglyConnectedComponents(),
-        stronglyConnectedComponent -> stronglyConnectedComponent.size() > 1);
-    Iterable<ImmutableSet<T>> immutableCycles =
-        Iterables.transform(cycles, ImmutableSet::copyOf);
+    Set<Set<T>> cycles =
+        Sets.filter(
+            findStronglyConnectedComponents(),
+            stronglyConnectedComponent -> stronglyConnectedComponent.size() > 1);
+    Iterable<ImmutableSet<T>> immutableCycles = Iterables.transform(cycles, ImmutableSet::copyOf);
 
     // Tarjan's algorithm (as pseudo-coded on Wikipedia) does not appear to account for single-node
     // cycles. Therefore, we must check for them exclusively.
@@ -186,8 +177,9 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   /**
-   * For this graph, returns the set of strongly connected components using Tarjan's
-   * algorithm. Note this is {@code O(|V| + |E|)}.
+   * For this graph, returns the set of strongly connected components using Tarjan's algorithm. Note
+   * this is {@code O(|V| + |E|)}.
+   *
    * @return an unmodifiable {@link Set} of sets, each of which is also an unmodifiable {@link Set}
    *     and represents a strongly connected component.
    */
@@ -220,8 +212,8 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /**
    * Implementation of
-   * http://en.wikipedia.org/wiki/Tarjan%E2%80%99s_strongly_connected_components_algorithm
-   * used to find cycles in the graph.
+   * http://en.wikipedia.org/wiki/Tarjan%E2%80%99s_strongly_connected_components_algorithm used to
+   * find cycles in the graph.
    */
   private static class Tarjan<S> {
     private final MutableDirectedGraph<S> graph;
@@ -260,15 +252,17 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       for (S sink : graph.getOutgoingNodesFor(node)) {
         if (!indexes.containsKey(sink)) {
           doStrongConnect(sink);
-          int lowlink = Math.min(
-              Preconditions.checkNotNull(lowlinks.get(node)),
-              Preconditions.checkNotNull(lowlinks.get(sink)));
+          int lowlink =
+              Math.min(
+                  Preconditions.checkNotNull(lowlinks.get(node)),
+                  Preconditions.checkNotNull(lowlinks.get(sink)));
           lowlinks.put(node, lowlink);
         } else if (nodeStack.contains(sink)) {
           // TODO(mbolin): contains() is O(N), consider maintaining an index so it is O(1)?
-          int lowlink = Math.min(
-              Preconditions.checkNotNull(lowlinks.get(node)),
-              Preconditions.checkNotNull(indexes.get(sink)));
+          int lowlink =
+              Math.min(
+                  Preconditions.checkNotNull(lowlinks.get(node)),
+                  Preconditions.checkNotNull(indexes.get(sink)));
           lowlinks.put(node, lowlink);
         }
       }
