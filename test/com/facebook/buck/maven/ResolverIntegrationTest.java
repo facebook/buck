@@ -51,16 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -71,11 +61,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ResolverIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
   private static ProjectBuildFileParser buildFileParser;
@@ -103,30 +100,29 @@ public class ResolverIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-        buckConfig,
-        new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
 
-    ImmutableSet<Description<?>> descriptions = ImmutableSet.of(
-        new RemoteFileDescription(new ExplodingDownloader()),
-        new PrebuiltJarDescription());
+    ImmutableSet<Description<?>> descriptions =
+        ImmutableSet.of(
+            new RemoteFileDescription(new ExplodingDownloader()), new PrebuiltJarDescription());
 
-    buildFileParser = new ProjectBuildFileParser(
-        ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(filesystem.getRootPath())
-            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
-            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-            .setIgnorePaths(filesystem.getIgnorePaths())
-            .setBuildFileName(parserConfig.getBuildFileName())
-            .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(descriptions)
-            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build(),
-        new DefaultTypeCoercerFactory(),
-        ImmutableMap.of(),
-        BuckEventBusFactory.newInstance(),
-        new DefaultProcessExecutor(new TestConsole()),
-        /* ignoreBuckAutodepsFiles */ false);
+    buildFileParser =
+        new ProjectBuildFileParser(
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(filesystem.getRootPath())
+                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+                .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+                .setIgnorePaths(filesystem.getIgnorePaths())
+                .setBuildFileName(parserConfig.getBuildFileName())
+                .setDefaultIncludes(parserConfig.getDefaultIncludes())
+                .setDescriptions(descriptions)
+                .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
+                .build(),
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(),
+            BuckEventBusFactory.newInstance(),
+            new DefaultProcessExecutor(new TestConsole()),
+            /* ignoreBuckAutodepsFiles */ false);
   }
 
   @AfterClass
@@ -153,7 +149,7 @@ public class ResolverIntegrationTest {
 
   private void resolveWithArtifacts(String... artifacts)
       throws URISyntaxException, IOException, RepositoryException, ExecutionException,
-      InterruptedException {
+          InterruptedException {
     ArtifactConfig config = newConfig();
     config.repositories.add(new ArtifactConfig.Repository(httpd.getUri("/").toString()));
     config.artifacts.addAll(Arrays.asList(artifacts));
@@ -172,8 +168,9 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnceViaPom() throws Exception {
-    resolveWithArtifacts(repo.resolve(
-        "com/example/A-depends-on-B-and-C/1.0/A-depends-on-B-and-C-1.0.pom").toString());
+    resolveWithArtifacts(
+        repo.resolve("com/example/A-depends-on-B-and-C/1.0/A-depends-on-B-and-C-1.0.pom")
+            .toString());
     Path groupDir = thirdParty.resolve("example");
     assertTrue(Files.exists(groupDir));
     assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
@@ -250,8 +247,7 @@ public class ResolverIntegrationTest {
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
     assertEquals(
-        ImmutableList.of(
-            String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
+        ImmutableList.of(String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
         deps);
   }
 
@@ -260,9 +256,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    List<Map<String, Object>> allTargets = buildFileParser.getAll(
-        buckRepoRoot.resolve(exampleDir).resolve(
-            "BUCK"));
+    List<Map<String, Object>> allTargets =
+        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"));
 
     assertEquals(2, allTargets.size());
 
@@ -284,9 +279,7 @@ public class ResolverIntegrationTest {
   public void shouldNotDownloadOlderJar() throws Exception {
     Path existingNewerJar = thirdParty.resolve("example/no-deps-1.1.jar");
     Files.createDirectories(existingNewerJar.getParent());
-    Files.copy(
-        repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"),
-        existingNewerJar);
+    Files.copy(repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"), existingNewerJar);
 
     Path groupDir = thirdParty.resolve("example");
     Path repoOlderJar = groupDir.resolve("no-deps-1.0.jar");
