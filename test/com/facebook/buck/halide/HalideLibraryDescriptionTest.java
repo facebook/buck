@@ -37,8 +37,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -55,14 +55,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class HalideLibraryDescriptionTest {
 
@@ -70,60 +68,46 @@ public class HalideLibraryDescriptionTest {
   public void testCreateBuildRule() throws Exception {
     // Set up a #halide-compiler rule, then set up a halide_library rule, and
     // check that the library rule depends on the compiler rule.
-    BuildTarget compilerTarget = BuildTargetFactory
-        .newInstance("//:rule")
-        .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
+    BuildTarget compilerTarget =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:rule");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    HalideLibraryBuilder compilerBuilder =
-        new HalideLibraryBuilder(compilerTarget);
+    HalideLibraryBuilder compilerBuilder = new HalideLibraryBuilder(compilerTarget);
     compilerBuilder.setSrcs(
-        ImmutableSortedSet.of(
-            SourceWithFlags.of(
-                new FakeSourcePath("main.cpp"))));
+        ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("main.cpp"))));
     HalideLibraryBuilder libBuilder = new HalideLibraryBuilder(libTarget);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        compilerBuilder.build(),
-        libBuilder.build());
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(compilerBuilder.build(), libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    HalideLibrary lib = (HalideLibrary) libBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
+    HalideLibrary lib = (HalideLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Check that the library rule has the correct preprocessor input.
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
     String headerName = "rule.h";
-    BuildTarget flavoredLibTarget = libTarget.withFlavors(
-        HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
-        cxxPlatform.getFlavor());
-    Path headerPath = HalideCompile.headerOutputPath(
-        flavoredLibTarget,
-        lib.getProjectFilesystem(),
-        Optional.empty());
+    BuildTarget flavoredLibTarget =
+        libTarget.withFlavors(
+            HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, cxxPlatform.getFlavor());
+    Path headerPath =
+        HalideCompile.headerOutputPath(
+            flavoredLibTarget, lib.getProjectFilesystem(), Optional.empty());
     CxxSymlinkTreeHeaders publicHeaders =
-        (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(
-            cxxPlatform,
-            HeaderVisibility.PUBLIC).getIncludes()
-            .get(0);
+        (CxxSymlinkTreeHeaders)
+            lib.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).getIncludes().get(0);
     assertThat(
-        publicHeaders.getIncludeType(),
-        Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));
+        publicHeaders.getIncludeType(), Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));
     assertThat(
         publicHeaders.getNameToPathMap(),
         Matchers.equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(headerName),
-                new ExplicitBuildTargetSourcePath(
-                    flavoredLibTarget,
-                    headerPath))));
+                new ExplicitBuildTargetSourcePath(flavoredLibTarget, headerPath))));
 
     // Check that the library rule has the correct native linkable input.
-    NativeLinkableInput input = lib.getNativeLinkableInput(
-        cxxPlatform,
-        Linker.LinkableDepType.STATIC);
+    NativeLinkableInput input =
+        lib.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
             .transformAndConcat(arg -> arg.getDeps(new SourcePathRuleFinder(resolver)))
@@ -138,18 +122,16 @@ public class HalideLibraryDescriptionTest {
 
     // First, make sure without any platform regex, we get something back for each of the interface
     // methods.
-    HalideLibraryBuilder halideLibraryBuilder =
-        new HalideLibraryBuilder(target);
+    HalideLibraryBuilder halideLibraryBuilder = new HalideLibraryBuilder(target);
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
     BuildRuleResolver resolver1 =
         new BuildRuleResolver(targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
-    HalideLibrary halideLibrary = (HalideLibrary) halideLibraryBuilder
-        .build(resolver1, filesystem, targetGraph1);
+    HalideLibrary halideLibrary =
+        (HalideLibrary) halideLibraryBuilder.build(resolver1, filesystem, targetGraph1);
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                Linker.LinkableDepType.STATIC)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC)
             .getArgs(),
         not(Matchers.empty()));
 
@@ -158,13 +140,11 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph2 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
     BuildRuleResolver resolver2 =
         new BuildRuleResolver(targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
-    halideLibrary = (HalideLibrary) halideLibraryBuilder
-        .build(resolver2, filesystem, targetGraph2);
+    halideLibrary = (HalideLibrary) halideLibraryBuilder.build(resolver2, filesystem, targetGraph2);
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                Linker.LinkableDepType.STATIC)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC)
             .getArgs(),
         Matchers.empty());
   }
@@ -172,60 +152,48 @@ public class HalideLibraryDescriptionTest {
   @Test
   public void extraCompilerFlags() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ImmutableList<String> extraCompilerFlags = ImmutableList.<String>builder()
-      .add("--test-flag")
-      .add("test-value")
-      .add("$TEST_MACRO")
-      .build();
+    ImmutableList<String> extraCompilerFlags =
+        ImmutableList.<String>builder()
+            .add("--test-flag")
+            .add("test-value")
+            .add("$TEST_MACRO")
+            .build();
 
     // Set up a #halide-compile rule, then check its build steps.
-    BuildTarget compileTarget = BuildTargetFactory
-        .newInstance("//:rule")
-        .withFlavors(HalideLibraryDescription.HALIDE_COMPILE_FLAVOR);
+    BuildTarget compileTarget =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(HalideLibraryDescription.HALIDE_COMPILE_FLAVOR);
     HalideLibraryBuilder compileBuilder = new HalideLibraryBuilder(compileTarget);
     compileBuilder.setSrcs(
-        ImmutableSortedSet.of(
-            SourceWithFlags.of(
-                new FakeSourcePath("main.cpp"))));
+        ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("main.cpp"))));
 
     // First, make sure the compile step doesn't include the extra flags.
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    HalideCompile compile = (HalideCompile) compileBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
+    HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
-    ImmutableList<Step> buildSteps = compile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
-    );
+    ImmutableList<Step> buildSteps =
+        compile.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(2);
-    ImmutableList<String> shellCommand = compilerStep.getShellCommandInternal(
-        TestExecutionContext.newInstance());
-    assertThat(
-        shellCommand,
-        not(hasItems("--test-flag", "test-value")));
+    ImmutableList<String> shellCommand =
+        compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
+    assertThat(shellCommand, not(hasItems("--test-flag", "test-value")));
 
     // Next verify that the shell command picks up on the extra compiler flags.
     compileBuilder.setCompilerInvocationFlags(extraCompilerFlags);
     targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
-    resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    compile = (HalideCompile) compileBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
+    resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
-    buildSteps = compile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
-    );
+    buildSteps =
+        compile.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     compilerStep = (HalideCompilerStep) buildSteps.get(2);
     shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
-    assertThat(
-        shellCommand,
-        hasItems("--test-flag", "test-value", "test_macro_expansion"));
+    assertThat(shellCommand, hasItems("--test-flag", "test-value", "test_macro_expansion"));
   }
 
   @Test
@@ -234,14 +202,12 @@ public class HalideLibraryDescriptionTest {
 
     // Set up a #halide-compile rule, then check its build steps.
     String defaultName = "default-halide-name";
-    BuildTarget compileTarget = BuildTargetFactory
-        .newInstance("//:" + defaultName)
-        .withFlavors(HalideLibraryDescription.HALIDE_COMPILE_FLAVOR);
+    BuildTarget compileTarget =
+        BuildTargetFactory.newInstance("//:" + defaultName)
+            .withFlavors(HalideLibraryDescription.HALIDE_COMPILE_FLAVOR);
     HalideLibraryBuilder compileBuilder = new HalideLibraryBuilder(compileTarget);
     compileBuilder.setSrcs(
-        ImmutableSortedSet.of(
-            SourceWithFlags.of(
-                new FakeSourcePath("main.cpp"))));
+        ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("main.cpp"))));
 
     // First, make sure the compile step passes the rulename "default-halide-name"
     // for the function output name.
@@ -249,43 +215,29 @@ public class HalideLibraryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    HalideCompile compile = (HalideCompile) compileBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
+    HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
-    ImmutableList<Step> buildSteps = compile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver),
-        new FakeBuildableContext()
-    );
+    ImmutableList<Step> buildSteps =
+        compile.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(2);
-    ImmutableList<String> shellCommand = compilerStep.getShellCommandInternal(
-        TestExecutionContext.newInstance());
-    assertThat(
-        shellCommand,
-        hasItem(defaultName));
+    ImmutableList<String> shellCommand =
+        compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
+    assertThat(shellCommand, hasItem(defaultName));
 
     // Next verify that the shell command picks up on the override name.
     String overrideName = "override-halide-name";
     compileBuilder.setFunctionNameOverride(overrideName);
     targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
-    resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    compile = (HalideCompile) compileBuilder.build(
-        resolver,
-        filesystem,
-        targetGraph);
+    resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
-    buildSteps = compile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()
-    );
+    buildSteps =
+        compile.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     compilerStep = (HalideCompilerStep) buildSteps.get(2);
     shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
-    assertThat(
-        shellCommand,
-        hasItem(overrideName));
-    assertThat(
-        shellCommand,
-        not(hasItem(defaultName)));
+    assertThat(shellCommand, hasItem(overrideName));
+    assertThat(shellCommand, not(hasItem(defaultName)));
   }
 }
