@@ -22,12 +22,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AggregationTreeTest {
 
@@ -39,15 +37,12 @@ public class AggregationTreeTest {
     addModule(modulePath, moduleType, "");
   }
 
-
   AggregationTree aggregationTree;
 
   @Before
   public void setUp() {
-    aggregationTree = new AggregationTree(createModule(
-        Paths.get(""),
-        IjModuleType.UNKNOWN_MODULE,
-        ""));
+    aggregationTree =
+        new AggregationTree(createModule(Paths.get(""), IjModuleType.UNKNOWN_MODULE, ""));
   }
 
   @Test
@@ -70,8 +65,11 @@ public class AggregationTreeTest {
             Paths.get("a/c"),
             Paths.get("a/d/e"),
             Paths.get("")),
-        aggregationTree.getModules().stream().map(AggregationModule::getModuleBasePath).collect(
-        MoreCollectors.toImmutableSet()));
+        aggregationTree
+            .getModules()
+            .stream()
+            .map(AggregationModule::getModuleBasePath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
@@ -119,10 +117,7 @@ public class AggregationTreeTest {
                 IjModuleType.JAVA_MODULE,
                 "tag2",
                 ImmutableSet.of(
-                    Paths.get("a"),
-                    Paths.get("c"),
-                    Paths.get("b/a"),
-                    Paths.get("b/b"))),
+                    Paths.get("a"), Paths.get("c"), Paths.get("b/a"), Paths.get("b/b"))),
             createModule(Paths.get("a/c/a/a"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/c/a/c"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/c/a/b/a"), IjModuleType.ANDROID_MODULE, "tag1"),

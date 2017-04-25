@@ -22,17 +22,13 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class AggregationTreeNodeTest {
 
-  public static AggregationModule createModule(
-      Path moduleBasePath,
-      IjModuleType moduleType) {
+  public static AggregationModule createModule(Path moduleBasePath, IjModuleType moduleType) {
     return createModule(moduleBasePath, moduleType, "");
   }
 
@@ -41,8 +37,7 @@ public class AggregationTreeNodeTest {
       IjModuleType moduleType,
       String aggregationTag,
       ImmutableSet<Path> excludes) {
-    return AggregationModule
-        .builder()
+    return AggregationModule.builder()
         .setModuleType(moduleType)
         .setModuleBasePath(moduleBasePath)
         .setAggregationTag(aggregationTag)
@@ -51,17 +46,12 @@ public class AggregationTreeNodeTest {
   }
 
   public static AggregationModule createModule(
-      Path moduleBasePath,
-      IjModuleType moduleType,
-      String aggregationTag) {
+      Path moduleBasePath, IjModuleType moduleType, String aggregationTag) {
     return createModule(moduleBasePath, moduleType, aggregationTag, ImmutableSet.of());
   }
 
   private static void addNode(
-      AggregationTreeNode node,
-      Path path,
-      IjModuleType moduleType,
-      String aggregationTag) {
+      AggregationTreeNode node, Path path, IjModuleType moduleType, String aggregationTag) {
     node.addChild(path, createModule(path, moduleType, aggregationTag), path);
   }
 
@@ -85,9 +75,7 @@ public class AggregationTreeNodeTest {
     assertEquals(ImmutableSet.of(existingNodePath), ImmutableSet.copyOf(node.getChildrenPaths()));
     AggregationTreeNode child = node.getChild(existingNodePath);
     Path grandChildPath = Paths.get("d/e/f");
-    assertEquals(
-        ImmutableSet.of(grandChildPath),
-        ImmutableSet.copyOf(child.getChildrenPaths()));
+    assertEquals(ImmutableSet.of(grandChildPath), ImmutableSet.copyOf(child.getChildrenPaths()));
     assertEquals(newNodePath, child.getChild(grandChildPath).getModuleBasePath());
   }
 
@@ -103,9 +91,7 @@ public class AggregationTreeNodeTest {
     assertEquals(ImmutableSet.of(newNodePath), ImmutableSet.copyOf(node.getChildrenPaths()));
     AggregationTreeNode child = node.getChild(newNodePath);
     Path grandChildPath = Paths.get("d/e/f");
-    assertEquals(
-        ImmutableSet.of(grandChildPath),
-        ImmutableSet.copyOf(child.getChildrenPaths()));
+    assertEquals(ImmutableSet.of(grandChildPath), ImmutableSet.copyOf(child.getChildrenPaths()));
     assertEquals(existingNodePath, child.getChild(grandChildPath).getModuleBasePath());
   }
 
@@ -170,13 +156,8 @@ public class AggregationTreeNodeTest {
     addNode(node, Paths.get("a/e/d"));
 
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("a/b"),
-            Paths.get("a/c"),
-            Paths.get("a/d"),
-            Paths.get("a/e")),
-        node
-            .collectNodes(2)
+        ImmutableSet.of(Paths.get("a/b"), Paths.get("a/c"), Paths.get("a/d"), Paths.get("a/e")),
+        node.collectNodes(2)
             .stream()
             .map(AggregationTreeNode::getModuleBasePath)
             .collect(MoreCollectors.toImmutableSet()));
@@ -193,10 +174,7 @@ public class AggregationTreeNodeTest {
     node.removeChild(Paths.get("a/b/c"));
 
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("a/b/c/d"),
-            Paths.get("a/b/c/e"),
-            Paths.get("a/b/c/f")),
+        ImmutableSet.of(Paths.get("a/b/c/d"), Paths.get("a/b/c/e"), Paths.get("a/b/c/f")),
         ImmutableSet.copyOf(node.getChildrenPaths()));
   }
 
@@ -209,12 +187,8 @@ public class AggregationTreeNodeTest {
     addNode(node, Paths.get("a/b/e"), IjModuleType.UNKNOWN_MODULE);
 
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("d"),
-            Paths.get("e")),
-        node
-            .getChild(Paths.get("a/b"))
-            .getChildrenPathsByModuleType(IjModuleType.UNKNOWN_MODULE));
+        ImmutableSet.of(Paths.get("d"), Paths.get("e")),
+        node.getChild(Paths.get("a/b")).getChildrenPathsByModuleType(IjModuleType.UNKNOWN_MODULE));
   }
 
   @Test
@@ -226,11 +200,8 @@ public class AggregationTreeNodeTest {
     addNode(node, Paths.get("a/b/e"), IjModuleType.UNKNOWN_MODULE, "tag3");
 
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("c"),
-            Paths.get("e")),
-        node
-            .getChild(Paths.get("a/b"))
+        ImmutableSet.of(Paths.get("c"), Paths.get("e")),
+        node.getChild(Paths.get("a/b"))
             .getChildrenPathsByModuleTypeOrTag(IjModuleType.UNKNOWN_MODULE, "tag1"));
   }
 }

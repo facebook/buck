@@ -34,13 +34,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DefaultIjLibraryFactoryTest {
 
@@ -60,46 +58,52 @@ public class DefaultIjLibraryFactoryTest {
 
   @Before
   public void setUp() throws Exception {
-    sourcePathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    sourcePathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     guavaJarPath = Paths.get("third_party/java/guava.jar");
-    guava = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
-        .setBinaryJar(guavaJarPath)
-        .build();
+    guava =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
+            .setBinaryJar(guavaJarPath)
+            .build();
 
     androidSupportBinaryPath = new FakeSourcePath("third_party/java/support/support.aar");
-    androidSupport = AndroidPrebuiltAarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/java/support:support"))
-        .setBinaryAar(androidSupportBinaryPath)
-        .build();
+    androidSupport =
+        AndroidPrebuiltAarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third_party/java/support:support"))
+            .setBinaryAar(androidSupportBinaryPath)
+            .build();
 
-    base = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep(guava.getBuildTarget())
-        .build();
+    base =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addDep(guava.getBuildTarget())
+            .build();
 
     androidSupportBinaryJarPath = new FakeSourcePath("buck_out/support.aar/classes.jar");
     baseOutputPath = new FakeSourcePath("buck-out/base.jar");
 
-    libraryFactoryResolver = new IjLibraryFactoryResolver() {
-      @Override
-      public Path getPath(SourcePath path) {
-        return sourcePathResolver.getRelativePath(path);
-      }
+    libraryFactoryResolver =
+        new IjLibraryFactoryResolver() {
+          @Override
+          public Path getPath(SourcePath path) {
+            return sourcePathResolver.getRelativePath(path);
+          }
 
-      @Override
-      public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
-        if (targetNode.equals(base)) {
-          return Optional.of(baseOutputPath);
-        }
-        if (targetNode.equals(androidSupport)) {
-          return Optional.of(androidSupportBinaryJarPath);
-        }
-        return Optional.empty();
-      }
-    };
+          @Override
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+            if (targetNode.equals(base)) {
+              return Optional.of(baseOutputPath);
+            }
+            if (targetNode.equals(androidSupport)) {
+              return Optional.of(androidSupportBinaryJarPath);
+            }
+            return Optional.empty();
+          }
+        };
 
     factory = new DefaultIjLibraryFactory(libraryFactoryResolver);
 
@@ -122,8 +126,7 @@ public class DefaultIjLibraryFactoryTest {
         Optional.of(androidSupportBinaryJarPath.getRelativePath()),
         androidSupportLibrary.getBinaryJar());
     assertEquals(
-        ImmutableSet.of(androidSupport.getBuildTarget()),
-        androidSupportLibrary.getTargets());
+        ImmutableSet.of(androidSupport.getBuildTarget()), androidSupportLibrary.getTargets());
   }
 
   @Test

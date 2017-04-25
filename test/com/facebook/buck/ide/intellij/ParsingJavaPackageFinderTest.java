@@ -27,13 +27,11 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ParsingJavaPackageFinderTest {
 
@@ -50,41 +48,37 @@ public class ParsingJavaPackageFinderTest {
     mismatchPath = Paths.get("case1/org/test/package2/Mismatch.java");
     placeholderPath = Paths.get("case3/com/test/placeholder");
 
-    fakeProjectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(0),
-        Paths.get(".").toAbsolutePath(),
-        ImmutableSet.of(
-            matchPath,
-            mismatchPath,
-            placeholderPath
-        ));
+    fakeProjectFilesystem =
+        new FakeProjectFilesystem(
+            new FakeClock(0),
+            Paths.get(".").toAbsolutePath(),
+            ImmutableSet.of(matchPath, mismatchPath, placeholderPath));
     fakeProjectFilesystem.writeContentsToPath(
-        "package org.test.package1; \n class Match {} \n",
-        matchPath);
+        "package org.test.package1; \n class Match {} \n", matchPath);
 
     fakeProjectFilesystem.writeContentsToPath(
-        "package org.test.\nhaha; \n class Mismatch {} \n",
-        mismatchPath);
+        "package org.test.\nhaha; \n class Mismatch {} \n", mismatchPath);
 
-    dummyPackageFinder = new JavaPackageFinder() {
-      @Override
-      public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
-        return Paths.get("dummy");
-      }
+    dummyPackageFinder =
+        new JavaPackageFinder() {
+          @Override
+          public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
+            return Paths.get("dummy");
+          }
 
-      @Override
-      public String findJavaPackage(Path pathRelativeToProjectRoot) {
-        return "dummy";
-      }
+          @Override
+          public String findJavaPackage(Path pathRelativeToProjectRoot) {
+            return "dummy";
+          }
 
-      @Override
-      public String findJavaPackage(BuildTarget buildTarget) {
-        return "dummy";
-      }
-    };
+          @Override
+          public String findJavaPackage(BuildTarget buildTarget) {
+            return "dummy";
+          }
+        };
 
-    javaFileParser = JavaFileParser.createJavaFileParser(
-        JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
+    javaFileParser =
+        JavaFileParser.createJavaFileParser(JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
   }
 
   @Test
@@ -138,11 +132,7 @@ public class ParsingJavaPackageFinderTest {
         "org.test.package3",
         parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/package3/notfound")));
     assertEquals(
-        "org.test",
-        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/notfound")));
-    assertEquals(
-        "com",
-        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/com/notfound")));
+        "org.test", parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/notfound")));
+    assertEquals("com", parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/com/notfound")));
   }
 }
-

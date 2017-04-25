@@ -21,12 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Ignore;
+import org.junit.Test;
 
 @Ignore
 public abstract class IjFolderTest {
@@ -39,10 +37,7 @@ public abstract class IjFolderTest {
   public void testMergeWithSelf() {
     Path srcPath = Paths.get("src");
     IjFolder folder =
-        folderFactory.create(
-            srcPath,
-            false,
-            ImmutableSortedSet.of(Paths.get("Source.java")));
+        folderFactory.create(srcPath, false, ImmutableSortedSet.of(Paths.get("Source.java")));
 
     assertEquals(
         "Merging " + folder + " with itself didn't result in the same folder being returned.",
@@ -54,14 +49,8 @@ public abstract class IjFolderTest {
   public void testMergeSourceWithSamePath() {
     Path srcPath = Paths.get("src");
     testSamePathMerge(
-        folderFactory.create(
-            srcPath,
-            false,
-            ImmutableSortedSet.of(Paths.get("Source.java"))),
-        folderFactory.create(
-            srcPath,
-            false,
-            ImmutableSortedSet.of(Paths.get("Source2.java"))));
+        folderFactory.create(srcPath, false, ImmutableSortedSet.of(Paths.get("Source.java"))),
+        folderFactory.create(srcPath, false, ImmutableSortedSet.of(Paths.get("Source2.java"))));
   }
 
   @Test
@@ -69,20 +58,12 @@ public abstract class IjFolderTest {
     Path parentPath = Paths.get("src");
     Path childPath = Paths.get("src/child");
     testMergeParentWithChild(
-        folderFactory.create(
-            parentPath,
-            false,
-            ImmutableSortedSet.of(Paths.get("Source.java"))),
-        folderFactory.create(
-            childPath,
-            false,
-            ImmutableSortedSet.of(Paths.get("Source2.java"))));
+        folderFactory.create(parentPath, false, ImmutableSortedSet.of(Paths.get("Source.java"))),
+        folderFactory.create(childPath, false, ImmutableSortedSet.of(Paths.get("Source2.java"))));
   }
 
   @Ignore
-  private void testMergeParentWithChild(
-      IjFolder parent,
-      IjFolder child) {
+  private void testMergeParentWithChild(IjFolder parent, IjFolder child) {
     IjFolder mergedFolder = child.merge(parent);
 
     assertEquals(
@@ -91,8 +72,7 @@ public abstract class IjFolderTest {
         parent.getPath());
 
     ImmutableSortedSet<Path> expectedMergedInputs =
-        ImmutableSortedSet
-            .<Path>naturalOrder()
+        ImmutableSortedSet.<Path>naturalOrder()
             .addAll(parent.getInputs())
             .addAll(child.getInputs())
             .build();
@@ -104,9 +84,7 @@ public abstract class IjFolderTest {
   }
 
   @Ignore
-  private void testSamePathMerge(
-      IjFolder folder1,
-      IjFolder folder2) {
+  private void testSamePathMerge(IjFolder folder1, IjFolder folder2) {
     IjFolder mergedFolder = folder1.merge(folder2);
 
     assertEquals(
@@ -120,8 +98,7 @@ public abstract class IjFolderTest {
         folder2.getPath());
 
     ImmutableSortedSet<Path> expectedMergedInputs =
-        ImmutableSortedSet
-            .<Path>naturalOrder()
+        ImmutableSortedSet.<Path>naturalOrder()
             .addAll(folder1.getInputs())
             .addAll(folder2.getInputs())
             .build();
@@ -144,5 +121,4 @@ public abstract class IjFolderTest {
 
     left.merge(right);
   }
-
 }

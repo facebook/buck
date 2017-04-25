@@ -24,28 +24,26 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class IjModuleTest {
 
   @Test
   public void testPathToModuleFile() {
-    TargetNode<?, ?> javaLibrary = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/foo:foo"))
-        .build();
+    TargetNode<?, ?> javaLibrary =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/src/com/facebook/foo:foo"))
+            .build();
 
     IjModule javaLibraryModule = createModule(javaLibrary);
 
-    assertEquals(Paths.get("java", "src", "com", "facebook", "foo"),
-        javaLibraryModule.getModuleBasePath());
-    assertEquals("java_src_com_facebook_foo",
-        javaLibraryModule.getName());
-    assertEquals(Paths.get("java", "src", "com", "facebook", "foo",
-            "java_src_com_facebook_foo.iml"),
+    assertEquals(
+        Paths.get("java", "src", "com", "facebook", "foo"), javaLibraryModule.getModuleBasePath());
+    assertEquals("java_src_com_facebook_foo", javaLibraryModule.getName());
+    assertEquals(
+        Paths.get("java", "src", "com", "facebook", "foo", "java_src_com_facebook_foo.iml"),
         javaLibraryModule.getModuleImlFilePath());
   }
 

@@ -19,7 +19,6 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
-
 import org.junit.Before;
 import org.junit.Test;
 

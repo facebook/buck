@@ -24,16 +24,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.Lists;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class ProjectIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testAndroidLibraryProject() throws IOException {
@@ -52,10 +49,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectSlice() throws IOException {
-    runBuckProjectAndVerify(
-        "project_slice",
-        "--without-tests",
-        "modules/dep1:dep1");
+    runBuckProjectAndVerify("project_slice", "--without-tests", "modules/dep1:dep1");
   }
 
   @Test
@@ -90,8 +84,9 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectWithUnusedLibraries() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_with_unused_libraries", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_unused_libraries", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
@@ -168,13 +163,12 @@ public class ProjectIntegrationTest {
         ".idea/generated-files.txt");
   }
 
-  private ProcessResult runBuckProjectAndVerify(
-      String folderWithTestData,
-      String... commandArgs) throws IOException {
+  private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
+      throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, folderWithTestData, temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, folderWithTestData, temporaryFolder);
     workspace.setUp();
 
     ProcessResult result =

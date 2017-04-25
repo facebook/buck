@@ -28,10 +28,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
-import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -51,13 +51,11 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
 
 public class IjProjectDataPreparerTest {
 
@@ -67,23 +65,25 @@ public class IjProjectDataPreparerTest {
   @Before
   public void setUp() {
     filesystem = new FakeProjectFilesystem();
-    javaPackageFinder = DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
-        ImmutableSet.of("/java/", "/javatests/")
-    );
+    javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            ImmutableSet.of("/java/", "/javatests/"));
   }
 
   @Test
   public void testWriteModule() throws Exception {
-    TargetNode<?, ?> guavaTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .addSrc(Paths.get("third_party/guava/src/Collections.java"))
-        .build();
+    TargetNode<?, ?> guavaTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third_party/guava:guava"))
+            .addSrc(Paths.get("third_party/guava/src/Collections.java"))
+            .build();
 
-    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/example/base/Base.java"))
-        .build();
+    TargetNode<?, ?> baseTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/example/base/Base.java"))
+            .build();
 
     IjModuleGraph moduleGraph =
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(guavaTargetNode, baseTargetNode));
@@ -106,65 +106,72 @@ public class IjProjectDataPreparerTest {
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             DependencyEntryData.builder()
                                 .setName("third_party_guava")
                                 .setScope(IjDependencyListBuilder.Scope.COMPILE)
                                 .setExported(false)
-                                .build()
-                        )))
-            )
-        ));
+                                .build()))))));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testDependencies() throws Exception {
-    TargetNode<?, ?> hamcrestTargetNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
-        .setBinaryJar(Paths.get("third-party/hamcrest/hamcrest.jar"))
-        .build();
+    TargetNode<?, ?> hamcrestTargetNode =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
+            .setBinaryJar(Paths.get("third-party/hamcrest/hamcrest.jar"))
+            .build();
 
-    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party/guava:guava"))
-        .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
-        .build();
+    TargetNode<?, ?> guavaTargetNode =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third-party/guava:guava"))
+            .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
+            .build();
 
-    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/example/base/Base.java"))
-        .build();
+    TargetNode<?, ?> baseTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/example/base/Base.java"))
+            .build();
 
-    TargetNode<?, ?> baseGenruleTarget = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
-        .build();
+    TargetNode<?, ?> baseGenruleTarget =
+        GenruleBuilder.newGenruleBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
+            .build();
 
-    TargetNode<?, ?> baseInlineTestsTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
-        .addDep(hamcrestTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/example/base/TestBase.java"))
-        .addSrcTarget(baseGenruleTarget.getBuildTarget())
-        .build();
+    TargetNode<?, ?> baseInlineTestsTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:tests"))
+            .addDep(hamcrestTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/example/base/TestBase.java"))
+            .addSrcTarget(baseGenruleTarget.getBuildTarget())
+            .build();
 
-    TargetNode<?, ?> baseTestsTargetNode = JavaTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
-        .addDep(baseTargetNode.getBuildTarget())
-        .addDep(hamcrestTargetNode.getBuildTarget())
-        .addSrc(Paths.get("javatests/com/example/base/Base.java"))
-        .build();
+    TargetNode<?, ?> baseTestsTargetNode =
+        JavaTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
+            .addDep(baseTargetNode.getBuildTarget())
+            .addDep(hamcrestTargetNode.getBuildTarget())
+            .addSrc(Paths.get("javatests/com/example/base/Base.java"))
+            .build();
 
-    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.of(
-            hamcrestTargetNode,
-            guavaTargetNode,
-            baseTargetNode,
-            baseGenruleTarget,
-            baseInlineTestsTargetNode,
-            baseTestsTargetNode),
-        ImmutableMap.of(
-            baseInlineTestsTargetNode, new FakeSourcePath("buck-out/baseInlineTests.jar")),
-        Functions.constant(Optional.empty()));
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(
+            ImmutableSet.of(
+                hamcrestTargetNode,
+                guavaTargetNode,
+                baseTargetNode,
+                baseGenruleTarget,
+                baseInlineTestsTargetNode,
+                baseTestsTargetNode),
+            ImmutableMap.of(
+                baseInlineTestsTargetNode, new FakeSourcePath("buck-out/baseInlineTests.jar")),
+            Functions.constant(Optional.empty()));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);
     IjLibrary guavaLibrary = IjModuleGraphTest.getLibraryForTarget(moduleGraph, guavaTargetNode);
@@ -179,77 +186,81 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode));
 
-    DependencyEntryData.Builder dependencyEntryBuilder = DependencyEntryData.builder()
-        .setExported(false);
+    DependencyEntryData.Builder dependencyEntryBuilder =
+        DependencyEntryData.builder().setExported(false);
 
     assertThat(
         dataPreparer.getDependencies(baseModule),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             dependencyEntryBuilder
                                 .setName(guavaLibrary.getName())
                                 .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build()
-                        )))
-            ),
+                                .build())))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             dependencyEntryBuilder
                                 .setName(hamcrestLibrary.getName())
                                 .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build()
-                        )))
-            ),
+                                .build())))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             DependencyEntryData.builder()
                                 .setExported(true)
                                 .setName("library_java_com_example_base_tests")
                                 .setScope(IjDependencyListBuilder.Scope.PROVIDED)
-                                .build()
-                        )))
-            )
-        ));
+                                .build()))))));
 
     assertThat(
         dataPreparer.getDependencies(baseTestModule),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             dependencyEntryBuilder
                                 .setName(baseModule.getName())
                                 .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build()
-                        )))
-            ),
+                                .build())))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
-                hasProperty("data", equalTo(Optional.of(
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
                             dependencyEntryBuilder
                                 .setName(hamcrestLibrary.getName())
                                 .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build()
-                        )))
-            )
-        ));
+                                .build()))))));
   }
 
   @Test
   public void testEmptyRootModule() throws Exception {
 
     Path baseTargetSrcFilePath = Paths.get("java/com/example/base/Base.java");
-    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addSrc(baseTargetSrcFilePath)
-        .build();
+    TargetNode<?, ?> baseTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addSrc(baseTargetSrcFilePath)
+            .build();
 
-    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.of(baseTargetNode));
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
@@ -270,36 +281,34 @@ public class IjProjectDataPreparerTest {
                 .setModuleBasePath(Paths.get(""))
                 .setTargets(ImmutableSet.of())
                 .setModuleType(IjModuleType.UNKNOWN_MODULE)
-                .build()
-        )
-    );
-
+                .build()));
   }
 
   @Test
   public void testModuleIndex() throws Exception {
-    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party/guava:guava"))
-        .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
-        .build();
+    TargetNode<?, ?> guavaTargetNode =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third-party/guava:guava"))
+            .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
+            .build();
 
-    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/example/base/Base.java"))
-        .build();
+    TargetNode<?, ?> baseTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/example/base:base"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/example/base/Base.java"))
+            .build();
 
-    TargetNode<?, ?> baseTestsTargetNode = JavaTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
-        .addDep(baseTargetNode.getBuildTarget())
-        .addSrc(Paths.get("javatests/com/example/base/Base.java"))
-        .build();
+    TargetNode<?, ?> baseTestsTargetNode =
+        JavaTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
+            .addDep(baseTargetNode.getBuildTarget())
+            .addSrc(Paths.get("javatests/com/example/base/Base.java"))
+            .build();
 
-    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.of(
-            guavaTargetNode,
-            baseTargetNode,
-            baseTestsTargetNode));
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(
+            ImmutableSet.of(guavaTargetNode, baseTargetNode, baseTestsTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
@@ -317,131 +326,108 @@ public class IjProjectDataPreparerTest {
                 .build(),
             ModuleIndexEntry.builder()
                 .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
+                .setFileUrl(
+                    "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
                 .setFilePath(Paths.get("javatests/com/example/base/javatests_com_example_base.iml"))
-                .build()
-        ),
+                .build()),
         dataPreparer.getModuleIndexEntries());
   }
 
   @Test
   public void testExcludePaths() throws Exception {
     /**
-     * Fake filesystem structure
-     * .idea
-     *  |- misc.xml
-     * .git
-     *  |- HEAD
-     * java
-     *  |- com
-     *     |- BUCK
-     *     |- data
-     *        |- wsad.txt
-     *     |- src
-     *        |- BUCK
-     *        |- Source.java
-     *        |- foo
-     *           |- Foo.java
-     *     |- src2
-     *        |- Code.java
-     *  |- org
-     *     |- bar
-     *        |- Bar.java
-     * lib
-     *  |- BUCK
-     *  |- guava.jar
+     * Fake filesystem structure .idea |- misc.xml .git |- HEAD java |- com |- BUCK |- data |-
+     * wsad.txt |- src |- BUCK |- Source.java |- foo |- Foo.java |- src2 |- Code.java |- org |- bar
+     * |- Bar.java lib |- BUCK |- guava.jar
      */
-    ImmutableSet<Path> paths = ImmutableSet.of(
-        Paths.get(".idea/misc.xml"),
-        Paths.get(".git/HEAD"),
-        Paths.get("java/com/BUCK"),
-        Paths.get("java/com/data/wsad.txt"),
-        Paths.get("java/com/src/BUCK"),
-        Paths.get("java/com/src/Source.java"),
-        Paths.get("java/com/src/foo/Foo.java"),
-        Paths.get("java/org/bar/Bar.java"),
-        Paths.get("lib/BUCK"),
-        Paths.get("lib/guava.jar"));
+    ImmutableSet<Path> paths =
+        ImmutableSet.of(
+            Paths.get(".idea/misc.xml"),
+            Paths.get(".git/HEAD"),
+            Paths.get("java/com/BUCK"),
+            Paths.get("java/com/data/wsad.txt"),
+            Paths.get("java/com/src/BUCK"),
+            Paths.get("java/com/src/Source.java"),
+            Paths.get("java/com/src/foo/Foo.java"),
+            Paths.get("java/org/bar/Bar.java"),
+            Paths.get("lib/BUCK"),
+            Paths.get("lib/guava.jar"));
 
     FakeProjectFilesystem filesystemForExcludesTest =
         new FakeProjectFilesystem(new FakeClock(0), Paths.get(".").toAbsolutePath(), paths);
 
-    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
-        .setBinaryJar(Paths.get("lib/guava.jar"))
-        .build();
+    TargetNode<?, ?> guavaTargetNode =
+        PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
+            .setBinaryJar(Paths.get("lib/guava.jar"))
+            .build();
 
-    TargetNode<?, ?> srcTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/src/Source.java"))
-        .build();
+    TargetNode<?, ?> srcTargetNode =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/src/Source.java"))
+            .build();
 
-    TargetNode<?, ?> src2TargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com:src2"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(Paths.get("java/com/src2/Code.java"))
-        .build();
+    TargetNode<?, ?> src2TargetNode =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com:src2"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(Paths.get("java/com/src2/Code.java"))
+            .build();
 
-    TargetNode<?, ?> rootTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:root"))
-        .build();
+    TargetNode<?, ?> rootTargetNode =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:root")).build();
 
-    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.of(guavaTargetNode, srcTargetNode, src2TargetNode, rootTargetNode));
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(
+            ImmutableSet.of(guavaTargetNode, srcTargetNode, src2TargetNode, rootTargetNode));
     IjModule srcModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, srcTargetNode);
     IjModule src2Module = IjModuleGraphTest.getModuleForTarget(moduleGraph, src2TargetNode);
     IjModule rootModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, rootTargetNode);
 
-    IjProjectTemplateDataPreparer dataPreparer = new IjProjectTemplateDataPreparer(
-        javaPackageFinder,
-        moduleGraph,
-        filesystemForExcludesTest);
+    IjProjectTemplateDataPreparer dataPreparer =
+        new IjProjectTemplateDataPreparer(
+            javaPackageFinder, moduleGraph, filesystemForExcludesTest);
 
-    assertEquals(ImmutableSet.of(Paths.get("java/com/src/foo")),
+    assertEquals(
+        ImmutableSet.of(Paths.get("java/com/src/foo")),
         distillExcludeFolders(dataPreparer.createExcludes(srcModule)));
 
-    assertEquals(ImmutableSet.of(Paths.get("java/com/data")),
+    assertEquals(
+        ImmutableSet.of(Paths.get("java/com/data")),
         distillExcludeFolders(dataPreparer.createExcludes(src2Module)));
 
     // In this case it's fine to exclude "lib" as there is no source code there.
-    assertEquals(ImmutableSet.of(Paths.get(".git"), Paths.get("java/org"), Paths.get("lib")),
+    assertEquals(
+        ImmutableSet.of(Paths.get(".git"), Paths.get("java/org"), Paths.get("lib")),
         distillExcludeFolders(dataPreparer.createExcludes(rootModule)));
   }
 
   @Test
   public void testCreatePackageLookupPahtSet() {
-    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
-        .setBinaryJar(Paths.get("lib/guava.jar"))
-        .build();
+    TargetNode<?, ?> guavaTargetNode =
+        PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
+            .setBinaryJar(Paths.get("lib/guava.jar"))
+            .build();
 
     Path sourcePath = Paths.get("java/com/src/Source.java");
     Path subSourcePath = Paths.get("java/com/src/subpackage/SubSource.java");
-    TargetNode<?, ?> srcTargetNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
-        .addDep(guavaTargetNode.getBuildTarget())
-        .addSrc(sourcePath)
-        .addSrc(subSourcePath)
-        .build();
+    TargetNode<?, ?> srcTargetNode =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
+            .addDep(guavaTargetNode.getBuildTarget())
+            .addSrc(sourcePath)
+            .addSrc(subSourcePath)
+            .build();
 
-    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.of(guavaTargetNode, srcTargetNode));
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(ImmutableSet.of(guavaTargetNode, srcTargetNode));
 
     assertThat(
         IjProjectTemplateDataPreparer.createPackageLookupPathSet(moduleGraph),
-        containsInAnyOrder(
-            subSourcePath,
-            sourcePath));
+        containsInAnyOrder(subSourcePath, sourcePath));
   }
 
   private static ImmutableSet<Path> distillExcludeFolders(ImmutableSet<IjFolder> folders) {
-    Preconditions.checkArgument(!FluentIterable.from(folders)
-            .anyMatch(
-                input -> !(input instanceof ExcludeFolder)));
-    return FluentIterable.from(folders)
-        .uniqueIndex(
-            IjFolder::getPath)
-        .keySet();
+    Preconditions.checkArgument(
+        !FluentIterable.from(folders).anyMatch(input -> !(input instanceof ExcludeFolder)));
+    return FluentIterable.from(folders).uniqueIndex(IjFolder::getPath).keySet();
   }
 }
