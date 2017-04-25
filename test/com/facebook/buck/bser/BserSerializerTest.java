@@ -28,22 +28,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.CharacterCodingException;
-
-import org.junit.rules.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BserSerializerTest {
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ByteBuffer buffer;
 
@@ -140,8 +136,7 @@ public class BserSerializerTest {
   @Test
   public void serializeArrayOfInt8() throws IOException {
     assertEncodingMatches(
-        ImmutableList.of((byte) 0x23, (byte) 0x42, (byte) 0xF0),
-        EXPECTED_INT8_ARRAY);
+        ImmutableList.of((byte) 0x23, (byte) 0x42, (byte) 0xF0), EXPECTED_INT8_ARRAY);
   }
 
   @Test
@@ -152,8 +147,7 @@ public class BserSerializerTest {
   @Test
   public void serializeSetOfInt8() throws IOException {
     assertEncodingMatches(
-        ImmutableSet.of((byte) 0x23, (byte) 0x42, (byte) 0xF0),
-        EXPECTED_INT8_ARRAY);
+        ImmutableSet.of((byte) 0x23, (byte) 0x42, (byte) 0xF0), EXPECTED_INT8_ARRAY);
   }
 
   @Test
@@ -297,5 +291,4 @@ public class BserSerializerTest {
       assertThat(os.toByteArray(), equalTo(BaseEncoding.base16().decode(EXPECTED_TRUE)));
     }
   }
-
 }
