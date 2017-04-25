@@ -20,7 +20,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
@@ -29,14 +28,17 @@ import java.util.regex.Pattern;
 
 /**
  * Responsible for converting a maven URL to an HTTP or HTTPS url. The format of a maven URL is:
+ *
  * <pre>
  *   mvn:optionalServer:group:id:type:classifier:version
  * </pre>
+ *
  * If the {@code optionalServer} is omitted, the default one configured in "download -&gt;
  * maven_repo" in the project's {@code .buckconfig} is used, or an exception is thrown. The
  * optionalServer URL is expected to be a valid http or https {@link java.net.URL}.
- * <p>
- * Examples of valid mvn URLs:
+ *
+ * <p>Examples of valid mvn URLs:
+ *
  * <pre>
  *   mvn:org.seleniumhq.selenium:selenium-java:jar:2.42.2
  *   mvn:http://repo1.maven.org/maven2:org.seleniumhq.selenium:selenium-java:jar:2.42.2
@@ -44,14 +46,14 @@ import java.util.regex.Pattern;
  */
 public class MavenUrlDecoder {
   @VisibleForTesting
-  private static final Pattern URL_PATTERN =  Pattern.compile(
-      "((?<host>^https?://.+?):)?" +
-          "(?<group>[^:]+)" +
-          ":(?<id>[^:]+)" +
-          ":(?<type>[^:]+)" +
-          "(:(?<classifier>[^:]+))?" +
-          ":(?<version>[^:]+)$"
-  );
+  private static final Pattern URL_PATTERN =
+      Pattern.compile(
+          "((?<host>^https?://.+?):)?"
+              + "(?<group>[^:]+)"
+              + ":(?<id>[^:]+)"
+              + ":(?<type>[^:]+)"
+              + "(:(?<classifier>[^:]+))?"
+              + ":(?<version>[^:]+)$");
 
   private MavenUrlDecoder() {
     // Utility class
@@ -61,8 +63,8 @@ public class MavenUrlDecoder {
     Preconditions.checkArgument("mvn".equals(uri.getScheme()), "URI must start with mvn: " + uri);
     Preconditions.checkArgument(
         mavenRepo.isPresent(),
-        "You must specify the maven repo in the \"download->maven_repo\" section of your " +
-            ".buckconfig");
+        "You must specify the maven repo in the \"download->maven_repo\" section of your "
+            + ".buckconfig");
 
     String repo = mavenRepo.get();
 
@@ -91,13 +93,10 @@ public class MavenUrlDecoder {
     }
 
     try {
-      String plainUri = String.format(
-          "%s%s/%s/%s/%s",
-          host,
-          group,
-          artifactId,
-          version,
-          fileNameFor(artifactId, version, type, classifier));
+      String plainUri =
+          String.format(
+              "%s%s/%s/%s/%s",
+              host, group, artifactId, version, fileNameFor(artifactId, version, type, classifier));
       URI generated = new URI(plainUri);
       if ("https".equals(generated.getScheme()) || "http".equals(generated.getScheme())) {
         return generated;
@@ -110,10 +109,7 @@ public class MavenUrlDecoder {
   }
 
   private static String fileNameFor(
-      String artifactId,
-      String version,
-      String type,
-      Optional<String> classifier) {
+      String artifactId, String version, String type, Optional<String> classifier) {
     StringBuilder sb = new StringBuilder();
     sb.append(artifactId);
     sb.append('-');

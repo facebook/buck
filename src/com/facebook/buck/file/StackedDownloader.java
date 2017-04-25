@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -76,10 +75,13 @@ public class StackedDownloader implements Downloader {
                   config.resolvePathThatMayBeOutsideTheProjectFilesystem(
                       Paths.get(url.getPath()))));
         } catch (FileNotFoundException e) {
-          throw new HumanReadableException(e, "Error occurred when attempting to use %s " +
-              "as a local Maven repository as configured in .buckconfig.  See " +
-              "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to " +
-              "configure this setting", repo);
+          throw new HumanReadableException(
+              e,
+              "Error occurred when attempting to use %s "
+                  + "as a local Maven repository as configured in .buckconfig.  See "
+                  + "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to "
+                  + "configure this setting",
+              repo);
         } catch (MalformedURLException e) {
           throw new HumanReadableException("Unable to determine path from %s", repo);
         }
@@ -90,10 +92,13 @@ public class StackedDownloader implements Downloader {
                   Preconditions.checkNotNull(
                       config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(repo)))));
         } catch (FileNotFoundException e) {
-          throw new HumanReadableException(e, "Error occurred when attempting to use %s " +
-              "as a local Maven repository as configured in .buckconfig.  See " +
-              "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to " +
-              "configure this setting", repo);
+          throw new HumanReadableException(
+              e,
+              "Error occurred when attempting to use %s "
+                  + "as a local Maven repository as configured in .buckconfig.  See "
+                  + "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to "
+                  + "configure this setting",
+              repo);
         }
       }
     }
@@ -112,19 +117,21 @@ public class StackedDownloader implements Downloader {
       } catch (FileNotFoundException e) {
         LOG.warn("Google Maven repo '%s' doesn't exist", googleMavenRepo.toString());
       }
-
     }
 
     // Add a default downloader
     // TODO(simons): Remove the maven_repo check
     Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
     if (defaultMavenRepo.isPresent()) {
-      LOG.warn("Please configure maven repos by adding them to a 'maven_repositories' " +
-              "section in your buckconfig");
+      LOG.warn(
+          "Please configure maven repos by adding them to a 'maven_repositories' "
+              + "section in your buckconfig");
     }
-    downloaders.add(downloadConfig.getMaxNumberOfRetries()
-        .map(retries -> (Downloader) RetryingDownloader.from(httpDownloader, retries))
-        .orElse(httpDownloader));
+    downloaders.add(
+        downloadConfig
+            .getMaxNumberOfRetries()
+            .map(retries -> (Downloader) RetryingDownloader.from(httpDownloader, retries))
+            .orElse(httpDownloader));
 
     return new StackedDownloader(downloaders.build());
   }

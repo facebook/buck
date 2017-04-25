@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-
 import java.net.URI;
 
 public abstract class DownloadEvent extends AbstractBuckEvent implements WorkAdvanceEvent {

@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.google.common.io.BaseEncoding;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -34,12 +33,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.net.ssl.HttpsURLConnection;
 
-/**
- * Download a file over HTTP.
- */
+/** Download a file over HTTP. */
 public class HttpDownloader implements Downloader, AuthAwareDownloader {
   private static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
 
@@ -62,11 +58,8 @@ public class HttpDownloader implements Downloader, AuthAwareDownloader {
 
   @Override
   public boolean fetch(
-      BuckEventBus eventBus,
-      URI uri,
-      Optional<PasswordAuthentication> authentication,
-      Path output
-  ) throws IOException {
+      BuckEventBus eventBus, URI uri, Optional<PasswordAuthentication> authentication, Path output)
+      throws IOException {
     if (!("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
       return false;
     }
@@ -81,8 +74,8 @@ public class HttpDownloader implements Downloader, AuthAwareDownloader {
         if ("https".equals(uri.getScheme()) && connection instanceof HttpsURLConnection) {
           PasswordAuthentication p = authentication.get();
           String authStr = p.getUserName() + ":" + new String(p.getPassword());
-          String authEncoded = BaseEncoding.base64().encode(
-              authStr.getBytes(StandardCharsets.UTF_8));
+          String authEncoded =
+              BaseEncoding.base64().encode(authStr.getBytes(StandardCharsets.UTF_8));
           connection.addRequestProperty("Authorization", "Basic " + authEncoded);
         } else {
           LOG.info("Refusing to send basic authentication over plain http.");
@@ -96,7 +89,7 @@ public class HttpDownloader implements Downloader, AuthAwareDownloader {
       }
       long contentLength = connection.getContentLengthLong();
       try (InputStream is = new BufferedInputStream(connection.getInputStream());
-           OutputStream os = new BufferedOutputStream(Files.newOutputStream(output))) {
+          OutputStream os = new BufferedOutputStream(Files.newOutputStream(output))) {
         long read = 0;
 
         while (true) {

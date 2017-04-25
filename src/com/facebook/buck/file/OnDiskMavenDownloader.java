@@ -17,7 +17,6 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,9 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * A {@link Downloader} that pulls content from the local file system.
- */
+/** A {@link Downloader} that pulls content from the local file system. */
 public class OnDiskMavenDownloader implements Downloader {
 
   private static final Optional<String> SPOOF_MAVEN_REPO = Optional.of("http://example.com");
@@ -38,8 +35,8 @@ public class OnDiskMavenDownloader implements Downloader {
   public OnDiskMavenDownloader(Path root) throws FileNotFoundException {
 
     if (!Files.exists(root)) {
-      throw new FileNotFoundException(String.format("Maven root %s doesn't exist",
-          root.toString()));
+      throw new FileNotFoundException(
+          String.format("Maven root %s doesn't exist", root.toString()));
     }
 
     this.root = root;

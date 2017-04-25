@@ -17,21 +17,15 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-
 import java.io.IOException;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Downloads bytes using an optional authentication.
- */
+/** Downloads bytes using an optional authentication. */
 public interface AuthAwareDownloader {
   boolean fetch(
-      BuckEventBus eventBus,
-      URI uri,
-      Optional<PasswordAuthentication> authentication,
-      Path output
-  ) throws IOException;
+      BuckEventBus eventBus, URI uri, Optional<PasswordAuthentication> authentication, Path output)
+      throws IOException;
 }

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.util.Optional;
 

@@ -31,7 +31,6 @@ import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.nio.file.Path;
 
@@ -43,11 +42,15 @@ import java.nio.file.Path;
 public class RemoteFile extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final URI uri;
+
   @AddToRuleKey(stringify = true)
   private final HashCode sha1;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
+
   private final Downloader downloader;
+
   @AddToRuleKey(stringify = true)
   private final Type type;
 
@@ -65,10 +68,7 @@ public class RemoteFile extends AbstractBuildRule {
     this.downloader = downloader;
     this.type = type;
 
-    output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        params.getBuildTarget(),
-        "%s/" + out);
+    output = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s/" + out);
   }
 
   @Override
@@ -76,10 +76,9 @@ public class RemoteFile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path tempFile = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/" + output.getFileName());
+    Path tempFile =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), tempFile.getParent()));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
@@ -106,6 +105,8 @@ public class RemoteFile extends AbstractBuildRule {
   }
 
   enum Type {
-    DATA, EXECUTABLE, EXPLODED_ZIP,
+    DATA,
+    EXECUTABLE,
+    EXPLODED_ZIP,
   }
 }

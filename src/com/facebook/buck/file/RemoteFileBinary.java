@@ -22,12 +22,11 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 
 /**
- * Represents an executable {@link RemoteFile}, which means that it can be invoked using
- * {@code buck run}.
+ * Represents an executable {@link RemoteFile}, which means that it can be invoked using {@code buck
+ * run}.
  */
 public class RemoteFileBinary extends RemoteFile implements BinaryBuildRule {
   public RemoteFileBinary(
@@ -42,8 +41,6 @@ public class RemoteFileBinary extends RemoteFile implements BinaryBuildRule {
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(getSourcePathToOutput()))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 }
