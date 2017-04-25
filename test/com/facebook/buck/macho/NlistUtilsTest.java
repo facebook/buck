@@ -22,11 +22,9 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class NlistUtilsTest {
 
@@ -38,11 +36,12 @@ public class NlistUtilsTest {
 
   @Test
   public void testWritingToByteBuffer64BitBigEndian() throws Exception {
-    ByteBuffer byteBuffer = ByteBuffer.wrap(NlistTestData.getBigEndian64Bit())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer byteBuffer =
+        ByteBuffer.wrap(NlistTestData.getBigEndian64Bit()).order(ByteOrder.BIG_ENDIAN);
 
-    Nlist nlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(NlistTestData.getBigEndian64Bit()).order(ByteOrder.BIG_ENDIAN), true);
+    Nlist nlist =
+        NlistUtils.createFromBuffer(
+            ByteBuffer.wrap(NlistTestData.getBigEndian64Bit()).order(ByteOrder.BIG_ENDIAN), true);
     Nlist updatedNlist = nlist.withN_strx(UnsignedInteger.valueOf(321));
     updatedNlist = updatedNlist.withN_value(UnsignedLong.valueOf(432L));
     assertThat(updatedNlist, instanceOf(nlist.getClass()));
@@ -53,8 +52,8 @@ public class NlistUtilsTest {
     byte[] newBytes = new byte[NlistTestData.getBigEndian64Bit().length];
     byteBuffer.get(newBytes, 0, NlistTestData.getBigEndian64Bit().length);
 
-    Nlist newNlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(newBytes).order(ByteOrder.BIG_ENDIAN), true);
+    Nlist newNlist =
+        NlistUtils.createFromBuffer(ByteBuffer.wrap(newBytes).order(ByteOrder.BIG_ENDIAN), true);
     assertThat(nlist.getOffsetInBinary(), equalTo(newNlist.getOffsetInBinary()));
     assertThat(newNlist.getN_strx(), equalToObject(UnsignedInteger.valueOf(321)));
     assertThat(nlist.getN_type(), equalToObject(newNlist.getN_type()));
@@ -65,12 +64,13 @@ public class NlistUtilsTest {
 
   @Test
   public void testWritingToByteBuffer64BitLittleEndian() throws Exception {
-    ByteBuffer byteBuffer = ByteBuffer.wrap(NlistTestData.getLittleEndian64Bit())
-        .order(ByteOrder.LITTLE_ENDIAN);
+    ByteBuffer byteBuffer =
+        ByteBuffer.wrap(NlistTestData.getLittleEndian64Bit()).order(ByteOrder.LITTLE_ENDIAN);
 
-    Nlist nlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(NlistTestData.getLittleEndian64Bit()).order(ByteOrder.BIG_ENDIAN),
-        false);
+    Nlist nlist =
+        NlistUtils.createFromBuffer(
+            ByteBuffer.wrap(NlistTestData.getLittleEndian64Bit()).order(ByteOrder.BIG_ENDIAN),
+            false);
     Nlist updatedNlist = nlist.withN_strx(UnsignedInteger.valueOf(321));
     updatedNlist = updatedNlist.withN_value(UnsignedLong.valueOf(432L));
     assertThat(updatedNlist, instanceOf(nlist.getClass()));
@@ -81,8 +81,8 @@ public class NlistUtilsTest {
     byte[] newBytes = new byte[NlistTestData.getLittleEndian64Bit().length];
     byteBuffer.get(newBytes, 0, NlistTestData.getLittleEndian64Bit().length);
 
-    Nlist newNlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(newBytes).order(ByteOrder.LITTLE_ENDIAN), true);
+    Nlist newNlist =
+        NlistUtils.createFromBuffer(ByteBuffer.wrap(newBytes).order(ByteOrder.LITTLE_ENDIAN), true);
     assertThat(nlist.getOffsetInBinary(), equalTo(newNlist.getOffsetInBinary()));
     assertThat(newNlist.getN_strx(), equalToObject(UnsignedInteger.valueOf(321)));
     assertThat(nlist.getN_type(), equalToObject(newNlist.getN_type()));
@@ -93,8 +93,8 @@ public class NlistUtilsTest {
 
   @Test
   public void testWritingToByteBuffer32BitBigEndian() throws Exception {
-    ByteBuffer byteBuffer = ByteBuffer.wrap(NlistTestData.getBigEndian32Bit())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer byteBuffer =
+        ByteBuffer.wrap(NlistTestData.getBigEndian32Bit()).order(ByteOrder.BIG_ENDIAN);
 
     Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
     Nlist updatedNlist = nlist.withN_strx(UnsignedInteger.valueOf(321));
@@ -107,8 +107,8 @@ public class NlistUtilsTest {
     byte[] newBytes = new byte[NlistTestData.getBigEndian32Bit().length];
     byteBuffer.get(newBytes, 0, NlistTestData.getBigEndian32Bit().length);
 
-    Nlist newNlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(newBytes).order(ByteOrder.BIG_ENDIAN), false);
+    Nlist newNlist =
+        NlistUtils.createFromBuffer(ByteBuffer.wrap(newBytes).order(ByteOrder.BIG_ENDIAN), false);
     assertThat(nlist.getOffsetInBinary(), equalTo(newNlist.getOffsetInBinary()));
     assertThat(newNlist.getN_strx(), equalToObject(UnsignedInteger.valueOf(321)));
     assertThat(nlist.getN_type(), equalToObject(newNlist.getN_type()));
@@ -119,8 +119,8 @@ public class NlistUtilsTest {
 
   @Test
   public void testWritingToByteBuffer32BitLittleEndian() throws Exception {
-    ByteBuffer byteBuffer = ByteBuffer.wrap(NlistTestData.getLittleEndian32Bit())
-        .order(ByteOrder.LITTLE_ENDIAN);
+    ByteBuffer byteBuffer =
+        ByteBuffer.wrap(NlistTestData.getLittleEndian32Bit()).order(ByteOrder.LITTLE_ENDIAN);
 
     Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
     Nlist updatedNlist = nlist.withN_strx(UnsignedInteger.valueOf(321));
@@ -133,8 +133,9 @@ public class NlistUtilsTest {
     byte[] newBytes = new byte[NlistTestData.getLittleEndian32Bit().length];
     byteBuffer.get(newBytes, 0, NlistTestData.getLittleEndian32Bit().length);
 
-    Nlist newNlist = NlistUtils.createFromBuffer(
-        ByteBuffer.wrap(newBytes).order(ByteOrder.LITTLE_ENDIAN), false);
+    Nlist newNlist =
+        NlistUtils.createFromBuffer(
+            ByteBuffer.wrap(newBytes).order(ByteOrder.LITTLE_ENDIAN), false);
     assertThat(nlist.getOffsetInBinary(), equalTo(newNlist.getOffsetInBinary()));
     assertThat(newNlist.getN_strx(), equalToObject(UnsignedInteger.valueOf(321)));
     assertThat(nlist.getN_type(), equalToObject(newNlist.getN_type()));

@@ -19,13 +19,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import org.junit.Test;
 
 public class SectionUtilsTest {
 
@@ -43,8 +41,9 @@ public class SectionUtilsTest {
     buffer.put(SectionTestData.getBigEndian64Bit());
     buffer.position(10);
 
-    Section section = SectionUtils.createFromBuffer(buffer, true,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            buffer, true, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(10));
     SectionTestData.checkValues(section, true);
   }
@@ -57,8 +56,9 @@ public class SectionUtilsTest {
     buffer.put(SectionTestData.getBigEndian32Bit());
     buffer.position(20);
 
-    Section section = SectionUtils.createFromBuffer(buffer, false,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            buffer, false, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(20));
     SectionTestData.checkValues(section, false);
   }

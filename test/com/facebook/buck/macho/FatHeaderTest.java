@@ -20,11 +20,9 @@ import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.primitives.UnsignedInteger;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class FatHeaderTest {
 
@@ -38,11 +36,11 @@ public class FatHeaderTest {
   @Test
   public void testCreatingFromBytesBigEndian() {
     byte[] bytes = {
-        (byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x04
+      (byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE,
+      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x04
     };
-    FatHeader header = FatHeaderUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+    FatHeader header =
+        FatHeaderUtils.createFromBuffer(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
     assertThat(header.getMagic(), equalTo(FatHeader.FAT_MAGIC));
     assertThat(header.getNfat_arch(), equalToObject(UnsignedInteger.fromIntBits(4)));
   }
@@ -50,11 +48,11 @@ public class FatHeaderTest {
   @Test
   public void testCreatingFromBytesLittleEndian() {
     byte[] bytes = {
-        (byte) 0xBE, (byte) 0xBA, (byte) 0xFE, (byte) 0xCA,
-        (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00
+      (byte) 0xBE, (byte) 0xBA, (byte) 0xFE, (byte) 0xCA,
+      (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00
     };
-    FatHeader header = FatHeaderUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN));
+    FatHeader header =
+        FatHeaderUtils.createFromBuffer(ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN));
     assertThat(header.getMagic(), equalTo(FatHeader.FAT_MAGIC));
     assertThat(header.getNfat_arch(), equalToObject(UnsignedInteger.fromIntBits(6)));
   }

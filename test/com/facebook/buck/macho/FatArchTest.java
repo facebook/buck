@@ -15,27 +15,24 @@
  */
 package com.facebook.buck.macho;
 
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class FatArchTest {
   @Test
   public void testCreatingFromBytesBigEndian() throws Exception {
-    FatArch arch = FatArchUtils.createFromBuffer(
-        ByteBuffer
-            .wrap(FatArchTestData.getBigEndian())
-            .order(ByteOrder.BIG_ENDIAN));
+    FatArch arch =
+        FatArchUtils.createFromBuffer(
+            ByteBuffer.wrap(FatArchTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
     FatArchTestData.checkValues(arch);
   }
 
   @Test
   public void testCreatingFromBytesLittleEndian() throws Exception {
-    FatArch arch = FatArchUtils.createFromBuffer(
-        ByteBuffer
-            .wrap(FatArchTestData.getLittleEndian())
-            .order(ByteOrder.LITTLE_ENDIAN));
+    FatArch arch =
+        FatArchUtils.createFromBuffer(
+            ByteBuffer.wrap(FatArchTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
     FatArchTestData.checkValues(arch);
   }
 }

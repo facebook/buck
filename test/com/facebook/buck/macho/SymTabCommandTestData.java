@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import java.util.Arrays;
 
 public class SymTabCommandTestData {
@@ -27,21 +26,21 @@ public class SymTabCommandTestData {
   private SymTabCommandTestData() {}
 
   private static final byte[] BIG_ENDIAN = {
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02,   // cmd = LC_SYMTAB
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x18,   // cmdsize = 24
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x10,   // symoff
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x20,   // nsyms
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x30,   // stroff
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40,   // strsize
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02, // cmd = LC_SYMTAB
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x18, // cmdsize = 24
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x10, // symoff
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x20, // nsyms
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x30, // stroff
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40, // strsize
   };
 
   private static final byte[] LITTLE_ENDIAN = {
-      (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // cmd = LC_SYMTAB
-      (byte) 0x18, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // cmdsize = 24
-      (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // symoff
-      (byte) 0x20, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // nsyms
-      (byte) 0x30, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // stroff
-      (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // strsize
+    (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00, // cmd = LC_SYMTAB
+    (byte) 0x18, (byte) 0x00, (byte) 0x00, (byte) 0x00, // cmdsize = 24
+    (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x00, // symoff
+    (byte) 0x20, (byte) 0x00, (byte) 0x00, (byte) 0x00, // nsyms
+    (byte) 0x30, (byte) 0x00, (byte) 0x00, (byte) 0x00, // stroff
+    (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00, // strsize
   };
 
   public static byte[] getBigEndian() {
@@ -56,7 +55,8 @@ public class SymTabCommandTestData {
     assertThat(
         command.getLoadCommandCommonFields().getCmd(),
         equalToObject(UnsignedInteger.fromIntBits(0x2)));
-    assertThat(command.getLoadCommandCommonFields().getCmdsize(),
+    assertThat(
+        command.getLoadCommandCommonFields().getCmdsize(),
         equalToObject(UnsignedInteger.fromIntBits(0x18)));
     assertThat(command.getSymoff(), equalToObject(UnsignedInteger.fromIntBits(0x10)));
     assertThat(command.getNsyms(), equalToObject(UnsignedInteger.fromIntBits(0x20)));

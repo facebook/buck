@@ -22,14 +22,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
 
 public class SegmentCommandUtilsTest {
   @Test
@@ -43,9 +41,10 @@ public class SegmentCommandUtilsTest {
   public void testGettingHeaderSize64Bit() throws Exception {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
   }
 
@@ -53,9 +52,10 @@ public class SegmentCommandUtilsTest {
   public void testGettingHeaderSize32Bit() throws Exception {
     byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
     final int commandSize = bytes.length;
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
   }
 
@@ -63,20 +63,22 @@ public class SegmentCommandUtilsTest {
   public void testUpdatingSegmentCommandInByteBuffer64Bit() throws Exception {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
-    SegmentCommand updated = command
-        .withFilesize(UnsignedLong.fromLongBits(1234))
-        .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand updated =
+        command
+            .withFilesize(UnsignedLong.fromLongBits(1234))
+            .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
 
     ByteBuffer buffer = ByteBuffer.allocate(commandSize);
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(
-        buffer,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand commandInBuffer =
+        SegmentCommandUtils.createFromBuffer(
+            buffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -86,20 +88,22 @@ public class SegmentCommandUtilsTest {
     byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
     final int commandSize = bytes.length;
 
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
-    SegmentCommand updated = command
-        .withFilesize(UnsignedLong.fromLongBits(1234))
-        .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand updated =
+        command
+            .withFilesize(UnsignedLong.fromLongBits(1234))
+            .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
 
     ByteBuffer buffer = ByteBuffer.allocate(commandSize);
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(
-        buffer,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand commandInBuffer =
+        SegmentCommandUtils.createFromBuffer(
+            buffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -108,27 +112,29 @@ public class SegmentCommandUtilsTest {
   public void testEnumeratingSections64Bit() throws Exception {
     final int sectionSize = SectionTestData.getBigEndian64Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian64Bit();
-    sectionData1[51] = (byte) 0x01;  // offset = 1
+    sectionData1[51] = (byte) 0x01; // offset = 1
 
     byte[] sectionData2 = SectionTestData.getBigEndian64Bit();
-    sectionData2[0] = (byte) 0x44;   // sectname = "DECTNAME"
-    sectionData2[16] = (byte) 0x44;  // segname = "DEGNAME"
-    sectionData2[51] = (byte) 0x02;  // offset = 2
+    sectionData2[0] = (byte) 0x44; // sectname = "DECTNAME"
+    sectionData2[16] = (byte) 0x44; // segname = "DEGNAME"
+    sectionData2[51] = (byte) 0x02; // offset = 2
 
     byte[] sectionData3 = SectionTestData.getBigEndian64Bit();
-    sectionData3[0] = (byte) 0x4C;   // sectname = "LECTNAME"
-    sectionData3[16] = (byte) 0x4C;  // segname = "LEGNAME"
-    sectionData3[51] = (byte) 0x03;  // offset = 3
+    sectionData3[0] = (byte) 0x4C; // sectname = "LECTNAME"
+    sectionData3[16] = (byte) 0x4C; // segname = "LEGNAME"
+    sectionData3[51] = (byte) 0x03; // offset = 3
 
     byte[] segmentBytes = SegmentCommandTestData.getBigEndian64Bits();
-    segmentBytes[67] = (byte) 0x03;  // nsects = 3
+    segmentBytes[67] = (byte) 0x03; // nsects = 3
 
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
-    ByteBuffer buffer = ByteBuffer.allocate(
-        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(
+            command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
     buffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommandUtils.writeCommandToBuffer(command, buffer, true);
     buffer.put(sectionData1);
@@ -152,47 +158,46 @@ public class SegmentCommandUtilsTest {
     assertThat(enumeratedSections.get(0).getSectname(), equalToObject("SECTNAME"));
     assertThat(enumeratedSections.get(0).getSegname(), equalToObject("SEGNAME"));
     assertThat(
-        enumeratedSections.get(0).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x01)));
+        enumeratedSections.get(0).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x01)));
 
     assertThat(enumeratedSections.get(1).getSectname(), equalToObject("DECTNAME"));
     assertThat(enumeratedSections.get(1).getSegname(), equalToObject("DEGNAME"));
     assertThat(
-        enumeratedSections.get(1).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x02)));
+        enumeratedSections.get(1).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x02)));
 
     assertThat(enumeratedSections.get(2).getSectname(), equalToObject("LECTNAME"));
     assertThat(enumeratedSections.get(2).getSegname(), equalToObject("LEGNAME"));
     assertThat(
-        enumeratedSections.get(2).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x03)));
+        enumeratedSections.get(2).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x03)));
   }
 
   @Test
   public void testEnumeratingSections32Bit() throws Exception {
     final int sectionSize = SectionTestData.getBigEndian32Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian32Bit();
-    sectionData1[43] = (byte) 0x01;  // offset = 1
+    sectionData1[43] = (byte) 0x01; // offset = 1
 
     byte[] sectionData2 = SectionTestData.getBigEndian32Bit();
-    sectionData2[0] = (byte) 0x44;   // sectname = "DECTNAME"
-    sectionData2[16] = (byte) 0x44;  // segname = "DEGNAME"
-    sectionData2[43] = (byte) 0x02;  // offset = 2
+    sectionData2[0] = (byte) 0x44; // sectname = "DECTNAME"
+    sectionData2[16] = (byte) 0x44; // segname = "DEGNAME"
+    sectionData2[43] = (byte) 0x02; // offset = 2
 
     byte[] sectionData3 = SectionTestData.getBigEndian32Bit();
-    sectionData3[0] = (byte) 0x4C;   // sectname = "LECTNAME"
-    sectionData3[16] = (byte) 0x4C;  // segname = "LEGNAME"
-    sectionData3[43] = (byte) 0x03;  // offset = 3
+    sectionData3[0] = (byte) 0x4C; // sectname = "LECTNAME"
+    sectionData3[16] = (byte) 0x4C; // segname = "LEGNAME"
+    sectionData3[43] = (byte) 0x03; // offset = 3
 
     byte[] segmentBytes = SegmentCommandTestData.getBigEndian32Bits();
-    segmentBytes[51] = (byte) 0x03;  // nsects = 3
+    segmentBytes[51] = (byte) 0x03; // nsects = 3
 
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
-    ByteBuffer buffer = ByteBuffer.allocate(
-        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(
+            command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
     buffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommandUtils.writeCommandToBuffer(command, buffer, false);
     buffer.put(sectionData1);
@@ -216,20 +221,17 @@ public class SegmentCommandUtilsTest {
     assertThat(enumeratedSections.get(0).getSectname(), equalToObject("SECTNAME"));
     assertThat(enumeratedSections.get(0).getSegname(), equalToObject("SEGNAME"));
     assertThat(
-        enumeratedSections.get(0).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x01)));
+        enumeratedSections.get(0).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x01)));
 
     assertThat(enumeratedSections.get(1).getSectname(), equalToObject("DECTNAME"));
     assertThat(enumeratedSections.get(1).getSegname(), equalToObject("DEGNAME"));
     assertThat(
-        enumeratedSections.get(1).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x02)));
+        enumeratedSections.get(1).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x02)));
 
     assertThat(enumeratedSections.get(2).getSectname(), equalToObject("LECTNAME"));
     assertThat(enumeratedSections.get(2).getSegname(), equalToObject("LEGNAME"));
     assertThat(
-        enumeratedSections.get(2).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x03)));
+        enumeratedSections.get(2).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x03)));
   }
 
   @Test
@@ -240,29 +242,31 @@ public class SegmentCommandUtilsTest {
 
     final int sectionSize = SectionTestData.getBigEndian64Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian64Bit();
-    sectionData1[51] = (byte) 0x01;  // offset = 1
+    sectionData1[51] = (byte) 0x01; // offset = 1
 
     byte[] sectionData2 = SectionTestData.getBigEndian64Bit();
-    sectionData2[0] = (byte) 0x44;   // sectname = "DECTNAME"
-    sectionData2[16] = (byte) 0x44;  // segname = "DEGNAME"
-    sectionData2[51] = (byte) 0x02;  // offset = 2
+    sectionData2[0] = (byte) 0x44; // sectname = "DECTNAME"
+    sectionData2[16] = (byte) 0x44; // segname = "DEGNAME"
+    sectionData2[51] = (byte) 0x02; // offset = 2
 
     byte[] sectionData3 = SectionTestData.getBigEndian64Bit();
-    sectionData3[0] = (byte) 0x4C;   // sectname = "LECTNAME"
-    sectionData3[16] = (byte) 0x4C;  // segname = "LEGNAME"
-    sectionData3[51] = (byte) 0x03;  // offset = 3
+    sectionData3[0] = (byte) 0x4C; // sectname = "LECTNAME"
+    sectionData3[16] = (byte) 0x4C; // segname = "LEGNAME"
+    sectionData3[51] = (byte) 0x03; // offset = 3
 
     byte[] segmentBytes = SegmentCommandTestData.getBigEndian64Bits();
     segmentBytes[6] = (byte) 0xAA;
-    segmentBytes[7] = (byte) 0xFF;   // cmdsize = 0xAAFF == 43755 bytes!!!
-    segmentBytes[67] = (byte) 0x03;  // nsects = 3
+    segmentBytes[7] = (byte) 0xFF; // cmdsize = 0xAAFF == 43755 bytes!!!
+    segmentBytes[67] = (byte) 0x03; // nsects = 3
 
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    SegmentCommand command =
+        SegmentCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
-    ByteBuffer buffer = ByteBuffer.allocate(
-        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(
+            command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
     buffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommandUtils.writeCommandToBuffer(command, buffer, true);
     buffer.put(sectionData1);
@@ -286,19 +290,16 @@ public class SegmentCommandUtilsTest {
     assertThat(enumeratedSections.get(0).getSectname(), equalToObject("SECTNAME"));
     assertThat(enumeratedSections.get(0).getSegname(), equalToObject("SEGNAME"));
     assertThat(
-        enumeratedSections.get(0).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x01)));
+        enumeratedSections.get(0).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x01)));
 
     assertThat(enumeratedSections.get(1).getSectname(), equalToObject("DECTNAME"));
     assertThat(enumeratedSections.get(1).getSegname(), equalToObject("DEGNAME"));
     assertThat(
-        enumeratedSections.get(1).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x02)));
+        enumeratedSections.get(1).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x02)));
 
     assertThat(enumeratedSections.get(2).getSectname(), equalToObject("LECTNAME"));
     assertThat(enumeratedSections.get(2).getSegname(), equalToObject("LEGNAME"));
     assertThat(
-        enumeratedSections.get(2).getOffset(),
-        equalToObject(UnsignedInteger.fromIntBits(0x03)));
+        enumeratedSections.get(2).getOffset(), equalToObject(UnsignedInteger.fromIntBits(0x03)));
   }
 }

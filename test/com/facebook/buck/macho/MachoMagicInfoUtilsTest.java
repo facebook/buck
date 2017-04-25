@@ -18,18 +18,18 @@ package com.facebook.buck.macho;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class MachoMagicInfoUtilsTest {
   @Test
   public void testReadingMachMagic() throws IOException {
-    ByteBuffer buffer = ByteBuffer.allocate(MachoHeaderUtils.MAGIC_SIZE)
-        .order(ByteOrder.BIG_ENDIAN)
-        .putInt(MachoHeader.MH_MAGIC.intValue());
+    ByteBuffer buffer =
+        ByteBuffer.allocate(MachoHeaderUtils.MAGIC_SIZE)
+            .order(ByteOrder.BIG_ENDIAN)
+            .putInt(MachoHeader.MH_MAGIC.intValue());
 
     buffer.position(0);
     MachoMagicInfo info32 = MachoMagicInfoUtils.getMachMagicInfo(buffer);

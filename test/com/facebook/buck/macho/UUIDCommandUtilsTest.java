@@ -15,37 +15,37 @@
  */
 package com.facebook.buck.macho;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.UUID;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.UUID;
 import org.junit.Test;
 
 public class UUIDCommandUtilsTest {
 
   @Test
   public void testUpdatingUuidCommandInByteBuffer() throws Exception {
-    UUIDCommand command = UUIDCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
+    UUIDCommand command =
+        UUIDCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
 
     UUID newValue = UUID.randomUUID();
     UUIDCommand updated = command.withUuid(newValue);
 
-    ByteBuffer buffer = ByteBuffer
-        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.updateUuidCommand(buffer, command, updated);
 
     buffer.position(0);
     UUIDCommand fromBuffer = UUIDCommandUtils.createFromBuffer(buffer);
 
-    ByteBuffer newBuffer = ByteBuffer
-        .allocate(fromBuffer.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer newBuffer =
+        ByteBuffer.allocate(fromBuffer.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(fromBuffer, newBuffer);
 
     assertThat(fromBuffer.getUuid(), equalToObject(newValue));
@@ -54,42 +54,43 @@ public class UUIDCommandUtilsTest {
 
   @Test
   public void testCreatingFromBufferPositionsItCorrectly() throws Exception {
-    ByteBuffer buffer = ByteBuffer.wrap(UUIDCommandTestData.getBigEndian())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer buffer =
+        ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.createFromBuffer(buffer);
     assertThat(buffer.position(), equalTo(8 + 16));
   }
 
   @Test
   public void testCreatingFromBytesBigEndian() {
-    UUIDCommand command = UUIDCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
+    UUIDCommand command =
+        UUIDCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
     assertThat(
-        command.getUuid(),
-        equalToObject(UUID.fromString("01234567-89ab-cdef-ffee-ddccbbaa1234")));
+        command.getUuid(), equalToObject(UUID.fromString("01234567-89ab-cdef-ffee-ddccbbaa1234")));
   }
 
   @Test
   public void testCreatingFromBytesLittleEndian() {
-    UUIDCommand command = UUIDCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(UUIDCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
+    UUIDCommand command =
+        UUIDCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(UUIDCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
     assertThat(
-        command.getUuid(),
-        equalToObject(UUID.fromString("01234567-89ab-cdef-ffee-ddccbbaa1234")));
+        command.getUuid(), equalToObject(UUID.fromString("01234567-89ab-cdef-ffee-ddccbbaa1234")));
   }
 
   @Test
   public void testGettingBytesBigEndian() {
-    UUIDCommand command = UUIDCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
+    UUIDCommand command =
+        UUIDCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
 
-    ByteBuffer bigEndian = ByteBuffer
-        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer bigEndian =
+        ByteBuffer.allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer
-        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.LITTLE_ENDIAN);
+    ByteBuffer littleEndian =
+        ByteBuffer.allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.LITTLE_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, littleEndian);
 
     assertThat(bigEndian.array(), equalTo(UUIDCommandTestData.getBigEndian()));
@@ -98,16 +99,17 @@ public class UUIDCommandUtilsTest {
 
   @Test
   public void testGettingBytesLittleEndian() {
-    UUIDCommand command = UUIDCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(UUIDCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
+    UUIDCommand command =
+        UUIDCommandUtils.createFromBuffer(
+            ByteBuffer.wrap(UUIDCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
 
-    ByteBuffer bigEndian = ByteBuffer
-        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer bigEndian =
+        ByteBuffer.allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer
-        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
-        .order(ByteOrder.LITTLE_ENDIAN);
+    ByteBuffer littleEndian =
+        ByteBuffer.allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
+            .order(ByteOrder.LITTLE_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, littleEndian);
 
     assertThat(bigEndian.array(), equalTo(UUIDCommandTestData.getBigEndian()));
