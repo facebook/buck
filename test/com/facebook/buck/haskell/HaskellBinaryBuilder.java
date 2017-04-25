@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
 public class HaskellBinaryBuilder
@@ -35,9 +34,7 @@ public class HaskellBinaryBuilder
       HaskellConfig haskellConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
-    super(
-        new HaskellBinaryDescription(haskellConfig, cxxPlatforms, defaultCxxPlatform),
-        target);
+    super(new HaskellBinaryDescription(haskellConfig, cxxPlatforms, defaultCxxPlatform), target);
   }
 
   public HaskellBinaryBuilder(BuildTarget target) {
@@ -57,5 +54,4 @@ public class HaskellBinaryBuilder
     arg.depsQuery = Optional.of(depQuery);
     return this;
   }
-
 }

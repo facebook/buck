@@ -22,18 +22,15 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class PrebuiltHaskellLibraryBuilder extends AbstractNodeBuilder<
-    HaskellPrebuiltLibraryDescription.Arg,
-    HaskellPrebuiltLibraryDescription,
-    PrebuiltHaskellLibrary> {
+public class PrebuiltHaskellLibraryBuilder
+    extends AbstractNodeBuilder<
+        HaskellPrebuiltLibraryDescription.Arg, HaskellPrebuiltLibraryDescription,
+        PrebuiltHaskellLibrary> {
 
   public PrebuiltHaskellLibraryBuilder(BuildTarget target) {
-    super(
-        new HaskellPrebuiltLibraryDescription(),
-        target);
+    super(new HaskellPrebuiltLibraryDescription(), target);
   }
 
   public PrebuiltHaskellLibraryBuilder setVersion(String version) {
@@ -81,5 +78,4 @@ public class PrebuiltHaskellLibraryBuilder extends AbstractNodeBuilder<
     arg.cxxHeaderDirs = cxxHeaderDirs;
     return this;
   }
-
 }

@@ -21,7 +21,6 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -65,5 +64,4 @@ abstract class AbstractFakeHaskellConfig implements HaskellConfig {
   public boolean shouldCacheLinks() {
     return true;
   }
-
 }

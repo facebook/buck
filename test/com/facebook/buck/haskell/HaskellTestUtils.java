@@ -20,7 +20,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -28,16 +27,11 @@ public class HaskellTestUtils {
 
   private HaskellTestUtils() {}
 
-  /**
-   * Assume that we can find a haskell compiler on the system.
-   */
+  /** Assume that we can find a haskell compiler on the system. */
   public static void assumeSystemCompiler() {
     HaskellBuckConfig fakeConfig =
-        new HaskellBuckConfig(
-            FakeBuckConfig.builder().build(),
-            new ExecutableFinder());
+        new HaskellBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     Optional<Path> compilerOptional = fakeConfig.getSystemCompiler();
     assumeTrue(compilerOptional.isPresent());
   }
-
 }
