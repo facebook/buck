@@ -16,32 +16,28 @@
 
 package com.facebook.buck.charset;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.io.BaseEncoding;
-
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
-
-import org.junit.Test;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class NulTerminatedCharsetDecoderTest {
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void nonNulTerminatedEmptyBufferDecodesWithUnderflow() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = ByteBuffer.allocate(0);
     CharBuffer out = CharBuffer.allocate(0);
     assertThat(in.position(), is(equalTo(0)));
@@ -54,14 +50,13 @@ public class NulTerminatedCharsetDecoderTest {
     assertThat(out.position(), is(equalTo(0)));
     assertThat(out.limit(), is(equalTo(0)));
     assertThat(
-        result,
-        is(equalTo(new NulTerminatedCharsetDecoder.Result(false, CoderResult.UNDERFLOW))));
+        result, is(equalTo(new NulTerminatedCharsetDecoder.Result(false, CoderResult.UNDERFLOW))));
   }
 
   @Test
   public void nulTerminatedEmptyBufferDecodesToEmptyBuffer() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = decodeHex("00");
     CharBuffer out = CharBuffer.allocate(0);
     assertThat(in.position(), is(equalTo(0)));
@@ -74,14 +69,13 @@ public class NulTerminatedCharsetDecoderTest {
     assertThat(out.position(), is(equalTo(0)));
     assertThat(out.limit(), is(equalTo(0)));
     assertThat(
-        result,
-        is(equalTo(new NulTerminatedCharsetDecoder.Result(true, CoderResult.UNDERFLOW))));
+        result, is(equalTo(new NulTerminatedCharsetDecoder.Result(true, CoderResult.UNDERFLOW))));
   }
 
   @Test
   public void nulTerminatedBufferDecodesContentsToBuffer() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = decodeHex("F09F92A900"); // U+1F4A9 in UTF-8
     CharBuffer out = CharBuffer.allocate(2);
     assertThat(in.position(), is(equalTo(0)));
@@ -90,8 +84,7 @@ public class NulTerminatedCharsetDecoderTest {
     assertThat(out.limit(), is(equalTo(2)));
     NulTerminatedCharsetDecoder.Result result = decoder.decode(in, out, true);
     assertThat(
-        result,
-        is(equalTo(new NulTerminatedCharsetDecoder.Result(true, CoderResult.UNDERFLOW))));
+        result, is(equalTo(new NulTerminatedCharsetDecoder.Result(true, CoderResult.UNDERFLOW))));
     assertThat(in.position(), is(equalTo(5)));
     assertThat(in.limit(), is(equalTo(5)));
     assertThat(out.position(), is(equalTo(2)));
@@ -103,8 +96,8 @@ public class NulTerminatedCharsetDecoderTest {
 
   @Test
   public void splittingCodePointAcrossByteBuffersDecodesContentToBuffer() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = decodeHex("F09F92A900"); // U+1F4A9 in UTF-8
 
     // first half of U+1F4A9 in UTF-8
@@ -142,8 +135,8 @@ public class NulTerminatedCharsetDecoderTest {
 
   @Test
   public void tooSmallCharBufferResultsInOverflow() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = decodeHex("F09F92A900"); // U+1F4A9 in UTF-8
     CharBuffer out = CharBuffer.allocate(1); // Too small to hold U+1F419 (need 2 UTF-16 code units)
     assertThat(in.position(), is(equalTo(0)));
@@ -152,12 +145,7 @@ public class NulTerminatedCharsetDecoderTest {
     assertThat(out.limit(), is(equalTo(1)));
     NulTerminatedCharsetDecoder.Result result = decoder.decode(in, out, true);
     assertThat(
-        result,
-        is(
-            equalTo(
-                new NulTerminatedCharsetDecoder.Result(
-                    false,
-                    CoderResult.OVERFLOW))));
+        result, is(equalTo(new NulTerminatedCharsetDecoder.Result(false, CoderResult.OVERFLOW))));
     assertThat(in.position(), is(equalTo(0)));
     assertThat(in.limit(), is(equalTo(5)));
     assertThat(out.position(), is(equalTo(0)));
@@ -166,8 +154,8 @@ public class NulTerminatedCharsetDecoderTest {
 
   @Test
   public void invalidUTF8BufferReturnsMalformedResult() {
-    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
-        StandardCharsets.UTF_8.newDecoder());
+    NulTerminatedCharsetDecoder decoder =
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
     ByteBuffer in = decodeHex("C0FFEE00");
     CharBuffer out = CharBuffer.allocate(4);
     assertThat(in.position(), is(equalTo(0)));
@@ -179,9 +167,7 @@ public class NulTerminatedCharsetDecoderTest {
         result,
         is(
             equalTo(
-                new NulTerminatedCharsetDecoder.Result(
-                    false,
-                    CoderResult.malformedForLength(1)))));
+                new NulTerminatedCharsetDecoder.Result(false, CoderResult.malformedForLength(1)))));
     assertThat(in.position(), is(equalTo(0)));
     assertThat(in.limit(), is(equalTo(4)));
     assertThat(out.position(), is(equalTo(0)));
