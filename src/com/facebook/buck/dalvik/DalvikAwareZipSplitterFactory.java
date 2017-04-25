@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -31,9 +30,7 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
   private final long linearAllocLimit;
   private final Set<String> wantedInPrimaryZip;
 
-  public DalvikAwareZipSplitterFactory(
-      long linearAllocLimit,
-      Set<String> wantedInPrimaryZip) {
+  public DalvikAwareZipSplitterFactory(long linearAllocLimit, Set<String> wantedInPrimaryZip) {
     this.linearAllocLimit = linearAllocLimit;
     this.wantedInPrimaryZip = wantedInPrimaryZip;
   }

@@ -17,12 +17,10 @@
 package com.facebook.buck.dalvik.firstorder;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 
 public class FirstOrderHelper {
 
@@ -31,8 +29,7 @@ public class FirstOrderHelper {
   private final Map<Type, FirstOrderTypeInfo> knownTypes;
 
   private FirstOrderHelper(
-      Iterable<Type> scenarioTypes,
-      ImmutableSet.Builder<String> resultBuilder) {
+      Iterable<Type> scenarioTypes, ImmutableSet.Builder<String> resultBuilder) {
     this.scenarioTypes = scenarioTypes;
     this.resultBuilder = resultBuilder;
     this.knownTypes = new HashMap<>();

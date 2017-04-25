@@ -19,13 +19,10 @@ package com.facebook.buck.dalvik.firstorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
-
-import java.util.Set;
-
-import javax.annotation.Nullable;
 
 class FirstOrderTypeInfo {
 
@@ -52,11 +49,9 @@ class FirstOrderTypeInfo {
 
   static class Builder {
 
-    @Nullable
-    private Type mType;
+    @Nullable private Type mType;
 
-    @Nullable
-    private Type mSuperType;
+    @Nullable private Type mSuperType;
 
     private final Set<Type> mInterfaceTypes = Sets.newHashSet();
     private final Set<Type> mObservedDependencies = Sets.newHashSet();
@@ -64,11 +59,7 @@ class FirstOrderTypeInfo {
     FirstOrderTypeInfo build() {
       Preconditions.checkNotNull(mType);
       Preconditions.checkNotNull(mSuperType);
-      return new FirstOrderTypeInfo(
-          mType,
-          mSuperType,
-          mInterfaceTypes,
-          mObservedDependencies);
+      return new FirstOrderTypeInfo(mType, mSuperType, mInterfaceTypes, mObservedDependencies);
     }
 
     Builder setTypeInternalName(String internalName) {

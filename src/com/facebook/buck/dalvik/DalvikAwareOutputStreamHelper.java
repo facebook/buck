@@ -21,7 +21,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,9 +31,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-/**
- * Helper to write a Zip file used by {@link DalvikAwareZipSplitter}.
- */
+/** Helper to write a Zip file used by {@link DalvikAwareZipSplitter}. */
 public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
   private static final int MAX_METHOD_REFERENCES = 64 * 1024;
@@ -53,10 +50,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private long currentLinearAllocSize;
 
   DalvikAwareOutputStreamHelper(
-      Path outputFile,
-      long linearAllocLimit,
-      Path reportDir,
-      DalvikStatsCache dalvikStatsCache)
+      Path outputFile, long linearAllocLimit, Path reportDir, DalvikStatsCache dalvikStatsCache)
       throws IOException {
     this.outStream =
         new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile)));
@@ -106,15 +100,18 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
       // Make sure FileLike#getSize didn't lie (or we forgot to call canPutEntry).
       DalvikStatsTool.Stats stats = dalvikStatsCache.getStats(fileLike);
-      Preconditions.checkState(!isEntryTooBig(fileLike),
+      Preconditions.checkState(
+          !isEntryTooBig(fileLike),
           "Putting entry %s (%s) exceeded maximum size of %s",
-          name, stats.estimatedLinearAllocSize, linearAllocLimit);
+          name,
+          stats.estimatedLinearAllocSize,
+          linearAllocLimit);
       currentLinearAllocSize += stats.estimatedLinearAllocSize;
       currentMethodReferences.addAll(stats.methodReferences);
       currentFieldReferences.addAll(stats.fieldReferences);
-      String report = String.format(
-          "%d %d %s\n",
-          stats.estimatedLinearAllocSize, stats.methodReferences.size(), name);
+      String report =
+          String.format(
+              "%d %d %s\n", stats.estimatedLinearAllocSize, stats.methodReferences.size(), name);
       reportFileWriter.append(report);
     }
   }

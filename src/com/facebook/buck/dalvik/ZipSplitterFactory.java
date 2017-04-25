@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -30,16 +29,16 @@ public interface ZipSplitterFactory {
 
   /**
    * Both combines and splits a set of input files into zip files such that no one output zip file
-   * has entries that in total exceed {@code zipSizeHardLimit}.  Input files can be themselves zip
-   * files, individual class/resource files, or a directory of such of files.  The inputs are
+   * has entries that in total exceed {@code zipSizeHardLimit}. Input files can be themselves zip
+   * files, individual class/resource files, or a directory of such of files. The inputs are
    * "opened", and the files contained within them are individually processed.
-   * <p>
-   * For example, given a set of inFiles of A.zip and B.zip where A.zip contains { A, B, C }, and
+   *
+   * <p>For example, given a set of inFiles of A.zip and B.zip where A.zip contains { A, B, C }, and
    * B.zip contains { X, Y, Z }, a possible outcome of this method could yield outPrimary.zip
-   * containing { A, B }, outSecondary1.zip containing { C, X }, and outSecondary2.zip containing
-   * { Y, Z }.
-   * <p>
-   * This method exists as a critical utility to divide source code so large that dx/dexopt fail
+   * containing { A, B }, outSecondary1.zip containing { C, X }, and outSecondary2.zip containing {
+   * Y, Z }.
+   *
+   * <p>This method exists as a critical utility to divide source code so large that dx/dexopt fail
    * due to design constraints.
    *
    * @param inFiles Set of input files (directories or zip files) whose contents should be placed in
@@ -48,18 +47,18 @@ public interface ZipSplitterFactory {
    * @param outSecondaryDir Directory to place secondary output zip files (if any are generated).
    * @param secondaryPattern Pattern containing a single integer (%d) that forms the filename of
    *     output zip files placed in {@code outSecondaryDir}.
-   * @param requiredInPrimaryZip Determine which input <em>entries</em> are necessary in the
-   *     primary output zip file.  Note that this is referring to the entries contained within
-   *     {@code inFiles}, not the input files themselves.
+   * @param requiredInPrimaryZip Determine which input <em>entries</em> are necessary in the primary
+   *     output zip file. Note that this is referring to the entries contained within {@code
+   *     inFiles}, not the input files themselves.
    * @param secondaryHeadSet list of classes to include in the primary dex until it is full
    * @param secondaryTailSet list of classes to include last in the secondary dex
    * @param additionalDexStores mapping of APKModules to module names for creating additional dex
-   *                            stores beyond the primary and secondary dex
+   *     stores beyond the primary and secondary dex
    * @param apkModuleGraph the graph of APK Modules used for associating classes with additional dex
-   *                       stores beyond the primary and secondary dexes.
+   *     stores beyond the primary and secondary dexes.
    * @param canaryStrategy Determine whether to include canary classes for easy verification.
-   * @param reportDir Directory where to publish a report of which classes were written to which
-   *     zip files with a corresponding size estimate.
+   * @param reportDir Directory where to publish a report of which classes were written to which zip
+   *     files with a corresponding size estimate.
    */
   ZipSplitter newInstance(
       ProjectFilesystem filesystem,

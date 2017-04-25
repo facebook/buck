@@ -20,14 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -37,12 +29,15 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import javax.annotation.Nullable;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
-/**
- * Tool to get stats about dalvik classes.
- */
+/** Tool to get stats about dalvik classes. */
 public class DalvikStatsTool {
 
   /** Utility class: do not instantiate */
@@ -60,17 +55,18 @@ public class DalvikStatsTool {
   // DX translates MULTIANEWARRAY into a method call that matches this (owner,name,desc)
   private static final String MULTIARRAY_OWNER = Type.getType(Array.class).getInternalName();
   private static final String MULTIARRAY_NAME = "newInstance";
-  private static final String MULTIARRAY_DESC = Type.getMethodType(
-      Type.getType(Object.class),
-      Type.getType(Class.class),
-      Type.getType("[" + Type.INT_TYPE.getDescriptor())).getDescriptor();
+  private static final String MULTIARRAY_DESC =
+      Type.getMethodType(
+              Type.getType(Object.class),
+              Type.getType(Class.class),
+              Type.getType("[" + Type.INT_TYPE.getDescriptor()))
+          .getDescriptor();
 
   public static class MethodReference {
 
     public final String className;
     public final String methodName;
     public final String methodDesc;
-
 
     public MethodReference(String className, String methodName, String methodDesc) {
       this.className = className;
@@ -122,7 +118,6 @@ public class DalvikStatsTool {
     public final String fieldName;
     public final String fieldDesc;
 
-
     public FieldReference(String className, String fieldName, String fieldDesc) {
       this.className = className;
       this.fieldName = fieldName;
@@ -167,15 +162,10 @@ public class DalvikStatsTool {
     }
   }
 
-  /**
-   * Stats about a java class.
-   */
+  /** Stats about a java class. */
   public static class Stats {
 
-    public static final Stats ZERO = new Stats(
-        0,
-        ImmutableSet.of(),
-        ImmutableSet.of());
+    public static final Stats ZERO = new Stats(0, ImmutableSet.of(), ImmutableSet.of());
 
     /** Estimated bytes the class will contribute to Dalvik linear alloc. */
     public final int estimatedLinearAllocSize;
@@ -196,9 +186,7 @@ public class DalvikStatsTool {
     }
   }
 
-  /**
-   * CLI wrapper to run against every class in a set of JARs.
-   */
+  /** CLI wrapper to run against every class in a set of JARs. */
   public static void main(String[] args) throws IOException {
     for (String fname : args) {
       try (ZipFile inJar = new ZipFile(fname)) {
@@ -215,8 +203,8 @@ public class DalvikStatsTool {
   }
 
   /**
-   * Estimates the footprint that a given class will have in the LinearAlloc buffer
-   * of Android's Dalvik VM.
+   * Estimates the footprint that a given class will have in the LinearAlloc buffer of Android's
+   * Dalvik VM.
    *
    * @param rawClass Raw bytes of the Java class to analyze.
    * @return the estimate
@@ -227,8 +215,8 @@ public class DalvikStatsTool {
   }
 
   /**
-   * Estimates the footprint that a given class will have in the LinearAlloc buffer
-   * of Android's Dalvik VM.
+   * Estimates the footprint that a given class will have in the LinearAlloc buffer of Android's
+   * Dalvik VM.
    *
    * @param classReader reader containing the Java class to analyze.
    * @return the estimate
@@ -254,8 +242,7 @@ public class DalvikStatsTool {
     private ImmutableSet.Builder<MethodReference> methodReferenceBuilder;
     private ImmutableSet.Builder<FieldReference> fieldReferenceBuilder;
 
-    @Nullable
-    private String className;
+    @Nullable private String className;
 
     private StatsClassVisitor(Map<Pattern, Integer> penalties) {
       super(Opcodes.ASM5);
@@ -286,7 +273,7 @@ public class DalvikStatsTool {
         // Non-interfaces inherit the java.lang.Object vtable, which is 48 bytes.
         int vtablePenalty = 48;
 
-        String[] names = new String[]{name, superName};
+        String[] names = new String[] {name, superName};
         for (Map.Entry<Pattern, Integer> entry : penalties.entrySet()) {
           for (String cls : names) {
             if (entry.getKey().matcher(cls).find()) {
@@ -323,8 +310,7 @@ public class DalvikStatsTool {
       // For non-interfaces, each virtual method adds another 4 bytes to the vtable.
       if (!isInterface) {
         boolean isDirect =
-            ((access & (Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)) != 0) ||
-                name.equals("<init>");
+            ((access & (Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)) != 0) || name.equals("<init>");
         if (!isDirect) {
           footprint += 4;
         }
