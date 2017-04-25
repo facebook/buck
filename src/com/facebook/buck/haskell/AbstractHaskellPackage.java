@@ -24,37 +24,25 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
-import java.util.stream.Stream;
-
-/**
- * Represents a Haskell package used as a dependency during compilation.
- */
+/** Represents a Haskell package used as a dependency during compilation. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractHaskellPackage implements RuleKeyAppendable {
 
-  /**
-   * @return the package identifying information (i.e. name, version, identifier).
-   */
+  /** @return the package identifying information (i.e. name, version, identifier). */
   public abstract HaskellPackageInfo getInfo();
 
-  /**
-   * @return the path to the package DB.
-   */
+  /** @return the path to the package DB. */
   protected abstract SourcePath getPackageDb();
 
-  /**
-   * @return the path to all libraries included in the package.
-   */
+  /** @return the path to all libraries included in the package. */
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getLibraries();
 
-  /**
-   * @return the path to all interface directories included in the package.
-   */
+  /** @return the path to all interface directories included in the package. */
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getInterfaces();
 
@@ -70,9 +58,7 @@ abstract class AbstractHaskellPackage implements RuleKeyAppendable {
     sink.setReflectively("package-db", getPackageDb());
   }
 
-  /**
-   * @return all dependencies required to use this package at build time.
-   */
+  /** @return all dependencies required to use this package at build time. */
   public final Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.of(ImmutableList.of(getPackageDb()), getLibraries(), getInterfaces())
         .flatMap(input -> ruleFinder.filterBuildRuleInputs(input).stream());

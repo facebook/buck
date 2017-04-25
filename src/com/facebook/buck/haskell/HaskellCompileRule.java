@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -62,51 +61,39 @@ import java.util.stream.Stream;
 
 public class HaskellCompileRule extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool compiler;
+  @AddToRuleKey private final Tool compiler;
 
   private final HaskellVersion haskellVersion;
 
-  @AddToRuleKey
-  private final ImmutableList<String> flags;
+  @AddToRuleKey private final ImmutableList<String> flags;
 
   private final PreprocessorFlags ppFlags;
   private final CxxPlatform cxxPlatform;
 
-  @AddToRuleKey
-  private final CxxSourceRuleFactory.PicType picType;
+  @AddToRuleKey private final CxxSourceRuleFactory.PicType picType;
 
-  @AddToRuleKey
-  private final Optional<String> main;
+  @AddToRuleKey private final Optional<String> main;
 
   /**
-   * Optional package info.  If specified, the package name and version are baked into the
+   * Optional package info. If specified, the package name and version are baked into the
    * compilation.
    */
-  @AddToRuleKey
-  private final Optional<HaskellPackageInfo> packageInfo;
+  @AddToRuleKey private final Optional<HaskellPackageInfo> packageInfo;
 
-  @AddToRuleKey
-  private final ImmutableList<SourcePath> includes;
+  @AddToRuleKey private final ImmutableList<SourcePath> includes;
 
-  /**
-   * Packages providing modules that modules from this compilation can directly import.
-   */
-  @AddToRuleKey
-  private final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
+  /** Packages providing modules that modules from this compilation can directly import. */
+  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
 
   /**
-   * Packages that are transitively used by the exposed packages.  Modules in this compilation
-   * cannot import modules from these.
+   * Packages that are transitively used by the exposed packages. Modules in this compilation cannot
+   * import modules from these.
    */
-  @AddToRuleKey
-  private final ImmutableSortedMap<String, HaskellPackage> packages;
+  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> packages;
 
-  @AddToRuleKey
-  private final HaskellSources sources;
+  @AddToRuleKey private final HaskellSources sources;
 
-  @AddToRuleKey
-  private final Preprocessor preprocessor;
+  @AddToRuleKey private final Preprocessor preprocessor;
 
   private HaskellCompileRule(
       BuildRuleParams buildRuleParams,
@@ -156,24 +143,25 @@ public class HaskellCompileRule extends AbstractBuildRule {
       final ImmutableSortedMap<String, HaskellPackage> packages,
       final HaskellSources sources,
       Preprocessor preprocessor) {
-    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps = Suppliers.memoize(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(compiler.getDeps(ruleFinder))
-            .addAll(ppFlags.getDeps(ruleFinder))
-            .addAll(ruleFinder.filterBuildRuleInputs(includes))
-            .addAll(sources.getDeps(ruleFinder))
-            .addAll(
-                Stream.of(exposedPackages, packages)
-                    .flatMap(packageMap -> packageMap.values().stream())
-                    .flatMap(pkg -> pkg.getDeps(ruleFinder))
-                    .iterator())
-            .build());
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
+        Suppliers.memoize(
+            () ->
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(ppFlags.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(includes))
+                    .addAll(sources.getDeps(ruleFinder))
+                    .addAll(
+                        Stream.of(exposedPackages, packages)
+                            .flatMap(packageMap -> packageMap.values().stream())
+                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
+                            .iterator())
+                    .build());
     return new HaskellCompileRule(
         baseParams
             .withBuildTarget(target)
             .copyReplacingDeclaredAndExtraDeps(
-                declaredDeps,
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
         compiler,
         haskellVersion,
         flags,
@@ -205,9 +193,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
         .resolve("interfaces");
   }
 
-  /**
-   * @return the path where the compiler places generated FFI stub files.
-   */
+  /** @return the path where the compiler places generated FFI stub files. */
   private Path getStubDir() {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve("stubs");
   }
@@ -219,16 +205,13 @@ public class HaskellCompileRule extends AbstractBuildRule {
         builder.add("-package-name", packageInfo.get().getName());
       } else {
         builder.add(
-            "-package-name",
-            packageInfo.get().getName() + '-' + packageInfo.get().getVersion());
+            "-package-name", packageInfo.get().getName() + '-' + packageInfo.get().getVersion());
       }
     }
     return builder.build();
   }
 
-  /**
-   * @return the arguments to pass to the compiler to build against package dependencies.
-   */
+  /** @return the arguments to pass to the compiler to build against package dependencies. */
   private Iterable<String> getPackageArgs(SourcePathResolver resolver) {
     Set<String> packageDbs = new TreeSet<>();
     Set<String> hidden = new TreeSet<>();
@@ -238,34 +221,23 @@ public class HaskellCompileRule extends AbstractBuildRule {
       packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
       hidden.add(
           String.format(
-              "%s-%s",
-              haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
+              "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
     }
 
     for (HaskellPackage haskellPackage : exposedPackages.values()) {
       packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
       exposed.add(
           String.format(
-              "%s-%s",
-              haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
+              "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
     }
 
     // We add all package DBs, and explicit expose or hide packages depending on whether they are
     // exposed or not.  This allows us to support setups that either add `-hide-all-packages` or
     // not.
     return ImmutableList.<String>builder()
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-package-db"),
-                packageDbs))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-package"),
-                exposed))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-hide-package"),
-                hidden))
+        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package-db"), packageDbs))
+        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package"), exposed))
+        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-hide-package"), hidden))
         .build();
   }
 
@@ -277,15 +249,12 @@ public class HaskellCompileRule extends AbstractBuildRule {
             CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
             preprocessor,
             /* pch */ Optional.empty());
-    return MoreIterables.zipAndConcat(
-        Iterables.cycle("-optP"),
-        cxxToolFlags.getAllFlags());
+    return MoreIterables.zipAndConcat(Iterables.cycle("-optP"), cxxToolFlags.getAllFlags());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext buildContext,
-      BuildableContext buildableContext) {
+      BuildContext buildContext, BuildableContext buildableContext) {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
@@ -293,56 +262,60 @@ public class HaskellCompileRule extends AbstractBuildRule {
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getObjectDir()))
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getInterfaceDir()))
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getStubDir()))
-        .add(new ShellStep(getProjectFilesystem().getRootPath()) {
+        .add(
+            new ShellStep(getProjectFilesystem().getRootPath()) {
 
-          @Override
-          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-            return ImmutableMap.<String, String>builder()
-                .putAll(super.getEnvironmentVariables(context))
-                .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
-                .build();
-          }
+              @Override
+              public ImmutableMap<String, String> getEnvironmentVariables(
+                  ExecutionContext context) {
+                return ImmutableMap.<String, String>builder()
+                    .putAll(super.getEnvironmentVariables(context))
+                    .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
+                    .build();
+              }
 
-          @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            SourcePathResolver resolver = buildContext.getSourcePathResolver();
-            return ImmutableList.<String>builder()
-                .addAll(compiler.getCommandPrefix(resolver))
-                .addAll(flags)
-                .add("-no-link")
-                .addAll(
-                    picType == CxxSourceRuleFactory.PicType.PIC ?
-                        ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi") :
-                        ImmutableList.of())
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-main-is"),
-                        OptionalCompat.asSet(main)))
-                .addAll(getPackageNameArgs())
-                .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
-                .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
-                .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
-                .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
-                .add("-i" +
-                    includes.stream()
-                        .map(resolver::getAbsolutePath)
-                        .map(Object::toString)
-                        .collect(Collectors.joining(":")))
-                .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
-                .addAll(
-                    sources.getSourcePaths().stream()
-                        .map(resolver::getAbsolutePath)
-                        .map(Object::toString)
-                        .iterator())
-                .build();
-          }
+              @Override
+              protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+                SourcePathResolver resolver = buildContext.getSourcePathResolver();
+                return ImmutableList.<String>builder()
+                    .addAll(compiler.getCommandPrefix(resolver))
+                    .addAll(flags)
+                    .add("-no-link")
+                    .addAll(
+                        picType == CxxSourceRuleFactory.PicType.PIC
+                            ? ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi")
+                            : ImmutableList.of())
+                    .addAll(
+                        MoreIterables.zipAndConcat(
+                            Iterables.cycle("-main-is"), OptionalCompat.asSet(main)))
+                    .addAll(getPackageNameArgs())
+                    .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
+                    .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
+                    .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
+                    .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
+                    .add(
+                        "-i"
+                            + includes
+                                .stream()
+                                .map(resolver::getAbsolutePath)
+                                .map(Object::toString)
+                                .collect(Collectors.joining(":")))
+                    .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
+                    .addAll(
+                        sources
+                            .getSourcePaths()
+                            .stream()
+                            .map(resolver::getAbsolutePath)
+                            .map(Object::toString)
+                            .iterator())
+                    .build();
+              }
 
-          @Override
-          public String getShortName() {
-            return "haskell-compile";
-          }
-
-        })
+              @Override
+              public String getShortName() {
+                return "haskell-compile";
+              }
+            })
         .build();
   }
 

@@ -25,7 +25,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -37,9 +36,7 @@ public class HaskellBuckConfig implements HaskellConfig {
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
 
-  public HaskellBuckConfig(
-      BuckConfig delegate,
-      ExecutableFinder finder) {
+  public HaskellBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
     this.delegate = delegate;
     this.finder = finder;
   }
@@ -74,16 +71,14 @@ public class HaskellBuckConfig implements HaskellConfig {
     }
 
     throw new HumanReadableException(
-        "No Haskell compiler found in .buckconfig (%s.compiler) or on system",
-        SECTION);
+        "No Haskell compiler found in .buckconfig (%s.compiler) or on system", SECTION);
   }
 
   private static final Integer DEFAULT_MAJOR_VERSION = 7;
 
   @Override
   public HaskellVersion getHaskellVersion() {
-    Optional<Integer> majorVersion =
-        delegate.getInteger(SECTION, "compiler_major_version");
+    Optional<Integer> majorVersion = delegate.getInteger(SECTION, "compiler_major_version");
     return HaskellVersion.of(majorVersion.orElse(DEFAULT_MAJOR_VERSION));
   }
 
@@ -105,8 +100,7 @@ public class HaskellBuckConfig implements HaskellConfig {
     }
 
     throw new HumanReadableException(
-        "No Haskell linker found in .buckconfig (%s.linker) or on system",
-        SECTION);
+        "No Haskell linker found in .buckconfig (%s.linker) or on system", SECTION);
   }
 
   @Override
@@ -132,8 +126,7 @@ public class HaskellBuckConfig implements HaskellConfig {
     }
 
     throw new HumanReadableException(
-        "No Haskell packager found in .buckconfig (%s.compiler) or on system",
-        SECTION);
+        "No Haskell packager found in .buckconfig (%s.compiler) or on system", SECTION);
   }
 
   @Override
@@ -145,5 +138,4 @@ public class HaskellBuckConfig implements HaskellConfig {
   public Optional<Boolean> shouldUsedOldBinaryOutputLocation() {
     return delegate.getBoolean(SECTION, "old_binary_output_location");
   }
-
 }

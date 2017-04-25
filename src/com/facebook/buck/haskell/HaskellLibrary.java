@@ -20,12 +20,10 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 
-public abstract class HaskellLibrary
-    extends NoopBuildRule
+public abstract class HaskellLibrary extends NoopBuildRule
     implements HaskellCompileDep, NativeLinkable {
 
   public HaskellLibrary(BuildRuleParams params) {
     super(params);
   }
-
 }

@@ -18,18 +18,17 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
-/**
- * Identifying information for a {@link HaskellPackage}.
- */
+/** Identifying information for a {@link HaskellPackage}. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractHaskellPackageInfo implements RuleKeyAppendable {
 
   public abstract String getName();
+
   public abstract String getVersion();
+
   public abstract String getIdentifier();
 
   @Override
@@ -38,5 +37,4 @@ abstract class AbstractHaskellPackageInfo implements RuleKeyAppendable {
     sink.setReflectively("version", getVersion());
     sink.setReflectively("identifier", getIdentifier());
   }
-
 }

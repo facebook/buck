@@ -19,30 +19,22 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value;
 
 /**
- * Information that contributes to a haskell compilation job.  Dependencies (e.g. `haskell_library`
+ * Information that contributes to a haskell compilation job. Dependencies (e.g. `haskell_library`
  * rules) export this object to their dependent's compilations.
  */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractHaskellCompileInput {
 
-  /**
-   * @return any haskell compilation flags to include in the top-level compile job.
-   */
+  /** @return any haskell compilation flags to include in the top-level compile job. */
   ImmutableList<String> getFlags();
 
-  /**
-   * @return any haskell includes used by the top-level compile job.
-   */
+  /** @return any haskell includes used by the top-level compile job. */
   ImmutableList<SourcePath> getIncludes();
 
-  /**
-   * @return any haskell packages used by the top-level compile job.
-   */
+  /** @return any haskell packages used by the top-level compile job. */
   ImmutableList<HaskellPackage> getPackages();
-
 }

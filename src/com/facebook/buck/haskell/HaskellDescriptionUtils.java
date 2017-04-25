@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -68,8 +67,8 @@ public class HaskellDescriptionUtils {
   private HaskellDescriptionUtils() {}
 
   /**
-   * Create a Haskell compile rule that compiles all the given haskell sources in one step and
-   * pulls interface files from all transitive haskell dependencies.
+   * Create a Haskell compile rule that compiles all the given haskell sources in one step and pulls
+   * interface files from all transitive haskell dependencies.
    */
   private static HaskellCompileRule createCompileRule(
       BuildTarget target,
@@ -94,6 +93,7 @@ public class HaskellDescriptionUtils {
         ImmutableSortedMap.naturalOrder();
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
+
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         Iterable<BuildRule> ruleDeps = empty;
@@ -156,9 +156,9 @@ public class HaskellDescriptionUtils {
         compileFlags,
         ppFlags,
         cxxPlatform,
-        depType == Linker.LinkableDepType.STATIC ?
-            CxxSourceRuleFactory.PicType.PDC :
-            CxxSourceRuleFactory.PicType.PIC,
+        depType == Linker.LinkableDepType.STATIC
+            ? CxxSourceRuleFactory.PicType.PDC
+            : CxxSourceRuleFactory.PicType.PIC,
         main,
         packageInfo,
         includes,
@@ -169,9 +169,7 @@ public class HaskellDescriptionUtils {
   }
 
   protected static BuildTarget getCompileBuildTarget(
-      BuildTarget target,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType depType) {
+      BuildTarget target, CxxPlatform cxxPlatform, Linker.LinkableDepType depType) {
     return target.withFlavors(
         cxxPlatform.getFlavor(),
         InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
@@ -247,15 +245,12 @@ public class HaskellDescriptionUtils {
     if (linkType.equals(Linker.LinkType.SHARED)) {
       name =
           CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.empty(),
-              target.withFlavors(),
-              cxxPlatform);
+              Optional.empty(), target.withFlavors(), cxxPlatform);
       argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
       argsBuilder.addAll(
           StringArg.from(
               MoreIterables.zipAndConcat(
-                  Iterables.cycle("-optl"),
-                  cxxPlatform.getLd().resolve(resolver).soname(name))));
+                  Iterables.cycle("-optl"), cxxPlatform.getLd().resolve(resolver).soname(name))));
     }
 
     // Add in extra flags passed into this function.
@@ -265,7 +260,7 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
-         NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
+        NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
       linkerArgsBuilder.addAll(
           NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable).getArgs());
     }
@@ -280,9 +275,7 @@ public class HaskellDescriptionUtils {
                 baseParams.withBuildTarget(emptyModuleTarget),
                 "module Unused where",
                 BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(),
-                    emptyModuleTarget,
-                    "%s/Unused.hs"),
+                    baseParams.getProjectFilesystem(), emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
     HaskellCompileRule emptyCompiledModule =
         resolver.addToIndex(
@@ -306,8 +299,7 @@ public class HaskellDescriptionUtils {
                 HaskellSources.builder()
                     .putModuleMap("Unused", emptyModule.getSourcePathToOutput())
                     .build()));
-    BuildTarget emptyArchiveTarget =
-        target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
+    BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         resolver.addToIndex(
             Archive.from(
@@ -317,12 +309,9 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(),
-                    emptyArchiveTarget,
-                    "%s/libempty.a"),
+                    baseParams.getProjectFilesystem(), emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
-    argsBuilder.add(
-        SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
+    argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
@@ -349,9 +338,7 @@ public class HaskellDescriptionUtils {
             haskellConfig.shouldCacheLinks()));
   }
 
-  /**
-   * Accumulate parse-time deps needed by Haskell descriptions in depsBuilder.
-   */
+  /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
   public static void getParseTimeDeps(
       HaskellConfig haskellConfig,
       Iterable<CxxPlatform> cxxPlatforms,
@@ -369,5 +356,4 @@ public class HaskellDescriptionUtils {
     // all C/C++ platform parse time deps.
     depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
   }
-
 }
