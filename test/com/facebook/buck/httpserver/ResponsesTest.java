@@ -20,16 +20,13 @@ import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.net.MediaType;
-
-import org.easymock.EasyMockSupport;
-import org.eclipse.jetty.server.Request;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
 import javax.servlet.http.HttpServletResponse;
+import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Request;
+import org.junit.Test;
 
 public class ResponsesTest extends EasyMockSupport {
 

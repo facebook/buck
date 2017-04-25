@@ -23,15 +23,13 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.EasyMockSupport;
-import org.eclipse.jetty.server.Request;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
+import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Request;
+import org.junit.Test;
 
 public class TracesHandlerTest extends EasyMockSupport {
   private static Path traceDir = BuckConstant.getBuckOutputPath().resolve("log").resolve("traces");
@@ -39,31 +37,27 @@ public class TracesHandlerTest extends EasyMockSupport {
   @Test
   public void testHandleGet() throws IOException {
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
-        "build.a.trace")))
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve("build.a.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck build buck"), FileTime.fromMillis(1000L)));
-    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
-        "build.b.trace")))
-        .andReturn(new TraceAttributes(
-            Optional.of("buck test --all --code-coverage"),
-            FileTime.fromMillis(4000L)));
-    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
-        "build.c.trace")))
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve("build.b.trace")))
+        .andReturn(
+            new TraceAttributes(
+                Optional.of("buck test --all --code-coverage"), FileTime.fromMillis(4000L)));
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve("build.c.trace")))
         .andReturn(new TraceAttributes(Optional.empty(), FileTime.fromMillis(2000L)));
-    expect(buildTraces.getTraceAttributesFor(traceDir.resolve(
-        "build.d.trace")))
+    expect(buildTraces.getTraceAttributesFor(traceDir.resolve("build.d.trace")))
         .andReturn(
             new TraceAttributes(
                 Optional.of("buck test //test/com/facebook/buck/cli:cli"),
                 FileTime.fromMillis(3000L)));
 
-    expect(buildTraces.listTraceFilesByLastModified()).andReturn(
-        ImmutableList.of(
-            traceDir.resolve("build.b.trace"),
-            traceDir.resolve("build.d.trace"),
-            traceDir.resolve("build.c.trace"),
-            traceDir.resolve("build.a.trace")
-        ));
+    expect(buildTraces.listTraceFilesByLastModified())
+        .andReturn(
+            ImmutableList.of(
+                traceDir.resolve("build.b.trace"),
+                traceDir.resolve("build.d.trace"),
+                traceDir.resolve("build.c.trace"),
+                traceDir.resolve("build.a.trace")));
     Request baseRequest = createMock(Request.class);
 
     replayAll();

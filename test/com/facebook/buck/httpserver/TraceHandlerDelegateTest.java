@@ -23,21 +23,18 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.trace.BuildTraces;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
-
-import org.easymock.EasyMockSupport;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.junit.Test;
 
 public class TraceHandlerDelegateTest extends EasyMockSupport {
 
@@ -57,15 +54,12 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
     response.flushBuffer();
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    expect(buildTraces.getTraceAttributesFor("abcdef")).andReturn(
-        new TraceAttributes(Optional.of("buck build buck"), FileTime.fromMillis(2000L)));
+    expect(buildTraces.getTraceAttributesFor("abcdef"))
+        .andReturn(new TraceAttributes(Optional.of("buck build buck"), FileTime.fromMillis(2000L)));
     Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate(buildTraces));
 
     replayAll();
-    traceHandler.handle("/trace/abcdef",
-        baseRequest,
-        request,
-        response);
+    traceHandler.handle("/trace/abcdef", baseRequest, request, response);
     verifyAll();
 
     String expectedScriptTag = "<script src=\"/tracedata/abcdef?callback=onTracesLoaded\">";

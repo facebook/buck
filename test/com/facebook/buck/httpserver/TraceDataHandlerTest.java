@@ -23,11 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.base.Charsets;
-
-import org.easymock.EasyMockSupport;
-import org.eclipse.jetty.server.Request;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,10 +30,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.regex.Matcher;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Request;
+import org.junit.Test;
 
 // TODO(simons): Use a FakeProjectFilesystem throughout.
 public class TraceDataHandlerTest extends EasyMockSupport {
@@ -75,17 +72,13 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    Iterable<InputStream> traces = Arrays.asList(
-        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
-    );
+    Iterable<InputStream> traces =
+        Arrays.asList(new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
-    traceDataHandler.handle("/trace/abcdef",
-        baseRequest,
-        request,
-        response);
+    traceDataHandler.handle("/trace/abcdef", baseRequest, request, response);
     verifyAll();
 
     assertEquals("[{\"foo\":\"bar\"}]", stringWriter.toString());
@@ -109,23 +102,19 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    Iterable<InputStream> traces = Arrays.asList(
-        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
-        new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+    Iterable<InputStream> traces =
+        Arrays.asList(
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
+            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
-    traceDataHandler.handle("/trace/abcdef",
-        baseRequest,
-        request,
-        response);
+    traceDataHandler.handle("/trace/abcdef", baseRequest, request, response);
     verifyAll();
 
-    assertEquals(
-        "[{\"foo\":\"bar\"},{\"baz\":\"blech\"}]",
-        stringWriter.toString());
+    assertEquals("[{\"foo\":\"bar\"},{\"baz\":\"blech\"}]", stringWriter.toString());
   }
 
   @Test
@@ -146,17 +135,13 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    Iterable<InputStream> traces = Arrays.asList(
-        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
-    );
+    Iterable<InputStream> traces =
+        Arrays.asList(new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
-    traceDataHandler.handle("/trace/abcdef?callback=my.callback",
-        baseRequest,
-        request,
-        response);
+    traceDataHandler.handle("/trace/abcdef?callback=my.callback", baseRequest, request, response);
     verifyAll();
 
     assertEquals("my.callback([{\"foo\":\"bar\"}]);\n", stringWriter.toString());
@@ -180,22 +165,19 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     BuildTraces buildTraces = createMock(BuildTraces.class);
-    Iterable<InputStream> traces = Arrays.asList(
-        new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
-        new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+    Iterable<InputStream> traces =
+        Arrays.asList(
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
+            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
     replayAll();
-    traceDataHandler.handle("/trace/abcdef?callback=my.callback",
-        baseRequest,
-        request,
-        response);
+    traceDataHandler.handle("/trace/abcdef?callback=my.callback", baseRequest, request, response);
     verifyAll();
 
     assertEquals(
-        "my.callback([{\"foo\":\"bar\"},{\"baz\":\"blech\"}]);\n",
-        stringWriter.toString());
+        "my.callback([{\"foo\":\"bar\"},{\"baz\":\"blech\"}]);\n", stringWriter.toString());
   }
 }
