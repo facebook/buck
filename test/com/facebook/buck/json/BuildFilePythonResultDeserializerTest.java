@@ -16,43 +16,33 @@
 
 package com.facebook.buck.json;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import static org.hamcrest.Matchers.is;
-
 import com.facebook.buck.util.ObjectMappers;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Tests for {@link BuildFilePythonResultDeserializer}.
- */
+/** Tests for {@link BuildFilePythonResultDeserializer}. */
 public final class BuildFilePythonResultDeserializerTest {
   @Test
   public void emptyParse() throws IOException {
     BuildFilePythonResult result = ObjectMappers.readValue("{}", BuildFilePythonResult.class);
     assertThat(
         result,
-        is(
-            BuildFilePythonResult.of(
-                ImmutableList.of(),
-                ImmutableList.of(),
-                Optional.empty())));
+        is(BuildFilePythonResult.of(ImmutableList.of(), ImmutableList.of(), Optional.empty())));
   }
 
   @Test
   public void basicParseWithNull() throws IOException {
-    BuildFilePythonResult result = ObjectMappers.readValue(
-        "{\"values\":[{\"buck.foo\":null,\"buck.bar\":[1,2,3]}]}",
-        BuildFilePythonResult.class);
+    BuildFilePythonResult result =
+        ObjectMappers.readValue(
+            "{\"values\":[{\"buck.foo\":null,\"buck.bar\":[1,2,3]}]}", BuildFilePythonResult.class);
     // Can't use ImmutableMap since we have a null
     Map<String, Object> expectedValues = new LinkedHashMap<>();
     expectedValues.put("buck.foo", null);
@@ -63,21 +53,20 @@ public final class BuildFilePythonResultDeserializerTest {
         result,
         is(
             BuildFilePythonResult.of(
-                ImmutableList.of(expectedValues),
-                ImmutableList.of(),
-                Optional.empty())));
+                ImmutableList.of(expectedValues), ImmutableList.of(), Optional.empty())));
   }
 
   @Test
   public void resultWithDiagnostics() throws IOException {
-    BuildFilePythonResult result = ObjectMappers.readValue(
-        "{\"values\":[]," +
-        "\"diagnostics\":[{\"message\":\"Oops\",\"level\":\"fatal\"," +
-        "\"source\":\"parse\",\"exception\":{\"type\":\"SyntaxError\"," +
-        "\"value\":\"Syntax error over there\",\"traceback\":\"(omitted)\"," +
-        "\"filename\":\"foo.py\",\"lineno\":12345,\"offset\":45678,\"text\":" +
-        "\"this is a syntax error\"}}]}",
-        BuildFilePythonResult.class);
+    BuildFilePythonResult result =
+        ObjectMappers.readValue(
+            "{\"values\":[],"
+                + "\"diagnostics\":[{\"message\":\"Oops\",\"level\":\"fatal\","
+                + "\"source\":\"parse\",\"exception\":{\"type\":\"SyntaxError\","
+                + "\"value\":\"Syntax error over there\",\"traceback\":\"(omitted)\","
+                + "\"filename\":\"foo.py\",\"lineno\":12345,\"offset\":45678,\"text\":"
+                + "\"this is a syntax error\"}}]}",
+            BuildFilePythonResult.class);
     assertThat(
         result,
         is(
@@ -85,9 +74,12 @@ public final class BuildFilePythonResultDeserializerTest {
                 ImmutableList.of(),
                 ImmutableList.of(
                     ImmutableMap.of(
-                        "message", "Oops",
-                        "level", "fatal",
-                        "source", "parse",
+                        "message",
+                        "Oops",
+                        "level",
+                        "fatal",
+                        "source",
+                        "parse",
                         "exception",
                         ImmutableMap.builder()
                             .put("type", "SyntaxError")
@@ -103,15 +95,13 @@ public final class BuildFilePythonResultDeserializerTest {
 
   @Test
   public void resultWithProfile() throws IOException {
-    BuildFilePythonResult result = ObjectMappers.readValue(
-        "{\"values\":[],\"profile\":\"this is a profile\"}",
-        BuildFilePythonResult.class);
+    BuildFilePythonResult result =
+        ObjectMappers.readValue(
+            "{\"values\":[],\"profile\":\"this is a profile\"}", BuildFilePythonResult.class);
     assertThat(
         result,
         is(
             BuildFilePythonResult.of(
-                ImmutableList.of(),
-                ImmutableList.of(),
-                Optional.of("this is a profile"))));
+                ImmutableList.of(), ImmutableList.of(), Optional.of("this is a profile"))));
   }
 }

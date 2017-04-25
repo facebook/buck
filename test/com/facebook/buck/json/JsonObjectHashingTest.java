@@ -22,13 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 public class JsonObjectHashingTest {
   private Hasher hasher;
@@ -131,12 +129,8 @@ public class JsonObjectHashingTest {
 
   @Test
   public void mapOrderDoesNotChangeHash() {
-    Map<?, ?> map1 = ImmutableMap.of(
-        "firstKey", 24,
-        "secondKey", new Float(13.5));
-    Map<?, ?> map2 = ImmutableMap.of(
-        "secondKey", new Float(13.5),
-        "firstKey", 24);
+    Map<?, ?> map1 = ImmutableMap.of("firstKey", 24, "secondKey", new Float(13.5));
+    Map<?, ?> map2 = ImmutableMap.of("secondKey", new Float(13.5), "firstKey", 24);
 
     Hasher hasher1 = Hashing.sha1().newHasher();
     Hasher hasher2 = Hashing.sha1().newHasher();
@@ -152,9 +146,9 @@ public class JsonObjectHashingTest {
    * making changes within Buck (such as adding or removing constructor arg fields) this means that
    * there are fewer places where tests fail, meaning less time being spent debugging "failed"
    * tests.
-   * <p>
-   * This means that two maps may generate the same hashcode, despite not being strictly equal. We
-   * rely on the use case that this class was designed for (namely, generating target hashes) to
+   *
+   * <p>This means that two maps may generate the same hashcode, despite not being strictly equal.
+   * We rely on the use case that this class was designed for (namely, generating target hashes) to
    * ensure that correct functionality is maintained.
    */
   @Test
