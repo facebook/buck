@@ -20,13 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DdPlistTest {
 
@@ -45,5 +43,4 @@ public class DdPlistTest {
     NSDictionary y = (NSDictionary) PropertyListParser.parse(outputFile);
     assertEquals(x, y);
   }
-
 }
