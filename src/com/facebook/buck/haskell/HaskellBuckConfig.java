@@ -105,7 +105,7 @@ public class HaskellBuckConfig implements HaskellConfig {
     }
 
     throw new HumanReadableException(
-        "No Haskell linker found in .buckconfig (%s.compiler) or on system",
+        "No Haskell linker found in .buckconfig (%s.linker) or on system",
         SECTION);
   }
 
