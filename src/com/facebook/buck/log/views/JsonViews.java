@@ -23,9 +23,6 @@ package com.facebook.buck.log.views;
  */
 public class JsonViews {
 
-  /**
-   * View for events for {@link com.facebook.buck.event.listener.MachineReadableLoggerListener}.
-   */
+  /** View for events for {@link com.facebook.buck.event.listener.MachineReadableLoggerListener}. */
   public static class MachineReadableLog {}
-
 }

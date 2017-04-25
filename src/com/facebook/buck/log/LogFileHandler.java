@@ -19,7 +19,6 @@ package com.facebook.buck.log;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
@@ -63,8 +62,8 @@ public class LogFileHandler extends Handler {
   }
 
   private static long getConfig(String suffix, long defaultValue) {
-    String maxSizeBytesStr = LogManager.getLogManager().getProperty(
-        LogFileHandler.class.getName() + "." + suffix);
+    String maxSizeBytesStr =
+        LogManager.getLogManager().getProperty(LogFileHandler.class.getName() + "." + suffix);
     if (maxSizeBytesStr == null) {
       return defaultValue;
     }
@@ -109,39 +108,38 @@ public class LogFileHandler extends Handler {
   }
 
   public static DirectoryCleaner newCleaner(
-      long maxLogsSizeBytes,
-      int maxLogsDirectories,
-      int minAmountOfLogsToKeep) {
-    DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
-        .setPathSelector(
-            new DirectoryCleaner.PathSelector() {
+      long maxLogsSizeBytes, int maxLogsDirectories, int minAmountOfLogsToKeep) {
+    DirectoryCleanerArgs cleanerArgs =
+        DirectoryCleanerArgs.builder()
+            .setPathSelector(
+                new DirectoryCleaner.PathSelector() {
 
-              @Override
-              public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
-                List<Path> dirPaths = new ArrayList<>();
-                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootPath)) {
-                  for (Path path : directoryStream) {
-                    Matcher matcher = DIR_PATTERN.matcher(path.getFileName().toString());
-                    if (matcher.matches()) {
-                      dirPaths.add(path);
+                  @Override
+                  public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
+                    List<Path> dirPaths = new ArrayList<>();
+                    try (DirectoryStream<Path> directoryStream =
+                        Files.newDirectoryStream(rootPath)) {
+                      for (Path path : directoryStream) {
+                        Matcher matcher = DIR_PATTERN.matcher(path.getFileName().toString());
+                        if (matcher.matches()) {
+                          dirPaths.add(path);
+                        }
+                      }
                     }
+
+                    return dirPaths;
                   }
-                }
 
-                return dirPaths;
-              }
-
-              @Override
-              public int comparePaths(
-                  DirectoryCleaner.PathStats path1,
-                  DirectoryCleaner.PathStats path2) {
-                return Long.compare(path1.getCreationMillis(), path2.getCreationMillis());
-              }
-            })
-        .setMaxTotalSizeBytes(maxLogsSizeBytes)
-        .setMaxPathCount(maxLogsDirectories)
-        .setMinAmountOfEntriesToKeep(minAmountOfLogsToKeep)
-        .build();
+                  @Override
+                  public int comparePaths(
+                      DirectoryCleaner.PathStats path1, DirectoryCleaner.PathStats path2) {
+                    return Long.compare(path1.getCreationMillis(), path2.getCreationMillis());
+                  }
+                })
+            .setMaxTotalSizeBytes(maxLogsSizeBytes)
+            .setMaxPathCount(maxLogsDirectories)
+            .setMinAmountOfEntriesToKeep(minAmountOfLogsToKeep)
+            .build();
 
     DirectoryCleaner cleaner = new DirectoryCleaner(cleanerArgs);
     return cleaner;

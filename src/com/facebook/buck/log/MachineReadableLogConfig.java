@@ -22,5 +22,4 @@ public final class MachineReadableLogConfig {
 
   public static final String PREFIX_INVOCATION_INFO = "InvocationInfo";
   public static final String PREFIX_EXIT_CODE = "ExitCode";
-
 }

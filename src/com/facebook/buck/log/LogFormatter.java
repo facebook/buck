@@ -16,16 +16,14 @@
 
 package com.facebook.buck.log;
 
-import com.google.common.base.Throwables;
 import com.google.common.annotations.VisibleForTesting;
-
+import com.google.common.base.Throwables;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-
 import javax.annotation.Nullable;
 
 public class LogFormatter extends java.util.logging.Formatter {
@@ -45,21 +43,17 @@ public class LogFormatter extends java.util.logging.Formatter {
   }
 
   @VisibleForTesting
-  LogFormatter(
-      ThreadIdToCommandIdMapper mapper,
-      final Locale locale,
-      final TimeZone timeZone) {
+  LogFormatter(ThreadIdToCommandIdMapper mapper, final Locale locale, final TimeZone timeZone) {
     this.mapper = mapper;
-    simpleDateFormat = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat(
-                "[yyyy-MM-dd HH:mm:ss.SSS]",
-                locale);
+    simpleDateFormat =
+        new ThreadLocal<SimpleDateFormat>() {
+          @Override
+          protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", locale);
             format.setTimeZone(timeZone);
             return format;
-        }
-      };
+          }
+        };
   }
 
   @Override
@@ -70,21 +64,20 @@ public class LogFormatter extends java.util.logging.Formatter {
     // performance-critical: http://stackoverflow.com/a/1281651
     long tid = record.getThreadID();
     @Nullable String command = mapper.threadIdToCommandId(tid);
-    StringBuilder sb = new StringBuilder(255)
-      .append(timestamp)
-      .append(formatRecordLevel(record.getLevel()))
-      .append("[command:")
-      .append(command)
-      .append("][tid:");
+    StringBuilder sb =
+        new StringBuilder(255)
+            .append(timestamp)
+            .append(formatRecordLevel(record.getLevel()))
+            .append("[command:")
+            .append(command)
+            .append("][tid:");
     // Zero-pad on the left. We're currently assuming we have less than 100 threads.
     if (tid < 10) {
       sb.append("0").append(tid);
     } else {
       sb.append(tid);
     }
-    sb.append("][")
-      .append(record.getLoggerName())
-      .append("] ");
+    sb.append("][").append(record.getLoggerName()).append("] ");
     if (record instanceof AppendableLogRecord) {
       // Avoid allocating then throwing away the formatted message and
       // params; just format directly to the StringBuilder.
@@ -95,8 +88,7 @@ public class LogFormatter extends java.util.logging.Formatter {
     sb.append("\n");
     Throwable t = record.getThrown();
     if (t != null) {
-      sb.append(Throwables.getStackTraceAsString(t))
-        .append("\n");
+      sb.append(Throwables.getStackTraceAsString(t)).append("\n");
     }
     return sb.toString();
   }

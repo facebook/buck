@@ -116,7 +116,7 @@ public class ReferenceCountedWriter extends Writer {
   }
 
   private static int getAndIncrementIfNotZero(AtomicInteger counter) {
-    for (;;) {
+    for (; ; ) {
       int current = counter.get();
       if (current == 0) {
         return 0;

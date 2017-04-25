@@ -17,22 +17,19 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
-
 import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
-
 import javax.annotation.Nullable;
 
 /**
- * A ThreadFactory which associates created threads with the same command associated with
- * the thread which creates the CommandThreadFactory.
+ * A ThreadFactory which associates created threads with the same command associated with the thread
+ * which creates the CommandThreadFactory.
  */
 public class CommandThreadFactory implements ThreadFactory {
 
   private final ThreadFactory threadFactory;
   private final CommonThreadFactoryState state;
-  @Nullable
-  private final String commandId;
+  @Nullable private final String commandId;
   private final Optional<Integer> optionalPriority;
 
   public CommandThreadFactory(String threadName, int threadPriority) {

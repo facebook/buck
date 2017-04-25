@@ -18,10 +18,8 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -40,9 +38,7 @@ abstract class AbstractLogConfigSetup {
   // At this point we can't guarantee that CWD is writeable so our logs go into the system's
   // temporary directory.
   public static final LogConfigSetup DEFAULT_SETUP =
-      LogConfigSetup.builder()
-          .setLogDir(BuckConstant.getBuckOutputPath().resolve("log"))
-          .build();
+      LogConfigSetup.builder().setLogDir(BuckConstant.getBuckOutputPath().resolve("log")).build();
 
   @Value.Parameter
   public abstract Path getLogDir();

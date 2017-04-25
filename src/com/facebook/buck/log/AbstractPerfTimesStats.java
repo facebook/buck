@@ -19,52 +19,41 @@ package com.facebook.buck.log;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractPerfTimesStats {
 
-  /**
-   * @return duration of the time spent in python, in milliseconds.
-   */
+  /** @return duration of the time spent in python, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getPythonTimeMs() {
     return 0L;
   }
 
-  /**
-   * @return duration Buck spends initializing, in milliseconds.
-   */
+  /** @return duration Buck spends initializing, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getInitTimeMs() {
     return 0L;
   }
 
-  /**
-   * @return time spent between initialization and start of parsing, in milliseconds.
-   */
+  /** @return time spent between initialization and start of parsing, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getProcessingTimeMs() {
     return 0L;
   }
 
-  /**
-   * @return time spent parsing and processing BUCK files, in milliseconds.
-   */
+  /** @return time spent parsing and processing BUCK files, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getParseTimeMs() {
     return 0L;
   }
 
-  /**
-   * @return time it takes to generate the action graph, in milliseconds.
-   */
+  /** @return time it takes to generate the action graph, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getActionGraphTimeMs() {
@@ -73,7 +62,7 @@ abstract class AbstractPerfTimesStats {
 
   /**
    * @return duration of the rule keys computation, from the start of rule key calculation to the
-   * fetching of the first artifact from the remote cache, in milliseconds.
+   *     fetching of the first artifact from the remote cache, in milliseconds.
    */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
@@ -83,7 +72,7 @@ abstract class AbstractPerfTimesStats {
 
   /**
    * @return duration of the fetch operation, from the first fetch event to the start of the local
-   * build, in milliseconds.
+   *     build, in milliseconds.
    */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
@@ -93,7 +82,7 @@ abstract class AbstractPerfTimesStats {
 
   /**
    * @return duration of the local build phase, from start of the local build to when the build
-   * completes, in milliseconds.
+   *     completes, in milliseconds.
    */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
@@ -101,13 +90,10 @@ abstract class AbstractPerfTimesStats {
     return 0L;
   }
 
-  /**
-   * @return time it takes to install to a device, in milliseconds.
-   */
+  /** @return time it takes to install to a device, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getInstallTimeMs() {
     return 0L;
   }
-
 }

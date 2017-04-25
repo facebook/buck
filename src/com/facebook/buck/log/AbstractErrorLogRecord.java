@@ -24,31 +24,26 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.LogRecord;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractErrorLogRecord {
 
-  private static final ThreadIdToCommandIdMapper MAPPER = GlobalStateManager
-      .singleton()
-      .getThreadIdToCommandIdMapper();
-  private static final CommandIdToIsDaemonMapper IS_DAEMON_MAPPER = GlobalStateManager
-      .singleton()
-      .getCommandIdToIsDaemonMapper();
+  private static final ThreadIdToCommandIdMapper MAPPER =
+      GlobalStateManager.singleton().getThreadIdToCommandIdMapper();
+  private static final CommandIdToIsDaemonMapper IS_DAEMON_MAPPER =
+      GlobalStateManager.singleton().getCommandIdToIsDaemonMapper();
   private static final CommandIdToIsSuperConsoleEnabledMapper IS_SUPERCONSOLE_ENABLED_MAPPER =
-      GlobalStateManager
-          .singleton()
-          .getCommandIdToIsSuperConsoleEnabledMapper();
+      GlobalStateManager.singleton().getCommandIdToIsSuperConsoleEnabledMapper();
   private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
+
   public abstract ImmutableList<String> getLogs();
 
   @Value.Derived
@@ -60,17 +55,18 @@ abstract class AbstractErrorLogRecord {
     } catch (IOException e) {
       LOG.debug(e, "Unable to fetch hostname");
     }
-    ImmutableMap<String, String> traits = ImmutableMap.<String, String> builder()
-        .put("severity", getRecord().getLevel().toString())
-        .put("logger", logger != null ? logger : "unknown")
-        .put("buckGitCommit", System.getProperty("buck.git_commit", "unknown"))
-        .put("javaVersion", System.getProperty("java.version", "unknown"))
-        .put("os", System.getProperty("os.name", "unknown"))
-        .put("osVersion", System.getProperty("os.version", "unknown"))
-        .put("user", System.getProperty("user.name", "unknown"))
-        .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
-        .put("hostname", hostname)
-        .build();
+    ImmutableMap<String, String> traits =
+        ImmutableMap.<String, String>builder()
+            .put("severity", getRecord().getLevel().toString())
+            .put("logger", logger != null ? logger : "unknown")
+            .put("buckGitCommit", System.getProperty("buck.git_commit", "unknown"))
+            .put("javaVersion", System.getProperty("java.version", "unknown"))
+            .put("os", System.getProperty("os.name", "unknown"))
+            .put("osVersion", System.getProperty("os.version", "unknown"))
+            .put("user", System.getProperty("user.name", "unknown"))
+            .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
+            .put("hostname", hostname)
+            .build();
     return traits;
   }
 
@@ -99,9 +95,9 @@ abstract class AbstractErrorLogRecord {
   }
 
   /**
-   * Computes a category key based on relevant LogRecord information. If an exception is
-   * present, categorizes on the class + method that threw it. If no exception
-   * is found, categorizes on the logger name and the beginning of the message.
+   * Computes a category key based on relevant LogRecord information. If an exception is present,
+   * categorizes on the class + method that threw it. If no exception is found, categorizes on the
+   * logger name and the beginning of the message.
    */
   @Value.Default
   public String getCategory() {
@@ -142,8 +138,7 @@ abstract class AbstractErrorLogRecord {
       return Optional.empty();
     }
     return Optional.ofNullable(
-        IS_SUPERCONSOLE_ENABLED_MAPPER
-            .commandIdToIsSuperConsoleEnabled(buildUuid));
+        IS_SUPERCONSOLE_ENABLED_MAPPER.commandIdToIsSuperConsoleEnabled(buildUuid));
   }
 
   @Value.Derived
@@ -201,10 +196,9 @@ abstract class AbstractErrorLogRecord {
   }
 
   /**
-   * We expect uploaded log records to contain a stack trace, but if they don't
-   * the logged message is important. To address the issue that these records
-   * often contain parametrized values, only first word (1 & 2 if first has 2 or
-   * less chars) of message is taken into account.
+   * We expect uploaded log records to contain a stack trace, but if they don't the logged message
+   * is important. To address the issue that these records often contain parametrized values, only
+   * first word (1 & 2 if first has 2 or less chars) of message is taken into account.
    */
   private String truncateMessage(String name) {
     String[] words = name.split("\\s+");

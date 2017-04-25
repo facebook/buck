@@ -23,12 +23,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Joiner;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -87,8 +85,7 @@ abstract class AbstractInvocationInfo {
 
   public String toLogLine() {
     return String.format(
-        LOG_MSG_TEMPLATE, getBuildId().toString(),
-        Joiner.on(", ").join(getCommandArgs()));
+        LOG_MSG_TEMPLATE, getBuildId().toString(), Joiner.on(", ").join(getCommandArgs()));
   }
 
   public Path getLogDirectoryPath() {
@@ -109,10 +106,8 @@ abstract class AbstractInvocationInfo {
 
   @Override
   public String toString() {
-    return String.format("buildId=[%s] subCommand=[%s] utcMillis=[%d]",
-        getBuildId().toString(),
-        getSubCommand(),
-        getTimestampMillis());
+    return String.format(
+        "buildId=[%s] subCommand=[%s] utcMillis=[%d]",
+        getBuildId().toString(), getSubCommand(), getTimestampMillis());
   }
-
 }

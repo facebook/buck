@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.Lists;
-
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-
 import javax.annotation.Nullable;
 
 public class GlobalStateManager {
@@ -49,8 +47,7 @@ public class GlobalStateManager {
   private final ConcurrentMap<Long, String> threadIdToCommandId;
 
   // Global state required by the ConsoleHandler.
-  private final ConcurrentMap<String, ConsoleHandlerState.Writer>
-      commandIdToConsoleHandlerWriter;
+  private final ConcurrentMap<String, ConsoleHandlerState.Writer> commandIdToConsoleHandlerWriter;
   private final ConcurrentMap<String, Level> commandIdToConsoleHandlerLevel;
 
   // Global state required by the LogFileHandler.
@@ -70,16 +67,17 @@ public class GlobalStateManager {
     this.commandIdToIsSuperconsoleEnabled = new ConcurrentHashMap<>();
     this.commandIdToIsDaemon = new ConcurrentHashMap<>();
 
-    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(
-        InvocationInfo.of(
-            new BuildId(),
-            false,
-            false,
-            "launch",
-            new String[0],
-            new String[0],
-            LogConfigSetup.DEFAULT_SETUP.getLogDir())
-            .getLogFilePath());
+    ReferenceCountedWriter defaultWriter =
+        rotateDefaultLogFileWriter(
+            InvocationInfo.of(
+                    new BuildId(),
+                    false,
+                    false,
+                    "launch",
+                    new String[0],
+                    new String[0],
+                    LogConfigSetup.DEFAULT_SETUP.getLogDir())
+                .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }
 
@@ -103,8 +101,7 @@ public class GlobalStateManager {
 
     // Setup the ConsoleHandler state.
     commandIdToConsoleHandlerWriter.put(
-        commandId,
-        ConsoleHandler.utf8OutputStreamWriter(consoleHandlerStream));
+        commandId, ConsoleHandler.utf8OutputStreamWriter(consoleHandlerStream));
     if (Verbosity.ALL.equals(consoleHandlerVerbosity)) {
       commandIdToConsoleHandlerLevel.put(commandId, Level.ALL);
     }
@@ -117,9 +114,7 @@ public class GlobalStateManager {
       Files.createDirectories(logDirectory);
     } catch (IOException e) {
       LOG.error(
-          e,
-          "Failed to created 'per command log directory': [%s]",
-          logDirectory.toAbsolutePath());
+          e, "Failed to created 'per command log directory': [%s]", logDirectory.toAbsolutePath());
     }
 
     return new LoggerIsMappedToThreadScope() {
@@ -138,8 +133,7 @@ public class GlobalStateManager {
 
         // Tear down the ConsoleHandler state.
         commandIdToConsoleHandlerWriter.put(
-            commandId,
-            ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
+            commandId, ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
         commandIdToConsoleHandlerLevel.remove(commandId);
         commandIdToIsSuperconsoleEnabled.remove(commandId);
         commandIdToIsDaemon.remove(commandId);
@@ -177,8 +171,7 @@ public class GlobalStateManager {
   }
 
   private void putReferenceCountedWriter(
-      String commandId,
-      @Nullable ReferenceCountedWriter newWriter) {
+      String commandId, @Nullable ReferenceCountedWriter newWriter) {
     try {
       java.io.Writer oldWriter;
       if (newWriter == null) {
@@ -260,8 +253,8 @@ public class GlobalStateManager {
   }
 
   /**
-   * Writers obtained by {@link LogFileHandlerState#getWriters} must not be closed!
-   * This class manages their lifetime.
+   * Writers obtained by {@link LogFileHandlerState#getWriters} must not be closed! This class
+   * manages their lifetime.
    */
   public LogFileHandlerState getLogFileHandlerState() {
     return new LogFileHandlerState() {
@@ -289,7 +282,7 @@ public class GlobalStateManager {
   /**
    * Since this is a Singleton class, make sure it cleans after itself once it's GC'ed.
    *
-   * @exception  IOException  if an I/O error occurs.
+   * @exception IOException if an I/O error occurs.
    */
   @Override
   protected void finalize() throws IOException {
