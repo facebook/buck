@@ -21,11 +21,9 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * The {@code buck autodeps} command does not generate deps for all programming languages; however,
@@ -33,8 +31,7 @@ import java.io.IOException;
  * consumed by Buck.
  */
 public class CustomAutodepsIntegrationTest {
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   /**
    * Tests a case where a set of {@code python_library()} and {@code python_binary()} rules specify
@@ -44,8 +41,8 @@ public class CustomAutodepsIntegrationTest {
    */
   @Test
   public void useCustomAutodepsForPythonRules() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "custom_autodeps", tmpFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "custom_autodeps", tmpFolder);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//:app");
@@ -55,5 +52,4 @@ public class CustomAutodepsIntegrationTest {
         "Hello!",
         result.getStdout().trim());
   }
-
 }
