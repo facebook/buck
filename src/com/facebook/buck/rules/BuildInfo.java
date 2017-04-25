@@ -80,9 +80,15 @@ public class BuildInfo {
     static final String MANIFEST_KEY = "MANIFEST_KEY";
 
     /**
-     * Key containing the ID of the build that originally built the rule.
+     * Key containing the ID of the current build.
+     */
+    static final String BUILD_ID = "BUILD_ID";
+
+    /**
+     * Key containing the ID of the build that previously built/cached this rule's outputs.
      */
     static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
+
   }
 
   /**

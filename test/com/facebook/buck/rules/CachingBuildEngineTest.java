@@ -433,6 +433,8 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       ImmutableMap<String, String> metadata =
           ImmutableMap.of(
+              BuildInfo.MetadataKey.BUILD_ID,
+              buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.RECORDED_PATHS,
@@ -514,6 +516,8 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       ImmutableMap<String, String> metadata =
           ImmutableMap.of(
+              BuildInfo.MetadataKey.BUILD_ID,
+              buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.RECORDED_PATHS,
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
@@ -1419,6 +1423,9 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(inputRuleKey)
+              .putMetadata(
+                  BuildInfo.MetadataKey.BUILD_ID,
+                  buildContext.getBuildId().toString())
               .putMetadata(
                   BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
                   buildContext.getBuildId().toString())
@@ -2587,6 +2594,9 @@ public class CachingBuildEngineTest {
           ArtifactInfo.builder()
               .addRuleKeys(depFileKey.getRuleKey())
               .putMetadata(
+                  BuildInfo.MetadataKey.BUILD_ID,
+                  buildContext.getBuildId().toString())
+              .putMetadata(
                   BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
                   buildContext.getBuildId().toString())
               .putMetadata(
@@ -3071,7 +3081,7 @@ public class CachingBuildEngineTest {
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine1 = cachingBuildEngineFactory().build();
-      BuildId buildId1 = new BuildId("id");
+      BuildId buildId1 = new BuildId("id1");
       BuildResult result1 =
           cachingBuildEngine1.build(
               buildContext.withBuildId(buildId1),
@@ -3083,7 +3093,7 @@ public class CachingBuildEngineTest {
 
       // Run the build and extract the event.
       CachingBuildEngine cachingBuildEngine2 = cachingBuildEngineFactory().build();
-      BuildId buildId2 = new BuildId("id");
+      BuildId buildId2 = new BuildId("id2");
       BuildResult result2 =
           cachingBuildEngine2.build(
               buildContext.withBuildId(buildId2),
@@ -3116,7 +3126,7 @@ public class CachingBuildEngineTest {
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine1 = cachingBuildEngineFactory().build();
-      BuildId buildId1 = new BuildId("id");
+      BuildId buildId1 = new BuildId("id1");
       BuildResult result1 =
           cachingBuildEngine1.build(
               buildContext.withBuildId(buildId1),
@@ -3130,7 +3140,7 @@ public class CachingBuildEngineTest {
 
       // Run the build and extract the event.
       CachingBuildEngine cachingBuildEngine2 = cachingBuildEngineFactory().build();
-      BuildId buildId2 = new BuildId("id");
+      BuildId buildId2 = new BuildId("id2");
       BuildResult result2 =
           cachingBuildEngine2.build(
               buildContext.withBuildId(buildId2),

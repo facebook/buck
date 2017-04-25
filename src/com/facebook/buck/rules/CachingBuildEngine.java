@@ -382,6 +382,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
   }
 
+  // Copy the fetched artifacts build ID to the current builds "origin" build ID.
+  private void fillInOriginFromCache(
+      CacheResult cacheResult,
+      BuildInfoRecorder buildInfoRecorder) {
+    buildInfoRecorder.addBuildMetadata(
+        BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+        Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
+  }
+
   private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
       final BuildRule rule,
       final BuildEngineBuildContext context,
@@ -547,10 +556,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                         rule.getProjectFilesystem(),
                         buildContext);
                 if (cacheResult.getType().isSuccess()) {
+                  fillInOriginFromCache(cacheResult, buildInfoRecorder);
                   fillMissingBuildMetadataFromCache(
                       cacheResult,
                       buildInfoRecorder,
-                      BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
                       BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE);
@@ -746,7 +755,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoStore)
             .addBuildMetadata(
                 BuildInfo.MetadataKey.RULE_KEY,
-                ruleKeyFactories.getDefaultRuleKeyFactory().build(rule).toString());
+                ruleKeyFactories.getDefaultRuleKeyFactory().build(rule).toString())
+            .addBuildMetadata(
+                BuildInfo.MetadataKey.BUILD_ID,
+                buildContext.getBuildId().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     final AtomicReference<Long> outputSize = Atomics.newReference();
 
@@ -919,7 +931,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             }
           }
 
-          // Make sure the origin field is fileld in.
+          // Make sure the origin field is filled in.
           BuildId buildId = buildContext.getBuildId();
           if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
             buildInfoRecorder.addBuildMetadata(
@@ -1900,10 +1912,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             context);
 
     if (cacheResult.getType().isSuccess()) {
+      fillInOriginFromCache(cacheResult, buildInfoRecorder);
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
-          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(
@@ -1963,10 +1975,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           context);
 
     if (cacheResult.getType().isSuccess()) {
+      fillInOriginFromCache(cacheResult, buildInfoRecorder);
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
-          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(
