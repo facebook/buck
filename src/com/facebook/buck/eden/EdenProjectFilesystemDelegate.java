@@ -25,7 +25,6 @@ import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;

@@ -26,7 +26,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -46,15 +45,15 @@ public class EdenMount {
   private final Path projectRoot;
 
   /**
-   * Relative path used to resolve paths under the {@link #projectRoot} in the context of the
-   * {@link #mountPoint}.
+   * Relative path used to resolve paths under the {@link #projectRoot} in the context of the {@link
+   * #mountPoint}.
    */
   private final Path prefix;
 
   /**
-   * Creates a new object for communicating with Eden that is bound to the specified
-   * (Eden mount point, Buck project root) pair. It must be the case that
-   * {@code projectRoot.startsWith(mountPoint)}.
+   * Creates a new object for communicating with Eden that is bound to the specified (Eden mount
+   * point, Buck project root) pair. It must be the case that {@code
+   * projectRoot.startsWith(mountPoint)}.
    */
   EdenMount(ThreadLocal<EdenService.Client> client, Path mountPoint, Path projectRoot) {
     Preconditions.checkArgument(
@@ -78,12 +77,10 @@ public class EdenMount {
     return prefix;
   }
 
-  /**
-   * @param entry is a path that is relative to {@link #getProjectRoot()}.
-   */
+  /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
   public Sha1HashCode getSha1(Path entry) throws EdenError, TException {
-    List<SHA1Result> results = client.get().getSHA1(mountPoint, ImmutableList.of(normalizePathArg(
-        entry)));
+    List<SHA1Result> results =
+        client.get().getSHA1(mountPoint, ImmutableList.of(normalizePathArg(entry)));
     SHA1Result result = Iterables.getOnlyElement(results);
     if (result.getSetField() == SHA1Result.SHA1) {
       return Sha1HashCode.fromBytes(result.getSha1());
@@ -100,14 +97,12 @@ public class EdenMount {
       throw new RuntimeException(e);
     }
 
-    return bindMounts.stream()
-        .map(Paths::get)
-        .collect(MoreCollectors.toImmutableList());
+    return bindMounts.stream().map(Paths::get).collect(MoreCollectors.toImmutableList());
   }
 
   /**
-   * Returns the path relative to {@link #getProjectRoot()} if {@code path} is contained by
-   * {@link #getProjectRoot()}; otherwise, returns {@link Optional#empty()}.
+   * Returns the path relative to {@link #getProjectRoot()} if {@code path} is contained by {@link
+   * #getProjectRoot()}; otherwise, returns {@link Optional#empty()}.
    */
   Optional<Path> getPathRelativeToProjectRoot(Path path) {
     if (path.isAbsolute()) {
