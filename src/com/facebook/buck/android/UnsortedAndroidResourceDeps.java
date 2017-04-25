@@ -20,7 +20,6 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
@@ -80,9 +79,17 @@ public class UnsortedAndroidResourceDeps {
             }
 
             // Only certain types of rules should be considered as part of this traversal.
-            ImmutableSet<BuildRule> depsToVisit = BuildRuleDependencyVisitors.maybeVisitAllDeps(
-                rule,
-                TRAVERSABLE_TYPES.contains(rule.getClass()));
+            // For JavaLibrary rules, we need to grab the deps directly from the rule and not from
+            // the BuildRuleParams object. BuildRuleParams may hold ABI rules which don't allow
+            // us to properly traverse and locate the transitive android resource deps
+            ImmutableSet<BuildRule> depsToVisit;
+            if (rule instanceof JavaLibrary) {
+              depsToVisit = ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries();
+            } else {
+              depsToVisit = TRAVERSABLE_TYPES.contains(rule.getClass()) ?
+                  rule.getBuildDeps() :
+                  ImmutableSet.of();
+            }
             if (callback.isPresent()) {
               callback.get().onRuleVisited(rule, depsToVisit);
             }

@@ -64,8 +64,4 @@ public class BuildRuleDependencyVisitors {
     visitor.start();
     return new DirectedAcyclicGraph<>(graph);
   }
-
-  public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {
-    return visitDeps ? rule.getBuildDeps() : ImmutableSet.of();
-  }
 }

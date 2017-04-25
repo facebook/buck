@@ -168,6 +168,16 @@ public class BuckBuildLog {
         logEntry.successType.get(), is(expectedType));
   }
 
+  public void assertNoLogEntry(String buildTargetRaw) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    if (buildLogEntries.containsKey(buildTarget)) {
+      fail(String.format(
+          "Was expecting no log entry for %s, but found: %s",
+          buildTargetRaw,
+          buildLogEntries.get(buildTarget)));
+    }
+  }
+
   public BuildLogEntry getLogEntry(String buildTargetRaw) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
     if (!buildLogEntries.containsKey(buildTarget)) {
