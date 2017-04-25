@@ -43,9 +43,7 @@ import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
-// This is open source software that we'd like to modify as little as
-// possible, and it doesn't match our coding style.
-@SuppressWarnings({"PMD", "checkstyle:leftcurly", "checkstyle:rightcurly", "checkstyle:linelength"})
+@SuppressWarnings("PMD")
 public class Logger
 {
     private final java.util.logging.Logger logger;

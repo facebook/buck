@@ -21,9 +21,6 @@
     -->
     <exclude name="TooManyStaticImports" />
 
-    <!--
-      Checkstyle covers this one; we don't need two messages.
-    -->
     <exclude name="UnusedImports" />
   </rule>
 

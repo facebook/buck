@@ -757,63 +757,6 @@
     </pmd>
   </target>
 
-  <path id="checkstyle-classpath">
-    <fileset dir="${basedir}/third-party/java/checkstyle" includes="*.jar" />
-  </path>
-
-  <!--
-  Runs checkstyle on the file(s) specified in the property "lint.files",
-  separated by commas.
-  -->
-  <target name="checkstyle-files-xml" if="lint.files">
-    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
-           classpathref="checkstyle-classpath"/>
-    <checkstyle config="checkstyle.xml">
-      <formatter type="xml" toFile="${lint.outputpath}" />
-      <fileset dir="${basedir}" includes="${lint.files}">
-        <exclude name="**/testdata/**"/>
-      </fileset>
-    </checkstyle>
-  </target>
-
-    <!--
-  Runs checkstyle on the file(s) specified in the property "lint.files",
-  separated by commas.
-  -->
-  <target name="checkstyle-xml">
-    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
-           classpathref="checkstyle-classpath"/>
-    <checkstyle config="checkstyle.xml">
-      <formatter type="xml" toFile="${lint.outputpath}" />
-      <fileset dir="${src.dir}">
-        <include name="**/*.java"/>
-      </fileset>
-      <fileset dir="${test.dir}">
-        <include name="**/*.java"/>
-        <exclude name="**/testdata/**"/>
-      </fileset>
-    </checkstyle>
-  </target>
-
-  <!--
-  Runs checkstyle on all source and test files.
-  -->
-  <target name="checkstyle">
-    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
-           classpathref="checkstyle-classpath"/>
-    <checkstyle config="checkstyle.xml" maxWarnings="0">
-      <fileset dir="${src.dir}">
-        <include name="**/*.java"/>
-        <exclude name="com/facebook/buck/intellij/ideabuck/gen/**"/>
-      </fileset>
-      <fileset dir="${test.dir}">
-        <include name="**/*.java"/>
-        <exclude name="**/testdata/**"/>
-      </fileset>
-      <formatter type="plain"/>
-    </checkstyle>
-  </target>
-
   <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpath="third-party/java/forbiddenapis/forbiddenapis-1.8.jar"/>
 
   <target name="forbidden-checks" depends="compile">
@@ -838,7 +781,7 @@
     </exec>
   </target>
 
-  <target name="lint" depends="pmd, checkstyle, missing-test-files-check" />
+  <target name="lint" depends="pmd, missing-test-files-check" />
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 

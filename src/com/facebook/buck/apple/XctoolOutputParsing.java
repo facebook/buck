@@ -46,9 +46,6 @@ class XctoolOutputParsing {
   // Utility class; do not instantiate.
   private XctoolOutputParsing() { }
 
-  // Checkstyle thinks any class named "*Exception" is an exception and
-  // must only have final fields..
-  @SuppressWarnings("checkstyle:mutableexception")
   public static class TestException {
     @Nullable
     public String filePathInProject = null;

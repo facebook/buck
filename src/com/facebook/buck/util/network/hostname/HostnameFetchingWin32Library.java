@@ -27,6 +27,5 @@ public interface HostnameFetchingWin32Library extends StdCallLibrary {
 
   int NAME_TYPE_DNS_HOSTNAME = 1;
 
-  @SuppressWarnings("checkstyle:methodname")
   boolean GetComputerNameEx(int nameType, char[] buffer, IntByReference bufferSize);
 }

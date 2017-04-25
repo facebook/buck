@@ -51,7 +51,6 @@ import java.util.logging.Logger; // NOPMD
  * 2) $PROJECT_ROOT/.bucklogging.properties
  * 3) $PROJECT_ROOT/.bucklogging.local.properties
  */
-@SuppressWarnings("checkstyle:hideutilityclassconstructor")
 public class LogConfig {
 
   private static final byte[] NEWLINE = {'\n'};
