@@ -31,24 +31,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public abstract class PythonBinary
-    extends AbstractBuildRule
+public abstract class PythonBinary extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
-  @AddToRuleKey
-  private final PythonPackageComponents components;
+  @AddToRuleKey private final PythonPackageComponents components;
   private final ImmutableSet<String> preloadLibraries;
-  @AddToRuleKey
-  private final String pexExtension;
-  @AddToRuleKey
-  private final boolean legacyOutputPath;
+  @AddToRuleKey private final String pexExtension;
+  @AddToRuleKey private final boolean legacyOutputPath;
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,

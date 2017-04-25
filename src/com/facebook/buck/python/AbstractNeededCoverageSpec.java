@@ -23,17 +23,17 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCoverageSpec> {
 
   public abstract float getNeededCoverageRatio();
+
   public abstract BuildTarget getBuildTarget();
+
   public abstract Optional<String> getPathName();
 
   @Override
@@ -47,10 +47,6 @@ abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCo
       return Optional.empty();
     }
     return Optional.of(
-        NeededCoverageSpec.of(
-            getNeededCoverageRatio(),
-            newBuildTarget.get(),
-            getPathName()));
+        NeededCoverageSpec.of(getNeededCoverageRatio(), newBuildTarget.get(), getPathName()));
   }
-
 }

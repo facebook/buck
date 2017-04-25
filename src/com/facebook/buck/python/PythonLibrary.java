@@ -24,16 +24,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
-
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRule implements PythonPackagable, HasRuntimeDeps {
 
   private final BuildRuleResolver resolver;
 
-  PythonLibrary(
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+  PythonLibrary(BuildRuleParams params, BuildRuleResolver resolver) {
     super(params);
     this.resolver = resolver;
   }
@@ -41,30 +38,28 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
   @Override
   @SuppressWarnings("unchecked")
   public Iterable<BuildRule> getPythonPackageDeps(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     return resolver
         .requireMetadata(
-            getBuildTarget().withAppendedFlavors(
-                PythonLibraryDescription.MetadataType.PACKAGE_DEPS.getFlavor(),
-                pythonPlatform.getFlavor(),
-                cxxPlatform.getFlavor()),
+            getBuildTarget()
+                .withAppendedFlavors(
+                    PythonLibraryDescription.MetadataType.PACKAGE_DEPS.getFlavor(),
+                    pythonPlatform.getFlavor(),
+                    cxxPlatform.getFlavor()),
             Iterable.class)
         .orElseThrow(IllegalStateException::new);
   }
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     return resolver
         .requireMetadata(
-            getBuildTarget().withAppendedFlavors(
-                PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
-                pythonPlatform.getFlavor(),
-                cxxPlatform.getFlavor()),
+            getBuildTarget()
+                .withAppendedFlavors(
+                    PythonLibraryDescription.MetadataType.PACKAGE_COMPONENTS.getFlavor(),
+                    pythonPlatform.getFlavor(),
+                    cxxPlatform.getFlavor()),
             PythonPackageComponents.class)
         .orElseThrow(IllegalStateException::new);
   }
@@ -73,5 +68,4 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
   public Stream<BuildTarget> getRuntimeDeps() {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
   }
-
 }

@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -55,16 +55,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class PythonBinaryDescription implements
-    Description<PythonBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<PythonBinaryDescription.Arg>,
-    VersionRoot<PythonBinaryDescription.Arg> {
+public class PythonBinaryDescription
+    implements Description<PythonBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<PythonBinaryDescription.Arg>,
+        VersionRoot<PythonBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
@@ -97,30 +96,27 @@ public class PythonBinaryDescription implements
   }
 
   public static SourcePath createEmptyInitModule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      BuildRuleParams params, BuildRuleResolver resolver) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(params.getBuildTarget());
     Path emptyInitPath =
         BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
-            "%s/__init__.py");
-    WriteFile rule = resolver.addToIndex(
-        new WriteFile(
-            params
-                .withBuildTarget(emptyInitTarget)
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
-            "",
-            emptyInitPath,
-            /* executable */ false));
+            params.getProjectFilesystem(), params.getBuildTarget(), "%s/__init__.py");
+    WriteFile rule =
+        resolver.addToIndex(
+            new WriteFile(
+                params
+                    .withBuildTarget(emptyInitTarget)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(ImmutableSortedSet.of()),
+                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                "",
+                emptyInitPath,
+                /* executable */ false));
     return rule.getSourcePathToOutput();
   }
 
   public static ImmutableMap<Path, SourcePath> addMissingInitModules(
-      ImmutableMap<Path, SourcePath> modules,
-      SourcePath emptyInit) {
+      ImmutableMap<Path, SourcePath> modules, SourcePath emptyInit) {
 
     Map<Path, SourcePath> initModules = Maps.newLinkedHashMap();
 
@@ -137,10 +133,7 @@ public class PythonBinaryDescription implements
       }
     }
 
-    return ImmutableMap.<Path, SourcePath>builder()
-        .putAll(modules)
-        .putAll(initModules)
-        .build();
+    return ImmutableMap.<Path, SourcePath>builder().putAll(modules).putAll(initModules).build();
   }
 
   private PythonInPlaceBinary createInPlaceBinaryRule(
@@ -158,8 +151,7 @@ public class PythonBinaryDescription implements
     if (cxxPlatform.getLd().resolve(resolver) instanceof WindowsLinker) {
       throw new HumanReadableException(
           "%s: cannot build in-place python binaries for Windows (%s)",
-          params.getBuildTarget(),
-          cxxPlatform.getFlavor());
+          params.getBuildTarget(), cxxPlatform.getFlavor());
     }
 
     // Add in any missing init modules into the python components.
@@ -212,7 +204,6 @@ public class PythonBinaryDescription implements
       ImmutableSet<String> preloadLibraries) {
 
     switch (packageStyle) {
-
       case INPLACE:
         return createInPlaceBinaryRule(
             params,
@@ -243,15 +234,13 @@ public class PythonBinaryDescription implements
 
       default:
         throw new IllegalStateException();
-
     }
-
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, Arg args) {
-    return cxxPlatforms.getValue(target)
-        .orElse(args.cxxPlatform.map(cxxPlatforms::getValue)
-            .orElse(defaultCxxPlatform));
+    return cxxPlatforms
+        .getValue(target)
+        .orElse(args.cxxPlatform.map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
   }
 
   @Override
@@ -260,11 +249,11 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
       throw new HumanReadableException(
-          "%s: must set exactly one of `main_module` and `main`",
-          params.getBuildTarget());
+          "%s: must set exactly one of `main_module` and `main`", params.getBuildTarget());
     }
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
@@ -287,38 +276,43 @@ public class PythonBinaryDescription implements
       mainModule = args.mainModule.get();
     }
     // Build up the list of all components going into the python binary.
-    PythonPackageComponents binaryPackageComponents = PythonPackageComponents.of(
-        modules.build(),
-        /* resources */ ImmutableMap.of(),
-        /* nativeLibraries */ ImmutableMap.of(),
-        /* prebuiltLibraries */ ImmutableSet.of(),
-        /* zipSafe */ args.zipSafe);
+    PythonPackageComponents binaryPackageComponents =
+        PythonPackageComponents.of(
+            modules.build(),
+            /* resources */ ImmutableMap.of(),
+            /* nativeLibraries */ ImmutableMap.of(),
+            /* prebuiltLibraries */ ImmutableSet.of(),
+            /* zipSafe */ args.zipSafe);
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
     PythonPlatform pythonPlatform =
-        pythonPlatforms.getValue(params.getBuildTarget()).orElse(
-            pythonPlatforms.getValue(
-                args.platform.<Flavor>map(InternalFlavor::of).orElse(
-                    pythonPlatforms.getFlavors().iterator().next())));
+        pythonPlatforms
+            .getValue(params.getBuildTarget())
+            .orElse(
+                pythonPlatforms.getValue(
+                    args.platform
+                        .<Flavor>map(InternalFlavor::of)
+                        .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             params,
             resolver,
             ruleFinder,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps).stream()
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps)
+                .stream()
                 .map(resolver::getRule)
                 .collect(MoreCollectors.toImmutableList()),
             binaryPackageComponents,
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            args.linkerFlags.stream()
-                .map(MacroArg.toMacroArgFunction(
-                    PythonUtil.MACRO_HANDLER,
-                    params.getBuildTarget(),
-                    cellRoots,
-                    resolver)::apply)
+            args.linkerFlags
+                .stream()
+                .map(
+                    MacroArg.toMacroArgFunction(
+                            PythonUtil.MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
+                        ::apply)
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.preloadDeps);
@@ -333,10 +327,7 @@ public class PythonBinaryDescription implements
         allPackageComponents,
         args.buildArgs,
         args.packageStyle.orElse(pythonBuckConfig.getPackageStyle()),
-        PythonUtil.getPreloadNames(
-            resolver,
-            cxxPlatform,
-            args.preloadDeps));
+        PythonUtil.getPreloadNames(resolver, cxxPlatform, args.preloadDeps));
   }
 
   @Override
@@ -350,8 +341,8 @@ public class PythonBinaryDescription implements
     // parse time deps.
     extraDepsBuilder.addAll(getCxxPlatform(buildTarget, constructorArg).getLd().getParseTimeDeps());
 
-    if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle()) ==
-        PythonBuckConfig.PackageStyle.STANDALONE) {
+    if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle())
+        == PythonBuckConfig.PackageStyle.STANDALONE) {
       extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexTarget()));
       extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexExecutorTarget()));
     }
@@ -378,7 +369,9 @@ public class PythonBinaryDescription implements
     public ImmutableSet<BuildTarget> preloadDeps = ImmutableSet.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
     public Optional<String> extension;
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
@@ -386,7 +379,5 @@ public class PythonBinaryDescription implements
     }
 
     public Optional<String> versionUniverse;
-
   }
-
 }

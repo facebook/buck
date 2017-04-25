@@ -24,11 +24,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.nio.file.Path;
 
-public abstract class CxxPythonExtension
-    extends NoopBuildRule
+public abstract class CxxPythonExtension extends NoopBuildRule
     implements PythonPackagable, HasRuntimeDeps {
 
   public CxxPythonExtension(BuildRuleParams params) {
@@ -36,19 +34,14 @@ public abstract class CxxPythonExtension
   }
 
   @VisibleForTesting
-  protected abstract BuildRule getExtension(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform)
+  protected abstract BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
 
   public abstract Path getModule();
 
   @Override
   public abstract PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException;
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) throws NoSuchBuildTargetException;
 
   public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
-
 }

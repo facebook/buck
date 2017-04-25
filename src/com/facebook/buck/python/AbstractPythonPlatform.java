@@ -20,32 +20,23 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractPythonPlatform extends FlavorConvertible {
 
-  /**
-   * @return the {@link Flavor} associated with this python platform.
-   */
+  /** @return the {@link Flavor} associated with this python platform. */
   @Value.Parameter
   @Override
   Flavor getFlavor();
 
-  /**
-   * @return the {@link PythonEnvironment} for this python platform.
-   */
+  /** @return the {@link PythonEnvironment} for this python platform. */
   @Value.Parameter
   PythonEnvironment getEnvironment();
 
-  /**
-   * @return the {@link BuildTarget} wrapping the C/C++ library used by C/C++ extensions.
-   */
+  /** @return the {@link BuildTarget} wrapping the C/C++ library used by C/C++ extensions. */
   @Value.Parameter
   Optional<BuildTarget> getCxxLibrary();
-
 }

@@ -57,7 +57,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -70,9 +69,7 @@ import java.util.Optional;
 public class PythonUtil {
 
   static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.of(
-              "location", new LocationMacroExpander()));
+      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private PythonUtil() {}
 
@@ -84,10 +81,14 @@ public class PythonUtil {
     return RichStream.<BuildTarget>empty()
         .concat(deps.stream())
         .concat(
-            platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
+            platformDeps
+                .getMatchingValues(pythonPlatform.getFlavor().toString())
+                .stream()
                 .flatMap(Collection::stream))
         .concat(
-            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
+            platformDeps
+                .getMatchingValues(cxxPlatform.getFlavor().toString())
+                .stream()
                 .flatMap(Collection::stream))
         .toImmutableList();
   }
@@ -113,11 +114,7 @@ public class PythonUtil {
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(
                 PythonUtil.toModuleMap(
-                    target,
-                    pathResolver,
-                    parameter,
-                    baseModule,
-                    ImmutableList.of(items)))
+                    target, pathResolver, parameter, baseModule, ImmutableList.of(items)))
             .putAll(
                 PythonUtil.toModuleMap(
                     target,
@@ -131,9 +128,9 @@ public class PythonUtil {
                     pathResolver,
                     "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
                     baseModule,
-                    versions.isPresent() && versionItems.isPresent() ?
-                        versionItems.get().getMatchingValues(versions.get()) :
-                        ImmutableList.of()))
+                    versions.isPresent() && versionItems.isPresent()
+                        ? versionItems.get().getMatchingValues(versions.get())
+                        : ImmutableList.of()))
             .build());
   }
 
@@ -150,17 +147,12 @@ public class PythonUtil {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =
-            resolver.getSourcePathNames(
-                target,
-                parameter,
-                input.getUnnamedSources().get());
+            resolver.getSourcePathNames(target, parameter, input.getUnnamedSources().get());
       } else {
         namesAndSourcePaths = input.getNamedSources().get();
       }
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
-        moduleNamesAndSourcePaths.put(
-            baseModule.resolve(entry.getKey()),
-            entry.getValue());
+        moduleNamesAndSourcePaths.put(baseModule.resolve(entry.getKey()), entry.getValue());
       }
     }
 
@@ -171,10 +163,7 @@ public class PythonUtil {
   static String toModuleName(BuildTarget target, String name) {
     int ext = name.lastIndexOf('.');
     if (ext == -1) {
-      throw new HumanReadableException(
-          "%s: missing extension for module path: %s",
-          target,
-          name);
+      throw new HumanReadableException("%s: missing extension for module path: %s", target, name);
     }
     name = name.substring(0, ext);
     return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
@@ -210,6 +199,7 @@ public class PythonUtil {
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
         Iterables.concat(deps, ruleResolver.getAllRules(preloadDeps))) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
+
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         Iterable<BuildRule> deps = empty;
@@ -285,18 +275,14 @@ public class PythonUtil {
                   params.getBuildTarget(),
                   root.getKey());
           allComponents.addNativeLibraries(
-              Paths.get(soname),
-              root.getValue().getPath(),
-              root.getKey());
+              Paths.get(soname), root.getValue().getPath(), root.getKey());
         }
       }
 
       // Add all remaining libraries as native libraries.
       for (OmnibusLibrary library : libraries.getLibraries()) {
         allComponents.addNativeLibraries(
-            Paths.get(library.getSoname()),
-            library.getPath(),
-            params.getBuildTarget());
+            Paths.get(library.getSoname()), library.getPath(), params.getBuildTarget());
       }
     } else {
 
@@ -308,7 +294,9 @@ public class PythonUtil {
             entry.getValue().getBuildTarget());
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
-                entry.getValue().getNativeLinkTarget(pythonPlatform)
+                entry
+                    .getValue()
+                    .getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform),
                 NativeLinkable::getBuildTarget));
       }
@@ -320,19 +308,16 @@ public class PythonUtil {
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
         NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget()) ||
-            linkage != NativeLinkable.Linkage.STATIC) {
+        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
+            || linkage != NativeLinkable.Linkage.STATIC) {
           ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
           for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
             allComponents.addNativeLibraries(
-                Paths.get(ent.getKey()),
-                ent.getValue(),
-                nativeLinkable.getBuildTarget());
+                Paths.get(ent.getKey()), ent.getValue(), nativeLinkable.getBuildTarget());
           }
         }
       }
     }
-
 
     return allComponents.build();
   }
@@ -344,18 +329,15 @@ public class PythonUtil {
   }
 
   static ImmutableSet<String> getPreloadNames(
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      Iterable<BuildTarget> preloadDeps)
+      BuildRuleResolver resolver, CxxPlatform cxxPlatform, Iterable<BuildTarget> preloadDeps)
       throws NoSuchBuildTargetException {
     ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
     for (NativeLinkable nativeLinkable :
-         FluentIterable.from(preloadDeps)
-             .transform(resolver::getRule)
-             .filter(NativeLinkable.class)) {
+        FluentIterable.from(preloadDeps)
+            .transform(resolver::getRule)
+            .filter(NativeLinkable.class)) {
       builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform).keySet());
     }
     return builder.build();
   }
-
 }

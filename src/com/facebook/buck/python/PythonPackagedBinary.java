@@ -42,7 +42,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -51,17 +50,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final Tool builder;
-  @AddToRuleKey
-  private final ImmutableList<String> buildArgs;
+  @AddToRuleKey private final Tool builder;
+  @AddToRuleKey private final ImmutableList<String> buildArgs;
   private final Tool pathToPexExecuter;
-  @AddToRuleKey
-  private final String mainModule;
-  @AddToRuleKey
-  private final PythonEnvironment pythonEnvironment;
-  @AddToRuleKey
-  private final ImmutableSet<String> preloadLibraries;
+  @AddToRuleKey private final String mainModule;
+  @AddToRuleKey private final PythonEnvironment pythonEnvironment;
+  @AddToRuleKey private final ImmutableSet<String> preloadLibraries;
   private final boolean cache;
 
   private PythonPackagedBinary(
@@ -149,8 +143,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
@@ -161,10 +154,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(RmStep.of(getProjectFilesystem(), binPath).withRecursive(true));
 
-    Path workingDirectory = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__%s__working_directory");
+    Path workingDirectory =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), getBuildTarget(), "__%s__working_directory");
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
@@ -208,5 +200,4 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   public boolean isCacheable() {
     return cache;
   }
-
 }

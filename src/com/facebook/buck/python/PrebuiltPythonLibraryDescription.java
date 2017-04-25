@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class PrebuiltPythonLibraryDescription
     implements Description<PrebuiltPythonLibraryDescription.Arg> {
 
@@ -43,9 +42,7 @@ public class PrebuiltPythonLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args) {
-    return new PrebuiltPythonLibrary(
-        params,
-        args.binarySrc);
+    return new PrebuiltPythonLibrary(params, args.binarySrc);
   }
 
   @SuppressFieldNotInitialized
@@ -53,5 +50,4 @@ public class PrebuiltPythonLibraryDescription
     public SourcePath binarySrc;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
-
 }
