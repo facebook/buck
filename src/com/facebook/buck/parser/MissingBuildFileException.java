@@ -17,23 +17,17 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTargetException;
-
 import java.nio.file.Path;
 
 @SuppressWarnings("serial")
 public class MissingBuildFileException extends BuildTargetException {
 
   public MissingBuildFileException(TargetNodeSpec spec, Path buildFile) {
-    super(
-        String.format(
-            "No build file at %s when resolving target %s.",
-            buildFile,
-            spec));
+    super(String.format("No build file at %s when resolving target %s.", buildFile, spec));
   }
 
   @Override
   public String getHumanReadableErrorMessage() {
     return getMessage();
   }
-
 }

@@ -22,13 +22,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-
 import java.nio.file.Path;
 import java.util.Map;
 
-/**
- * Creates {@link TargetNode} instances for the parser.
- */
+/** Creates {@link TargetNode} instances for the parser. */
 public interface ParserTargetNodeFactory<T> {
   T createTargetNode(
       Cell cell,
@@ -36,5 +33,4 @@ public interface ParserTargetNodeFactory<T> {
       BuildTarget target,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
-
 }

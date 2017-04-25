@@ -26,7 +26,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -35,9 +34,7 @@ import java.util.Set;
 
 public class BuildTargetParser {
 
-  /**
-   * The BuildTargetParser is stateless, so this single instance can be shared.
-   */
+  /** The BuildTargetParser is stateless, so this single instance can be shared. */
   public static final BuildTargetParser INSTANCE = new BuildTargetParser();
 
   private static final String BUILD_RULE_PREFIX = "//";
@@ -54,13 +51,12 @@ public class BuildTargetParser {
   }
 
   /**
-   * @param buildTargetName either a fully-qualified name or relative to the {@link BuildTargetPatternParser}.
-   *     For example, inside {@code first-party/orca/orcaapp/BUCK}, which can be obtained by
-   *     calling {@code ParseContext.forBaseName("first-party/orca/orcaapp")},
+   * @param buildTargetName either a fully-qualified name or relative to the {@link
+   *     BuildTargetPatternParser}. For example, inside {@code first-party/orca/orcaapp/BUCK}, which
+   *     can be obtained by calling {@code ParseContext.forBaseName("first-party/orca/orcaapp")},
    *     {@code //first-party/orca/orcaapp:assets} and {@code :assets} refer to the same target.
-   *     However, from the command line the context is obtained by calling
-   *     {@link BuildTargetPatternParser#fullyQualified()} and relative names are
-   *     not recognized.
+   *     However, from the command line the context is obtained by calling {@link
+   *     BuildTargetPatternParser#fullyQualified()} and relative names are not recognized.
    * @param buildTargetPatternParser how targets should be interpreted, such in the context of a
    *     specific build file or only as fully-qualified names (as is the case for targets from the
    *     command line).
@@ -70,16 +66,16 @@ public class BuildTargetParser {
       BuildTargetPatternParser<?> buildTargetPatternParser,
       CellPathResolver cellNames) {
 
-    if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) &&
-        !buildTargetPatternParser.isWildCardAllowed()) {
+    if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR)
+        && !buildTargetPatternParser.isWildCardAllowed()) {
       throw new BuildTargetParseException(
           String.format("%s cannot end with a colon", buildTargetName));
     }
 
     Optional<String> givenCellName = Optional.empty();
     String targetAfterCell = buildTargetName;
-    if (buildTargetName.contains(BUILD_RULE_PREFIX) &&
-        !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {
+    if (buildTargetName.contains(BUILD_RULE_PREFIX)
+        && !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
       givenCellName = Optional.of(buildTargetName.substring(0, slashIndex));
       targetAfterCell = buildTargetName.substring(slashIndex);
@@ -91,8 +87,9 @@ public class BuildTargetParser {
 
     List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterCell);
     if (parts.size() != 2) {
-      throw new BuildTargetParseException(String.format(
-          "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
+      throw new BuildTargetParseException(
+          String.format(
+              "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
     }
 
     String baseName =
@@ -138,34 +135,27 @@ public class BuildTargetParser {
     }
     if (!baseName.startsWith(BUILD_RULE_PREFIX)) {
       throw new BuildTargetParseException(
-          String.format(
-              "Path in %s must start with %s",
-              buildTargetName,
-              BUILD_RULE_PREFIX));
+          String.format("Path in %s must start with %s", buildTargetName, BUILD_RULE_PREFIX));
     }
     String baseNamePath = baseName.substring(BUILD_RULE_PREFIX.length());
     if (baseNamePath.startsWith("/")) {
       throw new BuildTargetParseException(
           String.format(
-              "Build target path should start with an optional cell name, then // and then a " +
-              "relative directory name, not an absolute directory path (found %s)",
-              buildTargetName
-          ));
+              "Build target path should start with an optional cell name, then // and then a "
+                  + "relative directory name, not an absolute directory path (found %s)",
+              buildTargetName));
     }
     for (String baseNamePart : Splitter.on('/').split(baseNamePath)) {
       if ("".equals(baseNamePart)) {
         throw new BuildTargetParseException(
             String.format(
-                "Build target path cannot contain // other than at the start " +
-                "(or after a cell name) (found %s)",
-                buildTargetName
-            ));
+                "Build target path cannot contain // other than at the start "
+                    + "(or after a cell name) (found %s)",
+                buildTargetName));
       }
       if (INVALID_BASE_NAME_PARTS.contains(baseNamePart)) {
         throw new BuildTargetParseException(
-            String.format(
-                "Build target path cannot contain . or .. (found %s)",
-                buildTargetName));
+            String.format("Build target path cannot contain . or .. (found %s)", buildTargetName));
       }
     }
   }

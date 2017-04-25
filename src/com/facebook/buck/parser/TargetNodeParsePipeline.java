@@ -29,27 +29,23 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * This implements a multithreaded pipeline for parsing BUCK files.
  *
+ * <p>The high-level flow looks like this: (in) BuildTarget -> [getRawNodes] -*> [createTargetNode]
+ * -> (out) TargetNode (steps in [] have their output cached, -*> means that this step has parallel
+ * fanout).
  *
- * The high-level flow looks like this:
- *   (in) BuildTarget -> [getRawNodes] -*> [createTargetNode] -> (out) TargetNode
- * (steps in [] have their output cached, -*> means that this step has parallel fanout).
- *
- * The work is simply dumped onto the executor, the {@link ProjectBuildFileParserPool} is used to
- * constrain the number of concurrent active parsers.
- * Within a single pipeline instance work is not duplicated (the **JobsCache variables) are used
- * to make sure we don't schedule the same work more than once), however it's possible for multiple
- * read-only commands to duplicate work.
+ * <p>The work is simply dumped onto the executor, the {@link ProjectBuildFileParserPool} is used to
+ * constrain the number of concurrent active parsers. Within a single pipeline instance work is not
+ * duplicated (the **JobsCache variables) are used to make sure we don't schedule the same work more
+ * than once), however it's possible for multiple read-only commands to duplicate work.
  */
 @ThreadSafe
 public class TargetNodeParsePipeline
@@ -65,7 +61,8 @@ public class TargetNodeParsePipeline
 
   /**
    * Create new pipeline for parsing Buck files.
-   *  @param cache where to persist results.
+   *
+   * @param cache where to persist results.
    * @param targetNodeDelegate where to farm out the creation of TargetNodes to
    * @param executorService executor
    * @param eventBus bus to use for parse start/stop events
@@ -91,55 +88,52 @@ public class TargetNodeParsePipeline
 
   @Override
   protected BuildTarget getBuildTarget(
-      Path root,
-      Optional<String> cellName,
-      Path buildFile,
-      Map<String, Object> from) {
+      Path root, Optional<String> cellName, Path buildFile, Map<String, Object> from) {
     return BuildTarget.of(
         RawNodeParsePipeline.parseBuildTargetFromRawRule(root, cellName, from, buildFile));
   }
 
   @Override
   protected TargetNode<?, ?> computeNode(
-      final Cell cell,
-      final BuildTarget buildTarget,
-      final Map<String, Object> rawNode) throws BuildTargetException {
-    try (final SimplePerfEvent.Scope scope = SimplePerfEvent.scopeIgnoringShortEvents(
-        eventBus,
-        PerfEventId.of("GetTargetNode"),
-        "target", buildTarget,
-        targetNodePipelineLifetimeEventScope,
-        getMinimumPerfEventTimeMs(),
-        TimeUnit.MILLISECONDS)) {
+      final Cell cell, final BuildTarget buildTarget, final Map<String, Object> rawNode)
+      throws BuildTargetException {
+    try (final SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scopeIgnoringShortEvents(
+            eventBus,
+            PerfEventId.of("GetTargetNode"),
+            "target",
+            buildTarget,
+            targetNodePipelineLifetimeEventScope,
+            getMinimumPerfEventTimeMs(),
+            TimeUnit.MILLISECONDS)) {
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScopeFunction =
-          perfEventId -> SimplePerfEvent.scopeIgnoringShortEvents(
-              eventBus,
-              perfEventId,
-              scope,
-              getMinimumPerfEventTimeMs(),
-              TimeUnit.MILLISECONDS);
-      final TargetNode<?, ?> targetNode = delegate.createTargetNode(
-          cell,
-          cell.getAbsolutePathToBuildFile(buildTarget),
-          buildTarget,
-          rawNode,
-          perfEventScopeFunction);
+          perfEventId ->
+              SimplePerfEvent.scopeIgnoringShortEvents(
+                  eventBus, perfEventId, scope, getMinimumPerfEventTimeMs(), TimeUnit.MILLISECONDS);
+      final TargetNode<?, ?> targetNode =
+          delegate.createTargetNode(
+              cell,
+              cell.getAbsolutePathToBuildFile(buildTarget),
+              buildTarget,
+              rawNode,
+              perfEventScopeFunction);
 
       if (speculativeDepsTraversal) {
-        executorService.submit(() -> {
-          for (BuildTarget depTarget : targetNode.getParseDeps()) {
-            Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
-            try {
-              if (depTarget.isFlavored()) {
-                getNodeJob(depCell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+        executorService.submit(
+            () -> {
+              for (BuildTarget depTarget : targetNode.getParseDeps()) {
+                Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
+                try {
+                  if (depTarget.isFlavored()) {
+                    getNodeJob(depCell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+                  }
+                  getNodeJob(depCell, depTarget);
+                } catch (BuildTargetException e) {
+                  // No biggie, we'll hit the error again in the non-speculative path.
+                  LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
+                }
               }
-              getNodeJob(depCell, depTarget);
-            } catch (BuildTargetException e) {
-              // No biggie, we'll hit the error again in the non-speculative path.
-              LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
-            }
-          }
-        });
+            });
       }
 
       return targetNode;
@@ -148,15 +142,13 @@ public class TargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<Map<String, Object>>> getItemsToConvert(
-      Cell cell,
-      Path buildFile) throws BuildTargetException {
+      Cell cell, Path buildFile) throws BuildTargetException {
     return rawNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell,
-      BuildTarget buildTarget) throws BuildTargetException {
+      Cell cell, BuildTarget buildTarget) throws BuildTargetException {
     return rawNodeParsePipeline.getNodeJob(cell, buildTarget);
   }
 

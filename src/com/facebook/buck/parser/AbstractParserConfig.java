@@ -25,12 +25,9 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
+import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
@@ -69,9 +66,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     ;
   }
 
-  /**
-   * Controls whether default flavors should be applied to unflavored targets.
-   */
+  /** Controls whether default flavors should be applied to unflavored targets. */
   public enum ApplyDefaultFlavorsMode {
     ENABLED,
     DISABLED
@@ -80,8 +75,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getAllowEmptyGlobs() {
     return getDelegate()
-        .getValue("build", "allow_empty_globs").map(Boolean::parseBoolean).orElse(
-            DEFAULT_ALLOW_EMPTY_GLOBS);
+        .getValue("build", "allow_empty_globs")
+        .map(Boolean::parseBoolean)
+        .orElse(DEFAULT_ALLOW_EMPTY_GLOBS);
   }
 
   @Value.Lazy
@@ -106,12 +102,11 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("project", "check_package_boundary", true);
   }
 
-  /**
-   * A list of absolute paths under which buck package boundary checks should not be performed.
-   */
+  /** A list of absolute paths under which buck package boundary checks should not be performed. */
   @Value.Lazy
   public ImmutableList<Path> getBuckPackageBoundaryExceptions() {
-    return getDelegate().getOptionalPathList("project", "package_boundary_exceptions")
+    return getDelegate()
+        .getOptionalPathList("project", "package_boundary_exceptions")
         .orElse(ImmutableList.of());
   }
 
@@ -122,30 +117,29 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public AllowSymlinks getAllowSymlinks() {
-    return getDelegate().getEnum("project", "allow_symlinks", AllowSymlinks.class).orElse(
-        AllowSymlinks.WARN);
+    return getDelegate()
+        .getEnum("project", "allow_symlinks", AllowSymlinks.class)
+        .orElse(AllowSymlinks.WARN);
   }
 
   @Value.Lazy
   public Optional<BuildFileSearchMethod> getBuildFileSearchMethod() {
-    return
-        getDelegate().getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
+    return getDelegate()
+        .getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
   }
 
   @Value.Lazy
   public GlobHandler getGlobHandler() {
-    return
-        getDelegate().getEnum(
-            "project",
-            "glob_handler",
-            GlobHandler.class).orElse(GlobHandler.PYTHON);
+    return getDelegate()
+        .getEnum("project", "glob_handler", GlobHandler.class)
+        .orElse(GlobHandler.PYTHON);
   }
 
   @Value.Lazy
   public WatchmanGlobSanityCheck getWatchmanGlobSanityCheck() {
     return getDelegate()
-        .getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class).orElse(
-            WatchmanGlobSanityCheck.STAT);
+        .getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class)
+        .orElse(WatchmanGlobSanityCheck.STAT);
   }
 
   @Value.Lazy
@@ -161,8 +155,8 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public WatchmanWatcher.CursorType getWatchmanCursor() {
     return getDelegate()
-      .getEnum("project", "watchman_cursor", WatchmanWatcher.CursorType.class)
-      .orElse(WatchmanWatcher.CursorType.CLOCK_ID);
+        .getEnum("project", "watchman_cursor", WatchmanWatcher.CursorType.class)
+        .orElse(WatchmanWatcher.CursorType.CLOCK_ID);
   }
 
   @Value.Lazy
@@ -176,19 +170,20 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
       return 1;
     }
 
-    int value = getDelegate()
-        .getLong("project", "parsing_threads").orElse(NUM_PARSING_THREADS_DEFAULT)
-        .intValue();
+    int value =
+        getDelegate()
+            .getLong("project", "parsing_threads")
+            .orElse(NUM_PARSING_THREADS_DEFAULT)
+            .intValue();
 
     return Math.min(value, getDelegate().getNumThreads());
   }
 
   @Value.Lazy
   public ApplyDefaultFlavorsMode getDefaultFlavorsMode() {
-    return getDelegate().getEnum(
-        "project",
-        "default_flavors_mode",
-        ApplyDefaultFlavorsMode.class).orElse(ApplyDefaultFlavorsMode.ENABLED);
+    return getDelegate()
+        .getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
+        .orElse(ApplyDefaultFlavorsMode.ENABLED);
   }
 
   @Value.Lazy
@@ -197,11 +192,10 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Returns the path to python interpreter. If python is specified in the
-   * 'python_interpreter' key of the 'parser' section that is used and an
-   * error reported if invalid.
+   * Returns the path to python interpreter. If python is specified in the 'python_interpreter' key
+   * of the 'parser' section that is used and an error reported if invalid.
    *
-   * If none has been specified, consult the PythonBuckConfig for an interpreter.
+   * <p>If none has been specified, consult the PythonBuckConfig for an interpreter.
    *
    * @return The found python interpreter.
    */
@@ -218,16 +212,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public String getPythonInterpreter(ExecutableFinder exeFinder) {
-    Optional<String> configPath = getDelegate().getValue(
-        "parser",
-        "python_interpreter"
-    );
+    Optional<String> configPath = getDelegate().getValue("parser", "python_interpreter");
     return getPythonInterpreter(configPath, exeFinder);
   }
 
   /**
-   * Returns the module search path PYTHONPATH to set for the parser, as
-   * specified by the 'python_path' key of the 'parser' section.
+   * Returns the module search path PYTHONPATH to set for the parser, as specified by the
+   * 'python_path' key of the 'parser' section.
    *
    * @return The PYTHONPATH value or an empty string if not set.
    */
@@ -235,5 +226,4 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public Optional<String> getPythonModuleSearchPath() {
     return getDelegate().getValue("parser", "python_path");
   }
-
 }

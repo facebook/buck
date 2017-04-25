@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-
 import java.io.IOException;
 import java.nio.file.Path;
 

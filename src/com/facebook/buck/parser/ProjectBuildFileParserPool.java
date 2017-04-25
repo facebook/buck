@@ -24,25 +24,25 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Allows multiple concurrently executing futures to share a constrained number of parsers.
  *
- * Parser instances are lazily created up till a fixed maximum. If more than max parser are
- * requested the associated 'requests' are queued up. As soon as a parser is returned it will
- * be used to satisfy the first pending request, otherwise it is "parked".
+ * <p>Parser instances are lazily created up till a fixed maximum. If more than max parser are
+ * requested the associated 'requests' are queued up. As soon as a parser is returned it will be
+ * used to satisfy the first pending request, otherwise it is "parked".
  */
 class ProjectBuildFileParserPool implements AutoCloseable {
   private final int maxParsersPerCell;
+
   @GuardedBy("this")
   private final Map<Cell, ResourcePool<ProjectBuildFileParser>> parserResourcePools;
+
   private final Function<Cell, ProjectBuildFileParser> parserFactory;
   private final AtomicBoolean closing;
 
@@ -51,8 +51,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @param parserFactory function used to create a new parser.
    */
   public ProjectBuildFileParserPool(
-      int maxParsersPerCell,
-      Function<Cell, ProjectBuildFileParser> parserFactory) {
+      int maxParsersPerCell, Function<Cell, ProjectBuildFileParser> parserFactory) {
     Preconditions.checkArgument(maxParsersPerCell > 0);
 
     this.maxParsersPerCell = maxParsersPerCell;
@@ -66,28 +65,28 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @param buildFile the file to parse
    * @param executorService where to perform the parsing.
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
-   *         cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
+   *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
-      final Cell cell,
-      final Path buildFile,
-      final ListeningExecutorService executorService) {
+      final Cell cell, final Path buildFile, final ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    return getResourcePoolForCell(cell).scheduleOperationWithResource(
-        parser -> ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile)),
-        executorService);
+    return getResourcePoolForCell(cell)
+        .scheduleOperationWithResource(
+            parser -> ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile)),
+            executorService);
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(Cell cell) {
     ResourcePool<ProjectBuildFileParser> pool = parserResourcePools.get(cell);
     if (pool == null) {
-      pool = new ResourcePool<>(
-          maxParsersPerCell,
-          // If the Python process garbles the output stream then the bser codec doesn't always
-          // recover and subsequent attempts at invoking the parser will fail.
-          ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-          () -> parserFactory.apply(cell));
+      pool =
+          new ResourcePool<>(
+              maxParsersPerCell,
+              // If the Python process garbles the output stream then the bser codec doesn't always
+              // recover and subsequent attempts at invoking the parser will fail.
+              ResourcePool.ResourceUsageErrorPolicy.RETIRE,
+              () -> parserFactory.apply(cell));
       parserResourcePools.put(cell, pool);
     }
     return pool;

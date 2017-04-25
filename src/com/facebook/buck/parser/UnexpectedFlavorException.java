@@ -24,7 +24,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -32,32 +31,37 @@ public class UnexpectedFlavorException extends HumanReadableException {
 
   private static final ImmutableSet<PatternAndMessage> suggestedMessagesForFlavors =
       ImmutableSet.of(
-          PatternAndMessage.of(Pattern.compile("android-*"),
-              "Make sure you have the Android SDK/NDK installed and set up. See " +
-                  "https://buckbuild.com/setup/install.html#locate-android-sdk"),
-          PatternAndMessage.of(Pattern.compile("macosx*"),
+          PatternAndMessage.of(
+              Pattern.compile("android-*"),
+              "Make sure you have the Android SDK/NDK installed and set up. See "
+                  + "https://buckbuild.com/setup/install.html#locate-android-sdk"),
+          PatternAndMessage.of(
+              Pattern.compile("macosx*"),
               "Make sure you have the Mac OSX SDK installed and set up."),
-          PatternAndMessage.of(Pattern.compile("iphoneos*"),
+          PatternAndMessage.of(
+              Pattern.compile("iphoneos*"),
               "Make sure you have the iPhone SDK installed and set up."),
-          PatternAndMessage.of(Pattern.compile("iphonesimulator*"),
+          PatternAndMessage.of(
+              Pattern.compile("iphonesimulator*"),
               "Make sure you have the iPhone Simulator installed and set up."),
-          PatternAndMessage.of(Pattern.compile("watchos*"),
+          PatternAndMessage.of(
+              Pattern.compile("watchos*"),
               "Make sure you have the Apple Watch SDK installed and set up."),
-          PatternAndMessage.of(Pattern.compile("watchsimulator*"),
+          PatternAndMessage.of(
+              Pattern.compile("watchsimulator*"),
               "Make sure you have the Watch Simulator installed and set up."),
-          PatternAndMessage.of(Pattern.compile("appletvos*"),
+          PatternAndMessage.of(
+              Pattern.compile("appletvos*"),
               "Make sure you have the Apple TV SDK installed and set up."),
-          PatternAndMessage.of(Pattern.compile("appletvsimulator*"),
-              "Make sure you have the Apple TV Simulator installed and set up.")
-      );
+          PatternAndMessage.of(
+              Pattern.compile("appletvsimulator*"),
+              "Make sure you have the Apple TV Simulator installed and set up."));
 
   private UnexpectedFlavorException(String message) {
     super(message);
   }
 
-  public static UnexpectedFlavorException createWithSuggestions(
-      Cell cell,
-      BuildTarget target) {
+  public static UnexpectedFlavorException createWithSuggestions(Cell cell, BuildTarget target) {
     // Get the specific message
     String exceptionMessage = createDefaultMessage(cell, target);
     // Get some suggestions on how to solve it.
@@ -75,7 +79,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
           }
         }
       }
-      if (!foundInConfig){
+      if (!foundInConfig) {
         for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
           if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
             suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
@@ -85,16 +89,20 @@ public class UnexpectedFlavorException extends HumanReadableException {
     }
 
     if (!suggestions.isEmpty()) {
-      exceptionMessage += "\nHere are some things you can try to get the following " +
-          "flavors to work::\n" + suggestions;
+      exceptionMessage +=
+          "\nHere are some things you can try to get the following "
+              + "flavors to work::\n"
+              + suggestions;
     }
 
     return new UnexpectedFlavorException(exceptionMessage);
   }
 
   private static String createDefaultMessage(Cell cell, BuildTarget target) {
-    return "Unrecognized flavor in target " + target + " while parsing " +
-        UnflavoredBuildTarget.BUILD_TARGET_PREFIX +
-        MorePaths.pathWithUnixSeparators(target.getBasePath().resolve(cell.getBuildFileName()));
+    return "Unrecognized flavor in target "
+        + target
+        + " while parsing "
+        + UnflavoredBuildTarget.BUILD_TARGET_PREFIX
+        + MorePaths.pathWithUnixSeparators(target.getBasePath().resolve(cell.getBuildFileName()));
   }
 }

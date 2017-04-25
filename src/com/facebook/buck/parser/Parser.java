@@ -32,11 +32,11 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -57,7 +57,6 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -70,13 +69,12 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nullable;
 
 /**
- * High-level build file parsing machinery. Primarily responsible for producing a
- * {@link TargetGraph} based on a set of targets. Caches build rules to minimise the number of calls
- * to python and processes filesystem WatchEvents to invalidate the cache as files change.
+ * High-level build file parsing machinery. Primarily responsible for producing a {@link
+ * TargetGraph} based on a set of targets. Caches build rules to minimise the number of calls to
+ * python and processes filesystem WatchEvents to invalidate the cache as files change.
  */
 public class Parser {
 
@@ -92,10 +90,9 @@ public class Parser {
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller) {
     this.typeCoercerFactory = typeCoercerFactory;
-    this.permState = new DaemonicParserState(
-        broadcastEventListener,
-        typeCoercerFactory,
-        parserConfig.getNumParsingThreads());
+    this.permState =
+        new DaemonicParserState(
+            broadcastEventListener, typeCoercerFactory, parserConfig.getNumParsingThreads());
     this.marshaller = marshaller;
   }
 
@@ -113,9 +110,7 @@ public class Parser {
 
   @VisibleForTesting
   static ImmutableSet<Map<String, Object>> getRawTargetNodes(
-      PerBuildState state,
-      Cell cell,
-      Path buildFile) throws BuildFileParseException {
+      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return state.getAllRawNodes(cell, buildFile);
@@ -126,7 +121,8 @@ public class Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      Path buildFile) throws BuildFileParseException {
+      Path buildFile)
+      throws BuildFileParseException {
     Preconditions.checkState(
         buildFile.isAbsolute(),
         "Build file should be referred to using an absolute path: %s",
@@ -137,14 +133,15 @@ public class Parser {
         cell.getRoot(),
         buildFile);
 
-    try (PerBuildState state = new PerBuildState(
-        this,
-        eventBus,
-        executor,
-        cell,
-        enableProfiling,
-        SpeculativeParsing.of(true),
-        /* ignoreBuckAutodepsFiles */ false)) {
+    try (PerBuildState state =
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            SpeculativeParsing.of(true),
+            /* ignoreBuckAutodepsFiles */ false)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -156,32 +153,28 @@ public class Parser {
       ListeningExecutorService executor,
       BuildTarget target)
       throws BuildFileParseException, BuildTargetException {
-    try (
-        PerBuildState state =
-            new PerBuildState(
-                this,
-                eventBus,
-                executor,
-                cell,
-                enableProfiling,
-                SpeculativeParsing.of(false),
-                /* ignoreBuckAutodepsFiles */ false)) {
+    try (PerBuildState state =
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            SpeculativeParsing.of(false),
+            /* ignoreBuckAutodepsFiles */ false)) {
       return state.getTargetNode(target);
     }
   }
 
   @Nullable
   public SortedMap<String, Object> getRawTargetNode(
-      PerBuildState state,
-      Cell cell,
-      TargetNode<?, ?> targetNode) throws BuildFileParseException {
+      PerBuildState state, Cell cell, TargetNode<?, ?> targetNode) throws BuildFileParseException {
     try {
 
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-      ImmutableSet<Map<String, Object>> allRawNodes = getRawTargetNodes(
-          state,
-          owningCell,
-          cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+      ImmutableSet<Map<String, Object>> allRawNodes =
+          getRawTargetNodes(
+              state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
       String shortName = targetNode.getBuildTarget().getShortName();
       for (Map<String, Object> rawNode : allRawNodes) {
@@ -190,7 +183,9 @@ public class Parser {
           toReturn.putAll(rawNode);
           toReturn.put(
               "buck.direct_dependencies",
-              targetNode.getParseDeps().stream()
+              targetNode
+                  .getParseDeps()
+                  .stream()
                   .map(Object::toString)
                   .collect(MoreCollectors.toImmutableList()));
           return toReturn;
@@ -208,18 +203,18 @@ public class Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      TargetNode<?, ?> targetNode) throws BuildFileParseException {
+      TargetNode<?, ?> targetNode)
+      throws BuildFileParseException {
 
-    try (
-        PerBuildState state =
-            new PerBuildState(
-                this,
-                eventBus,
-                executor,
-                cell,
-                enableProfiling,
-                SpeculativeParsing.of(false),
-                /* ignoreBuckAutodepsFiles */ false)) {
+    try (PerBuildState state =
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            SpeculativeParsing.of(false),
+            /* ignoreBuckAutodepsFiles */ false)) {
       return getRawTargetNode(state, cell, targetNode);
     }
   }
@@ -250,19 +245,15 @@ public class Parser {
     }
 
     try (final PerBuildState state =
-             new PerBuildState(
-                 this,
-                 eventBus,
-                 executor,
-                 rootCell,
-                 enableProfiling,
-                 SpeculativeParsing.of(true),
-                 /* ignoreBuckAutodepsFiles */ false)) {
-      return buildTargetGraph(
-          state,
-          eventBus,
-          toExplore,
-          /* ignoreBuckAutodepsFiles */ false);
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            enableProfiling,
+            SpeculativeParsing.of(true),
+            /* ignoreBuckAutodepsFiles */ false)) {
+      return buildTargetGraph(state, eventBus, toExplore, /* ignoreBuckAutodepsFiles */ false);
     }
   }
 
@@ -284,37 +275,38 @@ public class Parser {
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
-    GraphTraversable<BuildTarget> traversable = target -> {
-      TargetNode<?, ?> node;
-      try {
-        node = state.getTargetNode(target);
-      } catch (BuildFileParseException | BuildTargetException e) {
-        throw new RuntimeException(e);
-      }
+    GraphTraversable<BuildTarget> traversable =
+        target -> {
+          TargetNode<?, ?> node;
+          try {
+            node = state.getTargetNode(target);
+          } catch (BuildFileParseException | BuildTargetException e) {
+            throw new RuntimeException(e);
+          }
 
-      if (ignoreBuckAutodepsFiles) {
-        return Collections.emptyIterator();
-      }
+          if (ignoreBuckAutodepsFiles) {
+            return Collections.emptyIterator();
+          }
 
-      // this second lookup loop may *seem* pointless, but it allows us to report which node is
-      // referring to a node we can't find - something that's very difficult in this Traversable
-      // visitor pattern otherwise.
-      // it's also work we need to do anyways. the getTargetNode() result is cached, so that
-      // when we come around and re-visit that node there won't actually be any work performed.
-      for (BuildTarget dep : node.getParseDeps()) {
-        try {
-          state.getTargetNode(dep);
-        } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
-          throw new HumanReadableException(
-              e,
-              "Couldn't get dependency '%s' of target '%s':\n%s",
-              dep,
-              target,
-              e.getMessage());
-        }
-      }
-      return node.getParseDeps().iterator();
-    };
+          // this second lookup loop may *seem* pointless, but it allows us to report which node is
+          // referring to a node we can't find - something that's very difficult in this Traversable
+          // visitor pattern otherwise.
+          // it's also work we need to do anyways. the getTargetNode() result is cached, so that
+          // when we come around and re-visit that node there won't actually be any work performed.
+          for (BuildTarget dep : node.getParseDeps()) {
+            try {
+              state.getTargetNode(dep);
+            } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+              throw new HumanReadableException(
+                  e,
+                  "Couldn't get dependency '%s' of target '%s':\n%s",
+                  dep,
+                  target,
+                  e.getMessage());
+            }
+          }
+          return node.getParseDeps().iterator();
+        };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversal<>(traversable);
@@ -329,19 +321,14 @@ public class Parser {
         MoreMaps.putCheckEquals(index, target, targetNode);
         if (target.isFlavored()) {
           BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
-          MoreMaps.putCheckEquals(
-              index,
-              unflavoredTarget,
-              state.getTargetNode(unflavoredTarget));
+          MoreMaps.putCheckEquals(index, unflavoredTarget, state.getTargetNode(unflavoredTarget));
         }
         for (BuildTarget dep : targetNode.getParseDeps()) {
           graph.addEdge(targetNode, state.getTargetNode(dep));
         }
       }
 
-      targetGraph = new TargetGraph(
-          graph,
-          ImmutableMap.copyOf(index));
+      targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
       state.ensureConcreteFilesExist(eventBus);
       return targetGraph;
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
@@ -359,15 +346,14 @@ public class Parser {
    * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized TargetGraphAndBuildTargets
-  buildTargetGraphForTargetNodeSpecs(
+  public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean ignoreBuckAutodepsFiles)
-    throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
         eventBus,
         rootCell,
@@ -384,8 +370,7 @@ public class Parser {
    * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized TargetGraphAndBuildTargets
-  buildTargetGraphForTargetNodeSpecs(
+  public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
@@ -396,24 +381,20 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     try (PerBuildState state =
-             new PerBuildState(
-                 this,
-                 eventBus,
-                 executor,
-                 rootCell,
-                 enableProfiling,
-                 SpeculativeParsing.of(true),
-                 ignoreBuckAutodepsFiles)) {
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            enableProfiling,
+            SpeculativeParsing.of(true),
+            ignoreBuckAutodepsFiles)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
               Iterables.concat(
                   resolveTargetSpecs(
-                      state,
-                      eventBus,
-                      rootCell,
-                      targetNodeSpecs,
-                      applyDefaultFlavorsMode)));
+                      state, eventBus, rootCell, targetNodeSpecs, applyDefaultFlavorsMode)));
       TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
 
       return TargetGraphAndBuildTargets.builder()
@@ -439,20 +420,15 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
     try (PerBuildState state =
-            new PerBuildState(
-                this,
-                eventBus,
-                executor,
-                rootCell,
-                enableProfiling,
-                speculativeParsing,
-                /* ignoreBuckAutodepsFiles */ false)) {
-      return resolveTargetSpecs(
-          state,
-          eventBus,
-          rootCell,
-          specs,
-          applyDefaultFlavorsMode);
+        new PerBuildState(
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            enableProfiling,
+            speculativeParsing,
+            /* ignoreBuckAutodepsFiles */ false)) {
+      return resolveTargetSpecs(state, eventBus, rootCell, specs, applyDefaultFlavorsMode);
     }
   }
 
@@ -488,15 +464,11 @@ public class Parser {
       TargetNodeSpec spec = orderedSpecs.get(index);
       Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
       ImmutableSet<Path> buildFiles;
-      try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("FindBuildFiles"),
-          "targetNodeSpec",
-          spec)) {
+      try (SimplePerfEvent.Scope perfEventScope =
+          SimplePerfEvent.scope(
+              eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
         // Iterate over the build files the given target node spec returns.
-        buildFiles = spec.getBuildFileSpec().findBuildFiles(
-            cell,
-            buildFileSearchMethod);
+        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, buildFileSearchMethod);
       }
       for (Path buildFile : buildFiles) {
         perBuildFileSpecs.put(buildFile, index);
@@ -504,8 +476,8 @@ public class Parser {
     }
 
     // Kick off parse futures for each build file.
-    ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>
-        targetFutures = new ArrayList<>();
+    ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =
+        new ArrayList<>();
     for (Path buildFile : perBuildFileSpecs.keySet()) {
       final Collection<Integer> buildFileSpecs = perBuildFileSpecs.get(buildFile);
       TargetNodeSpec firstSpec = orderedSpecs.get(Iterables.get(buildFileSpecs, 0));
@@ -514,8 +486,7 @@ public class Parser {
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(
-            firstSpec,
-            cell.getFilesystem().getRootPath().relativize(buildFile));
+            firstSpec, cell.getFilesystem().getRootPath().relativize(buildFile));
       }
 
       for (int index : buildFileSpecs) {
@@ -526,10 +497,8 @@ public class Parser {
               Futures.transform(
                   state.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
                   node -> {
-                    ImmutableSet<BuildTarget> buildTargets = applySpecFilter(
-                        spec,
-                        ImmutableSet.of(node),
-                        applyDefaultFlavorsMode);
+                    ImmutableSet<BuildTarget> buildTargets =
+                        applySpecFilter(spec, ImmutableSet.of(node), applyDefaultFlavorsMode);
                     Preconditions.checkState(
                         buildTargets.size() == 1,
                         "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
@@ -542,13 +511,9 @@ public class Parser {
           targetFutures.add(
               Futures.transform(
                   state.getAllTargetNodesJob(cell, buildFile),
-                  nodes -> new AbstractMap.SimpleEntry<>(
-                      index,
-                      applySpecFilter(
-                          spec,
-                          nodes,
-                          applyDefaultFlavorsMode))));
-
+                  nodes ->
+                      new AbstractMap.SimpleEntry<>(
+                          index, applySpecFilter(spec, nodes, applyDefaultFlavorsMode))));
         }
       }
     }
@@ -557,8 +522,8 @@ public class Parser {
     // is indexed by the integer representing the input target spec order.
     LinkedHashMultimap<Integer, BuildTarget> targetsMap = LinkedHashMultimap.create();
     try {
-      for (ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>
-               targetFuture : targetFutures) {
+      for (ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>> targetFuture :
+          targetFutures) {
         Map.Entry<Integer, ImmutableSet<BuildTarget>> result = targetFuture.get();
         targetsMap.putAll(result.getKey(), result.getValue());
       }
@@ -584,15 +549,15 @@ public class Parser {
       ImmutableSet<TargetNode<?, ?>> targetNodes,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> partialTargets =
-        spec.filter(targetNodes);
+    ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> partialTargets = spec.filter(targetNodes);
     for (Map.Entry<BuildTarget, Optional<TargetNode<?, ?>>> partialTarget :
-             partialTargets.entrySet()) {
-      BuildTarget target = applyDefaultFlavors(
-            partialTarget.getKey(),
-            partialTarget.getValue(),
-            spec.getTargetType(),
-            applyDefaultFlavorsMode);
+        partialTargets.entrySet()) {
+      BuildTarget target =
+          applyDefaultFlavors(
+              partialTarget.getKey(),
+              partialTarget.getValue(),
+              spec.getTargetType(),
+              applyDefaultFlavorsMode);
       targets.add(target);
     }
     return targets.build();
@@ -603,10 +568,10 @@ public class Parser {
       Optional<TargetNode<?, ?>> targetNode,
       TargetNodeSpec.TargetType targetType,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
-    if (target.isFlavored() ||
-        !targetNode.isPresent() ||
-        targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS ||
-        applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
+    if (target.isFlavored()
+        || !targetNode.isPresent()
+        || targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS
+        || applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
       return target;
     }
 
@@ -620,12 +585,9 @@ public class Parser {
 
     if (node.getDescription() instanceof ImplicitFlavorsInferringDescription) {
       defaultFlavors =
-          ((ImplicitFlavorsInferringDescription)
-           node.getDescription()).addImplicitFlavors(defaultFlavors);
-      LOG.debug(
-          "Got default flavors %s from description of %s",
-          defaultFlavors,
-          target);
+          ((ImplicitFlavorsInferringDescription) node.getDescription())
+              .addImplicitFlavors(defaultFlavors);
+      LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
     }
 
     return target.withFlavors(defaultFlavors);
@@ -639,10 +601,7 @@ public class Parser {
 
   @Subscribe
   public void onFileSystemChange(WatchmanPathEvent event) {
-    LOG.verbose(
-        "Parser watched event %s %s",
-        event.getKind(),
-        event.getPath());
+    LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
     permState.invalidateBasedOn(event);
   }
@@ -659,5 +618,4 @@ public class Parser {
   public ImmutableList<Counter> getCounters() {
     return permState.getCounters();
   }
-
 }

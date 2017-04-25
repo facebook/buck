@@ -44,15 +44,14 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * Creates {@link TargetNode} instances from raw data coming in form the
- * {@link com.facebook.buck.json.ProjectBuildFileParser}.
+ * Creates {@link TargetNode} instances from raw data coming in form the {@link
+ * com.facebook.buck.json.ProjectBuildFileParser}.
  */
 public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?, ?>> {
 
@@ -80,15 +79,11 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
-        marshaller,
-        Optional.of(buildFileTrees),
-        nodeListener,
-        targetNodeFactory);
+        marshaller, Optional.of(buildFileTrees), nodeListener, targetNodeFactory);
   }
 
   public static ParserTargetNodeFactory<TargetNode<?, ?>> createForDistributedBuild(
-      ConstructorArgMarshaller marshaller,
-      TargetNodeFactory targetNodeFactory) {
+      ConstructorArgMarshaller marshaller, TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
         Optional.empty(),
@@ -113,31 +108,23 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
-        if (!((Flavored) description).hasFlavors(
-            ImmutableSet.copyOf(target.getFlavors()))) {
+        if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
           throw UnexpectedFlavorException.createWithSuggestions(cell, target);
         }
       } else {
         LOG.warn(
-            "Target %s (type %s) must implement the Flavored interface " +
-                "before we can check if it supports flavors: %s",
-            unflavoredBuildTarget,
-            buildRuleType,
-            target.getFlavors());
+            "Target %s (type %s) must implement the Flavored interface "
+                + "before we can check if it supports flavors: %s",
+            unflavoredBuildTarget, buildRuleType, target.getFlavors());
         throw new HumanReadableException(
             "Target %s (type %s) does not currently support flavors (tried %s)",
-            unflavoredBuildTarget,
-            buildRuleType,
-            target.getFlavors());
+            unflavoredBuildTarget, buildRuleType, target.getFlavors());
       }
     }
 
     UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
         RawNodeParsePipeline.parseBuildTargetFromRawRule(
-            cell.getRoot(),
-            cell.getCanonicalName(),
-            rawNode,
-            buildFile);
+            cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
     if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
       throw new IllegalStateException(
           String.format(
@@ -154,7 +141,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       ImmutableSet<VisibilityPattern> visibilityPatterns;
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
-               perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
+          perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
             targetCell.getCellPathResolver(),
             targetCell.getFilesystem(),
@@ -162,38 +149,36 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             constructorArg,
             declaredDeps,
             rawNode);
-        visibilityPatterns = ConstructorArgMarshaller.populateVisibilityPatterns(
-            targetCell.getCellPathResolver(),
-            "visibility",
-            rawNode.get("visibility"),
-            target);
-        withinViewPatterns = ConstructorArgMarshaller.populateVisibilityPatterns(
-            targetCell.getCellPathResolver(),
-            "within_view",
-            rawNode.get("within_view"),
-            target);
+        visibilityPatterns =
+            ConstructorArgMarshaller.populateVisibilityPatterns(
+                targetCell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
+        withinViewPatterns =
+            ConstructorArgMarshaller.populateVisibilityPatterns(
+                targetCell.getCellPathResolver(),
+                "within_view",
+                rawNode.get("within_view"),
+                target);
       }
       try (SimplePerfEvent.Scope scope =
-               perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
+          perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNode<?, ?> node = targetNodeFactory.createFromObject(
-            hasher.hash(),
-            description,
-            constructorArg,
-            targetCell.getFilesystem(),
-            target,
-            declaredDeps.build(),
-            visibilityPatterns,
-            withinViewPatterns,
-            targetCell.getCellPathResolver());
-        if (buildFileTrees.isPresent() &&
-            cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
+        TargetNode<?, ?> node =
+            targetNodeFactory.createFromObject(
+                hasher.hash(),
+                description,
+                constructorArg,
+                targetCell.getFilesystem(),
+                target,
+                declaredDeps.build(),
+                visibilityPatterns,
+                withinViewPatterns,
+                targetCell.getCellPathResolver());
+        if (buildFileTrees.isPresent()
+            && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
           enforceBuckPackageBoundaries(
-              target,
-              buildFileTrees.get().getUnchecked(targetCell),
-              node.getInputs());
+              target, buildFileTrees.get().getUnchecked(targetCell), node.getInputs());
         }
         nodeListener.onCreate(buildFile, node);
         return node;
@@ -208,17 +193,13 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   }
 
   protected void enforceBuckPackageBoundaries(
-      BuildTarget target,
-      BuildFileTree buildFileTree,
-      ImmutableSet<Path> paths) {
+      BuildTarget target, BuildFileTree buildFileTree, ImmutableSet<Path> paths) {
     Path basePath = target.getBasePath();
 
     for (Path path : paths) {
       if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
         throw new HumanReadableException(
-            "'%s' in '%s' refers to a parent directory.",
-            basePath.relativize(path),
-            target);
+            "'%s' in '%s' refers to a parent directory.", basePath.relativize(path), target);
       }
 
       Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
@@ -229,31 +210,22 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       //    a build file *unless* you happen to be referencing something that is ignored.
       if (!ancestor.isPresent()) {
         throw new HumanReadableException(
-            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by " +
-                "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
-            path,
-            target,
-            path);
+            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by "
+                + "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
+            path, target, path);
       }
       if (!ancestor.get().equals(basePath)) {
         throw new HumanReadableException(
-            "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find " +
-                "the owning rule that references '%s', and use a reference to that rule instead " +
-                "of referencing the desired file directly.",
-            path,
-            target,
-            ancestor.get(),
-            path);
+            "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find "
+                + "the owning rule that references '%s', and use a reference to that rule instead "
+                + "of referencing the desired file directly.",
+            path, target, ancestor.get(), path);
       }
     }
   }
 
-  private static BuildRuleType parseBuildRuleTypeFromRawRule(
-      Cell cell,
-      Map<String, Object> map) {
-    String type = (String) Preconditions.checkNotNull(
-        map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
+  private static BuildRuleType parseBuildRuleTypeFromRawRule(Cell cell, Map<String, Object> map) {
+    String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return cell.getBuildRuleType(type);
   }
-
 }

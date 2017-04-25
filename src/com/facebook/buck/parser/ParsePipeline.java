@@ -30,7 +30,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Abstract node parsing pipeline. Allows implementors to define their own logic for creating nodes
  * of type T.
+ *
  * @param <T> The type of node this pipeline will produce (raw nodes, target nodes, etc)
  */
 public abstract class ParsePipeline<T> implements AutoCloseable {
@@ -59,9 +59,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  public final ImmutableSet<T> getAllNodes(
-      final Cell cell,
-      final Path buildFile)
+  public final ImmutableSet<T> getAllNodes(final Cell cell, final Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
@@ -84,9 +82,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public final T getNode(
-      final Cell cell,
-      final BuildTarget buildTarget)
+  public final T getNode(final Cell cell, final BuildTarget buildTarget)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
@@ -108,15 +104,15 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * cached raw contents of the file (if present) but will always loop over the contents, so
    * repeated calls (with the same args) are not free.
    *
-   * returned future may throw {@link BuildFileParseException} and {@link HumanReadableException}.
+   * <p>returned future may throw {@link BuildFileParseException} and {@link
+   * HumanReadableException}.
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildFile absolute path to the file to process.
    * @return future.
    */
-  public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(
-      Cell cell,
-      Path buildFile) throws BuildTargetException;
+  public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(Cell cell, Path buildFile)
+      throws BuildTargetException;
 
   /**
    * Asynchronously get the {@link TargetNode}. This leverages the cache.
@@ -124,12 +120,10 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildTarget name of the node we're looking for. The build file path is derived from it.
    * @return future.
-   *
    * @throws BuildTargetException when the buildTarget is malformed.
    */
-  public abstract ListenableFuture<T> getNodeJob(
-      Cell cell,
-      BuildTarget buildTarget) throws BuildTargetException;
+  public abstract ListenableFuture<T> getNodeJob(Cell cell, BuildTarget buildTarget)
+      throws BuildTargetException;
 
   @Override
   public void close() {
@@ -151,9 +145,9 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
   }
 
   /**
-   * @return minimum duration time for performance events to be logged (
-   * for use with {@link SimplePerfEvent}s). This is on the base class to make it simpler to
-   * enable verbose tracing for all of the parsing pipelines.
+   * @return minimum duration time for performance events to be logged ( for use with {@link
+   *     SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing
+   *     for all of the parsing pipelines.
    */
   protected final long getMinimumPerfEventTimeMs() {
     return minimumPerfEventTimeMs;

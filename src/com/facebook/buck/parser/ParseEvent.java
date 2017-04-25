@@ -25,12 +25,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
-/**
- * Base class for events about parsing build files..
- */
+/** Base class for events about parsing build files.. */
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
   private final ImmutableList<BuildTarget> buildTargets;
@@ -59,8 +56,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
     return new Started(buildTargets);
   }
 
-  public static Finished finished(Started started,
-      Optional<TargetGraph> graph) {
+  public static Finished finished(Started started, Optional<TargetGraph> graph) {
     return new Finished(started, graph);
   }
 
