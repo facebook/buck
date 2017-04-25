@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;

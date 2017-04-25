@@ -36,12 +36,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Test;
 
 public class BuildTargetMacroExpanderTest {
 
@@ -57,10 +55,7 @@ public class BuildTargetMacroExpanderTest {
     BuildTargetMacroExpander<?> macroExpander =
         new ExecutableMacroExpander() {
           @Override
-          public String expand(
-              SourcePathResolver resolver,
-              BuildRule rule)
-              throws MacroException {
+          public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
             found.add(rule.getBuildTarget());
             return "";
           }
@@ -75,7 +70,8 @@ public class BuildTargetMacroExpanderTest {
     try {
       match(blob);
       fail("expected to throw");
-    } catch (MacroException e) {}
+    } catch (MacroException e) {
+    }
   }
 
   @Test
@@ -91,10 +87,6 @@ public class BuildTargetMacroExpanderTest {
   @Test
   public void extractTargets() throws MacroException {
     Optional<BuildTarget> target = match("$(exe //something:manifest)");
-    assertEquals(
-        Optional.of(
-            BuildTargetFactory.newInstance("//something:manifest")),
-        target);
+    assertEquals(Optional.of(BuildTargetFactory.newInstance("//something:manifest")), target);
   }
-
 }

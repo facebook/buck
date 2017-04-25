@@ -26,12 +26,9 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.Optional;
 
-/**
- * Handy way to create new {@link CachingBuildEngine} instances for test purposes.
- */
+/** Handy way to create new {@link CachingBuildEngine} instances for test purposes. */
 public class CachingBuildEngineFactory {
 
   private CachingBuildEngine.BuildMode buildMode = CachingBuildEngine.BuildMode.SHALLOW;
@@ -49,8 +46,7 @@ public class CachingBuildEngineFactory {
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
 
   public CachingBuildEngineFactory(BuildRuleResolver buildRuleResolver) {
-    this.cachingBuildEngineDelegate =
-        new LocalCachingBuildEngineDelegate(new NullFileHashCache());
+    this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new NullFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
   }
@@ -82,8 +78,7 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
-  public CachingBuildEngineFactory setExecutorService(
-      ListeningExecutorService executorService) {
+  public CachingBuildEngineFactory setExecutorService(ListeningExecutorService executorService) {
     this.executorService = toWeighted(executorService);
     return this;
   }
@@ -141,8 +136,7 @@ public class CachingBuildEngineFactory {
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
     return new WeightedListeningExecutorService(
         new ListeningMultiSemaphore(
-            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0),
-            ResourceAllocationFairness.FAIR),
+            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0), ResourceAllocationFairness.FAIR),
         /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
         service);
   }

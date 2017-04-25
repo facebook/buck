@@ -23,11 +23,9 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-
 import javax.annotation.Nullable;
 
 public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
@@ -43,19 +41,11 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    this(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(deps)
-            .build(),
-        resolver,
-        labels
-    );
+    this(new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(deps).build(), resolver, labels);
   }
 
   public FakeTestRule(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      ImmutableSet<String> labels) {
+      BuildRuleParams buildRuleParams, SourcePathResolver resolver, ImmutableSet<String> labels) {
     this(
         buildRuleParams,
         resolver,
@@ -107,8 +97,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return interpretedTestResults;
   }
 

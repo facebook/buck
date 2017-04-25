@@ -26,19 +26,18 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class ToolTest {
 
   @Test
   public void hashFileToolsCreatedWithTheSamePathAreEqual() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
@@ -92,36 +91,25 @@ public class ToolTest {
 
   @Test
   public void customVersion() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
-            0,
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of()),
-            pathResolver,
-            ruleFinder);
+            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
 
     String tool = "tool";
     String version = "version";
 
-    Tool tool1 =
-        VersionedTool.of(
-            Paths.get("something"),
-            tool,
-            version);
+    Tool tool1 = VersionedTool.of(Paths.get("something"), tool, version);
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool1)
             .build(RuleKey::new);
 
-    Tool tool2 =
-        VersionedTool.of(
-            Paths.get("something-else"),
-            tool,
-            version);
+    Tool tool2 = VersionedTool.of(Paths.get("something-else"), tool, version);
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory, pathResolver)
             .setReflectively("tool", tool2)
@@ -137,9 +125,10 @@ public class ToolTest {
     HashedFileTool tool1 = new HashedFileTool(Paths.get("/usr/local/bin/python2.7"));
     HashedFileTool tool2 = new HashedFileTool(Paths.get("/opt/bin/python2.7"));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
@@ -167,8 +156,7 @@ public class ToolTest {
   }
 
   private DefaultRuleKeyFactory.Builder<HashCode> createRuleKeyBuilder(
-      DefaultRuleKeyFactory factory,
-      SourcePathResolver resolver) {
+      DefaultRuleKeyFactory factory, SourcePathResolver resolver) {
     return factory.newBuilderForTesting(new FakeBuildRule("//:test", resolver));
   }
 }

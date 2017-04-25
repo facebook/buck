@@ -29,9 +29,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-
 import java.io.IOException;
-
 import javax.annotation.Nullable;
 
 public class TestCellBuilder {
@@ -71,24 +69,19 @@ public class TestCellBuilder {
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
-    BuckConfig config = buckConfig == null ?
-        FakeBuckConfig.builder().setFilesystem(filesystem).build() :
-        buckConfig;
+    BuckConfig config =
+        buckConfig == null
+            ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
+            : buckConfig;
 
-    KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
-        executor,
-        androidDirectoryResolver);
+    KnownBuildRuleTypesFactory typesFactory =
+        new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver);
 
-    return CellProvider.createForLocalBuild(
-        filesystem,
-        watchman,
-        config,
-        cellConfig,
-        typesFactory).getCellByPath(filesystem.getRootPath());
+    return CellProvider.createForLocalBuild(filesystem, watchman, config, cellConfig, typesFactory)
+        .getCellByPath(filesystem.getRootPath());
   }
 
-  public static CellPathResolver createCellRoots(
-      @Nullable ProjectFilesystem filesystem) {
+  public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {
     ProjectFilesystem toUse = filesystem == null ? new FakeProjectFilesystem() : filesystem;
     return new FakeCellPathResolver(toUse);
   }

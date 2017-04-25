@@ -31,11 +31,9 @@ import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class SourceListTest {
 
@@ -96,11 +94,11 @@ public class SourceListTest {
   public void untranslatedUnnamedSourcesTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
-    SourceList list = SourceList.ofUnnamedSources(
-        ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(target)));
+    SourceList list =
+        SourceList.ofUnnamedSources(
+            ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(target)));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
         Matchers.equalTo(Optional.empty()));
   }
-
 }

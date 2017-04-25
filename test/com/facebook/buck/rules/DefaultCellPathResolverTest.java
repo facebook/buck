@@ -25,16 +25,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.hamcrest.Matchers;
-import org.junit.Assume;
-import org.junit.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
+import org.junit.Test;
 
 public class DefaultCellPathResolverTest {
   private static final String REPOSITORIES_SECTION =
@@ -50,20 +48,20 @@ public class DefaultCellPathResolverTest {
     Path cell2Root = root.resolve("repo2");
     Files.createDirectories(cell2Root);
 
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " simple = " + cell2Root.toString()));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            cell1Root,
+            ConfigBuilder.createFromText(
+                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
 
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME, cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")), cell2Root
-            )
-        ));
+                RelativeCellName.ROOT_CELL_NAME,
+                cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")),
+                cell2Root)));
   }
 
   @Test
@@ -75,11 +73,11 @@ public class DefaultCellPathResolverTest {
     Files.createDirectories(cell1Root);
     Path cell2Root = root.resolve("repo2");
 
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " simple = " + cell2Root.toString()));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            cell1Root,
+            ConfigBuilder.createFromText(
+                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
 
     // Allow non-existant paths; Buck should allow paths whose .buckconfigs
     // cannot be loaded.
@@ -87,10 +85,10 @@ public class DefaultCellPathResolverTest {
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME, cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")), cell2Root
-            )
-        ));
+                RelativeCellName.ROOT_CELL_NAME,
+                cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")),
+                cell2Root)));
   }
 
   @Test
@@ -109,28 +107,23 @@ public class DefaultCellPathResolverTest {
     Path symlinkPath = cell2Root.resolve("symlink");
     Files.createSymbolicLink(symlinkPath, cell2Root);
 
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " two = ../repo2"));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            cell1Root, ConfigBuilder.createFromText(REPOSITORIES_SECTION, " two = ../repo2"));
 
     Files.write(
         cell2Root.resolve(".buckconfig"),
-        ImmutableList.of(
-            REPOSITORIES_SECTION,
-            " three = symlink"),
+        ImmutableList.of(REPOSITORIES_SECTION, " three = symlink"),
         StandardCharsets.UTF_8);
-
 
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME, cell1Root,
-                RelativeCellName.of(ImmutableList.of("two")), cell2Root
-            )
-        ));
+                RelativeCellName.ROOT_CELL_NAME,
+                cell1Root,
+                RelativeCellName.of(ImmutableList.of("two")),
+                cell2Root)));
   }
 
   @Test
@@ -145,35 +138,32 @@ public class DefaultCellPathResolverTest {
     Path cell3Root = root.resolve("repo3");
     Files.createDirectories(cell3Root);
 
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " simple = " + cell2Root.toString()));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            cell1Root,
+            ConfigBuilder.createFromText(
+                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
 
     Files.write(
         cell2Root.resolve(".buckconfig"),
-        ImmutableList.of(
-            REPOSITORIES_SECTION,
-            " three = " + cell3Root.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " three = " + cell3Root.toString()),
         StandardCharsets.UTF_8);
 
     Files.write(
         cell3Root.resolve(".buckconfig"),
-        ImmutableList.of(
-            REPOSITORIES_SECTION,
-            " cycle = " + cell1Root.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " cycle = " + cell1Root.toString()),
         StandardCharsets.UTF_8);
 
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME, cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")), cell2Root,
-                RelativeCellName.of(ImmutableList.of("simple", "three")), cell3Root
-            )
-        ));
+                RelativeCellName.ROOT_CELL_NAME,
+                cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")),
+                cell2Root,
+                RelativeCellName.of(ImmutableList.of("simple", "three")),
+                cell3Root)));
   }
 
   @Test
@@ -190,25 +180,22 @@ public class DefaultCellPathResolverTest {
     Path cellCenterRoot = root.resolve("center");
     Files.createDirectories(cellCenterRoot);
 
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        cell1Root,
-        ConfigBuilder.createFromText(
-            REPOSITORIES_SECTION,
-            " left = " + cellLeftRoot.toString(),
-            " right = " + cellRightRoot.toString()));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            cell1Root,
+            ConfigBuilder.createFromText(
+                REPOSITORIES_SECTION,
+                " left = " + cellLeftRoot.toString(),
+                " right = " + cellRightRoot.toString()));
 
     Files.write(
         cellLeftRoot.resolve(".buckconfig"),
-        ImmutableList.of(
-            REPOSITORIES_SECTION,
-            " center = " + cellCenterRoot.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot.toString()),
         StandardCharsets.UTF_8);
 
     Files.write(
         cellRightRoot.resolve(".buckconfig"),
-        ImmutableList.of(
-            REPOSITORIES_SECTION,
-            " center = " + cellCenterRoot.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot.toString()),
         StandardCharsets.UTF_8);
 
     assertThat(
@@ -220,41 +207,38 @@ public class DefaultCellPathResolverTest {
                 .put(RelativeCellName.of(ImmutableList.of("left", "center")), cellCenterRoot)
                 .put(RelativeCellName.of(ImmutableList.of("right", "center")), cellCenterRoot)
                 .put(RelativeCellName.of(ImmutableList.of("right")), cellRightRoot)
-            .build())
-        );
+                .build()));
   }
 
   @Test
   public void canonicalCellNameForRootIsEmpty() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        vfs.getPath("/foo/root"),
-        ImmutableMap.of("root", vfs.getPath("/foo/root")));
-    assertEquals(
-        Optional.empty(),
-        cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/root")));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            vfs.getPath("/foo/root"), ImmutableMap.of("root", vfs.getPath("/foo/root")));
+    assertEquals(Optional.empty(), cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/root")));
   }
 
   @Test
   public void canonicalCellNameForCellIsLexicographicallySmallest() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
-        vfs.getPath("/foo/root"),
-        ImmutableMap.of(
-            "root", vfs.getPath("/foo/root"),
-            "a", vfs.getPath("/foo/cell"),
-            "b", vfs.getPath("/foo/cell")));
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            vfs.getPath("/foo/root"),
+            ImmutableMap.of(
+                "root", vfs.getPath("/foo/root"),
+                "a", vfs.getPath("/foo/cell"),
+                "b", vfs.getPath("/foo/cell")));
 
-    assertEquals(
-        Optional.of("a"),
-        cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
+    assertEquals(Optional.of("a"), cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
 
-    cellPathResolver = new DefaultCellPathResolver(
-        vfs.getPath("/foo/root"),
-        ImmutableMap.of(
-            "root", vfs.getPath("/foo/root"),
-            "b", vfs.getPath("/foo/cell"),
-            "a", vfs.getPath("/foo/cell")));
+    cellPathResolver =
+        new DefaultCellPathResolver(
+            vfs.getPath("/foo/root"),
+            ImmutableMap.of(
+                "root", vfs.getPath("/foo/root"),
+                "b", vfs.getPath("/foo/cell"),
+                "a", vfs.getPath("/foo/cell")));
 
     assertEquals(
         "After flipping insertion order, still smallest.",

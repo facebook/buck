@@ -45,22 +45,21 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ExecutableMacroExpanderTest {
 
   private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) throws Exception {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildRule javaLibrary = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
-        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
-        .build(ruleResolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
+            .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
+            .build(ruleResolver);
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
@@ -81,25 +80,20 @@ public class ExecutableMacroExpanderTest {
 
     // Interpolate the build target in the genrule cmd string.
 
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        target,
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
 
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -112,24 +106,20 @@ public class ExecutableMacroExpanderTest {
 
     // Interpolate the build target in the genrule cmd string.
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        rule.getBuildTarget(),
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(
+            rule.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -143,24 +133,20 @@ public class ExecutableMacroExpanderTest {
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        rule.getBuildTarget(),
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(
+            rule.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -198,17 +184,11 @@ public class ExecutableMacroExpanderTest {
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
     assertThat(
         expander.extractBuildTimeDeps(
-            target,
-            createCellRoots(filesystem),
-            ruleResolver,
-            ImmutableList.of("//:rule")),
+            target, createCellRoots(filesystem), ruleResolver, ImmutableList.of("//:rule")),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
         expander.expand(
-            target,
-            createCellRoots(filesystem),
-            ruleResolver,
-            ImmutableList.of("//:rule")),
+            target, createCellRoots(filesystem), ruleResolver, ImmutableList.of("//:rule")),
         Matchers.equalTo(
             String.format(
                 "%s %s",
@@ -242,14 +222,11 @@ public class ExecutableMacroExpanderTest {
         Matchers.equalTo(tool));
   }
 
-  private abstract static class NoopBinaryBuildRule
-      extends NoopBuildRule
+  private abstract static class NoopBinaryBuildRule extends NoopBuildRule
       implements BinaryBuildRule {
 
     public NoopBinaryBuildRule(BuildRuleParams params) {
       super(params);
     }
-
   }
-
 }

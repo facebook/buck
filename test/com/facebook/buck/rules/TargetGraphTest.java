@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,8 +43,7 @@ public class TargetGraphTest {
   private TargetNode<?, ?> nodeI;
   private TargetGraph targetGraph;
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -67,16 +65,9 @@ public class TargetGraphTest {
     nodeC = createTargetNode("C", nodeF);
     nodeB = createTargetNode("B", nodeE);
     nodeA = createTargetNode("A", nodeC, nodeD, nodeE);
-    targetGraph = TargetGraphFactory.newInstance(
-        nodeA,
-        nodeB,
-        nodeC,
-        nodeD,
-        nodeE,
-        nodeF,
-        nodeG,
-        nodeH,
-        nodeI);
+    targetGraph =
+        TargetGraphFactory.newInstance(
+            nodeA, nodeB, nodeC, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
   }
 
   @Test
@@ -110,8 +101,8 @@ public class TargetGraphTest {
   @Test
   public void testPartialSubgraph1() {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeB, nodeD, nodeH);
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(
-        nodeB, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
+    ImmutableSet<TargetNode<?, ?>> expectedNodes =
+        ImmutableSet.of(nodeB, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
     checkSubgraph(roots, expectedNodes);
   }
 
@@ -149,20 +140,25 @@ public class TargetGraphTest {
   }
 
   private void checkSubgraph(
-      ImmutableSet<TargetNode<?, ?>> roots,
-      ImmutableSet<TargetNode<?, ?>> expectedNodes) {
+      ImmutableSet<TargetNode<?, ?>> roots, ImmutableSet<TargetNode<?, ?>> expectedNodes) {
     TargetGraph subgraph = targetGraph.getSubgraph(roots);
-    assertEquals("Subgraph should contain the roots and their dependencies",
-        expectedNodes, subgraph.getNodes());
+    assertEquals(
+        "Subgraph should contain the roots and their dependencies",
+        expectedNodes,
+        subgraph.getNodes());
 
     for (TargetNode<?, ?> node : subgraph.getNodes()) {
-      assertEquals("Subgraph should have the same edges as the original graph",
-          targetGraph.getOutgoingNodesFor(node), subgraph.getOutgoingNodesFor(node));
+      assertEquals(
+          "Subgraph should have the same edges as the original graph",
+          targetGraph.getOutgoingNodesFor(node),
+          subgraph.getOutgoingNodesFor(node));
     }
 
     for (TargetNode<?, ?> node : subgraph.getNodes()) {
-      assertEquals("subgraph.get should return a node containing the specified BuildTarget",
-          node, subgraph.get(node.getBuildTarget()));
+      assertEquals(
+          "subgraph.get should return a node containing the specified BuildTarget",
+          node,
+          subgraph.get(node.getBuildTarget()));
     }
   }
 
@@ -174,5 +170,4 @@ public class TargetGraphTest {
     }
     return targetNodeBuilder.build();
   }
-
 }

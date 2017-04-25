@@ -20,14 +20,11 @@ import java.util.stream.Stream;
 public final class DependencyAggregationTestUtil {
   private DependencyAggregationTestUtil() {}
 
-  /**
-   * Return dependencies of a rule, traversing through any dependency aggregations.
-   */
+  /** Return dependencies of a rule, traversing through any dependency aggregations. */
   public static Stream<BuildRule> getDisaggregatedDeps(BuildRule rule) {
-    return
-        rule.getBuildDeps().stream()
-            .flatMap(
-                (x) -> x instanceof DependencyAggregation ?
-                    x.getBuildDeps().stream() : Stream.of(x));
+    return rule.getBuildDeps()
+        .stream()
+        .flatMap(
+            (x) -> x instanceof DependencyAggregation ? x.getBuildDeps().stream() : Stream.of(x));
   }
 }

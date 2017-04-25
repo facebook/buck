@@ -23,26 +23,17 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import javax.annotation.Nullable;
 
 public class FakeBuildRule extends AbstractBuildRuleWithResolver implements BuildRule {
 
-
-  @Nullable
-  private Path outputFile;
+  @Nullable private Path outputFile;
 
   public FakeBuildRule(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    this(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(deps)
-            .build(), resolver);
+      BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
+    this(new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(deps).build(), resolver);
   }
 
   public FakeBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
@@ -62,7 +53,8 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build(), resolver);
+            .build(),
+        resolver);
   }
 
   public FakeBuildRule(String target, SourcePathResolver resolver, BuildRule... deps) {
@@ -74,8 +66,10 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
   }
 
   private static SourcePathResolver newSourcePathResolver() {
-    return new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    return new SourcePathResolver(
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   }
 
   @Override
@@ -99,9 +93,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
-
 }

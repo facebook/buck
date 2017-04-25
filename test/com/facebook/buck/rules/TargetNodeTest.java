@@ -38,13 +38,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
 
 public class TargetNodeTest {
 
@@ -63,17 +61,23 @@ public class TargetNodeTest {
 
   @Test
   public void testDepsAndPathsAreCollected() throws NoSuchBuildTargetException {
-    ImmutableList<String> depsStrings = ImmutableList.of(
-        "//example/path:one",
-        "//example/path:two");
-    ImmutableSet<BuildTarget> depsTargets = depsStrings.stream()
-        .map(BuildTargetFactory::newInstance)
-        .collect(MoreCollectors.toImmutableSet());
-    ImmutableMap<String, Object> rawNode = ImmutableMap.of(
-        "deps", depsStrings,
-        "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
-        "appleSource", "//example/path:five",
-        "source", "AnotherClass.java");
+    ImmutableList<String> depsStrings =
+        ImmutableList.of("//example/path:one", "//example/path:two");
+    ImmutableSet<BuildTarget> depsTargets =
+        depsStrings
+            .stream()
+            .map(BuildTargetFactory::newInstance)
+            .collect(MoreCollectors.toImmutableSet());
+    ImmutableMap<String, Object> rawNode =
+        ImmutableMap.of(
+            "deps",
+            depsStrings,
+            "sourcePaths",
+            ImmutableList.of("//example/path:four", "MyClass.java"),
+            "appleSource",
+            "//example/path:five",
+            "source",
+            "AnotherClass.java");
 
     TargetNode<Arg, ExampleDescription> targetNode =
         createTargetNode(TARGET_THREE, depsTargets, rawNode);
@@ -81,8 +85,7 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getInputs(),
         containsInAnyOrder(
-            Paths.get("example/path/MyClass.java"),
-            Paths.get("example/path/AnotherClass.java")));
+            Paths.get("example/path/MyClass.java"), Paths.get("example/path/AnotherClass.java")));
 
     assertThat(
         targetNode.getExtraDeps(),
@@ -120,6 +123,7 @@ public class TargetNodeTest {
     public Optional<SourceWithFlags> appleSource;
     public Optional<Path> source;
     public Optional<String> string;
+
     @Hint(isDep = false)
     public Optional<BuildTarget> target;
   }
@@ -142,14 +146,18 @@ public class TargetNodeTest {
     }
   }
 
-  private static TargetNode<Arg, ExampleDescription> createTargetNode(
-      BuildTarget buildTarget)
+  private static TargetNode<Arg, ExampleDescription> createTargetNode(BuildTarget buildTarget)
       throws NoSuchBuildTargetException {
-    ImmutableMap<String, Object> rawNode = ImmutableMap.of(
-        "deps", ImmutableList.of(),
-        "string", "//example/path:one",
-        "target", "//example/path:two",
-        "sourcePaths", ImmutableSortedSet.of());
+    ImmutableMap<String, Object> rawNode =
+        ImmutableMap.of(
+            "deps",
+            ImmutableList.of(),
+            "string",
+            "//example/path:one",
+            "target",
+            "//example/path:two",
+            "sourcePaths",
+            ImmutableSortedSet.of());
 
     return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
@@ -157,7 +165,8 @@ public class TargetNodeTest {
   private static TargetNode<Arg, ExampleDescription> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableMap<String, Object> rawNode) throws NoSuchBuildTargetException {
+      ImmutableMap<String, Object> rawNode)
+      throws NoSuchBuildTargetException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ExampleDescription description = new ExampleDescription();
@@ -166,10 +175,7 @@ public class TargetNodeTest {
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
-            createPopulatedConstructorArg(
-                description,
-                buildTarget,
-                rawNode),
+            createPopulatedConstructorArg(description, buildTarget, rawNode),
             filesystem,
             buildTarget,
             declaredDeps,
@@ -178,11 +184,9 @@ public class TargetNodeTest {
             createCellRoots(filesystem));
   }
 
-
   private static Arg createPopulatedConstructorArg(
-      Description<Arg> description,
-      BuildTarget buildTarget,
-      Map<String, Object> instance) throws NoSuchBuildTargetException {
+      Description<Arg> description, BuildTarget buildTarget, Map<String, Object> instance)
+      throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

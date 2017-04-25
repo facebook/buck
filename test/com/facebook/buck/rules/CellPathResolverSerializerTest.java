@@ -18,21 +18,20 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Map;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CellPathResolverSerializerTest {
   @Test
   public void testSerializingDefaultCellPathResolver() throws Exception {
-    DefaultCellPathResolver input = new DefaultCellPathResolver(
-        Paths.get("/root/path"),
-        ImmutableMap.of(
-            "key1", Paths.get("/path/1/"),
-            "key_2", Paths.get("/path/_2/")));
+    DefaultCellPathResolver input =
+        new DefaultCellPathResolver(
+            Paths.get("/root/path"),
+            ImmutableMap.of(
+                "key1", Paths.get("/path/1/"),
+                "key_2", Paths.get("/path/_2/")));
     Map<String, Object> data = CellPathResolverSerializer.serialize(input);
     CellPathResolver output = CellPathResolverSerializer.deserialize(data);
     assertThat(output, Matchers.instanceOf(DefaultCellPathResolver.class));

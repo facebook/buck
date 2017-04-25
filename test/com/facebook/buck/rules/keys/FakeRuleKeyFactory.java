@@ -24,25 +24,21 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 
-public class FakeRuleKeyFactory implements
-    RuleKeyFactoryWithDiagnostics<RuleKey>,
-    DependencyFileRuleKeyFactory {
+public class FakeRuleKeyFactory
+    implements RuleKeyFactoryWithDiagnostics<RuleKey>, DependencyFileRuleKeyFactory {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
   private final ImmutableSet<BuildTarget> oversized;
 
   public FakeRuleKeyFactory(
-      ImmutableMap<BuildTarget, RuleKey> ruleKeys,
-      ImmutableSet<BuildTarget> oversized) {
+      ImmutableMap<BuildTarget, RuleKey> ruleKeys, ImmutableSet<BuildTarget> oversized) {
     this.ruleKeys = ruleKeys;
     this.oversized = oversized;
   }
 
-  public FakeRuleKeyFactory(
-      ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+  public FakeRuleKeyFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
     this(ruleKeys, ImmutableSet.of());
   }
 
@@ -56,14 +52,13 @@ public class FakeRuleKeyFactory implements
 
   @Override
   public RuleKeyAndInputs build(
-      SupportsDependencyFileRuleKey rule,
-      ImmutableList<DependencyFileEntry> inputs) throws IOException {
+      SupportsDependencyFileRuleKey rule, ImmutableList<DependencyFileEntry> inputs)
+      throws IOException {
     return RuleKeyAndInputs.of(build(rule), ImmutableSet.<SourcePath>of());
   }
 
   @Override
-  public RuleKeyAndInputs buildManifestKey(
-      SupportsDependencyFileRuleKey rule) {
+  public RuleKeyAndInputs buildManifestKey(SupportsDependencyFileRuleKey rule) {
     return RuleKeyAndInputs.of(build(rule), ImmutableSet.<SourcePath>of());
   }
 

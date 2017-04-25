@@ -40,13 +40,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import org.junit.Test;
 
 public class TargetGraphHashingTest {
 
@@ -57,11 +55,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
-        new TargetGraphHashing(
-            eventBus,
-            targetGraph,
-            new NullFileHashCache(),
-            ImmutableList.of())
+        new TargetGraphHashing(eventBus, targetGraph, new NullFileHashCache(), ImmutableList.of())
             .hashTargetGraph()
             .entrySet(),
         empty());
@@ -73,33 +67,30 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?, ?> node = createJavaLibraryTargetNodeWithSrcs(
-        BuildTargetFactory.newInstance("//foo:lib"),
-        HashCode.fromLong(64738),
-        ImmutableSet.of(Paths.get("foo/FooLib.java")));
+    TargetNode<?, ?> node =
+        createJavaLibraryTargetNodeWithSrcs(
+            BuildTargetFactory.newInstance("//foo:lib"),
+            HashCode.fromLong(64738),
+            ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    FileHashCache baseCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
+    FileHashCache baseCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
 
-    FileHashCache modifiedCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
+    FileHashCache modifiedCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
-    Map<BuildTarget, HashCode> baseResult = new TargetGraphHashing(
-        eventBus,
-        targetGraph,
-        baseCache,
-        ImmutableList.of(node))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> baseResult =
+        new TargetGraphHashing(eventBus, targetGraph, baseCache, ImmutableList.of(node))
+            .hashTargetGraph();
 
-    Map<BuildTarget, HashCode> modifiedResult = new TargetGraphHashing(
-        eventBus,
-        targetGraph,
-        modifiedCache,
-        ImmutableList.of(node))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> modifiedResult =
+        new TargetGraphHashing(eventBus, targetGraph, modifiedCache, ImmutableList.of(node))
+            .hashTargetGraph();
 
     assertThat(baseResult, aMapWithSize(1));
     assertThat(baseResult, hasKey(node.getBuildTarget()));
@@ -116,43 +107,38 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?, ?> nodeA = createJavaLibraryTargetNodeWithSrcs(
-        BuildTargetFactory.newInstance("//foo:lib"),
-        HashCode.fromLong(64738),
-        ImmutableSet.of(Paths.get("foo/FooLib.java")));
-    TargetNode<?, ?> nodeB = createJavaLibraryTargetNodeWithSrcs(
-        BuildTargetFactory.newInstance("//bar:lib"),
-        HashCode.fromLong(49152),
-        ImmutableSet.of(Paths.get("bar/BarLib.java")));
+    TargetNode<?, ?> nodeA =
+        createJavaLibraryTargetNodeWithSrcs(
+            BuildTargetFactory.newInstance("//foo:lib"),
+            HashCode.fromLong(64738),
+            ImmutableSet.of(Paths.get("foo/FooLib.java")));
+    TargetNode<?, ?> nodeB =
+        createJavaLibraryTargetNodeWithSrcs(
+            BuildTargetFactory.newInstance("//bar:lib"),
+            HashCode.fromLong(49152),
+            ImmutableSet.of(Paths.get("bar/BarLib.java")));
     TargetGraph targetGraphA = TargetGraphFactory.newInstance(nodeA);
     TargetGraph targetGraphB = TargetGraphFactory.newInstance(nodeB);
     TargetGraph commonTargetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
-    FileHashCache fileHashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
-            projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
+    FileHashCache fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+                projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
-    Map<BuildTarget, HashCode> resultsA = new TargetGraphHashing(
-        eventBus,
-        targetGraphA,
-        fileHashCache,
-        ImmutableList.of(nodeA))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> resultsA =
+        new TargetGraphHashing(eventBus, targetGraphA, fileHashCache, ImmutableList.of(nodeA))
+            .hashTargetGraph();
 
-    Map<BuildTarget, HashCode> resultsB = new TargetGraphHashing(
-        eventBus,
-        targetGraphB,
-        fileHashCache,
-        ImmutableList.of(nodeB))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> resultsB =
+        new TargetGraphHashing(eventBus, targetGraphB, fileHashCache, ImmutableList.of(nodeB))
+            .hashTargetGraph();
 
-    Map<BuildTarget, HashCode> commonResults = new TargetGraphHashing(
-        eventBus,
-        commonTargetGraph,
-        fileHashCache,
-        ImmutableList.of(nodeA, nodeB))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> commonResults =
+        new TargetGraphHashing(
+                eventBus, commonTargetGraph, fileHashCache, ImmutableList.of(nodeA, nodeB))
+            .hashTargetGraph();
 
     assertThat(resultsA, aMapWithSize(1));
     assertThat(resultsA, hasKey(nodeA.getBuildTarget()));
@@ -162,27 +148,19 @@ public class TargetGraphHashingTest {
     assertThat(commonResults, hasKey(nodeA.getBuildTarget()));
     assertThat(commonResults, hasKey(nodeB.getBuildTarget()));
     assertThat(
-        resultsA.get(nodeA.getBuildTarget()),
-        equalTo(commonResults.get(nodeA.getBuildTarget())));
+        resultsA.get(nodeA.getBuildTarget()), equalTo(commonResults.get(nodeA.getBuildTarget())));
     assertThat(
-        resultsB.get(nodeB.getBuildTarget()),
-        equalTo(commonResults.get(nodeB.getBuildTarget())));
+        resultsB.get(nodeB.getBuildTarget()), equalTo(commonResults.get(nodeB.getBuildTarget())));
   }
 
   private TargetGraph createGraphWithANodeAndADep(
-      BuildTarget nodeTarget,
-      HashCode nodeHash,
-      BuildTarget depTarget,
-      HashCode depHash) {
-    TargetNode<?, ?> dep = createJavaLibraryTargetNodeWithSrcs(
-        depTarget,
-        depHash,
-        ImmutableSet.of(Paths.get("dep/DepLib.java")));
-    TargetNode<?, ?> node = createJavaLibraryTargetNodeWithSrcs(
-        nodeTarget,
-        nodeHash,
-        ImmutableSet.of(Paths.get("foo/FooLib.java")),
-        dep);
+      BuildTarget nodeTarget, HashCode nodeHash, BuildTarget depTarget, HashCode depHash) {
+    TargetNode<?, ?> dep =
+        createJavaLibraryTargetNodeWithSrcs(
+            depTarget, depHash, ImmutableSet.of(Paths.get("dep/DepLib.java")));
+    TargetNode<?, ?> node =
+        createJavaLibraryTargetNodeWithSrcs(
+            nodeTarget, nodeHash, ImmutableSet.of(Paths.get("foo/FooLib.java")), dep);
     return TargetGraphFactory.newInstance(node, dep);
   }
 
@@ -195,36 +173,35 @@ public class TargetGraphHashingTest {
     BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");
 
-    TargetGraph targetGraphA = createGraphWithANodeAndADep(
-        nodeTarget,
-        HashCode.fromLong(12345),
-        depTarget,
-        HashCode.fromLong(64738));
+    TargetGraph targetGraphA =
+        createGraphWithANodeAndADep(
+            nodeTarget, HashCode.fromLong(12345), depTarget, HashCode.fromLong(64738));
 
-    TargetGraph targetGraphB = createGraphWithANodeAndADep(
-        nodeTarget,
-        HashCode.fromLong(12345),
-        depTarget,
-        HashCode.fromLong(84552));
+    TargetGraph targetGraphB =
+        createGraphWithANodeAndADep(
+            nodeTarget, HashCode.fromLong(12345), depTarget, HashCode.fromLong(84552));
 
-    FileHashCache fileHashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
-            projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
+    FileHashCache fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
+                projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
 
-    Map<BuildTarget, HashCode> resultA = new TargetGraphHashing(
-        eventBus,
-        targetGraphA,
-        fileHashCache,
-        ImmutableList.of(targetGraphA.get(nodeTarget)))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> resultA =
+        new TargetGraphHashing(
+                eventBus,
+                targetGraphA,
+                fileHashCache,
+                ImmutableList.of(targetGraphA.get(nodeTarget)))
+            .hashTargetGraph();
 
-    Map<BuildTarget, HashCode> resultB = new TargetGraphHashing(
-        eventBus,
-        targetGraphB,
-        fileHashCache,
-        ImmutableList.of(targetGraphB.get(nodeTarget)))
-        .hashTargetGraph();
+    Map<BuildTarget, HashCode> resultB =
+        new TargetGraphHashing(
+                eventBus,
+                targetGraphB,
+                fileHashCache,
+                ImmutableList.of(targetGraphB.get(nodeTarget)))
+            .hashTargetGraph();
 
     assertThat(resultA, aMapWithSize(2));
     assertThat(resultA, hasKey(nodeTarget));
@@ -232,12 +209,8 @@ public class TargetGraphHashingTest {
     assertThat(resultB, aMapWithSize(2));
     assertThat(resultB, hasKey(nodeTarget));
     assertThat(resultB, hasKey(depTarget));
-    assertThat(
-        resultA.get(nodeTarget),
-        not(equalTo(resultB.get(nodeTarget))));
-    assertThat(
-        resultA.get(depTarget),
-        not(equalTo(resultB.get(depTarget))));
+    assertThat(resultA.get(nodeTarget), not(equalTo(resultB.get(nodeTarget))));
+    assertThat(resultA.get(depTarget), not(equalTo(resultB.get(depTarget))));
   }
 
   private static TargetNode<?, ?> createJavaLibraryTargetNodeWithSrcs(

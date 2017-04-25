@@ -23,13 +23,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class UriTypeCoercerTest {
 
@@ -40,11 +38,7 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("http://example.org");
-    URI uri = new UriTypeCoercer().coerce(
-        cellRoots,
-        filesystem,
-        pathFromRoot,
-        expected.toString());
+    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
 
     assertEquals(expected, uri);
   }
@@ -52,11 +46,7 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAValidHttpsURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("https://example.org");
-    URI uri = new UriTypeCoercer().coerce(
-        cellRoots,
-        filesystem,
-        pathFromRoot,
-        expected.toString());
+    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
 
     assertEquals(expected, uri);
   }
@@ -64,22 +54,14 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAMavenURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("mvn:org.hamcrest:hamcrest-core:jar:1.3");
-    URI uri = new UriTypeCoercer().coerce(
-        cellRoots,
-        filesystem,
-        pathFromRoot,
-        expected.toString());
+    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
 
     assertEquals(expected, uri);
   }
 
   @Test(expected = CoerceFailedException.class)
   public void shouldThrowAMeaningfulExceptionIfURICannotBeCoerced() throws CoerceFailedException {
-    new UriTypeCoercer().coerce(
-        cellRoots,
-        filesystem,
-        pathFromRoot,
-        "not a valid URI");
+    new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, "not a valid URI");
     fail("Expected coercion failure");
   }
 }

@@ -23,27 +23,24 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
-
 import org.junit.Test;
 
-/**
- * Unit test for {@link AbstractExecutionStep}.
- */
+/** Unit test for {@link AbstractExecutionStep}. */
 public class AbstractExecutionStepTest {
 
   @Test
   public void testDescriptionGetters() {
     String description = "How I describe myself.";
-    Step step = new AbstractExecutionStep(description) {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) {
-        return StepExecutionResult.SUCCESS;
-      }
-    };
+    Step step =
+        new AbstractExecutionStep(description) {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) {
+            return StepExecutionResult.SUCCESS;
+          }
+        };
     ExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(description, step.getShortName());
     assertEquals(description, step.getDescription(context));
   }
-
 }

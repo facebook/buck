@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.util.function.Supplier;
 
@@ -63,11 +62,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
       final SourcePathResolver resolver,
       final FileHashCache hashCache,
       final RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    return () -> new UncachedRuleKeyBuilder(
-        ruleFinder,
-        resolver,
-        hashCache,
-        ruleKeyFactory);
+    return () -> new UncachedRuleKeyBuilder(ruleFinder, resolver, hashCache, ruleKeyFactory);
   }
 
   @Override
@@ -98,5 +93,4 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
   protected RuleKeyBuilder<HashCode> setNonHashingSourcePath(SourcePath sourcePath) {
     return setNonHashingSourcePathDirectly(sourcePath);
   }
-
 }

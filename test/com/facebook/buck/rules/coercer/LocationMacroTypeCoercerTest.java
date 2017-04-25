@@ -25,12 +25,10 @@ import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class LocationMacroTypeCoercerTest {
 
@@ -42,42 +40,26 @@ public class LocationMacroTypeCoercerTest {
   public void validTarget() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
     assertThat(
-        coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
-            ImmutableList.of("//:test")),
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("//:test")),
         Matchers.equalTo(LocationMacro.of(BuildTargetFactory.newInstance("//:test"))));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void invalidTarget() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
-    coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
-        ImmutableList.of("not a target"));
+    coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("not a target"));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void tooManyArgs() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
     coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
-        ImmutableList.of("not", "a", "target"));
+        CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("not", "a", "target"));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void tooFewArgs() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
-    coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
-        ImmutableList.of());
+    coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of());
   }
-
 }

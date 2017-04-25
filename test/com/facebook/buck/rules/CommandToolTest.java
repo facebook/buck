@@ -31,11 +31,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class CommandToolTest {
 
@@ -55,21 +53,15 @@ public class CommandToolTest {
     SourcePath path = rule.getSourcePathToOutput();
 
     // Test command and inputs for just passing the source path.
-    CommandTool tool =
-        new CommandTool.Builder()
-            .addArg(SourcePathArg.of(path))
-            .build();
+    CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(
-            pathResolver.getAbsolutePath(
-                Preconditions.checkNotNull(rule.getSourcePathToOutput())).toString()));
-    assertThat(
-        tool.getDeps(ruleFinder),
-        Matchers.contains(rule));
-    assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
+            pathResolver
+                .getAbsolutePath(Preconditions.checkNotNull(rule.getSourcePathToOutput()))
+                .toString()));
+    assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
+    assertThat(tool.getInputs(), Matchers.contains(path));
   }
 
   @Test
@@ -83,10 +75,7 @@ public class CommandToolTest {
     SourcePath path = new PathSourcePath(filesystem, Paths.get("output"));
 
     // Test command and inputs for just passing the source path.
-    CommandTool tool =
-        new CommandTool.Builder()
-            .addArg(SourcePathArg.of(path))
-            .build();
+    CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(pathResolver.getAbsolutePath(path).toString()));
@@ -103,17 +92,10 @@ public class CommandToolTest {
     ruleResolver.addToIndex(rule);
     SourcePath path = rule.getSourcePathToOutput();
 
-    CommandTool tool =
-        new CommandTool.Builder()
-            .addInputs(ImmutableList.of(path))
-            .build();
+    CommandTool tool = new CommandTool.Builder().addInputs(ImmutableList.of(path)).build();
 
-    assertThat(
-        tool.getDeps(ruleFinder),
-        Matchers.contains(rule));
-    assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
+    assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
+    assertThat(tool.getInputs(), Matchers.contains(path));
   }
 
   @Test
@@ -123,14 +105,11 @@ public class CommandToolTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SourcePath path = new FakeSourcePath("input");
     CommandTool tool =
-        new CommandTool.Builder()
-            .addArg("runit")
-            .addEnv("PATH", SourcePathArg.of(path))
-            .build();
+        new CommandTool.Builder().addArg("runit").addEnv("PATH", SourcePathArg.of(path)).build();
 
-    assertThat(tool.getEnvironment(pathResolver), Matchers.hasEntry(
-            Matchers.equalTo("PATH"),
-            Matchers.containsString("input")));
+    assertThat(
+        tool.getEnvironment(pathResolver),
+        Matchers.hasEntry(Matchers.equalTo("PATH"), Matchers.containsString("input")));
   }
 
   @Test
@@ -140,38 +119,25 @@ public class CommandToolTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     SourcePath path = new FakeSourcePath("input");
-    CommandTool tool =
-        new CommandTool.Builder()
-            .addArg(SourcePathArg.of(path))
-            .build();
+    CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
 
-    FileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "input", Strings.repeat("a", 40)));
+    FileHashCache hashCache =
+        FakeFileHashCache.createFromStrings(ImmutableMap.of("input", Strings.repeat("a", 40)));
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
-    RuleKey ruleKey = new UncachedRuleKeyBuilder(
-        ruleFinder,
-        pathResolver,
-        hashCache,
-        ruleKeyFactory)
-        .setReflectively("key",  tool)
-        .build(RuleKey::new);
+    RuleKey ruleKey =
+        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
+            .setReflectively("key", tool)
+            .build(RuleKey::new);
 
-    hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "input", Strings.repeat("b", 40)));
-    ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
-    RuleKey changedRuleKey = new UncachedRuleKeyBuilder(
-        ruleFinder,
-        pathResolver,
-        hashCache,
-        ruleKeyFactory)
-        .setReflectively("key",  tool)
-        .build(RuleKey::new);
+    hashCache =
+        FakeFileHashCache.createFromStrings(ImmutableMap.of("input", Strings.repeat("b", 40)));
+    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
+    RuleKey changedRuleKey =
+        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
+            .setReflectively("key", tool)
+            .build(RuleKey::new);
 
     assertThat(ruleKey, Matchers.not(Matchers.equalTo(changedRuleKey)));
   }
-
 }

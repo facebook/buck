@@ -21,11 +21,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class ExternalTestRunnerTestSpecTest {
 
@@ -41,8 +39,7 @@ public class ExternalTestRunnerTestSpecTest {
     assertThat(
         result,
         Matchers.equalTo(
-            "{\"target\":\"//:target\",\"type\":\"custom\",\"command\":[]," +
-            "\"env\":{},\"labels\":[\"label\"],\"contacts\":[]}"));
+            "{\"target\":\"//:target\",\"type\":\"custom\",\"command\":[],"
+                + "\"env\":{},\"labels\":[\"label\"],\"contacts\":[]}"));
   }
-
 }

@@ -25,13 +25,11 @@ import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
 public class ParamInfoTest {
 
@@ -95,16 +93,14 @@ public class ParamInfoTest {
   public void pythonNamesShouldBeCorrectlyGenerated() throws NoSuchFieldException {
     ParamInfo info;
 
-    info = new ParamInfo(
-        typeCoercerFactory,
-        PythonNames.class,
-        PythonNames.class.getField("isDefaultName"));
+    info =
+        new ParamInfo(
+            typeCoercerFactory, PythonNames.class, PythonNames.class.getField("isDefaultName"));
     assertEquals("is_default_name", info.getPythonName());
 
-    info = new ParamInfo(
-        typeCoercerFactory,
-        PythonNames.class,
-        PythonNames.class.getField("notDefaultName"));
+    info =
+        new ParamInfo(
+            typeCoercerFactory, PythonNames.class, PythonNames.class.getField("notDefaultName"));
     assertEquals("not_the_default_name_123", info.getPythonName());
   }
 
@@ -118,10 +114,9 @@ public class ParamInfoTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    ParamInfo info = new ParamInfo(
-        typeCoercerFactory,
-        OptionalString.class,
-        OptionalString.class.getField("field"));
+    ParamInfo info =
+        new ParamInfo(
+            typeCoercerFactory, OptionalString.class, OptionalString.class.getField("field"));
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
     assertEquals(Optional.empty(), example.field);
@@ -143,10 +138,9 @@ public class ParamInfoTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    ParamInfo info = new ParamInfo(
-        typeCoercerFactory,
-        DefaultString.class,
-        DefaultString.class.getField("field"));
+    ParamInfo info =
+        new ParamInfo(
+            typeCoercerFactory, DefaultString.class, DefaultString.class.getField("field"));
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
     assertEquals("FIELD", example.field);

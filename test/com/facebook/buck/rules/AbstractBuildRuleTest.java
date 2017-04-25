@@ -25,8 +25,7 @@ public class AbstractBuildRuleTest {
   @Test
   public void getTypeForAnonymousClass() {
     NoopBuildRule noopBuildRule =
-        new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build()) {
-        };
+        new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build()) {};
     assertThat(noopBuildRule.getType(), Matchers.equalTo("noop_build_rule"));
   }
 }

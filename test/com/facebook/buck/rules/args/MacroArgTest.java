@@ -33,7 +33,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -42,8 +41,7 @@ public class MacroArgTest {
   @Test
   public void stringify() {
     MacroHandler macroHandler =
-        new MacroHandler(
-            ImmutableMap.of("macro", new StringExpander("expanded")));
+        new MacroHandler(ImmutableMap.of("macro", new StringExpander("expanded")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -61,8 +59,7 @@ public class MacroArgTest {
   @Test
   public void getDeps() throws Exception {
     MacroHandler macroHandler =
-        new MacroHandler(
-            ImmutableMap.of("loc", new LocationMacroExpander()));
+        new MacroHandler(ImmutableMap.of("loc", new LocationMacroExpander()));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -78,9 +75,6 @@ public class MacroArgTest {
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
             "$(loc //:rule)");
-    assertThat(
-        arg.getDeps(ruleFinder),
-        Matchers.contains(rule));
+    assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
   }
-
 }

@@ -51,24 +51,20 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class BuildInfoRecorderTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -76,8 +72,7 @@ public class BuildInfoRecorderTest {
   public void testAddMetadataMultipleValues() {
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(new FakeProjectFilesystem());
     buildInfoRecorder.addMetadata("foo", ImmutableList.of("bar", "biz", "baz"));
-    assertEquals("[\"bar\",\"biz\",\"baz\"]",
-        buildInfoRecorder.getMetadataFor("foo"));
+    assertEquals("[\"bar\",\"biz\",\"baz\"]", buildInfoRecorder.getMetadataFor("foo"));
   }
 
   @Test
@@ -89,8 +84,7 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
-    OnDiskBuildInfo onDiskBuildInfo =
-        new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
+    OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
 
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
@@ -98,11 +92,7 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
-        BUILD_TARGET,
-        filesystem,
-        store
-    );
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
 
@@ -111,11 +101,7 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
 
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
-        BUILD_TARGET,
-        filesystem,
-        store
-    );
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key3", "value3");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key2");
@@ -124,21 +110,13 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.addBuildMetadata("build", "metadata");
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
-        BUILD_TARGET,
-        filesystem,
-        store
-    );
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "build", "metadata");
 
     // Verify additional info build metadata always gets written.
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    onDiskBuildInfo = new DefaultOnDiskBuildInfo(
-        BUILD_TARGET,
-        filesystem,
-        store
-    );
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
     assertTrue(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
   }
 
@@ -147,10 +125,7 @@ public class BuildInfoRecorderTest {
     Path absPath = MorePathsForTests.rootRelativePath("some/absolute/path.txt");
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(
-        String.format(
-            BuildInfoRecorder.ABSOLUTE_PATH_ERROR_FORMAT,
-            BUILD_TARGET,
-            absPath));
+        String.format(BuildInfoRecorder.ABSOLUTE_PATH_ERROR_FORMAT, BUILD_TARGET, absPath));
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -159,8 +134,7 @@ public class BuildInfoRecorderTest {
   }
 
   @Test
-  public void testPerformUploadToArtifactCache()
-      throws IOException, InterruptedException {
+  public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
@@ -194,15 +168,12 @@ public class BuildInfoRecorderTest {
           }
 
           @Override
-          public ListenableFuture<Void> store(
-              ArtifactInfo info,
-              BorrowablePath output) {
+          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
             stored.set(true);
 
             // Verify the build metadata.
             assertThat(
-                info.getMetadata().get("build-metadata"),
-                Matchers.equalTo("build-metadata"));
+                info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
 
             // Verify zip contents
             try (Zip zip = new Zip(output.getPath(), /* forWriting */ false)) {
@@ -217,10 +188,7 @@ public class BuildInfoRecorderTest {
                       "buck-out/bin/foo/.bar/metadata/"),
                   zip.getDirNames());
               assertEquals(
-                  ImmutableSet.of(
-                      "dir/file",
-                      "file",
-                      "buck-out/bin/foo/.bar/metadata/metadata"),
+                  ImmutableSet.of("dir/file", "file", "buck-out/bin/foo/.bar/metadata/metadata"),
                   zip.getFileNames());
               assertArrayEquals(contents, zip.readFully("file"));
               assertArrayEquals(contents, zip.readFully("dir/file"));
@@ -253,9 +221,7 @@ public class BuildInfoRecorderTest {
     filesystem.writeBytesToPath(contents, dir.resolve("file2"));
     buildInfoRecorder.recordArtifact(dir);
 
-    assertEquals(
-        3 * contents.length,
-        buildInfoRecorder.getOutputSize());
+    assertEquals(3 * contents.length, buildInfoRecorder.getOutputSize());
   }
 
   @Test
@@ -263,8 +229,7 @@ public class BuildInfoRecorderTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();
@@ -318,9 +283,7 @@ public class BuildInfoRecorderTest {
   }
 
   private static void assertOnDiskBuildInfoHasMetadata(
-      OnDiskBuildInfo onDiskBuildInfo,
-      String key,
-      String value) {
+      OnDiskBuildInfo onDiskBuildInfo, String key, String value) {
     MoreAsserts.assertOptionalValueEquals(
         String.format("BuildInfoRecorder must record '%s:%s' to the filesystem.", key, value),
         value,
@@ -328,8 +291,7 @@ public class BuildInfoRecorderTest {
   }
 
   private static void assertOnDiskBuildInfoDoesNotHaveMetadata(
-      OnDiskBuildInfo onDiskBuildInfo,
-      String key) {
+      OnDiskBuildInfo onDiskBuildInfo, String key) {
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
         onDiskBuildInfo.getValue(key).isPresent());

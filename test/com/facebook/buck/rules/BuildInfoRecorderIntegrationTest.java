@@ -31,15 +31,13 @@ import com.facebook.buck.timing.DefaultClock;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
+import org.junit.Test;
 
 public class BuildInfoRecorderIntegrationTest {
   private static final String RULE_KEY = Strings.repeat("a", 40);
@@ -48,32 +46,30 @@ public class BuildInfoRecorderIntegrationTest {
 
   @Test
   public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
-    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(
-        new FakeProjectFilesystem() {
-            @Override
-            public void createZip(
-                Collection<Path> pathsToIncludeInZip,
-                Path out) throws IOException {
-              // For this test, nothing really cares about the content, so just write out the name.
-              writeBytesToPath(out.toString().getBytes(), out);
-            }
-        });
+    BuildInfoRecorder buildInfoRecorder =
+        createBuildInfoRecorder(
+            new FakeProjectFilesystem() {
+              @Override
+              public void createZip(Collection<Path> pathsToIncludeInZip, Path out)
+                  throws IOException {
+                // For this test, nothing really cares about the content, so just write out the name.
+                writeBytesToPath(out.toString().getBytes(), out);
+              }
+            });
     Path cacheDir = Files.createTempDirectory("root");
-    ArtifactCache artifactCache = TestArtifactCaches
-        .createDirCacheForTest(cacheDir, Paths.get("cache"));
+    ArtifactCache artifactCache =
+        TestArtifactCaches.createDirCacheForTest(cacheDir, Paths.get("cache"));
     buildInfoRecorder.performUploadToArtifactCache(
         ImmutableSet.of(new RuleKey(RULE_KEY)),
         artifactCache,
         new DefaultBuckEventBus(new DefaultClock(), new BuildId()));
     assertTrue(
-        cacheDir.resolve(
-            DirArtifactCacheTestUtil
-                .getPathForRuleKey(
-                    artifactCache,
-                    new RuleKey(RULE_KEY),
-                    Optional.empty()))
-        .toFile()
-        .exists());
+        cacheDir
+            .resolve(
+                DirArtifactCacheTestUtil.getPathForRuleKey(
+                    artifactCache, new RuleKey(RULE_KEY), Optional.empty()))
+            .toFile()
+            .exists());
   }
 
   private static BuildInfoRecorder createBuildInfoRecorder(ProjectFilesystem filesystem) {

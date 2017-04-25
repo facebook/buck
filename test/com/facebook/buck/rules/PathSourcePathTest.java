@@ -21,11 +21,9 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class PathSourcePathTest {
 
@@ -34,9 +32,11 @@ public class PathSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
 
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     ));
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path resolved = resolver.getRelativePath(path);
 
     assertEquals(Paths.get("cheese"), resolved);

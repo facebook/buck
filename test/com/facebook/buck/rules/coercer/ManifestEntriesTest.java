@@ -23,14 +23,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.junit.Test;
 
-import java.util.Optional;
-
-/**
- * Test functionality for the ManifestEntries class that goes beyond basic key/value get/set
- */
+/** Test functionality for the ManifestEntries class that goes beyond basic key/value get/set */
 public class ManifestEntriesTest {
 
   @Test
@@ -41,10 +37,12 @@ public class ManifestEntriesTest {
     assertTrue(ManifestEntries.builder().setVersionCode(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setVersionName("").build().hasAny());
     assertTrue(ManifestEntries.builder().setDebugMode(false).build().hasAny());
-    assertTrue(ManifestEntries.builder().setPlaceholders(
-        ImmutableMap.of("key1", "val1")).build().hasAny());
+    assertTrue(
+        ManifestEntries.builder()
+            .setPlaceholders(ImmutableMap.of("key1", "val1"))
+            .build()
+            .hasAny());
   }
-
 
   @Test
   public void shouldUpdateRuleKey() throws Exception {
@@ -59,22 +57,21 @@ public class ManifestEntriesTest {
         .andReturn(ruleKeyBuilder);
     expect(ruleKeyBuilder.setReflectively("versionName", Optional.of("thirteen")))
         .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.empty()))
-        .andReturn(ruleKeyBuilder);
+    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.empty())).andReturn(ruleKeyBuilder);
     expect(ruleKeyBuilder.setReflectively("placeholders", Optional.empty()))
         .andReturn(ruleKeyBuilder);
 
     replay(ruleKeyBuilder);
 
-    ManifestEntries entries = ManifestEntries.builder()
-        .setMinSdkVersion(5)
-        .setTargetSdkVersion(7)
-        .setVersionCode(11)
-        .setVersionName("thirteen")
-        .build();
+    ManifestEntries entries =
+        ManifestEntries.builder()
+            .setMinSdkVersion(5)
+            .setTargetSdkVersion(7)
+            .setVersionCode(11)
+            .setVersionName("thirteen")
+            .build();
 
     // The appendToRuleKey should set both present and absent properties
     entries.appendToRuleKey(ruleKeyBuilder);
   }
-
 }

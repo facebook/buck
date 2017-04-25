@@ -30,15 +30,13 @@ import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.junit.Test;
 
-public abstract class AbstractRuleKeyHasherTest<HASH>  {
+public abstract class AbstractRuleKeyHasherTest<HASH> {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
@@ -49,18 +47,18 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
 
   protected Number[] getNumbersForUniquenessTest() {
     return new Number[] {
-        /* int */ 0,
-        /* int */ 42,
-        (long) 0,
-        (long) 42,
-        (short) 0,
-        (short) 42,
-        (byte) 0,
-        (byte) 42,
-        (float) 0,
-        (float) 42,
-        (double) 0,
-        (double) 42,
+      /* int */ 0,
+      /* int */ 42,
+      (long) 0,
+      (long) 42,
+      (short) 0,
+      (short) 42,
+      (byte) 0,
+      (byte) 42,
+      (float) 0,
+      (float) 42,
+      (double) 0,
+      (double) 42,
     };
   }
 
@@ -96,16 +94,20 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
     hashes.add(newHasher().putPath(Paths.get("42"), HashCode.fromInt(0)).hash());
     hashes.add(newHasher().putPath(Paths.get("42"), HashCode.fromInt(42)).hash());
     hashes.add(newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
-    hashes.add(newHasher().putArchiveMemberPath(
-        newArchiveMember("", ""), HashCode.fromInt(0)).hash());
-    hashes.add(newHasher().putArchiveMemberPath(
-        newArchiveMember("", ""), HashCode.fromInt(42)).hash());
-    hashes.add(newHasher().putArchiveMemberPath(
-        newArchiveMember("42", "42"), HashCode.fromInt(0)).hash());
-    hashes.add(newHasher().putArchiveMemberPath(
-        newArchiveMember("42", "42"), HashCode.fromInt(42)).hash());
-    hashes.add(newHasher().putArchiveMemberPath(
-        newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash());
+    hashes.add(
+        newHasher().putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0)).hash());
+    hashes.add(
+        newHasher().putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42)).hash());
+    hashes.add(
+        newHasher().putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0)).hash());
+    hashes.add(
+        newHasher()
+            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))
+            .hash());
+    hashes.add(
+        newHasher()
+            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .hash());
     hashes.add(newHasher().putNonHashingPath("").hash());
     hashes.add(newHasher().putNonHashingPath("42").hash());
     hashes.add(newHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
@@ -118,14 +120,16 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
     hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("")).hash());
     hashes.add(newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
     hashes.add(
-        newHasher().putBuildRuleType(BuildRuleType.of("4"))
-            .putBuildRuleType(BuildRuleType.of("2")).hash());
+        newHasher()
+            .putBuildRuleType(BuildRuleType.of("4"))
+            .putBuildRuleType(BuildRuleType.of("2"))
+            .hash());
     hashes.add(newHasher().putBuildTarget(TARGET_1).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_2).hash());
-    hashes.add(newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
-        .hash());
-    hashes.add(newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
-        .hash());
+    hashes.add(
+        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
+    hashes.add(
+        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2)).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 42).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 0).hash());
@@ -158,11 +162,9 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
     assertEquals(newHasher().putNumber((byte) 4).hash(), newHasher().putNumber((byte) 4).hash());
     assertEquals(newHasher().putNumber((float) 4).hash(), newHasher().putNumber((float) 4).hash());
     assertEquals(
-        newHasher().putNumber((double) 4).hash(),
-        newHasher().putNumber((double) 4).hash());
+        newHasher().putNumber((double) 4).hash(), newHasher().putNumber((double) 4).hash());
     assertEquals(
-        newHasher().putBytes(new byte[] {42}).hash(),
-        newHasher().putBytes(new byte[] {42}).hash());
+        newHasher().putBytes(new byte[] {42}).hash(), newHasher().putBytes(new byte[] {42}).hash());
     assertEquals(
         newHasher().putPattern(Pattern.compile("42")).hash(),
         newHasher().putPattern(Pattern.compile("42")).hash());
@@ -170,25 +172,24 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
         newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash(),
         newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
     assertEquals(
-        newHasher().putArchiveMemberPath(
-            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash(),
-        newHasher().putArchiveMemberPath(
-            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash());
+        newHasher()
+            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .hash(),
+        newHasher()
+            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .hash());
     assertEquals(
-        newHasher().putNonHashingPath("42").hash(),
-        newHasher().putNonHashingPath("42").hash());
+        newHasher().putNonHashingPath("42").hash(), newHasher().putNonHashingPath("42").hash());
     assertEquals(
         newHasher().putSourceRoot(new SourceRoot("42")).hash(),
         newHasher().putSourceRoot(new SourceRoot("42")).hash());
     assertEquals(
-        newHasher().putRuleKey(RULE_KEY_1).hash(),
-        newHasher().putRuleKey(RULE_KEY_1).hash());
+        newHasher().putRuleKey(RULE_KEY_1).hash(), newHasher().putRuleKey(RULE_KEY_1).hash());
     assertEquals(
         newHasher().putBuildRuleType(BuildRuleType.of("42")).hash(),
         newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
     assertEquals(
-        newHasher().putBuildTarget(TARGET_1).hash(),
-        newHasher().putBuildTarget(TARGET_1).hash());
+        newHasher().putBuildTarget(TARGET_1).hash(), newHasher().putBuildTarget(TARGET_1).hash());
     assertEquals(
         newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash(),
         newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
@@ -200,11 +201,9 @@ public abstract class AbstractRuleKeyHasherTest<HASH>  {
     assertSame(hasher, hasher.selectCategory(RuleKeyFieldCategory.UNKNOWN));
   }
 
-
   protected ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {
     return ArchiveMemberPath.of(Paths.get(archivePath), Paths.get(memberPath));
   }
 
   protected abstract RuleKeyHasher<HASH> newHasher();
-
 }

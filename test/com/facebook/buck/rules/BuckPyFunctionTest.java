@@ -26,13 +26,11 @@ import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BuckPyFunctionTest {
 
@@ -50,9 +48,7 @@ public class BuckPyFunctionTest {
   @Test
   public void nameWillBeAddedIfMissing() {
 
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("bad"),
-        new NoName());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("bad"), new NoName());
 
     assertTrue(definition.contains("name"));
   }
@@ -63,9 +59,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void visibilityWillBeAddedIfMissing() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("bad"),
-        new NoVis());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("bad"), new NoVis());
 
     assertTrue(definition.contains("visibility=None"));
   }
@@ -76,23 +70,23 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("named"),
-        new Named());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("named"), new Named());
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def named(name, autodeps=None, visibility=None, within_view=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'named',",
-        "        'name': name,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "        'within_view': within_view,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def named(name, autodeps=None, visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'named',",
+                "        'name': name,",
+                "        'autodeps': autodeps,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 
   @TargetName(name = "lollerskates")
@@ -103,24 +97,25 @@ public class BuckPyFunctionTest {
   @Test
   public void testHasDefaultName() {
 
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("noname"),
-        new TargetNameOnly());
+    String definition =
+        buckPyFunction.toPythonFunction(BuildRuleType.of("noname"), new TargetNameOnly());
 
-    assertEquals(Joiner.on("\n").join(
-            "@provide_for_build",
-            "def noname(foobar, autodeps=None, visibility=None, within_view=None, build_env=None):",
-            "    add_rule({",
-            "        'buck.type': 'noname',",
-            "        'name': 'lollerskates',",
-            "        'foobar': foobar,",
-            "        'autodeps': autodeps,",
-            "        'visibility': visibility,",
-            "        'within_view': within_view,",
-            "    }, build_env)",
-            "",
-            ""
-        ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def noname(foobar, autodeps=None, visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'noname',",
+                "        'name': 'lollerskates',",
+                "        'foobar': foobar,",
+                "        'autodeps': autodeps,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 
   public static class BadName {
@@ -143,13 +138,14 @@ public class BuckPyFunctionTest {
 
   @Test
   public void optionalFieldsDefaultToAbsent() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("optional"), new LotsOfOptions());
+    String definition =
+        buckPyFunction.toPythonFunction(BuildRuleType.of("optional"), new LotsOfOptions());
 
     assertTrue(
         definition,
-        definition.contains("do_something=None, do_stuff=None, strings=None, targets=None, " +
-            "thing=None, version=None"));
+        definition.contains(
+            "do_something=None, do_stuff=None, strings=None, targets=None, "
+                + "thing=None, version=None"));
   }
 
   public static class Either {
@@ -162,28 +158,28 @@ public class BuckPyFunctionTest {
 
   @Test
   public void optionalFieldsAreListedAfterMandatoryOnes() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("either"),
-        new Either());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("either"), new Either());
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def either(name, dog, fake, cat=None, egg=None, " +
-            "autodeps=None, visibility=None, within_view=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'either',",
-        "        'name': name,",
-        "        'dog': dog,",
-        "        'fake': fake,",
-        "        'cat': cat,",
-        "        'egg': egg,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "        'within_view': within_view,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def either(name, dog, fake, cat=None, egg=None, "
+                    + "autodeps=None, visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'either',",
+                "        'name': name,",
+                "        'dog': dog,",
+                "        'fake': fake,",
+                "        'cat': cat,",
+                "        'egg': egg,",
+                "        'autodeps': autodeps,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 
   public static class Visible {
@@ -204,25 +200,25 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldConvertCamelCaseFieldNameToSnakeCaseParameter() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("case"),
-        new Dto());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("case"), new Dto());
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def case(name, all_this_was_fields, some_field, " +
-            "autodeps=None, visibility=None, within_view=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'case',",
-        "        'name': name,",
-        "        'hintedField': all_this_was_fields,",
-        "        'someField': some_field,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "        'within_view': within_view,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def case(name, all_this_was_fields, some_field, "
+                    + "autodeps=None, visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'case',",
+                "        'name': name,",
+                "        'hintedField': all_this_was_fields,",
+                "        'someField': some_field,",
+                "        'autodeps': autodeps,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 }

@@ -22,23 +22,20 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Test;
 
 public class FrameworkPathTypeCoercerTest {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-  private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer(
-      PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer = new SourcePathTypeCoercer(
-      buildTargetTypeCoercer,
-      pathTypeCoercer);
-  private final TypeCoercer<FrameworkPath> frameworkPathTypeCoercer = new FrameworkPathTypeCoercer(
-      sourcePathTypeCoercer);
+  private final TypeCoercer<Path> pathTypeCoercer =
+      new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
+  private final TypeCoercer<SourcePath> sourcePathTypeCoercer =
+      new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+  private final TypeCoercer<FrameworkPath> frameworkPathTypeCoercer =
+      new FrameworkPathTypeCoercer(sourcePathTypeCoercer);
 
   private FakeProjectFilesystem projectFilesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
@@ -49,12 +46,11 @@ public class FrameworkPathTypeCoercerTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException{
+  public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException {
     frameworkPathTypeCoercer.coerce(
         createCellRoots(projectFilesystem),
         projectFilesystem,
         pathRelativeToProjectRoot,
         "$FOOBAR/libfoo.a");
   }
-
 }

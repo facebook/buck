@@ -20,16 +20,13 @@ import com.facebook.buck.model.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 public class StringWithMacrosUtils {
 
   private StringWithMacrosUtils() {}
 
-  /**
-   * @return a {@link StringWithMacros} object built with the given format strings and macros.
-   */
+  /** @return a {@link StringWithMacros} object built with the given format strings and macros. */
   public static StringWithMacros format(String format, Macro... macros) {
     ImmutableList.Builder<Either<String, Macro>> partsBuilder = ImmutableList.builder();
 
@@ -49,5 +46,4 @@ public class StringWithMacrosUtils {
 
     return StringWithMacros.of(partsBuilder.build());
   }
-
 }

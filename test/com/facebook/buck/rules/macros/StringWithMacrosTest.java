@@ -28,11 +28,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class StringWithMacrosTest {
 
@@ -58,5 +56,4 @@ public class StringWithMacrosTest {
         Matchers.equalTo(
             Optional.of(StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(newTarget)))));
   }
-
 }

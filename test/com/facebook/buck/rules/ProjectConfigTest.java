@@ -23,16 +23,12 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.step.Step;
-
+import java.util.List;
 import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
 
-import java.util.List;
-
-/**
- * Unit test for {@link ProjectConfig}.
- */
+/** Unit test for {@link ProjectConfig}. */
 public class ProjectConfigTest extends EasyMockSupport {
 
   @After
@@ -46,10 +42,8 @@ public class ProjectConfigTest extends EasyMockSupport {
     BuildableContext buildableContext = new FakeBuildableContext();
 
     ProjectConfig projectConfig = createProjectConfig();
-    List<Step> result1 =
-        projectConfig.getBuildSteps(buildContext, buildableContext);
-    List<Step> result2 =
-        projectConfig.getBuildSteps(buildContext, buildableContext);
+    List<Step> result1 = projectConfig.getBuildSteps(buildContext, buildableContext);
+    List<Step> result2 = projectConfig.getBuildSteps(buildContext, buildableContext);
 
     assertNotNull("build() should return a non-null result", result1);
     assertSame("build() must be idempotent", result1, result2);
@@ -58,12 +52,12 @@ public class ProjectConfigTest extends EasyMockSupport {
   private ProjectConfig createProjectConfig() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule javaRule = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//javatests:lib"))
-        .build(ruleResolver);
+    BuildRule javaRule =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//javatests:lib"))
+            .build(ruleResolver);
 
-    return ProjectConfigBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//javatests:project_config"))
+    return ProjectConfigBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//javatests:project_config"))
         .setSrcRule(javaRule.getBuildTarget())
         .build(ruleResolver);
   }

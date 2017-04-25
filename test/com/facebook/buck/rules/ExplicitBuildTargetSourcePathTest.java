@@ -20,27 +20,24 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class ExplicitBuildTargetSourcePathTest {
 
   @Test
   public void explicitlySetPath() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())));
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     Path path = Paths.get("blah");
-    ExplicitBuildTargetSourcePath buildTargetSourcePath = new ExplicitBuildTargetSourcePath(
-        rule.getBuildTarget(),
-        path);
+    ExplicitBuildTargetSourcePath buildTargetSourcePath =
+        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -48,22 +45,17 @@ public class ExplicitBuildTargetSourcePathTest {
   @Test
   public void sameBuildTargetsWithDifferentPathsAreDifferent() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())));
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     ExplicitBuildTargetSourcePath path1 =
-        new ExplicitBuildTargetSourcePath(
-            rule.getBuildTarget(),
-            Paths.get("something"));
+        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        new ExplicitBuildTargetSourcePath(
-            rule.getBuildTarget(),
-            Paths.get("something else"));
+        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }
-
 }

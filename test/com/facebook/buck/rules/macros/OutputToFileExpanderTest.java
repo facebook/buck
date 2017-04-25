@@ -21,30 +21,27 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class OutputToFileExpanderTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
   public void shouldTakeOutputFromOtherMacroAndOutputItToAFile() throws Exception {
@@ -59,23 +56,20 @@ public class OutputToFileExpanderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> node = builder.build();
-    BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraphFactory.newInstance(node),
-        new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     builder.build(resolver, filesystem);
-    String result = expander.expand(
-        target,
-        createCellRoots(filesystem),
-        resolver,
-        ImmutableList.of("totally ignored"));
+    String result =
+        expander.expand(
+            target, createCellRoots(filesystem), resolver, ImmutableList.of("totally ignored"));
 
     assertTrue(result, result.startsWith("@"));
     Path output = Paths.get(result.substring(1));
     // Because we're going to shovel this into a genrule
     assertTrue(output.isAbsolute());
-    List <String> seen = Files.readAllLines(output, UTF_8);
+    List<String> seen = Files.readAllLines(output, UTF_8);
     List<String> expected = ImmutableList.of(text);
     assertEquals(expected, seen);
   }
-
 }

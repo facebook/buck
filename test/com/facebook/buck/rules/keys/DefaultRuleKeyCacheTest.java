@@ -27,7 +27,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -40,9 +39,7 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
     assertThat(
-        cache.get(
-            rule,
-            r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of())),
+        cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of())),
         Matchers.equalTo("result"));
   }
 
@@ -64,9 +61,7 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
     assertTrue(cache.isCached(rule));
     cache.invalidateInputs(ImmutableList.of(input));
     assertFalse(cache.isCached(rule));
@@ -77,13 +72,9 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
-    cache.get(
-        dep,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(dep, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
     TestRule rule = new TestRule();
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of()));
+    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of()));
     assertTrue(cache.isCached(rule));
     assertTrue(cache.isCached(dep));
     cache.invalidateInputs(ImmutableList.of(input));
@@ -96,13 +87,9 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
-    cache.get(
-        dep,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of()));
+    cache.get(dep, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of()));
     TestRule rule = new TestRule();
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of(input)));
     assertTrue(cache.isCached(rule));
     assertTrue(cache.isCached(dep));
     cache.invalidateInputs(ImmutableList.of(input));
@@ -114,21 +101,11 @@ public class DefaultRuleKeyCacheTest {
   public void testHitMissStats() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
-    assertThat(
-        cache.getStats().missCount(),
-        Matchers.equalTo(1L));
-    assertThat(
-        cache.getStats().hitCount(),
-        Matchers.equalTo(2L));
+    cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
+    cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
+    cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
+    assertThat(cache.getStats().missCount(), Matchers.equalTo(1L));
+    assertThat(cache.getStats().hitCount(), Matchers.equalTo(2L));
   }
 
   @Test
@@ -136,13 +113,9 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
-    assertThat(
-        cache.getStats().evictionCount(),
-        Matchers.equalTo(1L));
+    assertThat(cache.getStats().evictionCount(), Matchers.equalTo(1L));
   }
 
   @Test
@@ -151,24 +124,15 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>(clock);
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(
-        rule,
-        r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
-    assertThat(
-        cache.getStats().totalLoadTime(),
-        Matchers.equalTo(1L));
+    assertThat(cache.getStats().totalLoadTime(), Matchers.equalTo(1L));
   }
 
   private static class TestRule extends NoopBuildRule {
 
     private TestRule() {
-      super(
-          new FakeBuildRuleParamsBuilder("//:rule")
-              .build()
-      );
+      super(new FakeBuildRuleParamsBuilder("//:rule").build());
     }
-
   }
-
 }

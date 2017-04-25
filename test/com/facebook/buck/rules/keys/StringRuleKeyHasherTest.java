@@ -22,7 +22,7 @@ public class StringRuleKeyHasherTest extends AbstractRuleKeyHasherTest<String> {
   /** String hasher doesn't distinguish number types and that's fine. */
   @Override
   protected Number[] getNumbersForUniquenessTest() {
-    return new Number[] { 0, 42 };
+    return new Number[] {0, 42};
   }
 
   @Override

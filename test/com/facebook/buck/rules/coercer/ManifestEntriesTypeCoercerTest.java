@@ -23,16 +23,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-/**
- * Test coercion of map types to {@link ManifestEntries}
- */
+/** Test coercion of map types to {@link ManifestEntries} */
 public class ManifestEntriesTypeCoercerTest {
 
   private ManifestEntriesTypeCoercer manifestEntriesTypeCoercer;
@@ -50,19 +46,18 @@ public class ManifestEntriesTypeCoercerTest {
 
   @Test
   public void shouldAcceptWellFormedInput() throws Exception {
-    ImmutableMap<String, Object> inputMap = ImmutableMap.<String, Object>builder()
-        .put("min_sdk_version", 3)
-        .put("target_sdk_version", 5)
-        .put("debug_mode", true)
-        .put("version_code", 7)
-        .put("version_name", "eleven")
-        .build();
+    ImmutableMap<String, Object> inputMap =
+        ImmutableMap.<String, Object>builder()
+            .put("min_sdk_version", 3)
+            .put("target_sdk_version", 5)
+            .put("debug_mode", true)
+            .put("version_code", 7)
+            .put("version_name", "eleven")
+            .build();
 
-    ManifestEntries result = manifestEntriesTypeCoercer.coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        /* object */ inputMap);
+    ManifestEntries result =
+        manifestEntriesTypeCoercer.coerce(
+            createCellRoots(filesystem), filesystem, basePath, /* object */ inputMap);
 
     assertTrue(result.getDebugMode().get());
     assertEquals(Integer.valueOf(3), result.getMinSdkVersion().get());
@@ -73,30 +68,25 @@ public class ManifestEntriesTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void shouldThrowCoerceFailedExceptionOnUnrecognizedParam() throws Exception {
-    ImmutableMap<String, Object> inputMap = ImmutableMap.<String, Object>builder()
-        .put("bad_param_name", 3)
-        .build();
+    ImmutableMap<String, Object> inputMap =
+        ImmutableMap.<String, Object>builder().put("bad_param_name", 3).build();
 
     manifestEntriesTypeCoercer.coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        /* object */ inputMap);
+        createCellRoots(filesystem), filesystem, basePath, /* object */ inputMap);
   }
 
   @Test
   public void shouldUseAbsentForMissingItems() throws Exception {
-    ImmutableMap<String, Object> inputMap = ImmutableMap.<String, Object>builder()
-        .put("min_sdk_version", 3)
-        .put("target_sdk_version", 5)
-        .put("debug_mode", true)
-        .build();
+    ImmutableMap<String, Object> inputMap =
+        ImmutableMap.<String, Object>builder()
+            .put("min_sdk_version", 3)
+            .put("target_sdk_version", 5)
+            .put("debug_mode", true)
+            .build();
 
-    ManifestEntries result = manifestEntriesTypeCoercer.coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        /* object */ inputMap);
+    ManifestEntries result =
+        manifestEntriesTypeCoercer.coerce(
+            createCellRoots(filesystem), filesystem, basePath, /* object */ inputMap);
 
     assertTrue(result.getDebugMode().get());
     assertEquals(Integer.valueOf(3), result.getMinSdkVersion().get());

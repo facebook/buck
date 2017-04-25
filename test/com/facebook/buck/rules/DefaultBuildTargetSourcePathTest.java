@@ -21,11 +21,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.HumanReadableException;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class DefaultBuildTargetSourcePathTest {
 
@@ -72,5 +70,4 @@ public class DefaultBuildTargetSourcePathTest {
 
     assertEquals(target, path.getTarget());
   }
-
 }

@@ -23,11 +23,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.stream.Collectors;
 
 public class QueryUtilsTest {
 
@@ -42,5 +40,4 @@ public class QueryUtilsTest {
             .collect(Collectors.toList()),
         Matchers.contains(BuildTargetFactory.newInstance("//some:rule")));
   }
-
 }

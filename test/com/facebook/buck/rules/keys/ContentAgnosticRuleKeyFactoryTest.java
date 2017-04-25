@@ -31,12 +31,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ContentAgnosticRuleKeyFactoryTest {
 
@@ -62,11 +60,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
     assertThat(ruleKey1, Matchers.not(Matchers.equalTo(ruleKey2)));
   }
 
-  private RuleKey createRuleKey (
-      ProjectFilesystem fileSystem,
-      String filename,
-      String fileContents
-  ) throws Exception {
+  private RuleKey createRuleKey(ProjectFilesystem fileSystem, String filename, String fileContents)
+      throws Exception {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -76,14 +71,10 @@ public class ContentAgnosticRuleKeyFactoryTest {
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
         resolver.addToIndex(
-            new FakeBuildRule(
-                BuildTargetFactory.newInstance("//:dep"),
-                fileSystem,
-                pathResolver));
+            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), fileSystem, pathResolver));
     dep.setOutputFile(depOutput.toString());
     fileSystem.writeContentsToPath(
-        fileContents,
-        pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        fileContents, pathResolver.getRelativePath(dep.getSourcePathToOutput()));
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))

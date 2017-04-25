@@ -23,15 +23,13 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class StringifyAlterRuleKeyTest {
 
@@ -39,18 +37,14 @@ public class StringifyAlterRuleKeyTest {
   public void findAbsolutePathsInAbsolutePath() {
     Path path = MorePathsForTests.rootRelativePath("some/thing");
     Assert.assertEquals(
-        ImmutableSet.of(path),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(path)));
+        ImmutableSet.of(path), ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(path)));
   }
 
   @Test
   public void findAbsolutePathsInRelativePath() {
     Path path = Paths.get("some/thing");
     Assert.assertEquals(
-        ImmutableSet.of(),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(path)));
+        ImmutableSet.of(), ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(path)));
   }
 
   @Test
@@ -60,8 +54,7 @@ public class StringifyAlterRuleKeyTest {
     List<Path> input = ImmutableList.of(path1, path2);
     Assert.assertEquals(
         ImmutableSet.of(path1),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
 
   @Test
@@ -70,13 +63,13 @@ public class StringifyAlterRuleKeyTest {
     Path path2 = Paths.get("some/thing");
     Path path3 = Paths.get("other/thing");
     Path path4 = MorePathsForTests.rootRelativePath("other/thing");
-    Map<Path, Path> input = ImmutableMap.of(
-        path1, path2,
-        path3, path4);
+    Map<Path, Path> input =
+        ImmutableMap.of(
+            path1, path2,
+            path3, path4);
     Assert.assertEquals(
         ImmutableSet.of(path1, path4),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
 
   @Test
@@ -84,23 +77,19 @@ public class StringifyAlterRuleKeyTest {
     Optional<Path> input = Optional.empty();
     Assert.assertEquals(
         ImmutableSet.<Path>of(),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
 
   @Test
   public void findAbsolutePathsInListOfOptionals() {
     Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
-    List<Optional<Path>> input = ImmutableList.of(
-        Optional.empty(),
-        Optional.of(path2),
-        Optional.empty(),
-        Optional.of(path1));
+    List<Optional<Path>> input =
+        ImmutableList.of(
+            Optional.empty(), Optional.of(path2), Optional.empty(), Optional.of(path1));
     Assert.assertEquals(
         ImmutableSet.of(path1),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
 
   @Test
@@ -108,13 +97,13 @@ public class StringifyAlterRuleKeyTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
-    List<SourcePath> input = ImmutableList.of(
-        new PathSourcePath(projectFilesystem, path2),
-        new PathSourcePath(projectFilesystem, path1));
+    List<SourcePath> input =
+        ImmutableList.of(
+            new PathSourcePath(projectFilesystem, path2),
+            new PathSourcePath(projectFilesystem, path1));
     Assert.assertEquals(
         ImmutableSet.of(path1),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
 
   @Test
@@ -123,16 +112,14 @@ public class StringifyAlterRuleKeyTest {
     Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = MorePathsForTests.rootRelativePath("other/thing");
     Path path3 = MorePathsForTests.rootRelativePath("yet/another/thing");
-    Object input = ImmutableList.of(
-        ImmutableMap.of(
-            Optional.empty(), path1),
-        ImmutableSet.of(Optional.of(path2)),
-        Optional.empty(),
-        Optional.of(new PathSourcePath(projectFilesystem, path3)));
+    Object input =
+        ImmutableList.of(
+            ImmutableMap.of(Optional.empty(), path1),
+            ImmutableSet.of(Optional.of(path2)),
+            Optional.empty(),
+            Optional.of(new PathSourcePath(projectFilesystem, path3)));
     Assert.assertEquals(
         ImmutableSet.of(path1, path2, path3),
-        ImmutableSet.copyOf(
-            StringifyAlterRuleKey.findAbsolutePaths(input)));
+        ImmutableSet.copyOf(StringifyAlterRuleKey.findAbsolutePaths(input)));
   }
-
 }

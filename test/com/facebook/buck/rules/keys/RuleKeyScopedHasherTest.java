@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
 import org.junit.Test;
 
 public class RuleKeyScopedHasherTest {
@@ -66,16 +65,13 @@ public class RuleKeyScopedHasherTest {
     try (RuleKeyScopedHasher.Scope wrapperScope = containerHasher.wrapperScope(wrapper)) {
       countHasher.putString("val");
     }
-    assertEquals(
-        newGuavaHasher().putString("val").putWrapper(wrapper).hash(),
-        countHasher.hash());
+    assertEquals(newGuavaHasher().putString("val").putWrapper(wrapper).hash(), countHasher.hash());
   }
 
   private void testWrapperScopeNoOp(RuleKeyHasher.Wrapper wrapper) {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
     RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
-    try (RuleKeyScopedHasher.Scope wrapperScope =
-             containerHasher.wrapperScope(wrapper)) { // NOPMD
+    try (RuleKeyScopedHasher.Scope wrapperScope = containerHasher.wrapperScope(wrapper)) { // NOPMD
       // no-op
     }
     assertEquals(newGuavaHasher().hash(), countHasher.hash());
@@ -86,7 +82,7 @@ public class RuleKeyScopedHasherTest {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
     RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
-             containerHasher.containerScope(RuleKeyHasher.Container.LIST)) {
+        containerHasher.containerScope(RuleKeyHasher.Container.LIST)) {
       try (RuleKeyScopedHasher.Scope elementScope = containerScope.elementScope()) {
         countHasher.putString("val1");
       }
@@ -98,8 +94,12 @@ public class RuleKeyScopedHasherTest {
       }
     }
     assertEquals(
-        newGuavaHasher().putString("val1").putString("val2").putString("val3")
-            .putContainer(RuleKeyHasher.Container.LIST, 3).hash(),
+        newGuavaHasher()
+            .putString("val1")
+            .putString("val2")
+            .putString("val3")
+            .putContainer(RuleKeyHasher.Container.LIST, 3)
+            .hash(),
         countHasher.hash());
   }
 
@@ -108,7 +108,7 @@ public class RuleKeyScopedHasherTest {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
     RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
-             containerHasher.containerScope(RuleKeyHasher.Container.LIST)) { // NOPMD
+        containerHasher.containerScope(RuleKeyHasher.Container.LIST)) { // NOPMD
       // no-op
     }
     assertEquals(newGuavaHasher().hash(), countHasher.hash());
@@ -119,7 +119,7 @@ public class RuleKeyScopedHasherTest {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
     RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
-             containerHasher.containerScope(RuleKeyHasher.Container.MAP)) {
+        containerHasher.containerScope(RuleKeyHasher.Container.MAP)) {
       try (RuleKeyScopedHasher.Scope elementScope = containerScope.elementScope()) {
         countHasher.putString("key1");
       }
@@ -134,8 +134,13 @@ public class RuleKeyScopedHasherTest {
       }
     }
     assertEquals(
-        newGuavaHasher().putString("key1").putString("val1").putString("key2").putString("val2")
-            .putContainer(RuleKeyHasher.Container.MAP, 4).hash(),
+        newGuavaHasher()
+            .putString("key1")
+            .putString("val1")
+            .putString("key2")
+            .putString("val2")
+            .putContainer(RuleKeyHasher.Container.MAP, 4)
+            .hash(),
         countHasher.hash());
   }
 
@@ -144,7 +149,7 @@ public class RuleKeyScopedHasherTest {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
     RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
-             containerHasher.containerScope(RuleKeyHasher.Container.MAP)) { // NOPMD
+        containerHasher.containerScope(RuleKeyHasher.Container.MAP)) { // NOPMD
       // no-op
     }
     assertEquals(newGuavaHasher().hash(), countHasher.hash());
@@ -157,5 +162,4 @@ public class RuleKeyScopedHasherTest {
   private GuavaRuleKeyHasher newGuavaHasher() {
     return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
   }
-
 }

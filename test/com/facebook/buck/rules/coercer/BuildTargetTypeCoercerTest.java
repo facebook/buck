@@ -23,12 +23,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class BuildTargetTypeCoercerTest {
 
@@ -37,55 +35,45 @@ public class BuildTargetTypeCoercerTest {
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
   }
 
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        ":bar");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, ":bar");
 
     assertEquals(BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar"), seen);
   }
 
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar#baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar#baz");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
   }
 
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar#baz,qux");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar#baz,qux");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
   }
 
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        ":bar#baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, ":bar#baz");
 
     BuildTarget expected =
         BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar#baz");
@@ -100,21 +88,21 @@ public class BuildTargetTypeCoercerTest {
     // And we can't build a partial mock from an interface. *sigh*
     final Path concreteType = Paths.get("notused");
 
-    Path stubPath = (Path) Proxy.newProxyInstance(
-        getClass().getClassLoader(),
-        new Class[]{Path.class},
-        (proxy, method, args) -> {
-          if ("toString".equals(method.getName())) {
-            return "foo\\bar";
-          }
-          return method.invoke(concreteType, args);
-        });
+    Path stubPath =
+        (Path)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[] {Path.class},
+                (proxy, method, args) -> {
+                  if ("toString".equals(method.getName())) {
+                    return "foo\\bar";
+                  }
+                  return method.invoke(concreteType, args);
+                });
 
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        stubPath,
-        ":baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, stubPath, ":baz");
 
     BuildTarget expected = BuildTargetFactory.newInstance("//foo/bar:baz");
     assertEquals(expected, seen);

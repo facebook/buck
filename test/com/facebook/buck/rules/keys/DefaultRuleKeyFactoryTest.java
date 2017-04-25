@@ -61,10 +61,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MapMaker;
 import com.google.common.hash.HashCode;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,8 +69,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 // There are tons of unused fields in this class.
 @SuppressWarnings("unused")
@@ -83,9 +80,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void shouldNotAddUnannotatedFieldsToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -110,9 +108,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void shouldAddASingleAnnotatedFieldToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -125,8 +124,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class DecoratedFields extends EmptyRule {
 
-      @AddToRuleKey
-      private String field = "cake-walk";
+      @AddToRuleKey private String field = "cake-walk";
 
       public DecoratedFields(BuildTarget target) {
         super(target);
@@ -138,14 +136,13 @@ public class DefaultRuleKeyFactoryTest {
     assertEquals(expected, seen);
   }
 
-
-
   @Test
   public void shouldAllowAFieldToBeStringified() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -181,9 +178,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void shouldAllowRuleKeyAppendablesToAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -199,7 +197,7 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
-               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
+          builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         builder.getScopedHasher().getHasher().putRuleKey(subKey);
       }
     }
@@ -207,8 +205,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class AppendingField extends EmptyRule {
 
-      @AddToRuleKey
-      private Appender field = new Appender();
+      @AddToRuleKey private Appender field = new Appender();
 
       public AppendingField(BuildTarget target) {
         super(target);
@@ -224,9 +221,10 @@ public class DefaultRuleKeyFactoryTest {
   public void annotatedAppendableBuildRulesIncludeTheirRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//cheese:more-peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -243,7 +241,6 @@ public class DefaultRuleKeyFactoryTest {
       public void appendToRuleKey(RuleKeyObjectSink sink) {
         sink.setReflectively("cheese", "brie");
       }
-
     }
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
@@ -257,15 +254,14 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
     try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
       try (RuleKeyScopedHasher.Scope appendableScope =
-               builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
+          builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
         builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);
       }
     }
     RuleKey expected = builder.build(RuleKey::new);
 
     class RuleContainingAppendableRule extends EmptyRule {
-      @AddToRuleKey
-      private final AppendableRule field;
+      @AddToRuleKey private final AppendableRule field;
 
       public RuleContainingAppendableRule(BuildTarget target, AppendableRule appendableRule) {
         super(target);
@@ -273,8 +269,7 @@ public class DefaultRuleKeyFactoryTest {
       }
     }
 
-    RuleKey seen = factory.build(
-        new RuleContainingAppendableRule(target, appendableRule));
+    RuleKey seen = factory.build(new RuleContainingAppendableRule(target, appendableRule));
 
     assertEquals(expected, seen);
   }
@@ -282,9 +277,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void stringifiedRuleKeyAppendablesGetAddedToRuleKeyAsStrings() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -313,9 +309,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void fieldsAreAddedInAlphabeticalOrder() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -330,12 +327,9 @@ public class DefaultRuleKeyFactoryTest {
 
     class UnsortedFields extends EmptyRule {
 
-      @AddToRuleKey
-      private String gamma = "stinking bishop";
-      @AddToRuleKey
-      private int beta = 1;
-      @AddToRuleKey
-      private String alpha = "stilton";
+      @AddToRuleKey private String gamma = "stinking bishop";
+      @AddToRuleKey private int beta = 1;
+      @AddToRuleKey private String alpha = "stilton";
 
       public UnsortedFields(BuildTarget target) {
         super(target);
@@ -350,9 +344,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void fieldsFromParentClassesShouldBeAddedAndFieldsRetainOverallAlphabeticalOrdering() {
     BuildTarget topLevelTarget = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(topLevelTarget);
 
@@ -366,8 +361,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class Parent extends EmptyRule {
 
-      @AddToRuleKey
-      private BuildTarget target;
+      @AddToRuleKey private BuildTarget target;
 
       public Parent(BuildTarget target) {
         super(target);
@@ -377,8 +371,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class Child extends Parent {
 
-      @AddToRuleKey
-      private String exoticCheese = "bavarian smoked";
+      @AddToRuleKey private String exoticCheese = "bavarian smoked";
 
       public Child(BuildTarget target) {
         super(target);
@@ -393,9 +386,10 @@ public class DefaultRuleKeyFactoryTest {
   @Test
   public void fieldsFromParentClassesAreAlsoAdded() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
@@ -408,8 +402,7 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey expected = builder.build(RuleKey::new);
 
     class Parent extends EmptyRule {
-      @AddToRuleKey
-      private String key = "parent";
+      @AddToRuleKey private String key = "parent";
 
       public Parent(BuildTarget target) {
         super(target);
@@ -417,8 +410,7 @@ public class DefaultRuleKeyFactoryTest {
     }
 
     class Child extends Parent {
-      @AddToRuleKey
-      private String key = "child";
+      @AddToRuleKey private String key = "child";
 
       public Child(BuildTarget target) {
         super(target);
@@ -478,8 +470,7 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -508,15 +499,11 @@ public class DefaultRuleKeyFactoryTest {
             new FakeBuildRuleParamsBuilder("//:target")
                 .setProjectFilesystem(filesystem)
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build()
-        ) {
+                .build()) {
 
-          @AddToRuleKey
-          private final SourcePath inputField = input;
+          @AddToRuleKey private final SourcePath inputField = input;
 
-          @AddToRuleKey
-          private final RuleKeyAppendable appendableField = appendable;
-
+          @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
         };
 
     // Build the rule key.
@@ -537,8 +524,7 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -572,14 +558,9 @@ public class DefaultRuleKeyFactoryTest {
     // Create a dummy build rule that uses the input.
     BuildRule rule =
         new NoopBuildRule(
-            new FakeBuildRuleParamsBuilder("//:target")
-                .setProjectFilesystem(filesystem)
-                .build()
-        ) {
+            new FakeBuildRuleParamsBuilder("//:target").setProjectFilesystem(filesystem).build()) {
 
-          @AddToRuleKey
-          private final RuleKeyAppendable appendableField = appendable;
-
+          @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
         };
 
     // Build the rule key.
@@ -601,24 +582,22 @@ public class DefaultRuleKeyFactoryTest {
 
   private void assertKeysGetHashed(@Nullable Object val) {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule)
-        .setReflectively("key1", val)
-        .build(RuleKey::new);
-    RuleKey key1again = factory.newBuilderForTesting(rule)
-        .setReflectively("key1", val)
-        .build(RuleKey::new);
-    RuleKey key2 = factory.newBuilderForTesting(rule)
-        .setReflectively("key2", val)
-        .build(RuleKey::new);
+    RuleKey key1 =
+        factory.newBuilderForTesting(rule).setReflectively("key1", val).build(RuleKey::new);
+    RuleKey key1again =
+        factory.newBuilderForTesting(rule).setReflectively("key1", val).build(RuleKey::new);
+    RuleKey key2 =
+        factory.newBuilderForTesting(rule).setReflectively("key2", val).build(RuleKey::new);
     assertEquals("Rule keys should be same! " + val, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val, key1, key2);
   }
@@ -626,24 +605,22 @@ public class DefaultRuleKeyFactoryTest {
   private void assertValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
     Preconditions.checkArgument(!Objects.equal(val1, val2), "Values should be different!");
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
 
-    RuleKey key1 = factory.newBuilderForTesting(rule)
-        .setReflectively("key", val1)
-        .build(RuleKey::new);
-    RuleKey key1again = factory.newBuilderForTesting(rule)
-        .setReflectively("key", val1)
-        .build(RuleKey::new);
-    RuleKey key2 = factory.newBuilderForTesting(rule)
-        .setReflectively("key", val2)
-        .build(RuleKey::new);
+    RuleKey key1 =
+        factory.newBuilderForTesting(rule).setReflectively("key", val1).build(RuleKey::new);
+    RuleKey key1again =
+        factory.newBuilderForTesting(rule).setReflectively("key", val1).build(RuleKey::new);
+    RuleKey key2 =
+        factory.newBuilderForTesting(rule).setReflectively("key", val2).build(RuleKey::new);
     assertEquals("Rule keys should be same! " + val1, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val1 + " != " + val2, key1, key2);
   }
@@ -660,9 +637,7 @@ public class DefaultRuleKeyFactoryTest {
     }
   }
 
-  /**
-   * A hollow shell of a build rule containing absolutely no marked up fields.
-   */
+  /** A hollow shell of a build rule containing absolutely no marked up fields. */
   private static class EmptyRule implements BuildRule {
 
     private final BuildTarget target;
@@ -724,9 +699,7 @@ public class DefaultRuleKeyFactoryTest {
     private final Map<Object, RuleKeyResult<V>> results = new MapMaker().weakKeys().makeMap();
 
     @Override
-    public V get(
-        BuildRule rule,
-        Function<? super BuildRule, RuleKeyResult<V>> create) {
+    public V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create) {
       RuleKeyResult<V> result = create.apply(rule);
       results.put(rule, result);
       return result.result;
@@ -778,7 +751,5 @@ public class DefaultRuleKeyFactoryTest {
     public CacheStats getStats() {
       throw new UnsupportedOperationException();
     }
-
   }
-
 }

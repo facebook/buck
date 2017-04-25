@@ -17,20 +17,16 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public final class FakeCellPathResolver implements CellPathResolver {
-  @Nullable
-  private final ProjectFilesystem projectFilesystem;
+  @Nullable private final ProjectFilesystem projectFilesystem;
   private final ImmutableMap<String, Path> cellPaths;
 
   public FakeCellPathResolver(
-      ProjectFilesystem projectFilesystem,
-      ImmutableMap<String, Path> cellPaths) {
+      ProjectFilesystem projectFilesystem, ImmutableMap<String, Path> cellPaths) {
     this.projectFilesystem = projectFilesystem;
     this.cellPaths = cellPaths;
   }

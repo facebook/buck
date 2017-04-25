@@ -19,14 +19,11 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
-public class FakeTargetNodeBuilder extends AbstractNodeBuilder<
-    FakeTargetNodeBuilder.Arg,
-    FakeTargetNodeBuilder.FakeDescription,
-    BuildRule> {
+public class FakeTargetNodeBuilder
+    extends AbstractNodeBuilder<
+        FakeTargetNodeBuilder.Arg, FakeTargetNodeBuilder.FakeDescription, BuildRule> {
 
-  private FakeTargetNodeBuilder(
-      FakeDescription description,
-      BuildTarget target) {
+  private FakeTargetNodeBuilder(FakeDescription description, BuildTarget target) {
     super(description, target);
   }
 
@@ -58,7 +55,8 @@ public class FakeTargetNodeBuilder extends AbstractNodeBuilder<
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args) throws NoSuchBuildTargetException {
+        A args)
+        throws NoSuchBuildTargetException {
       return rule;
     }
   }

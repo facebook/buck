@@ -29,12 +29,10 @@ import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class PatternMatchedCollectionTest {
 
@@ -54,7 +52,8 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection)
+        translator
+            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
             .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -71,5 +70,4 @@ public class PatternMatchedCollectionTest {
         translator.translate(CELL_PATH_RESOLVER, PATTERN, collection),
         Matchers.equalTo(Optional.empty()));
   }
-
 }

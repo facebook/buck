@@ -23,17 +23,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.function.Predicate;
-
 import javax.annotation.Nullable;
 
-/**
- * A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}.
- */
-public class FakeDepFileBuildRule
-    extends AbstractBuildRule
+/** A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}. */
+public class FakeDepFileBuildRule extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;
@@ -46,13 +41,13 @@ public class FakeDepFileBuildRule
   }
 
   public FakeDepFileBuildRule(BuildTarget target) {
-    this(new FakeBuildRuleParamsBuilder(target)
-        .setProjectFilesystem(new FakeProjectFilesystem())
-        .build());
+    this(
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(new FakeProjectFilesystem())
+            .build());
   }
 
-  public FakeDepFileBuildRule(
-      BuildRuleParams buildRuleParams) {
+  public FakeDepFileBuildRule(BuildRuleParams buildRuleParams) {
     super(buildRuleParams);
   }
 
@@ -61,13 +56,11 @@ public class FakeDepFileBuildRule
     return this;
   }
 
-  public FakeDepFileBuildRule setCoveredByDepFilePredicate(
-      ImmutableSet<SourcePath> coveredPaths) {
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(ImmutableSet<SourcePath> coveredPaths) {
     return setCoveredByDepFilePredicate(coveredPaths::contains);
   }
 
-  public FakeDepFileBuildRule setCoveredByDepFilePredicate(
-      Predicate<SourcePath> coveredPredicate) {
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(Predicate<SourcePath> coveredPredicate) {
     this.coveredPredicate = coveredPredicate;
     return this;
   }

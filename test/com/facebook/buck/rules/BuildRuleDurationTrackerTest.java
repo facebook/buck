@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.timing.ClockDuration;
-
 import org.junit.Test;
 
 public class BuildRuleDurationTrackerTest {
@@ -31,22 +30,15 @@ public class BuildRuleDurationTrackerTest {
     BuildRule rule2 = new FakeBuildRule("//fake:rule2");
 
     /**
-     * 10      15   20  22  23  26  30  31  33   35   37
-     * .       .    .   .   .   .   .   .   .    .    .
-     * |-rule1-|    .   .   .   .   .   .   .    .    .
-     *              |---rule1---|   .   .   .    .    .
-     *                  |-------rule1-------|    .    .
-     *                      |---rule1---|        .    .
-     *                      .       |------rule1------|
-     *                      .                    .
-     *                      |--------rule2-------|
+     * 10 15 20 22 23 26 30 31 33 35 37 . . . . . . . . . . . |-rule1-| . . . . . . . . .
+     * |---rule1---| . . . . . |-------rule1-------| . . |---rule1---| . . . |------rule1------| . .
+     * |--------rule2-------|
      *
-     * Note that the total wall time for rule1 is 5 + 17 = 22. We count overlaps only once.
+     * <p>Note that the total wall time for rule1 is 5 + 17 = 22. We count overlaps only once.
      * Thread time on the other hand is always added, regardless of overlapping.
      *
-     * Durations for rule1 and rule2 are completely independent of each other.
+     * <p>Durations for rule1 and rule2 are completely independent of each other.
      */
-
     assertEquals(new ClockDuration(0, 0, 0), tracker.doBeginning(rule1, 10, 10000));
     assertEquals(new ClockDuration(5, 5000, 900), tracker.doEnding(rule1, 15, 15000, 900));
     assertEquals(new ClockDuration(5, 5000, 900), tracker.doBeginning(rule1, 20, 20000));

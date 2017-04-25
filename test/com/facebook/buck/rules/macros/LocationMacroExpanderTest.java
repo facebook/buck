@@ -41,12 +41,10 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class LocationMacroExpanderTest {
 
@@ -54,10 +52,11 @@ public class LocationMacroExpanderTest {
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildRule javaLibrary = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
-        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
-        .build(ruleResolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
+            .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
+            .build(ruleResolver);
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
@@ -72,27 +71,21 @@ public class LocationMacroExpanderTest {
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
+    JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
         .build(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "location",
-            new LocationMacroExpander()));
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
     try {
       macroHandler.expand(
-          target,
-          createCellRoots(filesystem),
-          resolver,
-          "$(location //cheese:java)");
+          target, createCellRoots(filesystem), resolver, "$(location //cheese:java)");
       fail("Location was null. Expected HumanReadableException with helpful message.");
     } catch (MacroException e) {
       assertEquals(
-          "expanding $(location //cheese:java): //cheese:java used" +
-              " in location macro does not produce output",
+          "expanding $(location //cheese:java): //cheese:java used"
+              + " in location macro does not produce output",
           e.getMessage());
     }
   }
@@ -107,21 +100,18 @@ public class LocationMacroExpanderTest {
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
     Path absolutePath = pathResolver.getAbsolutePath(javaBinary.getSourcePathToOutput());
 
-    String originalCmd = String.format(
-        "$(location :%s) $(location %s) $OUT",
-        javaBinary.getBuildTarget().getShortNameAndFlavorPostfix(),
-        javaBinary.getBuildTarget().getFullyQualifiedName());
+    String originalCmd =
+        String.format(
+            "$(location :%s) $(location %s) $OUT",
+            javaBinary.getBuildTarget().getShortNameAndFlavorPostfix(),
+            javaBinary.getBuildTarget().getFullyQualifiedName());
 
     // Interpolate the build target in the genrule cmd string.
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "location",
-            new LocationMacroExpander()));
-    String transformedString = macroHandler.expand(
-        javaBinary.getBuildTarget(),
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
+    String transformedString =
+        macroHandler.expand(
+            javaBinary.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
@@ -132,12 +122,13 @@ public class LocationMacroExpanderTest {
   public void extractRuleKeyAppendable() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String input = "//some/other:rule";
-    TargetNode<?, ?> node = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
-        .setOut("out")
-        .build();
-    BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraphFactory.newInstance(node),
-        new DefaultTargetNodeToBuildRuleTransformer());
+    TargetNode<?, ?> node =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
+            .setOut("out")
+            .build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = resolver.requireRule(node.getBuildTarget());
     LocationMacroExpander macroExpander = new LocationMacroExpander();
     assertThat(
@@ -148,5 +139,4 @@ public class LocationMacroExpanderTest {
             ImmutableList.of(input)),
         Matchers.equalTo(rule.getSourcePathToOutput()));
   }
-
 }

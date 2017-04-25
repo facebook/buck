@@ -32,7 +32,6 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,8 +39,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class MacroHandlerTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   private ProjectFilesystem filesystem;
   private BuildTarget target;
@@ -63,11 +61,7 @@ public class MacroHandlerTest {
   public void noSuchMacro() {
     MacroHandler handler = new MacroHandler(ImmutableMap.of());
     try {
-      handler.expand(
-          target,
-          createCellRoots(filesystem),
-          resolver,
-          "$(badmacro hello)");
+      handler.expand(target, createCellRoots(filesystem), resolver, "$(badmacro hello)");
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }
@@ -87,41 +81,32 @@ public class MacroHandlerTest {
   public void escapeMacro() throws MacroException {
     MacroHandler handler = new MacroHandler(ImmutableMap.of());
     String raw = "hello \\$(notamacro hello)";
-    String expanded = handler.expand(
-        target,
-        createCellRoots(filesystem),
-        resolver,
-        raw);
+    String expanded = handler.expand(target, createCellRoots(filesystem), resolver, raw);
     assertEquals("hello $(notamacro hello)", expanded);
   }
 
   @Test
   public void automaticallyAddsOutputToFileVariant() throws MacroException {
-    MacroHandler handler =
-        new MacroHandler(ImmutableMap.of("foo", new StringExpander("cake")));
-    String expanded = handler.expand(
-        target,
-        createCellRoots(filesystem),
-        resolver,
-        "Hello $(@foo //:test)");
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("foo", new StringExpander("cake")));
+    String expanded =
+        handler.expand(target, createCellRoots(filesystem), resolver, "Hello $(@foo //:test)");
 
     assertTrue(expanded, expanded.startsWith("Hello @"));
   }
 
   @Test
   public void testContainsWorkerMacroReturnsTrue() throws MacroException {
-    MacroHandler handler = new MacroHandler(
-        ImmutableMap.of("worker", new WorkerMacroExpander()));
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
     assertTrue(MacroArg.containsWorkerMacro(handler, "$(worker :rule)"));
   }
 
   @Test
   public void testContainsWorkerMacroReturnsFalse() throws MacroException {
     MacroHandler handler =
-        new MacroHandler(ImmutableMap.of(
-            "worker", new WorkerMacroExpander(),
-            "exe", new ExecutableMacroExpander()));
-    assertFalse(
-        MacroArg.containsWorkerMacro(handler, "$(exe :rule) not a worker macro in sight"));
+        new MacroHandler(
+            ImmutableMap.of(
+                "worker", new WorkerMacroExpander(),
+                "exe", new ExecutableMacroExpander()));
+    assertFalse(MacroArg.containsWorkerMacro(handler, "$(exe :rule) not a worker macro in sight"));
   }
 }

@@ -30,11 +30,9 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
+import org.junit.Test;
 
 public class CountingRuleKeyHasherTest {
 
@@ -47,57 +45,37 @@ public class CountingRuleKeyHasherTest {
 
   @Test
   public void testForwarding() {
-    assertEquals(
-        newGuavaHasher().hash(),
-        newCountHasher().hash());
+    assertEquals(newGuavaHasher().hash(), newCountHasher().hash());
     assertEquals(
         newGuavaHasher().selectCategory(RuleKeyFieldCategory.SOURCE).hash(),
         newCountHasher().selectCategory(RuleKeyFieldCategory.SOURCE).hash());
-    assertEquals(
-        newGuavaHasher().putKey("").hash(),
-        newCountHasher().putKey("").hash());
-    assertEquals(
-        newGuavaHasher().putKey("42").hash(),
-        newCountHasher().putKey("42").hash());
+    assertEquals(newGuavaHasher().putKey("").hash(), newCountHasher().putKey("").hash());
+    assertEquals(newGuavaHasher().putKey("42").hash(), newCountHasher().putKey("42").hash());
     assertEquals(
         newGuavaHasher().putKey("4").putKey("2").hash(),
         newCountHasher().putKey("4").putKey("2").hash());
+    assertEquals(newGuavaHasher().putNull().hash(), newCountHasher().putNull().hash());
     assertEquals(
-        newGuavaHasher().putNull().hash(),
-        newCountHasher().putNull().hash());
+        newGuavaHasher().putBoolean(true).hash(), newCountHasher().putBoolean(true).hash());
     assertEquals(
-        newGuavaHasher().putBoolean(true).hash(),
-        newCountHasher().putBoolean(true).hash());
+        newGuavaHasher().putBoolean(false).hash(), newCountHasher().putBoolean(false).hash());
+    assertEquals(newGuavaHasher().putNumber(0).hash(), newCountHasher().putNumber(0).hash());
+    assertEquals(newGuavaHasher().putNumber(42).hash(), newCountHasher().putNumber(42).hash());
     assertEquals(
-        newGuavaHasher().putBoolean(false).hash(),
-        newCountHasher().putBoolean(false).hash());
+        newGuavaHasher().putNumber((long) 0).hash(), newCountHasher().putNumber((long) 0).hash());
     assertEquals(
-        newGuavaHasher().putNumber(0).hash(),
-        newCountHasher().putNumber(0).hash());
+        newGuavaHasher().putNumber((long) 42).hash(), newCountHasher().putNumber((long) 42).hash());
     assertEquals(
-        newGuavaHasher().putNumber(42).hash(),
-        newCountHasher().putNumber(42).hash());
-    assertEquals(
-        newGuavaHasher().putNumber((long) 0).hash(),
-        newCountHasher().putNumber((long) 0).hash());
-    assertEquals(
-        newGuavaHasher().putNumber((long) 42).hash(),
-        newCountHasher().putNumber((long) 42).hash());
-    assertEquals(
-        newGuavaHasher().putNumber((short) 0).hash(),
-        newCountHasher().putNumber((short) 0).hash());
+        newGuavaHasher().putNumber((short) 0).hash(), newCountHasher().putNumber((short) 0).hash());
     assertEquals(
         newGuavaHasher().putNumber((short) 42).hash(),
         newCountHasher().putNumber((short) 42).hash());
     assertEquals(
-        newGuavaHasher().putNumber((byte) 0).hash(),
-        newCountHasher().putNumber((byte) 0).hash());
+        newGuavaHasher().putNumber((byte) 0).hash(), newCountHasher().putNumber((byte) 0).hash());
     assertEquals(
-        newGuavaHasher().putNumber((byte) 42).hash(),
-        newCountHasher().putNumber((byte) 42).hash());
+        newGuavaHasher().putNumber((byte) 42).hash(), newCountHasher().putNumber((byte) 42).hash());
     assertEquals(
-        newGuavaHasher().putNumber((float) 0).hash(),
-        newCountHasher().putNumber((float) 0).hash());
+        newGuavaHasher().putNumber((float) 0).hash(), newCountHasher().putNumber((float) 0).hash());
     assertEquals(
         newGuavaHasher().putNumber((float) 42).hash(),
         newCountHasher().putNumber((float) 42).hash());
@@ -107,12 +85,8 @@ public class CountingRuleKeyHasherTest {
     assertEquals(
         newGuavaHasher().putNumber((double) 42).hash(),
         newCountHasher().putNumber((double) 42).hash());
-    assertEquals(
-        newGuavaHasher().putString("").hash(),
-        newCountHasher().putString("").hash());
-    assertEquals(
-        newGuavaHasher().putString("42").hash(),
-        newCountHasher().putString("42").hash());
+    assertEquals(newGuavaHasher().putString("").hash(), newCountHasher().putString("").hash());
+    assertEquals(newGuavaHasher().putString("42").hash(), newCountHasher().putString("42").hash());
     assertEquals(
         newGuavaHasher().putString("4").putString("2").hash(),
         newCountHasher().putString("4").putString("2").hash());
@@ -136,14 +110,18 @@ public class CountingRuleKeyHasherTest {
         newCountHasher().putPattern(Pattern.compile("4")).putPattern(Pattern.compile("2")).hash());
     assertEquals(
         newGuavaHasher()
-            .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")).hash(),
+            .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
+            .hash(),
         newCountHasher()
-            .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c")).hash());
+            .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
+            .hash());
     assertEquals(
         newGuavaHasher()
-            .putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd")).hash(),
+            .putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"))
+            .hash(),
         newCountHasher()
-            .putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd")).hash());
+            .putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"))
+            .hash());
     assertEquals(
         newGuavaHasher().putPath(Paths.get(""), HashCode.fromInt(0)).hash(),
         newCountHasher().putPath(Paths.get(""), HashCode.fromInt(0)).hash());
@@ -160,30 +138,38 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash(),
         newCountHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(
-            newArchiveMember("", ""), HashCode.fromInt(0)).hash(),
-        newCountHasher().putArchiveMemberPath(
-            newArchiveMember("", ""), HashCode.fromInt(0)).hash());
+        newGuavaHasher().putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0)).hash(),
+        newCountHasher()
+            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0))
+            .hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(
-            newArchiveMember("", ""), HashCode.fromInt(42)).hash(),
-        newCountHasher().putArchiveMemberPath(
-            newArchiveMember("", ""), HashCode.fromInt(42)).hash());
+        newGuavaHasher()
+            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))
+            .hash(),
+        newCountHasher()
+            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))
+            .hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(
-            newArchiveMember("42", "42"), HashCode.fromInt(0)).hash(),
-        newCountHasher().putArchiveMemberPath(
-            newArchiveMember("42", "42"), HashCode.fromInt(0)).hash());
+        newGuavaHasher()
+            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))
+            .hash(),
+        newCountHasher()
+            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))
+            .hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(
-            newArchiveMember("42", "42"), HashCode.fromInt(42)).hash(),
-        newCountHasher().putArchiveMemberPath(
-            newArchiveMember("42", "42"), HashCode.fromInt(42)).hash());
+        newGuavaHasher()
+            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))
+            .hash(),
+        newCountHasher()
+            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))
+            .hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(
-            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash(),
-        newCountHasher().putArchiveMemberPath(
-            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)).hash());
+        newGuavaHasher()
+            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .hash(),
+        newCountHasher()
+            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .hash());
     assertEquals(
         newGuavaHasher().putNonHashingPath("").hash(),
         newCountHasher().putNonHashingPath("").hash());
@@ -201,9 +187,13 @@ public class CountingRuleKeyHasherTest {
         newCountHasher().putSourceRoot(new SourceRoot("42")).hash());
     assertEquals(
         newGuavaHasher()
-            .putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2")).hash(),
+            .putSourceRoot(new SourceRoot("4"))
+            .putSourceRoot(new SourceRoot("2"))
+            .hash(),
         newCountHasher()
-            .putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2")).hash());
+            .putSourceRoot(new SourceRoot("4"))
+            .putSourceRoot(new SourceRoot("2"))
+            .hash());
     assertEquals(
         newGuavaHasher().putRuleKey(RULE_KEY_1).hash(),
         newCountHasher().putRuleKey(RULE_KEY_1).hash());
@@ -217,10 +207,14 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putBuildRuleType(BuildRuleType.of("42")).hash(),
         newCountHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
     assertEquals(
-        newGuavaHasher().putBuildRuleType(BuildRuleType.of("4"))
-            .putBuildRuleType(BuildRuleType.of("2")).hash(),
-        newCountHasher().putBuildRuleType(BuildRuleType.of("4"))
-            .putBuildRuleType(BuildRuleType.of("2")).hash());
+        newGuavaHasher()
+            .putBuildRuleType(BuildRuleType.of("4"))
+            .putBuildRuleType(BuildRuleType.of("2"))
+            .hash(),
+        newCountHasher()
+            .putBuildRuleType(BuildRuleType.of("4"))
+            .putBuildRuleType(BuildRuleType.of("2"))
+            .hash());
     assertEquals(
         newGuavaHasher().putBuildTarget(TARGET_1).hash(),
         newCountHasher().putBuildTarget(TARGET_1).hash());
@@ -228,14 +222,18 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putBuildTarget(TARGET_2).hash(),
         newCountHasher().putBuildTarget(TARGET_2).hash());
     assertEquals(
-        newGuavaHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
+        newGuavaHasher()
+            .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
             .hash(),
-        newCountHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
+        newCountHasher()
+            .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1))
             .hash());
     assertEquals(
-        newGuavaHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+        newGuavaHasher()
+            .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
             .hash(),
-        newCountHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+        newCountHasher()
+            .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
             .hash());
     assertEquals(
         newGuavaHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash(),
@@ -326,7 +324,8 @@ public class CountingRuleKeyHasherTest {
     assertEquals(count += 2, hasher.getCount());
     hasher.putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
     assertEquals(++count, hasher.getCount());
-    hasher.putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"))
+    hasher
+        .putSha1(Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"))
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
     assertEquals(count += 2, hasher.getCount());
     hasher.putPath(Paths.get(""), HashCode.fromInt(0));
@@ -349,7 +348,8 @@ public class CountingRuleKeyHasherTest {
     assertEquals(++count, hasher.getCount());
     hasher.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42));
     assertEquals(++count, hasher.getCount());
-    hasher.putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+    hasher
+        .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
         .putArchiveMemberPath(newArchiveMember("43/43", "43/43"), HashCode.fromInt(43));
     assertEquals(count += 2, hasher.getCount());
     hasher.putNonHashingPath("");
@@ -374,17 +374,20 @@ public class CountingRuleKeyHasherTest {
     assertEquals(count += 2, hasher.getCount());
     hasher.putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1));
     assertEquals(++count, hasher.getCount());
-    hasher.putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
+    hasher
+        .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2))
         .putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1));
     assertEquals(count += 2, hasher.getCount());
     hasher.putContainer(RuleKeyHasher.Container.LIST, 0);
     assertEquals(++count, hasher.getCount());
-    hasher.putContainer(RuleKeyHasher.Container.LIST, 42)
+    hasher
+        .putContainer(RuleKeyHasher.Container.LIST, 42)
         .putContainer(RuleKeyHasher.Container.LIST, 43);
     assertEquals(count += 2, hasher.getCount());
     hasher.putContainer(RuleKeyHasher.Container.MAP, 0);
     assertEquals(++count, hasher.getCount());
-    hasher.putContainer(RuleKeyHasher.Container.MAP, 42)
+    hasher
+        .putContainer(RuleKeyHasher.Container.MAP, 42)
         .putContainer(RuleKeyHasher.Container.MAP, 43);
     assertEquals(count += 2, hasher.getCount());
     hasher.putWrapper(RuleKeyHasher.Wrapper.SUPPLIER);
@@ -401,7 +404,8 @@ public class CountingRuleKeyHasherTest {
     assertEquals(++count, hasher.getCount());
     hasher.putWrapper(RuleKeyHasher.Wrapper.APPENDABLE);
     assertEquals(++count, hasher.getCount());
-    hasher.putWrapper(RuleKeyHasher.Wrapper.SUPPLIER)
+    hasher
+        .putWrapper(RuleKeyHasher.Wrapper.SUPPLIER)
         .putWrapper(RuleKeyHasher.Wrapper.OPTIONAL)
         .putWrapper(RuleKeyHasher.Wrapper.EITHER_LEFT)
         .putWrapper(RuleKeyHasher.Wrapper.EITHER_RIGHT)
@@ -409,9 +413,12 @@ public class CountingRuleKeyHasherTest {
         .putWrapper(RuleKeyHasher.Wrapper.APPENDABLE)
         .putWrapper(RuleKeyHasher.Wrapper.OPTIONAL);
     assertEquals(count += 7, hasher.getCount());
-    hasher.putKey("key")
+    hasher
+        .putKey("key")
         .putContainer(RuleKeyHasher.Container.LIST, 3)
-        .putString("a").putNumber(1).putNull();
+        .putString("a")
+        .putNumber(1)
+        .putNull();
     assertEquals(count += 5, hasher.getCount());
   }
 

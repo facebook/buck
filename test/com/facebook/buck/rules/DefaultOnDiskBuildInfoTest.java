@@ -24,13 +24,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class DefaultOnDiskBuildInfoTest {
 
@@ -42,29 +40,20 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
-    assertThat(
-        onDiskBuildInfo.getValue("KEY"),
-        Matchers.equalTo(Optional.of("")));
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+    assertThat(onDiskBuildInfo.getValue("KEY"), Matchers.equalTo(Optional.of("")));
   }
 
   @Test
-   public void whenMetaDataJsonListThenGetValuesReturnsList() throws IOException {
+  public void whenMetaDataJsonListThenGetValuesReturnsList() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "[\"bar\",\"biz\",\"baz\"]",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "[\"bar\",\"biz\",\"baz\"]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.of(ImmutableList.of("bar", "biz", "baz"))));
@@ -74,16 +63,12 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "[]",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "[]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.of(ImmutableList.<String>of())));
@@ -97,32 +82,21 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
-    assertThat(
-        onDiskBuildInfo.getValues("KEY"),
-        Matchers.equalTo(Optional.empty()));
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+    assertThat(onDiskBuildInfo.getValues("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
   public void whenMetadataInvalidJsonThenGetValuesReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "Some Invalid Json",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "Some Invalid Json", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
-    assertThat(
-        onDiskBuildInfo.getValues("KEY"),
-        Matchers.equalTo(Optional.empty()));
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+    assertThat(onDiskBuildInfo.getValues("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -130,19 +104,14 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String hash = "fac0fac1fac2fac3fac4fac5fac6fac7fac8fac9";
     projectFilesystem.writeContentsToPath(
-        hash,
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        hash, Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
-        onDiskBuildInfo.getHash("KEY"),
-        Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
+        onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
   }
 
   @Test
@@ -153,32 +122,21 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
-    assertThat(
-        onDiskBuildInfo.getHash("KEY"),
-        Matchers.equalTo(Optional.empty()));
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
   public void whenMetadataInvalidHashThenGetHashReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "Not A Valid Hash",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "Not A Valid Hash", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
-    assertThat(
-        onDiskBuildInfo.getHash("KEY"),
-        Matchers.equalTo(Optional.empty()));
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -186,16 +144,12 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String key = "fa";
     projectFilesystem.writeContentsToPath(
-        key,
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
+        key, Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.of(new RuleKey(key))));
@@ -205,16 +159,12 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataEmptyStringThenGetRuleKeyReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
+        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.empty()));
@@ -230,13 +180,9 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
         new DefaultOnDiskBuildInfo(
-            buildTarget,
-            projectFilesystem,
-            new FilesystemBuildInfoStore(projectFilesystem)
-        );
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.empty()));
   }
-
 }

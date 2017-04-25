@@ -23,7 +23,6 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
-
 import org.junit.Test;
 
 public class BuildContextTest {

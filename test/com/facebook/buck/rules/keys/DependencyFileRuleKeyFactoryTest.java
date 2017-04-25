@@ -41,15 +41,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Predicate;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DependencyFileRuleKeyFactoryTest {
 
@@ -140,9 +138,7 @@ public class DependencyFileRuleKeyFactoryTest {
         DependencyFileEntry.fromSourcePath(usedSourcePath, pathResolver));
   }
 
-  /**
-   * Tests all types of changes (or the lack of it): used, unused, noncovered.
-   */
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
   private void testKeysWhenInputContentsChanges(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -154,8 +150,8 @@ public class DependencyFileRuleKeyFactoryTest {
       Path unusedAbsolutePath,
       Path noncoveredAbsolutePath,
       Path interestingAbsolutePath,
-      DependencyFileEntry usedDepFileEntry
-  ) throws Exception {
+      DependencyFileEntry usedDepFileEntry)
+      throws Exception {
     testDepFileRuleKeyWhenInputContentsChanges(
         ruleFinder,
         pathResolver,
@@ -179,9 +175,7 @@ public class DependencyFileRuleKeyFactoryTest {
         interestingAbsolutePath);
   }
 
-  /**
-   * Tests all types of changes (or the lack of it): used, unused, noncovered.
-   */
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
   private void testDepFileRuleKeyWhenInputContentsChanges(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -193,20 +187,17 @@ public class DependencyFileRuleKeyFactoryTest {
       Path unusedAbsolutePath,
       Path noncoveredAbsolutePath,
       Path interestingAbsolutePath,
-      DependencyFileEntry usedDepFileEntry
-  ) throws Exception {
+      DependencyFileEntry usedDepFileEntry)
+      throws Exception {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -221,16 +212,13 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
@@ -245,15 +233,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(205),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -268,16 +253,13 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(205),
             noncoveredAbsolutePath, HashCode.fromInt(300),
@@ -292,15 +274,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(105),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -315,16 +294,13 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(105),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
@@ -340,16 +316,13 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(305),
@@ -365,15 +338,12 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(405)),
@@ -388,16 +358,13 @@ public class DependencyFileRuleKeyFactoryTest {
         ruleFinder,
         pathResolver,
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300),
@@ -412,17 +379,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            usedSourcePath,
-            interestingSourcePath),
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(usedSourcePath, interestingSourcePath),
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(205),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -436,20 +398,14 @@ public class DependencyFileRuleKeyFactoryTest {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            interestingSourcePath),
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(305),
@@ -464,20 +420,14 @@ public class DependencyFileRuleKeyFactoryTest {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, noncoveredSourcePath),
         ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath),
-        ImmutableList.of(
-            usedSourcePath,
-            unusedSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(300)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             usedAbsolutePath, HashCode.fromInt(100),
             unusedAbsolutePath, HashCode.fromInt(200),
             noncoveredAbsolutePath, HashCode.fromInt(305),
@@ -494,16 +444,13 @@ public class DependencyFileRuleKeyFactoryTest {
           ruleFinder,
           pathResolver,
           ImmutableList.of(
-              usedSourcePath,
-              unusedSourcePath,
-              noncoveredSourcePath,
-              interestingSourcePath),
-          ImmutableMap.of(// before
+              usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+          ImmutableMap.of( // before
               usedAbsolutePath, HashCode.fromInt(100),
               unusedAbsolutePath, HashCode.fromInt(200),
               noncoveredAbsolutePath, HashCode.fromInt(300),
               interestingAbsolutePath, HashCode.fromInt(400)),
-          ImmutableMap.of(// after
+          ImmutableMap.of( // after
               usedAbsolutePath, HashCode.fromInt(100),
               unusedAbsolutePath, HashCode.fromInt(200),
               noncoveredAbsolutePath, HashCode.fromInt(300),
@@ -520,9 +467,7 @@ public class DependencyFileRuleKeyFactoryTest {
     }
   }
 
-  /**
-   * Tests SourcePaths both directly, and when wrapped with a RuleKeyAppendable.
-   */
+  /** Tests SourcePaths both directly, and when wrapped with a RuleKeyAppendable. */
   private void testDepFileRuleKey(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -534,7 +479,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableList<DependencyFileEntry> depFileEntries,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     testDepFileRuleKey(
         ruleFinder,
         pathResolver,
@@ -549,6 +495,7 @@ public class DependencyFileRuleKeyFactoryTest {
         expectedDepFileInputsAfter,
         failureMessage);
   }
+
   private void testDepFileRuleKey(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -561,7 +508,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableList<DependencyFileEntry> depFileEntries,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     testDepFileRuleKeyImpl(
         ruleFinder,
         pathResolver,
@@ -603,12 +551,13 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableList<DependencyFileEntry> depFileEntries,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
-    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField = fieldValueBefore;
-    };
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueBefore;
+        };
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
@@ -616,10 +565,10 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, depFileEntries);
 
-    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField = fieldValueAfter;
-    };
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueAfter;
+        };
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
@@ -631,16 +580,12 @@ public class DependencyFileRuleKeyFactoryTest {
       assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
     } else {
       assertThat(
-          failureMessage,
-          res2.getRuleKey(),
-          Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+          failureMessage, res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
     }
     assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
 
-  /**
-   * Tests all types of changes (or the lack of it): used, unused, noncovered.
-   */
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
   private void testManifestKeyWhenInputContentsChanges(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -649,17 +594,16 @@ public class DependencyFileRuleKeyFactoryTest {
       SourcePath interestingSourcePath,
       Path coveredAbsolutePath,
       Path noncoveredAbsolutePath,
-      Path interestingAbsolutePath) throws Exception {
+      Path interestingAbsolutePath)
+      throws Exception {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
         (SourcePath path) -> true, // all inputs are covered by dep file
@@ -671,15 +615,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -692,13 +633,11 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(105),
             interestingAbsolutePath, HashCode.fromInt(400)),
         (SourcePath path) -> true, // all inputs are covered by dep file
@@ -710,15 +649,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(105),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -731,15 +667,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(305),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -752,13 +685,11 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(405)),
         (SourcePath path) -> true, // all files covered
@@ -770,15 +701,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(405)),
@@ -791,17 +719,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(noncoveredSourcePath, interestingSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(105),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -814,17 +737,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            interestingSourcePath),
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             interestingAbsolutePath, HashCode.fromInt(400)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -837,17 +755,12 @@ public class DependencyFileRuleKeyFactoryTest {
     testManifestKey(
         ruleFinder,
         pathResolver,
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath),
-        ImmutableList.of(
-            coveredSourcePath,
-            noncoveredSourcePath,
-            interestingSourcePath),
-        ImmutableMap.of(// before
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300)),
-        ImmutableMap.of(// after
+        ImmutableMap.of( // after
             coveredAbsolutePath, HashCode.fromInt(100),
             noncoveredAbsolutePath, HashCode.fromInt(300),
             interestingAbsolutePath, HashCode.fromInt(400)),
@@ -869,7 +782,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableSet<SourcePath> interestingInputPaths,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     testManifestKey(
         ruleFinder,
         pathResolver,
@@ -883,6 +797,7 @@ public class DependencyFileRuleKeyFactoryTest {
         expectedDepFileInputsAfter,
         failureMessage);
   }
+
   private void testManifestKey(
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -894,7 +809,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableSet<SourcePath> interestingInputPaths,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     testManifestKeyImpl(
         ruleFinder,
         pathResolver,
@@ -933,12 +849,13 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableSet<SourcePath> interestingInputPaths,
       boolean expectSameKeys,
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
-      String failureMessage) throws Exception {
+      String failureMessage)
+      throws Exception {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
-    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField = fieldValueBefore;
-    };
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueBefore;
+        };
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
@@ -946,10 +863,10 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule1);
 
-    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField = fieldValueAfter;
-    };
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueAfter;
+        };
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
@@ -961,9 +878,7 @@ public class DependencyFileRuleKeyFactoryTest {
       assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
     } else {
       assertThat(
-          failureMessage,
-          res2.getRuleKey(),
-          Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+          failureMessage, res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
     }
     assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
@@ -981,30 +896,28 @@ public class DependencyFileRuleKeyFactoryTest {
     DependencyFileEntry dependencyFileEntry =
         DependencyFileEntry.fromSourcePath(sourcePath, pathResolver);
 
-    ImmutableMap<Path, HashCode> hashes = ImmutableMap.of(
-        pathResolver.getAbsolutePath(sourcePath), HashCode.fromInt(42));
+    ImmutableMap<Path, HashCode> hashes =
+        ImmutableMap.of(pathResolver.getAbsolutePath(sourcePath), HashCode.fromInt(42));
 
     Predicate<SourcePath> coveredPredicate =
         ImmutableSet.of(sourcePath, unusedSourcePath)::contains;
 
-    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField1 = sourcePath;
-      @AddToRuleKey
-      final Object myField2 = unusedSourcePath;
-    };
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField1 = sourcePath;
+          @AddToRuleKey final Object myField2 = unusedSourcePath;
+        };
     rule1.setCoveredByDepFilePredicate(coveredPredicate);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
     RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, ImmutableList.of(dependencyFileEntry));
 
-    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRule("//:rule") {
-      @AddToRuleKey
-      final Object myField1 = unusedSourcePath;
-      @AddToRuleKey
-      final Object myField2 = sourcePath;
-    };
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField1 = unusedSourcePath;
+          @AddToRuleKey final Object myField2 = sourcePath;
+        };
     rule2.setCoveredByDepFilePredicate(coveredPredicate);
     hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
     RuleKeyAndInputs res2 =
@@ -1027,11 +940,9 @@ public class DependencyFileRuleKeyFactoryTest {
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("field", field);
     }
-
   }
 
   private BuildRuleResolver newRuleResolver() {
     return new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   }
-
 }

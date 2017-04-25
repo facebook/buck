@@ -60,7 +60,6 @@ public class FakeBuildRuleParamsBuilder {
         Suppliers.ofInstance(declaredDeps),
         Suppliers.ofInstance(extraDeps),
         ImmutableSortedSet.of(),
-        filesystem
-    );
+        filesystem);
   }
 }

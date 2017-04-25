@@ -26,10 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -38,27 +34,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ManifestTest {
 
   private static final SourcePathResolver RESOLVER =
-      new SourcePathResolver(new SourcePathRuleFinder(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+      new SourcePathResolver(
+          new SourcePathRuleFinder(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Test
   public void toMap() {
     ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> entries =
         ImmutableMap.of(new RuleKey("aa"), ImmutableMap.of("foo/bar.h", HashCode.fromInt(20)));
-    assertThat(
-        Manifest.fromMap(new RuleKey("cc"), entries).toMap(),
-        Matchers.equalTo(entries));
+    assertThat(Manifest.fromMap(new RuleKey("cc"), entries).toMap(), Matchers.equalTo(entries));
   }
 
   @Test
   public void emptyManifest() {
-    assertThat(
-        new Manifest(new RuleKey("cc")).toMap().entrySet(),
-        Matchers.empty());
+    assertThat(new Manifest(new RuleKey("cc")).toMap().entrySet(), Matchers.empty());
   }
 
   @Test
@@ -69,9 +65,7 @@ public class ManifestTest {
     Manifest.fromMap(new RuleKey("cc"), entries).serialize(byteArrayOutputStream);
     Manifest deserialized =
         new Manifest(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-    assertThat(
-        deserialized.toMap(),
-        Matchers.equalTo(entries));
+    assertThat(deserialized.toMap(), Matchers.equalTo(entries));
   }
 
   @Test
@@ -87,17 +81,16 @@ public class ManifestTest {
         manifest.toMap(),
         Matchers.equalTo(
             ImmutableMap.of(
-                key,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode))));
+                key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode))));
   }
 
   @Test
   public void addEntryFromArchive() throws IOException {
     Manifest manifest = new Manifest(new RuleKey("cc"));
     RuleKey key = new RuleKey("aa");
-    SourcePath input = new ArchiveMemberSourcePath(
-        new FakeSourcePath("somewhere/a.jar"),
-        Paths.get("Member.class"));
+    SourcePath input =
+        new ArchiveMemberSourcePath(
+            new FakeSourcePath("somewhere/a.jar"), Paths.get("Member.class"));
     HashCode hashCode = HashCode.fromInt(20);
     FileHashCache fileHashCache =
         new FakeFileHashCache(
@@ -111,8 +104,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(
-                    RESOLVER.getRelativeArchiveMemberPath(input).toString(),
-                    hashCode))));
+                    RESOLVER.getRelativeArchiveMemberPath(input).toString(), hashCode))));
   }
 
   @Test
@@ -139,11 +131,7 @@ public class ManifestTest {
 
     Manifest manifest1 = new Manifest(new RuleKey("cc"));
     manifest1.addEntry(
-        fileHashCache,
-        key,
-        RESOLVER,
-        ImmutableSet.of(input1, input2),
-        ImmutableSet.of(input1));
+        fileHashCache, key, RESOLVER, ImmutableSet.of(input1, input2), ImmutableSet.of(input1));
     assertThat(
         manifest1.toMap(),
         Matchers.equalTo(
@@ -152,17 +140,11 @@ public class ManifestTest {
                 ImmutableMap.of(
                     RESOLVER.getRelativePath(input1).toString(),
                     Manifest.hashSourcePathGroup(
-                        fileHashCache,
-                        RESOLVER,
-                        ImmutableList.of(input1, input2))))));
+                        fileHashCache, RESOLVER, ImmutableList.of(input1, input2))))));
 
     Manifest manifest2 = new Manifest(new RuleKey("cc"));
     manifest2.addEntry(
-        fileHashCache,
-        key,
-        RESOLVER,
-        ImmutableSet.of(input1, input2),
-        ImmutableSet.of(input2));
+        fileHashCache, key, RESOLVER, ImmutableSet.of(input1, input2), ImmutableSet.of(input2));
     assertThat(
         manifest2.toMap(),
         Matchers.equalTo(
@@ -171,9 +153,7 @@ public class ManifestTest {
                 ImmutableMap.of(
                     RESOLVER.getRelativePath(input2).toString(),
                     Manifest.hashSourcePathGroup(
-                        fileHashCache,
-                        RESOLVER,
-                        ImmutableList.of(input1, input2))))));
+                        fileHashCache, RESOLVER, ImmutableList.of(input1, input2))))));
   }
 
   @Test
@@ -185,8 +165,7 @@ public class ManifestTest {
         Manifest.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
-                key,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode)));
+                key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode)));
     FileHashCache fileHashCache =
         new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input), hashCode));
     assertThat(
@@ -224,13 +203,10 @@ public class ManifestTest {
                 ImmutableMap.of(
                     RESOLVER.getRelativePath(input1).toString(),
                     Manifest.hashSourcePathGroup(
-                        fileHashCache,
-                        RESOLVER,
-                        ImmutableList.of(input1, input2)))));
+                        fileHashCache, RESOLVER, ImmutableList.of(input1, input2)))));
     assertThat(
         manifest1.lookup(fileHashCache, RESOLVER, ImmutableSet.of(input1, input2)),
         Matchers.equalTo(Optional.of(key)));
-
 
     Manifest manifest2 =
         Manifest.fromMap(
@@ -240,9 +216,7 @@ public class ManifestTest {
                 ImmutableMap.of(
                     RESOLVER.getRelativePath(input2).toString(),
                     Manifest.hashSourcePathGroup(
-                        fileHashCache,
-                        RESOLVER,
-                        ImmutableList.of(input1, input2)))));
+                        fileHashCache, RESOLVER, ImmutableList.of(input1, input2)))));
     assertThat(
         manifest2.lookup(fileHashCache, RESOLVER, ImmutableSet.of(input1, input2)),
         Matchers.equalTo(Optional.of(key)));
@@ -308,22 +282,19 @@ public class ManifestTest {
     assertThat(new Manifest(new RuleKey("cc")).size(), Matchers.equalTo(0));
     assertThat(
         Manifest.fromMap(
-            new RuleKey("cc"),
-            ImmutableMap.of(
-                new RuleKey("aa"),
-                ImmutableMap.of("foo.h", HashCode.fromInt(0))))
+                new RuleKey("cc"),
+                ImmutableMap.of(new RuleKey("aa"), ImmutableMap.of("foo.h", HashCode.fromInt(0))))
             .size(),
         Matchers.equalTo(1));
     assertThat(
         Manifest.fromMap(
-            new RuleKey("cc"),
-            ImmutableMap.of(
-                new RuleKey("aa"),
-                ImmutableMap.of("foo.h", HashCode.fromInt(0)),
-                new RuleKey("bb"),
-                ImmutableMap.of("bar.h", HashCode.fromInt(0))))
+                new RuleKey("cc"),
+                ImmutableMap.of(
+                    new RuleKey("aa"),
+                    ImmutableMap.of("foo.h", HashCode.fromInt(0)),
+                    new RuleKey("bb"),
+                    ImmutableMap.of("bar.h", HashCode.fromInt(0))))
             .size(),
         Matchers.equalTo(2));
   }
-
 }

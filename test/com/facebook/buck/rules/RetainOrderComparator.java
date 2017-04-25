@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Comparator;
 
 /**
@@ -33,6 +32,7 @@ final class RetainOrderComparator {
   /**
    * This is meant to be used for testing when a list of objects created via EasyMock need to be
    * added to a SortedSet:
+   *
    * <pre>
    * Iterable&lt;T> iterable;
    * Comparator&lt;T> comparator = RetainOrderComparator.createComparator(iterable);

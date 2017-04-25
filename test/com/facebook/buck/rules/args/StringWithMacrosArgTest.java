@@ -37,7 +37,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -50,9 +49,7 @@ public class StringWithMacrosArgTest {
       new FakeCellPathResolver(new FakeProjectFilesystem());
 
   private final BuildRuleResolver resolver =
-      new BuildRuleResolver(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer());
+      new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
   @Test
   public void getDeps() throws NoSuchBuildTargetException {
@@ -75,23 +72,17 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(
-        noMacrosArg.getDeps(pathFinder),
-        Matchers.empty());
+    assertThat(noMacrosArg.getDeps(pathFinder), Matchers.empty());
 
     // Test one embedded macros.
     StringWithMacrosArg oneMacrosArg =
         StringWithMacrosArg.of(
-            StringWithMacrosUtils.format(
-                "--test=%s",
-                LocationMacro.of(rule1.getBuildTarget())),
+            StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(
-        oneMacrosArg.getDeps(pathFinder),
-        Matchers.contains(rule1));
+    assertThat(oneMacrosArg.getDeps(pathFinder), Matchers.contains(rule1));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
@@ -105,9 +96,7 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(
-        multipleMacrosArg.getDeps(pathFinder),
-        Matchers.contains(rule1, rule2, rule1));
+    assertThat(multipleMacrosArg.getDeps(pathFinder), Matchers.contains(rule1, rule2, rule1));
   }
 
   @Test
@@ -129,23 +118,17 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(
-        noMacrosArg.getInputs(),
-        Matchers.empty());
+    assertThat(noMacrosArg.getInputs(), Matchers.empty());
 
     // Test one embedded macros.
     StringWithMacrosArg oneMacrosArg =
         StringWithMacrosArg.of(
-            StringWithMacrosUtils.format(
-                "--test=%s",
-                LocationMacro.of(rule1.getBuildTarget())),
+            StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(
-        oneMacrosArg.getInputs(),
-        Matchers.contains(rule1.getSourcePathToOutput()));
+    assertThat(oneMacrosArg.getInputs(), Matchers.contains(rule1.getSourcePathToOutput()));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
@@ -190,15 +173,12 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        Arg.stringifyList(noMacrosArg, pathResolver),
-        Matchers.equalTo(ImmutableList.of("--test")));
+        Arg.stringifyList(noMacrosArg, pathResolver), Matchers.equalTo(ImmutableList.of("--test")));
 
     // Test one embedded macros.
     StringWithMacrosArg oneMacrosArg =
         StringWithMacrosArg.of(
-            StringWithMacrosUtils.format(
-                "--test=%s",
-                LocationMacro.of(rule1.getBuildTarget())),
+            StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
             TARGET,
             CELL_PATH_RESOLVER,
@@ -208,8 +188,7 @@ public class StringWithMacrosArgTest {
         Matchers.equalTo(
             ImmutableList.of(
                 String.format(
-                    "--test=%s",
-                    pathResolver.getAbsolutePath(rule1.getSourcePathToOutput())))));
+                    "--test=%s", pathResolver.getAbsolutePath(rule1.getSourcePathToOutput())))));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
@@ -233,5 +212,4 @@ public class StringWithMacrosArgTest {
                     pathResolver.getAbsolutePath(rule2.getSourcePathToOutput()),
                     pathResolver.getAbsolutePath(rule1.getSourcePathToOutput())))));
   }
-
 }

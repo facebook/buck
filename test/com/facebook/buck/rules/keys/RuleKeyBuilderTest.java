@@ -55,9 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,8 +63,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
+import org.junit.Test;
 
 public class RuleKeyBuilderTest {
 
@@ -102,76 +99,77 @@ public class RuleKeyBuilderTest {
   @Test
   public void testUniqueness() {
     String[] fieldKeys = new String[] {"key1", "key2"};
-    Object[] fieldValues = new Object[] {
-        // Java types
-        null,
-        true,
-        false,
-        0,
-        42,
-        (long) 0,
-        (long) 42,
-        (short) 0,
-        (short) 42,
-        (byte) 0,
-        (byte) 42,
-        (float) 0,
-        (float) 42,
-        (double) 0,
-        (double) 42,
-        "",
-        "42",
-        new byte[0],
-        new byte[] {42},
-        new byte[] {42, 42},
-        DummyEnum.BLACK,
-        DummyEnum.WHITE,
-        Pattern.compile(""),
-        Pattern.compile("42"),
+    Object[] fieldValues =
+        new Object[] {
+          // Java types
+          null,
+          true,
+          false,
+          0,
+          42,
+          (long) 0,
+          (long) 42,
+          (short) 0,
+          (short) 42,
+          (byte) 0,
+          (byte) 42,
+          (float) 0,
+          (float) 42,
+          (double) 0,
+          (double) 42,
+          "",
+          "42",
+          new byte[0],
+          new byte[] {42},
+          new byte[] {42, 42},
+          DummyEnum.BLACK,
+          DummyEnum.WHITE,
+          Pattern.compile(""),
+          Pattern.compile("42"),
 
-        // Buck simple types
-        Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
-        Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"),
-        new SourceRoot(""),
-        new SourceRoot("42"),
-        RULE_KEY_1,
-        RULE_KEY_2,
-        BuildRuleType.of(""),
-        BuildRuleType.of("42"),
-        TARGET_1,
-        TARGET_2,
+          // Buck simple types
+          Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
+          Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"),
+          new SourceRoot(""),
+          new SourceRoot("42"),
+          RULE_KEY_1,
+          RULE_KEY_2,
+          BuildRuleType.of(""),
+          BuildRuleType.of("42"),
+          TARGET_1,
+          TARGET_2,
 
-        // Buck paths
-        new NonHashableSourcePathContainer(SOURCE_PATH_1),
-        new NonHashableSourcePathContainer(SOURCE_PATH_2),
-        SOURCE_PATH_1,
-        SOURCE_PATH_2,
-        ARCHIVE_PATH_1,
-        ARCHIVE_PATH_2,
-        TARGET_PATH_1,
-        TARGET_PATH_2,
-        SourceWithFlags.of(SOURCE_PATH_1, ImmutableList.of("42")),
-        SourceWithFlags.of(SOURCE_PATH_2, ImmutableList.of("42")),
+          // Buck paths
+          new NonHashableSourcePathContainer(SOURCE_PATH_1),
+          new NonHashableSourcePathContainer(SOURCE_PATH_2),
+          SOURCE_PATH_1,
+          SOURCE_PATH_2,
+          ARCHIVE_PATH_1,
+          ARCHIVE_PATH_2,
+          TARGET_PATH_1,
+          TARGET_PATH_2,
+          SourceWithFlags.of(SOURCE_PATH_1, ImmutableList.of("42")),
+          SourceWithFlags.of(SOURCE_PATH_2, ImmutableList.of("42")),
 
-        // Buck rules & appendables
-        RULE_1,
-        RULE_2,
-        APPENDABLE_1,
-        APPENDABLE_2,
+          // Buck rules & appendables
+          RULE_1,
+          RULE_2,
+          APPENDABLE_1,
+          APPENDABLE_2,
 
-        // Wrappers
-        Suppliers.ofInstance(42),
-        Optional.of(42),
-        Either.ofLeft(42),
-        Either.ofRight(42),
+          // Wrappers
+          Suppliers.ofInstance(42),
+          Optional.of(42),
+          Either.ofLeft(42),
+          Either.ofRight(42),
 
-        // Containers & nesting
-        ImmutableList.of(42),
-        ImmutableList.of(42, 42),
-        ImmutableMap.of(42, 42),
-        ImmutableList.of(ImmutableList.of(1, 2, 3, 4)),
-        ImmutableList.of(ImmutableList.of(1, 2), ImmutableList.of(3, 4)),
-    };
+          // Containers & nesting
+          ImmutableList.of(42),
+          ImmutableList.of(42, 42),
+          ImmutableMap.of(42, 42),
+          ImmutableList.of(ImmutableList.of(1, 2, 3, 4)),
+          ImmutableList.of(ImmutableList.of(1, 2), ImmutableList.of(3, 4)),
+        };
 
     List<RuleKey> ruleKeys = new ArrayList<>();
     List<String> desc = new ArrayList<>();
@@ -222,22 +220,18 @@ public class RuleKeyBuilderTest {
     BuildRuleResolver ruleResolver = new FakeBuildRuleResolver(ruleMap);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            FILESYSTEM.resolve(PATH_1), HashCode.fromInt(0),
-            FILESYSTEM.resolve(PATH_2), HashCode.fromInt(42)
-        ),
-        ImmutableMap.of(
-            pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_1), HashCode.fromInt(0),
-            pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_2), HashCode.fromInt(42)
-        ),
-        ImmutableMap.of());
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                FILESYSTEM.resolve(PATH_1), HashCode.fromInt(0),
+                FILESYSTEM.resolve(PATH_2), HashCode.fromInt(42)),
+            ImmutableMap.of(
+                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_1), HashCode.fromInt(0),
+                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_2), HashCode.fromInt(42)),
+            ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleFinder,
-        pathResolver,
-        hashCache,
-        RuleKeyBuilder.createDefaultHasher()) {
+        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher()) {
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {
@@ -274,10 +268,12 @@ public class RuleKeyBuilderTest {
   // This ugliness is necessary as we don't have mocks in Buck unit tests.
   private static class FakeBuildRuleResolver extends BuildRuleResolver {
     private final Map<BuildTarget, BuildRule> ruleMap;
+
     public FakeBuildRuleResolver(Map<BuildTarget, BuildRule> ruleMap) {
       super(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       this.ruleMap = ruleMap;
     }
+
     @Override
     public BuildRule getRule(BuildTarget target) {
       return Preconditions.checkNotNull(ruleMap.get(target), "No rule for target: " + target);
@@ -296,7 +292,6 @@ public class RuleKeyBuilderTest {
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("field", field);
     }
-
   }
 
   private static class EmptyRule implements BuildRule {

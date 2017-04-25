@@ -21,23 +21,20 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
 
 public class OptionalTypeCoercerTest {
 
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final Path PATH_RELATIVE_TO_PROJECT_ROOT = Paths.get("");
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void nullIsAbsent() throws CoerceFailedException {
@@ -69,9 +66,6 @@ public class OptionalTypeCoercerTest {
   public void nestedOptionals() throws CoerceFailedException {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Nested optional fields are ambiguous.");
-    new OptionalTypeCoercer<>(
-        new OptionalTypeCoercer<>(
-            new IdentityTypeCoercer<>(Void.class)));
+    new OptionalTypeCoercer<>(new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Void.class)));
   }
-
 }
