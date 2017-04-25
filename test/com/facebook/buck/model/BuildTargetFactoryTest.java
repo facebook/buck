@@ -18,11 +18,10 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
 public class BuildTargetFactoryTest {
 
@@ -46,8 +45,8 @@ public class BuildTargetFactoryTest {
 
   @Test
   public void testTargetWithMultipleFlavors() {
-    BuildTarget buildTarget = BuildTargetFactory
-        .newInstance(ROOT, "//example/base:shortName#one,two,three");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(ROOT, "//example/base:shortName#one,two,three");
     assertEquals(
         BuildTarget.builder(ROOT, "//example/base", "shortName")
             .addFlavors(InternalFlavor.of("one"))
@@ -62,7 +61,8 @@ public class BuildTargetFactoryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "xplat//example/base:one");
     assertEquals(
         BuildTarget.builder(
-            UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one")).build(),
+                UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one"))
+            .build(),
         buildTarget);
   }
 }

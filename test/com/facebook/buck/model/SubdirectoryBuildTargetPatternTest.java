@@ -22,10 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class SubdirectoryBuildTargetPatternTest {
 
@@ -33,33 +31,33 @@ public class SubdirectoryBuildTargetPatternTest {
 
   @Test
   public void testApply() {
-    SubdirectoryBuildTargetPattern pattern = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/com/facebook/buck/"));
+    SubdirectoryBuildTargetPattern pattern =
+        new SubdirectoryBuildTargetPattern(
+            filesystem.getRootPath(), Paths.get("src/com/facebook/buck/"));
 
     assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem.getRootPath(),
-        "//src/com/facebook/buck:buck")));
-    assertTrue(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem.getRootPath(),
-        "//src/com/facebook/buck/bar:bar")));
-    assertFalse(pattern.apply(BuildTargetFactory.newInstance(
-        filesystem.getRootPath(),
-        "//src/com/facebook/foo:foo")));
+    assertTrue(
+        pattern.apply(
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/buck:buck")));
+    assertTrue(
+        pattern.apply(
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/buck/bar:bar")));
+    assertFalse(
+        pattern.apply(
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/foo:foo")));
   }
 
   @Test
   public void testEquals() {
-    SubdirectoryBuildTargetPattern subDirPattern1 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex/"));
-    SubdirectoryBuildTargetPattern subDirPattern2 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex/"));
-    SubdirectoryBuildTargetPattern subDirPattern3 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex2/"));
+    SubdirectoryBuildTargetPattern subDirPattern1 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex/"));
+    SubdirectoryBuildTargetPattern subDirPattern2 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex/"));
+    SubdirectoryBuildTargetPattern subDirPattern3 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex2/"));
 
     assertFalse(subDirPattern1.equals(null));
     assertEquals(subDirPattern1, subDirPattern2);
@@ -68,15 +66,12 @@ public class SubdirectoryBuildTargetPatternTest {
 
   @Test
   public void testHashCode() {
-    SubdirectoryBuildTargetPattern subDirPattern1 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex/"));
-    SubdirectoryBuildTargetPattern subDirPattern2 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex/"));
-    SubdirectoryBuildTargetPattern subDirPattern3 = new SubdirectoryBuildTargetPattern(
-        filesystem.getRootPath(),
-        Paths.get("src/ex2/"));
+    SubdirectoryBuildTargetPattern subDirPattern1 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex/"));
+    SubdirectoryBuildTargetPattern subDirPattern2 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex/"));
+    SubdirectoryBuildTargetPattern subDirPattern3 =
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), Paths.get("src/ex2/"));
 
     assertEquals(subDirPattern1.hashCode(), subDirPattern2.hashCode());
     assertNotSame(subDirPattern1.hashCode(), subDirPattern3.hashCode());

@@ -25,11 +25,9 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class MacroFinderTest {
 
@@ -59,9 +57,10 @@ public class MacroFinderTest {
                 .setEndIndex(58)
                 .setEscaped(false)
                 .build());
-    ImmutableList<MacroMatchResult> actualResults = FINDER.findAll(
-        ImmutableSet.of("macro1", "macro2"),
-        "hello world $(macro1) and $(macro2 arg) $(macro1 arg arg2)");
+    ImmutableList<MacroMatchResult> actualResults =
+        FINDER.findAll(
+            ImmutableSet.of("macro1", "macro2"),
+            "hello world $(macro1) and $(macro2 arg) $(macro1 arg arg2)");
     assertEquals(expectedResults, actualResults);
   }
 
@@ -74,48 +73,51 @@ public class MacroFinderTest {
   public void replace() throws MacroException {
     Function<String, String> replacer =
         Functions.forMap(
-        ImmutableMap.of(
-            "arg1", "something",
-            "arg2", "something else"));
-    String actual = FINDER.replace(
-        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
-        "hello $(macro arg1) goodbye $(macro arg2)",
-        true);
+            ImmutableMap.of(
+                "arg1", "something",
+                "arg2", "something else"));
+    String actual =
+        FINDER.replace(
+            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            "hello $(macro arg1) goodbye $(macro arg2)",
+            true);
     assertEquals("hello something goodbye something else", actual);
   }
 
   @Test
   public void replaceEscaped() throws MacroException {
     Function<String, String> replacer =
-        Functions.forMap(ImmutableMap.of(
-            "arg1", "something",
-            "arg2", "something else"));
-    String actual = FINDER.replace(
-        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
-        "hello \\$(macro arg1) goodbye $(macro arg2)",
-        true);
+        Functions.forMap(
+            ImmutableMap.of(
+                "arg1", "something",
+                "arg2", "something else"));
+    String actual =
+        FINDER.replace(
+            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            "hello \\$(macro arg1) goodbye $(macro arg2)",
+            true);
     assertEquals("hello $(macro arg1) goodbye something else", actual);
   }
 
   @Test
   public void replacePreserveEscaping() throws MacroException {
     String input = "hello \\$(escaped) goodbye";
-    assertThat(
-        FINDER.replace(ImmutableMap.of(), input, false),
-        Matchers.equalTo(input));
+    assertThat(FINDER.replace(ImmutableMap.of(), input, false), Matchers.equalTo(input));
   }
 
   @Test
   public void replaceDollarEdgeCases() throws MacroException {
     Function<String, String> replacer =
-        Functions.forMap(ImmutableMap.of(
-            "arg1", "something",
-            "arg2", "something else",
-            "$", "dollar"));
-    String actual = FINDER.replace(
-        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
-        "hello $\\$(macro arg1) goodbye $$(macro arg2) $(macro \\$)",
-        true);
+        Functions.forMap(
+            ImmutableMap.of(
+                "arg1", "something",
+                "arg2", "something else",
+                "$", "dollar"));
+    String actual =
+        FINDER.replace(
+            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            "hello $\\$(macro arg1) goodbye $$(macro arg2) $(macro \\$)",
+            true);
     assertEquals("hello $$(macro arg1) goodbye $something else dollar", actual);
   }
 
@@ -127,12 +129,12 @@ public class MacroFinderTest {
     assertThat(
         FINDER.match(ImmutableSet.of("macro1"), "$(macro1)").get(),
         Matchers.equalTo(
-                MacroMatchResult.builder()
-                    .setMacroType("macro1")
-                    .setStartIndex(0)
-                    .setEndIndex(9)
-                    .setEscaped(false)
-                    .build()));
+            MacroMatchResult.builder()
+                .setMacroType("macro1")
+                .setStartIndex(0)
+                .setEndIndex(9)
+                .setEscaped(false)
+                .build()));
     assertThat(
         FINDER.match(ImmutableSet.of("macro1"), "$(macro1 arg)"),
         Matchers.equalTo(
@@ -164,8 +166,7 @@ public class MacroFinderTest {
   @Test
   public void matchWithUnbalancedParensDoesNotThrow() throws MacroException {
     assertThat(
-        FINDER.match(ImmutableSet.of("macro1"), "$(macro1 ()"),
-        Matchers.equalTo(Optional.empty()));
+        FINDER.match(ImmutableSet.of("macro1"), "$(macro1 ()"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -198,5 +199,4 @@ public class MacroFinderTest {
   public void matchWithInvalidName() throws MacroException {
     FINDER.match(ImmutableSet.of("macro1"), "$(macro2)");
   }
-
 }

@@ -18,10 +18,8 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
@@ -37,9 +35,7 @@ public class BuildTargetFactory {
     return newInstance(null, fullyQualifiedName);
   }
 
-  public static BuildTarget newInstance(
-      @Nullable Path root,
-      String fullyQualifiedName) {
+  public static BuildTarget newInstance(@Nullable Path root, String fullyQualifiedName) {
     root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
 
     int buildTarget = fullyQualifiedName.indexOf("//");
@@ -56,13 +52,12 @@ public class BuildTargetFactory {
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return BuildTarget.builder(
-          UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1])).build();
+      return BuildTarget.builder(UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]))
+          .build();
     }
     String[] flavors = nameAndFlavor[1].split(",");
     BuildTarget.Builder buildTargetBuilder =
-        BuildTarget.builder(
-            UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]));
+        BuildTarget.builder(UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]));
     for (String flavor : flavors) {
       buildTargetBuilder.addFlavors(InternalFlavor.of(flavor));
     }

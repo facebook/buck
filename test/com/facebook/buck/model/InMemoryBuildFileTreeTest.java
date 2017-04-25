@@ -21,43 +21,40 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class InMemoryBuildFileTreeTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   private InMemoryBuildFileTree buildFileTree;
 
   @Test
   public void testGetChildPaths() {
-    ImmutableSet<BuildTarget> targets = ImmutableSet.of(
-        BuildTargetFactory.newInstance("//:fb4a"),
-        BuildTargetFactory.newInstance("//java/com/facebook/common:base"),
-        BuildTargetFactory.newInstance("//java/com/facebook/common/rpc:rpc"),
-        BuildTargetFactory.newInstance("//java/com/facebook/common/ui:ui"),
-        BuildTargetFactory.newInstance("//javatests/com/facebook/common:base"),
-        BuildTargetFactory.newInstance("//javatests/com/facebook/common/rpc:rpc"),
-        BuildTargetFactory.newInstance("//javatests/com/facebook/common/ui:ui"));
+    ImmutableSet<BuildTarget> targets =
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance("//:fb4a"),
+            BuildTargetFactory.newInstance("//java/com/facebook/common:base"),
+            BuildTargetFactory.newInstance("//java/com/facebook/common/rpc:rpc"),
+            BuildTargetFactory.newInstance("//java/com/facebook/common/ui:ui"),
+            BuildTargetFactory.newInstance("//javatests/com/facebook/common:base"),
+            BuildTargetFactory.newInstance("//javatests/com/facebook/common/rpc:rpc"),
+            BuildTargetFactory.newInstance("//javatests/com/facebook/common/ui:ui"));
     buildFileTree = new InMemoryBuildFileTree(targets);
 
-    assertGetChildPaths("",
+    assertGetChildPaths(
+        "",
         ImmutableSet.of(
             pathWithPlatformSeparators("java/com/facebook/common"),
             pathWithPlatformSeparators("javatests/com/facebook/common")));
-    assertGetChildPaths("java/com/facebook/common",
-        ImmutableSet.of("rpc", "ui"));
-    assertGetChildPaths("java/com/facebook/common/rpc",
-        ImmutableSet.of());
+    assertGetChildPaths("java/com/facebook/common", ImmutableSet.of("rpc", "ui"));
+    assertGetChildPaths("java/com/facebook/common/rpc", ImmutableSet.of());
   }
 
   private void assertGetChildPaths(String parent, Set<String> expectedChildren) {
@@ -65,8 +62,6 @@ public class InMemoryBuildFileTreeTest {
 
     assertEquals(
         expectedChildren,
-        children.stream()
-            .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+        children.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
   }
 }

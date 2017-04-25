@@ -24,15 +24,10 @@ public class FlavorTest {
 
   @Test
   public void replaceInvalidCharacters() {
-    assertEquals(
-        "abcd",
-        Flavor.replaceInvalidCharacters("abcd"));
-    assertEquals(
-        "abcd_efgh_ijkl",
-        Flavor.replaceInvalidCharacters("abcd/efgh/ijkl"));
+    assertEquals("abcd", Flavor.replaceInvalidCharacters("abcd"));
+    assertEquals("abcd_efgh_ijkl", Flavor.replaceInvalidCharacters("abcd/efgh/ijkl"));
     assertEquals(
         "abcd_ABCD_e_fg_h-i.jkl.mn_opq____r___049",
         Flavor.replaceInvalidCharacters("abcd/ABCD/e_fg+h-i.jkl.mn/opq@#$$r/()049"));
   }
-
 }
