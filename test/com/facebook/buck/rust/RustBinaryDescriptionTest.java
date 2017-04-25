@@ -25,7 +25,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
 
 public class RustBinaryDescriptionTest {
@@ -33,21 +32,15 @@ public class RustBinaryDescriptionTest {
   @Test
   public void testGeneratedSourceFromCxxGenrule() throws NoSuchBuildTargetException {
     CxxGenruleBuilder srcBuilder =
-        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src"))
-            .setOut("main.rs");
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("main.rs");
     RustBinaryBuilder binaryBuilder =
         RustBinaryBuilder.from("//:bin")
             .setSrcs(
                 ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(srcBuilder.getTarget())));
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            srcBuilder.build(),
-            binaryBuilder.build());
+        TargetGraphFactory.newInstance(srcBuilder.build(), binaryBuilder.build());
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(
-            targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.requireRule(binaryBuilder.getTarget());
   }
-
 }

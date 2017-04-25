@@ -26,7 +26,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
 
 public class RustLibraryDescriptionTest {
@@ -34,8 +33,7 @@ public class RustLibraryDescriptionTest {
   @Test
   public void testGeneratedSourceFromCxxGenrule() throws NoSuchBuildTargetException {
     CxxGenruleBuilder srcBuilder =
-        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src"))
-            .setOut("lib.rs");
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("lib.rs");
     RustLibraryBuilder libraryBuilder =
         RustLibraryBuilder.from("//:lib")
             .setSrcs(
@@ -46,14 +44,9 @@ public class RustLibraryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            srcBuilder.build(),
-            libraryBuilder.build(),
-            binaryBuilder.build());
+            srcBuilder.build(), libraryBuilder.build(), binaryBuilder.build());
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(
-            targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.requireRule(binaryBuilder.getTarget());
   }
-
 }

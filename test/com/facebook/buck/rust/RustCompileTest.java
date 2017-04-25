@@ -43,51 +43,42 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class RustCompileTest {
   @Test(expected = HumanReadableException.class)
   public void noCrateRootInSrcs() {
-    RustCompileRule linkable = FakeRustCompileRule.from(
-        "//:donotcare",
-        ImmutableSortedSet.of()
-    );
+    RustCompileRule linkable = FakeRustCompileRule.from("//:donotcare", ImmutableSortedSet.of());
     linkable.getCrateRoot();
   }
 
   @Test
   public void crateRootMainInSrcs() {
-    RustCompileRule linkable = FakeRustCompileRule.from(
-        "//:donotcare",
-        ImmutableSortedSet.of(new FakeSourcePath("main.rs"))
-    );
+    RustCompileRule linkable =
+        FakeRustCompileRule.from(
+            "//:donotcare", ImmutableSortedSet.of(new FakeSourcePath("main.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
   @Test
   public void crateRootTargetNameInSrcs() {
-    RustCompileRule linkable = FakeRustCompileRule.from(
-        "//:myname",
-        ImmutableSortedSet.of(new FakeSourcePath("myname.rs"))
-    );
+    RustCompileRule linkable =
+        FakeRustCompileRule.from(
+            "//:myname", ImmutableSortedSet.of(new FakeSourcePath("myname.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
   // Test that there's only one valid candidate root source file.
   @Test(expected = HumanReadableException.class)
   public void crateRootMainAndTargetNameInSrcs() {
-    RustCompileRule linkable = FakeRustCompileRule.from(
-        "//:myname",
-        ImmutableSortedSet.of(
-            new FakeSourcePath("main.rs"),
-            new FakeSourcePath("myname.rs"))
-    );
+    RustCompileRule linkable =
+        FakeRustCompileRule.from(
+            "//:myname",
+            ImmutableSortedSet.of(new FakeSourcePath("main.rs"), new FakeSourcePath("myname.rs")));
     linkable.getCrateRoot();
   }
 
@@ -226,17 +217,13 @@ public class RustCompileTest {
 
   static class FakeRustCompileRule extends RustCompileRule {
     private FakeRustCompileRule(
-        BuildTarget target,
-        ImmutableSortedSet<SourcePath> srcs,
-        SourcePath rootModule) {
+        BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
       super(
           new FakeBuildRuleParamsBuilder(target).build(),
           String.format("lib%s.rlib", target),
           fakeTool(),
           fakeLinker(),
-          Stream.of(
-              "--crate-name", target.getShortName(),
-              "--crate-type", "rlib")
+          Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
               .map(StringArg::of)
               .collect(MoreCollectors.toImmutableList()),
           /* linkerFlags */ ImmutableList.of(),
@@ -245,23 +232,22 @@ public class RustCompileTest {
           true);
     }
 
-    static FakeRustCompileRule from(
-        String target,
-        ImmutableSortedSet<SourcePath> srcs) {
+    static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-          new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer()));
+      SourcePathRuleFinder ruleFinder =
+          new SourcePathRuleFinder(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
 
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-      Optional<SourcePath> root = RustCompileUtils.getCrateRoot(
-          pathResolver,
-          buildTarget.getShortName(),
-          ImmutableSet.of("main.rs", "lib.rs"),
-          srcs.stream());
+      Optional<SourcePath> root =
+          RustCompileUtils.getCrateRoot(
+              pathResolver,
+              buildTarget.getShortName(),
+              ImmutableSet.of("main.rs", "lib.rs"),
+              srcs.stream());
 
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");

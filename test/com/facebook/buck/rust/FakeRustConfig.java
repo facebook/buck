@@ -24,7 +24,6 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -63,9 +62,7 @@ public class FakeRustConfig extends RustBuckConfig {
   }
 
   @Override
-  LinkerProvider getLinkerProvider(
-      CxxPlatform cxxPlatform,
-      LinkerProvider.Type defaultType) {
+  LinkerProvider getLinkerProvider(CxxPlatform cxxPlatform, LinkerProvider.Type defaultType) {
     return linker.orElseGet(() -> super.getLinkerProvider(cxxPlatform, defaultType));
   }
 

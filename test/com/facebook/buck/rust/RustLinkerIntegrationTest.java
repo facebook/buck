@@ -22,39 +22,32 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-
-
 public class RustLinkerIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void ensureRustIsAvailable() throws IOException, InterruptedException {
     RustAssumptions.assumeRustCompilerAvailable();
   }
 
-
   @Test
   public void rustLinkerOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        Matchers.containsString(
-            "Overridden rust:linker path not found: bad-linker"));
+        Matchers.containsString("Overridden rust:linker path not found: bad-linker"));
 
     workspace
         .runBuckCommand("run", "--config", "rust.linker=bad-linker", "//:xyzzy")
@@ -63,25 +56,22 @@ public class RustLinkerIntegrationTest {
 
   @Test
   public void rustLinkerCxxArgsOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     // rust.linker_args always passed through
     assertThat(
         workspace
-            .runBuckCommand(
-                "run",
-                "--config", "rust.linker_args=-lbad-linker-args",
-                "//:xyzzy")
+            .runBuckCommand("run", "--config", "rust.linker_args=-lbad-linker-args", "//:xyzzy")
             .getStderr(),
         Matchers.containsString("library not found for -lbad-linker-args"));
   }
 
   @Test
   public void rustLinkerRustArgsOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     // rust.linker_args always passed through
@@ -89,8 +79,10 @@ public class RustLinkerIntegrationTest {
         workspace
             .runBuckCommand(
                 "run",
-                "--config", "rust.linker=/usr/bin/gcc",   // need something that works
-                "--config", "rust.linker_args=-lbad-linker-args",
+                "--config",
+                "rust.linker=/usr/bin/gcc", // need something that works
+                "--config",
+                "rust.linker_args=-lbad-linker-args",
                 "//:xyzzy")
             .getStderr(),
         Matchers.containsString("library not found for -lbad-linker-args"));
@@ -98,87 +90,79 @@ public class RustLinkerIntegrationTest {
 
   @Test
   public void rustRuleLinkerFlagsOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     assertThat(
-        workspace
-            .runBuckBuild("//:xyzzy_linkerflags")
-            .assertFailure()
-            .getStderr(),
+        workspace.runBuckBuild("//:xyzzy_linkerflags").assertFailure().getStderr(),
         Matchers.containsString("this-is-a-bad-option"));
   }
 
   @Test
   public void rustTestRuleLinkerFlagsOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_tests", tmp);
     workspace.setUp();
 
     assertThat(
-        workspace
-            .runBuckBuild("//:test_success_linkerflags")
-            .assertFailure()
-            .getStderr(),
+        workspace.runBuckBuild("//:test_success_linkerflags").assertFailure().getStderr(),
         Matchers.containsString("this-is-a-bad-option"));
   }
 
   @Test
   public void cxxLinkerOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("Overridden cxx:ld path not found: bad-linker"));
 
-    workspace
-        .runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy")
-        .assertFailure();
+    workspace.runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy").assertFailure();
   }
 
   @Test
   public void cxxLinkerArgsOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     // default linker gets cxx.ldflags
     assertThat(
-        workspace.runBuckCommand(
-            "run",
-            "--config", "cxx.ldflags=-lbad-linker-args",
-            "//:xyzzy")
-            .assertFailure().getStderr(),
+        workspace
+            .runBuckCommand("run", "--config", "cxx.ldflags=-lbad-linker-args", "//:xyzzy")
+            .assertFailure()
+            .getStderr(),
         Matchers.containsString("library not found for -lbad-linker-args"));
   }
 
   @Test
   public void cxxLinkerArgsNoOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     // cxx.ldflags not used if linker overridden
-    workspace.runBuckCommand(
-        "run",
-        "--config", "rust.linker=/usr/bin/gcc",       // want to set it to something that will work
-        "--config", "cxx.ldflags=-lbad-linker-args",
-        "//:xyzzy")
+    workspace
+        .runBuckCommand(
+            "run",
+            "--config",
+            "rust.linker=/usr/bin/gcc", // want to set it to something that will work
+            "--config",
+            "cxx.ldflags=-lbad-linker-args",
+            "//:xyzzy")
         .assertSuccess();
   }
 
   @Test
   public void cxxLinkerDependency() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand(
-        "run",
-        "--config", "cxx.ld=//:generated_linker",
-        "//:xyzzy")
+    workspace
+        .runBuckCommand("run", "--config", "cxx.ld=//:generated_linker", "//:xyzzy")
         .assertSuccess();
   }
 }

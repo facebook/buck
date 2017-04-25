@@ -22,22 +22,17 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-
-
 public class RustLibraryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void ensureRustIsAvailable() throws IOException, InterruptedException {
@@ -46,13 +41,11 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryBuild() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
-    workspace
-        .runBuckBuild("//messenger:messenger#rlib")
-        .assertSuccess();
+    workspace.runBuckBuild("//messenger:messenger#rlib").assertSuccess();
   }
 
   @Test
@@ -61,8 +54,8 @@ public class RustLibraryIntegrationTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("Can't find suitable top-level source file for"));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("//messenger:messenger_ambig#rlib").assertFailure();
@@ -70,33 +63,29 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryAmbigOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
-    workspace
-        .runBuckBuild("//messenger:messenger_ambig_ovr#rlib")
-        .assertSuccess();
+    workspace.runBuckBuild("//messenger:messenger_ambig_ovr#rlib").assertSuccess();
   }
 
   @Test
   public void rustLibraryCheck() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     workspace
         .runBuckBuild(
-            "--config",
-            "rust.rustc_check_flags=-Dwarnings",
-            "//messenger:messenger#check")
+            "--config", "rust.rustc_check_flags=-Dwarnings", "//messenger:messenger#check")
         .assertSuccess();
   }
 
   @Test
   public void rustLibraryCheckWarning() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -111,8 +100,8 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryCheckCompilerArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -127,24 +116,22 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryCompilerArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
         workspace
             .runBuckBuild(
-                "--config",
-                "rust.rustc_flags=--this-is-a-bad-option",
-                "//messenger:messenger#rlib")
+                "--config", "rust.rustc_flags=--this-is-a-bad-option", "//messenger:messenger#rlib")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
 
   @Test
   public void rustLibraryCompilerLibraryArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -159,22 +146,20 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryCompilerBinaryArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     workspace
         .runBuckBuild(
-            "--config",
-            "rust.rustc_binary_flags=--this-is-a-bad-option",
-            "//messenger:messenger")
+            "--config", "rust.rustc_binary_flags=--this-is-a-bad-option", "//messenger:messenger")
         .assertSuccess();
   }
 
   @Test
   public void rustLibraryCompilerArgs2() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -190,21 +175,19 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void rustLibraryRuleCompilerArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
-        workspace
-            .runBuckBuild("//messenger:messenger_flags#rlib")
-            .getStderr(),
+        workspace.runBuckBuild("//messenger:messenger_flags#rlib").getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
 
   @Test
   public void libraryCrateRoot() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("//messenger2").assertSuccess();
@@ -212,8 +195,8 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void binaryWithLibrary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(
@@ -225,8 +208,8 @@ public class RustLibraryIntegrationTest {
 
   @Test
   public void binaryWithAliasedLibrary() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
     assertThat(

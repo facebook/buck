@@ -20,7 +20,6 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.io.IOException;
 
 abstract class RustAssumptions {
