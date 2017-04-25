@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -43,5 +42,4 @@ public class DTestDescriptionTest {
       assertThat(implicitDeps, Matchers.hasItem(target));
     }
   }
-
 }

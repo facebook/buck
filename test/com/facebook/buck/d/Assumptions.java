@@ -19,7 +19,6 @@ package com.facebook.buck.d;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-
 import java.io.IOException;
 
 abstract class Assumptions {

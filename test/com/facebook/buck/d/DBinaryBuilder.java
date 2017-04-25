@@ -21,20 +21,13 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 
-
 public class DBinaryBuilder
     extends AbstractNodeBuilder<DBinaryDescription.Arg, DBinaryDescription, DBinary> {
 
   public DBinaryBuilder(
-      BuildTarget target,
-      DBuckConfig dBuckConfig,
-      CxxPlatform defaultCxxPlatform) {
+      BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {
     super(
-        new DBinaryDescription(
-            dBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            defaultCxxPlatform),
+        new DBinaryDescription(dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG, defaultCxxPlatform),
         target);
   }
-
 }

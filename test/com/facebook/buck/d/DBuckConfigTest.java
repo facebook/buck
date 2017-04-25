@@ -35,26 +35,22 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
- * Tests that the autodetection in DBuckConfig works and that explicitly
- * configured values are respected.
+ * Tests that the autodetection in DBuckConfig works and that explicitly configured values are
+ * respected.
  */
 public class DBuckConfigTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Path makeFakeExecutable(Path directory, String baseName) throws IOException {
-    Path dmd = directory.resolve(
-        baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
+    Path dmd = directory.resolve(baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
     Files.createFile(dmd);
     MoreFiles.makeExecutable(dmd);
     return dmd;
@@ -64,10 +60,10 @@ public class DBuckConfigTest {
   public void testCompilerInPath() throws IOException {
     Path yooserBeen = tmp.newFolder("yooser", "been");
     Path dmd = makeFakeExecutable(yooserBeen, "dmd");
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBeen.toRealPath().toString()))
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of("PATH", yooserBeen.toRealPath().toString()))
+            .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     assertEquals(dmd.toRealPath().toString(), toolPath(dBuckConfig.getDCompiler()));
   }
@@ -77,9 +73,10 @@ public class DBuckConfigTest {
     Path yooserBeen = tmp.newFolder("yooser", "been");
     Path userBean = tmp.newFolder("user", "bean").toRealPath();
     makeFakeExecutable(yooserBeen, "dmd");
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of("PATH", userBean.toString()))
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of("PATH", userBean.toString()))
+            .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     String msg = "";
     Tool compiler = null;
@@ -99,9 +96,7 @@ public class DBuckConfigTest {
       assertFalse(toolPath(compiler).contains(userBean.toString()));
       assertFalse(toolPath(compiler).contains(yooserBeen.toString()));
     } else {
-      assertEquals(
-        "Unable to locate dmd on PATH, or it's not marked as being executable",
-        msg);
+      assertEquals("Unable to locate dmd on PATH, or it's not marked as being executable", msg);
     }
   }
 
@@ -110,24 +105,19 @@ public class DBuckConfigTest {
     Path yooserBeen = tmp.newFolder("yooser", "been");
     makeFakeExecutable(yooserBeen, "dmd");
     Path ldc = makeFakeExecutable(yooserBeen, "ldc");
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBeen.toRealPath().toString()))
-      .setSections(
-          "[d]",
-          "compiler=" + ldc.toRealPath())
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of("PATH", yooserBeen.toRealPath().toString()))
+            .setSections("[d]", "compiler=" + ldc.toRealPath())
+            .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     assertEquals(ldc.toRealPath().toString(), toolPath(dBuckConfig.getDCompiler()));
   }
 
   @Test
   public void testDCompilerFlagsOverridden() throws IOException {
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setSections(
-          "[d]",
-          "base_compiler_flags=-g -O3")
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder().setSections("[d]", "base_compiler_flags=-g -O3").build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     ImmutableList<String> compilerFlags = dBuckConfig.getBaseCompilerFlags();
     assertContains(compilerFlags, "-g");
@@ -141,13 +131,12 @@ public class DBuckConfigTest {
     makeFakeExecutable(yooserBin, "dmd");
     Path phobos2So = yooserLib.resolve("libphobos2.so");
     Files.createFile(phobos2So);
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBin.toRealPath().toString()))
-      .setSections(
-          "[d]",
-          "linker_flags = -L/opt/doesnotexist/dmd/lib \"-L/path with spaces\"")
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of("PATH", yooserBin.toRealPath().toString()))
+            .setSections(
+                "[d]", "linker_flags = -L/opt/doesnotexist/dmd/lib \"-L/path with spaces\"")
+            .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     ImmutableList<String> linkerFlags = dBuckConfig.getLinkerFlags();
     assertContains(linkerFlags, "-L/opt/doesnotexist/dmd/lib");
@@ -162,31 +151,27 @@ public class DBuckConfigTest {
     makeFakeExecutable(yooserBin, "dmd");
     Path phobos2So = yooserLib.resolve("libphobos2.so");
     Files.createFile(phobos2So);
-    BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBin.toRealPath().toString()))
-      .build();
+    BuckConfig delegate =
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of("PATH", yooserBin.toRealPath().toString()))
+            .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     ImmutableList<String> linkerFlags = dBuckConfig.getLinkerFlags();
     assertContains(linkerFlags, "-L" + yooserLib.toRealPath());
   }
 
   private static <T> void assertContains(Collection<T> haystack, T needle) {
-    assertTrue(
-        needle.toString() + " is in " + haystack.toString(),
-        haystack.contains(needle));
+    assertTrue(needle.toString() + " is in " + haystack.toString(), haystack.contains(needle));
   }
 
   private static <T> void assertDoesNotContain(Collection<T> haystack, T needle) {
-    assertFalse(
-        needle.toString() + " is not in " + haystack.toString(),
-        haystack.contains(needle));
+    assertFalse(needle.toString() + " is not in " + haystack.toString(), haystack.contains(needle));
   }
 
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
-    BuildRuleResolver resolver = new BuildRuleResolver(
-        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return tool.getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))).get(0);
   }
 }
