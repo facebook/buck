@@ -19,21 +19,19 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.net.URI;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-
 public class ServerHealthManagerTest {
-  private static final ImmutableList<URI> SERVERS = ImmutableList.of(
-      URI.create("http://localhost:4242"),
-      URI.create("http://localhost:8484"),
-      URI.create("http://localhost:2121")
-  );
+  private static final ImmutableList<URI> SERVERS =
+      ImmutableList.of(
+          URI.create("http://localhost:4242"),
+          URI.create("http://localhost:8484"),
+          URI.create("http://localhost:2121"));
 
   private static final long NOW_MILLIS = 0;
   private static final int RANGE_MILLIS = 42;

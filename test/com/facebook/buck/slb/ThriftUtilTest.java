@@ -20,24 +20,20 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ThriftUtilTest {
 
   @Test
   public void testSerializations() throws IOException {
-    ImmutableList<Serializer> serializers = ImmutableList.of(
-        new ByteSerializer(),
-        new StreamSerializer());
-    ImmutableList<Deserializer> deserializers = ImmutableList.of(
-        new ByteSerializer(),
-        new StreamSerializer());
+    ImmutableList<Serializer> serializers =
+        ImmutableList.of(new ByteSerializer(), new StreamSerializer());
+    ImmutableList<Deserializer> deserializers =
+        ImmutableList.of(new ByteSerializer(), new StreamSerializer());
 
     for (Serializer serializer : serializers) {
       for (Deserializer deserializer : deserializers) {
@@ -55,8 +51,7 @@ public class ThriftUtilTest {
                   expectedJob,
                   actualJob),
               expectedJob,
-              actualJob
-          );
+              actualJob);
         }
       }
     }
@@ -82,8 +77,7 @@ public class ThriftUtilTest {
   public static class ByteSerializer implements Serializer, Deserializer {
 
     @Override
-    public byte[] serialize(
-        ThriftProtocol protocol, BuildJob job) throws ThriftException {
+    public byte[] serialize(ThriftProtocol protocol, BuildJob job) throws ThriftException {
       return ThriftUtil.serialize(protocol, job);
     }
 
@@ -98,8 +92,7 @@ public class ThriftUtilTest {
   public static class StreamSerializer implements Serializer, Deserializer {
 
     @Override
-    public byte[] serialize(
-        ThriftProtocol protocol, BuildJob job) throws IOException {
+    public byte[] serialize(ThriftProtocol protocol, BuildJob job) throws IOException {
       try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
         ThriftUtil.serialize(protocol, job, stream);
         return stream.toByteArray();

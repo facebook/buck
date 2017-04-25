@@ -16,23 +16,20 @@
 
 package com.facebook.buck.slb;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
+import okio.BufferedSource;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-
-import okio.BufferedSource;
 
 public class LoadBalancedHttpResponseTest extends EasyMockSupport {
   private static final URI SERVER = URI.create("http://localhost/example");
@@ -54,15 +51,14 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
     EasyMock.expectLastCall().once();
 
     responseBody = ResponseBody.create(MediaType.parse("text/plain"), 42, mockBufferedSource);
-    request = new Request.Builder()
-        .url(SERVER.toString())
-        .build();
-    response = new Response.Builder()
-        .body(responseBody)
-        .code(200)
-        .protocol(Protocol.HTTP_1_1)
-        .request(request)
-        .build();
+    request = new Request.Builder().url(SERVER.toString()).build();
+    response =
+        new Response.Builder()
+            .body(responseBody)
+            .code(200)
+            .protocol(Protocol.HTTP_1_1)
+            .request(request)
+            .build();
   }
 
   @Test
@@ -73,8 +69,8 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
     replayAll();
 
     // Run the test.
-    LoadBalancedHttpResponse response = new LoadBalancedHttpResponse(
-        SERVER, mockLoadBalancer, this.response);
+    LoadBalancedHttpResponse response =
+        new LoadBalancedHttpResponse(SERVER, mockLoadBalancer, this.response);
     response.close();
 
     verifyAll();
@@ -90,8 +86,8 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
     replayAll();
 
     // Run the test.
-    try (LoadBalancedHttpResponse response = new LoadBalancedHttpResponse(
-        SERVER, mockLoadBalancer, this.response)) {
+    try (LoadBalancedHttpResponse response =
+        new LoadBalancedHttpResponse(SERVER, mockLoadBalancer, this.response)) {
       response.close();
     }
 
@@ -108,8 +104,8 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
     replayAll();
 
     // Run the test.
-    try (LoadBalancedHttpResponse response = new LoadBalancedHttpResponse(
-        SERVER, mockLoadBalancer, this.response)) {
+    try (LoadBalancedHttpResponse response =
+        new LoadBalancedHttpResponse(SERVER, mockLoadBalancer, this.response)) {
       response.getBody().read();
     }
     verifyAll();
@@ -128,8 +124,8 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
     replayAll();
 
     // Run the test.
-    try (LoadBalancedHttpResponse response = new LoadBalancedHttpResponse(
-        SERVER, mockLoadBalancer, this.response)) {
+    try (LoadBalancedHttpResponse response =
+        new LoadBalancedHttpResponse(SERVER, mockLoadBalancer, this.response)) {
       try (InputStream inputStream = response.getBody()) {
         for (int i = 0; i < exceptionCount; ++i) {
           try {

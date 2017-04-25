@@ -19,7 +19,10 @@ package com.facebook.buck.slb;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import okhttp3.Request;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
 import org.easymock.Capture;
@@ -27,12 +30,6 @@ import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import okhttp3.Request;
 
 public class ThriftOverHttpServiceTest {
 
@@ -43,9 +40,7 @@ public class ThriftOverHttpServiceTest {
   @Before
   public void setUp() {
     httpService = EasyMock.createMock(HttpService.class);
-    config = ThriftOverHttpServiceConfig.builder()
-        .setService(httpService)
-        .build();
+    config = ThriftOverHttpServiceConfig.builder().setService(httpService).build();
     service = new ThriftOverHttpService<FrontendRequest, FrontendResponse>(config);
   }
 
@@ -64,7 +59,7 @@ public class ThriftOverHttpServiceTest {
     EasyMock.expect(httpResponse.statusMessage()).andReturn("topspin").atLeastOnce();
     EasyMock.expect(httpResponse.requestUrl()).andReturn("super url").atLeastOnce();
     EasyMock.expect(
-        httpService.makeRequest(EasyMock.eq("/thrift"), EasyMock.capture(requestBuilder)))
+            httpService.makeRequest(EasyMock.eq("/thrift"), EasyMock.capture(requestBuilder)))
         .andReturn(httpResponse)
         .times(1);
 
@@ -77,8 +72,8 @@ public class ThriftOverHttpServiceTest {
     }
 
     Request actualHttpRequest = requestBuilder.getValue().url("http://localhost").build();
-    Assert.assertEquals(ThriftOverHttpService.THRIFT_CONTENT_TYPE,
-        actualHttpRequest.body().contentType());
+    Assert.assertEquals(
+        ThriftOverHttpService.THRIFT_CONTENT_TYPE, actualHttpRequest.body().contentType());
 
     EasyMock.verify(httpResponse, httpService);
   }
@@ -94,45 +89,45 @@ public class ThriftOverHttpServiceTest {
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     TSerializer serializer = new TSerializer(config.getThriftProtocol().getFactory());
     final byte[] responseBuffer = serializer.serialize(expectedResponse);
-    HttpResponse httpResponse = new HttpResponse() {
-      @Override
-      public int statusCode() {
-        return 200;
-      }
+    HttpResponse httpResponse =
+        new HttpResponse() {
+          @Override
+          public int statusCode() {
+            return 200;
+          }
 
-      @Override
-      public String statusMessage() {
-        return "super cool msg";
-      }
+          @Override
+          public String statusMessage() {
+            return "super cool msg";
+          }
 
-      @Override
-      public long contentLength() throws IOException {
-        return responseBuffer.length;
-      }
+          @Override
+          public long contentLength() throws IOException {
+            return responseBuffer.length;
+          }
 
-      @Override
-      public InputStream getBody() {
-        return new ByteArrayInputStream(responseBuffer);
-      }
+          @Override
+          public InputStream getBody() {
+            return new ByteArrayInputStream(responseBuffer);
+          }
 
-      @Override
-      public String requestUrl() {
-        return "super url";
-      }
+          @Override
+          public String requestUrl() {
+            return "super url";
+          }
 
-      @Override
-      public void close() throws IOException {
-        // do nothing.
-      }
-    };
+          @Override
+          public void close() throws IOException {
+            // do nothing.
+          }
+        };
 
     EasyMock.expect(
-        httpService.makeRequest(EasyMock.eq("/thrift"), EasyMock.capture(requestBuilder)))
+            httpService.makeRequest(EasyMock.eq("/thrift"), EasyMock.capture(requestBuilder)))
         .andReturn(httpResponse)
         .times(1);
 
     EasyMock.replay(httpService);
-
 
     FrontendResponse actualResponse = new FrontendResponse();
     service.makeRequest(request, actualResponse);

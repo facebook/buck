@@ -19,22 +19,12 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.Capture;
-import org.easymock.EasyMock;
-import org.easymock.EasyMockSupport;
-import org.easymock.IAnswer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Dispatcher;
@@ -44,14 +34,21 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.easymock.Capture;
+import org.easymock.EasyMock;
+import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ClientSideSlbTest extends EasyMockSupport {
 
-  private static final ImmutableList<URI> SERVERS = ImmutableList.of(
-      URI.create("http://localhost:4242"),
-      URI.create("http://localhost:8484"),
-      URI.create("http://localhost:2121")
-  );
+  private static final ImmutableList<URI> SERVERS =
+      ImmutableList.of(
+          URI.create("http://localhost:4242"),
+          URI.create("http://localhost:8484"),
+          URI.create("http://localhost:2121"));
 
   private BuckEventBus mockBus;
   private Clock mockClock;
@@ -76,28 +73,31 @@ public class ClientSideSlbTest extends EasyMockSupport {
     mockClock = createMock(Clock.class);
     EasyMock.expect(mockClock.currentTimeMillis()).andReturn(42L).anyTimes();
 
-    config = ClientSideSlbConfig.builder()
-        .setClock(mockClock)
-        .setServerPool(SERVERS)
-        .setEventBus(mockBus)
-        .build();
+    config =
+        ClientSideSlbConfig.builder()
+            .setClock(mockClock)
+            .setServerPool(SERVERS)
+            .setEventBus(mockBus)
+            .build();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testBackgroundHealthCheckIsScheduled() {
     Capture<Runnable> capture = EasyMock.newCapture();
-    EasyMock.expect(mockScheduler.scheduleWithFixedDelay(
-        EasyMock.capture(capture),
-        EasyMock.anyLong(),
-        EasyMock.anyLong(),
-        EasyMock.anyObject(TimeUnit.class)))
+    EasyMock.expect(
+            mockScheduler.scheduleWithFixedDelay(
+                EasyMock.capture(capture),
+                EasyMock.anyLong(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
     EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
     EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
     EasyMock.expect(dispatcher.executorService().shutdownNow())
-        .andReturn(ImmutableList.of()).once();
+        .andReturn(ImmutableList.of())
+        .once();
 
     replayAll();
 
@@ -112,41 +112,45 @@ public class ClientSideSlbTest extends EasyMockSupport {
   @SuppressWarnings("unchecked")
   public void testAllServersArePinged() throws IOException {
     Capture<Runnable> capture = EasyMock.newCapture();
-    EasyMock.expect(mockScheduler.scheduleWithFixedDelay(
-        EasyMock.capture(capture),
-        EasyMock.anyLong(),
-        EasyMock.anyLong(),
-        EasyMock.anyObject(TimeUnit.class)))
+    EasyMock.expect(
+            mockScheduler.scheduleWithFixedDelay(
+                EasyMock.capture(capture),
+                EasyMock.anyLong(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
     Call mockCall = createMock(Call.class);
-    for (URI server: SERVERS) {
+    for (URI server : SERVERS) {
       EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class))).andReturn(mockCall);
       mockCall.enqueue(EasyMock.anyObject(ClientSideSlb.ServerPing.class));
-      EasyMock.expectLastCall().andAnswer(
-          new IAnswer<Object>() {
-            @Override
-            public Object answer() throws Throwable {
-              Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
-              ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
-              Response response = new Response.Builder()
-                  .body(body)
-                  .code(200)
-                  .protocol(Protocol.HTTP_1_1)
-                  .request(new Request.Builder().url(server.toString()).build())
-                  .build();
-              callback.onResponse(mockCall, response);
-              return null;
-            }
-          }
-      );
+      EasyMock.expectLastCall()
+          .andAnswer(
+              new IAnswer<Object>() {
+                @Override
+                public Object answer() throws Throwable {
+                  Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
+                  ResponseBody body =
+                      ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
+                  Response response =
+                      new Response.Builder()
+                          .body(body)
+                          .code(200)
+                          .protocol(Protocol.HTTP_1_1)
+                          .request(new Request.Builder().url(server.toString()).build())
+                          .build();
+                  callback.onResponse(mockCall, response);
+                  return null;
+                }
+              });
     }
     mockBus.post(EasyMock.anyObject(LoadBalancerPingEvent.class));
     EasyMock.expectLastCall();
     EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
     EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
     EasyMock.expect(dispatcher.executorService().shutdownNow())
-        .andReturn(ImmutableList.of()).once();
+        .andReturn(ImmutableList.of())
+        .once();
 
     replayAll();
 
