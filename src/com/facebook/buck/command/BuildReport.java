@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -44,17 +43,14 @@ public class BuildReport {
    * @param buildExecutionResult the build result to generate the report for.
    * @param pathResolver source path resolver which can be used for the result.
    */
-  public BuildReport(
-      BuildExecutionResult buildExecutionResult,
-      SourcePathResolver pathResolver) {
+  public BuildReport(BuildExecutionResult buildExecutionResult, SourcePathResolver pathResolver) {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
   }
 
   public String generateForConsole(Console console) {
     Ansi ansi = console.getAnsi();
-    Map<BuildRule, Optional<BuildResult>> ruleToResult =
-        buildExecutionResult.getResults();
+    Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
 
     StringBuilder report = new StringBuilder();
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
@@ -78,7 +74,8 @@ public class BuildReport {
         outputFile = null;
       }
 
-      report.append(String.format(
+      report.append(
+          String.format(
               "%s %s%s%s\n",
               successIndicator,
               rule.getBuildTarget(),
@@ -86,15 +83,15 @@ public class BuildReport {
               outputFile != null ? " " + pathResolver.getRelativePath(outputFile) : ""));
     }
 
-    if (!buildExecutionResult.getFailures().isEmpty() &&
-        console.getVerbosity().shouldPrintCommand()) {
+    if (!buildExecutionResult.getFailures().isEmpty()
+        && console.getVerbosity().shouldPrintCommand()) {
       report.append("\n ** Summary of failures encountered during the build **\n");
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
         Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
-        report.append(String.format(
+        report.append(
+            String.format(
                 "Rule %s FAILED because %s.\n",
-                failureResult.getRule().getFullyQualifiedName(),
-                failure.getMessage()));
+                failureResult.getRule().getFullyQualifiedName(), failure.getMessage()));
       }
     }
 
@@ -102,8 +99,7 @@ public class BuildReport {
   }
 
   public String generateJsonBuildReport() throws IOException {
-    Map<BuildRule, Optional<BuildResult>> ruleToResult =
-        buildExecutionResult.getResults();
+    Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
     LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
     LinkedHashMap<String, Object> failures = Maps.newLinkedHashMap();
     boolean isOverallSuccess = true;
@@ -125,7 +121,8 @@ public class BuildReport {
       if (isSuccess) {
         value.put("type", success.get().name());
         SourcePath outputFile = rule.getSourcePathToOutput();
-        value.put("output",
+        value.put(
+            "output",
             outputFile != null ? pathResolver.getRelativePath(outputFile).toString() : null);
       }
       results.put(rule.getFullyQualifiedName(), value);
