@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -45,6 +44,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
@@ -53,17 +53,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-
-public class RustLibraryDescription implements
-    Description<RustLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<RustLibraryDescription.Arg>,
-    Flavored,
-    VersionPropagator<RustLibraryDescription.Arg> {
+public class RustLibraryDescription
+    implements Description<RustLibraryDescription.Arg>,
+        ImplicitDepsInferringDescription<RustLibraryDescription.Arg>,
+        Flavored,
+        VersionPropagator<RustLibraryDescription.Arg> {
 
   private static final FlavorDomain<RustDescriptionEnhancer.Type> LIBRARY_TYPE =
       FlavorDomain.from("Rust Library Type", RustDescriptionEnhancer.Type.class);
@@ -134,7 +132,8 @@ public class RustLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -236,20 +235,21 @@ public class RustLibraryDescription implements
         }
 
         try {
-          rule = requireBuild(
-              params,
-              resolver,
-              pathResolver,
-              ruleFinder,
-              cxxPlatform,
-              rustBuckConfig,
-              rustcArgs.build(),
-              /* linkerArgs */ ImmutableList.of(),
-              /* linkerInputs */ ImmutableList.of(),
-              crate,
-              crateType,
-              depType,
-              args);
+          rule =
+              requireBuild(
+                  params,
+                  resolver,
+                  pathResolver,
+                  ruleFinder,
+                  cxxPlatform,
+                  rustBuckConfig,
+                  rustcArgs.build(),
+                  /* linkerArgs */ ImmutableList.of(),
+                  /* linkerInputs */ ImmutableList.of(),
+                  crate,
+                  crateType,
+                  depType,
+                  args);
         } catch (NoSuchBuildTargetException e) {
           throw new RuntimeException(e);
         }
@@ -282,9 +282,7 @@ public class RustLibraryDescription implements
                 CrateType.DYLIB,
                 Linker.LinkableDepType.SHARED,
                 args);
-        libs.put(
-            sharedLibrarySoname,
-            sharedLibraryBuildRule.getSourcePathToOutput());
+        libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
 
@@ -296,14 +294,12 @@ public class RustLibraryDescription implements
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
-        return FluentIterable.from(getBuildDeps())
-            .filter(NativeLinkable.class);
+        return FluentIterable.from(getBuildDeps()).filter(NativeLinkable.class);
       }
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform,
-          Linker.LinkableDepType depType)
+          CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
           throws NoSuchBuildTargetException {
         CrateType crateType;
 
@@ -322,20 +318,21 @@ public class RustLibraryDescription implements
             break;
         }
 
-        BuildRule rule = requireBuild(
-            params,
-            resolver,
-            pathResolver,
-            ruleFinder,
-            cxxPlatform,
-            rustBuckConfig,
-            rustcArgs.build(),
-            /* linkerArgs */ ImmutableList.of(),
-            /* linkerInputs */ ImmutableList.of(),
-            crate,
-            crateType,
-            depType,
-            args);
+        BuildRule rule =
+            requireBuild(
+                params,
+                resolver,
+                pathResolver,
+                ruleFinder,
+                cxxPlatform,
+                rustBuckConfig,
+                rustcArgs.build(),
+                /* linkerArgs */ ImmutableList.of(),
+                /* linkerInputs */ ImmutableList.of(),
+                crate,
+                crateType,
+                depType,
+                args);
 
         SourcePath lib = rule.getSourcePathToOutput();
         SourcePathArg arg = SourcePathArg.of(lib);
@@ -354,9 +351,7 @@ public class RustLibraryDescription implements
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.empty(),
-                getBuildTarget(),
-                cxxPlatform);
+                Optional.empty(), getBuildTarget(), cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 params,
@@ -372,9 +367,7 @@ public class RustLibraryDescription implements
                 CrateType.CDYLIB,
                 Linker.LinkableDepType.SHARED,
                 args);
-        libs.put(
-            sharedLibrarySoname,
-            sharedLibraryBuildRule.getSourcePathToOutput());
+        libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
     };
@@ -389,9 +382,7 @@ public class RustLibraryDescription implements
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
     extraDepsBuilder.addAll(
-        rustBuckConfig.getLinker()
-            .map(ToolProvider::getParseTimeDeps)
-            .orElse(ImmutableList.of()));
+        rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
 
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
   }
@@ -425,6 +416,7 @@ public class RustLibraryDescription implements
     public NativeLinkable.Linkage preferredLinkage = NativeLinkable.Linkage.ANY;
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;
+
     @Hint(isDep = false)
     public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

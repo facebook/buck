@@ -44,25 +44,24 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class RustTestDescription implements
-    Description<RustTestDescription.Arg>,
-    ImplicitDepsInferringDescription<RustTestDescription.Arg>,
-    Flavored,
-    VersionRoot<RustTestDescription.Arg> {
+public class RustTestDescription
+    implements Description<RustTestDescription.Arg>,
+        ImplicitDepsInferringDescription<RustTestDescription.Arg>,
+        Flavored,
+        VersionRoot<RustTestDescription.Arg> {
 
   private final RustBuckConfig rustBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
-
   public RustTestDescription(
       RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms, CxxPlatform defaultCxxPlatform) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxPlatform defaultCxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -79,52 +78,49 @@ public class RustTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
 
-    BuildTarget exeTarget = params.getBuildTarget()
-        .withAppendedFlavors(InternalFlavor.of("unittest"));
+    BuildTarget exeTarget =
+        params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("unittest"));
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
-    BinaryWrapperRule testExeBuild = resolver.addToIndex(
-        RustCompileUtils.createBinaryBuildRule(
-            params.withBuildTarget(exeTarget),
-            resolver,
-            rustBuckConfig,
-            cxxPlatforms,
-            defaultCxxPlatform,
-            args.crate,
-            args.features,
-            Stream.of(
-                args.framework ? Stream.of("--test") : Stream.<String>empty(),
-                rustBuckConfig.getRustTestFlags().stream(),
-                args.rustcFlags.stream())
-                .flatMap(x -> x).iterator(),
-            args.linkerFlags.iterator(),
-            RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle),
-            args.rpath, args.srcs,
-            args.crateRoot,
-            ImmutableSet.of("lib.rs", "main.rs"),
-            isCheck
-        ));
+    BinaryWrapperRule testExeBuild =
+        resolver.addToIndex(
+            RustCompileUtils.createBinaryBuildRule(
+                params.withBuildTarget(exeTarget),
+                resolver,
+                rustBuckConfig,
+                cxxPlatforms,
+                defaultCxxPlatform,
+                args.crate,
+                args.features,
+                Stream.of(
+                        args.framework ? Stream.of("--test") : Stream.<String>empty(),
+                        rustBuckConfig.getRustTestFlags().stream(),
+                        args.rustcFlags.stream())
+                    .flatMap(x -> x)
+                    .iterator(),
+                args.linkerFlags.iterator(),
+                RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle),
+                args.rpath,
+                args.srcs,
+                args.crateRoot,
+                ImmutableSet.of("lib.rs", "main.rs"),
+                isCheck));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     Tool testExe = testExeBuild.getExecutableCommand();
 
-    BuildRuleParams testParams = params.copyAppendingExtraDeps(
-        testExe.getDeps(ruleFinder));
+    BuildRuleParams testParams = params.copyAppendingExtraDeps(testExe.getDeps(ruleFinder));
 
-    return new RustTest(
-        testParams,
-        ruleFinder,
-        testExeBuild,
-        args.labels,
-        args.contacts);
+    return new RustTest(testParams, ruleFinder, testExeBuild, args.labels, args.contacts);
   }
 
   @Override

@@ -23,9 +23,7 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
 
-/**
- * Rust-specific flavors.
- */
+/** Rust-specific flavors. */
 public class RustDescriptionEnhancer {
   private RustDescriptionEnhancer() {}
 
@@ -34,13 +32,14 @@ public class RustDescriptionEnhancer {
   public static final Flavor RFRLIB = InternalFlavor.of("rlib");
   public static final Flavor RFRLIB_PIC = InternalFlavor.of("rlib-pic");
   public static final Flavor RFDYLIB = InternalFlavor.of("dylib");
-  public static final Flavor RFCHECK = UserFlavor.of(
-      "check", "Quickly check code and generate metadata about crate, without generating code");
+  public static final Flavor RFCHECK =
+      UserFlavor.of(
+          "check", "Quickly check code and generate metadata about crate, without generating code");
 
   /**
    * Flavor of Rust crate
    *
-   * Corresponds to https://doc.rust-lang.org/reference.html#linkage
+   * <p>Corresponds to https://doc.rust-lang.org/reference.html#linkage
    */
   enum Type implements FlavorConvertible {
     BIN(RustDescriptionEnhancer.RFBIN, CrateType.BIN),

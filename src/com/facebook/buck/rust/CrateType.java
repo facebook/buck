@@ -20,39 +20,38 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 
-/**
- * Describe the kinds of crates rustc can generate.
- */
+/** Describe the kinds of crates rustc can generate. */
 public enum CrateType {
   BIN(
-      "bin", RustDescriptionEnhancer.RFBIN,
+      "bin",
+      RustDescriptionEnhancer.RFBIN,
       (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
-  CHECK(
-      "lib", RustDescriptionEnhancer.RFCHECK,
-      (n, p) -> String.format("lib%s.rmeta", n)),
+  CHECK("lib", RustDescriptionEnhancer.RFCHECK, (n, p) -> String.format("lib%s.rmeta", n)),
   CHECKBIN(
-      "bin", RustDescriptionEnhancer.RFCHECK,
+      "bin",
+      RustDescriptionEnhancer.RFCHECK,
       (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
   LIB(
-      "lib", RustDescriptionEnhancer.RFLIB,
+      "lib",
+      RustDescriptionEnhancer.RFLIB,
       (n, p) -> String.format("lib%s.rlib", n)), // XXX how to tell?
-  RLIB(
-      "rlib", RustDescriptionEnhancer.RFRLIB,
-      (n, p) -> String.format("lib%s.rlib", n)),
-  RLIB_PIC(
-      "rlib", RustDescriptionEnhancer.RFRLIB_PIC,
-      (n, p) -> String.format("lib%s.rlib", n)),
+  RLIB("rlib", RustDescriptionEnhancer.RFRLIB, (n, p) -> String.format("lib%s.rlib", n)),
+  RLIB_PIC("rlib", RustDescriptionEnhancer.RFRLIB_PIC, (n, p) -> String.format("lib%s.rlib", n)),
   DYLIB(
-      "dylib", RustDescriptionEnhancer.RFDYLIB,
+      "dylib",
+      RustDescriptionEnhancer.RFDYLIB,
       (n, p) -> String.format("lib%s.%s", n, p.getSharedLibraryExtension())),
   CDYLIB(
-      "cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR,
+      "cdylib",
+      CxxDescriptionEnhancer.SHARED_FLAVOR,
       (n, p) -> String.format("lib%s.%s", n, p.getSharedLibraryExtension())),
   STATIC(
-      "staticlib", CxxDescriptionEnhancer.STATIC_FLAVOR,
+      "staticlib",
+      CxxDescriptionEnhancer.STATIC_FLAVOR,
       (n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
   STATIC_PIC(
-      "staticlib", CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
+      "staticlib",
+      CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
       (n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
   ;
 
@@ -81,9 +80,9 @@ public enum CrateType {
   }
 
   /**
-   * Return true if this crate type is intended to be a native output (ie, not intended for
-   * further processing by the Rust toolchain). In other words, a binary, or a native-linkable
-   * shared or static object.
+   * Return true if this crate type is intended to be a native output (ie, not intended for further
+   * processing by the Rust toolchain). In other words, a binary, or a native-linkable shared or
+   * static object.
    *
    * @return Is natively usable.
    */
@@ -110,8 +109,8 @@ public enum CrateType {
   }
 
   /**
-   * Crate needs to be compiled with relocation-model=pic.
-   * Executables are currently always compiled with -pie, and so are also PIC.
+   * Crate needs to be compiled with relocation-model=pic. Executables are currently always compiled
+   * with -pie, and so are also PIC.
    *
    * @return Needs PIC.
    */
@@ -120,9 +119,9 @@ public enum CrateType {
   }
 
   /**
-   * We're just checking the code, and generating metadata to allow dependents to check.
-   * For libraries this means we emit a metadata file, and binaries produce no output (they
-   * just consume library metadata).
+   * We're just checking the code, and generating metadata to allow dependents to check. For
+   * libraries this means we emit a metadata file, and binaries produce no output (they just consume
+   * library metadata).
    */
   public boolean isCheck() {
     return this == CHECK || this == CHECKBIN;
@@ -139,7 +138,7 @@ public enum CrateType {
   /**
    * Return an appropriate filename for this crate, given its type and the platform.
    *
-   * @param name        Base filename
+   * @param name Base filename
    * @param cxxPlatform Platform we're building for
    * @return Path component
    */

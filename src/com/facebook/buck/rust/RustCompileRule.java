@@ -45,49 +45,40 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-/**
- * Generate a rustc command line with all appropriate dependencies in place.
- */
+/** Generate a rustc command line with all appropriate dependencies in place. */
 public class RustCompileRule extends AbstractBuildRule implements SupportsInputBasedRuleKey {
-  @AddToRuleKey
-  private final Tool compiler;
+  @AddToRuleKey private final Tool compiler;
 
-  @AddToRuleKey
-  private final Linker linker;
+  @AddToRuleKey private final Linker linker;
 
-  @AddToRuleKey
-  private final ImmutableList<Arg> args;
+  @AddToRuleKey private final ImmutableList<Arg> args;
 
-  @AddToRuleKey
-  private final ImmutableList<Arg> linkerArgs;
+  @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
 
-  @AddToRuleKey
-  private final SourcePath rootModule;
+  @AddToRuleKey private final SourcePath rootModule;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
   private final Path scratchDir;
   private final String filename;
-  @AddToRuleKey
-  private final boolean hasOutput;
+  @AddToRuleKey private final boolean hasOutput;
 
   /**
    * Work out how to invoke the Rust compiler, rustc.
    *
-   * In Rust, a crate is the equivalent of a package in other languages. It's also the basic unit of
-   * compilation.
+   * <p>In Rust, a crate is the equivalent of a package in other languages. It's also the basic unit
+   * of compilation.
    *
-   * A crate can either be a "binary crate" - which generates an executable - or a "library crate",
-   * which makes an .rlib file. .rlib files contain both interface details (function signatures,
-   * inline functions, macros, etc) and compiled object code, and so are equivalent to both header
-   * files and library archives. There are also dynamic crates which compile to .so files.
+   * <p>A crate can either be a "binary crate" - which generates an executable - or a "library
+   * crate", which makes an .rlib file. .rlib files contain both interface details (function
+   * signatures, inline functions, macros, etc) and compiled object code, and so are equivalent to
+   * both header files and library archives. There are also dynamic crates which compile to .so
+   * files.
    *
-   * All crates are compiled from at least one source file, which is its main (or top, or root)
+   * <p>All crates are compiled from at least one source file, which is its main (or top, or root)
    * module. It may have references to other modules, which may be in other source files. Rustc only
    * needs the main module filename and will find the rest of the source files from there (akin to
    * #include in C/C++). If the crate also has dependencies on other crates, then those .rlib files
@@ -131,18 +122,19 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
     return new RustCompileRule(
         params.copyReplacingExtraDeps(
             Suppliers.memoize(
-                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(ruleFinder))
-                    .addAll(linker.getDeps(ruleFinder))
-                    .addAll(
-                        Stream.of(args, linkerArgs)
-                            .flatMap(
-                                a -> a.stream()
-                                    .flatMap(arg -> arg.getDeps(ruleFinder).stream()))
-                            .iterator())
-                    .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
-                    .addAll(ruleFinder.filterBuildRuleInputs(sources))
-                    .build())),
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(compiler.getDeps(ruleFinder))
+                        .addAll(linker.getDeps(ruleFinder))
+                        .addAll(
+                            Stream.of(args, linkerArgs)
+                                .flatMap(
+                                    a ->
+                                        a.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()))
+                                .iterator())
+                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
+                        .addAll(ruleFinder.filterBuildRuleInputs(sources))
+                        .build())),
         filename,
         compiler,
         linker,
@@ -173,12 +165,18 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
 
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
 
-    Path argFilePath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(
-            getProjectFilesystem(), getBuildTarget(),
-            "%s.argsfile"));
-    Path fileListPath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+    Path argFilePath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
+    Path fileListPath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
@@ -192,8 +190,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                 scratchDir))
         .addAll(
             MakeCleanDirectoryStep.of(
-                getProjectFilesystem(),
-                getOutputDir(getBuildTarget(), getProjectFilesystem())))
+                getProjectFilesystem(), getOutputDir(getBuildTarget(), getProjectFilesystem())))
         .addAll(
             CxxPrepareForLinkStep.create(
                 argFilePath,
@@ -214,11 +211,11 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                 ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
                 Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
-                cmd
-                    .addAll(compiler.getCommandPrefix(resolver))
+                cmd.addAll(compiler.getCommandPrefix(resolver))
                     .addAll(
-                        executionContext.getAnsi().isAnsiTerminal() ?
-                            ImmutableList.of("--color=always") : ImmutableList.of())
+                        executionContext.getAnsi().isAnsiTerminal()
+                            ? ImmutableList.of("--color=always")
+                            : ImmutableList.of())
                     .add(String.format("-Clinker=%s", linkerCmd.get(0)))
                     .add(String.format("-Clink-arg=@%s", argFilePath))
                     .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
@@ -248,7 +245,6 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
               public String getShortName() {
                 return "rust-build";
               }
-
             })
         .build();
   }

@@ -28,17 +28,14 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A pre-built rust library (ie, typically .rlib). This can't be a NoopBuildRule because
- * we need to implement getPathToOutput(). Note that the same library file is used for all
- * build modes, so the library should be a static .rlib compile with PIC relocation so that its
- * compatible with all other modes. Later we may want to allow per-flavor files.
+ * A pre-built rust library (ie, typically .rlib). This can't be a NoopBuildRule because we need to
+ * implement getPathToOutput(). Note that the same library file is used for all build modes, so the
+ * library should be a static .rlib compile with PIC relocation so that its compatible with all
+ * other modes. Later we may want to allow per-flavor files.
  */
-abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver
-    implements RustLinkable {
+abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver implements RustLinkable {
 
-  public PrebuiltRustLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
+  public PrebuiltRustLibrary(BuildRuleParams params, SourcePathResolver resolver) {
     super(params, resolver);
   }
 

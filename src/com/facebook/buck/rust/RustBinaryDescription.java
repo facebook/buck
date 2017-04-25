@@ -33,28 +33,26 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-
-public class RustBinaryDescription implements
-    Description<RustBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<RustBinaryDescription.Arg>,
-    Flavored,
-    VersionRoot<RustBinaryDescription.Arg> {
+public class RustBinaryDescription
+    implements Description<RustBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<RustBinaryDescription.Arg>,
+        Flavored,
+        VersionRoot<RustBinaryDescription.Arg> {
 
   public static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Rust Binary Type", Type.class);
@@ -83,7 +81,8 @@ public class RustBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
 
     Linker.LinkableDepType linkStyle =
@@ -103,7 +102,8 @@ public class RustBinaryDescription implements
         args.crate,
         args.features,
         Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.rustcFlags.stream())
-            .flatMap(x -> x).iterator(),
+            .flatMap(x -> x)
+            .iterator(),
         args.linkerFlags.iterator(),
         linkStyle,
         args.rpath,
@@ -125,9 +125,7 @@ public class RustBinaryDescription implements
 
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
     extraDepsBuilder.addAll(
-        rustBuckConfig.getLinker()
-            .map(ToolProvider::getParseTimeDeps)
-            .orElse(ImmutableList.of()));
+        rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
   }
 
   @Override
@@ -136,7 +134,6 @@ public class RustBinaryDescription implements
   }
 
   protected enum Type implements FlavorConvertible {
-
     CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
@@ -196,6 +193,7 @@ public class RustBinaryDescription implements
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;
     public boolean rpath = true;
+
     @Hint(isDep = false)
     public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

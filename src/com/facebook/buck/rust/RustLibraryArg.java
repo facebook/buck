@@ -27,12 +27,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * Generate linker command line for Rust library when used as a dependency.
- */
+/** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg extends Arg implements HasSourcePath {
   private final SourcePathResolver resolver;
   private final String crate;
@@ -70,8 +67,7 @@ public class RustLibraryArg extends Arg implements HasSourcePath {
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     Path path = resolver.getRelativePath(rlib);
     if (direct) {
       builder.add("--extern", String.format("%s=%s", crate, path));
@@ -109,7 +105,6 @@ public class RustLibraryArg extends Arg implements HasSourcePath {
       return false;
     }
     return rlib.equals(that.rlib);
-
   }
 
   @Override

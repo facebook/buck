@@ -47,7 +47,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,20 +61,17 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class RustTest
-    extends AbstractBuildRule
+public class RustTest extends AbstractBuildRule
     implements BinaryBuildRule, TestRule, ExternalTestRunnerRule, HasRuntimeDeps {
 
   private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
 
-  @AddToRuleKey
-  private final BinaryBuildRule testExeBuild;
+  @AddToRuleKey private final BinaryBuildRule testExeBuild;
 
-  private static final Pattern TEST_STDOUT_PATTERN = Pattern.compile(
-      "^---- (?<name>.+) stdout ----$");
-  private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile(
-      "^failures:$");
+  private static final Pattern TEST_STDOUT_PATTERN =
+      Pattern.compile("^---- (?<name>.+) stdout ----$");
+  private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile("^failures:$");
   private final Path testOutputFile;
   private final Path testStdoutFile;
   private final SourcePathRuleFinder ruleFinder;
@@ -105,15 +101,16 @@ public class RustTest
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory))
-        .add(new AbstractTestStep(
-            "rust test",
-            getProjectFilesystem(),
-            Optional.of(workingDirectory),
-            getTestCommand(pathResolver, "--logfile", testOutputFile.toString()),
-            Optional.empty(), // TODO(stash): environment
-            workingDirectory.resolve("exitcode"),
-            Optional.empty(),
-            testStdoutFile) { })
+        .add(
+            new AbstractTestStep(
+                "rust test",
+                getProjectFilesystem(),
+                Optional.of(workingDirectory),
+                getTestCommand(pathResolver, "--logfile", testOutputFile.toString()),
+                Optional.empty(), // TODO(stash): environment
+                workingDirectory.resolve("exitcode"),
+                Optional.empty(),
+                testStdoutFile) {})
         .build();
   }
 
@@ -122,17 +119,14 @@ public class RustTest
       ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return () -> {
       ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
-      summaries = ImmutableList.of(
-          new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              parseTestResults()));
+      summaries =
+          ImmutableList.of(
+              new TestCaseSummary(getBuildTarget().getFullyQualifiedName(), parseTestResults()));
       return TestResults.of(
           getBuildTarget(),
           summaries,
           getContacts(),
-          getLabels().stream()
-              .map(Object::toString)
-              .collect(MoreCollectors.toImmutableSet()));
+          getLabels().stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
     };
   }
 
@@ -148,10 +142,7 @@ public class RustTest
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   @Override
@@ -179,8 +170,7 @@ public class RustTest
   }
 
   private ImmutableList<String> getTestCommand(
-      SourcePathResolver pathResolver,
-      String... additionalArgs) {
+      SourcePathResolver pathResolver, String... additionalArgs) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(pathResolver));
     args.add(additionalArgs);
@@ -228,10 +218,11 @@ public class RustTest
 
       StringBuilder stdout = new StringBuilder();
       String currentStdoutTestName = null;
-      BiConsumer<String, String> addTestStdout = (key, value) -> {
-        testToStdout.put(key, value);
-        stdout.setLength(0);
-      };
+      BiConsumer<String, String> addTestStdout =
+          (key, value) -> {
+            testToStdout.put(key, value);
+            stdout.setLength(0);
+          };
       String line;
       while ((line = reader.readLine()) != null) {
         Matcher matcher;
@@ -265,7 +256,7 @@ public class RustTest
               "", // stack trace,
               testToStdout.get(entry.getKey()),
               "" // stderr
-          ));
+              ));
     }
     return summariesBuilder.build();
   }
@@ -284,14 +275,13 @@ public class RustTest
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(),
-        testExeBuild.getSourcePathToOutput());
+        getBuildTarget(), testExeBuild.getSourcePathToOutput());
   }
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
-    return Stream
-        .concat(getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
+    return Stream.concat(
+            getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 }

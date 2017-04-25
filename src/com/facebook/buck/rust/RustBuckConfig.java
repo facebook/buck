@@ -25,11 +25,9 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-
 
 public class RustBuckConfig {
   private static final String SECTION = "rust";
@@ -51,10 +49,10 @@ public class RustBuckConfig {
         .getToolProvider(SECTION, "compiler")
         .orElseGet(
             () -> {
-              HashedFileTool tool = new HashedFileTool(
-                  new ExecutableFinder().getExecutable(
-                      DEFAULT_RUSTC_COMPILER,
-                      delegate.getEnvironment()));
+              HashedFileTool tool =
+                  new HashedFileTool(
+                      new ExecutableFinder()
+                          .getExecutable(DEFAULT_RUSTC_COMPILER, delegate.getEnvironment()));
               return new ConstantToolProvider(tool);
             });
   }
@@ -111,8 +109,8 @@ public class RustBuckConfig {
   }
 
   /**
-   * Get rustc flags for #check flavored builds. Caller must also include rule-dependent
-   * flags and common flags.
+   * Get rustc flags for #check flavored builds. Caller must also include rule-dependent flags and
+   * common flags.
    *
    * @return List of rustc_check_flags.
    */
@@ -128,16 +126,13 @@ public class RustBuckConfig {
     return delegate.getToolProvider(SECTION, "linker");
   }
 
-  LinkerProvider getLinkerProvider(
-      CxxPlatform cxxPlatform,
-      LinkerProvider.Type defaultType) {
+  LinkerProvider getLinkerProvider(CxxPlatform cxxPlatform, LinkerProvider.Type defaultType) {
     LinkerProvider.Type type =
-        delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class)
-            .orElse(defaultType);
+        delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class).orElse(defaultType);
 
     return getLinker()
-            .map(tp -> (LinkerProvider) new DefaultLinkerProvider(type, tp))
-            .orElseGet(cxxPlatform::getLd);
+        .map(tp -> (LinkerProvider) new DefaultLinkerProvider(type, tp))
+        .orElseGet(cxxPlatform::getLd);
   }
 
   // Get args for linker. Always return rust.linker_args if provided, and also include cxx.ldflags

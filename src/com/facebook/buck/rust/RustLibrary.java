@@ -21,9 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 
-public abstract class RustLibrary
-    extends NoopBuildRule
-    implements RustLinkable, NativeLinkable {
+public abstract class RustLibrary extends NoopBuildRule implements RustLinkable, NativeLinkable {
 
   public RustLibrary(BuildRuleParams params) {
     super(params);

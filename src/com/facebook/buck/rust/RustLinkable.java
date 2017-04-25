@@ -26,25 +26,21 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled
- * Rust crate).
+ * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled Rust
+ * crate).
  */
 interface RustLinkable {
   /**
    * Return Arg for dependency.
    *
-   * @param direct      true for direct dependency, false for transitive
-   * @param isCheck     true if we're generated check builds
+   * @param direct true for direct dependency, false for transitive
+   * @param isCheck true if we're generated check builds
    * @param cxxPlatform Current platform we're building for.
-   * @param depType     What kind of linkage we want with the dependency.
-   *
+   * @param depType What kind of linkage we want with the dependency.
    * @return Arg for linking dependency.
    */
   Arg getLinkerArg(
-      boolean direct,
-      boolean isCheck,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType depType);
+      boolean direct, boolean isCheck, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
 
   /**
    * Return {@link BuildTarget} for linkable
@@ -61,7 +57,6 @@ interface RustLinkable {
    */
   ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
-
 
   /**
    * Return the linkage style for this linkable.
