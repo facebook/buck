@@ -22,11 +22,10 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class JsBundleBuilder extends
-    AbstractNodeBuilder<JsBundleDescription.Arg, JsBundleDescription, JsBundle> {
+public class JsBundleBuilder
+    extends AbstractNodeBuilder<JsBundleDescription.Arg, JsBundleDescription, JsBundle> {
   private static final JsBundleDescription bundleDescription = new JsBundleDescription();
 
   JsBundleBuilder(

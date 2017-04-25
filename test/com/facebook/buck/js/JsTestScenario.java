@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -67,21 +66,18 @@ public class JsTestScenario {
     this.filesystem = filesystem;
   }
 
-  JsBundle createBundle(
-      String target,
-      ImmutableSortedSet<BuildTarget> libs) throws NoSuchBuildTargetException {
+  JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> libs)
+      throws NoSuchBuildTargetException {
     return createBundle(target, libs, Either.ofLeft(ImmutableSet.of()));
   }
 
   private JsBundle createBundle(
       String target,
       ImmutableSortedSet<BuildTarget> libs,
-      Either<ImmutableSet<String>, String> entry) throws NoSuchBuildTargetException {
+      Either<ImmutableSet<String>, String> entry)
+      throws NoSuchBuildTargetException {
     return new JsBundleBuilder(
-        BuildTargetFactory.newInstance(target),
-        workerTarget,
-        entry,
-        filesystem)
+            BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem)
         .setLibs(libs)
         .build(resolver, targetGraph);
   }
@@ -142,17 +138,11 @@ public class JsTestScenario {
     }
 
     Builder library(BuildTarget target, String basePath, SourcePath... sources) {
-      addLibrary(
-          target,
-          basePath,
-          Stream.of(sources).map(Either::ofLeft));
+      addLibrary(target, basePath, Stream.of(sources).map(Either::ofLeft));
       return this;
     }
 
-    Builder library(
-        BuildTarget target,
-        String basePath,
-        Pair<SourcePath, String> source) {
+    Builder library(BuildTarget target, String basePath, Pair<SourcePath, String> source) {
       addLibrary(target, basePath, Stream.of(source).map(Either::ofRight));
       return this;
     }
@@ -176,24 +166,19 @@ public class JsTestScenario {
     Builder appleLibraryWithDeps(BuildTarget target, BuildTarget... deps) {
       nodes.add(
           AppleLibraryBuilder.createBuilder(target)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
-            .build());
+              .setDeps(ImmutableSortedSet.copyOf(deps))
+              .build());
       return this;
     }
 
     JsTestScenario build() throws NoSuchBuildTargetException {
       final TargetGraph graph = TargetGraphFactory.newInstance(nodes);
-      final BuildRuleResolver resolver = new BuildRuleResolver(
-          graph,
-          new DefaultTargetNodeToBuildRuleTransformer());
+      final BuildRuleResolver resolver =
+          new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
       for (TargetNode<?, ?> node : nodes) {
         resolver.requireRule(node.getBuildTarget());
       }
-      return new JsTestScenario(
-          graph,
-          resolver,
-          workerTarget,
-          filesystem);
+      return new JsTestScenario(graph, resolver, workerTarget, filesystem);
     }
   }
 }

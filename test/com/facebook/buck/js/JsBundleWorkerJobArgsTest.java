@@ -35,11 +35,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Collection;
 
 public class JsBundleWorkerJobArgsTest {
   private JsTestScenario scenario;
@@ -49,16 +47,17 @@ public class JsBundleWorkerJobArgsTest {
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     scenario = JsTestScenario.builder().build();
-    context = FakeBuildContext.withSourcePathResolver(
-        new SourcePathResolver(new SourcePathRuleFinder(scenario.resolver)));
+    context =
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(scenario.resolver)));
     fakeBuildableContext = new FakeBuildableContext();
   }
 
   @Test
   public void testFileRamBundleFlavor() throws NoSuchBuildTargetException {
-    final JsBundle bundle = scenario.createBundle(
-        targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES),
-        ImmutableSortedSet.of());
+    final JsBundle bundle =
+        scenario.createBundle(
+            targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES), ImmutableSortedSet.of());
 
     assertThat(
         getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
@@ -67,9 +66,10 @@ public class JsBundleWorkerJobArgsTest {
 
   @Test
   public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException {
-    final JsBundle bundle = scenario.createBundle(
-        targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
-        ImmutableSortedSet.of());
+    final JsBundle bundle =
+        scenario.createBundle(
+            targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
+            ImmutableSortedSet.of());
 
     assertThat(
         getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
@@ -78,12 +78,11 @@ public class JsBundleWorkerJobArgsTest {
 
   @Test(expected = FlavorDomainException.class)
   public void testMultipleRamBundleFlavorsFail() throws NoSuchBuildTargetException {
-    final JsBundle bundle = scenario.createBundle(
-        targetWithFlavors(
-            "//:arbitrary",
-            JsFlavors.RAM_BUNDLE_FILES,
-            JsFlavors.RAM_BUNDLE_INDEXED),
-        ImmutableSortedSet.of());
+    final JsBundle bundle =
+        scenario.createBundle(
+            targetWithFlavors(
+                "//:arbitrary", JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RAM_BUNDLE_INDEXED),
+            ImmutableSortedSet.of());
 
     getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext));
   }
@@ -93,8 +92,7 @@ public class JsBundleWorkerJobArgsTest {
     final JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
     assertThat(
         getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
-        containsString(String.format(" --root %s ", scenario.filesystem.getRootPath()))
-    );
+        containsString(String.format(" --root %s ", scenario.filesystem.getRootPath())));
   }
 
   private static String targetWithFlavors(String target, Flavor... flavors) {
@@ -107,8 +105,10 @@ public class JsBundleWorkerJobArgsTest {
     return RichStream.from(steps)
         .filter(WorkerShellStep.class)
         .findFirst()
-        .orElseThrow(() -> new HumanReadableException(
-            "build steps don't contain a WorkerShellStep instance"))
-        .getWorkerJobParamsToUse(Platform.UNKNOWN).getJobArgs();
+        .orElseThrow(
+            () ->
+                new HumanReadableException("build steps don't contain a WorkerShellStep instance"))
+        .getWorkerJobParamsToUse(Platform.UNKNOWN)
+        .getJobArgs();
   }
 }

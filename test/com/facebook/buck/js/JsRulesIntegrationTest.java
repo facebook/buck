@@ -30,23 +30,19 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class JsRulesIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectWorkspace workspace;
   private ProjectFilesystem projectFilesystem;
@@ -56,10 +52,7 @@ public class JsRulesIntegrationTest {
   public void setUp() throws IOException {
     // worker tool does not work on windows
     assumeFalse(Platform.detect() == Platform.WINDOWS);
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "js_rules",
-        tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
     workspace.setUp();
     projectFilesystem = new ProjectFilesystem(workspace.getDestPath());
     genPath = projectFilesystem.getBuckPaths().getGenDir();
@@ -67,63 +60,49 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testSimpleLibraryBuild() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit").assertSuccess();
 
     workspace.verify(Paths.get("simple_library_build.expected"), genPath);
   }
 
   @Test
   public void testBuildWithExtraArgs() throws IOException {
-    workspace
-        .runBuckBuild("//js:extras")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:extras").assertSuccess();
 
     workspace.verify(Paths.get("with_extra_args.expected"), genPath);
   }
 
   @Test
   public void testOptimizationBuild() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit#release,android")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit#release,android").assertSuccess();
 
     workspace.verify(Paths.get("simple_release_build.expected"), genPath);
   }
 
   @Test
   public void testBuildWithDeps() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit-salad")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit-salad").assertSuccess();
 
     workspace.verify(Paths.get("with_deps.expected"), genPath);
   }
 
   @Test
   public void testReleaseBuildWithDeps() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit-salad#release,ios")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit-salad#release,ios").assertSuccess();
 
     workspace.verify(Paths.get("release_flavor_with_deps.expected"), genPath);
   }
 
   @Test
   public void testFlavoredAndUnflavoredBuild() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit#release,android", "//js:fruit")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit#release,android", "//js:fruit").assertSuccess();
 
     workspace.verify(Paths.get("same_target_with_and_without_flavors.expected"), genPath);
   }
 
   @Test
   public void testBuildTargetOutputs() throws IOException {
-    workspace
-        .runBuckBuild("//js:build-target-output")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:build-target-output").assertSuccess();
 
     workspace.verify(Paths.get("with_build_target.expected"), genPath);
   }
@@ -139,36 +118,28 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testSubPathsOfBuildTargets() throws IOException {
-    workspace
-        .runBuckBuild("//js:node_modules")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:node_modules").assertSuccess();
 
     workspace.verify(Paths.get("subpaths.expected"), genPath);
   }
 
   @Test
   public void testBundleBuild() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit-salad-in-a-bundle#ios")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#ios").assertSuccess();
 
     workspace.verify(Paths.get("simple_bundle.expected"), genPath);
   }
 
   @Test
   public void testBundleBuildWithFlavors() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit-salad-in-a-bundle#android,release")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#android,release").assertSuccess();
 
     workspace.verify(Paths.get("simple_bundle_with_flavors.expected"), genPath);
   }
 
   @Test
   public void testBundleBuildWithName() throws IOException {
-    workspace
-        .runBuckBuild("//js:fruit-with-extras")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:fruit-with-extras").assertSuccess();
 
     workspace.verify(Paths.get("named_flavored_bundle.expected"), genPath);
   }
@@ -176,8 +147,9 @@ public class JsRulesIntegrationTest {
   @Test
   public void testBundleWithNonLibraryDeps() throws IOException {
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("js_bundle target '//js:bundle-with-genrule-dep' can only depend on " +
-        "js_library targets, but one of its dependencies, '//js:a-genrule', is of type genrule.");
+    thrown.expectMessage(
+        "js_bundle target '//js:bundle-with-genrule-dep' can only depend on "
+            + "js_library targets, but one of its dependencies, '//js:a-genrule', is of type genrule.");
     workspace.runBuckBuild("//js:bundle-with-genrule-dep");
   }
 
@@ -187,8 +159,9 @@ public class JsRulesIntegrationTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
 
     zipInspector.assertFileExists("assets/fruit-salad-in-a-bundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
@@ -196,9 +169,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void bundleWithAndroidLibraryDependency() throws IOException {
-    workspace
-        .runBuckBuild("//js:bundle-with-android-lib#android,release")
-        .assertSuccess();
+    workspace.runBuckBuild("//js:bundle-with-android-lib#android,release").assertSuccess();
     workspace.verify(Paths.get("android_library_bundle.expected"), genPath);
   }
 
@@ -206,10 +177,7 @@ public class JsRulesIntegrationTest {
   public void iOSApplicationContainsJsAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
-    workspace
-        .runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug")
-        .assertSuccess();
+    workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(Paths.get("ios_app.expected"), genPath);
   }
-
 }

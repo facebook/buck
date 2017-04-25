@@ -23,19 +23,16 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 @RunWith(Parameterized.class)
 public class JsFlavorValidationCommonTest {
 
-  @Parameterized.Parameter
-  public Flavored description;
+  @Parameterized.Parameter public Flavored description;
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Flavored> getDescriptions() {
@@ -72,7 +69,7 @@ public class JsFlavorValidationCommonTest {
   @Test
   public void testUnknownFlavors() {
     assertFalse(description.hasFlavors(ImmutableSet.of(InternalFlavor.of("unknown"))));
-    assertFalse(description.hasFlavors(
-        ImmutableSet.of(InternalFlavor.of("unknown"), JsFlavors.RELEASE)));
+    assertFalse(
+        description.hasFlavors(ImmutableSet.of(InternalFlavor.of("unknown"), JsFlavors.RELEASE)));
   }
 }

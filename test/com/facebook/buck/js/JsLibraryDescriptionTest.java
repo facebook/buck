@@ -34,7 +34,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,8 +67,7 @@ public class JsLibraryDescriptionTest {
     final JsTestScenario scenario = buildScenario(basePath, new FakeSourcePath(filePath));
 
     assertEquals(
-        "arbitrary/base/path/sub/file.js",
-        findFileRule(scenario.resolver).getVirtualPath().get());
+        "arbitrary/base/path/sub/file.js", findFileRule(scenario.resolver).getVirtualPath().get());
   }
 
   @Test
@@ -77,13 +75,11 @@ public class JsLibraryDescriptionTest {
     final String basePath = "base/path.js";
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario = buildScenario(
-        basePath,
-        new DefaultBuildTargetSourcePath(target));
+    final JsTestScenario scenario =
+        buildScenario(basePath, new DefaultBuildTargetSourcePath(target));
 
     assertEquals(
-        "arbitrary/path/base/path.js",
-        findFileRule(scenario.resolver).getVirtualPath().get());
+        "arbitrary/path/base/path.js", findFileRule(scenario.resolver).getVirtualPath().get());
   }
 
   @Test
@@ -91,13 +87,10 @@ public class JsLibraryDescriptionTest {
     final String basePath = "../path.js";
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario = buildScenario(
-        basePath,
-        new DefaultBuildTargetSourcePath(target));
+    final JsTestScenario scenario =
+        buildScenario(basePath, new DefaultBuildTargetSourcePath(target));
 
-    assertEquals(
-        "arbitrary/path.js",
-        findFileRule(scenario.resolver).getVirtualPath().get());
+    assertEquals("arbitrary/path.js", findFileRule(scenario.resolver).getVirtualPath().get());
   }
 
   @Test
@@ -105,9 +98,10 @@ public class JsLibraryDescriptionTest {
     final String basePath = ".";
     final BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario = buildScenario(
-        basePath,
-        new Pair<>(new DefaultBuildTargetSourcePath(target), "node_modules/left-pad/index.js"));
+    final JsTestScenario scenario =
+        buildScenario(
+            basePath,
+            new Pair<>(new DefaultBuildTargetSourcePath(target), "node_modules/left-pad/index.js"));
 
     assertEquals(
         "arbitrary/path/node_modules/left-pad/index.js",
@@ -119,66 +113,58 @@ public class JsLibraryDescriptionTest {
     ImmutableSortedSet<UserFlavor> flavors =
         ImmutableSortedSet.of(JsFlavors.IOS, JsFlavors.RELEASE);
     BuildTarget withFlavors = this.target.withFlavors(flavors);
-    JsTestScenario scenario = scenarioBuilder.library(
-        withFlavors,
-        new FakeSourcePath("apples"),
-        new FakeSourcePath("pears")).build();
+    JsTestScenario scenario =
+        scenarioBuilder
+            .library(withFlavors, new FakeSourcePath("apples"), new FakeSourcePath("pears"))
+            .build();
 
     RichStream.from(scenario.resolver.getRule(withFlavors).getBuildDeps())
         .filter(JsFile.class)
         .map(JsFile::getBuildTarget)
-        .forEach(target -> assertThat(
-            String.format(
-                "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
-                target,
-                withFlavors,
-                flavors),
-            flavors,
-            everyItem(in(target.getFlavors()))));
+        .forEach(
+            target ->
+                assertThat(
+                    String.format(
+                        "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
+                        target, withFlavors, flavors),
+                    flavors,
+                    everyItem(in(target.getFlavors()))));
   }
 
   @Test
   public void doesNotpropagatePlatformFlavorsWithoutRelease() throws NoSuchBuildTargetException {
     UserFlavor platformFlavor = JsFlavors.ANDROID;
     BuildTarget withPlatformFlavor = this.target.withFlavors(platformFlavor);
-    JsTestScenario scenario = scenarioBuilder.library(
-        withPlatformFlavor,
-        new FakeSourcePath("apples"),
-        new FakeSourcePath("pears")).build();
+    JsTestScenario scenario =
+        scenarioBuilder
+            .library(withPlatformFlavor, new FakeSourcePath("apples"), new FakeSourcePath("pears"))
+            .build();
 
     RichStream.from(scenario.resolver.getRule(withPlatformFlavor).getBuildDeps())
         .filter(JsFile.class)
         .map(JsFile::getBuildTarget)
-        .forEach(target -> assertThat(
-            String.format(
-                "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
-                target,
-                withPlatformFlavor,
-                platformFlavor),
-            target.getFlavors(),
-            not(contains(platformFlavor))));
+        .forEach(
+            target ->
+                assertThat(
+                    String.format(
+                        "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
+                        target, withPlatformFlavor, platformFlavor),
+                    target.getFlavors(),
+                    not(contains(platformFlavor))));
   }
 
-  private JsTestScenario buildScenario(
-      String basePath,
-      SourcePath source) throws NoSuchBuildTargetException {
-    return scenarioBuilder
-        .library(target, basePath, source)
-        .build();
+  private JsTestScenario buildScenario(String basePath, SourcePath source)
+      throws NoSuchBuildTargetException {
+    return scenarioBuilder.library(target, basePath, source).build();
   }
 
-  private JsTestScenario buildScenario(
-      String basePath,
-      Pair<SourcePath, String> source) throws NoSuchBuildTargetException {
-    return scenarioBuilder
-        .library(target, basePath, source)
-        .build();
+  private JsTestScenario buildScenario(String basePath, Pair<SourcePath, String> source)
+      throws NoSuchBuildTargetException {
+    return scenarioBuilder.library(target, basePath, source).build();
   }
 
   private JsFile.JsFileDev findFileRule(BuildRuleResolver resolver) {
-    return RichStream.from(resolver
-        .getRule(target)
-        .getBuildDeps())
+    return RichStream.from(resolver.getRule(target).getBuildDeps())
         .filter(JsFile.JsFileDev.class)
         .findFirst()
         .get();

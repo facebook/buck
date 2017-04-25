@@ -24,7 +24,6 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,14 +40,13 @@ public class JsFlavorsTest {
 
   @Test
   public void bundleArgsHaveAndroidFlag() {
-    assertEquals("--platform android",
-        JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.ANDROID)));
+    assertEquals(
+        "--platform android", JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.ANDROID)));
   }
 
   @Test
   public void bundleArgsHaveIOSFlag() {
-    assertEquals("--platform ios",
-        JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.IOS)));
+    assertEquals("--platform ios", JsFlavors.bundleJobArgs(ImmutableSortedSet.of(JsFlavors.IOS)));
   }
 
   @Test
@@ -90,14 +88,15 @@ public class JsFlavorsTest {
 
   @Test
   public void platformArgHasAndroidFlag() {
-    assertEquals("--platform android",
+    assertEquals(
+        "--platform android",
         JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.ANDROID)));
   }
 
   @Test
   public void platformArgHasIOSFlag() {
-    assertEquals("--platform ios",
-        JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.IOS)));
+    assertEquals(
+        "--platform ios", JsFlavors.platformArgForRelease(ImmutableSortedSet.of(JsFlavors.IOS)));
   }
 
   @Test(expected = FlavorDomainException.class)
@@ -120,10 +119,10 @@ public class JsFlavorsTest {
 
   @Test
   public void testBundleFlavorsWithOtherFlavors() {
-    assertTrue(bundleDescription.hasFlavors(
-        ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE)));
-    assertTrue(bundleDescription.hasFlavors(
-        ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS)));
+    assertTrue(
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE)));
+    assertTrue(
+        bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS)));
   }
-
 }
