@@ -17,14 +17,12 @@ package com.facebook.buck.jvm.java;
 
 import java.io.File;
 import java.io.IOException;
-
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 public class ForwardingStandardJavaFileManager
-    extends ForwardingJavaFileManager<StandardJavaFileManager>
-    implements StandardJavaFileManager {
+    extends ForwardingJavaFileManager<StandardJavaFileManager> implements StandardJavaFileManager {
 
   public ForwardingStandardJavaFileManager(StandardJavaFileManager fileManager) {
     super(fileManager);
@@ -52,9 +50,7 @@ public class ForwardingStandardJavaFileManager
   }
 
   @Override
-  public void setLocation(
-      Location location,
-      Iterable<? extends File> path) throws IOException {
+  public void setLocation(Location location, Iterable<? extends File> path) throws IOException {
     fileManager.setLocation(location, path);
   }
 

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -30,10 +29,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 /**
- * Wraps an annotation processor to ensure that it always sees canonical elements -- that is,
- * {@link TreeBackedElement}s when they are available, javac elements when they are not.
+ * Wraps an annotation processor to ensure that it always sees canonical elements -- that is, {@link
+ * TreeBackedElement}s when they are available, javac elements when they are not.
  *
- * Annotation processors that depend on compiler internals or {@link com.sun.source.util.Trees}
+ * <p>Annotation processors that depend on compiler internals or {@link com.sun.source.util.Trees}
  * will not run properly (typically they will crash) when run inside this wrapper.
  */
 class TreeBackedProcessorWrapper implements Processor {
@@ -67,10 +66,7 @@ class TreeBackedProcessorWrapper implements Processor {
 
   @Override
   public Iterable<? extends Completion> getCompletions(
-      Element element,
-      AnnotationMirror annotation,
-      ExecutableElement member,
-      String userText) {
+      Element element, AnnotationMirror annotation, ExecutableElement member, String userText) {
     // This method is only ever called from IDEs, which is not a scenario for Buck right now
     throw new UnsupportedOperationException();
   }
@@ -78,7 +74,8 @@ class TreeBackedProcessorWrapper implements Processor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return inner.process(
-        annotations.stream()
+        annotations
+            .stream()
             .map(task.getElements()::getCanonicalElement)
             .collect(Collectors.toSet()),
         new TreeBackedRoundEnvironment(task, roundEnv));

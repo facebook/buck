@@ -22,25 +22,23 @@ import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 /**
  * A {@link TreeScanner} that keeps track of the following as it is scanning:
+ *
  * <ul>
- * <li>The {@link TreePath} from the {@link com.sun.source.tree.CompilationUnitTree}</li>
- * <li>The nearest {@link Element} that encloses the current {@link Tree}</li>
+ *   <li>The {@link TreePath} from the {@link com.sun.source.tree.CompilationUnitTree}
+ *   <li>The nearest {@link Element} that encloses the current {@link Tree}
  * </ul>
  */
 class TreeContextScanner<R, P> extends TreeScanner<R, P> {
 
   private final Trees trees;
 
-  @Nullable
-  private TreePath currentPath;
-  @Nullable
-  private Element enclosingElement;
+  @Nullable private TreePath currentPath;
+  @Nullable private Element enclosingElement;
 
   public TreeContextScanner(Trees trees) {
     this.trees = trees;
@@ -50,17 +48,15 @@ class TreeContextScanner<R, P> extends TreeScanner<R, P> {
     return Preconditions.checkNotNull(currentPath);
   }
 
-  /**
-   * Returns the {@link Element} that encloses the current tree path.
-   */
+  /** Returns the {@link Element} that encloses the current tree path. */
   protected final Element getEnclosingElement() {
     return Preconditions.checkNotNull(enclosingElement);
   }
 
   /**
-   * Returns the {@link Element} for the type of the current tree. (Equivalent to
-   * {@code getCurrentType().asElement()} when the current tree represents a type for which there
-   * is an element.)
+   * Returns the {@link Element} for the type of the current tree. (Equivalent to {@code
+   * getCurrentType().asElement()} when the current tree represents a type for which there is an
+   * element.)
    */
   @Nullable
   protected final Element getCurrentElement() {
@@ -94,7 +90,7 @@ class TreeContextScanner<R, P> extends TreeScanner<R, P> {
       case TYPE_PARAMETER:
         enclosingElement = Preconditions.checkNotNull(trees.getElement(currentPath));
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         break;
     }

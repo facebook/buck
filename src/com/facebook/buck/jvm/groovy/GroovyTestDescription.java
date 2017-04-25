@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -73,24 +72,18 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    JavacOptions javacOptions = JavacOptionsFactory
-        .create(
-          defaultJavacOptions,
-          params,
-          resolver,
-          args
-        );
+      A args)
+      throws NoSuchBuildTargetException {
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
 
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder = new DefaultGroovyLibraryBuilder(
-        testsLibraryParams,
-        resolver,
-        javacOptions,
-        groovyBuckConfig)
-        .setArgs(args)
-        .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
+        new DefaultGroovyLibraryBuilder(
+                testsLibraryParams, resolver, javacOptions, groovyBuckConfig)
+            .setArgs(args)
+            .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
 
     if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();

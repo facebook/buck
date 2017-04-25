@@ -25,13 +25,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
@@ -48,6 +46,7 @@ public class KotlinBuckConfig {
 
   /**
    * Get the Tool instance for the Kotlin compiler.
+   *
    * @return the Kotlin compiler Tool
    */
   public Supplier<Tool> getKotlinCompiler() {
@@ -65,6 +64,7 @@ public class KotlinBuckConfig {
 
   /**
    * Get the path to the Kotlin runtime jar.
+   *
    * @return the Kotlin runtime jar path
    */
   public Either<SourcePath, Path> getPathToRuntimeJar() {
@@ -121,8 +121,9 @@ public class KotlinBuckConfig {
           return kotlinHome;
         } else {
           // Lastly, we try to resolve from the system PATH
-          Optional<Path> compiler = new ExecutableFinder()
-              .getOptionalExecutable(DEFAULT_KOTLIN_COMPILER, delegate.getEnvironment());
+          Optional<Path> compiler =
+              new ExecutableFinder()
+                  .getOptionalExecutable(DEFAULT_KOTLIN_COMPILER, delegate.getEnvironment());
           if (compiler.isPresent()) {
             kotlinHome = compiler.get().toRealPath().getParent().normalize();
             if (kotlinHome != null && kotlinHome.endsWith(Paths.get("bin"))) {
@@ -140,5 +141,4 @@ public class KotlinBuckConfig {
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
     }
   }
-
 }

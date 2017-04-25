@@ -22,29 +22,22 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 
-public class JavaAnnotationProcessor
-    extends NoopBuildRule
-    implements SupportsInputBasedRuleKey {
-  @AddToRuleKey
-  private final JavacPluginProperties properties;
+public class JavaAnnotationProcessor extends NoopBuildRule implements SupportsInputBasedRuleKey {
+  @AddToRuleKey private final JavacPluginProperties properties;
   private final ResolvedJavacPluginProperties resolvedProperties;
 
   public JavaAnnotationProcessor(
-      BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      JavacPluginProperties properties) {
+      BuildRuleParams params, SourcePathResolver pathResolver, JavacPluginProperties properties) {
     super(params);
 
     this.properties = properties;
 
-    resolvedProperties = new ResolvedJavacPluginProperties(
-        properties,
-        getProjectFilesystem(),
-        pathResolver);
+    resolvedProperties =
+        new ResolvedJavacPluginProperties(properties, getProjectFilesystem(), pathResolver);
   }
 
   public JavacPluginProperties getUnresolvedProperties() {
-    return properties;  // Shut up PMD
+    return properties; // Shut up PMD
   }
 
   public ResolvedJavacPluginProperties getProcessorProperties() {

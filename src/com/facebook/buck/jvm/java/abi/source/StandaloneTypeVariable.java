@@ -17,10 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-
 import java.util.Collections;
 import java.util.List;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeParameterElement;
@@ -39,17 +37,14 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
 
   private final TypeParameterElement element;
   private final NullType lowerBound;
-  @Nullable
-  private TypeMirror upperBound;
+  @Nullable private TypeMirror upperBound;
 
   public StandaloneTypeVariable(Types types, TypeParameterElement element) {
     this(types, element, Collections.emptyList());
   }
 
   public StandaloneTypeVariable(
-      Types types,
-      TypeParameterElement element,
-      List<? extends AnnotationMirror> annotations) {
+      Types types, TypeParameterElement element, List<? extends AnnotationMirror> annotations) {
     super(TypeKind.TYPEVAR, annotations);
     this.element = element;
     lowerBound = types.getNullType();

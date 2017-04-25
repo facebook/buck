@@ -27,22 +27,21 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
 
-  private static final Function<Path, URL> PATH_TO_URL = p -> {
-    try {
-      return p.toUri().toURL();
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
-  };
+  private static final Function<Path, URL> PATH_TO_URL =
+      p -> {
+        try {
+          return p.toUri().toURL();
+        } catch (MalformedURLException e) {
+          throw new RuntimeException(e);
+        }
+      };
 
   private final String compilerClassName;
   private final ImmutableSortedSet<SourcePath> classpath;
@@ -73,13 +72,14 @@ public class JarBackedJavac extends Jsr199Javac {
   @Override
   protected JavaCompiler createCompiler(JavacExecutionContext context) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
-    ClassLoader compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
-        ClassLoader.getSystemClassLoader(),
-        FluentIterable.from(context.getAbsolutePathsForInputs())
-            .transform(PATH_TO_URL)
-            // Use "toString" since URL.equals does DNS lookups.
-            .toSortedSet(Ordering.usingToString())
-            .asList());
+    ClassLoader compilerClassLoader =
+        classLoaderCache.getClassLoaderForClassPath(
+            ClassLoader.getSystemClassLoader(),
+            FluentIterable.from(context.getAbsolutePathsForInputs())
+                .transform(PATH_TO_URL)
+                // Use "toString" since URL.equals does DNS lookups.
+                .toSortedSet(Ordering.usingToString())
+                .asList());
     try {
       return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {

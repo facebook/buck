@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +26,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.tools.JavaCompiler;
@@ -50,9 +48,9 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
   }
 
   /**
-   * Creates a canonical URI that represents the {@link ZipEntry}. This URI starts with
-   * {@code "string:///"} because {@link JavaCompiler} does not seem to tolerate URIs that start
-   * with {@code "jar:///"}, even though that would be more appropriate.
+   * Creates a canonical URI that represents the {@link ZipEntry}. This URI starts with {@code
+   * "string:///"} because {@link JavaCompiler} does not seem to tolerate URIs that start with
+   * {@code "jar:///"}, even though that would be more appropriate.
    */
   private static URI createURIFromEntry(ZipEntry entry) {
     try {
@@ -72,7 +70,7 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
     }
 
     try (InputStream inputStream = zipFile.getInputStream(zipEntry);
-         InputStreamReader isr = new InputStreamReader(inputStream, Charsets.UTF_8)) {
+        InputStreamReader isr = new InputStreamReader(inputStream, Charsets.UTF_8)) {
       contents = CharStreams.toString(isr);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -81,9 +79,7 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
     return contents;
   }
 
-  /**
-   * Closes the {@link ZipFile} this entry was loaded from. Use with care.
-   */
+  /** Closes the {@link ZipFile} this entry was loaded from. Use with care. */
   @Override
   public void close() throws IOException {
     zipFile.close();

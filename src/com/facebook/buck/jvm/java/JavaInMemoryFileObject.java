@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.zip.CustomZipOutputStream;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -31,7 +30,6 @@ import java.io.Writer;
 import java.net.URI;
 import java.util.concurrent.Semaphore;
 import java.util.zip.ZipEntry;
-
 import javax.tools.SimpleJavaFileObject;
 
 /**

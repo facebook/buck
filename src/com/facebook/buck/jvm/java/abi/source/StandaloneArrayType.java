@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import java.util.Collections;
 import java.util.List;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
@@ -37,8 +36,7 @@ class StandaloneArrayType extends StandaloneTypeMirror implements ArrayType {
   }
 
   public StandaloneArrayType(
-      TypeMirror componentType,
-      List<? extends AnnotationMirror> annotations) {
+      TypeMirror componentType, List<? extends AnnotationMirror> annotations) {
     super(TypeKind.ARRAY, annotations);
     this.componentType = componentType;
   }

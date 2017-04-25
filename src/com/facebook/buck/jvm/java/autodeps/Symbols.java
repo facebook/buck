@@ -20,22 +20,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Lightweight class that is used to pass some collections around, avoiding unnecessary copying.
- */
+/** Lightweight class that is used to pass some collections around, avoiding unnecessary copying. */
 @JsonSerialize
 final class Symbols {
   static final Symbols EMPTY = new Symbols();
 
-  @JsonSerialize
-  @JsonDeserialize
-  final Iterable<String> provided;
-  @JsonSerialize
-  @JsonDeserialize
-  final Iterable<String> required;
-  @JsonSerialize
-  @JsonDeserialize
-  final Iterable<String> exported;
+  @JsonSerialize @JsonDeserialize final Iterable<String> provided;
+  @JsonSerialize @JsonDeserialize final Iterable<String> required;
+  @JsonSerialize @JsonDeserialize final Iterable<String> exported;
 
   // For JsonDeserialize.
   Symbols() {

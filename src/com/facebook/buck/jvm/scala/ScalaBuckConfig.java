@@ -26,7 +26,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -67,8 +66,9 @@ public class ScalaBuckConfig {
 
   public ImmutableList<String> getCompilerFlags() {
     return ImmutableList.copyOf(
-        Splitter.on(" ").omitEmptyStrings().split(
-            delegate.getValue(SECTION, "compiler_flags").orElse("")));
+        Splitter.on(" ")
+            .omitEmptyStrings()
+            .split(delegate.getValue(SECTION, "compiler_flags").orElse("")));
   }
 
   private Tool findScalac(BuildRuleResolver resolver) {
@@ -77,8 +77,9 @@ public class ScalaBuckConfig {
       return configScalac.get();
     }
 
-    Optional<Path> externalScalac = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("scalac"), delegate.getEnvironment());
+    Optional<Path> externalScalac =
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("scalac"), delegate.getEnvironment());
     if (externalScalac.isPresent()) {
       return new HashedFileTool(externalScalac.get());
     }
@@ -95,5 +96,4 @@ public class ScalaBuckConfig {
     throw new HumanReadableException(
         "Could not find scalac. Consider setting scala.compiler or $SCALA_HOME.");
   }
-
 }

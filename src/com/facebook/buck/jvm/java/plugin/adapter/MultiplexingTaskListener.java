@@ -18,12 +18,11 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * Multiplexes messages to several other task listeners. Messages are dispatched to listeners in
- * the order in which the listeners were registered.
+ * Multiplexes messages to several other task listeners. Messages are dispatched to listeners in the
+ * order in which the listeners were registered.
  */
 class MultiplexingTaskListener implements TaskListener {
   private final CopyOnWriteArraySet<TaskListener> listeners = new CopyOnWriteArraySet<>();

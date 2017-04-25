@@ -20,7 +20,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -39,9 +38,9 @@ import javax.lang.model.type.WildcardType;
 
 /**
  * An implementation of {@link TypeMirror} that is not dependent on any particular compiler
- * implementation. Subclasses may require {@link javax.lang.model.element.Element}s and/or
- * {@link javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of
- * them (beyond the spec).
+ * implementation. Subclasses may require {@link javax.lang.model.element.Element}s and/or {@link
+ * javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of them
+ * (beyond the spec).
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
   private final TypeKind kind;

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 
-/**
- * A {@link LibraryReader} that reads from a directory (recursively).
- */
+/** A {@link LibraryReader} that reads from a directory (recursively). */
 class DirectoryReader implements LibraryReader {
   private final Path root;
 

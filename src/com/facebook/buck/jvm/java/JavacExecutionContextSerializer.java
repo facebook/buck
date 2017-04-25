@@ -28,7 +28,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,8 +37,7 @@ import java.util.Optional;
 
 public class JavacExecutionContextSerializer {
 
-  private JavacExecutionContextSerializer() {
-  }
+  private JavacExecutionContextSerializer() {}
 
   private static final String VERBOSITY = "verbosity";
   private static final String CELL_PATH_RESOLVER = "cell_path_resolver";
@@ -56,19 +54,16 @@ public class JavacExecutionContextSerializer {
 
     builder.put(VERBOSITY, context.getVerbosity().toString());
     builder.put(
-        CELL_PATH_RESOLVER,
-        CellPathResolverSerializer.serialize(context.getCellPathResolver()));
+        CELL_PATH_RESOLVER, CellPathResolverSerializer.serialize(context.getCellPathResolver()));
     builder.put(
-        JAVA_PACKAGE_FINDER,
-        JavaPackageFinderSerializer.serialize(context.getJavaPackageFinder()));
+        JAVA_PACKAGE_FINDER, JavaPackageFinderSerializer.serialize(context.getJavaPackageFinder()));
     builder.put(PROJECT_FILE_SYSTEM_ROOT, context.getProjectFilesystem().getRootPath().toString());
     builder.put(
         CLASS_USAGE_FILE_WRITER,
         ClassUsageFileWriterSerializer.serialize(context.getUsedClassesFileWriter()));
     builder.put(ENVIRONMENT, context.getEnvironment());
     builder.put(
-        PROCESS_EXECUTOR,
-        ProcessExecutorSerializer.serialize(context.getProcessExecutor()));
+        PROCESS_EXECUTOR, ProcessExecutorSerializer.serialize(context.getProcessExecutor()));
     builder.put(
         ABSOLUTE_PATHS_FOR_INPUTS,
         ImmutableList.copyOf(
@@ -94,33 +89,40 @@ public class JavacExecutionContextSerializer {
     Verbosity verbosity =
         Verbosity.valueOf((String) Preconditions.checkNotNull(data.get(VERBOSITY)));
 
-    CellPathResolver cellPathResolver = CellPathResolverSerializer.deserialize(
-        (Map<String, Object>) Preconditions.checkNotNull(data.get(CELL_PATH_RESOLVER)));
+    CellPathResolver cellPathResolver =
+        CellPathResolverSerializer.deserialize(
+            (Map<String, Object>) Preconditions.checkNotNull(data.get(CELL_PATH_RESOLVER)));
 
-    JavaPackageFinder javaPackageFinder = JavaPackageFinderSerializer.deserialize(
-        (Map<String, Object>) Preconditions.checkNotNull(data.get(JAVA_PACKAGE_FINDER)));
+    JavaPackageFinder javaPackageFinder =
+        JavaPackageFinderSerializer.deserialize(
+            (Map<String, Object>) Preconditions.checkNotNull(data.get(JAVA_PACKAGE_FINDER)));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(
-        (String) Preconditions.checkNotNull(data.get(PROJECT_FILE_SYSTEM_ROOT))));
+    ProjectFilesystem projectFilesystem =
+        new ProjectFilesystem(
+            Paths.get((String) Preconditions.checkNotNull(data.get(PROJECT_FILE_SYSTEM_ROOT))));
 
-    ClassUsageFileWriter classUsageFileWriter = ClassUsageFileWriterSerializer.deserialize(
-        (Map<String, Object>) Preconditions.checkNotNull(data.get(CLASS_USAGE_FILE_WRITER)));
+    ClassUsageFileWriter classUsageFileWriter =
+        ClassUsageFileWriterSerializer.deserialize(
+            (Map<String, Object>) Preconditions.checkNotNull(data.get(CLASS_USAGE_FILE_WRITER)));
 
-    ProcessExecutor processExecutor = ProcessExecutorSerializer.deserialize(
-        (Map<String, Object>) Preconditions.checkNotNull(data.get(PROCESS_EXECUTOR)),
-        console);
+    ProcessExecutor processExecutor =
+        ProcessExecutorSerializer.deserialize(
+            (Map<String, Object>) Preconditions.checkNotNull(data.get(PROCESS_EXECUTOR)), console);
 
     ImmutableList<Path> absolutePathsForInputs =
         ImmutableList.copyOf(
             ((List<String>) Preconditions.checkNotNull(data.get(ABSOLUTE_PATHS_FOR_INPUTS)))
                 .stream()
-                .map(s -> Paths.get(s)).iterator());
+                .map(s -> Paths.get(s))
+                .iterator());
 
     Optional<DirectToJarOutputSettings> directToJarOutputSettings = Optional.empty();
     if (data.containsKey(DIRECT_TO_JAR_SETTINGS)) {
-      directToJarOutputSettings = Optional.of(
-          DirectToJarOutputSettingsSerializer.deserialize(
-              (Map<String, Object>) Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_SETTINGS))));
+      directToJarOutputSettings =
+          Optional.of(
+              DirectToJarOutputSettingsSerializer.deserialize(
+                  (Map<String, Object>)
+                      Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_SETTINGS))));
     }
 
     return JavacExecutionContext.of(
@@ -132,9 +134,10 @@ public class JavacExecutionContextSerializer {
         javaPackageFinder,
         projectFilesystem,
         classUsageFileWriter,
-        (Map<String, String>) Preconditions.checkNotNull(
-            data.get(ENVIRONMENT),
-            "Missing environment when deserializing JavacExectionContext"),
+        (Map<String, String>)
+            Preconditions.checkNotNull(
+                data.get(ENVIRONMENT),
+                "Missing environment when deserializing JavacExectionContext"),
         processExecutor,
         absolutePathsForInputs,
         directToJarOutputSettings);

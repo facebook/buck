@@ -16,8 +16,5 @@
 
 package com.facebook.buck.jvm.java.abi.source.api;
 
-/**
- * Thrown by our ABI generating plugin to stop the compiler.
- */
-public class StopCompilation extends RuntimeException {
-}
+/** Thrown by our ABI generating plugin to stop the compiler. */
+public class StopCompilation extends RuntimeException {}

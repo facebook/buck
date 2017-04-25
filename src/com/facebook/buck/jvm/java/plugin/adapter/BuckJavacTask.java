@@ -21,7 +21,6 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -30,14 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.lang.model.element.TypeElement;
 
 /**
  * Extends {@link JavacTask} with functionality that is useful for Buck:
+ *
  * <ul>
- * <li>Exposes the enter method from JavacTaskImpl</li>
- * <li>Pre-javac-8 support for addTaskListener/removeTaskListener</li>
+ *   <li>Exposes the enter method from JavacTaskImpl
+ *   <li>Pre-javac-8 support for addTaskListener/removeTaskListener
  * </ul>
  */
 public class BuckJavacTask extends JavacTaskWrapper {
@@ -48,8 +47,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
 
   private boolean pluginsInstalled = false;
 
-  @Nullable
-  private TaskListener singleTaskListener;
+  @Nullable private TaskListener singleTaskListener;
 
   public BuckJavacTask(JavacTask inner) {
     super(inner);
@@ -57,17 +55,18 @@ public class BuckJavacTask extends JavacTaskWrapper {
       throw new IllegalArgumentException();
     }
 
-    inner.setTaskListener(new TaskListener() {
-      @Override
-      public void started(TaskEvent e) {
-        BuckJavacTask.this.started(e);
-      }
+    inner.setTaskListener(
+        new TaskListener() {
+          @Override
+          public void started(TaskEvent e) {
+            BuckJavacTask.this.started(e);
+          }
 
-      @Override
-      public void finished(TaskEvent e) {
-        BuckJavacTask.this.finished(e);
-      }
-    });
+          @Override
+          public void finished(TaskEvent e) {
+            BuckJavacTask.this.finished(e);
+          }
+        });
 
     postEnterTaskListener = new PostEnterTaskListener(this, this::onPostEnter);
   }
@@ -75,8 +74,8 @@ public class BuckJavacTask extends JavacTaskWrapper {
   public Iterable<? extends TypeElement> enter() throws IOException {
     try {
       @SuppressWarnings("unchecked")
-      Iterable<? extends TypeElement> result = (Iterable<? extends TypeElement>)
-          inner.getClass().getMethod("enter").invoke(inner);
+      Iterable<? extends TypeElement> result =
+          (Iterable<? extends TypeElement>) inner.getClass().getMethod("enter").invoke(inner);
       return result;
     } catch (IllegalAccessException | NoSuchMethodException e) {
       throw new RuntimeException(e);
@@ -93,10 +92,10 @@ public class BuckJavacTask extends JavacTaskWrapper {
    * Sets a {@link TaskListener}. Like {@link JavacTask}'s implementation of this method, the
    * listener does not replace listeners added with {@link #addTaskListener(TaskListener)}. Instead,
    * it replaces only the listener provided in the previous call to this method, if any.
-   * <p>
-   * Presumably this behavior was to enable {@link com.sun.source.util.Plugin}s to work properly
-   * with build systems that were written when only a single {@link TaskListener} was supported
-   * at a time.
+   *
+   * <p>Presumably this behavior was to enable {@link com.sun.source.util.Plugin}s to work properly
+   * with build systems that were written when only a single {@link TaskListener} was supported at a
+   * time.
    */
   @Override
   public void setTaskListener(@Nullable TaskListener taskListener) {

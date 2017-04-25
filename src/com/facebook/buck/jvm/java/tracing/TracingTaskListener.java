@@ -18,12 +18,9 @@ package com.facebook.buck.jvm.java.tracing;
 
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 
 /**
  * A {@link BuckJavacTaskListener} that traces all events to a {@link JavacPhaseTracer}. The event
@@ -33,8 +30,7 @@ import javax.annotation.Nullable;
 public class TracingTaskListener implements BuckJavacTaskListener {
   private final JavacPhaseTracer tracing;
   private final TraceCleaner traceCleaner;
-  @Nullable
-  private final BuckJavacTaskListener inner;
+  @Nullable private final BuckJavacTaskListener inner;
 
   public TracingTaskListener(JavacPhaseTracer tracing, @Nullable BuckJavacTaskListener next) {
     inner = next;
@@ -105,9 +101,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
     }
   }
 
-  /**
-   * Cleans up the slightly dirty aspects of the event stream.
-   */
+  /** Cleans up the slightly dirty aspects of the event stream. */
   static class TraceCleaner {
     private final JavacPhaseTracer tracing;
     private int enterCount = 0;
@@ -122,11 +116,13 @@ public class TracingTaskListener implements BuckJavacTaskListener {
      * Generally the compiler enters all compilation units at once. It fires start events for all of
      * them, does the work, then fires finish events for all of them. There are a couple of issues
      * with this from a tracing perspective:
+     *
      * <ul>
-     * <li>It generates a ton of slices</li>
-     * <li>The finish events are in the same order as the start ones (we'd expect them to be in
-     * reverse order if this were true tracing)</li>
+     *   <li>It generates a ton of slices
+     *   <li>The finish events are in the same order as the start ones (we'd expect them to be in
+     *       reverse order if this were true tracing)
      * </ul>
+     *
      * To clean this up into a trace-friendly event stream, we coalesce all the enter events for a
      * given round into one.
      *
@@ -141,9 +137,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
       enteredFiles.add(filename);
     }
 
-    /**
-     * @see #startEnter(String)
-     */
+    /** @see #startEnter(String) */
     void finishEnter() {
       enterCount -= 1;
 
@@ -165,9 +159,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
       tracing.beginAnalyze(filename, typename);
     }
 
-    /**
-     * @see #startAnalyze(String, String)
-     */
+    /** @see #startAnalyze(String, String) */
     void finishAnalyze(@Nullable String filename, @Nullable String typename) {
       if (analyzeCount > 0) {
         analyzeCount -= 1;

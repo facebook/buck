@@ -17,27 +17,20 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.collect.Iterables;
-
-import org.objectweb.asm.ClassVisitor;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.List;
-
 import javax.annotation.Nullable;
+import org.objectweb.asm.ClassVisitor;
 
-/**
- * A {@link LibraryReader} that reads from a jar file.
- */
+/** A {@link LibraryReader} that reads from a jar file. */
 class JarReader implements LibraryReader {
   private final Path jarPath;
-  @Nullable
-  FileSystem fileSystem;
-  @Nullable
-  private DirectoryReader inner;
+  @Nullable FileSystem fileSystem;
+  @Nullable private DirectoryReader inner;
 
   JarReader(Path jarPath) {
     this.jarPath = jarPath;
@@ -70,9 +63,7 @@ class JarReader implements LibraryReader {
   private DirectoryReader getInner() throws IOException {
     if (inner == null) {
       fileSystem = FileSystems.newFileSystem(jarPath, null);
-      inner = new DirectoryReader(
-          Iterables.getOnlyElement(
-              fileSystem.getRootDirectories()));
+      inner = new DirectoryReader(Iterables.getOnlyElement(fileSystem.getRootDirectories()));
     }
 
     return inner;

@@ -21,11 +21,9 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.TreePath;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
@@ -39,8 +37,7 @@ import javax.lang.model.type.TypeMirror;
 class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
   private final TypeParameterElement underlyingElement;
   private final StandaloneTypeVariable typeVar;
-  @Nullable
-  private List<TypeMirror> bounds;
+  @Nullable private List<TypeMirror> bounds;
 
   public TreeBackedTypeParameterElement(
       TypeParameterElement underlyingElement,
@@ -75,10 +72,13 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public List<? extends TypeMirror> getBounds() {
     if (bounds == null) {
-      bounds = Collections.unmodifiableList(
-          underlyingElement.getBounds().stream()
-              .map(getResolver()::getCanonicalType)
-              .collect(Collectors.toList()));
+      bounds =
+          Collections.unmodifiableList(
+              underlyingElement
+                  .getBounds()
+                  .stream()
+                  .map(getResolver()::getCanonicalType)
+                  .collect(Collectors.toList()));
     }
 
     return bounds;

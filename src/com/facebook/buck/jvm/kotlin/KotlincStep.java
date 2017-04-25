@@ -27,7 +27,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.nio.file.Path;
 
@@ -68,8 +67,8 @@ public class KotlincStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    final ImmutableList.Builder<String> command = ImmutableList.<String>builder()
-        .addAll(kotlinc.getCommandPrefix(resolver));
+    final ImmutableList.Builder<String> command =
+        ImmutableList.<String>builder().addAll(kotlinc.getCommandPrefix(resolver));
 
     String classpath =
         Joiner.on(File.pathSeparator).join(transform(declaredClassPathEntries, Object::toString));
@@ -80,9 +79,7 @@ public class KotlincStep extends ShellStep {
         .add(DESTINATION_FLAG)
         .add(outputDirectory.toString());
 
-    command
-        .addAll(extraArguments)
-        .addAll(transform(sourceFilePaths, Object::toString));
+    command.addAll(extraArguments).addAll(transform(sourceFilePaths, Object::toString));
     return command.build();
   }
 }

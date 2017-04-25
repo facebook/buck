@@ -24,7 +24,6 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Trees;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +31,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -42,27 +40,22 @@ import javax.tools.JavaFileObject;
 
 /**
  * An implementation of {@link JavacTask} that implements only the frontend portions of the task,
- * using only the parse phase of the underlying compiler and without requiring a complete
- * classpath. This effectively does the same thing as the Enter phase of the compiler (see
+ * using only the parse phase of the underlying compiler and without requiring a complete classpath.
+ * This effectively does the same thing as the Enter phase of the compiler (see
  * http://openjdk.java.net/groups/compiler/doc/compilation-overview/index.html), but applying
  * heuristics when dependencies are missing. This necessarily requires some assumptions to be made
- * about references to symbols defined in those dependencies. See the documentation of
- * {@link com.facebook.buck.jvm.java.abi.source} for details.
+ * about references to symbols defined in those dependencies. See the documentation of {@link
+ * com.facebook.buck.jvm.java.abi.source} for details.
  */
 public class FrontendOnlyJavacTask extends BuckJavacTask {
   private final JavacTask javacTask;
 
-  @Nullable
-  private TreeBackedElements elements;
-  @Nullable
-  private TreeBackedTrees trees;
-  @Nullable
-  private TreeBackedTypes types;
+  @Nullable private TreeBackedElements elements;
+  @Nullable private TreeBackedTrees trees;
+  @Nullable private TreeBackedTypes types;
 
-  @Nullable
-  private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
-  @Nullable
-  private List<TreeBackedTypeElement> topLevelElements;
+  @Nullable private Iterable<? extends CompilationUnitTree> parsedCompilationUnits;
+  @Nullable private List<TreeBackedTypeElement> topLevelElements;
   private boolean stopCompilationAfterEnter = false;
 
   public FrontendOnlyJavacTask(JavacTask task) {
@@ -87,10 +80,11 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   public Iterable<? extends TypeElement> enter() throws IOException {
     Iterable<? extends TypeElement> javacTopLevelElements = super.enter();
 
-    topLevelElements = StreamSupport.stream(javacTopLevelElements.spliterator(), false)
-        .map(getElements()::getCanonicalElement)
-        .map(element -> (TreeBackedTypeElement) element)
-        .collect(Collectors.toList());
+    topLevelElements =
+        StreamSupport.stream(javacTopLevelElements.spliterator(), false)
+            .map(getElements()::getCanonicalElement)
+            .map(element -> (TreeBackedTypeElement) element)
+            .collect(Collectors.toList());
 
     return topLevelElements;
   }

@@ -21,9 +21,7 @@ import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.lang.reflect.Constructor;
-
 import javax.tools.Diagnostic;
 
 public final class SourceBasedAbiStubber {
@@ -33,27 +31,22 @@ public final class SourceBasedAbiStubber {
       BootClasspathOracle bootClasspathOracle,
       Diagnostic.Kind messageKind) {
     try {
-      Class<?> validatingTaskListenerClass = pluginLoader.loadClass(
-          "com.facebook.buck.jvm.java.abi.source.ValidatingTaskListener",
-          Object.class);
+      Class<?> validatingTaskListenerClass =
+          pluginLoader.loadClass(
+              "com.facebook.buck.jvm.java.abi.source.ValidatingTaskListener", Object.class);
       final Constructor<?> constructor =
           validatingTaskListenerClass.getConstructor(
-              BuckJavacTaskProxy.class,
-              BootClasspathOracle.class,
-              Diagnostic.Kind.class);
+              BuckJavacTaskProxy.class, BootClasspathOracle.class, Diagnostic.Kind.class);
 
       return BuckJavacTaskListener.wrapRealTaskListener(
-          pluginLoader,
-          constructor.newInstance(task, bootClasspathOracle, messageKind));
+          pluginLoader, constructor.newInstance(task, bootClasspathOracle, messageKind));
     } catch (ReflectiveOperationException e) {
       throw new HumanReadableException(
           e,
-          "Could not load source-generated ABI validator. Your compiler might not support this. " +
-              "If it doesn't, you may need to disable source-based ABI generation.");
+          "Could not load source-generated ABI validator. Your compiler might not support this. "
+              + "If it doesn't, you may need to disable source-based ABI generation.");
     }
   }
 
-  private SourceBasedAbiStubber() {
-
-  }
+  private SourceBasedAbiStubber() {}
 }

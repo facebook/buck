@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -48,9 +47,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private final JavacOptionsAmender amender;
 
   public JavacToJarStepFactory(
-      Javac javac,
-      JavacOptions javacOptions,
-      JavacOptionsAmender amender) {
+      Javac javac, JavacOptions javacOptions, JavacOptionsAmender amender) {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.amender = amender;
@@ -113,8 +110,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     // extra deps
     return Iterables.concat(
         super.getExtraDeps(ruleFinder),
-        ruleFinder.filterBuildRuleInputs(
-            javacOptions.getAnnotationProcessingParams().getInputs()));
+        ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
   }
 
   @Override
@@ -146,11 +142,12 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     // (2) The target must have 0 postprocessing steps.
     // (3) Tha compile API must be JSR 199.
     boolean isSpoolingToJarEnabled =
-        postprocessClassesCommands.isEmpty() &&
-            javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR &&
-            javac instanceof Jsr199Javac;
+        postprocessClassesCommands.isEmpty()
+            && javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR
+            && javac instanceof Jsr199Javac;
 
-    LOG.info("Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
+    LOG.info(
+        "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
         invokingRule.getBaseName(),
         (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
         spoolMode,
@@ -207,8 +204,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
-    Optional<Path> annotationGenFolder =
-        buildTimeOptions.getGeneratedSourceFolderName();
+    Optional<Path> annotationGenFolder = buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
       steps.addAll(MakeCleanDirectoryStep.of(filesystem, annotationGenFolder.get()));
       buildableContext.recordArtifact(annotationGenFolder.get());

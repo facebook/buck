@@ -20,9 +20,7 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-
 import java.util.List;
-
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.AnnotationValueVisitor;
 
@@ -31,8 +29,7 @@ class TreeBackedAnnotationValue implements AnnotationValue {
   private final TreePath valuePath;
   private final TreeBackedElementResolver resolver;
 
-  @Nullable
-  private Object value;
+  @Nullable private Object value;
 
   TreeBackedAnnotationValue(
       AnnotationValue underlyingAnnotationValue,

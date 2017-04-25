@@ -22,23 +22,17 @@ import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * Base class for events about the phases of compilation within javac.
- */
+/** Base class for events about the phases of compilation within javac. */
 public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   public enum Phase {
-    /**
-     * Parsing a single source file. Filename will be in the args.
-     */
+    /** Parsing a single source file. Filename will be in the args. */
     PARSE(Constants.PARSE),
     /**
      * Entering all parse trees into the compiler's symbol tables. All filenames will be in the
      * args.
      */
     ENTER(Constants.ENTER),
-    /**
-     * Overall annotation processing phase, including all rounds. No args.
-     */
+    /** Overall annotation processing phase, including all rounds. No args. */
     ANNOTATION_PROCESSING(Constants.ANNOTATION_PROCESSING),
     /**
      * A single round of annotation processing, including running the relevant processors, parsing
@@ -47,8 +41,8 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
      */
     ANNOTATION_PROCESSING_ROUND(Constants.ANNOTATION_PROCESSING_ROUND),
     /**
-     * Just running the annotation processors that are relevant to the sources being compiled.
-     * No args.
+     * Just running the annotation processors that are relevant to the sources being compiled. No
+     * args.
      */
     RUN_ANNOTATION_PROCESSORS(Constants.RUN_ANNOTATION_PROCESSORS),
     /**
@@ -111,10 +105,7 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   private final ImmutableMap<String, String> args;
 
   protected JavacPhaseEvent(
-      EventKey eventKey,
-      BuildTarget buildTarget,
-      Phase phase,
-      ImmutableMap<String, String> args) {
+      EventKey eventKey, BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
     super(eventKey);
     this.buildTarget = buildTarget;
     this.phase = phase;
@@ -139,23 +130,16 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   }
 
   public static Started started(
-      BuildTarget buildTarget,
-      Phase phase,
-      ImmutableMap<String, String> args) {
+      BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
     return new Started(buildTarget, phase, args);
   }
 
-  public static Finished finished(
-      Started startedEvent,
-      ImmutableMap<String, String> args) {
+  public static Finished finished(Started startedEvent, ImmutableMap<String, String> args) {
     return new Finished(startedEvent, args);
   }
 
   public static class Started extends JavacPhaseEvent {
-    public Started(
-        BuildTarget buildTarget,
-        Phase phase,
-        ImmutableMap<String, String> args) {
+    public Started(BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
       super(EventKey.unique(), buildTarget, phase, args);
     }
 
@@ -166,13 +150,9 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   }
 
   public static class Finished extends JavacPhaseEvent {
-    public Finished(
-        Started startedEvent,
-        ImmutableMap<String, String> args) {
-      super(startedEvent.getEventKey(),
-          startedEvent.getBuildTarget(),
-          startedEvent.getPhase(),
-          args);
+    public Finished(Started startedEvent, ImmutableMap<String, String> args) {
+      super(
+          startedEvent.getEventKey(), startedEvent.getBuildTarget(), startedEvent.getPhase(), args);
     }
 
     @Override

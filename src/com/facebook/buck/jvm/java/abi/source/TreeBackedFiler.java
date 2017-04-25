@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.io.IOException;
-
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.FileObject;
@@ -34,19 +33,17 @@ class TreeBackedFiler implements Filer {
   }
 
   @Override
-  public JavaFileObject createSourceFile(
-      CharSequence name, Element... originatingElements) throws IOException {
+  public JavaFileObject createSourceFile(CharSequence name, Element... originatingElements)
+      throws IOException {
     return javacFiler.createSourceFile(
-        name,
-        task.getElements().getJavacElements(originatingElements));
+        name, task.getElements().getJavacElements(originatingElements));
   }
 
   @Override
-  public JavaFileObject createClassFile(
-      CharSequence name, Element... originatingElements) throws IOException {
+  public JavaFileObject createClassFile(CharSequence name, Element... originatingElements)
+      throws IOException {
     return javacFiler.createClassFile(
-        name,
-        task.getElements().getJavacElements(originatingElements));
+        name, task.getElements().getJavacElements(originatingElements));
   }
 
   @Override
@@ -54,19 +51,16 @@ class TreeBackedFiler implements Filer {
       JavaFileManager.Location location,
       CharSequence pkg,
       CharSequence relativeName,
-      Element... originatingElements) throws IOException {
+      Element... originatingElements)
+      throws IOException {
     return javacFiler.createResource(
-        location,
-        pkg,
-        relativeName,
-        task.getElements().getJavacElements(originatingElements));
+        location, pkg, relativeName, task.getElements().getJavacElements(originatingElements));
   }
 
   @Override
   public FileObject getResource(
-      JavaFileManager.Location location,
-      CharSequence pkg,
-      CharSequence relativeName) throws IOException {
+      JavaFileManager.Location location, CharSequence pkg, CharSequence relativeName)
+      throws IOException {
     return javacFiler.getResource(location, pkg, relativeName);
   }
 }

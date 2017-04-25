@@ -30,35 +30,33 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Information for annotation processing.
  *
- * Annotation processing involves a set of processors, their classpath(s), and a few other
- * command-line options for javac.  We want to be able to specify all this various information
- * in a BUCK configuration file and use it when we generate the javac command.  This facilitates
- * threading the information through buck in a more descriptive package rather than passing all
- * the components separately.
+ * <p>Annotation processing involves a set of processors, their classpath(s), and a few other
+ * command-line options for javac. We want to be able to specify all this various information in a
+ * BUCK configuration file and use it when we generate the javac command. This facilitates threading
+ * the information through buck in a more descriptive package rather than passing all the components
+ * separately.
  */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
-  public static final AnnotationProcessingParams EMPTY = AnnotationProcessingParams.builder()
-      .setOwnerTarget(null)
-      .setProjectFilesystem(null)
-      .setModernProcessors(ImmutableList.of())
-      .setParameters(ImmutableSortedSet.of())
-      .setProcessOnly(false)
-      .build();
+  public static final AnnotationProcessingParams EMPTY =
+      AnnotationProcessingParams.builder()
+          .setOwnerTarget(null)
+          .setProjectFilesystem(null)
+          .setModernProcessors(ImmutableList.of())
+          .setParameters(ImmutableSortedSet.of())
+          .setProcessOnly(false)
+          .build();
 
   @Nullable
   protected abstract BuildTarget getOwnerTarget();
@@ -75,23 +73,23 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
 
   @Value.Lazy
   protected ImmutableList<JavacPluginProperties> getLegacyProcessors() {
-    JavacPluginProperties.Builder legacySafeProcessorsBuilder = JavacPluginProperties.builder()
-        .setCanReuseClassLoader(true)
-        .setDoesNotAffectAbi(true)
-        .setSupportsAbiGenerationFromSource(false)
-        .setProcessorNames(
-            Sets.intersection(
-                getLegacyAnnotationProcessorNames(),
-                getLegacySafeAnnotationProcessors()));
+    JavacPluginProperties.Builder legacySafeProcessorsBuilder =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(false)
+            .setProcessorNames(
+                Sets.intersection(
+                    getLegacyAnnotationProcessorNames(), getLegacySafeAnnotationProcessors()));
 
-    JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder = JavacPluginProperties.builder()
-        .setCanReuseClassLoader(false)
-        .setDoesNotAffectAbi(true)
-        .setSupportsAbiGenerationFromSource(false)
-        .setProcessorNames(
-            Sets.difference(
-                getLegacyAnnotationProcessorNames(),
-                getLegacySafeAnnotationProcessors()));
+    JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(false)
+            .setProcessorNames(
+                Sets.difference(
+                    getLegacyAnnotationProcessorNames(), getLegacySafeAnnotationProcessors()));
 
     for (BuildRule dep : getLegacyAnnotationProcessorDeps()) {
       legacySafeProcessorsBuilder.addDep(dep);
@@ -100,7 +98,6 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
 
     JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
     JavacPluginProperties legacyUnsafeProcessors = legacyUnsafeProcessorsBuilder.build();
-
 
     ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
     if (!legacySafeProcessors.isEmpty()) {
@@ -126,26 +123,24 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     ProjectFilesystem filesystem = getProjectFilesystem();
     Preconditions.checkNotNull(filesystem);
     return BuildTargets.getAnnotationPath(
-        filesystem,
-        Preconditions.checkNotNull(getOwnerTarget()), "__%s_gen__");
+        filesystem, Preconditions.checkNotNull(getOwnerTarget()), "__%s_gen__");
   }
 
   public boolean isEmpty() {
-    return getModernProcessors().isEmpty() &&
-        getLegacyProcessors().isEmpty() &&
-        getParameters().isEmpty();
+    return getModernProcessors().isEmpty()
+        && getLegacyProcessors().isEmpty()
+        && getParameters().isEmpty();
   }
 
   public ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors(
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver) {
+      ProjectFilesystem filesystem, SourcePathResolver resolver) {
     if (getLegacyProcessors().isEmpty()) {
       return getModernProcessors();
     }
 
-    return Stream
-        .concat(
-            getLegacyProcessors().stream()
+    return Stream.concat(
+            getLegacyProcessors()
+                .stream()
                 .map(processorGroup -> processorGroup.resolve(filesystem, resolver)),
             getModernProcessors().stream())
         .collect(MoreCollectors.toImmutableList());
@@ -155,8 +150,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
   public abstract ImmutableSortedSet<String> getParameters();
 
   public ImmutableSortedSet<SourcePath> getInputs() {
-    return Stream
-        .concat(
+    return Stream.concat(
             getLegacyProcessors().stream().map(JavacPluginProperties::getInputs),
             getModernProcessors().stream().map(ResolvedJavacPluginProperties::getInputs))
         .flatMap(Collection::stream)

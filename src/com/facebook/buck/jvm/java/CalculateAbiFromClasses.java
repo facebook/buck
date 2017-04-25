@@ -33,19 +33,15 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class CalculateAbiFromClasses extends AbstractBuildRule
     implements CalculateAbi, SupportsInputBasedRuleKey {
 
-  @AddToRuleKey
-  private final SourcePath binaryJar;
+  @AddToRuleKey private final SourcePath binaryJar;
   private final Path outputPath;
 
-  public CalculateAbiFromClasses(
-      BuildRuleParams buildRuleParams,
-      SourcePath binaryJar) {
+  public CalculateAbiFromClasses(BuildRuleParams buildRuleParams, SourcePath binaryJar) {
     super(buildRuleParams);
     this.binaryJar = binaryJar;
     this.outputPath = getAbiJarPath();
@@ -73,8 +69,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of(
         MkdirStep.of(getProjectFilesystem(), getAbiJarPath().getParent()),
         RmStep.of(getProjectFilesystem(), getAbiJarPath()),

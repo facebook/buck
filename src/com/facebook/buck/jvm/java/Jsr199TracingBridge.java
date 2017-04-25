@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.api.BuckTracingInterface;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
 public class Jsr199TracingBridge implements BuckTracingInterface {
@@ -32,15 +31,9 @@ public class Jsr199TracingBridge implements BuckTracingInterface {
   }
 
   @Override
-  public void begin(
-      String pluginName,
-      String eventName,
-      Map<String, String> args) {
+  public void begin(String pluginName, String eventName, Map<String, String> args) {
     eventSink.reportCompilerPluginStarted(
-        buildTarget,
-        pluginName,
-        eventName,
-        ImmutableMap.copyOf(args));
+        buildTarget, pluginName, eventName, ImmutableMap.copyOf(args));
   }
 
   @Override

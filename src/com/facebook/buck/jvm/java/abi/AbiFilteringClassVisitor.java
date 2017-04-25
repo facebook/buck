@@ -17,24 +17,17 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
-
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-
-import javax.annotation.Nullable;
-
-/**
- * A {@link ClassVisitor} that only passes to its delegate events for the class's ABI.
- */
+/** A {@link ClassVisitor} that only passes to its delegate events for the class's ABI. */
 class AbiFilteringClassVisitor extends ClassVisitor {
-  @Nullable
-  private String name;
-  @Nullable
-  private String outerName = null;
+  @Nullable private String name;
+  @Nullable private String outerName = null;
   private int classAccess;
   private boolean hasVisibleConstructor = false;
 
@@ -70,11 +63,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   @Override
   @Nullable
   public FieldVisitor visitField(
-      int access,
-      String name,
-      String desc,
-      String signature,
-      Object value) {
+      int access, String name, String desc, String signature, Object value) {
     if (!shouldInclude(access)) {
       return null;
     }
@@ -84,11 +73,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   @Override
   @Nullable
   public MethodVisitor visitMethod(
-      int access,
-      String name,
-      String desc,
-      String signature,
-      String[] exceptions) {
+      int access, String name, String desc, String signature, String[] exceptions) {
     // Per JVMS8 2.9, "Class and interface initialization methods are invoked
     // implicitly by the Java Virtual Machine; they are never invoked directly from any
     // Java Virtual Machine instruction, but are invoked only indirectly as part of the class
@@ -122,19 +107,18 @@ class AbiFilteringClassVisitor extends ClassVisitor {
 
   @Override
   public void visitEnd() {
-    if (!hasVisibleConstructor &&
-        !isInterface(classAccess) &&
-        !isAnnotation(classAccess)) {
+    if (!hasVisibleConstructor && !isInterface(classAccess) && !isAnnotation(classAccess)) {
       String desc;
       if (isEnum(classAccess)) {
-        desc = Type.getMethodType(
-            Type.VOID_TYPE,
-            Type.getObjectType("java/lang/String"),
-            Type.INT_TYPE).getDescriptor();
+        desc =
+            Type.getMethodType(
+                    Type.VOID_TYPE, Type.getObjectType("java/lang/String"), Type.INT_TYPE)
+                .getDescriptor();
       } else {
-        desc = outerName == null ?
-            Type.getMethodType(Type.VOID_TYPE).getDescriptor() :
-            Type.getMethodType(Type.VOID_TYPE, Type.getObjectType(outerName)).getDescriptor();
+        desc =
+            outerName == null
+                ? Type.getMethodType(Type.VOID_TYPE).getDescriptor()
+                : Type.getMethodType(Type.VOID_TYPE, Type.getObjectType(outerName)).getDescriptor();
       }
       super.visitMethod(Opcodes.ACC_PRIVATE, "<init>", desc, null, null);
     }

@@ -21,13 +21,11 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.annotation.processing.Processor;
 
 class AnnotationProcessorFactory implements AutoCloseable {
@@ -55,7 +53,8 @@ class AnnotationProcessorFactory implements AutoCloseable {
 
   public List<Processor> createProcessors(
       ImmutableList<ResolvedJavacPluginProperties> processorsProperties) {
-    return processorsProperties.stream()
+    return processorsProperties
+        .stream()
         .map(this::createProcessorsWithCommonClasspath)
         .flatMap(Function.identity())
         .collect(Collectors.toList());
@@ -64,7 +63,9 @@ class AnnotationProcessorFactory implements AutoCloseable {
   private Stream<Processor> createProcessorsWithCommonClasspath(
       ResolvedJavacPluginProperties processorGroup) {
     ClassLoader classLoader = getClassLoaderForProcessorGroup(processorGroup);
-    return processorGroup.getProcessorNames().stream()
+    return processorGroup
+        .getProcessorNames()
+        .stream()
         .map(name -> createProcessor(classLoader, name));
   }
 
@@ -76,8 +77,7 @@ class AnnotationProcessorFactory implements AutoCloseable {
       // If this happens, then the build is really in trouble. Better warn the user.
       throw new HumanReadableException(
           "%s: javac unable to load annotation processor: %s",
-          target.getFullyQualifiedName(),
-          name);
+          target.getFullyQualifiedName(), name);
     }
   }
 
@@ -95,7 +95,6 @@ class AnnotationProcessorFactory implements AutoCloseable {
       cache = localClassLoaderCache;
     }
     return cache.getClassLoaderForClassPath(
-        compilerClassLoader,
-        ImmutableList.copyOf(processorGroup.getClasspath()));
+        compilerClassLoader, ImmutableList.copyOf(processorGroup.getClasspath()));
   }
 }

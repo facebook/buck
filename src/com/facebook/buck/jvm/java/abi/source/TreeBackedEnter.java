@@ -22,10 +22,8 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -33,8 +31,8 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementScanner8;
 
 /**
- * Creates {@link TreeBackedElement}s for each element in the {@link CompilationUnitTree}s known
- * to the compiler. This is analogous to the "Enter" phase of javac.
+ * Creates {@link TreeBackedElement}s for each element in the {@link CompilationUnitTree}s known to
+ * the compiler. This is analogous to the "Enter" phase of javac.
  */
 class TreeBackedEnter {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeBackedEnter");
@@ -71,8 +69,7 @@ class TreeBackedEnter {
 
     @Override
     public Void visitType(TypeElement e, Void v) {
-      TreeBackedTypeElement newClass =
-          (TreeBackedTypeElement) elements.enterElement(e);
+      TreeBackedTypeElement newClass = (TreeBackedTypeElement) elements.enterElement(e);
       try (ElementContext c = new ElementContext(newClass)) {
         super.visitType(e, v);
         super.scan(e.getTypeParameters(), v);
@@ -96,8 +93,7 @@ class TreeBackedEnter {
 
     @Override
     public Void visitExecutable(ExecutableElement e, Void v) {
-      TreeBackedExecutableElement method =
-          (TreeBackedExecutableElement) elements.enterElement(e);
+      TreeBackedExecutableElement method = (TreeBackedExecutableElement) elements.enterElement(e);
 
       try (ElementContext c = new ElementContext(method)) {
         super.visitExecutable(e, v);

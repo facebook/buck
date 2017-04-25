@@ -24,7 +24,6 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -39,7 +38,6 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileObject;
@@ -76,8 +74,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   /**
-   * Creates a ZipEntry for placing in the jar output stream. Sets the modification time to 0 for
-   * a deterministic jar.
+   * Creates a ZipEntry for placing in the jar output stream. Sets the modification time to 0 for a
+   * deterministic jar.
+   *
    * @param name the name of the entry
    * @return the zip entry for the file specified
    */
@@ -97,17 +96,15 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private static String getPath(String packageName, String relativeName) {
-    return !packageName.isEmpty() ?
-        packageName.replace('.', '/') + '/' + relativeName :
-        relativeName;
+    return !packageName.isEmpty()
+        ? packageName.replace('.', '/') + '/' + relativeName
+        : relativeName;
   }
 
   @Override
   public JavaFileObject getJavaFileForOutput(
-      Location location,
-      String className,
-      JavaFileObject.Kind kind,
-      FileObject sibling) throws IOException {
+      Location location, String className, JavaFileObject.Kind kind, FileObject sibling)
+      throws IOException {
     // Use the normal FileObject that writes to the disk for source files.
     if (shouldDelegate(location)) {
       return delegate.getJavaFileForOutput(location, className, kind, sibling);
@@ -115,8 +112,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     String path = getPath(className, kind);
 
     // If the class is to be removed from the Jar create a NoOp FileObject.
-    if (classesToRemoveFromJar.hasPatterns() &&
-        classesToRemoveFromJar.matches(className.toString())) {
+    if (classesToRemoveFromJar.hasPatterns()
+        && classesToRemoveFromJar.matches(className.toString())) {
       LOG.info(
           "%s was excluded from the Jar because it matched a remove_classes pattern.",
           className.toString());
@@ -128,10 +125,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
 
   @Override
   public FileObject getFileForOutput(
-      Location location,
-      String packageName,
-      String relativeName,
-      FileObject sibling) throws IOException {
+      Location location, String packageName, String relativeName, FileObject sibling)
+      throws IOException {
     if (shouldDelegate(location)) {
       return delegate.getFileForOutput(location, packageName, relativeName, sibling);
     }
@@ -145,9 +140,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     boolean aInMemoryJavaFileInstance = a instanceof JavaInMemoryFileObject;
     boolean bInMemoryJavaFileInstance = b instanceof JavaInMemoryFileObject;
     if (aInMemoryJavaFileInstance || bInMemoryJavaFileInstance) {
-      return aInMemoryJavaFileInstance &&
-          bInMemoryJavaFileInstance &&
-          a.getName().equals(b.getName());
+      return aInMemoryJavaFileInstance
+          && bInMemoryJavaFileInstance
+          && a.getName().equals(b.getName());
     }
     return super.isSameFile(a, b);
   }
@@ -174,9 +169,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   @Override
-  public void setLocation(
-      Location location,
-      Iterable<? extends File> path) throws IOException {
+  public void setLocation(Location location, Iterable<? extends File> path) throws IOException {
     delegate.setLocation(location, path);
   }
 
@@ -187,10 +180,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
 
   @Override
   public Iterable<JavaFileObject> list(
-      Location location,
-      String packageName,
-      Set<JavaFileObject.Kind> kinds,
-      boolean recurse)
+      Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse)
       throws IOException {
     if (shouldDelegate(location)) {
       return delegate.list(location, packageName, kinds, recurse);
@@ -205,9 +195,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     for (String filepath : fileForOutputPaths.keySet()) {
       if (recurse && filepath.startsWith(packageDirPath)) {
         results.add(fileForOutputPaths.get(filepath));
-      } else if (!recurse &&
-          filepath.startsWith(packageDirPath) &&
-          filepath.substring(packageDirPath.length()).indexOf('/') < 0) {
+      } else if (!recurse
+          && filepath.startsWith(packageDirPath)
+          && filepath.substring(packageDirPath.length()).indexOf('/') < 0) {
         results.add(fileForOutputPaths.get(filepath));
       }
     }
@@ -223,22 +213,16 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return location != CLASS_OUTPUT;
   }
 
-  private JavaFileObject getJavaMemoryFileObject(
-      JavaFileObject.Kind kind,
-      String path) throws IOException {
-    return fileForOutputPaths.computeIfAbsent(path,
-        p -> new JavaInMemoryFileObject(
-            getUriPath(p),
-            p,
-            kind,
-            jarOutputStream,
-            jarFileSemaphore));
+  private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path)
+      throws IOException {
+    return fileForOutputPaths.computeIfAbsent(
+        path,
+        p -> new JavaInMemoryFileObject(getUriPath(p), p, kind, jarOutputStream, jarFileSemaphore));
   }
 
   private JavaFileObject getJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
     return fileForOutputPaths.computeIfAbsent(
-        path,
-        p -> new JavaNoOpFileObject(getUriPath(p), p, kind));
+        path, p -> new JavaNoOpFileObject(getUriPath(p), p, kind));
   }
 
   private String encodeURL(String path) {
@@ -250,7 +234,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private URI getUriPath(String relativePath) {
-    return URI.create(
-        "jar:file:" + encodeURL(jarPath.toString()) + "!/" + encodeURL(relativePath));
+    return URI.create("jar:file:" + encodeURL(jarPath.toString()) + "!/" + encodeURL(relativePath));
   }
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -97,23 +96,24 @@ public class JavacDirectToJarStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList<String> javacStepOptions = JavacStep.getOptions(
-        buildTimeOptions,
-        filesystem,
-        resolver,
-        outputDirectory,
-        context,
-        declaredClasspathEntries);
-    String javacDescription = javac.getDescription(
-        javacStepOptions,
-        sourceFilePaths,
-        pathToSrcsList);
+    ImmutableList<String> javacStepOptions =
+        JavacStep.getOptions(
+            buildTimeOptions,
+            filesystem,
+            resolver,
+            outputDirectory,
+            context,
+            declaredClasspathEntries);
+    String javacDescription =
+        javac.getDescription(javacStepOptions, sourceFilePaths, pathToSrcsList);
 
-    String jarDescription = String.format("jar %s %s %s %s",
-        getJarArgs(),
-        outputJar,
-        manifestFile.isPresent() ? manifestFile.get() : "",
-        Joiner.on(' ').join(entriesToJar));
+    String jarDescription =
+        String.format(
+            "jar %s %s %s %s",
+            getJarArgs(),
+            outputJar,
+            manifestFile.isPresent() ? manifestFile.get() : "",
+            Joiner.on(' ').join(entriesToJar));
 
     return javacDescription + "; " + jarDescription;
   }
@@ -127,12 +127,13 @@ public class JavacDirectToJarStep implements Step {
   }
 
   private JavacStep createJavacStep() {
-    DirectToJarOutputSettings directToJarOutputSettings = DirectToJarOutputSettings.of(
-        outputJar,
-        buildTimeOptions.getClassesToRemoveFromJar(),
-        entriesToJar,
-        mainClass,
-        manifestFile);
+    DirectToJarOutputSettings directToJarOutputSettings =
+        DirectToJarOutputSettings.of(
+            outputJar,
+            buildTimeOptions.getClassesToRemoveFromJar(),
+            entriesToJar,
+            mainClass,
+            manifestFile);
     return new JavacStep(
         outputDirectory,
         usedClassesFileWriter,

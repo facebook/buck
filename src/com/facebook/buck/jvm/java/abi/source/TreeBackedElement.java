@@ -20,13 +20,11 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.util.TreePath;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -35,21 +33,18 @@ import javax.lang.model.element.Name;
 import javax.lang.model.type.TypeMirror;
 
 /**
- * An implementation of {@link Element} that uses only the information available from a
- * {@link com.sun.source.tree.Tree}. This results in an incomplete implementation; see documentation
- * for individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
+ * An implementation of {@link Element} that uses only the information available from a {@link
+ * com.sun.source.tree.Tree}. This results in an incomplete implementation; see documentation for
+ * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 abstract class TreeBackedElement implements Element {
   private final Element underlyingElement;
-  @Nullable
-  private final TreeBackedElement enclosingElement;
+  @Nullable private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
   private final TreeBackedElementResolver resolver;
 
-  @Nullable
-  private final TreePath path;
-  @Nullable
-  private List<TreeBackedAnnotationMirror> annotationMirrors;
+  @Nullable private final TreePath path;
+  @Nullable private List<TreeBackedAnnotationMirror> annotationMirrors;
 
   public TreeBackedElement(
       Element underlyingElement,
@@ -122,10 +117,11 @@ abstract class TreeBackedElement implements Element {
       List<? extends AnnotationTree> annotationTrees = getAnnotationTrees();
       List<TreeBackedAnnotationMirror> result = new ArrayList<>();
       for (int i = 0; i < underlyingAnnotations.size(); i++) {
-        result.add(new TreeBackedAnnotationMirror(
-            underlyingAnnotations.get(i),
-            new TreePath(path, annotationTrees.get(i)),
-            resolver));
+        result.add(
+            new TreeBackedAnnotationMirror(
+                underlyingAnnotations.get(i),
+                new TreePath(path, annotationTrees.get(i)),
+                resolver));
       }
       annotationMirrors = Collections.unmodifiableList(result);
     }

@@ -19,9 +19,7 @@ package com.facebook.buck.jvm.java.abi.source.api;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoaderFactory;
-
 import java.io.Writer;
-
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
@@ -37,23 +35,17 @@ public interface FrontendOnlyJavacTaskProxy extends BuckJavacTaskProxy {
       Iterable<String> options,
       Iterable<String> classes,
       Iterable<? extends JavaFileObject> compilationUnits) {
-    JavaCompiler.CompilationTask task = compiler.getTask(
-        out,
-        fileManager,
-        diagnosticListener,
-        options,
-        classes,
-        compilationUnits);
+    JavaCompiler.CompilationTask task =
+        compiler.getTask(out, fileManager, diagnosticListener, options, classes, compilationUnits);
 
     PluginClassLoader loader = loaderFactory.getPluginClassLoader(task);
-    Class<? extends FrontendOnlyJavacTaskProxy> proxyImplClass = loader.loadClass(
-        "com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTaskProxyImpl",
-        FrontendOnlyJavacTaskProxy.class);
+    Class<? extends FrontendOnlyJavacTaskProxy> proxyImplClass =
+        loader.loadClass(
+            "com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTaskProxyImpl",
+            FrontendOnlyJavacTaskProxy.class);
 
     try {
-      return proxyImplClass
-          .getConstructor(JavaCompiler.CompilationTask.class)
-          .newInstance(task);
+      return proxyImplClass.getConstructor(JavaCompiler.CompilationTask.class).newInstance(task);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }

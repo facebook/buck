@@ -17,40 +17,39 @@
 package com.facebook.buck.jvm.java.tracing;
 
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
  * A {@link JavacPhaseTracer} that translates the trace data to be more useful.
- * <p>
- * The phases of compilation are described
- * <a href="http://openjdk.java.net/groups/compiler/doc/compilation-overview/index.html">here</a>.
- * The doc describes annotation processing as conceptually occuring before compilation, but
- * actually occurring somewhat out-of-phase with the conceptual model.
- * <p>
- * Javac calls {@link TracingTaskListener} according to the conceptual model described in that
- * document: annotation processing starts at the very beginning of the run, and ends after the
- * last annotation processor is run in the last round of processing. Then there is one last parse
- * and enter before going into analyze and generate. This is problematic from a performance
- * perspective, because some of the work attributed to annotation processing would have happened
- * regardless.
- * <p>
- * This class translates the tracing data from the conceptual model back into something that more
+ *
+ * <p>The phases of compilation are described <a
+ * href="http://openjdk.java.net/groups/compiler/doc/compilation-overview/index.html">here</a>. The
+ * doc describes annotation processing as conceptually occuring before compilation, but actually
+ * occurring somewhat out-of-phase with the conceptual model.
+ *
+ * <p>Javac calls {@link TracingTaskListener} according to the conceptual model described in that
+ * document: annotation processing starts at the very beginning of the run, and ends after the last
+ * annotation processor is run in the last round of processing. Then there is one last parse and
+ * enter before going into analyze and generate. This is problematic from a performance perspective,
+ * because some of the work attributed to annotation processing would have happened regardless.
+ *
+ * <p>This class translates the tracing data from the conceptual model back into something that more
  * closely matches the actual implementation:
+ *
  * <ul>
- * <li>Parse, enter, analyze, and generate phases pass thru unchanged</li>
- * <li>What javac traces as an annotation processing round is renamed
- * "run annotation processors"</li>
- * <li>Annotation processing rounds are traced from the beginning of "run annotation processors"
- * to the beginning of the next "run annotation processors" or (for the last round)
- * the first analyze phase</li>
- * <li>Annotation processing is traced from the beginning of the first round to
- * the end of the last</li>
- * <li>If compilation ends during annotation processing (as can happen with -proc:only), it
- * detects this (via being closed by its caller) and emits appropriate tracing</li>
+ *   <li>Parse, enter, analyze, and generate phases pass thru unchanged
+ *   <li>What javac traces as an annotation processing round is renamed "run annotation processors"
+ *   <li>Annotation processing rounds are traced from the beginning of "run annotation processors"
+ *       to the beginning of the next "run annotation processors" or (for the last round) the first
+ *       analyze phase
+ *   <li>Annotation processing is traced from the beginning of the first round to the end of the
+ *       last
+ *   <li>If compilation ends during annotation processing (as can happen with -proc:only), it
+ *       detects this (via being closed by its caller) and emits appropriate tracing
  * </ul>
- * In this way, the time attributed to annotation processing is always time
- * that would not have been spent if annotation processors were not present.
+ *
+ * In this way, the time attributed to annotation processing is always time that would not have been
+ * spent if annotation processors were not present.
  */
 public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
   private final JavacPhaseEventLogger logger;

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -59,8 +58,8 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
           return;
         }
 
-        String fullyQualifiedName = name.substring(0, name.length() - CLASS_SUFFIX.length())
-            .replace('/', '.');
+        String fullyQualifiedName =
+            name.substring(0, name.length() - CLASS_SUFFIX.length()).replace('/', '.');
         providedSymbols.add(fullyQualifiedName);
       }
     }.traverse();

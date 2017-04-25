@@ -27,14 +27,13 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.immutables.value.Value;
 
 /**
- * Describes the properties of a plugin to javac, either a
- * {@link javax.annotation.processing.Processor} or a {@link com.sun.source.util.Plugin}. The
- * classpath and input properties in particular can be expensive to compute, so this object
- * should be cached when possible.
+ * Describes the properties of a plugin to javac, either a {@link
+ * javax.annotation.processing.Processor} or a {@link com.sun.source.util.Plugin}. The classpath and
+ * input properties in particular can be expensive to compute, so this object should be cached when
+ * possible.
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -57,21 +56,18 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
   public abstract boolean getSupportsAbiGenerationFromSource();
 
   public boolean isEmpty() {
-    return getProcessorNames().isEmpty() &&
-        getClasspathEntries().isEmpty();
+    return getProcessorNames().isEmpty() && getClasspathEntries().isEmpty();
   }
 
   public ResolvedJavacPluginProperties resolve(
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver) {
+      ProjectFilesystem filesystem, SourcePathResolver resolver) {
     return new ResolvedJavacPluginProperties(this, filesystem, resolver);
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     // classpathEntries is not necessary because it is derived from inputs, which is below
-    sink.setReflectively("processors", getProcessorNames())
-        .setReflectively("inputs", getInputs());
+    sink.setReflectively("processors", getProcessorNames()).setReflectively("inputs", getInputs());
   }
 
   abstract static class Builder {
@@ -109,8 +105,8 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
         addAllClasspathEntries(hasClasspathEntries.getTransitiveClasspaths());
       } else {
         throw new HumanReadableException(
-            "%s is not a legal dependency for an annotation processor or compiler plugin; " +
-                "must refer only to prebuilt jar, java binary, or java library targets.",
+            "%s is not a legal dependency for an annotation processor or compiler plugin; "
+                + "must refer only to prebuilt jar, java binary, or java library targets.",
             rule.getFullyQualifiedName());
       }
       return (JavacPluginProperties.Builder) this;

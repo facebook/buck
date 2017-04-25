@@ -17,15 +17,16 @@
 package com.facebook.buck.jvm.java.plugin.api;
 
 /**
- * Listens to events coming from the Java compiler. This is analogous to
- * {@link com.sun.source.util.TaskListener}, but loads in Buck's {@link ClassLoader} instead of the
+ * Listens to events coming from the Java compiler. This is analogous to {@link
+ * com.sun.source.util.TaskListener}, but loads in Buck's {@link ClassLoader} instead of the
  * compiler's.
  */
 public interface BuckJavacTaskListener {
   static BuckJavacTaskListener wrapRealTaskListener(PluginClassLoader loader, Object taskListener) {
-    Class<? extends BuckJavacTaskListener> taskListenerProxyClass = loader.loadClass(
-        "com.facebook.buck.jvm.java.plugin.adapter.TaskListenerProxy",
-        BuckJavacTaskListener.class);
+    Class<? extends BuckJavacTaskListener> taskListenerProxyClass =
+        loader.loadClass(
+            "com.facebook.buck.jvm.java.plugin.adapter.TaskListenerProxy",
+            BuckJavacTaskListener.class);
 
     try {
       return taskListenerProxyClass.getConstructor(Object.class).newInstance(taskListener);

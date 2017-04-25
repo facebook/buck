@@ -22,29 +22,21 @@ import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
-
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.jar.Attributes;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.ClassNode;
 
-/**
- * A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}.
- */
+/** A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}. */
 class FilesystemStubJarWriter implements StubJarWriter {
   private final CustomJarOutputStream jar;
   private boolean closed = false;
 
-  public FilesystemStubJarWriter(
-      ProjectFilesystem filesystem,
-      Path outputPath) throws IOException {
+  public FilesystemStubJarWriter(ProjectFilesystem filesystem, Path outputPath) throws IOException {
     Preconditions.checkState(
-        !filesystem.exists(outputPath),
-        "Output file already exists: %s)",
-        outputPath);
+        !filesystem.exists(outputPath), "Output file already exists: %s)", outputPath);
 
     if (outputPath.getParent() != null && !filesystem.exists(outputPath.getParent())) {
       filesystem.createParentDirs(outputPath);

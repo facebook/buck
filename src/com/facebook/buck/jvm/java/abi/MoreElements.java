@@ -17,9 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
-
 import java.util.Map;
-
 import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -32,13 +30,11 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 
 /**
- * More utility functions for working with {@link Element}s, along the lines of those
- * found on {@link javax.lang.model.util.Elements}.
+ * More utility functions for working with {@link Element}s, along the lines of those found on
+ * {@link javax.lang.model.util.Elements}.
  */
 final class MoreElements {
-  private MoreElements() {
-
-  }
+  private MoreElements() {}
 
   public static boolean isInnerClassConstructor(ExecutableElement e) {
     return isConstructor(e) && isInnerClass((TypeElement) e.getEnclosingElement());
@@ -57,8 +53,7 @@ final class MoreElements {
     Element outerClass = innerClass.getEnclosingElement();
     if (outerClass == null) {
       throw new IllegalArgumentException(
-          String.format(
-              "Cannot get outer class of element which isn't an inner class: %s", e));
+          String.format("Cannot get outer class of element which isn't an inner class: %s", e));
     }
     return outerClass;
   }
@@ -67,17 +62,15 @@ final class MoreElements {
     DeclaredType annotationType = annotation.getAnnotationType();
     TypeElement annotationTypeElement = (TypeElement) annotationType.asElement();
 
-    AnnotationMirror retentionAnnotation = findAnnotation(
-        "java.lang.annotation.Retention",
-        annotationTypeElement);
+    AnnotationMirror retentionAnnotation =
+        findAnnotation("java.lang.annotation.Retention", annotationTypeElement);
     if (retentionAnnotation == null) {
       return false;
     }
 
-    VariableElement retentionPolicy = (VariableElement) Preconditions.checkNotNull(
-        findAnnotationValue(
-          retentionAnnotation,
-          "value"));
+    VariableElement retentionPolicy =
+        (VariableElement)
+            Preconditions.checkNotNull(findAnnotationValue(retentionAnnotation, "value"));
 
     return retentionPolicy.getSimpleName().contentEquals("RUNTIME");
   }
@@ -86,17 +79,15 @@ final class MoreElements {
     DeclaredType annotationType = annotation.getAnnotationType();
     TypeElement annotationTypeElement = (TypeElement) annotationType.asElement();
 
-    AnnotationMirror retentionAnnotation = findAnnotation(
-        "java.lang.annotation.Retention",
-        annotationTypeElement);
+    AnnotationMirror retentionAnnotation =
+        findAnnotation("java.lang.annotation.Retention", annotationTypeElement);
     if (retentionAnnotation == null) {
       return false;
     }
 
-    VariableElement retentionPolicy = (VariableElement) Preconditions.checkNotNull(
-        findAnnotationValue(
-            retentionAnnotation,
-            "value"));
+    VariableElement retentionPolicy =
+        (VariableElement)
+            Preconditions.checkNotNull(findAnnotationValue(retentionAnnotation, "value"));
 
     return retentionPolicy.getSimpleName().contentEquals("SOURCE");
   }

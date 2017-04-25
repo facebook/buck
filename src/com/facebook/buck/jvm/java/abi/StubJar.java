@@ -17,11 +17,6 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InnerClassNode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,12 +25,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InnerClassNode;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
@@ -46,12 +43,10 @@ public class StubJar {
 
   /**
    * @param targetVersion the class file version to output, expressed as the corresponding Java
-   *                      source version
+   *     source version
    */
   public StubJar(
-      SourceVersion targetVersion,
-      Elements elements,
-      Iterable<TypeElement> topLevelTypes) {
+      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
     libraryReaderSupplier = () -> LibraryReader.of(targetVersion, elements, topLevelTypes);
   }
 

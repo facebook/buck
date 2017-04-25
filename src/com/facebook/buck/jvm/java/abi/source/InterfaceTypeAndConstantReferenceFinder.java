@@ -27,7 +27,6 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -37,10 +36,10 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
- * Examines the non-private interfaces of types defined in one or more
- * {@link CompilationUnitTree}s and finds references to types or compile-time constants. This is
- * intended for use during full compilation, to expose references that may be problematic when
- * generating ABIs without dependencies.
+ * Examines the non-private interfaces of types defined in one or more {@link CompilationUnitTree}s
+ * and finds references to types or compile-time constants. This is intended for use during full
+ * compilation, to expose references that may be problematic when generating ABIs without
+ * dependencies.
  */
 class InterfaceTypeAndConstantReferenceFinder {
   public interface Listener {
@@ -49,9 +48,7 @@ class InterfaceTypeAndConstantReferenceFinder {
     void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement);
 
     void onConstantReferenceFound(
-        VariableElement constant,
-        TreePath path,
-        Element enclosingElement);
+        VariableElement constant, TreePath path, Element enclosingElement);
   }
 
   private final Listener listener;
@@ -70,9 +67,7 @@ class InterfaceTypeAndConstantReferenceFinder {
     // Scan the non-private interface portions of the tree, and report any references to types
     // or constants that are found.
     new TreeContextScanner<Void, Void>(trees) {
-      /**
-       * Reports types that are imported via single-type imports
-       */
+      /** Reports types that are imported via single-type imports */
       @Override
       public Void visitImport(ImportTree node, Void aVoid) {
         if (node.isStatic()) {
@@ -94,9 +89,7 @@ class InterfaceTypeAndConstantReferenceFinder {
         return null;
       }
 
-      /**
-       * Restricts the search to non-private classes.
-       */
+      /** Restricts the search to non-private classes. */
       @Override
       public Void visitClass(ClassTree node, Void aVoid) {
         Element element = getEnclosingElement();
@@ -108,9 +101,7 @@ class InterfaceTypeAndConstantReferenceFinder {
         return super.visitClass(node, aVoid);
       }
 
-      /**
-       * Restricts the search to non-private methods
-       */
+      /** Restricts the search to non-private methods */
       @Override
       public Void visitMethod(MethodTree node, Void aVoid) {
         Element element = getEnclosingElement();
@@ -139,8 +130,8 @@ class InterfaceTypeAndConstantReferenceFinder {
 
         // Skip the initializers of variables that aren't static constants since they're not part
         // of the interface
-        if (element.getConstantValue() == null ||
-            !element.getModifiers().contains(Modifier.STATIC)) {
+        if (element.getConstantValue() == null
+            || !element.getModifiers().contains(Modifier.STATIC)) {
           return null;
         }
 
@@ -149,9 +140,7 @@ class InterfaceTypeAndConstantReferenceFinder {
         return null;
       }
 
-      /**
-       * Prevents the search from descending into method bodies.
-       */
+      /** Prevents the search from descending into method bodies. */
       @Override
       public Void visitBlock(BlockTree node, Void aVoid) {
         // We care only about the interface, so we don't need to recurse into code blocks
@@ -179,7 +168,7 @@ class InterfaceTypeAndConstantReferenceFinder {
           if (typeElement.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
             // This is a fully-qualified name
             reportType();
-            return null;  // Stop; we don't need to report the package reference
+            return null; // Stop; we don't need to report the package reference
           }
 
           // If it's not a package member, keep going; we want to report the outermost type
@@ -199,8 +188,8 @@ class InterfaceTypeAndConstantReferenceFinder {
       }
 
       /**
-       * Reports references to types or constants via simple name, wherever it might appear
-       * in the interface
+       * Reports references to types or constants via simple name, wherever it might appear in the
+       * interface
        */
       @Override
       public Void visitIdentifier(IdentifierTree node, Void aVoid) {
@@ -236,8 +225,7 @@ class InterfaceTypeAndConstantReferenceFinder {
         listener.onTypeReferenceFound(
             (TypeElement) Preconditions.checkNotNull(getCurrentElement()),
             getCurrentPath(),
-            getEnclosingElement()
-        );
+            getEnclosingElement());
       }
 
       private void reportConstant() {

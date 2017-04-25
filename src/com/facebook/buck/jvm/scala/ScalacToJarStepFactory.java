@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -74,9 +73,11 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
-    this.compilerPlugins = compilerPlugins.stream()
-        .map(BuildRule::getSourcePathToOutput)
-        .collect(MoreCollectors.toImmutableSet());
+    this.compilerPlugins =
+        compilerPlugins
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSet());
     this.extraClassPath = extraClassPath;
   }
 
@@ -98,25 +99,30 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
       BuildableContext buildableContext) {
 
     steps.add(
-      new ScalacStep(
-          scalac,
-          ImmutableList.<String>builder()
-              .addAll(configCompilerFlags)
-              .addAll(extraArguments)
-              .addAll(
-                  Iterables.transform(
-                      compilerPlugins,
-                      input -> "-Xplugin:" +
-                          context.getSourcePathResolver().getRelativePath(input).toString()))
-              .build(),
-          resolver,
-          outputDirectory,
-          sourceFilePaths,
-          ImmutableSortedSet.<Path>naturalOrder()
-            .addAll(Optional.ofNullable(extraClassPath.apply(context)).orElse(ImmutableList.of()))
-            .addAll(classpathEntries)
-            .build(),
-          filesystem));
+        new ScalacStep(
+            scalac,
+            ImmutableList.<String>builder()
+                .addAll(configCompilerFlags)
+                .addAll(extraArguments)
+                .addAll(
+                    Iterables.transform(
+                        compilerPlugins,
+                        input ->
+                            "-Xplugin:"
+                                + context
+                                    .getSourcePathResolver()
+                                    .getRelativePath(input)
+                                    .toString()))
+                .build(),
+            resolver,
+            outputDirectory,
+            sourceFilePaths,
+            ImmutableSortedSet.<Path>naturalOrder()
+                .addAll(
+                    Optional.ofNullable(extraClassPath.apply(context)).orElse(ImmutableList.of()))
+                .addAll(classpathEntries)
+                .build(),
+            filesystem));
   }
 
   @Override
@@ -135,7 +141,6 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
   @Override
   public Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder) {
     return Iterables.concat(
-        super.getDeclaredDeps(ruleFinder),
-        ImmutableList.of(scalaLibraryTarget));
+        super.getDeclaredDeps(ruleFinder), ImmutableList.of(scalaLibraryTarget));
   }
 }

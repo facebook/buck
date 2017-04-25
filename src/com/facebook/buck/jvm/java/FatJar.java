@@ -14,18 +14,18 @@
  * under the License.
  */
 
-/***************
+/**
+ * *************
  *
- * This code can be embedded in arbitrary third-party projects!
- * For maximum compatibility, use only Java 6 constructs.
+ * <p>This code can be embedded in arbitrary third-party projects! For maximum compatibility, use
+ * only Java 6 constructs.
  *
- ***************/
-
+ * <p>*************
+ */
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +33,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -53,17 +52,11 @@ public class FatJar {
 
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
 
-  /**
-   * The resource name for the real JAR.
-   */
-  @Nullable
-  private String innerJar;
+  /** The resource name for the real JAR. */
+  @Nullable private String innerJar;
 
-  /**
-   * The map of system-specific shared library names to their corresponding resource names.
-   */
-  @Nullable
-  private Map<String, String> nativeLibraries;
+  /** The map of system-specific shared library names to their corresponding resource names. */
+  @Nullable private Map<String, String> nativeLibraries;
 
   // Required for XML deserialization.
   protected FatJar() {}
@@ -73,9 +66,7 @@ public class FatJar {
     this.nativeLibraries = nativeLibraries;
   }
 
-  /**
-   * @return the {@link FatJar} object deserialized from the resource name via {@code loader}.
-   */
+  /** @return the {@link FatJar} object deserialized from the resource name via {@code loader}. */
   public static FatJar load(ClassLoader loader)
       throws XMLStreamException, JAXBException, IOException {
     InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
@@ -96,9 +87,7 @@ public class FatJar {
     }
   }
 
-  /**
-   * Serialize this instance as XML to {@code outputStream}.
-   */
+  /** Serialize this instance as XML to {@code outputStream}. */
   public void store(OutputStream outputStream) throws JAXBException {
     JAXBContext context = JAXBContext.newInstance(FatJar.class);
     JAXBElement<FatJar> element = new JAXBElement<FatJar>(new QName("fatjar"), FatJar.class, this);

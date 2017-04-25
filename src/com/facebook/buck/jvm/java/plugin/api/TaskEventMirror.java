@@ -17,40 +17,27 @@
 package com.facebook.buck.jvm.java.plugin.api;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 
 /**
- * {@link com.sun.source.util.TaskEvent} is included with the compiler and is thus not
- * directly accessible from within Buck's class loader. This class is used as a mirror within
- * Buck's class loader for a {@link com.sun.source.util.TaskEvent} within the compiler's.
+ * {@link com.sun.source.util.TaskEvent} is included with the compiler and is thus not directly
+ * accessible from within Buck's class loader. This class is used as a mirror within Buck's class
+ * loader for a {@link com.sun.source.util.TaskEvent} within the compiler's.
  */
 public final class TaskEventMirror {
   public enum Kind {
-    /**
-     * For events related to the parsing of a file.
-     */
+    /** For events related to the parsing of a file. */
     PARSE,
-    /**
-     * For events relating to elements being entered.
-     **/
+    /** For events relating to elements being entered. */
     ENTER,
-    /**
-     * For events relating to elements being analyzed for errors.
-     **/
+    /** For events relating to elements being analyzed for errors. */
     ANALYZE,
-    /**
-     * For events relating to class files being generated.
-     **/
+    /** For events relating to class files being generated. */
     GENERATE,
-    /**
-     * For events relating to overall annotation processing.
-     **/
+    /** For events relating to overall annotation processing. */
     ANNOTATION_PROCESSING,
-    /**
-     * For events relating to an individual annotation processing round.
-     **/
+    /** For events relating to an individual annotation processing round. */
     ANNOTATION_PROCESSING_ROUND,
   };
 

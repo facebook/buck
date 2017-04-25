@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi.source;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -43,16 +42,12 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
   }
 
   public StandaloneDeclaredType(
-      Types types,
-      TypeElement typeElement,
-      List<? extends TypeMirror> typeArguments) {
+      Types types, TypeElement typeElement, List<? extends TypeMirror> typeArguments) {
     this(typeElement, typeArguments, types.getNoType(TypeKind.NONE));
   }
 
   public StandaloneDeclaredType(
-      TypeElement typeElement,
-      List<? extends TypeMirror> typeArguments,
-      TypeMirror enclosingType) {
+      TypeElement typeElement, List<? extends TypeMirror> typeArguments, TypeMirror enclosingType) {
     this(typeElement, typeArguments, enclosingType, Collections.emptyList());
   }
 
@@ -63,8 +58,7 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.DECLARED, annotations);
     this.typeElement = typeElement;
-    this.typeArguments =
-        Collections.unmodifiableList(new ArrayList<>(typeArguments));
+    this.typeArguments = Collections.unmodifiableList(new ArrayList<>(typeArguments));
     this.enclosingType = enclosingType;
   }
 

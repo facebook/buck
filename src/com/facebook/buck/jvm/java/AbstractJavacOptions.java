@@ -25,9 +25,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -41,6 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
@@ -53,15 +51,13 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
 
-  /**
-   * The method in which the compiler output is spooled.
-   */
+  /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
     /**
      * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory.
-     * If {@link com.facebook.buck.jvm.java.JavaLibraryDescription.Arg} postprocessClassesCommands
-     * are present, the builder will resort to writing .class files to disk by necessity.
+     * files in memory. If {@link com.facebook.buck.jvm.java.JavaLibraryDescription.Arg}
+     * postprocessClassesCommands are present, the builder will resort to writing .class files to
+     * disk by necessity.
      */
     DIRECT_TO_JAR,
 
@@ -106,8 +102,11 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public abstract Set<String> getSafeAnnotationProcessors();
 
   public abstract List<String> getExtraArguments();
+
   public abstract Set<Pattern> getClassesToRemoveFromJar();
+
   protected abstract Optional<String> getBootclasspath();
+
   protected abstract Map<String, String> getSourceToBootclasspath();
 
   protected boolean isDebug() {
@@ -184,7 +183,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       // Specify processorpath to search for processors.
       optionsConsumer.addOptionValue(
           "processorpath",
-          annotationProcessors.stream()
+          annotationProcessors
+              .stream()
               .map(ResolvedJavacPluginProperties::getClasspath)
               .flatMap(Arrays::stream)
               .distinct()
@@ -194,7 +194,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       // Specify names of processors.
       optionsConsumer.addOptionValue(
           "processor",
-          annotationProcessors.stream()
+          annotationProcessors
+              .stream()
               .map(ResolvedJavacPluginProperties::getProcessorNames)
               .flatMap(Collection::stream)
               .collect(Collectors.joining(",")));

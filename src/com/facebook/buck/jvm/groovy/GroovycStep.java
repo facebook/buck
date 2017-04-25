@@ -34,7 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -77,11 +76,12 @@ class GroovycStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     try {
-      ProcessExecutorParams params = ProcessExecutorParams.builder()
-          .setCommand(createCommand())
-          .setEnvironment(context.getEnvironment())
-          .setDirectory(filesystem.getRootPath().toAbsolutePath())
-          .build();
+      ProcessExecutorParams params =
+          ProcessExecutorParams.builder()
+              .setCommand(createCommand())
+              .setEnvironment(context.getEnvironment())
+              .setDirectory(filesystem.getRootPath().toAbsolutePath())
+              .build();
       writePathToSourcesList(sourceFilePaths);
       ProcessExecutor processExecutor = context.getProcessExecutor();
       return StepExecutionResult.of(processExecutor.launchAndExecute(params));

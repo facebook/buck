@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
 import javax.tools.StandardJavaFileManager;
 
 public interface ClassUsageFileWriter {

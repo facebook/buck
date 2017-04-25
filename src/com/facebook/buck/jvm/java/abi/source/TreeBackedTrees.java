@@ -29,10 +29,8 @@ import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -59,9 +57,7 @@ class TreeBackedTrees extends Trees {
   }
 
   /* package */ TreeBackedTrees(
-      Trees javacTrees,
-      TreeBackedElements elements,
-      TreeBackedTypes types) {
+      Trees javacTrees, TreeBackedElements elements, TreeBackedTypes types) {
     this.javacTrees = javacTrees;
     this.elements = elements;
     this.types = types;
@@ -213,24 +209,24 @@ class TreeBackedTrees extends Trees {
       return "";
     }
 
-    return tree.accept(new SimpleTreeVisitor<CharSequence, Void>() {
-      @Override
-      protected CharSequence defaultAction(Tree node, Void aVoid) {
-        throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
-      }
+    return tree.accept(
+        new SimpleTreeVisitor<CharSequence, Void>() {
+          @Override
+          protected CharSequence defaultAction(Tree node, Void aVoid) {
+            throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
+          }
 
-      @Override
-      public CharSequence visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        return String.format(
-            "%s.%s",
-            node.getExpression().accept(this, aVoid),
-            node.getIdentifier());
-      }
+          @Override
+          public CharSequence visitMemberSelect(MemberSelectTree node, Void aVoid) {
+            return String.format(
+                "%s.%s", node.getExpression().accept(this, aVoid), node.getIdentifier());
+          }
 
-      @Override
-      public CharSequence visitIdentifier(IdentifierTree node, Void aVoid) {
-        return node.getName();
-      }
-    }, null);
+          @Override
+          public CharSequence visitIdentifier(IdentifierTree node, Void aVoid) {
+            return node.getName();
+          }
+        },
+        null);
   }
 }

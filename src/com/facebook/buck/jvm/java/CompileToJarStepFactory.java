@@ -30,25 +30,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Creates the necessary steps to compile the source files, apply post process classes commands,
- * and pack the output .class files into a Jar.
+ * Creates the necessary steps to compile the source files, apply post process classes commands, and
+ * pack the output .class files into a Jar.
  */
 public interface CompileToJarStepFactory extends RuleKeyAppendable {
 
   default BuildRuleParams addInputs(BuildRuleParams params, SourcePathRuleFinder ruleFinder) {
     return params.copyReplacingDeclaredAndExtraDeps(
-        () -> ImmutableSortedSet.copyOf(Iterables.concat(
-            params.getDeclaredDeps().get(),
-            getDeclaredDeps(ruleFinder))),
-        () -> ImmutableSortedSet.copyOf(Iterables.concat(
-            params.getExtraDeps().get(),
-            getExtraDeps(ruleFinder))));
+        () ->
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(params.getDeclaredDeps().get(), getDeclaredDeps(ruleFinder))),
+        () ->
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(params.getExtraDeps().get(), getExtraDeps(ruleFinder))));
   }
 
   Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder);

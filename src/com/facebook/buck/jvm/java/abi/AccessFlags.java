@@ -16,10 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import org.objectweb.asm.Opcodes;
-
 import java.util.Set;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -28,18 +25,15 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import org.objectweb.asm.Opcodes;
 
-/**
- * Computes the access flags (see JVMS8 4.1, 4.5, 4.6) for {@link Element}s.
- */
+/** Computes the access flags (see JVMS8 4.1, 4.5, 4.6) for {@link Element}s. */
 public final class AccessFlags {
-  private AccessFlags() {
-
-  }
+  private AccessFlags() {}
 
   /**
-   * Gets the class access flags (see JVMS8 4.1) for the given type element, augmented
-   * by the special ASM pseudo-access flag for @Deprecated types.
+   * Gets the class access flags (see JVMS8 4.1) for the given type element, augmented by the
+   * special ASM pseudo-access flag for @Deprecated types.
    */
   public static int getAccessFlags(TypeElement typeElement) {
     int result = getCommonAccessFlags(typeElement);
@@ -52,7 +46,7 @@ public final class AccessFlags {
         result = result | Opcodes.ACC_ABSTRACT;
         break;
       case ENUM:
-        result = result | Opcodes.ACC_SUPER;  // JVMS 4.1
+        result = result | Opcodes.ACC_SUPER; // JVMS 4.1
         result = result | Opcodes.ACC_ENUM;
 
         // Enums have this lovely property that they can have abstract members without themselves
@@ -69,9 +63,9 @@ public final class AccessFlags {
         result = result | Opcodes.ACC_ABSTRACT;
         result = result | Opcodes.ACC_INTERFACE;
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
-        result = result | Opcodes.ACC_SUPER;  // JVMS 4.1
+        result = result | Opcodes.ACC_SUPER; // JVMS 4.1
         break;
     }
 
@@ -79,8 +73,8 @@ public final class AccessFlags {
   }
 
   /**
-   * Gets the method access flags (see JVMS8 4.6) for the given executable element, augmented
-   * by the special ASM pseudo-access flag for @Deprecated methods.
+   * Gets the method access flags (see JVMS8 4.6) for the given executable element, augmented by the
+   * special ASM pseudo-access flag for @Deprecated methods.
    */
   public static int getAccessFlags(ExecutableElement executableElement) {
     int result = getCommonAccessFlags(executableElement);
@@ -93,8 +87,8 @@ public final class AccessFlags {
   }
 
   /**
-   * Gets the field access flags (see JVMS8 4.5) for the given variable element, augmented
-   * by the special ASM pseudo-access flag for @Deprecated fields.
+   * Gets the field access flags (see JVMS8 4.5) for the given variable element, augmented by the
+   * special ASM pseudo-access flag for @Deprecated fields.
    */
   public static int getAccessFlags(VariableElement variableElement) {
     int result = getCommonAccessFlags(variableElement);
@@ -107,8 +101,8 @@ public final class AccessFlags {
   }
 
   /**
-   * Gets the access flags (see JVMS8 4.1, 4.5, 4.6) for the given element, from among
-   * those that are common to all kinds of elements.
+   * Gets the access flags (see JVMS8 4.1, 4.5, 4.6) for the given element, from among those that
+   * are common to all kinds of elements.
    */
   private static int getCommonAccessFlags(Element element) {
     int result = modifiersToAccessFlags(element.getModifiers());
@@ -147,9 +141,7 @@ public final class AccessFlags {
     return result;
   }
 
-  /**
-   * Gets the access flag (see JVMS8 4.1, 4.5, 4.6) corresponding to the given modifier.
-   */
+  /** Gets the access flag (see JVMS8 4.1, 4.5, 4.6) corresponding to the given modifier. */
   private static int modifierToAccessFlag(Modifier modifier) {
     switch (modifier) {
       case PUBLIC:

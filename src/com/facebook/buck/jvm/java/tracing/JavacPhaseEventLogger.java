@@ -19,14 +19,10 @@ package com.facebook.buck.jvm.java.tracing;
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Helper class for creating and posting {@link JavacPhaseEvent}s.
- */
+/** Helper class for creating and posting {@link JavacPhaseEvent}s. */
 public class JavacPhaseEventLogger {
   private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
 
@@ -68,14 +64,12 @@ public class JavacPhaseEventLogger {
 
   public void beginAnnotationProcessingRound(int roundNumber) {
     postStartedEvent(
-        JavacPhaseEvent.Phase.ANNOTATION_PROCESSING_ROUND,
-        getRoundNumberArgs(roundNumber));
+        JavacPhaseEvent.Phase.ANNOTATION_PROCESSING_ROUND, getRoundNumberArgs(roundNumber));
   }
 
   public void endAnnotationProcessingRound(boolean isLastRound) {
     postFinishedEvent(
-        JavacPhaseEvent.Phase.ANNOTATION_PROCESSING_ROUND,
-        getIsLastRoundArgs(isLastRound));
+        JavacPhaseEvent.Phase.ANNOTATION_PROCESSING_ROUND, getIsLastRoundArgs(isLastRound));
   }
 
   public void beginRunAnnotationProcessors() {

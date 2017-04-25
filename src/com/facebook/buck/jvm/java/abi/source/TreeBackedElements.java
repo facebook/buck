@@ -19,13 +19,11 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.util.Trees;
-
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -42,8 +40,8 @@ import javax.lang.model.util.Elements;
 /**
  * An implementation of {@link Elements} using just the AST of a single module, without its
  * dependencies. Of necessity, such an implementation will need to make assumptions about the
- * meanings of some names, and thus must be used with care. See documentation for individual
- * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
+ * meanings of some names, and thus must be used with care. See documentation for individual methods
+ * and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
@@ -52,8 +50,7 @@ class TreeBackedElements implements Elements {
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
   private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
 
-  @Nullable
-  private TreeBackedElementResolver resolver;
+  @Nullable private TreeBackedElementResolver resolver;
 
   public TreeBackedElements(Elements javacElements, Trees javacTrees) {
     this.javacElements = javacElements;
@@ -99,7 +96,7 @@ class TreeBackedElements implements Elements {
       case METHOD:
         result = newTreeBackedExecutable((ExecutableElement) underlyingElement);
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException(String.format("Element kind %s NYI", kind));
     }
@@ -111,9 +108,7 @@ class TreeBackedElements implements Elements {
 
   private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
     TreeBackedPackageElement treeBackedPackage =
-        new TreeBackedPackageElement(
-            underlyingPackage,
-            Preconditions.checkNotNull(resolver));
+        new TreeBackedPackageElement(underlyingPackage, Preconditions.checkNotNull(resolver));
 
     knownPackages.put(treeBackedPackage.getQualifiedName(), treeBackedPackage);
 
@@ -126,8 +121,7 @@ class TreeBackedElements implements Elements {
             underlyingType,
             enterElement(underlyingType.getEnclosingElement()),
             Preconditions.checkNotNull(javacTrees.getPath(underlyingType)),
-            Preconditions.checkNotNull(resolver)
-        );
+            Preconditions.checkNotNull(resolver));
 
     knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
 
@@ -142,8 +136,7 @@ class TreeBackedElements implements Elements {
         underlyingTypeParameter,
         Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),
         enclosingElement,
-        Preconditions.checkNotNull(resolver)
-    );
+        Preconditions.checkNotNull(resolver));
   }
 
   private TreeBackedExecutableElement newTreeBackedExecutable(
@@ -193,9 +186,7 @@ class TreeBackedElements implements Elements {
   }
 
   /* package */ Element[] getJavacElements(Element[] elements) {
-    return Arrays.stream(elements)
-        .map(this::getJavacElement)
-        .toArray(Element[]::new);
+    return Arrays.stream(elements).map(this::getJavacElement).toArray(Element[]::new);
   }
 
   /* package */ TypeElement getJavacElement(TypeElement element) {
@@ -212,9 +203,8 @@ class TreeBackedElements implements Elements {
   }
 
   /**
-   * Gets the package element with the given name. If a package with the given name is referenced
-   * in the code or exists in the classpath, returns the corresponding element. Otherwise returns
-   * null.
+   * Gets the package element with the given name. If a package with the given name is referenced in
+   * the code or exists in the classpath, returns the corresponding element. Otherwise returns null.
    */
   @Override
   @Nullable
@@ -232,9 +222,8 @@ class TreeBackedElements implements Elements {
   }
 
   /**
-   * Gets the type element with the given name. If a class with the given name is referenced in
-   * the code or exists in the classpath, returns the corresponding element. Otherwise returns
-   * null.
+   * Gets the type element with the given name. If a class with the given name is referenced in the
+   * code or exists in the classpath, returns the corresponding element. Otherwise returns null.
    */
   @Override
   @Nullable

@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,12 +52,9 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.xml.bind.JAXBException;
 
-/**
- * Build a fat JAR that packages an inner JAR along with any required native libraries.
- */
+/** Build a fat JAR that packages an inner JAR along with any required native libraries. */
 public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final String FAT_JAR_INNER_JAR = "inner.jar";
@@ -67,22 +63,16 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
       ImmutableList.of(
           "com/facebook/buck/jvm/java/FatJar.java",
           "com/facebook/buck/util/liteinfersupport/Nullable.java",
-          "com/facebook/buck/util/liteinfersupport/Preconditions.java"
-      );
+          "com/facebook/buck/util/liteinfersupport/Preconditions.java");
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey
-  private final Javac javac;
-  @AddToRuleKey
-  private final JavacOptions javacOptions;
-  @AddToRuleKey
-  private final SourcePath innerJar;
-  @AddToRuleKey
-  private final ImmutableMap<String, SourcePath> nativeLibraries;
-  @AddToRuleKey
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final Javac javac;
+  @AddToRuleKey private final JavacOptions javacOptions;
+  @AddToRuleKey private final SourcePath innerJar;
+  @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
+  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final Path output;
 
   public JarFattener(
@@ -100,15 +90,14 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.output = BuildTargets
-        .getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
-        .resolve(getBuildTarget().getShortName() + ".jar");
+    this.output =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+            .resolve(getBuildTarget().getShortName() + ".jar");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -148,9 +137,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     // Symlink the inner JAR into it's place in the fat JAR.
     steps.add(
-        MkdirStep.of(
-            getProjectFilesystem(),
-            fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent()));
+        MkdirStep.of(getProjectFilesystem(), fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent()));
     steps.add(
         SymlinkFileStep.builder()
             .setFilesystem(getProjectFilesystem())
@@ -163,23 +150,21 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     // expensive compression on builds and decompression on startup.
     Path zipped = outputDir.resolve("contents.zip");
 
-    Step zipStep = new ZipStep(
-        getProjectFilesystem(),
-        zipped,
-        ImmutableSet.of(),
-        false,
-        ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-        fatJarDir);
+    Step zipStep =
+        new ZipStep(
+            getProjectFilesystem(),
+            zipped,
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
+            fatJarDir);
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
     steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     CompileToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(
-            javac,
-            javacOptions,
-            JavacOptionsAmender.IDENTITY);
+        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
 
     compileStepFactory.createCompileStep(
         context,
@@ -210,33 +195,29 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     return steps.build();
   }
 
-  /**
-   * @return a {@link Step} that generates the fat jar info resource.
-   */
+  /** @return a {@link Step} that generates the fat jar info resource. */
   private Step writeFatJarInfo(
-      Path destination,
-      final ImmutableMap<String, String> nativeLibraries) {
+      Path destination, final ImmutableMap<String, String> nativeLibraries) {
 
-    ByteSource source = new ByteSource() {
-      @Override
-      public InputStream openStream() throws IOException {
-        FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries);
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try {
-          fatJar.store(bytes);
-        } catch (JAXBException e) {
-          throw new RuntimeException(e);
-        }
-        return new ByteArrayInputStream(bytes.toByteArray());
-      }
-    };
+    ByteSource source =
+        new ByteSource() {
+          @Override
+          public InputStream openStream() throws IOException {
+            FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries);
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            try {
+              fatJar.store(bytes);
+            } catch (JAXBException e) {
+              throw new RuntimeException(e);
+            }
+            return new ByteArrayInputStream(bytes.toByteArray());
+          }
+        };
 
     return new WriteFileStep(getProjectFilesystem(), source, destination, /* executable */ false);
   }
 
-  /**
-   * @return a {@link Step} that writes the final from the resource named {@code name}.
-   */
+  /** @return a {@link Step} that writes the final from the resource named {@code name}. */
   private Step writeFromResource(Path destination, final String name) {
     return new WriteFileStep(
         getProjectFilesystem(),

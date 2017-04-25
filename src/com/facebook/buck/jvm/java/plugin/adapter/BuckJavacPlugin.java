@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java.plugin.adapter;
 
 /**
- * Analogue to javac 8's {@link com.sun.source.util.Plugin} class for use within Buck, even on
- * older versions of javac.
+ * Analogue to javac 8's {@link com.sun.source.util.Plugin} class for use within Buck, even on older
+ * versions of javac.
  */
 public interface BuckJavacPlugin {
   String getName();

@@ -23,9 +23,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
@@ -34,22 +32,17 @@ import javax.annotation.Nullable;
  */
 public class ExternalOrJarBackedJavacProvider implements JavacProvider {
   private final SourcePath compiler;
-  @Nullable
-  private final String compilerClassName;
-  @Nullable
-  private Javac javac;
+  @Nullable private final String compilerClassName;
+  @Nullable private Javac javac;
 
-  public ExternalOrJarBackedJavacProvider(
-      SourcePath compiler,
-      @Nullable String compilerClassName) {
+  public ExternalOrJarBackedJavacProvider(SourcePath compiler, @Nullable String compilerClassName) {
     this.compiler = compiler;
     this.compilerClassName = compilerClassName;
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("compiler", compiler)
+    sink.setReflectively("compiler", compiler)
         .setReflectively("compilerClassName", compilerClassName);
   }
 
@@ -60,17 +53,18 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider {
       if (possibleRule.isPresent() && possibleRule.get() instanceof JavaLibrary) {
         SourcePath javacJarPath = possibleRule.get().getSourcePathToOutput();
         if (javacJarPath == null) {
-          throw new HumanReadableException(String.format(
-              "%s isn't a valid value for javac_jar because it does not produce output",
-              compiler));
+          throw new HumanReadableException(
+              String.format(
+                  "%s isn't a valid value for javac_jar because it does not produce output",
+                  compiler));
         }
 
         javac =
             new JarBackedJavacProvider(
-                javacJarPath,
-                Preconditions.checkNotNull(compilerClassName),
-                Javac.Location.IN_PROCESS)
-            .resolve(ruleFinder);
+                    javacJarPath,
+                    Preconditions.checkNotNull(compilerClassName),
+                    Javac.Location.IN_PROCESS)
+                .resolve(ruleFinder);
       } else {
         javac = new ExternalJavac(Either.ofRight(compiler));
       }

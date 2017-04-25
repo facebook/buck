@@ -21,24 +21,22 @@ import com.facebook.buck.jvm.java.plugin.api.PluginClassLoaderFactory;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-
 import javax.annotation.Nullable;
 import javax.tools.JavaCompiler;
 
 /**
  * Loads the Buck javac plugin JAR using the {@link ClassLoader} of a particular compiler instance.
- * <p>
- * {@link com.sun.source.tree} and {@link com.sun.source.util} packages are public APIs whose
- * implementation is packaged with javac rather than in the Java runtime jar. Code that needs
- * to work with these must be loaded using the same {@link ClassLoader} as the instance of javac
- * with which it will be working.
+ *
+ * <p>{@link com.sun.source.tree} and {@link com.sun.source.util} packages are public APIs whose
+ * implementation is packaged with javac rather than in the Java runtime jar. Code that needs to
+ * work with these must be loaded using the same {@link ClassLoader} as the instance of javac with
+ * which it will be working.
  */
 public final class PluginLoader implements PluginClassLoader {
   private static final String JAVAC_PLUGIN_JAR_RESOURCE_PATH = "javac-plugin.jar";
@@ -47,12 +45,12 @@ public final class PluginLoader implements PluginClassLoader {
   private final ClassLoader classLoader;
 
   /**
-   * Extracts the jar containing the Buck javac plugin and returns a URL that can be given
-   * to a {@link java.net.URLClassLoader} to load it.
+   * Extracts the jar containing the Buck javac plugin and returns a URL that can be given to a
+   * {@link java.net.URLClassLoader} to load it.
    */
   private static URL extractJavacPluginJar() {
-    @Nullable final URL resourceURL =
-        PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
+    @Nullable
+    final URL resourceURL = PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
     if (resourceURL == null) {
       throw new RuntimeException("Could not find javac plugin jar; Buck may be corrupted.");
     } else if ("file".equals(resourceURL.getProtocol())) {
@@ -61,8 +59,8 @@ public final class PluginLoader implements PluginClassLoader {
       return resourceURL;
     } else {
       // Running from a .pex file, extraction is required
-      try (InputStream resourceStream = PluginLoader.class.getResourceAsStream(
-          JAVAC_PLUGIN_JAR_RESOURCE_PATH)) {
+      try (InputStream resourceStream =
+          PluginLoader.class.getResourceAsStream(JAVAC_PLUGIN_JAR_RESOURCE_PATH)) {
         File tempFile = File.createTempFile("javac-plugin", ".jar");
         tempFile.deleteOnExit();
         try (OutputStream tempFileStream = new FileOutputStream(tempFile)) {
@@ -75,21 +73,16 @@ public final class PluginLoader implements PluginClassLoader {
     }
   }
 
-  /**
-   * Returns a class loader that can be used to load classes from the compiler plugin jar.
-   */
+  /** Returns a class loader that can be used to load classes from the compiler plugin jar. */
   public static ClassLoader getPluginClassLoader(
-      ClassLoaderCache classLoaderCache,
-      JavaCompiler.CompilationTask compiler) {
+      ClassLoaderCache classLoaderCache, JavaCompiler.CompilationTask compiler) {
     final ClassLoader compilerClassLoader = compiler.getClass().getClassLoader();
     return classLoaderCache.getClassLoaderForClassPath(
-        compilerClassLoader,
-        ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
+        compilerClassLoader, ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
   }
 
   public static PluginLoader newInstance(
-      ClassLoaderCache classLoaderCache,
-      JavaCompiler.CompilationTask compiler) {
+      ClassLoaderCache classLoaderCache, JavaCompiler.CompilationTask compiler) {
     return new PluginLoader(getPluginClassLoader(classLoaderCache, compiler));
   }
 

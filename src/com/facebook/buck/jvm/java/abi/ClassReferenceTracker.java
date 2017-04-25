@@ -17,7 +17,8 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -28,13 +29,9 @@ import org.objectweb.asm.TypePath;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-import java.util.SortedSet;
-
-import javax.annotation.Nullable;
-
 /**
- * A {@link ClassVisitor} that records references to other classes. This is intended to be driven
- * by another {@link ClassVisitor} which is filtering down to just the ABI of the class.
+ * A {@link ClassVisitor} that records references to other classes. This is intended to be driven by
+ * another {@link ClassVisitor} which is filtering down to just the ABI of the class.
  */
 class ClassReferenceTracker extends ClassVisitor {
   private final ImmutableSortedSet.Builder<String> referencedClassNames =
@@ -80,8 +77,7 @@ class ClassReferenceTracker extends ClassVisitor {
       int typeRef, TypePath typePath, String desc, boolean visible) {
     visitDescriptor(desc);
     return new TrackingAnnotationVisitor(
-        api,
-        super.visitTypeAnnotation(typeRef, typePath, desc, visible));
+        api, super.visitTypeAnnotation(typeRef, typePath, desc, visible));
   }
 
   @Override
@@ -95,9 +91,7 @@ class ClassReferenceTracker extends ClassVisitor {
     visitDescriptor(desc);
     visitSignature(signature);
 
-    return new TrackingFieldVisitor(
-        api,
-        super.visitField(access, name, desc, signature, value));
+    return new TrackingFieldVisitor(api, super.visitField(access, name, desc, signature, value));
   }
 
   @Override
@@ -108,8 +102,7 @@ class ClassReferenceTracker extends ClassVisitor {
     addReferencedClassNames(exceptions);
 
     return new TrackingMethodVisitor(
-        api,
-        super.visitMethod(access, name, desc, signature, exceptions));
+        api, super.visitMethod(access, name, desc, signature, exceptions));
   }
 
   void visitDescriptor(String desc) {
@@ -134,7 +127,7 @@ class ClassReferenceTracker extends ClassVisitor {
       case Type.OBJECT:
         addReferencedClassName(type.getInternalName());
         break;
-      // $CASES-OMITTED
+        // $CASES-OMITTED
       default:
         // Others are primitives or void; don't care
         break;
@@ -145,7 +138,7 @@ class ClassReferenceTracker extends ClassVisitor {
     referencedClassNames.add(className);
   }
 
-  void addReferencedClassNames(@Nullable  String[] classNames) {
+  void addReferencedClassNames(@Nullable String[] classNames) {
     if (classNames == null) {
       return;
     }
@@ -180,16 +173,14 @@ class ClassReferenceTracker extends ClassVisitor {
         int typeRef, TypePath typePath, String desc, boolean visible) {
       visitDescriptor(desc);
       return new TrackingAnnotationVisitor(
-          api,
-          super.visitTypeAnnotation(typeRef, typePath, desc, visible));
+          api, super.visitTypeAnnotation(typeRef, typePath, desc, visible));
     }
 
     @Override
     public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
       visitDescriptor(desc);
       return new TrackingAnnotationVisitor(
-          api,
-          super.visitParameterAnnotation(parameter, desc, visible));
+          api, super.visitParameterAnnotation(parameter, desc, visible));
     }
   }
 
@@ -209,8 +200,7 @@ class ClassReferenceTracker extends ClassVisitor {
         int typeRef, TypePath typePath, String desc, boolean visible) {
       visitDescriptor(desc);
       return new TrackingAnnotationVisitor(
-          api,
-          super.visitTypeAnnotation(typeRef, typePath, desc, visible));
+          api, super.visitTypeAnnotation(typeRef, typePath, desc, visible));
     }
   }
 

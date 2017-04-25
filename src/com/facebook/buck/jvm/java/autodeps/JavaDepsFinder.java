@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,43 +73,40 @@ public class JavaDepsFinder {
     JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
     JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(javacOptions);
 
-    return new JavaDepsFinder(
-        javaFileParser,
-        buildContext,
-        executionContext,
-        buildEngine);
+    return new JavaDepsFinder(javaFileParser, buildContext, executionContext, buildEngine);
   }
 
-  private static final Set<BuildRuleType> RULES_TO_VISIT = ImmutableSet.of(
-      Description.getBuildRuleType(AndroidLibraryDescription.class),
-      Description.getBuildRuleType(JavaLibraryDescription.class),
-      Description.getBuildRuleType(JavaTestDescription.class),
-      Description.getBuildRuleType(PrebuiltJarDescription.class));
+  private static final Set<BuildRuleType> RULES_TO_VISIT =
+      ImmutableSet.of(
+          Description.getBuildRuleType(AndroidLibraryDescription.class),
+          Description.getBuildRuleType(JavaLibraryDescription.class),
+          Description.getBuildRuleType(JavaTestDescription.class),
+          Description.getBuildRuleType(PrebuiltJarDescription.class));
 
-  /**
-   * Java dependency information that is extracted from a {@link TargetGraph}.
-   */
+  /** Java dependency information that is extracted from a {@link TargetGraph}. */
   public static class DependencyInfo {
     final Set<TargetNode<?, ?>> rulesWithAutodeps = new HashSet<>();
 
     /**
      * Keys are rules with autodeps = True. Values are symbols that are referenced by Java files in
      * the rule. These need to satisfied by one of the following:
+     *
      * <ul>
-     * <li>The hardcoded deps for the rule defined in the build file.
-     * <li>The provided_deps of the rule.
-     * <li>The auto-generated deps provided by this class.
-     * <li>The exported_deps of one of the above.
+     *   <li>The hardcoded deps for the rule defined in the build file.
+     *   <li>The provided_deps of the rule.
+     *   <li>The auto-generated deps provided by this class.
+     *   <li>The exported_deps of one of the above.
      * </ul>
      */
     final HashMultimap<TargetNode<?, ?>, String> ruleToRequiredSymbols = HashMultimap.create();
+
     final HashMultimap<TargetNode<?, ?>, String> ruleToExportedSymbols = HashMultimap.create();
 
     public final HashMultimap<String, TargetNode<?, ?>> symbolToProviders = HashMultimap.create();
 
     /**
-     * Keys are rules with {@code autodeps = True}. Values are the provided_deps for the rule.
-     * Note that not every entry in rulesWithAutodeps will have an entry in this multimap.
+     * Keys are rules with {@code autodeps = True}. Values are the provided_deps for the rule. Note
+     * that not every entry in rulesWithAutodeps will have an entry in this multimap.
      */
     final HashMultimap<TargetNode<?, ?>, BuildTarget> rulesWithAutodepsToProvidedDeps =
         HashMultimap.create();
@@ -182,20 +178,16 @@ public class JavaDepsFinder {
     JavaSymbolsRule.SymbolsFinder symbolsFinder;
     if (argForNode instanceof JavaLibraryDescription.Arg) {
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) argForNode;
-      symbolsFinder = new JavaLibrarySymbolsFinder(
-          arg.srcs,
-          javaFileParser,
-          shouldRecordRequiredSymbols);
+      symbolsFinder =
+          new JavaLibrarySymbolsFinder(arg.srcs, javaFileParser, shouldRecordRequiredSymbols);
     } else {
       PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) argForNode;
       symbolsFinder = new PrebuiltJarSymbolsFinder(arg.binaryJar);
     }
 
     // Build the rule, leveraging Buck's build cache.
-    JavaSymbolsRule buildRule = new JavaSymbolsRule(
-        buildTarget,
-        symbolsFinder,
-        node.getFilesystem());
+    JavaSymbolsRule buildRule =
+        new JavaSymbolsRule(buildTarget, symbolsFinder, node.getFilesystem());
     ListenableFuture<BuildResult> future =
         buildEngine.build(buildContext, executionContext, buildRule);
     BuildResult result = Futures.getUnchecked(future);
@@ -210,5 +202,4 @@ public class JavaDepsFinder {
     }
     return features;
   }
-
 }

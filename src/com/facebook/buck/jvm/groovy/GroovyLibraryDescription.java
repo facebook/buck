@@ -29,9 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
-
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
 
@@ -40,8 +38,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   private final JavacOptions defaultJavacOptions;
 
   public GroovyLibraryDescription(
-      GroovyBuckConfig groovyBuckConfig,
-      JavacOptions defaultJavacOptions) {
+      GroovyBuckConfig groovyBuckConfig, JavacOptions defaultJavacOptions) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.defaultJavacOptions = defaultJavacOptions;
   }
@@ -57,19 +54,13 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    JavacOptions javacOptions = JavacOptionsFactory
-        .create(
-          defaultJavacOptions,
-          params,
-          resolver,
-          args);
-    DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder = new DefaultGroovyLibraryBuilder(
-        params,
-        resolver,
-        javacOptions,
-        groovyBuckConfig)
-        .setArgs(args);
+      A args)
+      throws NoSuchBuildTargetException {
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
+    DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder =
+        new DefaultGroovyLibraryBuilder(params, resolver, javacOptions, groovyBuckConfig)
+            .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(params.getBuildTarget())
         ? defaultGroovyLibraryBuilder.buildAbi()

@@ -16,13 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import org.objectweb.asm.signature.SignatureVisitor;
-import org.objectweb.asm.signature.SignatureWriter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
@@ -41,10 +37,10 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.signature.SignatureWriter;
 
-/**
- * Computes type signatures for {@link Element}s that require them.
- */
+/** Computes type signatures for {@link Element}s that require them. */
 class SignatureFactory {
   private final DescriptorFactory descriptorFactory;
 
@@ -54,8 +50,7 @@ class SignatureFactory {
   private final ElementVisitor<Void, SignatureVisitor> elementVisitorAdapter =
       new SimpleElementVisitor8<Void, SignatureVisitor>() {
         @Override
-        protected Void defaultAction(
-            Element e, SignatureVisitor signatureVisitor) {
+        protected Void defaultAction(Element e, SignatureVisitor signatureVisitor) {
           throw new IllegalArgumentException(
               String.format("Unexpected element kind: %s", e.getKind()));
         }
@@ -157,8 +152,7 @@ class SignatureFactory {
   private final TypeVisitor<Void, SignatureVisitor> typeVisitorAdapter =
       new SimpleTypeVisitor8<Void, SignatureVisitor>() {
         @Override
-        protected Void defaultAction(
-            TypeMirror e, SignatureVisitor signatureVisitor) {
+        protected Void defaultAction(TypeMirror e, SignatureVisitor signatureVisitor) {
           throw new IllegalArgumentException(
               String.format("Unexpected type kind: %s", e.getKind()));
         }
@@ -275,8 +269,8 @@ class SignatureFactory {
   }
 
   /**
-   * Returns true if the JVM spec requires a signature to be emitted for this type.
-   * See JVMS8 4.7.9.1
+   * Returns true if the JVM spec requires a signature to be emitted for this type. See JVMS8
+   * 4.7.9.1
    */
   private static boolean signatureRequired(TypeElement element) {
     if (!element.getTypeParameters().isEmpty()) {
@@ -297,8 +291,8 @@ class SignatureFactory {
   }
 
   /**
-   * Returns true if the JVM spec requires a signature to be emitted for this method.
-   * See JVMS8 4.7.9.1
+   * Returns true if the JVM spec requires a signature to be emitted for this method. See JVMS8
+   * 4.7.9.1
    */
   private static boolean signatureRequired(ExecutableElement element) {
     if (!element.getTypeParameters().isEmpty()) {
@@ -332,50 +326,52 @@ class SignatureFactory {
   }
 
   /**
-   * Returns true if the JVM spec requires a signature to be emitted for this field.
-   * See JVMS8 4.7.9.1
+   * Returns true if the JVM spec requires a signature to be emitted for this field. See JVMS8
+   * 4.7.9.1
    */
   private static boolean signatureRequired(VariableElement element) {
     return usesGenerics(element.asType());
   }
 
   private static boolean usesGenerics(TypeMirror type) {
-    return type.accept(new SimpleTypeVisitor8<Boolean, Void>() {
-      @Override
-      protected Boolean defaultAction(TypeMirror e, Void aVoid) {
-        throw new IllegalArgumentException(
-            String.format("Unexpected type kind: %s", e.getKind()));
-      }
+    return type.accept(
+        new SimpleTypeVisitor8<Boolean, Void>() {
+          @Override
+          protected Boolean defaultAction(TypeMirror e, Void aVoid) {
+            throw new IllegalArgumentException(
+                String.format("Unexpected type kind: %s", e.getKind()));
+          }
 
-      @Override
-      public Boolean visitPrimitive(PrimitiveType t, Void aVoid) {
-        return false;
-      }
+          @Override
+          public Boolean visitPrimitive(PrimitiveType t, Void aVoid) {
+            return false;
+          }
 
-      @Override
-      public Boolean visitTypeVariable(TypeVariable t, Void aVoid) {
-        return true;
-      }
+          @Override
+          public Boolean visitTypeVariable(TypeVariable t, Void aVoid) {
+            return true;
+          }
 
-      @Override
-      public Boolean visitNoType(NoType t, Void aVoid) {
-        return false;
-      }
+          @Override
+          public Boolean visitNoType(NoType t, Void aVoid) {
+            return false;
+          }
 
-      @Override
-      public Boolean visitArray(ArrayType t, Void aVoid) {
-        return usesGenerics(t.getComponentType());
-      }
+          @Override
+          public Boolean visitArray(ArrayType t, Void aVoid) {
+            return usesGenerics(t.getComponentType());
+          }
 
-      @Override
-      public Boolean visitWildcard(WildcardType t, Void aVoid) {
-        return true;
-      }
+          @Override
+          public Boolean visitWildcard(WildcardType t, Void aVoid) {
+            return true;
+          }
 
-      @Override
-      public Boolean visitDeclared(DeclaredType t, Void aVoid) {
-        return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
-      }
-    }, null);
+          @Override
+          public Boolean visitDeclared(DeclaredType t, Void aVoid) {
+            return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
+          }
+        },
+        null);
   }
 }

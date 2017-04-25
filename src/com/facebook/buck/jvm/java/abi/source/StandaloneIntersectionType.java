@@ -16,11 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;

@@ -38,16 +38,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
-public class JavaSourceJar extends AbstractBuildRule
-    implements HasMavenCoordinates, HasSources {
+public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordinates, HasSources {
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;
   private final Path temp;
   private final Optional<String> mavenCoords;
@@ -59,11 +56,7 @@ public class JavaSourceJar extends AbstractBuildRule
     super(params);
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
-    this.output =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            target,
-            "%s" + Javac.SRC_JAR);
+    this.output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s" + Javac.SRC_JAR);
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), target, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }
@@ -92,9 +85,7 @@ public class JavaSourceJar extends AbstractBuildRule
       }
       steps.add(
           CopyStep.forFile(
-              getProjectFilesystem(),
-              source,
-              packageDir.resolve(source.getFileName())));
+              getProjectFilesystem(), source, packageDir.resolve(source.getFileName())));
     }
     steps.add(
         new ZipStep(

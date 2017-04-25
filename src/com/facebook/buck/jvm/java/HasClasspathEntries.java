@@ -19,36 +19,32 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * Implemented by build rules where the output has a classpath environment.
- */
+/** Implemented by build rules where the output has a classpath environment. */
 public interface HasClasspathEntries {
 
   /**
-   * @return Classpath entries for this rule and its dependencies.
-   * e.g. If the rule represents a java library, then these entries will be passed to
-   * {@code javac}'s {@code -classpath} flag in order to build a jar associated with this rule.
+   * @return Classpath entries for this rule and its dependencies. e.g. If the rule represents a
+   *     java library, then these entries will be passed to {@code javac}'s {@code -classpath} flag
+   *     in order to build a jar associated with this rule.
    */
   ImmutableSet<SourcePath> getTransitiveClasspaths();
 
-  /**
-   * @return A set of rules contributing classpath entries for this rule and its dependencies.
-   */
+  /** @return A set of rules contributing classpath entries for this rule and its dependencies. */
   ImmutableSet<JavaLibrary> getTransitiveClasspathDeps();
 
   /**
    * Returns the classpaths for only this rule, not its deps.
    *
-   * Used to generate the value of {@link #getTransitiveClasspaths()}.
+   * <p>Used to generate the value of {@link #getTransitiveClasspaths()}.
    */
   ImmutableSet<SourcePath> getImmediateClasspaths();
 
   /**
-   * @return Classpath entries that this rule will contribute when it is used as a dependency.
-   * e.g. If the rule represents a java library, then these entries must be passed to
-   * {@code javac}'s {@code -classpath} flag in order to compile rules that depend on this rule.
-   * This is a superset of {@code getImmediateClasspaths} which also contains the classpath entries
-   * of any exported deps.
+   * @return Classpath entries that this rule will contribute when it is used as a dependency. e.g.
+   *     If the rule represents a java library, then these entries must be passed to {@code javac}'s
+   *     {@code -classpath} flag in order to compile rules that depend on this rule. This is a
+   *     superset of {@code getImmediateClasspaths} which also contains the classpath entries of any
+   *     exported deps.
    */
   ImmutableSet<SourcePath> getOutputClasspaths();
 }

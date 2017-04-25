@@ -29,9 +29,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -50,33 +50,32 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithResolver
-    implements AndroidPackageable, ExportDependencies, HasClasspathEntries,
-    InitializableFromDisk<JavaLibrary.Data>, JavaLibrary, SupportsInputBasedRuleKey {
+    implements AndroidPackageable,
+        ExportDependencies,
+        HasClasspathEntries,
+        InitializableFromDisk<JavaLibrary.Data>,
+        JavaLibrary,
+        SupportsInputBasedRuleKey {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  @AddToRuleKey
-  private final SourcePath binaryJar;
+  @AddToRuleKey private final SourcePath binaryJar;
   private final Path copiedBinaryJar;
-  @AddToRuleKey
-  private final Optional<SourcePath> sourceJar;
+  @AddToRuleKey private final Optional<SourcePath> sourceJar;
+
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final Optional<SourcePath> gwtJar;
-  @AddToRuleKey
-  private final Optional<String> javadocUrl;
-  @AddToRuleKey
-  private final Optional<String> mavenCoords;
-  @AddToRuleKey
-  private final boolean provided;
+
+  @AddToRuleKey private final Optional<String> javadocUrl;
+  @AddToRuleKey private final Optional<String> mavenCoords;
+  @AddToRuleKey private final boolean provided;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -100,8 +99,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     this.provided = provided;
 
     transitiveClasspathsSupplier =
-        Suppliers.memoize(() -> JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-            getTransitiveClasspathDeps()));
+        Suppliers.memoize(
+            () ->
+                JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+                    getTransitiveClasspathDeps()));
 
     this.transitiveClasspathDepsSupplier =
         Suppliers.memoize(
@@ -112,21 +113,20 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
               }
               return ImmutableSet.<JavaLibrary>builder()
                   .add(PrebuiltJar.this)
-                  .addAll(JavaLibraryClasspathProvider.getClasspathDeps(
-                      PrebuiltJar.this.getDeclaredDeps()))
+                  .addAll(
+                      JavaLibraryClasspathProvider.getClasspathDeps(
+                          PrebuiltJar.this.getDeclaredDeps()))
                   .build();
             });
 
     Path fileName = resolver.getRelativePath(binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
-    copiedBinaryJar = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__%s__/" + fileNameWithJarExtension);
+    copiedBinaryJar =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
 
-    buildOutputInitializer =
-        new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
@@ -150,9 +150,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     return JavaLibraryRules.initializeFromDisk(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        onDiskBuildInfo);
+        getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
   }
 
   @Override
@@ -216,8 +214,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     SourcePathResolver resolver = context.getSourcePathResolver();
@@ -234,20 +231,24 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
 
     if (resolver.getFilesystem(binaryJar).isDirectory(resolvedBinaryJar)) {
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), copiedBinaryJar));
-      steps.add(CopyStep.forDirectory(
-          getProjectFilesystem(),
-          resolvedBinaryJar,
-          copiedBinaryJar,
-          CopyStep.DirectoryMode.CONTENTS_ONLY));
+      steps.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              resolvedBinaryJar,
+              copiedBinaryJar,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     } else {
       if (!MorePaths.getFileExtension(copiedBinaryJar.getFileName())
           .equals(MorePaths.getFileExtension(resolvedBinaryJar))) {
-        context.getEventBus().post(
-            ConsoleEvent.warning("Assuming %s is a JAR and renaming to %s in %s. " +
-                "Change the extension of the binary_jar to '.jar' to remove this warning.",
-                resolvedBinaryJar.getFileName(),
-                copiedBinaryJar.getFileName(),
-                getBuildTarget().getFullyQualifiedName()));
+        context
+            .getEventBus()
+            .post(
+                ConsoleEvent.warning(
+                    "Assuming %s is a JAR and renaming to %s in %s. "
+                        + "Change the extension of the binary_jar to '.jar' to remove this warning.",
+                    resolvedBinaryJar.getFileName(),
+                    copiedBinaryJar.getFileName(),
+                    getBuildTarget().getFullyQualifiedName()));
       }
 
       steps.add(MkdirStep.of(getProjectFilesystem(), copiedBinaryJar.getParent()));
@@ -256,10 +257,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     buildableContext.recordArtifact(copiedBinaryJar);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        this,
-        buildableContext,
-        context.getSourcePathResolver(),
-        steps);
+        this, buildableContext, context.getSourcePathResolver(), steps);
 
     return steps.build();
   }

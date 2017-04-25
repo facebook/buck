@@ -21,17 +21,13 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePathScanner;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.lang.model.element.TypeElement;
 
-/**
- * A {@link TaskListener} that runs some code after the final enter phase.
- */
+/** A {@link TaskListener} that runs some code after the final enter phase. */
 public class PostEnterTaskListener implements TaskListener {
   private final BuckJavacTask task;
   private final Consumer<Set<TypeElement>> callback;
@@ -58,7 +54,7 @@ public class PostEnterTaskListener implements TaskListener {
         }
         pendingEnterCalls += 1;
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         break;
     }
@@ -87,7 +83,7 @@ public class PostEnterTaskListener implements TaskListener {
           }
         }.scan(compilationUnit, null);
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         break;
     }

@@ -31,12 +31,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
-
 import javax.annotation.Nonnull;
 
 public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
@@ -44,12 +42,13 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   private final LoadingCache<BuildTarget, BuckTracingEventBusBridge> buckTracingBridgeCache =
       CacheBuilder.newBuilder()
           .build(
-          new CacheLoader<BuildTarget, BuckTracingEventBusBridge>() {
-            @Override
-            public BuckTracingEventBusBridge load(@Nonnull BuildTarget target) throws Exception {
-              return new BuckTracingEventBusBridge(eventBus, target);
-            }
-          });
+              new CacheLoader<BuildTarget, BuckTracingEventBusBridge>() {
+                @Override
+                public BuckTracingEventBusBridge load(@Nonnull BuildTarget target)
+                    throws Exception {
+                  return new BuckTracingEventBusBridge(eventBus, target);
+                }
+              });
   private final Map<Pair<BuildTarget, JavacPhaseEvent.Phase>, JavacPhaseEvent.Started>
       currentJavacPhaseEvents = new ConcurrentHashMap<>();
 
@@ -89,16 +88,13 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void reportCompilerPluginFinished(
-      BuildTarget buildTarget,
-      ImmutableMap<String, String> args) {
+      BuildTarget buildTarget, ImmutableMap<String, String> args) {
     getBuckTracingEventBusBridgeForBuildTarget(buildTarget).end(args);
   }
 
   @Override
   public void reportJavacPhaseStarted(
-      BuildTarget buildTarget,
-      String phaseAsString,
-      ImmutableMap<String, String> args) {
+      BuildTarget buildTarget, String phaseAsString, ImmutableMap<String, String> args) {
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.fromString(phaseAsString);
     JavacPhaseEvent.Started startedEvent = JavacPhaseEvent.started(buildTarget, phase, args);
 
@@ -111,15 +107,11 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void reportJavacPhaseFinished(
-      BuildTarget buildTarget,
-      String phaseAsString,
-      ImmutableMap<String, String> args) {
-    Pair<BuildTarget, JavacPhaseEvent.Phase> key = new Pair<>(
-        buildTarget,
-        JavacPhaseEvent.Phase.fromString(phaseAsString));
-    JavacPhaseEvent.Finished finishedEvent = JavacPhaseEvent.finished(
-        Assertions.assertNotNull(currentJavacPhaseEvents.get(key)),
-        args);
+      BuildTarget buildTarget, String phaseAsString, ImmutableMap<String, String> args) {
+    Pair<BuildTarget, JavacPhaseEvent.Phase> key =
+        new Pair<>(buildTarget, JavacPhaseEvent.Phase.fromString(phaseAsString));
+    JavacPhaseEvent.Finished finishedEvent =
+        JavacPhaseEvent.finished(Assertions.assertNotNull(currentJavacPhaseEvents.get(key)), args);
     currentJavacPhaseEvents.remove(key);
 
     eventBus.post(finishedEvent);
@@ -132,19 +124,16 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
       String operationAsString,
       int round,
       boolean isLastRound) {
-    AnnotationProcessingEvent.Started started = AnnotationProcessingEvent.started(
-        buildTarget,
-        annotationProcessorName,
-        AnnotationProcessingEvent.Operation.valueOf(operationAsString),
-        round,
-        isLastRound);
-    startedAnnotationProcessingEvents.put(
-        getKeyForAnnotationProcessingEvent(
+    AnnotationProcessingEvent.Started started =
+        AnnotationProcessingEvent.started(
             buildTarget,
             annotationProcessorName,
-            operationAsString,
+            AnnotationProcessingEvent.Operation.valueOf(operationAsString),
             round,
-            isLastRound),
+            isLastRound);
+    startedAnnotationProcessingEvents.put(
+        getKeyForAnnotationProcessingEvent(
+            buildTarget, annotationProcessorName, operationAsString, round, isLastRound),
         started.getEventKey());
     eventBus.post(started);
   }
@@ -156,20 +145,18 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
       String operationAsString,
       int round,
       boolean isLastRound) {
-    EventKey startedEventKey = startedAnnotationProcessingEvents.get(
-        getKeyForAnnotationProcessingEvent(
+    EventKey startedEventKey =
+        startedAnnotationProcessingEvents.get(
+            getKeyForAnnotationProcessingEvent(
+                buildTarget, annotationProcessorName, operationAsString, round, isLastRound));
+    AnnotationProcessingEvent.Finished finished =
+        new AnnotationProcessingEvent.Finished(
+            Preconditions.checkNotNull(startedEventKey),
             buildTarget,
             annotationProcessorName,
-            operationAsString,
+            AnnotationProcessingEvent.Operation.valueOf(operationAsString),
             round,
-            isLastRound));
-    AnnotationProcessingEvent.Finished finished = new AnnotationProcessingEvent.Finished(
-        Preconditions.checkNotNull(startedEventKey),
-        buildTarget,
-        annotationProcessorName,
-        AnnotationProcessingEvent.Operation.valueOf(operationAsString),
-        round,
-        isLastRound);
+            isLastRound);
     eventBus.post(finished);
   }
 
@@ -179,11 +166,8 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
       String operationAsString,
       int round,
       boolean isLastRound) {
-    return Joiner.on(":").join(
-        buildTarget.toString(),
-        annotationProcessorName,
-        operationAsString,
-        round,
-        isLastRound);
+    return Joiner.on(":")
+        .join(
+            buildTarget.toString(), annotationProcessorName, operationAsString, round, isLastRound);
   }
 }

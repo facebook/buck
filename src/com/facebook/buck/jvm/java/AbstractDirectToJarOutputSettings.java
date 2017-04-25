@@ -19,19 +19,21 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractDirectToJarOutputSettings {
   public abstract Path getDirectToJarOutputPath();
+
   public abstract ImmutableSet<Pattern> getClassesToRemoveFromJar();
+
   public abstract ImmutableSortedSet<Path> getEntriesToJar();
+
   public abstract Optional<String> getMainClass();
+
   public abstract Optional<Path> getManifestFile();
 }

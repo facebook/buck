@@ -18,9 +18,7 @@ package com.facebook.buck.jvm.java.plugin.api;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 
-/**
- * Utility interface for loading classes that live in Buck's Java compiler plugin.
- */
+/** Utility interface for loading classes that live in Buck's Java compiler plugin. */
 public interface PluginClassLoader {
   @Nullable
   <T> Class<? extends T> loadClass(String name, Class<T> superclass);

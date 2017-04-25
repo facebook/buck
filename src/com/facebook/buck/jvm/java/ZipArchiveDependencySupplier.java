@@ -20,10 +20,9 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
-import com.facebook.buck.zip.Unzip;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -42,15 +41,18 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
 
   @Override
   public Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
-    return zipFiles.stream()
-        .flatMap(zipSourcePath -> {
-          final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
-          try {
-            return Unzip.getZipMembers(zipAbsolutePath).stream()
-                .map(member -> new ArchiveMemberSourcePath(zipSourcePath, member));
-          } catch (IOException e) {
-            throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
-          }
-        });
+    return zipFiles
+        .stream()
+        .flatMap(
+            zipSourcePath -> {
+              final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
+              try {
+                return Unzip.getZipMembers(zipAbsolutePath)
+                    .stream()
+                    .map(member -> new ArchiveMemberSourcePath(zipSourcePath, member));
+              } catch (IOException e) {
+                throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
+              }
+            });
   }
 }

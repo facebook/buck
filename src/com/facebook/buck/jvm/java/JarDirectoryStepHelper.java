@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -72,18 +71,13 @@ public class JarDirectoryStepHelper {
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
       JavacEventSink eventSink,
-      PrintStream stdErr) throws IOException {
+      PrintStream stdErr)
+      throws IOException {
 
     Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
 
     // Write the manifest first.
-    writeManifest(
-        outputFile,
-        filesystem,
-        entriesToJar,
-        mainClass,
-        manifestFile,
-        mergeManifests);
+    writeManifest(outputFile, filesystem, entriesToJar, mainClass, manifestFile, mergeManifests);
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
 
@@ -91,35 +85,20 @@ public class JarDirectoryStepHelper {
       Path file = filesystem.getPathForRelativePath(entry);
       if (Files.isRegularFile(file)) {
         Preconditions.checkArgument(
-            !file.equals(absoluteOutputPath),
-            "Trying to put file %s into itself",
-            file);
+            !file.equals(absoluteOutputPath), "Trying to put file %s into itself", file);
         // Assume the file is a ZIP/JAR file.
         copyZipEntriesToJar(
-            file,
-            pathToOutputFile,
-            outputFile,
-            alreadyAddedEntries,
-            eventSink,
-            blacklist);
+            file, pathToOutputFile, outputFile, alreadyAddedEntries, eventSink, blacklist);
       } else if (Files.isDirectory(file)) {
         addFilesInDirectoryToJar(
-            filesystem,
-            file,
-            outputFile,
-            alreadyAddedEntries,
-            blacklist,
-            eventSink);
+            filesystem, file, outputFile, alreadyAddedEntries, blacklist, eventSink);
       } else {
         throw new IllegalStateException("Must be a file or directory: " + file);
       }
     }
 
     if (mainClass.isPresent() && !mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
-      stdErr.print(
-          String.format(
-              "ERROR: Main class %s does not exist.\n",
-              mainClass.get()));
+      stdErr.print(String.format("ERROR: Main class %s does not exist.\n", mainClass.get()));
       return 1;
     }
 
@@ -135,13 +114,14 @@ public class JarDirectoryStepHelper {
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
       JavacEventSink eventSink,
-      PrintStream stdErr) throws IOException {
+      PrintStream stdErr)
+      throws IOException {
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
-    try (CustomJarOutputStream outputFile = ZipOutputStreams.newJarOutputStream(
-        absoluteOutputPath,
-        APPEND_TO_ZIP)) {
-      return createJarFile(filesystem,
+    try (CustomJarOutputStream outputFile =
+        ZipOutputStreams.newJarOutputStream(absoluteOutputPath, APPEND_TO_ZIP)) {
+      return createJarFile(
+          filesystem,
           pathToOutputFile,
           outputFile,
           entriesToJar,
@@ -159,7 +139,8 @@ public class JarDirectoryStepHelper {
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
       JavacEventSink eventSink,
-      PrintStream stdErr) throws IOException {
+      PrintStream stdErr)
+      throws IOException {
     return JarDirectoryStepHelper.createJarFile(
         filesystem,
         pathToOutputFile,
@@ -178,7 +159,8 @@ public class JarDirectoryStepHelper {
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
-      boolean mergeManifests) throws IOException {
+      boolean mergeManifests)
+      throws IOException {
     DeterministicManifest manifest = jar.getManifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
@@ -235,9 +217,7 @@ public class JarDirectoryStepHelper {
     jar.writeManifest();
   }
 
-  private static boolean mainClassPresent(
-      String mainClass,
-      Set<String> alreadyAddedEntries) {
+  private static boolean mainClassPresent(String mainClass, Set<String> alreadyAddedEntries) {
     String mainClassPath = classNameToPath(mainClass);
 
     return alreadyAddedEntries.contains(mainClassPath);
@@ -259,7 +239,8 @@ public class JarDirectoryStepHelper {
       final CustomJarOutputStream jar,
       Set<String> alreadyAddedEntries,
       JavacEventSink eventSink,
-      Iterable<Pattern> blacklist) throws IOException {
+      Iterable<Pattern> blacklist)
+      throws IOException {
     try (ZipFile zip = new ZipFile(inputFile.toFile())) {
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
@@ -284,11 +265,11 @@ public class JarDirectoryStepHelper {
         if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
           // Duplicate entries. Skip.
           eventSink.reportEvent(
-                  determineSeverity(entry),
-                  "Duplicate found when adding '%s' to '%s' from '%s'",
-                  entryName,
-                  outputFile.toAbsolutePath(),
-                  inputFile.toAbsolutePath());
+              determineSeverity(entry),
+              "Duplicate found when adding '%s' to '%s' from '%s'",
+              entryName,
+              outputFile.toAbsolutePath(),
+              inputFile.toAbsolutePath());
           continue;
         }
 
@@ -315,8 +296,7 @@ public class JarDirectoryStepHelper {
         jar.closeEntry();
       }
     } catch (ZipException e) {
-      throw new IOException(
-          "Failed to process zip file " + inputFile + ": " + e.getMessage(), e);
+      throw new IOException("Failed to process zip file " + inputFile + ": " + e.getMessage(), e);
     }
   }
 
@@ -334,7 +314,8 @@ public class JarDirectoryStepHelper {
       CustomJarOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final Iterable<Pattern> blacklist,
-      final JavacEventSink eventSink) throws IOException {
+      final JavacEventSink eventSink)
+      throws IOException {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
@@ -371,7 +352,8 @@ public class JarDirectoryStepHelper {
               if (!entryName.endsWith("/")) {
                 eventSink.reportEvent(
                     determineSeverity(entry),
-                    "Duplicate found when adding directory to jar: %s", relativePath);
+                    "Duplicate found when adding directory to jar: %s",
+                    relativePath);
               }
               return FileVisitResult.CONTINUE;
             }
@@ -412,9 +394,7 @@ public class JarDirectoryStepHelper {
   }
 
   private static boolean shouldEntryBeRemovedFromJar(
-      JavacEventSink eventSink,
-      String relativePath,
-      Iterable<Pattern> blacklist) {
+      JavacEventSink eventSink, String relativePath, Iterable<Pattern> blacklist) {
     String entry = relativePath;
     if (relativePath.contains(".class")) {
       entry = relativePath.replace('/', '.').replace(".class", "");
@@ -429,8 +409,7 @@ public class JarDirectoryStepHelper {
   }
 
   /**
-   * Merge entries from two Manifests together, with existing attributes being
-   * overwritten.
+   * Merge entries from two Manifests together, with existing attributes being overwritten.
    *
    * @param into The Manifest to modify.
    * @param from The Manifest to copy from.

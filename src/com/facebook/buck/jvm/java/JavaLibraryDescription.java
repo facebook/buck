@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -28,10 +27,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -41,28 +40,22 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
-public class JavaLibraryDescription implements
-    Description<JavaLibraryDescription.Arg>,
-    Flavored,
-    VersionPropagator<JavaLibraryDescription.Arg> {
+public class JavaLibraryDescription
+    implements Description<JavaLibraryDescription.Arg>,
+        Flavored,
+        VersionPropagator<JavaLibraryDescription.Arg> {
 
-  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      Javadoc.DOC_JAR,
-      JavaLibrary.SRC_JAR,
-      JavaLibrary.MAVEN_JAR);
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(Javadoc.DOC_JAR, JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   private final JavaBuckConfig javaBuckConfig;
-  @VisibleForTesting
-  private final JavacOptions defaultOptions;
+  @VisibleForTesting private final JavacOptions defaultOptions;
 
-  public JavaLibraryDescription(
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions defaultOptions) {
+  public JavaLibraryDescription(JavaBuckConfig javaBuckConfig, JavacOptions defaultOptions) {
     this.javaBuckConfig = javaBuckConfig;
     this.defaultOptions = defaultOptions;
   }
@@ -83,7 +76,8 @@ public class JavaLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     BuildTarget target = params.getBuildTarget();
 
@@ -96,15 +90,20 @@ public class JavaLibraryDescription implements
       BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
       BuildRule baseLibrary = resolver.requireRule(unflavored);
 
-      JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
-          JarShape.MAVEN : JarShape.SINGLE;
+      JarShape shape =
+          params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR)
+              ? JarShape.MAVEN
+              : JarShape.SINGLE;
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
-      ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
-          .filter(HasSources.class::isInstance)
-          .map(rule -> ((HasSources) rule).getSources())
-          .flatMap(Collection::stream)
-          .collect(MoreCollectors.toImmutableSet());
+      ImmutableSet<SourcePath> sources =
+          summary
+              .getPackagedRules()
+              .stream()
+              .filter(HasSources.class::isInstance)
+              .map(rule -> ((HasSources) rule).getSources())
+              .flatMap(Collection::stream)
+              .collect(MoreCollectors.toImmutableSet());
 
       // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
       // javadoc wants to have classes being documented have all their deps be available somewhere.
@@ -117,20 +116,18 @@ public class JavaLibraryDescription implements
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(
-          summary.getClasspath().stream()
+          summary
+              .getClasspath()
+              .stream()
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
-      BuildRuleParams emptyParams = params.copyReplacingDeclaredAndExtraDeps(
-          Suppliers.ofInstance(deps.build()),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
+      BuildRuleParams emptyParams =
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(deps.build()), Suppliers.ofInstance(ImmutableSortedSet.of()));
 
       return new Javadoc(
-          emptyParams,
-          args.mavenCoords,
-          args.mavenPomTemplate,
-          summary.getMavenDeps(),
-          sources);
+          emptyParams, args.mavenCoords, args.mavenPomTemplate, summary.getMavenDeps(), sources);
     }
 
     BuildRuleParams paramsWithMavenFlavor = null;
@@ -143,15 +140,12 @@ public class JavaLibraryDescription implements
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords = args.mavenCoords.map(input -> AetherUtil.addClassifier(
-          input,
-          AetherUtil.CLASSIFIER_SOURCES));
+      args.mavenCoords =
+          args.mavenCoords.map(
+              input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(
-            params,
-            args.srcs,
-            args.mavenCoords);
+        return new JavaSourceJar(params, args.srcs, args.mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
@@ -161,15 +155,10 @@ public class JavaLibraryDescription implements
       }
     }
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(
-        defaultOptions,
-        params,
-        resolver,
-        args);
+    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary
-            .builder(params, resolver, javaBuckConfig)
+        DefaultJavaLibrary.builder(params, resolver, javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
@@ -203,6 +192,7 @@ public class JavaLibraryDescription implements
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
+
     public Optional<SourcePath> manifestFile;
     public Optional<String> mavenCoords;
     public Optional<SourcePath> mavenPomTemplate;
@@ -212,7 +202,8 @@ public class JavaLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

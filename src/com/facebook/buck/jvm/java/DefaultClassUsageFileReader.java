@@ -25,33 +25,26 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-/**
- * Provides utility methods for reading dependency file entries.
- */
+/** Provides utility methods for reading dependency file entries. */
 class DefaultClassUsageFileReader {
-  /**
-   * Utility code, not instantiable
-   */
+  /** Utility code, not instantiable */
   private DefaultClassUsageFileReader() {}
 
-  private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(
-      Path mapFilePath) throws IOException {
+  private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(Path mapFilePath)
+      throws IOException {
     return ObjectMappers.readValue(
-        mapFilePath.toFile(),
-        new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {
-        });
+        mapFilePath.toFile(), new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {});
   }
 
   /**
-   * This method loads a class usage file that maps JARs to the list of files within those jars
-   * that were used. Given our rule's deps, we determine which of these
-   * JARS in the class usage file are actually among the deps of our rule.
+   * This method loads a class usage file that maps JARs to the list of files within those jars that
+   * were used. Given our rule's deps, we determine which of these JARS in the class usage file are
+   * actually among the deps of our rule.
    */
   public static ImmutableList<SourcePath> loadFromFile(
       ProjectFilesystem projectFilesystem,

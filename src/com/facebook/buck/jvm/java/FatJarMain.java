@@ -14,17 +14,17 @@
  * under the License.
  */
 
-/***************
+/**
+ * *************
  *
- * This code can be embedded in arbitrary third-party projects!
- * For maximum compatibility, use only Java 6 constructs.
+ * <p>This code can be embedded in arbitrary third-party projects! For maximum compatibility, use
+ * only Java 6 constructs.
  *
- ***************/
-
+ * <p>*************
+ */
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -66,9 +66,7 @@ public class FatJarMain {
     }
   }
 
-  /**
-   * @return a command to start a new JVM process to execute the given main class.
-   */
+  /** @return a command to start a new JVM process to execute the given main class. */
   private static List<String> getCommand(Path jar, String[] args) {
     List<String> cmd = new ArrayList<String>();
 
@@ -176,14 +174,11 @@ public class FatJarMain {
               Files.delete(dir);
               return FileVisitResult.CONTINUE;
             }
-
           });
     }
 
     public Path getPath() {
       return path;
     }
-
   }
-
 }

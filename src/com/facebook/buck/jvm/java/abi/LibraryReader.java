@@ -16,21 +16,17 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import org.objectweb.asm.ClassVisitor;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import org.objectweb.asm.ClassVisitor;
 
-/**
- * An interface for reading and listing resources and classes in a library.
- */
+/** An interface for reading and listing resources and classes in a library. */
 interface LibraryReader extends AutoCloseable {
   static LibraryReader of(Path path) {
     if (Files.isDirectory(path)) {
@@ -41,9 +37,7 @@ interface LibraryReader extends AutoCloseable {
   }
 
   static LibraryReader of(
-      SourceVersion targetVersion,
-      Elements elements,
-      Iterable<TypeElement> topLevelTypes) {
+      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
     return new TypeElementsReader(targetVersion, elements, topLevelTypes);
   }
 

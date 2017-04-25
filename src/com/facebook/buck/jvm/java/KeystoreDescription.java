@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class KeystoreDescription implements Description<KeystoreDescription.Arg> {
 
   @Override

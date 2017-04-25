@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
 public interface OutOfProcessJavacConnectionInterface {
@@ -26,13 +25,13 @@ public interface OutOfProcessJavacConnectionInterface {
    * This is interface that will be used to perform out of process compilation.
    *
    * @param compilerClassNameForJarBackedJavacMode String value of compilerClassName for Jar-backed
-   *                                               mode, or null
+   *     mode, or null
    * @param serializedJavacExecutionContext JavacExecutionContext converted to String
    * @param invokingRuleBuildTargetAsString BuildTarget converted to String
    * @param options Immutable list of string options
    * @param setOfSafeAnnotationProcessorsAsList ImmutableSet represented as a List
    * @param sortedSetOfJavaSourceFilePathsAsStringsAsList ImmutableSortedSet<Path> represented as
-   *                                                      List of String objects.
+   *     List of String objects.
    * @param pathToSrcsListAsString Path represented as String.
    * @param workingDirectory Path represented as String, or null.
    * @return Resulting code, 0 if build finished without issues, non-zero otherwise.

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
-
 public class ConstantJavacProvider implements JavacProvider {
   private final Javac javac;
 

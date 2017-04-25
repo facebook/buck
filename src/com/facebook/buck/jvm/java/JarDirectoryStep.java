@@ -23,17 +23,13 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
-/**
- * Creates a JAR file from a collection of directories/ZIP/JAR files.
- */
+/** Creates a JAR file from a collection of directories/ZIP/JAR files. */
 public class JarDirectoryStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -45,19 +41,15 @@ public class JarDirectoryStep implements Step {
   private final ImmutableSortedSet<Path> entriesToJar;
 
   /** If specified, the Main-Class to list in the manifest of the generated JAR file. */
-  @Nullable
-  private final String mainClass;
+  @Nullable private final String mainClass;
 
-  /** If specified, the Manifest file to use for the generated JAR file.  */
-  @Nullable
-  private final Path manifestFile;
+  /** If specified, the Manifest file to use for the generated JAR file. */
+  @Nullable private final Path manifestFile;
 
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
 
-  /**
-   * A set of regex. If a file matches one of the regex it will not be included in the Jar.
-   */
+  /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
   private final ImmutableSet<Pattern> blacklist;
 
   public JarDirectoryStep(
@@ -78,11 +70,12 @@ public class JarDirectoryStep implements Step {
 
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
-   * <p>
-   * If an entry is a directory, then its files are traversed and added to the generated JAR.
-   * <p>
-   * If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
+   *
+   * <p>If an entry is a directory, then its files are traversed and added to the generated JAR.
+   *
+   * <p>If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
    * and copied to the generated JAR.
+   *
    * @param pathToOutputFile The directory that contains this path must exist before this command is
    *     executed.
    * @param entriesToJar Paths to directories/ZIP/JAR files.
@@ -122,7 +115,8 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("jar %s %s %s %s",
+    return String.format(
+        "jar %s %s %s %s",
         getJarArgs(),
         pathToOutputFile,
         manifestFile != null ? manifestFile : "",
@@ -131,15 +125,16 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
-    return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
-        filesystem,
-        pathToOutputFile,
-        entriesToJar,
-        Optional.ofNullable(mainClass),
-        Optional.ofNullable(manifestFile),
-        mergeManifests,
-        blacklist,
-        new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
-        context.getStdErr()));
+    return StepExecutionResult.of(
+        JarDirectoryStepHelper.createJarFile(
+            filesystem,
+            pathToOutputFile,
+            entriesToJar,
+            Optional.ofNullable(mainClass),
+            Optional.ofNullable(manifestFile),
+            mergeManifests,
+            blacklist,
+            new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
+            context.getStdErr()));
   }
 }

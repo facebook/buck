@@ -18,10 +18,8 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-
 import java.util.Arrays;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -40,13 +38,12 @@ import javax.lang.model.util.Types;
 /**
  * An implementation of {@link Types} using just the AST of a single module, without its
  * dependencies. Of necessity, such an implementation will need to make assumptions about the
- * meanings of some names, and thus must be used with care. See documentation for individual
- * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
+ * meanings of some names, and thus must be used with care. See documentation for individual methods
+ * and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypes implements Types {
   private final Types javacTypes;
-  @Nullable
-  private TreeBackedElements elements;
+  @Nullable private TreeBackedElements elements;
 
   TreeBackedTypes(Types javacTypes) {
     this.javacTypes = javacTypes;
@@ -102,7 +99,7 @@ class TreeBackedTypes implements Types {
       case NULL:
         return true;
       case WILDCARD:
-        return false;  // Wildcard types are never the same as one another; see docs
+        return false; // Wildcard types are never the same as one another; see docs
       case DECLARED:
         return isSameDeclaredType((DeclaredType) t1, (DeclaredType) t2);
       case TYPEVAR:
@@ -111,7 +108,7 @@ class TreeBackedTypes implements Types {
         return isSameIntersectionType((IntersectionType) t1, (IntersectionType) t2);
       case ARRAY:
         return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
-      //$CASES-OMITTED$
+        //$CASES-OMITTED$
       default:
         throw new UnsupportedOperationException(
             String.format("isSameType NYI for kind %s", t1.getKind()));
@@ -196,8 +193,7 @@ class TreeBackedTypes implements Types {
   }
 
   @Override
-  public boolean isSubsignature(
-      ExecutableType m1, ExecutableType m2) {
+  public boolean isSubsignature(ExecutableType m1, ExecutableType m2) {
     throw new UnsupportedOperationException();
   }
 
@@ -217,22 +213,24 @@ class TreeBackedTypes implements Types {
 
   private TypeMirror erasure(StandaloneTypeMirror t) {
     switch (t.getKind()) {
-      case ARRAY: {
-        ArrayType arrayType = (ArrayType) t;
-        return getArrayType(erasure(arrayType.getComponentType()));
-      }
-      case DECLARED: {
-        DeclaredType declaredType = (DeclaredType) t;
-        TypeElement typeElement = (TypeElement) declaredType.asElement();
-        if (declaredType.getEnclosingType().getKind() == TypeKind.DECLARED) {
-          DeclaredType enclosingType = (DeclaredType) declaredType.getEnclosingType();
-
-          return getDeclaredType((DeclaredType) erasure(enclosingType), typeElement);
+      case ARRAY:
+        {
+          ArrayType arrayType = (ArrayType) t;
+          return getArrayType(erasure(arrayType.getComponentType()));
         }
+      case DECLARED:
+        {
+          DeclaredType declaredType = (DeclaredType) t;
+          TypeElement typeElement = (TypeElement) declaredType.asElement();
+          if (declaredType.getEnclosingType().getKind() == TypeKind.DECLARED) {
+            DeclaredType enclosingType = (DeclaredType) declaredType.getEnclosingType();
 
-        return getDeclaredType(typeElement);
-      }
-      // $CASES-OMITTED$
+            return getDeclaredType((DeclaredType) erasure(enclosingType), typeElement);
+          }
+
+          return getDeclaredType(typeElement);
+        }
+        // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException();
     }
@@ -279,8 +277,7 @@ class TreeBackedTypes implements Types {
 
   @Override
   public WildcardType getWildcardType(
-      @Nullable TypeMirror extendsBound,
-      @Nullable TypeMirror superBound) {
+      @Nullable TypeMirror extendsBound, @Nullable TypeMirror superBound) {
     if (containsArtificialTypes(extendsBound, superBound)) {
       return new StandaloneWildcardType(extendsBound, superBound);
     }
@@ -296,9 +293,9 @@ class TreeBackedTypes implements Types {
   @Override
   public DeclaredType getDeclaredType(
       @Nullable DeclaredType containing, TypeElement typeElem, TypeMirror... typeArgs) {
-    if (isArtificialType(containing) ||
-        isArtificialElement(typeElem) ||
-        containsArtificialTypes(typeArgs)) {
+    if (isArtificialType(containing)
+        || isArtificialElement(typeElem)
+        || containsArtificialTypes(typeArgs)) {
       if (containing != null) {
         return new StandaloneDeclaredType(typeElem, Arrays.asList(typeArgs), containing);
       } else {
@@ -316,38 +313,43 @@ class TreeBackedTypes implements Types {
     }
 
     switch (typeMirror.getKind()) {
-      case ARRAY: {
-        ArrayType arrayType = (ArrayType) typeMirror;
-        return getArrayType(getCanonicalType(arrayType.getComponentType()));
-      }
-      case TYPEVAR: {
-        TypeVariable typeVar = (TypeVariable) typeMirror;
-        return getElements().getCanonicalElement(typeVar.asElement()).asType();
-      }
-      case WILDCARD: {
-        WildcardType wildcardType = (WildcardType) typeMirror;
-        return getWildcardType(
-            getCanonicalType(wildcardType.getExtendsBound()),
-            getCanonicalType(wildcardType.getSuperBound()));
-      }
-      case DECLARED: {
-        DeclaredType declaredType = (DeclaredType) typeMirror;
+      case ARRAY:
+        {
+          ArrayType arrayType = (ArrayType) typeMirror;
+          return getArrayType(getCanonicalType(arrayType.getComponentType()));
+        }
+      case TYPEVAR:
+        {
+          TypeVariable typeVar = (TypeVariable) typeMirror;
+          return getElements().getCanonicalElement(typeVar.asElement()).asType();
+        }
+      case WILDCARD:
+        {
+          WildcardType wildcardType = (WildcardType) typeMirror;
+          return getWildcardType(
+              getCanonicalType(wildcardType.getExtendsBound()),
+              getCanonicalType(wildcardType.getSuperBound()));
+        }
+      case DECLARED:
+        {
+          DeclaredType declaredType = (DeclaredType) typeMirror;
 
-        TypeMirror enclosingType = declaredType.getEnclosingType();
-        DeclaredType canonicalEnclosingType = enclosingType.getKind() != TypeKind.NONE
-            ? (DeclaredType) getCanonicalType(enclosingType)
-            : null;
-        TypeElement canonicalElement =
-            (TypeElement) getElements().getCanonicalElement(declaredType.asElement());
-        TypeMirror[] canonicalTypeArgs = declaredType.getTypeArguments().stream()
-            .map(this::getCanonicalType)
-            .toArray(TypeMirror[]::new);
+          TypeMirror enclosingType = declaredType.getEnclosingType();
+          DeclaredType canonicalEnclosingType =
+              enclosingType.getKind() != TypeKind.NONE
+                  ? (DeclaredType) getCanonicalType(enclosingType)
+                  : null;
+          TypeElement canonicalElement =
+              (TypeElement) getElements().getCanonicalElement(declaredType.asElement());
+          TypeMirror[] canonicalTypeArgs =
+              declaredType
+                  .getTypeArguments()
+                  .stream()
+                  .map(this::getCanonicalType)
+                  .toArray(TypeMirror[]::new);
 
-        return getDeclaredType(
-            canonicalEnclosingType,
-            canonicalElement,
-            canonicalTypeArgs);
-      }
+          return getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
+        }
       case PACKAGE:
       case ERROR:
         throw new UnsupportedOperationException("ErrorType NYI");

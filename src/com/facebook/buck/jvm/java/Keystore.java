@@ -24,20 +24,14 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nullable;
 
 public class Keystore extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final SourcePath pathToStore;
-  @AddToRuleKey
-  private final SourcePath pathToProperties;
+  @AddToRuleKey private final SourcePath pathToStore;
+  @AddToRuleKey private final SourcePath pathToProperties;
 
-  public Keystore(
-      BuildRuleParams params,
-      SourcePath store,
-      SourcePath properties) {
+  public Keystore(BuildRuleParams params, SourcePath store, SourcePath properties) {
     super(params);
     this.pathToStore = store;
     this.pathToProperties = properties;
@@ -59,8 +53,7 @@ public class Keystore extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     // Nothing to build: this is like a glorified exported_deps() rule.
     return ImmutableList.of();
   }

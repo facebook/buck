@@ -42,7 +42,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -59,35 +58,35 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          args.binaryJar);
+          params.getBuildTarget(), ruleFinder, params, args.binaryJar);
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildRule prebuilt = new PrebuiltJar(
-        params,
-        pathResolver,
-        args.binaryJar,
-        args.sourceJar,
-        args.gwtJar,
-        args.javadocUrl,
-        args.mavenCoords,
-        args.provided.orElse(false));
+    BuildRule prebuilt =
+        new PrebuiltJar(
+            params,
+            pathResolver,
+            args.binaryJar,
+            args.sourceJar,
+            args.gwtJar,
+            args.javadocUrl,
+            args.mavenCoords,
+            args.provided.orElse(false));
 
     params.getBuildTarget().checkUnflavored();
-    BuildRuleParams gwtParams = params
-        .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
-        .copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams gwtParams =
+        params
+            .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
+                Suppliers.ofInstance(ImmutableSortedSet.of()));
     BuildRule gwtModule = createGwtModule(gwtParams, args);
     resolver.addToIndex(gwtModule);
 
@@ -110,32 +109,30 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     }
 
     class ExistingOuputs extends AbstractBuildRule {
-      @AddToRuleKey
-      private final SourcePath source;
+      @AddToRuleKey private final SourcePath source;
       private final Path output;
 
-      protected ExistingOuputs(
-          BuildRuleParams params,
-          SourcePath source) {
+      protected ExistingOuputs(BuildRuleParams params, SourcePath source) {
         super(params);
         this.source = source;
         BuildTarget target = params.getBuildTarget();
-        this.output = BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            target,
-            String.format("%s/%%s-gwt.jar", target.getShortName()));
+        this.output =
+            BuildTargets.getGenPath(
+                getProjectFilesystem(),
+                target,
+                String.format("%s/%%s-gwt.jar", target.getShortName()));
       }
 
       @Override
       public ImmutableList<Step> getBuildSteps(
-          BuildContext context,
-          BuildableContext buildableContext) {
+          BuildContext context, BuildableContext buildableContext) {
         buildableContext.recordArtifact(
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
         steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()));
-        steps.add(CopyStep.forFile(
+        steps.add(
+            CopyStep.forFile(
                 getProjectFilesystem(),
                 context.getSourcePathResolver().getAbsolutePath(source),
                 output));

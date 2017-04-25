@@ -24,13 +24,11 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
@@ -42,10 +40,8 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
   private final AnnotationTree tree;
   private final TreeBackedElementResolver resolver;
 
-  @Nullable
-  private DeclaredType type;
-  @Nullable
-  private Map<ExecutableElement, TreeBackedAnnotationValue> elementValues;
+  @Nullable private DeclaredType type;
+  @Nullable private Map<ExecutableElement, TreeBackedAnnotationValue> elementValues;
 
   TreeBackedAnnotationMirror(
       AnnotationMirror underlyingAnnotationMirror,
@@ -85,8 +81,8 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
         }
       }
 
-      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
-          : underlyingAnnotationMirror.getElementValues().entrySet()) {
+      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+          underlyingAnnotationMirror.getElementValues().entrySet()) {
         ExecutableElement underlyingKeyElement = entry.getKey();
 
         TreePath valuePath =

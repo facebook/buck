@@ -29,11 +29,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -43,15 +43,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class JavaBinaryDescription implements
-    Description<JavaBinaryDescription.Args>,
-    ImplicitDepsInferringDescription<JavaBinaryDescription.Args>,
-    VersionRoot<JavaBinaryDescription.Args> {
+public class JavaBinaryDescription
+    implements Description<JavaBinaryDescription.Args>,
+        ImplicitDepsInferringDescription<JavaBinaryDescription.Args>,
+        VersionRoot<JavaBinaryDescription.Args> {
 
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = InternalFlavor.of("inner-jar");
 
@@ -82,7 +81,8 @@ public class JavaBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
@@ -100,17 +100,18 @@ public class JavaBinaryDescription implements
         JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
-    BuildRule rule = new JavaBinary(
-        binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
-        javaOptions.getJavaRuntimeLauncher(),
-        args.mainClass.orElse(null),
-        args.manifestFile.orElse(null),
-        args.mergeManifests.orElse(true),
-        args.metaInfDirectory.orElse(null),
-        args.blacklist,
-        transitiveClasspathDeps,
-        transitiveClasspaths,
-        javaBuckConfig.shouldCacheBinaries());
+    BuildRule rule =
+        new JavaBinary(
+            binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
+            javaOptions.getJavaRuntimeLauncher(),
+            args.mainClass.orElse(null),
+            args.manifestFile.orElse(null),
+            args.mergeManifests.orElse(true),
+            args.metaInfDirectory.orElse(null),
+            args.blacklist,
+            transitiveClasspathDeps,
+            transitiveClasspaths,
+            javaBuckConfig.shouldCacheBinaries());
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.
@@ -118,20 +119,21 @@ public class JavaBinaryDescription implements
       BuildRule innerJarRule = rule;
       resolver.addToIndex(innerJarRule);
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
-      rule = new JarFattener(
-          params.copyAppendingExtraDeps(
-              Suppliers.<Iterable<BuildRule>>ofInstance(
-                  ruleFinder.filterBuildRuleInputs(
-                      ImmutableList.<SourcePath>builder()
-                          .add(innerJar)
-                          .addAll(nativeLibraries.values())
-                          .build()))),
-          ruleFinder,
-          JavacFactory.create(ruleFinder, javaBuckConfig, null),
-          javacOptions,
-          innerJar,
-          nativeLibraries,
-          javaOptions.getJavaRuntimeLauncher());
+      rule =
+          new JarFattener(
+              params.copyAppendingExtraDeps(
+                  Suppliers.<Iterable<BuildRule>>ofInstance(
+                      ruleFinder.filterBuildRuleInputs(
+                          ImmutableList.<SourcePath>builder()
+                              .add(innerJar)
+                              .addAll(nativeLibraries.values())
+                              .build()))),
+              ruleFinder,
+              JavacFactory.create(ruleFinder, javaBuckConfig, null),
+              javacOptions,
+              innerJar,
+              nativeLibraries,
+              javaOptions.getJavaRuntimeLauncher());
     }
 
     return rule;
@@ -160,12 +162,13 @@ public class JavaBinaryDescription implements
     public Optional<Boolean> mergeManifests;
     public Optional<Path> metaInfDirectory;
     public ImmutableSet<Pattern> blacklist = ImmutableSet.of();
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
       return tests;
     }
-
   }
 }

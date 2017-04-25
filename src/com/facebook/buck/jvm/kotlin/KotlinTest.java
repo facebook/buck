@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -76,5 +75,4 @@ public class KotlinTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel);
   }
-
 }

@@ -24,4 +24,3 @@ enum BuiltInJavac {
   /** Equivalent to {@link javax.tools.ToolProvider#getSystemJavaCompiler()} */
   DEFAULT
 }
-

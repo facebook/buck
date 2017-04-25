@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
-
 /**
  * Watches the phases of the compiler and keeps our parallel symbol table in sync. Put task
  * listeners that need access to our symbol tables inside this one.
@@ -35,9 +34,8 @@ class EnteringPlugin implements BuckJavacPlugin {
   @Override
   public void init(BuckJavacTask task, String... args) {
     FrontendOnlyJavacTask frontendTask = (FrontendOnlyJavacTask) task;
-    task.addTaskListener(new EnteringTaskListener(
-        frontendTask.getElements(),
-        frontendTask.getTrees()));
+    task.addTaskListener(
+        new EnteringTaskListener(frontendTask.getElements(), frontendTask.getTrees()));
   }
 
   private static class EnteringTaskListener implements TaskListener {

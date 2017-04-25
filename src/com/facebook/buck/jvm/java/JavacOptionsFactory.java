@@ -25,8 +25,8 @@ public final class JavacOptionsFactory {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       JvmLibraryArg jvmLibraryArg) {
-    if ((jvmLibraryArg.source.isPresent() || jvmLibraryArg.target.isPresent()) &&
-        jvmLibraryArg.javaVersion.isPresent()) {
+    if ((jvmLibraryArg.source.isPresent() || jvmLibraryArg.target.isPresent())
+        && jvmLibraryArg.javaVersion.isPresent()) {
       throw new HumanReadableException("Please set either source and target or java_version.");
     }
 
@@ -45,8 +45,8 @@ public final class JavacOptionsFactory {
       builder.setTargetLevel(jvmLibraryArg.target.get());
     }
 
-    if (jvmLibraryArg.generateAbiFromSource.isPresent() &&
-        !jvmLibraryArg.generateAbiFromSource.get()) {
+    if (jvmLibraryArg.generateAbiFromSource.isPresent()
+        && !jvmLibraryArg.generateAbiFromSource.get()) {
       // This parameter can only be used to turn off ABI generation from source where it would
       // otherwise be employed.
       builder.setCompilationMode(Javac.CompilationMode.FULL);

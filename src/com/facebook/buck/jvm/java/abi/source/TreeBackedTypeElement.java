@@ -21,11 +21,9 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.util.TreePath;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
@@ -33,20 +31,16 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
- * An implementation of {@link TypeElement} that uses only the information available from a
- * {@link ClassTree}. This results in an incomplete implementation; see documentation for individual
+ * An implementation of {@link TypeElement} that uses only the information available from a {@link
+ * ClassTree}. This results in an incomplete implementation; see documentation for individual
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeElement {
   private final TypeElement underlyingElement;
-  @Nullable
-  private final ClassTree tree;
-  @Nullable
-  private StandaloneDeclaredType typeMirror;
-  @Nullable
-  private TypeMirror superclass;
-  @Nullable
-  private List<? extends TypeMirror> interfaces;
+  @Nullable private final ClassTree tree;
+  @Nullable private StandaloneDeclaredType typeMirror;
+  @Nullable private TypeMirror superclass;
+  @Nullable private List<? extends TypeMirror> interfaces;
 
   TreeBackedTypeElement(
       TypeElement underlyingElement,
@@ -100,10 +94,13 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   @Override
   public List<? extends TypeMirror> getInterfaces() {
     if (interfaces == null) {
-      interfaces = Collections.unmodifiableList(
-          underlyingElement.getInterfaces().stream()
-              .map(getResolver()::getCanonicalType)
-              .collect(Collectors.toList()));
+      interfaces =
+          Collections.unmodifiableList(
+              underlyingElement
+                  .getInterfaces()
+                  .stream()
+                  .map(getResolver()::getCanonicalType)
+                  .collect(Collectors.toList()));
     }
     return interfaces;
   }

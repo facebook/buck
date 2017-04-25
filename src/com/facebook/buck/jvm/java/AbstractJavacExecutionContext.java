@@ -25,31 +25,36 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractJavacExecutionContext {
   public abstract JavacEventSink getEventSink();
+
   public abstract PrintStream getStdErr();
+
   public abstract ClassLoaderCache getClassLoaderCache();
+
   public abstract Verbosity getVerbosity();
+
   public abstract CellPathResolver getCellPathResolver();
+
   public abstract JavaPackageFinder getJavaPackageFinder();
+
   public abstract ProjectFilesystem getProjectFilesystem();
+
   public abstract ClassUsageFileWriter getUsedClassesFileWriter();
+
   public abstract ImmutableMap<String, String> getEnvironment();
+
   public abstract ProcessExecutor getProcessExecutor();
+
   public abstract ImmutableList<Path> getAbsolutePathsForInputs();
 
-  /**
-   * Setting this to non-absent value enables direct to jar output.
-   */
+  /** Setting this to non-absent value enables direct to jar output. */
   public abstract Optional<DirectToJarOutputSettings> getDirectToJarOutputSettings();
-
 }

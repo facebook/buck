@@ -25,7 +25,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
@@ -63,12 +62,12 @@ public class ScalacStep extends ShellStep {
     return "scalac";
   }
 
-
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
-        .addAll(scalac.getCommandPrefix(resolver))
-        .addAll(extraArguments);
+    ImmutableList.Builder<String> commandBuilder =
+        ImmutableList.<String>builder()
+            .addAll(scalac.getCommandPrefix(resolver))
+            .addAll(extraArguments);
 
     Verbosity verbosity = context.getVerbosity();
     if (verbosity.shouldUseVerbosityFlagIfAvailable()) {
@@ -78,10 +77,12 @@ public class ScalacStep extends ShellStep {
     // Specify the output directory.
     commandBuilder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
-    String classpath = classpathEntries.stream()
-        .map(filesystem::resolve)
-        .map(Path::toString)
-        .collect(Collectors.joining(File.pathSeparator));
+    String classpath =
+        classpathEntries
+            .stream()
+            .map(filesystem::resolve)
+            .map(Path::toString)
+            .collect(Collectors.joining(File.pathSeparator));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
     } else {

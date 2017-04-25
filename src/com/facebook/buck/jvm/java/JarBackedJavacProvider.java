@@ -21,22 +21,17 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class JarBackedJavacProvider implements JavacProvider {
   private final SourcePath javacJarPath;
   private final String compilerClassName;
   private final Javac.Location javacLocation;
-  @Nullable
-  private Javac javac;
+  @Nullable private Javac javac;
 
   public JarBackedJavacProvider(
-      SourcePath javacJarPath,
-      String compilerClassName,
-      Javac.Location javacLocation) {
+      SourcePath javacJarPath, String compilerClassName, Javac.Location javacLocation) {
     this.javacJarPath = javacJarPath;
     this.compilerClassName = compilerClassName;
     this.javacLocation = javacLocation;
@@ -44,8 +39,7 @@ public class JarBackedJavacProvider implements JavacProvider {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("javacJar", javacJarPath)
+    sink.setReflectively("javacJar", javacJarPath)
         .setReflectively("compilerClassName", compilerClassName)
         .setReflectively("javacLocation", javacLocation);
   }

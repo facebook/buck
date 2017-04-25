@@ -24,9 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
-
 
 class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
   private final GroovyBuckConfig groovyBuckConfig;

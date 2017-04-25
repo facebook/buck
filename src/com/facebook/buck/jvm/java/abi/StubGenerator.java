@@ -17,10 +17,8 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.util.HumanReadableException;
-
 import java.io.IOException;
 import java.util.Set;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;

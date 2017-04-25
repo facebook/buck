@@ -42,7 +42,6 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -51,14 +50,10 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
   public static final Flavor DOC_JAR = InternalFlavor.of("doc");
 
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> sources;
-  @AddToRuleKey
-  private final Optional<String> mavenCoords;
-  @AddToRuleKey
-  private final Optional<SourcePath> mavenPomTemplate;
-  @AddToRuleKey
-  private final Iterable<HasMavenCoordinates> mavenDeps;
+  @AddToRuleKey private final ImmutableSet<SourcePath> sources;
+  @AddToRuleKey private final Optional<String> mavenCoords;
+  @AddToRuleKey private final Optional<SourcePath> mavenPomTemplate;
+  @AddToRuleKey private final Iterable<HasMavenCoordinates> mavenDeps;
 
   private final Path output;
   private final Path scratchDir;
@@ -76,20 +71,21 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
     this.mavenDeps = mavenDeps;
     this.sources = sources;
 
-    this.output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        String.format("%%s/%s-javadoc.jar", getBuildTarget().getShortName()));
-    this.scratchDir = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        String.format("%%s/%s-javadoc.tmp", getBuildTarget().getShortName()));
+    this.output =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            String.format("%%s/%s-javadoc.jar", getBuildTarget().getShortName()));
+    this.scratchDir =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            String.format("%%s/%s-javadoc.tmp", getBuildTarget().getShortName()));
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -114,58 +110,63 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
     // Write an @-file with all the source files in
-    steps.add(new WriteFileStep(
-        getProjectFilesystem(),
-        Joiner.on("\n").join(
-            sources.stream()
-                .map(context.getSourcePathResolver()::getAbsolutePath)
-                .map(Path::toString)
-                .iterator()),
-        sourcesListFilePath,
-          /* can execute */ false));
+    steps.add(
+        new WriteFileStep(
+            getProjectFilesystem(),
+            Joiner.on("\n")
+                .join(
+                    sources
+                        .stream()
+                        .map(context.getSourcePathResolver()::getAbsolutePath)
+                        .map(Path::toString)
+                        .iterator()),
+            sourcesListFilePath,
+            /* can execute */ false));
 
     Path atArgs = scratchDir.resolve("options");
     // Write an @-file with the classpath
     StringBuilder argsBuilder = new StringBuilder("-classpath ");
-    Joiner.on(File.pathSeparator).appendTo(
-        argsBuilder,
-        getBuildDeps().stream()
-            .filter(HasClasspathEntries.class::isInstance)
-            .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
-            .map(context.getSourcePathResolver()::getAbsolutePath)
-            .map(Object::toString)
-            .iterator());
-    steps.add(new WriteFileStep(
-        getProjectFilesystem(),
-        argsBuilder.toString(),
-        atArgs,
-          /* can execute */ false));
+    Joiner.on(File.pathSeparator)
+        .appendTo(
+            argsBuilder,
+            getBuildDeps()
+                .stream()
+                .filter(HasClasspathEntries.class::isInstance)
+                .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
+                .map(context.getSourcePathResolver()::getAbsolutePath)
+                .map(Object::toString)
+                .iterator());
+    steps.add(
+        new WriteFileStep(
+            getProjectFilesystem(), argsBuilder.toString(), atArgs, /* can execute */ false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), uncompressedOutputDir));
-    steps.add(new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return ImmutableList.of(
-            "javadoc",
-            "-Xdoclint:none",
-            "-notimestamp",
-            "-d", uncompressedOutputDir.getFileName().toString(),
-            "@" + getProjectFilesystem().resolve(atArgs),
-            "@" + getProjectFilesystem().resolve(sourcesListFilePath));
-      }
+    steps.add(
+        new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            return ImmutableList.of(
+                "javadoc",
+                "-Xdoclint:none",
+                "-notimestamp",
+                "-d",
+                uncompressedOutputDir.getFileName().toString(),
+                "@" + getProjectFilesystem().resolve(atArgs),
+                "@" + getProjectFilesystem().resolve(sourcesListFilePath));
+          }
 
-      @Override
-      public String getShortName() {
-        return "javadoc";
-      }
-    });
+          @Override
+          public String getShortName() {
+            return "javadoc";
+          }
+        });
     steps.add(
         new ZipStep(
             getProjectFilesystem(),
             output,
             ImmutableSet.of(),
-              /* junk paths */ false,
+            /* junk paths */ false,
             DEFAULT_COMPRESSION_LEVEL,
             uncompressedOutputDir));
 
@@ -189,7 +190,7 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
   @Override
   public Iterable<BuildRule> getPackagedDependencies() {
-    return ImmutableSet.of(this);  // I think that this is right
+    return ImmutableSet.of(this); // I think that this is right
   }
 
   @Override

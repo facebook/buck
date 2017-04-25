@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
-
 import java.nio.file.Path;
 
 public class ResourcesRootPackageFinder implements JavaPackageFinder {
@@ -44,9 +43,7 @@ public class ResourcesRootPackageFinder implements JavaPackageFinder {
   public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
     if (pathRelativeToProjectRoot.startsWith(resourcesRoot)) {
       return MorePaths.getParentOrEmpty(
-          MorePaths.relativize(
-              resourcesRoot,
-              pathRelativeToProjectRoot));
+          MorePaths.relativize(resourcesRoot, pathRelativeToProjectRoot));
     }
     return fallbackFinder.findJavaPackageFolder(pathRelativeToProjectRoot);
   }

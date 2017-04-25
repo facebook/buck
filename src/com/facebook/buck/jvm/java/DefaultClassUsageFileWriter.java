@@ -20,14 +20,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableSetMultimap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.tools.StandardJavaFileManager;
 
 public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
@@ -53,16 +51,14 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
       ObjectMappers.WRITER.writeValue(
-          filesystem.resolve(relativePath).toFile(),
-          relativizeMap(classUsageMap, filesystem));
+          filesystem.resolve(relativePath).toFile(), relativizeMap(classUsageMap, filesystem));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
   }
 
   private static ImmutableSetMultimap<Path, Path> relativizeMap(
-      ImmutableSetMultimap<Path, Path> classUsageMap,
-      ProjectFilesystem filesystem) {
+      ImmutableSetMultimap<Path, Path> classUsageMap, ProjectFilesystem filesystem) {
     final ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
 
     // Ensure deterministic ordering.
@@ -81,7 +77,6 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
         // outside the project are coming from a build tool (e.g. JDK or Android SDK).
         continue;
       }
-
 
       builder.putAll(jarRelativePath.get(), jarClassesEntry.getValue());
     }

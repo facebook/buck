@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.abi.source;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -29,8 +28,7 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
   private final RoundEnvironment javacRoundEnvironment;
 
   public TreeBackedRoundEnvironment(
-      FrontendOnlyJavacTask task,
-      RoundEnvironment javacRoundEnvironment) {
+      FrontendOnlyJavacTask task, RoundEnvironment javacRoundEnvironment) {
     this.task = task;
     this.javacRoundEnvironment = javacRoundEnvironment;
   }
@@ -47,7 +45,9 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
 
   @Override
   public Set<? extends Element> getRootElements() {
-    return javacRoundEnvironment.getRootElements().stream()
+    return javacRoundEnvironment
+        .getRootElements()
+        .stream()
         .map(task.getElements()::getCanonicalElement)
         .collect(Collectors.toSet());
   }
@@ -63,7 +63,9 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
 
   @Override
   public Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-    return javacRoundEnvironment.getElementsAnnotatedWith(a).stream()
+    return javacRoundEnvironment
+        .getElementsAnnotatedWith(a)
+        .stream()
         .map(task.getElements()::getCanonicalElement)
         .collect(Collectors.toSet());
   }

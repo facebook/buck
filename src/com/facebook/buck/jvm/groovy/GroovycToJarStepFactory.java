@@ -32,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -43,9 +42,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
-      Tool groovyc,
-      Optional<ImmutableList<String>> extraArguments,
-      JavacOptions javacOptions) {
+      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -83,8 +80,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     groovyc.appendToRuleKey(sink);
-    sink
-        .setReflectively("extraArguments", extraArguments)
+    sink.setReflectively("extraArguments", extraArguments)
         .setReflectively("javacOptions", javacOptions);
   }
 
@@ -101,7 +97,6 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
     // extra deps
     return Iterables.concat(
         super.getExtraDeps(ruleFinder),
-        ruleFinder.filterBuildRuleInputs(
-            javacOptions.getAnnotationProcessingParams().getInputs()));
+        ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
   }
 }

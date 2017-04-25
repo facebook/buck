@@ -17,14 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
 import javax.tools.StandardJavaFileManager;
 
 public class NoOpClassUsageFileWriter implements ClassUsageFileWriter {
   private static final NoOpClassUsageFileWriter INSTANCE = new NoOpClassUsageFileWriter();
 
-  private NoOpClassUsageFileWriter() {
-  }
+  private NoOpClassUsageFileWriter() {}
 
   public static NoOpClassUsageFileWriter instance() {
     return INSTANCE;
@@ -36,6 +34,5 @@ public class NoOpClassUsageFileWriter implements ClassUsageFileWriter {
   }
 
   @Override
-  public void writeFile(ProjectFilesystem filesystem) {
-  }
+  public void writeFile(ProjectFilesystem filesystem) {}
 }

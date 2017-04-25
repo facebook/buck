@@ -20,8 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSortedSet;
 
 public interface JavaLibraryWithTests {
-  /**
-   * @return A list of tests of this target.
-   */
+  /** @return A list of tests of this target. */
   ImmutableSortedSet<BuildTarget> getTests();
 }

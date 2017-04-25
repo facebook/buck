@@ -16,11 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import org.objectweb.asm.tree.ClassNode;
 
 /** An interface for writing to stub jars. */
 interface StubJarWriter extends AutoCloseable {

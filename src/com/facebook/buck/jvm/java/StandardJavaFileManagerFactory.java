@@ -19,13 +19,9 @@ package com.facebook.buck.jvm.java;
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 
-/**
- * Allows the use of custom {@link StandardJavaFileManager}s for use with javac.
- */
+/** Allows the use of custom {@link StandardJavaFileManager}s for use with javac. */
 public interface StandardJavaFileManagerFactory {
 
-  /**
-   * @param compiler the compiler that will be used with the file manager to be created
-   */
+  /** @param compiler the compiler that will be used with the file manager to be created */
   StandardJavaFileManager create(JavaCompiler compiler);
 }

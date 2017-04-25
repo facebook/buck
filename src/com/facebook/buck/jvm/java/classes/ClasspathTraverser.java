@@ -21,5 +21,4 @@ import java.io.IOException;
 public interface ClasspathTraverser {
 
   public void traverse(ClasspathTraversal traversal) throws IOException;
-
 }

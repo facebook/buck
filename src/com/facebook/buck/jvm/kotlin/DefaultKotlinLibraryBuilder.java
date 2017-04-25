@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-
 public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
   private final KotlinBuckConfig kotlinBuckConfig;
   private ImmutableList<String> extraKotlincArguments = ImmutableList.of();

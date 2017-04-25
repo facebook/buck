@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -31,9 +30,9 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
 /**
- * {@link com.sun.source.util.JavacTask} is included with the compiler and is thus not
- * directly accessible from within Buck's class loader. This interface is used as a proxy within
- * Buck's class loader to allow access to commonly-used methods.
+ * {@link com.sun.source.util.JavacTask} is included with the compiler and is thus not directly
+ * accessible from within Buck's class loader. This interface is used as a proxy within Buck's class
+ * loader to allow access to commonly-used methods.
  */
 public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
   static BuckJavacTaskProxy getTask(
@@ -45,23 +44,17 @@ public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
       Iterable<String> options,
       Iterable<String> classes,
       Iterable<? extends JavaFileObject> compilationUnits) {
-    JavaCompiler.CompilationTask task = compiler.getTask(
-        out,
-        fileManager,
-        diagnosticListener,
-        options,
-        classes,
-        compilationUnits);
+    JavaCompiler.CompilationTask task =
+        compiler.getTask(out, fileManager, diagnosticListener, options, classes, compilationUnits);
 
     PluginClassLoader loader = loaderFactory.getPluginClassLoader(task);
-    Class<? extends BuckJavacTaskProxy> proxyImplClass = loader.loadClass(
-        "com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl",
-        BuckJavacTaskProxy.class);
+    Class<? extends BuckJavacTaskProxy> proxyImplClass =
+        loader.loadClass(
+            "com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl",
+            BuckJavacTaskProxy.class);
 
     try {
-      return proxyImplClass
-          .getConstructor(JavaCompiler.CompilationTask.class)
-          .newInstance(task);
+      return proxyImplClass.getConstructor(JavaCompiler.CompilationTask.class).newInstance(task);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }

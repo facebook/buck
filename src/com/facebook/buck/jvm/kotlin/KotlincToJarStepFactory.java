@@ -30,7 +30,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -40,9 +39,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
   private final ImmutableList<String> extraArguments;
   private final Function<BuildContext, Iterable<Path>> extraClassPath;
 
-  public KotlincToJarStepFactory(
-      Tool kotlinc,
-      ImmutableList<String> extraArguments) {
+  public KotlincToJarStepFactory(Tool kotlinc, ImmutableList<String> extraArguments) {
     this(kotlinc, extraArguments, EMPTY_EXTRA_CLASSPATH);
   }
 

@@ -19,9 +19,6 @@ package com.facebook.buck.jvm.java.abi;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
-import org.objectweb.asm.ClassVisitor;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,32 +28,29 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import org.objectweb.asm.ClassVisitor;
 
-/**
- * A {@link LibraryReader} that reads from a list of {@link TypeElement}s and their
- * inner types.
- */
+/** A {@link LibraryReader} that reads from a list of {@link TypeElement}s and their inner types. */
 class TypeElementsReader implements LibraryReader {
   private final SourceVersion targetVersion;
   private final Elements elements;
   private final Supplier<Map<Path, TypeElement>> allTypes;
 
   TypeElementsReader(
-      SourceVersion targetVersion,
-      Elements elements,
-      Iterable<TypeElement> topLevelTypes) {
+      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
     this.targetVersion = targetVersion;
     this.elements = elements;
-    this.allTypes = Suppliers.memoize(() -> {
-      Map<Path, TypeElement> types = new LinkedHashMap<>();
-      topLevelTypes.forEach(type -> addTypeElements(type, types));
-      return types;
-    });
+    this.allTypes =
+        Suppliers.memoize(
+            () -> {
+              Map<Path, TypeElement> types = new LinkedHashMap<>();
+              topLevelTypes.forEach(type -> addTypeElements(type, types));
+              return types;
+            });
   }
 
   @Override
@@ -93,8 +87,9 @@ class TypeElementsReader implements LibraryReader {
   }
 
   private Path getRelativePath(TypeElement typeElement) {
-    return Paths.get(String.format(
-        "%s.class",
-        elements.getBinaryName(typeElement).toString().replace('.', File.separatorChar)));
+    return Paths.get(
+        String.format(
+            "%s.class",
+            elements.getBinaryName(typeElement).toString().replace('.', File.separatorChar)));
   }
 }

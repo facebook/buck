@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-
 public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
   private final ScalaBuckConfig scalaBuckConfig;
   private ImmutableList<String> extraArguments = ImmutableList.of();

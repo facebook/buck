@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.scala;
 
-
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -26,21 +25,21 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
+public class ScalaLibraryDescription
+    implements Description<ScalaLibraryDescription.Arg>,
+        ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
 
   private final ScalaBuckConfig scalaBuckConfig;
 
@@ -59,12 +58,10 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    ScalaLibraryBuilder scalaLibraryBuilder = new ScalaLibraryBuilder(
-        rawParams,
-        resolver,
-        scalaBuckConfig)
-        .setArgs(args);
+      A args)
+      throws NoSuchBuildTargetException {
+    ScalaLibraryBuilder scalaLibraryBuilder =
+        new ScalaLibraryBuilder(rawParams, resolver, scalaBuckConfig).setArgs(args);
 
     return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())
         ? scalaLibraryBuilder.buildAbi()
@@ -96,11 +93,11 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
+
     public Optional<SourcePath> manifestFile;
     public Optional<String> mavenCoords;
 
     @Hint(isDep = false)
     public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   }
-
 }

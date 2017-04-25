@@ -21,7 +21,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
-
 import java.util.Optional;
 
 public interface HasJavaAbi {
@@ -58,9 +57,7 @@ public interface HasJavaAbi {
 
   BuildTarget getBuildTarget();
 
-  /**
-   * @return the {@link SourcePath} representing the ABI Jar for this rule.
-   */
+  /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
     return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
   }

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -81,12 +80,14 @@ public class DirectToJarOutputSettingsSerializer {
         (List<Map<String, Object>>) Preconditions.checkNotNull(data.get(CLASSES_TO_REMOVE))) {
       classesToRemove.add(
           Pattern.compile(
-              (String) Preconditions.checkNotNull(
-                  patternData.get(CLASSES_TO_REMOVE_PATTERN),
-                  "Didn't find classes to remove pattern in serialized DirectToJarOutputSettings"),
-              (int) Preconditions.checkNotNull(
-                  patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS),
-                  "Didn't find flags in serialized DirectToJarOutputSettings")));
+              (String)
+                  Preconditions.checkNotNull(
+                      patternData.get(CLASSES_TO_REMOVE_PATTERN),
+                      "Didn't find classes to remove pattern in serialized DirectToJarOutputSettings"),
+              (int)
+                  Preconditions.checkNotNull(
+                      patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS),
+                      "Didn't find flags in serialized DirectToJarOutputSettings")));
     }
 
     ImmutableSortedSet.Builder<Path> entries = ImmutableSortedSet.naturalOrder();
@@ -105,10 +106,6 @@ public class DirectToJarOutputSettingsSerializer {
     }
 
     return DirectToJarOutputSettings.of(
-        outputPath,
-        classesToRemove.build(),
-        entries.build(),
-        mainClass,
-        manifestFile);
+        outputPath, classesToRemove.build(), entries.build(), mainClass, manifestFile);
   }
 }

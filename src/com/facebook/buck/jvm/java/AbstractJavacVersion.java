@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -31,5 +30,4 @@ abstract class AbstractJavacVersion {
   public String toString() {
     return getVersionString();
   }
-
 }

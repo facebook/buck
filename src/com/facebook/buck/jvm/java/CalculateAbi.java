@@ -16,8 +16,5 @@
 
 package com.facebook.buck.jvm.java;
 
-/**
- * Tag interface for rules that calculate ABIs for Java code.
- */
-public interface CalculateAbi {
-}
+/** Tag interface for rules that calculate ABIs for Java code. */
+public interface CalculateAbi {}

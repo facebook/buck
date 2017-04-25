@@ -40,11 +40,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
@@ -52,24 +50,16 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
-  @AddToRuleKey
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
 
-  @AddToRuleKey
-  @Nullable
-  private final String mainClass;
+  @AddToRuleKey @Nullable private final String mainClass;
 
-  @AddToRuleKey
-  @Nullable
-  private final SourcePath manifestFile;
+  @AddToRuleKey @Nullable private final SourcePath manifestFile;
   private final boolean mergeManifests;
 
-  @Nullable
-  @AddToRuleKey
-  private final SourcePath metaInfDirectory;
+  @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
 
-  @AddToRuleKey
-  private final ImmutableSet<Pattern> blacklist;
+  @AddToRuleKey private final ImmutableSet<Pattern> blacklist;
 
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
   private final ImmutableSet<SourcePath> transitiveClasspaths;
@@ -92,9 +82,10 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
-    this.metaInfDirectory = metaInfDirectory != null ?
-        new PathSourcePath(getProjectFilesystem(), metaInfDirectory) :
-        null;
+    this.metaInfDirectory =
+        metaInfDirectory != null
+            ? new PathSourcePath(getProjectFilesystem(), metaInfDirectory)
+            : null;
     this.blacklist = blacklist;
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
@@ -108,8 +99,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
@@ -131,25 +121,28 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
               .setDesiredLink(stagingTarget)
               .build());
 
-      includePaths = ImmutableSortedSet.<Path>naturalOrder()
-          .add(stagingRoot)
-          .addAll(context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()))
-          .build();
+      includePaths =
+          ImmutableSortedSet.<Path>naturalOrder()
+              .add(stagingRoot)
+              .addAll(
+                  context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()))
+              .build();
     } else {
       includePaths = context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths());
     }
 
     Path outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    Path manifestPath = manifestFile == null ?
-        null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
-    Step jar = new JarDirectoryStep(
-        getProjectFilesystem(),
-        outputFile,
-        includePaths,
-        mainClass,
-        manifestPath,
-        mergeManifests,
-        blacklist);
+    Path manifestPath =
+        manifestFile == null ? null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
+    Step jar =
+        new JarDirectoryStep(
+            getProjectFilesystem(),
+            outputFile,
+            includePaths,
+            mainClass,
+            manifestPath,
+            mergeManifests,
+            blacklist);
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
@@ -188,8 +181,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
         Paths.get(
             String.format(
                 "%s/%s.jar",
-                getOutputDirectory(),
-                getBuildTarget().getShortNameAndFlavorPostfix())));
+                getOutputDirectory(), getBuildTarget().getShortNameAndFlavorPostfix())));
   }
 
   @Override

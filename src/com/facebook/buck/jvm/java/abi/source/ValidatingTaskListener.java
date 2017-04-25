@@ -25,25 +25,21 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.tools.Diagnostic;
 
 /**
  * A {@link TaskListener} that is used during full compilation to validate the guesses made by
  * source-based ABI generation.
  */
-public class ValidatingTaskListener
-    implements TaskListener {
+public class ValidatingTaskListener implements TaskListener {
   private final BuckJavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private final BootClasspathOracle bootClasspathOracle;
   private final Diagnostic.Kind messageKind;
 
-  @Nullable
-  private InterfaceValidator validator;
+  @Nullable private InterfaceValidator validator;
   private int enterDepth = 0;
   private boolean annotationProcessing = false;
 

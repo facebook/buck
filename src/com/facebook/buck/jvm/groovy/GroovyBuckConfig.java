@@ -22,7 +22,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,19 +43,17 @@ public class GroovyBuckConfig {
       String defaultGroovyHome = delegate.getEnvironment().get("GROOVY_HOME");
       if (defaultGroovyHome == null) {
         throw new HumanReadableException(
-            "Unable to locate groovy compiler:" +
-                " GROOVY_HOME is not set, and groovy.groovy_home was not provided");
+            "Unable to locate groovy compiler:"
+                + " GROOVY_HOME is not set, and groovy.groovy_home was not provided");
       } else {
         groovyHomePath = Paths.get(defaultGroovyHome);
       }
     }
 
     Path compiler =
-        new ExecutableFinder().getExecutable(
-            groovyHomePath.resolve("bin/groovyc"),
-            delegate.getEnvironment());
+        new ExecutableFinder()
+            .getExecutable(groovyHomePath.resolve("bin/groovyc"), delegate.getEnvironment());
 
     return Suppliers.ofInstance(new HashedFileTool(compiler));
   }
-
 }

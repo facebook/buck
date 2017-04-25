@@ -42,16 +42,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
-
-public class JavaTestDescription implements
-    Description<JavaTestDescription.Arg>,
-    ImplicitDepsInferringDescription<JavaTestDescription.Arg> {
+public class JavaTestDescription
+    implements Description<JavaTestDescription.Arg>,
+        ImplicitDepsInferringDescription<JavaTestDescription.Arg> {
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -83,41 +81,37 @@ public class JavaTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            templateJavacOptions,
-            params,
-            resolver,
-            args
-        );
+        JavacOptionsFactory.create(templateJavacOptions, params, resolver, args);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
-        params,
-        args.useCxxLibraries,
-        args.cxxLibraryWhitelist,
-        resolver,
-        ruleFinder,
-        cxxPlatform);
+    CxxLibraryEnhancement cxxLibraryEnhancement =
+        new CxxLibraryEnhancement(
+            params,
+            args.useCxxLibraries,
+            args.cxxLibraryWhitelist,
+            resolver,
+            ruleFinder,
+            cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams = params
-        .withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildRuleParams testsLibraryParams =
+        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder = DefaultJavaLibrary
-        .builder(testsLibraryParams, resolver, javaBuckConfig)
-        .setArgs(args)
-        .setJavacOptions(javacOptions)
-        .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
-        .setTrackClassUsage(javacOptions.trackClassUsage());
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
+        DefaultJavaLibrary.builder(testsLibraryParams, resolver, javaBuckConfig)
+            .setArgs(args)
+            .setJavacOptions(javacOptions)
+            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+            .setTrackClassUsage(javacOptions.trackClassUsage());
 
     if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    JavaLibrary testsLibrary =
-        resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
@@ -172,6 +166,7 @@ public class JavaTestDescription implements
     public boolean getRunTestSeparately() {
       return runTestSeparately.orElse(false);
     }
+
     public ForkMode getForkMode() {
       return forkMode.orElse(ForkMode.NONE);
     }
@@ -187,7 +182,8 @@ public class JavaTestDescription implements
         final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathRuleFinder ruleFinder,
-        CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+        CxxPlatform cxxPlatform)
+        throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(ruleFinder, params, cxxPlatform);
@@ -206,25 +202,30 @@ public class JavaTestDescription implements
               filteredLinks.put(entry.getKey(), entry.getValue());
             }
           }
-          nativeLibsSymlinkTree = new SymlinkTree(
-              nativeLibsSymlinkTree.getBuildTarget(),
-              nativeLibsSymlinkTree.getProjectFilesystem(),
-              nativeLibsSymlinkTree.getProjectFilesystem()
-                  .relativize(nativeLibsSymlinkTree.getRoot()),
-              filteredLinks.build(),
-              ruleFinder);
+          nativeLibsSymlinkTree =
+              new SymlinkTree(
+                  nativeLibsSymlinkTree.getBuildTarget(),
+                  nativeLibsSymlinkTree.getProjectFilesystem(),
+                  nativeLibsSymlinkTree
+                      .getProjectFilesystem()
+                      .relativize(nativeLibsSymlinkTree.getRoot()),
+                  filteredLinks.build(),
+                  ruleFinder);
         }
 
         resolver.addToIndex(nativeLibsSymlinkTree);
-        updatedParams = params.copyAppendingExtraDeps(ImmutableList.<BuildRule>builder()
-            .add(nativeLibsSymlinkTree)
-            // Add all the native libraries as first-order dependencies.
-            // This has two effects:
-            // (1) They become runtime deps because JavaTest adds all first-order deps.
-            // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
-            // the test results cache.
-            .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
-            .build());
+        updatedParams =
+            params.copyAppendingExtraDeps(
+                ImmutableList.<BuildRule>builder()
+                    .add(nativeLibsSymlinkTree)
+                    // Add all the native libraries as first-order dependencies.
+                    // This has two effects:
+                    // (1) They become runtime deps because JavaTest adds all first-order deps.
+                    // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
+                    // the test results cache.
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+                    .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
                 cxxPlatform.getLd().resolve(resolver).searchPathEnvVar(),
@@ -236,18 +237,15 @@ public class JavaTestDescription implements
     }
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
-        SourcePathRuleFinder ruleFinder,
-        BuildRuleParams buildRuleParams,
-        CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+        SourcePathRuleFinder ruleFinder, BuildRuleParams buildRuleParams, CxxPlatform cxxPlatform)
+        throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           ruleFinder,
           buildRuleParams.getBuildTarget(),
           buildRuleParams.getProjectFilesystem(),
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
-          Predicates.or(
-              NativeLinkable.class::isInstance,
-              JavaLibrary.class::isInstance));
+          Predicates.or(NativeLinkable.class::isInstance, JavaLibrary.class::isInstance));
     }
   }
 }

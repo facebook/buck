@@ -25,8 +25,8 @@ import java.io.Writer;
 import java.net.URI;
 
 /**
- * An {@link JarFileObject} implementation that represents a {@link javax.tools.FileObject}
- * that has no operations and does not write the contents to any form of output.
+ * An {@link JarFileObject} implementation that represents a {@link javax.tools.FileObject} that has
+ * no operations and does not write the contents to any form of output.
  */
 public class JavaNoOpFileObject extends JarFileObject {
 

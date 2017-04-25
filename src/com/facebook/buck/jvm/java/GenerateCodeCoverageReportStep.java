@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -95,9 +94,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
         extractedClassesDirectories.add(jarFile);
       } else {
         Path extractClassDir = Files.createTempDirectory("extractedClasses");
-        populateClassesDir(
-            jarFile,
-            extractClassDir);
+        populateClassesDir(jarFile, extractClassDir);
         extractedClassesDirectories.add(extractClassDir);
         tempDirs.add(extractClassDir);
       }
@@ -114,10 +111,9 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
   @VisibleForTesting
   StepExecutionResult executeInternal(
-      ExecutionContext context,
-      Set<Path> extractedClassesDirectories)
-    throws IOException, InterruptedException{
-    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
+      ExecutionContext context, Set<Path> extractedClassesDirectories)
+      throws IOException, InterruptedException {
+    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())) {
       saveParametersToPropertyStream(filesystem, extractedClassesDirectories, propertyFileStream);
     }
 
@@ -128,21 +124,18 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   void saveParametersToPropertyStream(
       ProjectFilesystem filesystem,
       Set<Path> extractedClassesDirectories,
-      OutputStream outputStream) throws IOException {
+      OutputStream outputStream)
+      throws IOException {
     final Properties properties = new Properties();
 
-    properties.setProperty(
-        "jacoco.output.dir",
-        filesystem.resolve(outputDirectory).toString());
+    properties.setProperty("jacoco.output.dir", filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);
     properties.setProperty("jacoco.format", format.toString().toLowerCase());
     properties.setProperty("jacoco.title", title);
 
-    properties.setProperty(
-        "classes.jars", formatPathSet(jarFiles));
+    properties.setProperty("classes.jars", formatPathSet(jarFiles));
 
-    properties.setProperty(
-        "classes.dir", formatPathSet(extractedClassesDirectories));
+    properties.setProperty("classes.dir", formatPathSet(extractedClassesDirectories));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
 
     if (coverageIncludes.isPresent()) {
@@ -159,10 +152,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   private String formatPathSet(Set<Path> paths) {
-    return Joiner.on(":").join(
-            Iterables.transform(
-                paths,
-                filesystem::resolve));
+    return Joiner.on(":").join(Iterables.transform(paths, filesystem::resolve));
   }
 
   @Override
@@ -179,20 +169,15 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   /**
-   * ReportGenerator.java needs a class-directory to work with, so if
-   * we instead have a jar file we extract it first.
+   * ReportGenerator.java needs a class-directory to work with, so if we instead have a jar file we
+   * extract it first.
    */
-  private void populateClassesDir(
-      Path outputJar,
-      Path classesDir) {
+  private void populateClassesDir(Path outputJar, Path classesDir) {
     try {
       Preconditions.checkState(
-          filesystem.exists(outputJar),
-          String.valueOf(outputJar) + " does not exist");
+          filesystem.exists(outputJar), String.valueOf(outputJar) + " does not exist");
       Unzip.extractZipFile(
-          outputJar,
-          classesDir,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+          outputJar, classesDir, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

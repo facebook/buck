@@ -17,11 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
-
-import org.objectweb.asm.Type;
-
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -39,10 +35,9 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
+import org.objectweb.asm.Type;
 
-/**
- * Computes type descriptors from {@link Element}s or {@link TypeMirror}s.
- */
+/** Computes type descriptors from {@link Element}s or {@link TypeMirror}s. */
 class DescriptorFactory {
   private final Elements elements;
 
@@ -64,120 +59,121 @@ class DescriptorFactory {
   }
 
   private Type getType(Element element) {
-    return Preconditions.checkNotNull(element.accept(new SimpleElementVisitor8<Type, Void>() {
-      @Override
-      protected Type defaultAction(Element e, Void aVoid) {
-        throw new IllegalArgumentException(
-            String.format("Unexpected element kind: %s", element.getKind()));
-      }
+    return Preconditions.checkNotNull(
+        element.accept(
+            new SimpleElementVisitor8<Type, Void>() {
+              @Override
+              protected Type defaultAction(Element e, Void aVoid) {
+                throw new IllegalArgumentException(
+                    String.format("Unexpected element kind: %s", element.getKind()));
+              }
 
-      @Override
-      public Type visitExecutable(ExecutableElement e, Void aVoid) {
-        Stream<TypeMirror> parameterTypeStream = e.getParameters().stream()
-            .map(Element::asType);
+              @Override
+              public Type visitExecutable(ExecutableElement e, Void aVoid) {
+                Stream<TypeMirror> parameterTypeStream =
+                    e.getParameters().stream().map(Element::asType);
 
-        if (MoreElements.isInnerClassConstructor(e)) {
-          parameterTypeStream = Stream.concat(
-              Stream.of(MoreElements.getOuterClass(e).asType()),
-              parameterTypeStream);
-        }
+                if (MoreElements.isInnerClassConstructor(e)) {
+                  parameterTypeStream =
+                      Stream.concat(
+                          Stream.of(MoreElements.getOuterClass(e).asType()), parameterTypeStream);
+                }
 
-        return Type.getMethodType(
-            getType(e.getReturnType()),
-            parameterTypeStream
-                .map(DescriptorFactory.this::getType)
-                .toArray(size -> new Type[size]));
-      }
+                return Type.getMethodType(
+                    getType(e.getReturnType()),
+                    parameterTypeStream
+                        .map(DescriptorFactory.this::getType)
+                        .toArray(size -> new Type[size]));
+              }
 
-      @Override
-      public Type visitVariable(VariableElement e, Void aVoid) {
-        return getType(e.asType());
-      }
-    }, null));
+              @Override
+              public Type visitVariable(VariableElement e, Void aVoid) {
+                return getType(e.asType());
+              }
+            },
+            null));
   }
 
   public Type getType(TypeMirror typeMirror) {
-    return Preconditions.checkNotNull(typeMirror.accept(new SimpleTypeVisitor8<Type, Void>() {
-      @Override
-      protected Type defaultAction(TypeMirror t, Void aVoid) {
-        throw new IllegalArgumentException(String.format("Unexpected type kind: %s", t.getKind()));
-      }
+    return Preconditions.checkNotNull(
+        typeMirror.accept(
+            new SimpleTypeVisitor8<Type, Void>() {
+              @Override
+              protected Type defaultAction(TypeMirror t, Void aVoid) {
+                throw new IllegalArgumentException(
+                    String.format("Unexpected type kind: %s", t.getKind()));
+              }
 
-      @Override
-      public Type visitPrimitive(PrimitiveType type, Void aVoid) {
-        switch (type.getKind()) {
-          case BOOLEAN:
-            return Type.BOOLEAN_TYPE;
-          case BYTE:
-            return Type.BYTE_TYPE;
-          case CHAR:
-            return Type.CHAR_TYPE;
-          case SHORT:
-            return Type.SHORT_TYPE;
-          case INT:
-            return Type.INT_TYPE;
-          case LONG:
-            return Type.LONG_TYPE;
-          case FLOAT:
-            return Type.FLOAT_TYPE;
-          case DOUBLE:
-            return Type.DOUBLE_TYPE;
-          // $CASES-OMITTED$
-          default:
-            throw new IllegalArgumentException(String.format(
-                "Unexpected type kind: %s",
-                type.getKind()));
-        }
-      }
+              @Override
+              public Type visitPrimitive(PrimitiveType type, Void aVoid) {
+                switch (type.getKind()) {
+                  case BOOLEAN:
+                    return Type.BOOLEAN_TYPE;
+                  case BYTE:
+                    return Type.BYTE_TYPE;
+                  case CHAR:
+                    return Type.CHAR_TYPE;
+                  case SHORT:
+                    return Type.SHORT_TYPE;
+                  case INT:
+                    return Type.INT_TYPE;
+                  case LONG:
+                    return Type.LONG_TYPE;
+                  case FLOAT:
+                    return Type.FLOAT_TYPE;
+                  case DOUBLE:
+                    return Type.DOUBLE_TYPE;
+                    // $CASES-OMITTED$
+                  default:
+                    throw new IllegalArgumentException(
+                        String.format("Unexpected type kind: %s", type.getKind()));
+                }
+              }
 
-      @Override
-      public Type visitNoType(NoType t, Void aVoid) {
-        if (t.getKind() != TypeKind.VOID) {
-          throw new IllegalArgumentException(String.format(
-              "Unexpected type kind: %s",
-              t.getKind()));
-        }
+              @Override
+              public Type visitNoType(NoType t, Void aVoid) {
+                if (t.getKind() != TypeKind.VOID) {
+                  throw new IllegalArgumentException(
+                      String.format("Unexpected type kind: %s", t.getKind()));
+                }
 
-        return Type.VOID_TYPE;
-      }
+                return Type.VOID_TYPE;
+              }
 
-      @Override
-      public Type visitArray(ArrayType t, Void aVoid) {
-        return Type.getObjectType("[" + getDescriptor(t.getComponentType()));
-      }
+              @Override
+              public Type visitArray(ArrayType t, Void aVoid) {
+                return Type.getObjectType("[" + getDescriptor(t.getComponentType()));
+              }
 
-      @Override
-      public Type visitDeclared(DeclaredType t, Void aVoid) {
-        // The erasure of a parameterized type is just the unparameterized version (JLS8 4.6)
-        return Type.getObjectType(getInternalName((TypeElement) t.asElement()));
-      }
+              @Override
+              public Type visitDeclared(DeclaredType t, Void aVoid) {
+                // The erasure of a parameterized type is just the unparameterized version (JLS8 4.6)
+                return Type.getObjectType(getInternalName((TypeElement) t.asElement()));
+              }
 
-      @Override
-      public Type visitTypeVariable(TypeVariable t, Void aVoid) {
-        // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
-        // If there's only one bound, getUpperBound returns it directly; if there's more than
-        // one it returns an IntersectionType
-        return getType(t.getUpperBound());
-      }
+              @Override
+              public Type visitTypeVariable(TypeVariable t, Void aVoid) {
+                // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
+                // If there's only one bound, getUpperBound returns it directly; if there's more than
+                // one it returns an IntersectionType
+                return getType(t.getUpperBound());
+              }
 
-      @Override
-      public Type visitIntersection(IntersectionType t, Void aVoid) {
-        // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
-        return getType(t.getBounds().get(0));
-      }
-    }, null));
+              @Override
+              public Type visitIntersection(IntersectionType t, Void aVoid) {
+                // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
+                return getType(t.getBounds().get(0));
+              }
+            },
+            null));
   }
 
-  /**
-   * Gets the internal form of the binary name; see JVMS8 4.2.1
-   */
+  /** Gets the internal form of the binary name; see JVMS8 4.2.1 */
   public String getInternalName(TypeMirror typeMirror) {
     return getType(typeMirror).getInternalName();
   }
 
-  /**
-   * Gets the internal form of the binary name; see JVMS8 4.2.1
-   */
+  /** Gets the internal form of the binary name; see JVMS8 4.2.1 */
   public String getInternalName(TypeElement typeElement) {
     return elements.getBinaryName(typeElement).toString().replace('.', '/');
   }

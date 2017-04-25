@@ -37,18 +37,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
   private final BuildRuleParams params;
-  @Nullable
-  private final JavaBuckConfig javaBuckConfig;
+  @Nullable private final JavaBuckConfig javaBuckConfig;
   protected final BuildRuleResolver buildRuleResolver;
   protected final SourcePathResolver sourcePathResolver;
   protected final SourcePathRuleFinder ruleFinder;
@@ -67,15 +64,11 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
   protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
-  @Nullable
-  protected JavacOptions javacOptions = null;
-  @Nullable
-  private JavaLibraryDescription.Arg args = null;
+  @Nullable protected JavacOptions javacOptions = null;
+  @Nullable private JavaLibraryDescription.Arg args = null;
 
   protected DefaultJavaLibraryBuilder(
-      BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
-      JavaBuckConfig javaBuckConfig) {
+      BuildRuleParams params, BuildRuleResolver buildRuleResolver, JavaBuckConfig javaBuckConfig) {
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
     this.javaBuckConfig = javaBuckConfig;
@@ -85,9 +78,7 @@ public class DefaultJavaLibraryBuilder {
     setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
-  protected DefaultJavaLibraryBuilder(
-      BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver) {
+  protected DefaultJavaLibraryBuilder(BuildRuleParams params, BuildRuleResolver buildRuleResolver) {
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
 
@@ -124,12 +115,10 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setResources(
-      ImmutableSortedSet<SourcePath> resources) {
-    this.resources = ResourceValidator.validateResources(
-        sourcePathResolver,
-        params.getProjectFilesystem(),
-        resources);
+  public DefaultJavaLibraryBuilder setResources(ImmutableSortedSet<SourcePath> resources) {
+    this.resources =
+        ResourceValidator.validateResources(
+            sourcePathResolver, params.getProjectFilesystem(), resources);
     return this;
   }
 
@@ -215,22 +204,14 @@ public class DefaultJavaLibraryBuilder {
   }
 
   protected class BuilderHelper {
-    @Nullable
-    private BuildRuleParams finalParams;
-    @Nullable
-    private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
-    @Nullable
-    private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
-    @Nullable
-    private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
-    @Nullable
-    private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
-    @Nullable
-    private ImmutableSortedSet<SourcePath> abiInputs;
-    @Nullable
-    private CompileToJarStepFactory compileStepFactory;
-    @Nullable
-    private BuildTarget abiJar;
+    @Nullable private BuildRuleParams finalParams;
+    @Nullable private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
+    @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
+    @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
+    @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
+    @Nullable private ImmutableSortedSet<SourcePath> abiInputs;
+    @Nullable private CompileToJarStepFactory compileStepFactory;
+    @Nullable private BuildTarget abiJar;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
@@ -259,9 +240,10 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildTarget getAbiJar() {
       if (abiJar == null) {
-        abiJar = shouldBuildAbiFromSource()
-            ? HasJavaAbi.getSourceAbiJar(params.getBuildTarget())
-            : HasJavaAbi.getClassAbiJar(params.getBuildTarget());
+        abiJar =
+            shouldBuildAbiFromSource()
+                ? HasJavaAbi.getSourceAbiJar(params.getBuildTarget())
+                : HasJavaAbi.getClassAbiJar(params.getBuildTarget());
       }
 
       return abiJar;
@@ -293,9 +275,11 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
       if (finalFullJarDeclaredDeps == null) {
-        finalFullJarDeclaredDeps = ImmutableSortedSet.copyOf(Iterables.concat(
-            params.getDeclaredDeps().get(),
-            getCompileStepFactory().getDeclaredDeps(ruleFinder)));
+        finalFullJarDeclaredDeps =
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    params.getDeclaredDeps().get(),
+                    getCompileStepFactory().getDeclaredDeps(ruleFinder)));
       }
 
       return finalFullJarDeclaredDeps;
@@ -303,11 +287,11 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths()
         throws NoSuchBuildTargetException {
-      ImmutableSortedSet<BuildRule> buildRules = compileAgainstAbis ?
-          getCompileTimeClasspathAbiDeps() :
-          getCompileTimeClasspathFullDeps();
+      ImmutableSortedSet<BuildRule> buildRules =
+          compileAgainstAbis ? getCompileTimeClasspathAbiDeps() : getCompileTimeClasspathFullDeps();
 
-      return buildRules.stream()
+      return buildRules
+          .stream()
           .map(BuildRule::getSourcePathToOutput)
           .filter(Objects::nonNull)
           .collect(MoreCollectors.toImmutableSortedSet());
@@ -315,9 +299,11 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
       if (compileTimeClasspathFullDeps == null) {
-        compileTimeClasspathFullDeps = getCompileTimeClasspathUnfilteredFullDeps().stream()
-            .filter(dep -> dep instanceof HasJavaAbi)
-            .collect(MoreCollectors.toImmutableSortedSet());
+        compileTimeClasspathFullDeps =
+            getCompileTimeClasspathUnfilteredFullDeps()
+                .stream()
+                .filter(dep -> dep instanceof HasJavaAbi)
+                .collect(MoreCollectors.toImmutableSortedSet());
       }
 
       return compileTimeClasspathFullDeps;
@@ -354,21 +340,20 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
       ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
       if (compileAgainstAbis) {
-        declaredDepsBuilder.addAll(getAbiRulesWherePossible(
-            buildRuleResolver,
-            getFinalFullJarDeclaredDeps()));
+        declaredDepsBuilder.addAll(
+            getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));
         // We remove provided and exported deps since we'll be adding the ABI rules of these and
         // don't want to end up with both full & ABI rules
-        extraDepsBuilder.addAll(Sets.difference(
-            params.getExtraDeps().get(),
-            Sets.union(fullJarProvidedDeps, fullJarExportedDeps)));
+        extraDepsBuilder.addAll(
+            Sets.difference(
+                params.getExtraDeps().get(), Sets.union(fullJarProvidedDeps, fullJarExportedDeps)));
       } else {
         declaredDepsBuilder.addAll(getFinalFullJarDeclaredDeps());
         extraDepsBuilder
             .addAll(params.getExtraDeps().get())
-            .addAll(Sets.difference(
-                getCompileTimeClasspathUnfilteredFullDeps(),
-                params.getBuildDeps()));
+            .addAll(
+                Sets.difference(
+                    getCompileTimeClasspathUnfilteredFullDeps(), params.getBuildDeps()));
       }
       ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
@@ -381,28 +366,27 @@ public class DefaultJavaLibraryBuilder {
       // declared deps are grabbed and are expected to reflect the actual deps argument of the
       // target. In addition, when compiling against ABIs, extra deps shouldn't be translated to
       // their ABI rules as their full JARs are required (with exception of classpath rules).
-      ImmutableSortedSet<BuildRule> extraDeps = extraDepsBuilder
-          .addAll(Sets.difference(compileTimeClasspathAbiDeps, declaredDeps))
-          .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
-          .build();
+      ImmutableSortedSet<BuildRule> extraDeps =
+          extraDepsBuilder
+              .addAll(Sets.difference(compileTimeClasspathAbiDeps, declaredDeps))
+              .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
+              .build();
 
       return params.copyReplacingDeclaredAndExtraDeps(() -> declaredDeps, () -> extraDeps);
     }
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
-        Iterable<BuildRule> firstOrderDeps = Iterables.concat(
-            getFinalFullJarDeclaredDeps(),
-            fullJarExportedDeps,
-            fullJarProvidedDeps);
+        Iterable<BuildRule> firstOrderDeps =
+            Iterables.concat(
+                getFinalFullJarDeclaredDeps(), fullJarExportedDeps, fullJarProvidedDeps);
 
         ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
             BuildRules.getExportedRules(firstOrderDeps);
 
-        compileTimeClasspathUnfilteredFullDeps = RichStream.from(Iterables.concat(
-            firstOrderDeps,
-            rulesExportedByDependencies))
-            .collect(MoreCollectors.toImmutableSortedSet());
+        compileTimeClasspathUnfilteredFullDeps =
+            RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
+                .collect(MoreCollectors.toImmutableSortedSet());
       }
 
       return compileTimeClasspathUnfilteredFullDeps;
@@ -414,18 +398,15 @@ public class DefaultJavaLibraryBuilder {
     }
 
     protected ImmutableSortedSet<SourcePath> buildAbiInputs() throws NoSuchBuildTargetException {
-        return getCompileTimeClasspathAbiDeps()
-            .stream()
-            .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet());
+      return getCompileTimeClasspathAbiDeps()
+          .stream()
+          .map(BuildRule::getSourcePathToOutput)
+          .collect(MoreCollectors.toImmutableSortedSet());
     }
 
     protected CompileToJarStepFactory buildCompileStepFactory() {
       return new JavacToJarStepFactory(
-          JavacFactory.create(
-              ruleFinder,
-              Preconditions.checkNotNull(javaBuckConfig),
-              args),
+          JavacFactory.create(ruleFinder, Preconditions.checkNotNull(javaBuckConfig), args),
           Preconditions.checkNotNull(javacOptions),
           javacOptionsAmender);
     }

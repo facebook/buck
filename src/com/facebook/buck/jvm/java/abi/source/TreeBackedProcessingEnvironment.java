@@ -17,10 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.sun.source.util.Trees;
-
 import java.util.Locale;
 import java.util.Map;
-
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -35,8 +33,7 @@ class TreeBackedProcessingEnvironment implements ProcessingEnvironment {
   private final TreeBackedFiler filer;
 
   public TreeBackedProcessingEnvironment(
-      FrontendOnlyJavacTask task,
-      ProcessingEnvironment javacProcessingEnvironment) {
+      FrontendOnlyJavacTask task, ProcessingEnvironment javacProcessingEnvironment) {
     this.task = task;
     this.javacProcessingEnvironment = javacProcessingEnvironment;
     messager = new TreeBackedMessager(task, javacProcessingEnvironment.getMessager());

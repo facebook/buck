@@ -21,7 +21,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -47,8 +46,7 @@ final class SymbolExtractor {
         throw new RuntimeException(e);
       }
 
-      JavaFileParser.JavaFileFeatures features = javaFileParser
-          .extractFeaturesFromJavaCode(code);
+      JavaFileParser.JavaFileFeatures features = javaFileParser.extractFeaturesFromJavaCode(code);
       if (shouldRecordRequiredSymbols) {
         requiredSymbols.addAll(features.requiredSymbols);
         exportedSymbols.addAll(features.exportedSymbols);

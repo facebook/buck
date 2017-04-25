@@ -23,17 +23,15 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
 /**
- * Holds and formats the arguments and system properties that should be passed to
- * the JVM to run JUnit.
+ * Holds and formats the arguments and system properties that should be passed to the JVM to run
+ * JUnit.
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -43,25 +41,19 @@ abstract class AbstractJUnitJvmArgs {
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
 
-  /**
-   * @return Directory to use to write test results to.
-   */
+  /** @return Directory to use to write test results to. */
   abstract Optional<Path> getDirectoryForTestResults();
 
   /**
-   * @return Path to newline-separated file containing classpath entries with which to run
-   * the JVM.
+   * @return Path to newline-separated file containing classpath entries with which to run the JVM.
    */
   abstract Path getClasspathFile();
 
-  /**
-   * @return The type of test runner to use.
-   */
+  /** @return The type of test runner to use. */
   abstract TestType getTestType();
 
   /**
-   * @return If true, suspend the JVM to allow a debugger to attach after launch.
-   * Defaults to false.
+   * @return If true, suspend the JVM to allow a debugger to attach after launch. Defaults to false.
    */
   @Value.Default
   boolean isDebugEnabled() {
@@ -70,8 +62,7 @@ abstract class AbstractJUnitJvmArgs {
 
   /**
    * @return If true, gathers code coverage metrics when running tests.
-   *
-   * Defaults to false.
+   *     <p>Defaults to false.
    */
   @Value.Default
   boolean isCodeCoverageEnabled() {
@@ -80,80 +71,59 @@ abstract class AbstractJUnitJvmArgs {
 
   /**
    * @return If true, passes inclNoLocationClassesEnabled=true to the jacoco java agent.
-   *
-   * Defaults to false.
+   *     <p>Defaults to false.
    */
   @Value.Default
   boolean isInclNoLocationClassesEnabled() {
     return false;
   }
 
-  /**
-   * @return If true, include explanations for tests that were filtered out.
-   */
+  /** @return If true, include explanations for tests that were filtered out. */
   @Value.Default
   boolean isShouldExplainTestSelectorList() {
     return false;
   }
 
-  /**
-   * @return The filesystem path to a JVM agent (i.e., a profiler).
-   */
+  /** @return The filesystem path to a JVM agent (i.e., a profiler). */
   abstract Optional<String> getPathToJavaAgent();
 
-  /**
-   * @return Unique identifier for the build.
-   */
+  /** @return Unique identifier for the build. */
   abstract BuildId getBuildId();
 
-  /**
-   * @return The filesystem path to the source code for the Buck module
-   * under test.
-   */
+  /** @return The filesystem path to the source code for the Buck module under test. */
   abstract Path getBuckModuleBaseSourceCodePath();
 
   /**
-   * @return If set, specifies a minimum Java logging level at and above which
-   * java.util.logging logs will be written to stdout.
+   * @return If set, specifies a minimum Java logging level at and above which java.util.logging
+   *     logs will be written to stdout.
    */
   abstract Optional<Level> getStdOutLogLevel();
 
   /**
-   * @return If set, specifies a minimum Java logging level at and above which
-   * java.util.logging logs will be written to stderr.
+   * @return If set, specifies a minimum Java logging level at and above which java.util.logging
+   *     logs will be written to stderr.
    */
   abstract Optional<Level> getStdErrLogLevel();
 
   /**
-   * @return If set, specifies a filesystem path to which Robolectric debug logs
-   * will be written during the test.
+   * @return If set, specifies a filesystem path to which Robolectric debug logs will be written
+   *     during the test.
    */
   abstract Optional<Path> getRobolectricLogPath();
 
-  /**
-   * @return The filesystem path to the compiled Buck test runner classes.
-   */
+  /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
-  /**
-   * @return Extra JVM args to pass on the command line.
-   */
+  /** @return Extra JVM args to pass on the command line. */
   abstract Optional<ImmutableList<String>> getExtraJvmArgs();
 
-  /**
-   * @return Name of test classes to run.
-   */
+  /** @return Name of test classes to run. */
   abstract ImmutableList<String> getTestClasses();
 
-  /**
-   * @return Test selectors with which to filter the tests to run.
-   */
+  /** @return Test selectors with which to filter the tests to run. */
   abstract Optional<TestSelectorList> getTestSelectorList();
 
-  /**
-   * Formats the JVM arguments in this object suitable to pass on the
-   * command line.
-   */
+  /** Formats the JVM arguments in this object suitable to pass on the command line. */
   public void formatCommandLineArgsToList(
       ImmutableList.Builder<String> args,
       ProjectFilesystem filesystem,
@@ -164,11 +134,13 @@ abstract class AbstractJUnitJvmArgs {
     args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
 
     if (isCodeCoverageEnabled()) {
-      args.add(String.format("-javaagent:%s=destfile=%s/%s,append=true,inclnolocationclasses=%b",
-          JacocoConstants.PATH_TO_JACOCO_AGENT_JAR,
-          JacocoConstants.getJacocoOutputDir(filesystem),
-          JacocoConstants.JACOCO_EXEC_COVERAGE_FILE,
-          isInclNoLocationClassesEnabled()));
+      args.add(
+          String.format(
+              "-javaagent:%s=destfile=%s/%s,append=true,inclnolocationclasses=%b",
+              JacocoConstants.PATH_TO_JACOCO_AGENT_JAR,
+              JacocoConstants.getJacocoOutputDir(filesystem),
+              JacocoConstants.JACOCO_EXEC_COVERAGE_FILE,
+              isInclNoLocationClassesEnabled()));
     }
 
     if (getPathToJavaAgent().isPresent()) {
@@ -187,22 +159,14 @@ abstract class AbstractJUnitJvmArgs {
 
     // Include log levels
     if (getStdOutLogLevel().isPresent()) {
-      args.add(
-          String.format(
-              "-D%s=%s",
-              STD_OUT_LOG_LEVEL_PROPERTY, getStdOutLogLevel().get()));
+      args.add(String.format("-D%s=%s", STD_OUT_LOG_LEVEL_PROPERTY, getStdOutLogLevel().get()));
     }
     if (getStdErrLogLevel().isPresent()) {
-      args.add(
-          String.format(
-              "-D%s=%s",
-              STD_ERR_LOG_LEVEL_PROPERTY, getStdErrLogLevel().get()));
+      args.add(String.format("-D%s=%s", STD_ERR_LOG_LEVEL_PROPERTY, getStdErrLogLevel().get()));
     }
 
     if (getRobolectricLogPath().isPresent()) {
-      args.add(
-          String.format(
-              "-Drobolectric.logging=%s", getRobolectricLogPath().get()));
+      args.add(String.format("-Drobolectric.logging=%s", getRobolectricLogPath().get()));
     }
 
     if (isDebugEnabled()) {
@@ -224,8 +188,10 @@ abstract class AbstractJUnitJvmArgs {
 
     args.add(
         "-classpath",
-        "@" + filesystem.resolve(getClasspathFile()).toString() + File.pathSeparator +
-        getTestRunnerClasspath().toString());
+        "@"
+            + filesystem.resolve(getClasspathFile()).toString()
+            + File.pathSeparator
+            + getTestRunnerClasspath().toString());
 
     args.add(FileClassPathRunner.class.getName());
 
@@ -246,8 +212,7 @@ abstract class AbstractJUnitJvmArgs {
 
     // Add the test selectors, one per line, in a single argument.
     StringBuilder selectorsArgBuilder = new StringBuilder();
-    if (getTestSelectorList().isPresent() &&
-        !getTestSelectorList().get().isEmpty()) {
+    if (getTestSelectorList().isPresent() && !getTestSelectorList().get().isEmpty()) {
       for (String rawSelector : getTestSelectorList().get().getRawSelectors()) {
         selectorsArgBuilder.append(rawSelector).append("\n");
       }
