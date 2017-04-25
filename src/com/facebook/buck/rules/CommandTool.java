@@ -22,21 +22,19 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
  *
- * Example:
- * <pre>
- * {@code
- *   Tool compiler = new CommandTool.Builder()
- *      .addArg(compilerPath)
- *      .addArg("-I%s", defaultIncludeDir)
- *      .build();
- * }
- * </pre>
+ * <p>Example:
+ *
+ * <pre>{@code
+ * Tool compiler = new CommandTool.Builder()
+ *    .addArg(compilerPath)
+ *    .addArg("-I%s", defaultIncludeDir)
+ *    .build();
+ * }</pre>
  */
 public class CommandTool implements Tool {
 
@@ -107,8 +105,7 @@ public class CommandTool implements Tool {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("baseTool", baseTool)
+    sink.setReflectively("baseTool", baseTool)
         .setReflectively("args", args)
         .setReflectively("extraInputs", extraInputs);
   }
@@ -136,9 +133,7 @@ public class CommandTool implements Tool {
       this(Optional.empty());
     }
 
-    /**
-     * Adds an argument.
-     */
+    /** Adds an argument. */
     public Builder addArg(Arg arg) {
       args.add(arg);
       return this;
@@ -148,9 +143,7 @@ public class CommandTool implements Tool {
       return addArg(StringArg.of(arg));
     }
 
-    /**
-     * Adds an environment variable key=arg.
-     */
+    /** Adds an environment variable key=arg. */
     public Builder addEnv(String key, Arg arg) {
       environment.put(key, arg);
       return this;
@@ -160,9 +153,7 @@ public class CommandTool implements Tool {
       return addEnv(key, StringArg.of(val));
     }
 
-    /**
-     * Adds additional non-argument inputs to the tool.
-     */
+    /** Adds additional non-argument inputs to the tool. */
     public Builder addInputs(Iterable<? extends SourcePath> inputs) {
       extraInputs.addAll(inputs);
       return this;
@@ -172,9 +163,7 @@ public class CommandTool implements Tool {
       return addInputs(ImmutableList.copyOf(inputs));
     }
 
-    /**
-     * Adds additional non-argument deps to the tool.
-     */
+    /** Adds additional non-argument deps to the tool. */
     public Builder addDeps(Iterable<? extends BuildRule> deps) {
       extraDeps.addAll(deps);
       return this;
@@ -186,13 +175,7 @@ public class CommandTool implements Tool {
 
     public CommandTool build() {
       return new CommandTool(
-          baseTool,
-          args.build(),
-          environment.build(),
-          extraInputs.build(),
-          extraDeps.build());
+          baseTool, args.build(), environment.build(), extraInputs.build(), extraDeps.build());
     }
-
   }
-
 }

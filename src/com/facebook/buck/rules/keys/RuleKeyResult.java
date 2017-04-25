@@ -21,19 +21,13 @@ package com.facebook.buck.rules.keys;
  */
 public class RuleKeyResult<R> {
 
-  /**
-   * The result of rule key computation.
-   */
+  /** The result of rule key computation. */
   public final R result;
 
-  /**
-   * All other `BuildRule`s and `RuleKeyAppendable`s which this rule key's value depends on.
-   */
+  /** All other `BuildRule`s and `RuleKeyAppendable`s which this rule key's value depends on. */
   public final Iterable<?> deps;
 
-  /**
-   * All inputs this rule key's value depends on.
-   */
+  /** All inputs this rule key's value depends on. */
   public final Iterable<RuleKeyInput> inputs;
 
   public RuleKeyResult(R result, Iterable<?> deps, Iterable<RuleKeyInput> inputs) {
@@ -69,5 +63,4 @@ public class RuleKeyResult<R> {
     result1 = 31 * result1 + inputs.hashCode();
     return result1;
   }
-
 }

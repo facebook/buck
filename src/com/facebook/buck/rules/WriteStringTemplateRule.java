@@ -28,7 +28,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -39,14 +38,11 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  @AddToRuleKey
-  private final SourcePath template;
+  @AddToRuleKey private final SourcePath template;
 
-  @AddToRuleKey
-  private final ImmutableMap<String, String> values;
+  @AddToRuleKey private final ImmutableMap<String, String> values;
 
-  @AddToRuleKey
-  private final boolean executable;
+  @AddToRuleKey private final boolean executable;
 
   public WriteStringTemplateRule(
       BuildRuleParams buildRuleParams,
@@ -63,8 +59,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
@@ -117,5 +112,4 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
         values,
         executable);
   }
-
 }

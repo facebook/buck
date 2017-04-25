@@ -20,9 +20,7 @@ import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * Some build rule diagnostic data.
- */
+/** Some build rule diagnostic data. */
 public class BuildRuleDiagnosticData {
 
   public final ImmutableSortedSet<BuildRule> deps;
@@ -34,5 +32,4 @@ public class BuildRuleDiagnosticData {
     this.deps = deps;
     this.diagnosticKeys = diagnosticKeys;
   }
-
 }

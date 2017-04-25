@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 /**
  * This class should not ever be extended.
  *
- * Everywhere that currently extends it is a legacy caller of SourcePathResolver which should be
+ * <p>Everywhere that currently extends it is a legacy caller of SourcePathResolver which should be
  * migrated to extend AbstractBuildRule directly and use SourcePathResolver only from the
  * BuildContext supplied in getBuildSteps.
  */
@@ -28,8 +28,7 @@ public abstract class AbstractBuildRuleWithResolver extends AbstractBuildRule {
   private final SourcePathResolver resolver;
 
   protected AbstractBuildRuleWithResolver(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
+      BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     super(buildRuleParams);
     this.resolver = resolver;
   }

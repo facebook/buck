@@ -25,7 +25,6 @@ import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
@@ -34,22 +33,26 @@ import java.util.regex.Pattern;
  *
  * <p><b>Warning:</b> The result of calling any methods after calling {@link #hash} is undefined.
  *
- * Chunks of data that are put into the {@link RuleKeyHasher} are delimited. Delimiting details are
- * implementation dependent, but one common way is to hash the size of the data along with the data
- * itself, for each operation performed.
- * For example, the following three expressions should ideally all generate different hash codes:
- * <pre>  {@code
- *   newHasher().putByte(b1).putByte(b2).putByte(b3).hash()
- *   newHasher().putByte(b1).putBytes(new byte[] { b2, b3 }).hash()
- *   newHasher().putBytes(new byte[] { b1, b2, b3 }).hash()}</pre>
+ * <p>Chunks of data that are put into the {@link RuleKeyHasher} are delimited. Delimiting details
+ * are implementation dependent, but one common way is to hash the size of the data along with the
+ * data itself, for each operation performed. For example, the following three expressions should
+ * ideally all generate different hash codes:
+ *
+ * <pre>{@code
+ * newHasher().putByte(b1).putByte(b2).putByte(b3).hash()
+ * newHasher().putByte(b1).putBytes(new byte[] { b2, b3 }).hash()
+ * newHasher().putBytes(new byte[] { b1, b2, b3 }).hash()
+ * }</pre>
  *
  * Note, Buck hashes both field values and field names (keys) when constructing rule keys. E.g.:
- * <pre>  {@code
- *   public class myRule implements BuildRule {
- *     @AddToRuleKey
- *     private final int someInt = 42;
- *   }
+ *
+ * <pre>{@code
+ * public class myRule implements BuildRule {
+ *   @AddToRuleKey
+ *   private final int someInt = 42;
+ * }
  * }</pre>
+ *
  * should have {@code "someInt"} hashed via {@code putKey}, and similarly {@code 42} hashed via
  * {@code putNumber}.
  */
@@ -59,6 +62,7 @@ public interface RuleKeyHasher<HASH> {
     LIST,
     MAP,
   }
+
   enum Wrapper {
     SUPPLIER,
     OPTIONAL,
@@ -69,8 +73,8 @@ public interface RuleKeyHasher<HASH> {
   }
 
   /**
-   * Selects the field's category (for the upcoming field).
-   * Must be called before any other put method for that field.
+   * Selects the field's category (for the upcoming field). Must be called before any other put
+   * method for that field.
    */
   RuleKeyHasher<HASH> selectCategory(RuleKeyFieldCategory category);
   /** Puts the field's key (i.e. the name of the field) */
@@ -78,25 +82,39 @@ public interface RuleKeyHasher<HASH> {
 
   /** Puts the field's value, Java types */
   RuleKeyHasher<HASH> putNull();
+
   RuleKeyHasher<HASH> putBoolean(boolean val);
+
   RuleKeyHasher<HASH> putNumber(Number val);
+
   RuleKeyHasher<HASH> putString(String val);
+
   RuleKeyHasher<HASH> putBytes(byte[] bytes);
+
   RuleKeyHasher<HASH> putPattern(Pattern pattern);
 
   /** Puts the field's value, Buck specific types */
   RuleKeyHasher<HASH> putSha1(Sha1HashCode sha1);
+
   RuleKeyHasher<HASH> putPath(Path path, HashCode hash);
+
   RuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash);
+
   RuleKeyHasher<HASH> putNonHashingPath(String path);
+
   RuleKeyHasher<HASH> putSourceRoot(SourceRoot sourceRoot);
+
   RuleKeyHasher<HASH> putRuleKey(RuleKey ruleKey);
+
   RuleKeyHasher<HASH> putBuildRuleType(BuildRuleType buildRuleType);
+
   RuleKeyHasher<HASH> putBuildTarget(BuildTarget buildTarget);
+
   RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath<?> buildTargetSourcePath);
 
   /** Puts the container signature */
   RuleKeyHasher<HASH> putContainer(Container container, int length);
+
   RuleKeyHasher<HASH> putWrapper(Wrapper wrapper);
 
   /** Computes the final hash. */

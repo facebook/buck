@@ -22,16 +22,15 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 /**
- * Arg that represents object file that should be linked into resulting binary using
- * normal mechanism, e.g. passed to the linker without any additional surrounding flags.
- * Sometimes these arguments can be grouped into a single text file that linker can pick up.
- * This is mostly to simplify and shorten command line that is used to invoke the linker.
- * This arg represents such kind of object file in the list of args, so later we can easily create
- * such file list for the linker.
+ * Arg that represents object file that should be linked into resulting binary using normal
+ * mechanism, e.g. passed to the linker without any additional surrounding flags. Sometimes these
+ * arguments can be grouped into a single text file that linker can pick up. This is mostly to
+ * simplify and shorten command line that is used to invoke the linker. This arg represents such
+ * kind of object file in the list of args, so later we can easily create such file list for the
+ * linker.
  */
 public class FileListableLinkerInputArg extends Arg implements HasSourcePath {
 
@@ -65,8 +64,7 @@ public class FileListableLinkerInputArg extends Arg implements HasSourcePath {
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     value.appendToCommandLine(builder, pathResolver);
   }
 

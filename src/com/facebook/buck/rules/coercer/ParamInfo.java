@@ -23,24 +23,19 @@ import com.google.common.base.CaseFormat;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-/**
- * Represents a single field that can be represented in buck build files.
- */
+/** Represents a single field that can be represented in buck build files. */
 public class ParamInfo implements Comparable<ParamInfo> {
 
   private final TypeCoercer<?> typeCoercer;
 
   private final boolean isOptional;
-  @Nullable
-  private final Object defaultValue;
+  @Nullable private final Object defaultValue;
   private final String name;
   private final String pythonName;
   private final boolean isDep;
@@ -48,21 +43,24 @@ public class ParamInfo implements Comparable<ParamInfo> {
   private final Field field;
 
   private static final LoadingCache<Class<?>, Object> EMPTY_CONSTRUCTOR_ARGS =
-      CacheBuilder.newBuilder().build(
-          new CacheLoader<Class<?>, Object>() {
-            @Override
-            public Object load(Class<?> cls) throws Exception {
-              try {
-                return cls.newInstance();
-              } catch (Exception e) {
-                throw new RuntimeException(
-                    "Failed to instantiate an empty constructor arg for class " + cls + ". " +
-                        "Check that the class has a public constructor that doesn't take any " +
-                        "parameters and that it is not a non-static inner (or anonymous) class.",
-                    e);
-              }
-            }
-          });
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Class<?>, Object>() {
+                @Override
+                public Object load(Class<?> cls) throws Exception {
+                  try {
+                    return cls.newInstance();
+                  } catch (Exception e) {
+                    throw new RuntimeException(
+                        "Failed to instantiate an empty constructor arg for class "
+                            + cls
+                            + ". "
+                            + "Check that the class has a public constructor that doesn't take any "
+                            + "parameters and that it is not a non-static inner (or anonymous) class.",
+                        e);
+                  }
+                }
+              });
 
   public ParamInfo(TypeCoercerFactory typeCoercerFactory, Class<?> cls, Field field) {
     this.field = field;
@@ -107,8 +105,8 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   /**
-   * Returns the type that input values will be coerced to.
-   * Return the type parameter of Optional if wrapped in Optional.
+   * Returns the type that input values will be coerced to. Return the type parameter of Optional if
+   * wrapped in Optional.
    */
   public Class<?> getResultClass() {
     return typeCoercer.getOutputClass();
@@ -117,12 +115,11 @@ public class ParamInfo implements Comparable<ParamInfo> {
   /**
    * Traverse the value of the field on {@code dto} that is represented by this instance.
    *
-   * If this field has a top level Optional type, traversal begins at the Optional value, or not at
-   * all if the field is empty.
+   * <p>If this field has a top level Optional type, traversal begins at the Optional value, or not
+   * at all if the field is empty.
    *
    * @param traversal traversal to apply on the values.
    * @param dto the object whose field will be traversed.
-   *
    * @see TypeCoercer#traverse(Object, TypeCoercer.Traversal)
    */
   public void traverse(Traversal traversal, Object dto) {
@@ -152,20 +149,16 @@ public class ParamInfo implements Comparable<ParamInfo> {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       Object arg,
-      Map<String, ?> instance) throws ParamInfoException {
-    set(
-        cellRoots,
-        filesystem,
-        buildTarget.getBasePath(),
-        arg,
-        instance.get(name));
+      Map<String, ?> instance)
+      throws ParamInfoException {
+    set(cellRoots, filesystem, buildTarget.getBasePath(), arg, instance.get(name));
   }
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
+   *
    * @param cellRoots
-   * @param filesystem {@link ProjectFilesystem} used to ensure
-   *        {@link Path}s exist.
+   * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
@@ -175,7 +168,8 @@ public class ParamInfo implements Comparable<ParamInfo> {
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object dto,
-      @Nullable Object value) throws ParamInfoException {
+      @Nullable Object value)
+      throws ParamInfoException {
     Object result;
 
     if (value == null) {
@@ -188,11 +182,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
       }
     } else {
       try {
-        result = typeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            value);
+        result = typeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, value);
       } catch (CoerceFailedException e) {
         throw new ParamInfoException(name, e.getMessage(), e);
       }
@@ -205,9 +195,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
     }
   }
 
-  /**
-   * Only valid when comparing {@link ParamInfo} instances from the same description.
-   */
+  /** Only valid when comparing {@link ParamInfo} instances from the same description. */
   @Override
   public int compareTo(ParamInfo that) {
     if (this == that) {
@@ -241,4 +229,3 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   public interface Traversal extends TypeCoercer.Traversal {}
 }
-

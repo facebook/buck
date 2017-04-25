@@ -16,22 +16,19 @@
 
 package com.facebook.buck.rules;
 
-
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Charsets;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Optional;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
 
 public class RocksDBBuildInfoStore implements BuildInfoStore {
   private static final char KEY_SEP = '\0';
@@ -40,8 +37,10 @@ public class RocksDBBuildInfoStore implements BuildInfoStore {
 
   public RocksDBBuildInfoStore(ProjectFilesystem filesystem) throws IOException {
     RocksDB.loadLibrary();
-    Path pathToDB = filesystem.getRootPath().resolve(
-        filesystem.getBuckPaths().getScratchDir().resolve("metadata"));
+    Path pathToDB =
+        filesystem
+            .getRootPath()
+            .resolve(filesystem.getBuckPaths().getScratchDir().resolve("metadata"));
     try (Options options = new Options()) {
       options.setCreateIfMissing(true);
       db = RocksDB.open(options, pathToDB.toString());
@@ -69,13 +68,10 @@ public class RocksDBBuildInfoStore implements BuildInfoStore {
   }
 
   @Override
-  public void updateMetadata(
-      BuildTarget buildTarget,
-      Map<String, String> metadata) throws IOException {
-    try (
-        WriteOptions options = new WriteOptions();
-        WriteBatch wb = new WriteBatch()
-    ) {
+  public void updateMetadata(BuildTarget buildTarget, Map<String, String> metadata)
+      throws IOException {
+    try (WriteOptions options = new WriteOptions();
+        WriteBatch wb = new WriteBatch()) {
       for (Map.Entry<String, String> entry : metadata.entrySet()) {
         wb.put(makeKey(buildTarget, entry.getKey()), entry.getValue().getBytes(Charsets.UTF_8));
       }
@@ -87,11 +83,9 @@ public class RocksDBBuildInfoStore implements BuildInfoStore {
 
   @Override
   public void deleteMetadata(BuildTarget buildTarget) throws IOException {
-    try (
-        WriteOptions options = new WriteOptions();
+    try (WriteOptions options = new WriteOptions();
         WriteBatch wb = new WriteBatch();
-        RocksIterator it = db.newIterator()
-    ) {
+        RocksIterator it = db.newIterator()) {
       byte[] keyPrefix = keyPrefix(buildTarget);
       it.seek(keyPrefix);
       while (it.isValid() && startsWith(it.key(), keyPrefix)) {

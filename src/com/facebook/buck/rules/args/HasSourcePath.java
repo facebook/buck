@@ -18,9 +18,7 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.SourcePath;
 
-/**
- * Interface for extracting a SourcePath from an Arg which has one.
- */
+/** Interface for extracting a SourcePath from an Arg which has one. */
 public interface HasSourcePath {
   SourcePath getPath();
 }

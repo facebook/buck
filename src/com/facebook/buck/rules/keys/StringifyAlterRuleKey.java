@@ -26,7 +26,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -82,8 +81,7 @@ class StringifyAlterRuleKey implements AlterRuleKey {
       if (!Iterables.isEmpty(absolutePaths)) {
         LOG.warn(
             "Value %s contains absolute paths %s and it is included in a rule key.",
-            valueExtractor.getFullyQualifiedName(),
-            ImmutableSet.copyOf(absolutePaths));
+            valueExtractor.getFullyQualifiedName(), ImmutableSet.copyOf(absolutePaths));
       }
     }
   }

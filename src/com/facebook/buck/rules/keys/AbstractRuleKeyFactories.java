@@ -22,31 +22,23 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
-/**
- * The various rule key factories used by the build engine.
- */
+/** The various rule key factories used by the build engine. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractRuleKeyFactories {
 
-  /**
-   * @return a {@link RuleKeyFactory} that produces {@link RuleKey}s.
-   */
+  /** @return a {@link RuleKeyFactory} that produces {@link RuleKey}s. */
   public abstract RuleKeyFactoryWithDiagnostics<RuleKey> getDefaultRuleKeyFactory();
 
-  /**
-   * @return a {@link RuleKeyFactory} that produces input-based {@link RuleKey}s.
-   */
+  /** @return a {@link RuleKeyFactory} that produces input-based {@link RuleKey}s. */
   public abstract RuleKeyFactory<RuleKey> getInputBasedRuleKeyFactory();
 
   /**
    * @return a {@link DependencyFileRuleKeyFactory} that produces dep-file-based {@link RuleKey}s.
    */
   public abstract DependencyFileRuleKeyFactory getDepFileRuleKeyFactory();
-
 
   public static RuleKeyFactories of(
       int keySeed,
@@ -59,22 +51,10 @@ abstract class AbstractRuleKeyFactories {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
-            fieldLoader,
-            fileHashCache,
-            pathResolver,
-            ruleFinder,
-            defaultRuleKeyFactoryCache),
+            fieldLoader, fileHashCache, pathResolver, ruleFinder, defaultRuleKeyFactoryCache),
         new InputBasedRuleKeyFactory(
-            fieldLoader,
-            fileHashCache,
-            pathResolver,
-            ruleFinder,
-            inputRuleKeyFileSizeLimit),
+            fieldLoader, fileHashCache, pathResolver, ruleFinder, inputRuleKeyFileSizeLimit),
         new DefaultDependencyFileRuleKeyFactory(
-            fieldLoader,
-            fileHashCache,
-            pathResolver,
-            ruleFinder));
+            fieldLoader, fileHashCache, pathResolver, ruleFinder));
   }
-
 }

@@ -18,11 +18,12 @@ package com.facebook.buck.rules.keys;
 
 import javax.annotation.Nullable;
 
-/**
- * Extracts a value, e.g. by reflection. Used by {@link AlterRuleKey} implementations.
- */
+/** Extracts a value, e.g. by reflection. Used by {@link AlterRuleKey} implementations. */
 public interface ValueExtractor {
   String getFullyQualifiedName();
+
   String getName();
-  @Nullable Object getValue(Object obj);
+
+  @Nullable
+  Object getValue(Object obj);
 }

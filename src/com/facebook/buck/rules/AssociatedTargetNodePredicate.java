@@ -17,7 +17,5 @@
 package com.facebook.buck.rules;
 
 public interface AssociatedTargetNodePredicate {
-  public boolean apply(
-      TargetNode<?, ?> targetNode,
-      TargetGraph targetGraph);
+  public boolean apply(TargetNode<?, ?> targetNode, TargetGraph targetGraph);
 }

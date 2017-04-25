@@ -21,11 +21,9 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestResultSummary;
-
 import java.util.UUID;
 
-public abstract class TestSummaryEvent
-    extends AbstractBuckEvent
+public abstract class TestSummaryEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
 
   private final String testCaseName;
@@ -50,13 +48,11 @@ public abstract class TestSummaryEvent
     return testName;
   }
 
-  public static Started started(
-      UUID uuid, String testCaseName, String testName) {
+  public static Started started(UUID uuid, String testCaseName, String testName) {
     return new Started(uuid, testCaseName, testName);
   }
 
-  public static Finished finished(
-      UUID uuid, TestResultSummary testResultSummary) {
+  public static Finished finished(UUID uuid, TestResultSummary testResultSummary) {
     return new Finished(uuid, testResultSummary);
   }
 
@@ -86,10 +82,7 @@ public abstract class TestSummaryEvent
     private final TestResultSummary testResultSummary;
 
     public Finished(UUID uuid, TestResultSummary testResultSummary) {
-      super(
-          uuid,
-          testResultSummary.getTestCaseName(),
-          testResultSummary.getTestName());
+      super(uuid, testResultSummary.getTestCaseName(), testResultSummary.getTestName());
       this.testResultSummary = testResultSummary;
     }
 

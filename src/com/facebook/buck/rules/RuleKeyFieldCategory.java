@@ -16,14 +16,12 @@
 
 package com.facebook.buck.rules;
 
-/**
- * A rulekey field category used for instrumentation purposes.
- */
+/** A rulekey field category used for instrumentation purposes. */
 public enum RuleKeyFieldCategory {
-    UNKNOWN,
-    SOURCE,
-    DEPENDENCY,
-    PARAMETER,
-    ENVIRONMENT,
-    TOOL,
+  UNKNOWN,
+  SOURCE,
+  DEPENDENCY,
+  PARAMETER,
+  ENVIRONMENT,
+  TOOL,
 }

@@ -16,9 +16,5 @@
 
 package com.facebook.buck.rules;
 
-/**
- * Represents a source that is required to build a rule (typically a file).
- */
-public interface SourcePath extends Comparable<SourcePath>  {
-
-}
+/** Represents a source that is required to build a rule (typically a file). */
+public interface SourcePath extends Comparable<SourcePath> {}

@@ -28,27 +28,22 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
  * Abstract expander which resolves using a references to another {@link BuildRule}.
- * <p>
- * Matches either a relative or fully-qualified build target wrapped in <tt>$()</tt>, unless the
+ *
+ * <p>Matches either a relative or fully-qualified build target wrapped in <tt>$()</tt>, unless the
  * <code>$</code> is preceded by a backslash.
  */
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     extends AbstractMacroExpander<M> {
 
-  protected abstract String expand(
-      SourcePathResolver resolver,
-      BuildRule rule)
+  protected abstract String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException;
 
-  protected BuildRule resolve(BuildRuleResolver resolver, M input)
-      throws MacroException {
+  protected BuildRule resolve(BuildRuleResolver resolver, M input) throws MacroException {
     Optional<BuildRule> rule = resolver.getRuleOptional(input.getTarget());
     if (!rule.isPresent()) {
       throw new MacroException(String.format("no rule %s", input.getTarget()));
@@ -57,21 +52,14 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   }
 
   BuildTarget parseBuildTarget(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
-      throw new MacroException(
-          String.format(
-              "expected a single argument: %s",
-              input));
+      throw new MacroException(String.format("expected a single argument: %s", input));
     }
     try {
       return BuildTargetParser.INSTANCE.parse(
-          input.get(0),
-          BuildTargetPatternParser.forBaseName(target.getBaseName()),
-          cellNames);
+          input.get(0), BuildTargetPatternParser.forBaseName(target.getBaseName()), cellNames);
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }
@@ -79,28 +67,21 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
 
   @Override
   public String expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      M input)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
       throws MacroException {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return expand(pathResolver, resolve(resolver, input));
   }
 
   protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      @SuppressWarnings("unused") BuildRuleResolver resolver,
-      BuildRule rule)
+      @SuppressWarnings("unused") BuildRuleResolver resolver, BuildRule rule)
       throws MacroException {
     return ImmutableList.of(rule);
   }
 
   @Override
   public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      M input)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
       throws MacroException {
     return extractBuildTimeDeps(resolver, resolve(resolver, input));
   }
@@ -118,12 +99,8 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   @Override
   @Nullable
   public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      M input)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
       throws MacroException {
     return resolve(resolver, input).getSourcePathToOutput();
   }
-
 }

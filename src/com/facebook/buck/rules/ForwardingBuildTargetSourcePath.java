@@ -19,9 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 
-/**
- * A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath.
- */
+/** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
 public class ForwardingBuildTargetSourcePath
     extends BuildTargetSourcePath<ForwardingBuildTargetSourcePath> {
   private final SourcePath delegate;

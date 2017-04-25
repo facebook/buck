@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,15 +53,14 @@ public class SourcePathResolver {
     return paths.build();
   }
 
-  /**
-   * @return the {@link ProjectFilesystem} associated with {@code sourcePath}.
-   */
+  /** @return the {@link ProjectFilesystem} associated with {@code sourcePath}. */
   public ProjectFilesystem getFilesystem(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getFilesystem();
     }
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)
+      return ruleFinder
+          .getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath)
           .getProjectFilesystem();
     }
     if (sourcePath instanceof ArchiveMemberSourcePath) {
@@ -72,8 +70,8 @@ public class SourcePathResolver {
   }
 
   /**
-   * @return the {@link Path} for this {@code sourcePath}, resolved using its associated
-   *     {@link com.facebook.buck.io.ProjectFilesystem}.
+   * @return the {@link Path} for this {@code sourcePath}, resolved using its associated {@link
+   *     com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getAbsolutePath(SourcePath sourcePath) {
     Path path = getPathPrivateImpl(sourcePath);
@@ -111,14 +109,15 @@ public class SourcePathResolver {
 
   public ImmutableSortedSet<Path> getAllAbsolutePaths(
       Collection<? extends SourcePath> sourcePaths) {
-    return sourcePaths.stream()
+    return sourcePaths
+        .stream()
         .map(this::getAbsolutePath)
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   /**
-   * @return The {@link Path} the {@code sourcePath} refers to, relative to its owning
-   * {@link com.facebook.buck.io.ProjectFilesystem}.
+   * @return The {@link Path} the {@code sourcePath} refers to, relative to its owning {@link
+   *     com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getRelativePath(SourcePath sourcePath) {
     Path toReturn = getPathPrivateImpl(sourcePath);
@@ -134,10 +133,10 @@ public class SourcePathResolver {
 
   /**
    * @return The {@link Path} the {@code sourcePath} refers to, ideally relative to its owning
-   * {@link com.facebook.buck.io.ProjectFilesystem}. Absolute path may get returned however!
-   *
-   * We should make sure that {@link #getPathPrivateImpl} always returns a relative path after
-   * which we should simply call {@link #getRelativePath}. Until then we still need this nonsense.
+   *     {@link com.facebook.buck.io.ProjectFilesystem}. Absolute path may get returned however!
+   *     <p>We should make sure that {@link #getPathPrivateImpl} always returns a relative path
+   *     after which we should simply call {@link #getRelativePath}. Until then we still need this
+   *     nonsense.
    */
   public Path getIdeallyRelativePath(SourcePath sourcePath) {
     return getPathPrivateImpl(sourcePath);
@@ -167,19 +166,17 @@ public class SourcePathResolver {
   }
 
   /**
-   * Resolved the logical names for a group of SourcePath objects into a map, throwing an
-   * error on duplicates.
+   * Resolved the logical names for a group of SourcePath objects into a map, throwing an error on
+   * duplicates.
    */
   public ImmutableMap<String, SourcePath> getSourcePathNames(
-      BuildTarget target,
-      String parameter,
-      Iterable<SourcePath> sourcePaths) {
+      BuildTarget target, String parameter, Iterable<SourcePath> sourcePaths) {
     return getSourcePathNames(target, parameter, sourcePaths, x -> true, x -> x);
   }
 
   /**
-   * Resolves the logical names for a group of objects that have a SourcePath into a map,
-   * throwing an error on duplicates.
+   * Resolves the logical names for a group of objects that have a SourcePath into a map, throwing
+   * an error on duplicates.
    */
   public <T> ImmutableMap<String, T> getSourcePathNames(
       BuildTarget target,
@@ -196,11 +193,9 @@ public class SourcePathResolver {
         String name = getSourcePathName(target, path);
         T old = resolved.put(name, object);
         if (old != null) {
-          throw new HumanReadableException(String.format(
-              "%s: parameter '%s': duplicate entries for '%s'",
-              target,
-              parameter,
-              name));
+          throw new HumanReadableException(
+              String.format(
+                  "%s: parameter '%s': duplicate entries for '%s'", target, parameter, name));
         }
       }
     }
@@ -236,8 +231,8 @@ public class SourcePathResolver {
   }
 
   /**
-   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that represent
-   * {@link Path}s.
+   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that represent {@link
+   * Path}s.
    */
   public ImmutableCollection<Path> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {
@@ -249,8 +244,7 @@ public class SourcePathResolver {
     // file, and generated files are not hashed as part of a RuleKey.
     return FluentIterable.from(sources)
         .filter(PathSourcePath.class)
-        .transform(
-            PathSourcePath::getRelativePath)
+        .transform(PathSourcePath::getRelativePath)
         .toList();
   }
 
@@ -258,16 +252,13 @@ public class SourcePathResolver {
     return filterInputsToCompareToOutput(Arrays.asList(sources));
   }
 
-  /**
-   * @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any.
-   */
+  /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */
   public Optional<PathSourcePath> getPathSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       sourcePath = ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath();
     }
-    return sourcePath instanceof PathSourcePath ?
-        Optional.of((PathSourcePath) sourcePath) :
-        Optional.empty();
+    return sourcePath instanceof PathSourcePath
+        ? Optional.of((PathSourcePath) sourcePath)
+        : Optional.empty();
   }
-
 }

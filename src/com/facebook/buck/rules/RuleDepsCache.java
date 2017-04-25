@@ -25,13 +25,12 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.concurrent.ExecutionException;
 
 /**
  * A "loading cache" of rule deps futures.
  *
- * Not a mere LoadingCache since the key is a build target but the loader uses a build rule.
+ * <p>Not a mere LoadingCache since the key is a build target but the loader uses a build rule.
  */
 public class RuleDepsCache {
   private final ListeningExecutorService service;
@@ -48,16 +47,20 @@ public class RuleDepsCache {
     try {
       return cache.get(
           rule.getBuildTarget(),
-          () -> service.submit(() -> {
-            ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-            deps.addAll(rule.getBuildDeps());
-            if (rule instanceof HasRuntimeDeps) {
-              deps.addAll(
-                  resolver.getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps()
-                      .collect(MoreCollectors.toImmutableSet())));
-            }
-            return deps.build();
-          }));
+          () ->
+              service.submit(
+                  () -> {
+                    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+                    deps.addAll(rule.getBuildDeps());
+                    if (rule instanceof HasRuntimeDeps) {
+                      deps.addAll(
+                          resolver.getAllRules(
+                              ((HasRuntimeDeps) rule)
+                                  .getRuntimeDeps()
+                                  .collect(MoreCollectors.toImmutableSet())));
+                    }
+                    return deps.build();
+                  }));
     } catch (ExecutionException e) {
       // service.submit doesn't throw any checked exceptions, so this should be fine.
       Throwables.throwIfUnchecked(e.getCause());

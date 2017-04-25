@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -61,5 +60,4 @@ public class HashedFileTool implements Tool {
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return ImmutableMap.of();
   }
-
 }

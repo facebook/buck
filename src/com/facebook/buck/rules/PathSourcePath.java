@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
-
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -35,9 +34,7 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   private final Supplier<Path> relativePath;
 
   public PathSourcePath(
-      ProjectFilesystem filesystem,
-      String relativePathName,
-      Supplier<Path> relativePath) {
+      ProjectFilesystem filesystem, String relativePathName, Supplier<Path> relativePath) {
     this.filesystem = filesystem;
     this.relativePathName = relativePathName;
     this.relativePath = relativePath;
@@ -61,8 +58,8 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
       return false;
     }
     PathSourcePath that = (PathSourcePath) other;
-    return relativePathName.equals(that.relativePathName) &&
-        filesystem.getRootPath().equals(that.filesystem.getRootPath());
+    return relativePathName.equals(that.relativePathName)
+        && filesystem.getRootPath().equals(that.filesystem.getRootPath());
   }
 
   @Override
@@ -89,5 +86,4 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   public Path getRelativePath() {
     return relativePath.get();
   }
-
 }

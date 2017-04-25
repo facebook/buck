@@ -26,15 +26,12 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Joiner;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * An implementation of {@link RuleKeyHasher} that serializes to {@link String}.
- */
+/** An implementation of {@link RuleKeyHasher} that serializes to {@link String}. */
 public class StringRuleKeyHasher implements RuleKeyHasher<String> {
 
   private final List<String> parts = new ArrayList<>();

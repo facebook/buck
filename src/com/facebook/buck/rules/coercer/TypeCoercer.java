@@ -18,13 +18,12 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.nio.file.Path;
 
 /**
  * Class defining an interpretation of some dynamically typed Java object as a specific class.
  *
- * Used to coerce JSON parser output from BUCK files into the proper type to populate Description
+ * <p>Used to coerce JSON parser output from BUCK files into the proper type to populate Description
  * rule args.
  *
  * @param <T> resulting type
@@ -42,20 +41,18 @@ public interface TypeCoercer<T> {
   /**
    * Traverse an object guided by this TypeCoercer.
    *
-   * #{link Traversal#traverse} function will be called once for the object.
-   * If the object is a collection or map, it will also recursively traverse all elements of the
-   * map.
+   * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
+   * collection or map, it will also recursively traverse all elements of the map.
    */
   void traverse(T object, Traversal traversal);
 
-  /**
-   * @throws CoerceFailedException Input object cannot be coerced into the given type.
-   */
+  /** @throws CoerceFailedException Input object cannot be coerced into the given type. */
   T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException;
+      Object object)
+      throws CoerceFailedException;
 
   interface Traversal {
     void traverse(Object object);

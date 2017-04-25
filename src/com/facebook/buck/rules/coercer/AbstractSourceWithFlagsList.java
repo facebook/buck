@@ -21,14 +21,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- * Simple type representing a list of {@link SourceWithFlags}.
- */
+/** Simple type representing a list of {@link SourceWithFlags}. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlagsList {
@@ -68,18 +64,11 @@ abstract class AbstractSourceWithFlagsList {
 
   public static SourceWithFlagsList ofUnnamedSources(
       ImmutableSortedSet<SourceWithFlags> unnamedSources) {
-    return SourceWithFlagsList.of(
-        Type.UNNAMED,
-        Optional.of(unnamedSources),
-        Optional.empty());
+    return SourceWithFlagsList.of(Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
   }
 
   public static SourceWithFlagsList ofNamedSources(
       ImmutableSortedMap<String, SourceWithFlags> namedSources) {
-    return SourceWithFlagsList.of(
-        Type.NAMED,
-        Optional.empty(),
-        Optional.of(namedSources));
+    return SourceWithFlagsList.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
   }
-
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-/***
- * Prevents a {@link SourcePath} being resolved and hashed when used as part of an
+/**
+ * * Prevents a {@link SourcePath} being resolved and hashed when used as part of an
  * InputBased-{@link RuleKey}. It is still hashed when added to default rulekeys.
  */
 public class NonHashableSourcePathContainer {
@@ -30,5 +30,4 @@ public class NonHashableSourcePathContainer {
   public SourcePath getSourcePath() {
     return sourcePath;
   }
-
 }

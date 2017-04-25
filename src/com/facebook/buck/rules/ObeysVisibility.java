@@ -20,5 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 
 public interface ObeysVisibility {
   BuildTarget getBuildTarget();
+
   VisibilityChecker getVisibilityChecker();
 }

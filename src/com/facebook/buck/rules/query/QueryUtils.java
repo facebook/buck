@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.event.PerfEventId;
@@ -34,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +40,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * Mixin class to allow dynamic dependency resolution at graph enhancement time.
- * New and unstable. Will almost certainly change in interface and implementation.
+ * Mixin class to allow dynamic dependency resolution at graph enhancement time. New and unstable.
+ * Will almost certainly change in interface and implementation.
  */
 public final class QueryUtils {
 
@@ -58,24 +56,29 @@ public final class QueryUtils {
       CellPathResolver cellRoots,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> declaredDeps) {
-    GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
-        Optional.of(resolver),
-        Optional.of(targetGraph),
-        cellRoots,
-        BuildTargetPatternParser.forBaseName(target.getBaseName()),
-        declaredDeps);
+    GraphEnhancementQueryEnvironment env =
+        new GraphEnhancementQueryEnvironment(
+            Optional.of(resolver),
+            Optional.of(targetGraph),
+            cellRoots,
+            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            declaredDeps);
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-        Optional.ofNullable(resolver.getEventBus()),
-        PerfEventId.of("resolve_dep_query"),
-        "target", target.toString())) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(
+            Optional.ofNullable(resolver.getEventBus()),
+            PerfEventId.of("resolve_dep_query"),
+            "target",
+            target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
-      return queryTargets.stream()
-          .map(queryTarget -> {
-            Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-            return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-          });
+      return queryTargets
+          .stream()
+          .map(
+              queryTarget -> {
+                Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+              });
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
     } catch (InterruptedException e) {
@@ -91,16 +94,13 @@ public final class QueryUtils {
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.empty(),
-            Optional.empty(),
-            cellPathResolver,
-            parserPattern,
-            ImmutableSet.of());
+            Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
     ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
     List<String> targetLiterals = new ArrayList<>();
     parsedExp.collectTargetPatterns(targetLiterals);
-    return targetLiterals.stream()
+    return targetLiterals
+        .stream()
         .flatMap(
             pattern -> {
               try {
@@ -117,17 +117,12 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildTarget> extractParseTimeTargets(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      Query query) {
+      BuildTarget target, CellPathResolver cellNames, Query query) {
     try {
       return extractBuildTargets(
-          cellNames,
-          BuildTargetPatternParser.forBaseName(target.getBaseName()),
-          query);
+          cellNames, BuildTargetPatternParser.forBaseName(target.getBaseName()), query);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
     }
   }
-
 }

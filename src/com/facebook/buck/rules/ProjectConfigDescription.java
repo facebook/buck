@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
@@ -46,7 +45,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
 
   @TargetName(name = "project_config")
   @SuppressFieldNotInitialized
-    public static class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg {
     public Optional<BuildTarget> srcTarget;
     public ImmutableList<String> srcRoots = ImmutableList.of();
     public Optional<BuildTarget> testTarget;

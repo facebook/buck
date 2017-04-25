@@ -21,16 +21,13 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.util.Iterator;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
   private final ImmutableSet<TargetNode<?, ?>> projectRoots;
 
-  private TargetGraphAndTargets(
-      TargetGraph targetGraph,
-      Iterable<TargetNode<?, ?>> projectRoots) {
+  private TargetGraphAndTargets(TargetGraph targetGraph, Iterable<TargetNode<?, ?>> projectRoots) {
     this.targetGraph = targetGraph;
     this.projectRoots = ImmutableSet.copyOf(projectRoots);
   }
@@ -47,8 +44,7 @@ public class TargetGraphAndTargets {
    * @param nodes Nodes whose test targets we would like to find
    * @return A set of all test targets that test the targets in {@code nodes}.
    */
-  public static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      Iterator<TargetNode<?, ?>> nodes) {
+  public static ImmutableSet<BuildTarget> getExplicitTestTargets(Iterator<TargetNode<?, ?>> nodes) {
     return RichStream.from(nodes)
         .flatMap(node -> TargetNodes.getTestTargetsForNode(node).stream())
         .toImmutableSet();
@@ -72,13 +68,15 @@ public class TargetGraphAndTargets {
           ImmutableSet.copyOf(ImmutableSet.copyOf(projectGraph.getAll(explicitTests)));
     }
 
-    ImmutableSet<TargetNode<?, ?>> associatedProjects = getAssociatedTargetNodes(
-        projectGraph,
-        Iterables.concat(projectRoots, associatedTests),
-        associatedProjectPredicate);
+    ImmutableSet<TargetNode<?, ?>> associatedProjects =
+        getAssociatedTargetNodes(
+            projectGraph,
+            Iterables.concat(projectRoots, associatedTests),
+            associatedProjectPredicate);
 
-    TargetGraph targetGraph = projectGraph.getSubgraph(
-        Iterables.concat(projectRoots, associatedTests, associatedProjects));
+    TargetGraph targetGraph =
+        projectGraph.getSubgraph(
+            Iterables.concat(projectRoots, associatedTests, associatedProjects));
 
     return new TargetGraphAndTargets(targetGraph, projectRoots);
   }
@@ -86,7 +84,7 @@ public class TargetGraphAndTargets {
   /**
    * @param projectGraph A TargetGraph containing all nodes that could be related.
    * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
-   *                      are related.
+   *     are related.
    * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
    * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
    */
@@ -96,10 +94,8 @@ public class TargetGraphAndTargets {
       final AssociatedTargetNodePredicate associatedTargetNodePredicate) {
     final TargetGraph subgraph = projectGraph.getSubgraph(subgraphRoots);
 
-    return FluentIterable
-        .from(projectGraph.getNodes())
-        .filter(
-            node -> associatedTargetNodePredicate.apply(node, subgraph))
+    return FluentIterable.from(projectGraph.getNodes())
+        .filter(node -> associatedTargetNodePredicate.apply(node, subgraph))
         .toSet();
   }
 }

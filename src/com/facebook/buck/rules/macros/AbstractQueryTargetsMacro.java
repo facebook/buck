@@ -17,14 +17,12 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 /**
- * Class providing the type for macros used in `$(query_targets ...)` macro strings.  The
+ * Class providing the type for macros used in `$(query_targets ...)` macro strings. The
  * implementation is provided by the {@link QueryMacro} base class.
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractQueryTargetsMacro extends QueryMacro {
-}
+abstract class AbstractQueryTargetsMacro extends QueryMacro {}

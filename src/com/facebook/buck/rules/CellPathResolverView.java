@@ -20,14 +20,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
  * View of a subset of cells of a cell path resolver.
  *
- * Views are used for non-root cells, to ensure that only the subset of cell names that the cell
+ * <p>Views are used for non-root cells, to ensure that only the subset of cell names that the cell
  * declares are visible within that cell.
  */
 public final class CellPathResolverView implements CellPathResolver {
@@ -36,9 +35,7 @@ public final class CellPathResolverView implements CellPathResolver {
   private final Path cellPath;
 
   public CellPathResolverView(
-      CellPathResolver delegate,
-      ImmutableSet<String> declaredCellNames,
-      Path cellPath) {
+      CellPathResolver delegate, ImmutableSet<String> declaredCellNames, Path cellPath) {
     this.delegate = delegate;
     this.declaredCellNames = declaredCellNames;
     this.cellPath = cellPath;
@@ -51,9 +48,7 @@ public final class CellPathResolverView implements CellPathResolver {
         return delegate.getCellPath(cellName);
       } else {
         throw new HumanReadableException(
-            "In cell rooted at %s: cell name '%s' is not visible.",
-            cellPath,
-            cellName.get());
+            "In cell rooted at %s: cell name '%s' is not visible.", cellPath, cellName.get());
       }
     } else {
       return cellPath;

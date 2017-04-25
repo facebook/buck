@@ -38,15 +38,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-/**
- * Abstract base class for the query_targets and query_outputs macros
- */
+/** Abstract base class for the query_targets and query_outputs macros */
 public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractMacroExpander<T> {
 
   private ListeningExecutorService executorService;
@@ -63,32 +60,33 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
       Optional<BuildRuleResolver> resolver,
       T input) {
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    final GraphEnhancementQueryEnvironment env = new GraphEnhancementQueryEnvironment(
-        resolver,
-        targetGraph,
-        cellNames,
-        BuildTargetPatternParser.forBaseName(target.getBaseName()),
-        ImmutableSet.of());
+    final GraphEnhancementQueryEnvironment env =
+        new GraphEnhancementQueryEnvironment(
+            resolver,
+            targetGraph,
+            cellNames,
+            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            ImmutableSet.of());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       HashSet<String> targetLiterals = new HashSet<>();
       parsedExp.collectTargetPatterns(targetLiterals);
-      return targetLiterals.stream()
-          .flatMap(pattern -> {
-            try {
-              return env.getTargetsMatchingPattern(pattern, executorService).stream();
-            } catch (Exception e) {
-              throw new HumanReadableException(
-                  e,
-                  "Error parsing target expression %s for target %s",
-                  pattern,
-                  target);
-            }
-          })
-          .map(queryTarget -> {
-            Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-            return ((QueryBuildTarget) queryTarget).getBuildTarget();
-          });
+      return targetLiterals
+          .stream()
+          .flatMap(
+              pattern -> {
+                try {
+                  return env.getTargetsMatchingPattern(pattern, executorService).stream();
+                } catch (Exception e) {
+                  throw new HumanReadableException(
+                      e, "Error parsing target expression %s for target %s", pattern, target);
+                }
+              })
+          .map(
+              queryTarget -> {
+                Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                return ((QueryBuildTarget) queryTarget).getBuildTarget();
+              });
     } catch (QueryException e) {
       throw new HumanReadableException("Error executing query in macro for target %s", target, e);
     }
@@ -98,7 +96,8 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      String queryExpression) throws MacroException {
+      String queryExpression)
+      throws MacroException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.of(resolver),
@@ -106,10 +105,12 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-        Optional.ofNullable(resolver.getEventBus()),
-        PerfEventId.of("resolve_query_macro"),
-        "target", target.toString())) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(
+            Optional.ofNullable(resolver.getEventBus()),
+            PerfEventId.of("resolve_query_macro"),
+            "target",
+            target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
       return queryTargets.stream();
@@ -124,9 +125,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
 
   @Override
   protected final T parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException("One quoted query expression is expected");
@@ -147,5 +146,4 @@ public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractM
         .forEach(
             (detectsTargetGraphOnlyDeps() ? targetGraphOnlyDepsBuilder : buildDepsBuilder)::add);
   }
-
 }

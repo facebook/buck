@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.query.QueryEnvironment;
@@ -24,7 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -32,7 +30,9 @@ import java.util.function.Consumer;
 /**
  * A classpath(expression [, depth]) expression that calculates targets in the classpath of the
  * given library or libraries.
+ *
  * <pre>expr ::= CLASSPATH '(' expr ')'</pre>
+ *
  * <pre>       | CLASSPATH '(' expr ',' INTEGER ')'</pre>
  */
 public class ClasspathFunction implements QueryEnvironment.QueryFunction {
@@ -49,15 +49,15 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
   @Override
   public ImmutableList<QueryEnvironment.ArgumentType> getArgumentTypes() {
     return ImmutableList.of(
-        QueryEnvironment.ArgumentType.EXPRESSION,
-        QueryEnvironment.ArgumentType.INTEGER);
+        QueryEnvironment.ArgumentType.EXPRESSION, QueryEnvironment.ArgumentType.INTEGER);
   }
 
   @Override
   public ImmutableSet<QueryTarget> eval(
       QueryEnvironment env,
       ImmutableList<QueryEnvironment.Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+      ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     Preconditions.checkArgument(env instanceof GraphEnhancementQueryEnvironment);
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
 
@@ -74,8 +74,7 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
               next.add(queryTarget);
             }
           };
-      ((GraphEnhancementQueryEnvironment) env).getFirstOrderClasspath(current)
-          .forEach(consumer);
+      ((GraphEnhancementQueryEnvironment) env).getFirstOrderClasspath(current).forEach(consumer);
       if (next.isEmpty()) {
         break;
       }

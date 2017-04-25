@@ -30,7 +30,6 @@ import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * A {@link com.facebook.buck.rules.RuleKey} cache used by a {@link RuleKeyFactory}.  Inputs and
+ * A {@link com.facebook.buck.rules.RuleKey} cache used by a {@link RuleKeyFactory}. Inputs and
  * dependencies of cached rule keys are tracked to allow for invalidations based on changed inputs.
  * As such, this cache is usable between multiple build runs.
  *
@@ -62,35 +61,32 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   private final Clock clock;
 
   /**
-   * The underlying rule key cache.  We use object identity for indexing.
+   * The underlying rule key cache. We use object identity for indexing.
    *
-   * NOTE: We intentionally use `ConcurrentHashMap` over Guava's `LoadingCache` for performance
-   * reasons as the latter was a *lot* slower when invalidating nodes.  Some differences are:
-   * a) `LoadingCache` supports using object identity in it's keys by setting `weakKeys()`, whereas
-   *    `ConcurrentHashMap` does not.  We work around this limitation by wrapping keys using the
-   *    `IdentityWrapper` helper class.
-   * b) `LoadingCache.get()` offers "at most once" execution guarantees for the loading function for
-   *    keys.  `ConcurrentHashMap.computeIfAbsent()` does as well, and we use it here, but it
-   *    appears to use more coarse-grained locking and so is more likely to block.  As such, we wrap
-   *    values in `Suppliers` so the computation is a very fast `Supplier` allocation.
-   * c) The loading function called by `LoadingCache.get()` is re-entrant, whereas
-   *    `ConcurrentHashMap.computeIfAbsent()` is not.  As the `RuleKeyCache.get*()` interfaces must
-   *    support re-entrant functions, we rely on wrapping values in memoizing `Suppliers` to
-   *    implement this behavior.
+   * <p>NOTE: We intentionally use `ConcurrentHashMap` over Guava's `LoadingCache` for performance
+   * reasons as the latter was a *lot* slower when invalidating nodes. Some differences are: a)
+   * `LoadingCache` supports using object identity in it's keys by setting `weakKeys()`, whereas
+   * `ConcurrentHashMap` does not. We work around this limitation by wrapping keys using the
+   * `IdentityWrapper` helper class. b) `LoadingCache.get()` offers "at most once" execution
+   * guarantees for the loading function for keys. `ConcurrentHashMap.computeIfAbsent()` does as
+   * well, and we use it here, but it appears to use more coarse-grained locking and so is more
+   * likely to block. As such, we wrap values in `Suppliers` so the computation is a very fast
+   * `Supplier` allocation. c) The loading function called by `LoadingCache.get()` is re-entrant,
+   * whereas `ConcurrentHashMap.computeIfAbsent()` is not. As the `RuleKeyCache.get*()` interfaces
+   * must support re-entrant functions, we rely on wrapping values in memoizing `Suppliers` to
+   * implement this behavior.
    */
   private final ConcurrentMap<IdentityWrapper<Object>, Supplier<V>> cache =
       new ConcurrentHashMap<>();
 
   /**
-   * A map from cached nodes to their dependents.  Used for invalidating the chain of transitive
+   * A map from cached nodes to their dependents. Used for invalidating the chain of transitive
    * dependents of a node.
    */
   private final ConcurrentMap<IdentityWrapper<Object>, Collection<Object>> dependentsIndex =
       new ConcurrentHashMap<>();
 
-  /**
-   * A map for rule key inputs to nodes that use them.
-   */
+  /** A map for rule key inputs to nodes that use them. */
   private final ConcurrentMap<RuleKeyInput, Collection<Object>> inputsIndex =
       new ConcurrentHashMap<>();
 
@@ -119,14 +115,10 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
     RuleKeyResult<V> result = create.apply(node);
     for (Object dependency : result.deps) {
-      dependentsIndex
-          .computeIfAbsent(new IdentityWrapper<>(dependency), NEW_COLLECTION)
-          .add(node);
+      dependentsIndex.computeIfAbsent(new IdentityWrapper<>(dependency), NEW_COLLECTION).add(node);
     }
     for (RuleKeyInput input : result.inputs) {
-      inputsIndex
-          .computeIfAbsent(input, NEW_COLLECTION)
-          .add(node);
+      inputsIndex.computeIfAbsent(input, NEW_COLLECTION).add(node);
     }
 
     // Update stats.
@@ -153,14 +145,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
   @Override
   public V get(
-      RuleKeyAppendable appendable,
-      Function<? super RuleKeyAppendable, RuleKeyResult<V>> create) {
+      RuleKeyAppendable appendable, Function<? super RuleKeyAppendable, RuleKeyResult<V>> create) {
     return getNode(appendable, create);
   }
 
   private boolean isCachedNode(Object object) {
     return cache.containsKey(new IdentityWrapper<>(object));
-
   }
 
   @VisibleForTesting
@@ -173,9 +163,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
     return isCachedNode(appendable);
   }
 
-  /**
-   * Recursively invalidate nodes up the dependency tree.
-   */
+  /** Recursively invalidate nodes up the dependency tree. */
   private void invalidateNodes(Iterable<?> nodes) {
     for (Object node : nodes) {
       LOG.verbose("invalidating node %s", node);
@@ -194,9 +182,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
     }
   }
 
-  /**
-   * Invalidate the given inputs and all their transitive dependents.
-   */
+  /** Invalidate the given inputs and all their transitive dependents. */
   @Override
   public void invalidateInputs(Iterable<RuleKeyInput> inputs) {
     List<Iterable<Object>> nodes = new ArrayList<>();
@@ -216,7 +202,9 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   public void invalidateInputsMatchingRelativePath(Path path) {
     Preconditions.checkArgument(!path.isAbsolute());
     invalidateInputs(
-        inputsIndex.keySet().stream()
+        inputsIndex
+            .keySet()
+            .stream()
             .filter(input -> path.equals(input.getPath()))
             .collect(Collectors.toList()));
   }
@@ -230,7 +218,9 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
       invalidateAll();
     } else {
       invalidateInputs(
-          inputsIndex.keySet().stream()
+          inputsIndex
+              .keySet()
+              .stream()
               .filter(input -> !filesystems.contains(input.getFilesystem()))
               .collect(Collectors.toList()));
     }
@@ -242,14 +232,14 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public void invalidateFilesystem(ProjectFilesystem filesystem) {
     invalidateInputs(
-        inputsIndex.keySet().stream()
+        inputsIndex
+            .keySet()
+            .stream()
             .filter(input -> filesystem.equals(input.getFilesystem()))
             .collect(Collectors.toList()));
   }
 
-  /**
-   * Invalidate everything in the cache.
-   */
+  /** Invalidate everything in the cache. */
   @Override
   public void invalidateAll() {
     cache.clear();
@@ -272,20 +262,21 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
     ImmutableList.Builder<Map.Entry<BuildRule, V>> builder = ImmutableList.builder();
-    cache.entrySet().forEach(
-        entry -> {
-          if (entry.getKey().delegate instanceof BuildRule) {
-            builder.add(
-                new AbstractMap.SimpleEntry<>(
-                    (BuildRule) entry.getKey().delegate,
-                    entry.getValue().get()));
-          }
-        });
+    cache
+        .entrySet()
+        .forEach(
+            entry -> {
+              if (entry.getKey().delegate instanceof BuildRule) {
+                builder.add(
+                    new AbstractMap.SimpleEntry<>(
+                        (BuildRule) entry.getKey().delegate, entry.getValue().get()));
+              }
+            });
     return builder.build();
   }
 
   /**
-   * A wrapper class which uses identity equality and hash code.  Intended to wrap keys used in a
+   * A wrapper class which uses identity equality and hash code. Intended to wrap keys used in a
    * map.
    */
   private static final class IdentityWrapper<T> {
@@ -309,7 +300,5 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
       IdentityWrapper<?> other = (IdentityWrapper<?>) obj;
       return delegate == other.delegate;
     }
-
   }
-
 }

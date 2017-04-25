@@ -23,7 +23,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
 public class VersionMatchedCollection<T> {
@@ -36,8 +35,7 @@ public class VersionMatchedCollection<T> {
   }
 
   private boolean matches(
-      ImmutableMap<BuildTarget, Version> universe,
-      ImmutableMap<BuildTarget, Version> versions) {
+      ImmutableMap<BuildTarget, Version> universe, ImmutableMap<BuildTarget, Version> versions) {
     for (Map.Entry<BuildTarget, Version> ent : versions.entrySet()) {
       Version existing = universe.get(ent.getKey());
       if (existing != null && !existing.equals(ent.getValue())) {
@@ -57,20 +55,12 @@ public class VersionMatchedCollection<T> {
     return matchingValues.build();
   }
 
-  /**
-   * @return the only item that matches the given version map, or throw.
-   */
+  /** @return the only item that matches the given version map, or throw. */
   public T getOnlyMatchingValue(ImmutableMap<BuildTarget, Version> selected) {
     ImmutableList<T> matching = getMatchingValues(selected);
+    Preconditions.checkState(!matching.isEmpty(), "no matches for %s found", selected);
     Preconditions.checkState(
-        !matching.isEmpty(),
-        "no matches for %s found",
-        selected);
-    Preconditions.checkState(
-        matching.size() < 2,
-        "multiple matches for %s found: %s",
-        selected,
-        matching);
+        matching.size() < 2, "multiple matches for %s found: %s", selected, matching);
     return matching.get(0);
   }
 

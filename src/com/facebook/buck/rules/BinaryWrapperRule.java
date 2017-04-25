@@ -19,38 +19,32 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
 import java.util.stream.Stream;
 
 /**
- * A no-op stub class for binary rules which delegate to another rule to provide the output path
- * and executable tool.
+ * A no-op stub class for binary rules which delegate to another rule to provide the output path and
+ * executable tool.
  */
-public abstract class BinaryWrapperRule
-    extends AbstractBuildRule
+public abstract class BinaryWrapperRule extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
 
-  public BinaryWrapperRule(
-      BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder) {
+  public BinaryWrapperRule(BuildRuleParams buildRuleParams, SourcePathRuleFinder ruleFinder) {
     super(buildRuleParams);
     this.ruleFinder = ruleFinder;
   }
 
   @Override
   public final ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
   @Override
   public final Stream<BuildTarget> getRuntimeDeps() {
-    return Stream
-        .concat(getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
+    return Stream.concat(
+            getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
-
 }

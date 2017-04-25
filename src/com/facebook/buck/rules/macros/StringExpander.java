@@ -59,8 +59,7 @@ public class StringExpander implements MacroExpander {
       ImmutableList<String> input,
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {
-  }
+      throws MacroException {}
 
   @Override
   public Object extractRuleKeyAppendables(
@@ -71,5 +70,4 @@ public class StringExpander implements MacroExpander {
       throws MacroException {
     return toReturn;
   }
-
 }

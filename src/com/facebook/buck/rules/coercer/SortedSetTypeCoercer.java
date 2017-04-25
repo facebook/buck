@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
@@ -46,16 +45,14 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       SortedSet<T> builder,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
 
     if (object instanceof Collection) {
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
-        T coercedElement = elementTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            element);
+        T coercedElement =
+            elementTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, element);
         boolean alreadyExists = !builder.add(coercedElement);
         if (alreadyExists) {
           throw new CoerceFailedException(
@@ -75,13 +72,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       Object object)
       throws CoerceFailedException {
     final SortedSet<T> builder = Sets.newTreeSet();
-    fillSortedSet(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        builder,
-        object);
+    fillSortedSet(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return ImmutableSortedSet.copyOf(builder);
   }
-
 }

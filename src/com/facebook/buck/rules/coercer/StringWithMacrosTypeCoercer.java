@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.HashSet;
 
@@ -50,8 +49,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       ImmutableMap<String, Class<? extends Macro>> macros,
       ImmutableList<MacroTypeCoercer<? extends Macro>> coercers) {
     return new StringWithMacrosTypeCoercer(
-        macros,
-        Maps.uniqueIndex(coercers, MacroTypeCoercer::getOutputClass));
+        macros, Maps.uniqueIndex(coercers, MacroTypeCoercer::getOutputClass));
   }
 
   @Override
@@ -70,9 +68,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   private <M extends Macro> void traverse(
-      MacroTypeCoercer<M> coercer,
-      Macro macro,
-      Traversal traversal) {
+      MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
     coercer.traverse(coercer.getOutputClass().cast(macro), traversal);
   }
 
@@ -115,8 +111,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
                 blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex()),
                 matchResult.getMacroType()));
       }
-      MacroTypeCoercer<? extends Macro> coercer =
-          Preconditions.checkNotNull(coercers.get(clazz));
+      MacroTypeCoercer<? extends Macro> coercer = Preconditions.checkNotNull(coercers.get(clazz));
       ImmutableList<String> args = matchResult.getMacroInput();
 
       // Delegate to the macro coercers to parse the macro..
@@ -152,5 +147,4 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
     }
     return parse(cellRoots, filesystem, pathRelativeToProjectRoot, (String) object);
   }
-
 }

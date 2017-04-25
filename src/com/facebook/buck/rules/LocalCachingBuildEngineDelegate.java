@@ -18,8 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.cache.FileHashCache;
 
-/**
- */
+/** */
 public class LocalCachingBuildEngineDelegate implements CachingBuildEngineDelegate {
   private final FileHashCache defaultFileHashCache;
 

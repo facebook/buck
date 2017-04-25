@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableSortedMap;
-
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -64,16 +63,11 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
       ImmutableSortedMap.Builder<K, V> builder = ImmutableSortedMap.naturalOrder();
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-        K key = keyTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            entry.getKey());
-        V value = valueTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            entry.getValue());
+        K key =
+            keyTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, entry.getKey());
+        V value =
+            valueTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
         builder.put(key, value);
       }
 

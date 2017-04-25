@@ -25,15 +25,12 @@ public class VisibilityPatternParser {
   private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
       BuildTargetPatternParser.forVisibilityArgument();
 
-  public VisibilityPattern parse(
-      CellPathResolver cellNames,
-      String buildTargetPattern) {
+  public VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return PublicVisibilityPattern.INSTANCE;
     } else {
-      return new BuildTargetVisibilityPattern(buildTargetPatternParser.parse(
-          cellNames,
-          buildTargetPattern));
+      return new BuildTargetVisibilityPattern(
+          buildTargetPatternParser.parse(cellNames, buildTargetPattern));
     }
   }
 
@@ -46,9 +43,7 @@ public class VisibilityPatternParser {
     }
 
     @Override
-    public boolean checkVisibility(
-        ObeysVisibility viewer,
-        ObeysVisibility viewed) {
+    public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
       return viewerPattern.apply(viewer.getBuildTarget());
     }
 
@@ -62,9 +57,7 @@ public class VisibilityPatternParser {
     public static final PublicVisibilityPattern INSTANCE = new PublicVisibilityPattern();
 
     @Override
-    public boolean checkVisibility(
-        ObeysVisibility viewer,
-        ObeysVisibility viewed) {
+    public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
       return true;
     }
 

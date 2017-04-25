@@ -19,12 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-
 import java.nio.file.Path;
 
-/**
- * A {@link SourcePath} that can reference a member within an archive.
- */
+/** A {@link SourcePath} that can reference a member within an archive. */
 public final class ArchiveMemberSourcePath extends AbstractSourcePath<ArchiveMemberSourcePath> {
   private final Pair<SourcePath, Path> contents;
 

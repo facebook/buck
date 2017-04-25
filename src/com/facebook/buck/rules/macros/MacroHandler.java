@@ -29,12 +29,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 
-/**
- * Extracts macros from input strings and calls registered expanders to handle their input.
- */
+/** Extracts macros from input strings and calls registered expanders to handle their input. */
 public class MacroHandler {
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
@@ -82,34 +79,25 @@ public class MacroHandler {
       final BuildRuleResolver resolver,
       String blob)
       throws MacroException {
-    ImmutableMap<String, MacroReplacer> replacers = getMacroReplacers(
-        target,
-        cellNames,
-        resolver);
+    ImmutableMap<String, MacroReplacer> replacers = getMacroReplacers(target, cellNames, resolver);
     return MACRO_FINDER.replace(replacers, blob, true);
   }
 
   public ImmutableMap<String, MacroReplacer> getMacroReplacers(
       final BuildTarget target,
-      final CellPathResolver cellNames, final BuildRuleResolver resolver) {
+      final CellPathResolver cellNames,
+      final BuildRuleResolver resolver) {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       replacers.put(
           entry.getKey(),
-          input -> getExpander(entry.getKey()).expand(
-              target,
-              cellNames,
-              resolver,
-              input));
+          input -> getExpander(entry.getKey()).expand(target, cellNames, resolver, input));
     }
     return replacers.build();
   }
 
   public ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String blob)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String blob)
       throws MacroException {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
 
@@ -117,11 +105,8 @@ public class MacroHandler {
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       deps.addAll(
-          getExpander(matchResult.getMacroType()).extractBuildTimeDeps(
-              target,
-              cellNames,
-              resolver,
-              matchResult.getMacroInput()));
+          getExpander(matchResult.getMacroType())
+              .extractBuildTimeDeps(target, cellNames, resolver, matchResult.getMacroInput()));
     }
 
     return deps.build();
@@ -138,20 +123,18 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      getExpander(matchResult.getMacroType()).extractParseTimeDeps(
-          target,
-          cellNames,
-          matchResult.getMacroInput(),
-          buildDepsBuilder,
-          targetGraphOnlyDepsBuilder);
+      getExpander(matchResult.getMacroType())
+          .extractParseTimeDeps(
+              target,
+              cellNames,
+              matchResult.getMacroInput(),
+              buildDepsBuilder,
+              targetGraphOnlyDepsBuilder);
     }
   }
 
   public ImmutableList<Object> extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String blob)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String blob)
       throws MacroException {
 
     ImmutableList.Builder<Object> targets = ImmutableList.builder();
@@ -159,11 +142,9 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      Object ruleKeyAppendable = getExpander(matchResult.getMacroType()).extractRuleKeyAppendables(
-          target,
-          cellNames,
-          resolver,
-          matchResult.getMacroInput());
+      Object ruleKeyAppendable =
+          getExpander(matchResult.getMacroType())
+              .extractRuleKeyAppendables(target, cellNames, resolver, matchResult.getMacroInput());
       if (ruleKeyAppendable != null) {
         targets.add(ruleKeyAppendable);
       }

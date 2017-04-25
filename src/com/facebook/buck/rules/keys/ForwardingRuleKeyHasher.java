@@ -25,14 +25,13 @@ import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 /**
  * A {@link RuleKeyHasher} that forwards all the methods to the two underlying hashers.
  *
- * {@link ForwardingRuleKeyHasher#hash} invokes the method of the both underlying hashers and
+ * <p>{@link ForwardingRuleKeyHasher#hash} invokes the method of the both underlying hashers and
  * returns the hash of the first one.
  */
 public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHasher<HASH> {

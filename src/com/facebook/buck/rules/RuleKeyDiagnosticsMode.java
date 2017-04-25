@@ -16,9 +16,7 @@
 
 package com.facebook.buck.rules;
 
-/**
- * Whether and when to perform rulekey diagnostics.
- */
+/** Whether and when to perform rulekey diagnostics. */
 public enum RuleKeyDiagnosticsMode {
   NEVER,
   BUILT_LOCALLY,

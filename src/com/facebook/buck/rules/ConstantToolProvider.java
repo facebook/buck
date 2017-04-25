@@ -36,5 +36,4 @@ public class ConstantToolProvider implements ToolProvider {
   public Iterable<BuildTarget> getParseTimeDeps() {
     return ImmutableList.of();
   }
-
 }

@@ -17,12 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
-/**
- * Holds an ActionGraph with the BuildRuleResolver that created it.
- */
+/** Holds an ActionGraph with the BuildRuleResolver that created it. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractActionGraphAndResolver {

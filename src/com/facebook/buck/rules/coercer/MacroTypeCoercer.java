@@ -20,12 +20,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-/**
- * Base class for coercing a macro name and arguments into a typed {@link Macro}.
- */
+/** Base class for coercing a macro name and arguments into a typed {@link Macro}. */
 interface MacroTypeCoercer<T extends Macro> {
 
   boolean hasElementClass(Class<?>[] types);
@@ -40,5 +37,4 @@ interface MacroTypeCoercer<T extends Macro> {
       Path pathRelativeToProjectRoot,
       ImmutableList<String> args)
       throws CoerceFailedException;
-
 }

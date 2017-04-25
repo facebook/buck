@@ -34,5 +34,4 @@ public class LocationMacroTypeCoercer extends BuildTargetMacroTypeCoercer<Locati
   LocationMacro create(BuildTarget target) {
     return LocationMacro.of(target);
   }
-
 }

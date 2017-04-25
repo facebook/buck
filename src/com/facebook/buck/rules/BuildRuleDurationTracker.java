@@ -19,17 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.ClockDuration;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Tracks the total duration of work spent on each build rule.
  *
- * Computation associated with build rules are broken into several phases. Those phases are
+ * <p>Computation associated with build rules are broken into several phases. Those phases are
  * invoked from various places in {@link CachingBuildEngine} at various times and on various
  * threads. In order to track the total duration of all of those phases combined we need some
  * central store, i.e. this class.
@@ -38,28 +36,22 @@ public class BuildRuleDurationTracker {
 
   private final ConcurrentMap<BuildTarget, DurationHolder> durations = new ConcurrentHashMap<>();
 
-  /**
-   * This method should only be used for testing.
-   */
+  /** This method should only be used for testing. */
   @VisibleForTesting
   public void setDuration(BuildRule rule, ClockDuration duration) {
     durations.put(rule.getBuildTarget(), new DurationHolder(duration));
   }
 
-  public ClockDuration doBeginning(
-      BuildRule rule,
-      long wallMillisTime,
-      long nanoTime) {
-    return durations.computeIfAbsent(rule.getBuildTarget(), (key) -> new DurationHolder())
+  public ClockDuration doBeginning(BuildRule rule, long wallMillisTime, long nanoTime) {
+    return durations
+        .computeIfAbsent(rule.getBuildTarget(), (key) -> new DurationHolder())
         .doBeginning(wallMillisTime, nanoTime);
   }
 
   public ClockDuration doEnding(
-      BuildRule rule,
-      long wallMillisTime,
-      long nanoTime,
-      long threadUserNanoDuration) {
-    return durations.computeIfAbsent(rule.getBuildTarget(), (key) -> new DurationHolder())
+      BuildRule rule, long wallMillisTime, long nanoTime, long threadUserNanoDuration) {
+    return durations
+        .computeIfAbsent(rule.getBuildTarget(), (key) -> new DurationHolder())
         .doEnding(wallMillisTime, nanoTime, threadUserNanoDuration);
   }
 
@@ -72,14 +64,17 @@ public class BuildRuleDurationTracker {
     // start time of the current in-progress interval
     @GuardedBy("this")
     private long wallMillisStarted = 0;
+
     @GuardedBy("this")
     private long nanoStarted = 0;
 
     // accumulated duration till the current in-progress interval
     @GuardedBy("this")
     private long wallMillisDuration;
+
     @GuardedBy("this")
     private long nanoDuration;
+
     @GuardedBy("this")
     private long threadUserNanoDuration;
 
@@ -109,9 +104,7 @@ public class BuildRuleDurationTracker {
     }
 
     public synchronized ClockDuration doEnding(
-        long wallMillisTime,
-        long nanoTime,
-        long threadUserNanoDuration) {
+        long wallMillisTime, long nanoTime, long threadUserNanoDuration) {
       this.threadUserNanoDuration += threadUserNanoDuration;
       ClockDuration duration = getDurationAt(wallMillisTime, nanoTime);
       if (--inProgressCount == 0) {

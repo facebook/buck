@@ -30,9 +30,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-/**
- * Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}.
- */
+/** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
 
   @Override
@@ -52,29 +50,22 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
 
   @Override
   protected ExecutableMacro parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     return ExecutableMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
   protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildRuleResolver resolver,
-      BuildRule rule)
-      throws MacroException {
+      BuildRuleResolver resolver, BuildRule rule) throws MacroException {
     return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathRuleFinder(resolver)));
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
-      throws MacroException {
+  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
     // TODO(mikekap): Pass environment variables through.
-    return Joiner.on(' ').join(
-        Iterables.transform(
-            getTool(rule).getCommandPrefix(resolver),
-            Escaper.SHELL_ESCAPER));
+    return Joiner.on(' ')
+        .join(Iterables.transform(getTool(rule).getCommandPrefix(resolver), Escaper.SHELL_ESCAPER));
   }
 
   @Override
@@ -86,5 +77,4 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
       throws MacroException {
     return getTool(resolve(resolver, input));
   }
-
 }

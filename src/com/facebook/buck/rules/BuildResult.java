@@ -17,13 +17,12 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-
 import javax.annotation.Nullable;
 
 /**
- * This is a union type that represents either a success or a failure. This exists so that
- * {@code com.facebook.buck.rules.CachingBuildEngine#buildOnceDepsAreBuilt()}
- * can return a strongly typed value.
+ * This is a union type that represents either a success or a failure. This exists so that {@code
+ * com.facebook.buck.rules.CachingBuildEngine#buildOnceDepsAreBuilt()} can return a strongly typed
+ * value.
  */
 public class BuildResult {
 
@@ -48,15 +47,11 @@ public class BuildResult {
   }
 
   public static BuildResult success(
-      BuildRule rule,
-      BuildRuleSuccessType success,
-      CacheResult cacheResult) {
+      BuildRule rule, BuildRuleSuccessType success, CacheResult cacheResult) {
     return new BuildResult(rule, BuildRuleStatus.SUCCESS, cacheResult, success, null);
   }
 
-  public static BuildResult failure(
-      BuildRule rule,
-      Throwable failure) {
+  public static BuildResult failure(BuildRule rule, Throwable failure) {
     return new BuildResult(rule, BuildRuleStatus.FAIL, CacheResult.miss(), null, failure);
   }
 

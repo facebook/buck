@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public abstract class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
@@ -58,11 +57,7 @@ public abstract class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     }
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            args.get(0));
+            cellRoots, filesystem, pathRelativeToProjectRoot, args.get(0));
     return create(target);
   }
-
 }

@@ -18,12 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import com.fasterxml.jackson.annotation.JsonView;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -35,7 +32,8 @@ interface AbstractBuildRuleKeys {
 
   @JsonView(JsonViews.MachineReadableLog.class)
   Optional<RuleKey> getInputRuleKey();
-  Optional<RuleKey> getDepFileRuleKey();
-  Optional<RuleKey> getManifestRuleKey();
 
+  Optional<RuleKey> getDepFileRuleKey();
+
+  Optional<RuleKey> getManifestRuleKey();
 }

@@ -23,17 +23,17 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractOutputCollectorMacro implements Macro {
 
   public abstract String getType();
+
   public abstract String getFilename();
+
   public abstract ImmutableList<BuildTarget> getTargets();
 
   @Override
@@ -41,8 +41,8 @@ abstract class AbstractOutputCollectorMacro implements Macro {
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       TargetNodeTranslator translator) {
-    return translator.translate(cellPathResolver, pattern, getTargets())
+    return translator
+        .translate(cellPathResolver, pattern, getTargets())
         .map(targets -> OutputCollectorMacro.of(getType(), getFilename(), targets));
   }
-
 }

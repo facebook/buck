@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
-
 import java.nio.file.Path;
 
 public class RuleKeyFieldLoader {

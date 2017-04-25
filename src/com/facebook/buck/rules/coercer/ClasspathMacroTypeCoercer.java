@@ -34,5 +34,4 @@ public class ClasspathMacroTypeCoercer extends BuildTargetMacroTypeCoercer<Class
   ClasspathMacro create(BuildTarget target) {
     return ClasspathMacro.of(target);
   }
-
 }

@@ -29,13 +29,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.util.function.Function;
 
-/**
- * A {@link RuleKeyFactory} which adds some default settings to {@link RuleKey}s.
- */
+/** A {@link RuleKeyFactory} which adds some default settings to {@link RuleKey}s. */
 public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
@@ -62,12 +59,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this(
-        ruleKeyFieldLoader,
-        hashLoader,
-        pathResolver,
-        ruleFinder,
-        new DefaultRuleKeyCache<>());
+    this(ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, new DefaultRuleKeyCache<>());
   }
 
   public DefaultRuleKeyFactory(
@@ -79,8 +71,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   }
 
   private <HASH> Builder<HASH> newPopulatedBuilder(
-      BuildRule buildRule,
-      RuleKeyHasher<HASH> hasher) {
+      BuildRule buildRule, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);
     ruleKeyFieldLoader.setFields(buildRule, builder);
     addDepsToRuleKey(buildRule, builder);
@@ -88,8 +79,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   }
 
   private <HASH> Builder<HASH> newPopulatedBuilder(
-      RuleKeyAppendable appendable,
-      RuleKeyHasher<HASH> hasher) {
+      RuleKeyAppendable appendable, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);
     appendable.appendToRuleKey(builder);
     return builder;
@@ -104,22 +94,22 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   public RuleKey build(BuildRule buildRule) {
     return ruleKeyCache.get(
         buildRule,
-        rule -> newPopulatedBuilder(rule, RuleKeyBuilder.createDefaultHasher())
-            .buildResult(RuleKey::new));
+        rule ->
+            newPopulatedBuilder(rule, RuleKeyBuilder.createDefaultHasher())
+                .buildResult(RuleKey::new));
   }
 
   private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
     return ruleKeyCache.get(
         appendable,
-        app -> newPopulatedBuilder(app, RuleKeyBuilder.createDefaultHasher())
-            .buildResult(RuleKey::new)
-    );
+        app ->
+            newPopulatedBuilder(app, RuleKeyBuilder.createDefaultHasher())
+                .buildResult(RuleKey::new));
   }
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      BuildRule buildRule,
-      RuleKeyHasher<DIAG_KEY> hasher) {
+      BuildRule buildRule, RuleKeyHasher<DIAG_KEY> hasher) {
     return RuleKeyDiagnostics.Result.of(
         build(buildRule), // real rule key
         newPopulatedBuilder(buildRule, hasher).buildResult(Function.identity()));
@@ -127,8 +117,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      RuleKeyAppendable appendable,
-      RuleKeyHasher<DIAG_KEY> hasher) {
+      RuleKeyAppendable appendable, RuleKeyHasher<DIAG_KEY> hasher) {
     return RuleKeyDiagnostics.Result.of(
         buildAppendableKey(appendable), // real rule key
         newPopulatedBuilder(appendable, hasher).buildResult(Function.identity()));
@@ -176,8 +165,10 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
       } else {
         // Add `PathSourcePath`s to our tracked inputs.
-        pathResolver.getPathSourcePath(sourcePath).ifPresent(
-            path -> inputs.add(RuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
+        pathResolver
+            .getPathSourcePath(sourcePath)
+            .ifPresent(
+                path -> inputs.add(RuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
         return setSourcePathDirectly(sourcePath);
       }
     }
@@ -197,5 +188,4 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
       return new RuleKeyResult<>(this.build(mapper), deps.build(), inputs.build());
     }
   }
-
 }

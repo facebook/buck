@@ -19,9 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nullable;
 
 /**
@@ -30,22 +28,16 @@ import javax.annotation.Nullable;
  */
 public interface BuildEngine {
 
-  /**
-   * Calculate the total number of transitive build rules processed from the given roots.
-   */
+  /** Calculate the total number of transitive build rules processed from the given roots. */
   int getNumRulesToBuild(Iterable<BuildRule> rule);
 
-  /**
-   * Build the given build rule and return a future to the build rule success.
-   */
+  /** Build the given build rule and return a future to the build rule success. */
   ListenableFuture<BuildResult> build(
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildRule rule);
+      BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule);
 
   /**
-   * Returns the build result of the build rule associated with the given build target.
-   * Returns {@code null} if the build rule has not yet been built.
+   * Returns the build result of the build rule associated with the given build target. Returns
+   * {@code null} if the build rule has not yet been built.
    */
   @Nullable
   BuildResult getBuildRuleResult(BuildTarget buildTarget)
@@ -56,8 +48,6 @@ public interface BuildEngine {
    */
   boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException;
 
-  /**
-   * This is a temporary hack to expose a build rule's rule key to the associated buildable.
-   */
+  /** This is a temporary hack to expose a build rule's rule key to the associated buildable. */
   RuleKey getRuleKey(BuildTarget buildTarget);
 }

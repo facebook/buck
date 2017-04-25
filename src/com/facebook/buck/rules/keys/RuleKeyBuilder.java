@@ -50,7 +50,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -59,27 +58,26 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
 /**
  * A base implementation for rule key builders.
  *
- * {@link RuleKeyFactory} classes create concrete instances of this class and use them to produce
+ * <p>{@link RuleKeyFactory} classes create concrete instances of this class and use them to produce
  * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
- * should implement {@link #setAppendableRuleKey(RuleKeyAppendable)}, and
- * {@link #setBuildRule(BuildRule)}.
+ * should implement {@link #setAppendableRuleKey(RuleKeyAppendable)}, and {@link
+ * #setBuildRule(BuildRule)}.
  *
- * This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of how
- * {@link RuleKeyFactory} and {@link RuleKeyAppendable} classes feed the builder.
+ * <p>This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of
+ * how {@link RuleKeyFactory} and {@link RuleKeyAppendable} classes feed the builder.
  *
- * Each element fed to the builder is a (key, value) pair. Keys are always simple strings, typically
- * the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may be complex
- * types that are resolved recursively. For instance, a list of elements gets serialized by
- * serializing each element of the list in order, and finally serializing the list token along with
- * the length of the list. Similarly for other containers and wrappers.
+ * <p>Each element fed to the builder is a (key, value) pair. Keys are always simple strings,
+ * typically the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may
+ * be complex types that are resolved recursively. For instance, a list of elements gets serialized
+ * by serializing each element of the list in order, and finally serializing the list token along
+ * with the length of the list. Similarly for other containers and wrappers.
  *
- * There is an exception to the above rule of how containers and wrappers get serialized. Namely,
+ * <p>There is an exception to the above rule of how containers and wrappers get serialized. Namely,
  * they only get serialized if at least one of their elements gets serialized. This is to support
  * concrete rule key builders that ignore some elements, or handle them differently. For example,
  * several concrete builders handle {@link SourcePath} elements in a special way.
@@ -116,12 +114,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   public static RuleKeyHasher<HashCode> createDefaultHasher() {
     RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
     if (logger.isVerboseEnabled()) {
-      hasher = new ForwardingRuleKeyHasher<HashCode, String>(hasher, new StringRuleKeyHasher()) {
-        @Override
-        protected void onHash(HashCode firstHash, String secondHash) {
-          logger.verbose("RuleKey %s=%s", firstHash, secondHash);
-        }
-      };
+      hasher =
+          new ForwardingRuleKeyHasher<HashCode, String>(hasher, new StringRuleKeyHasher()) {
+            @Override
+            protected void onHash(HashCode firstHash, String secondHash) {
+              logger.verbose("RuleKey %s=%s", firstHash, secondHash);
+            }
+          };
     }
     return hasher;
   }
@@ -159,7 +158,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
-      try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.OPTIONAL)){
+      try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.OPTIONAL)) {
         return setReflectively(o);
       }
     }
@@ -167,7 +166,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
-        try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.EITHER_LEFT)){
+        try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.EITHER_LEFT)) {
           return setReflectively(either.getLeft());
         }
       } else {
@@ -205,8 +204,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     if (val instanceof Map) {
       if (!(val instanceof SortedMap || val instanceof ImmutableMap)) {
         logger.warn(
-            "Adding an unsorted map to the rule key. " +
-                "Expect unstable ordering and caches misses: %s",
+            "Adding an unsorted map to the rule key. "
+                + "Expect unstable ordering and caches misses: %s",
             val);
       }
       try (ContainerScope containerScope = scopedHasher.containerScope(Container.MAP)) {
@@ -272,25 +271,25 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   /**
-   * Implementations should ask their factories to compute the rule key for the
-   * {@link RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
+   * Implementations should ask their factories to compute the rule key for the {@link
+   * RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
    */
   protected abstract RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable);
 
   /** To be called from {@link #setAppendableRuleKey(RuleKeyAppendable)}. */
   protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKey ruleKey) {
-    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)){
+    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)) {
       return setSingleValue(ruleKey);
     }
   }
 
   /**
    * Implementations may just forward to {@link #setSourcePathDirectly}. However, they will
-   * typically want to handle {@link BuildTargetSourcePath} explicitly. See also
-   * {@link #setSourcePathAsRule}.
+   * typically want to handle {@link BuildTargetSourcePath} explicitly. See also {@link
+   * #setSourcePathAsRule}.
    */
-  protected abstract RuleKeyBuilder<RULE_KEY> setSourcePath(
-      SourcePath sourcePath) throws IOException;
+  protected abstract RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath)
+      throws IOException;
 
   /**
    * To be called from {@link #setSourcePath(SourcePath)}. Note that this implementation handles
@@ -299,27 +298,21 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
    * explicitly in {@link #setSourcePath(SourcePath)} instead of calling this method. See also
    * {@link #setSourcePathAsRule}.
    */
-  protected final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(
-      SourcePath sourcePath) throws IOException {
+  protected final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath)
+      throws IOException {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return setPath(
-          resolver.getFilesystem(sourcePath),
-          resolver.getRelativePath(sourcePath));
+      return setPath(resolver.getFilesystem(sourcePath), resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
       Path ideallyRelativePath = resolver.getIdeallyRelativePath(sourcePath);
       if (ideallyRelativePath.isAbsolute()) {
         return setPath(
-            resolver.getAbsolutePath(sourcePath),
-            resolver.getIdeallyRelativePath(sourcePath));
+            resolver.getAbsolutePath(sourcePath), resolver.getIdeallyRelativePath(sourcePath));
       } else {
-        return setPath(
-            resolver.getFilesystem(sourcePath),
-            ideallyRelativePath);
+        return setPath(resolver.getFilesystem(sourcePath), ideallyRelativePath);
       }
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
       return setArchiveMemberPath(
-          resolver.getFilesystem(sourcePath),
-          resolver.getRelativeArchiveMemberPath(sourcePath));
+          resolver.getFilesystem(sourcePath), resolver.getRelativeArchiveMemberPath(sourcePath));
     } else {
       throw new UnsupportedOperationException(
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
@@ -350,9 +343,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
   @Override
-  public RuleKeyBuilder<RULE_KEY> setPath(
-      Path absolutePath,
-      Path ideallyRelative) throws IOException {
+  public RuleKeyBuilder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative)
+      throws IOException {
     // TODO(simons): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     if (ideallyRelative.isAbsolute()) {
@@ -365,9 +357,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder<RULE_KEY> setPath(
-      ProjectFilesystem filesystem,
-      Path relativePath)
+  protected RuleKeyBuilder<RULE_KEY> setPath(ProjectFilesystem filesystem, Path relativePath)
       throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     hasher.putPath(relativePath, hashLoader.get(filesystem, relativePath));
@@ -375,19 +365,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   private RuleKeyBuilder<RULE_KEY> setArchiveMemberPath(
-      ProjectFilesystem filesystem,
-      ArchiveMemberPath relativeArchiveMemberPath)
+      ProjectFilesystem filesystem, ArchiveMemberPath relativeArchiveMemberPath)
       throws IOException {
     Preconditions.checkArgument(!relativeArchiveMemberPath.isAbsolute());
     hasher.putArchiveMemberPath(
-        relativeArchiveMemberPath,
-        hashLoader.get(filesystem, relativeArchiveMemberPath));
+        relativeArchiveMemberPath, hashLoader.get(filesystem, relativeArchiveMemberPath));
     return this;
   }
 
-  /**
-   * Implementations may just forward to {@link #setNonHashingSourcePathDirectly}.
-   */
+  /** Implementations may just forward to {@link #setNonHashingSourcePathDirectly}. */
   protected abstract RuleKeyBuilder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath);
 
   protected final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
@@ -407,7 +393,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       hasher.putNull();
-    } else if (val instanceof Boolean) {           // JRE types
+    } else if (val instanceof Boolean) { // JRE types
       hasher.putBoolean((boolean) val);
     } else if (val instanceof Enum) {
       hasher.putString(String.valueOf(val));
@@ -417,7 +403,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       hasher.putString((String) val);
     } else if (val instanceof Pattern) {
       hasher.putPattern((Pattern) val);
-    } else if (val instanceof BuildRuleType) {           // Buck types
+    } else if (val instanceof BuildRuleType) { // Buck types
       hasher.putBuildRuleType((BuildRuleType) val);
     } else if (val instanceof RuleKey) {
       hasher.putRuleKey((RuleKey) val);
@@ -444,5 +430,4 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   public final <RESULT> RESULT build(Function<RULE_KEY, RESULT> mapper) {
     return mapper.apply(build());
   }
-
 }

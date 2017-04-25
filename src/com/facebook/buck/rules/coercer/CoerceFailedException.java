@@ -28,13 +28,11 @@ public class CoerceFailedException extends Exception {
   }
 
   public static CoerceFailedException simple(Object object, Class<?> resultType) {
-    return new CoerceFailedException(
-        String.format("cannot coerce '%s' to %s", object, resultType));
+    return new CoerceFailedException(String.format("cannot coerce '%s' to %s", object, resultType));
   }
 
   public static CoerceFailedException simple(Object object, Class<?> resultType, String detail) {
     return new CoerceFailedException(
         String.format("cannot coerce '%s' to %s, %s", object, resultType, detail));
   }
-
 }

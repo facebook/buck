@@ -20,11 +20,8 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
-
+import org.immutables.value.Value;
 
 /**
  * Manifest entries to be injected into the AndroidManifest.xml file via AAPT command line flags.
@@ -35,21 +32,25 @@ import java.util.Optional;
 abstract class AbstractManifestEntries implements RuleKeyAppendable {
   @Value.Parameter
   protected abstract Optional<Integer> getMinSdkVersion();
+
   @Value.Parameter
   protected abstract Optional<Integer> getTargetSdkVersion();
+
   @Value.Parameter
   protected abstract Optional<Integer> getVersionCode();
+
   @Value.Parameter
   protected abstract Optional<String> getVersionName();
+
   @Value.Parameter
   protected abstract Optional<Boolean> getDebugMode();
+
   @Value.Parameter
   protected abstract Optional<ImmutableMap<String, String>> getPlaceholders();
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("minSdkVersion", getMinSdkVersion())
+    sink.setReflectively("minSdkVersion", getMinSdkVersion())
         .setReflectively("targetSdkVersion", getTargetSdkVersion())
         .setReflectively("versionCode", getVersionCode())
         .setReflectively("versionName", getVersionName())
@@ -57,21 +58,17 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
         .setReflectively("placeholders", getPlaceholders());
   }
 
-  /**
-   * @return true if and only if at least one of the parameters is non-absent.
-   */
+  /** @return true if and only if at least one of the parameters is non-absent. */
   public boolean hasAny() {
-    return getMinSdkVersion().isPresent() ||
-        getTargetSdkVersion().isPresent() ||
-        getVersionName().isPresent() ||
-        getVersionCode().isPresent() ||
-        getDebugMode().isPresent() ||
-        getPlaceholders().isPresent();
+    return getMinSdkVersion().isPresent()
+        || getTargetSdkVersion().isPresent()
+        || getVersionName().isPresent()
+        || getVersionCode().isPresent()
+        || getDebugMode().isPresent()
+        || getPlaceholders().isPresent();
   }
 
-  /**
-   * @return an empty (all items set to Optional.empty()) ManifestEntries
-   */
+  /** @return an empty (all items set to Optional.empty()) ManifestEntries */
   public static ManifestEntries empty() {
     return ManifestEntries.builder().build();
   }

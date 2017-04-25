@@ -20,7 +20,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -51,8 +50,8 @@ public class SourcePathRuleFinder {
 
   /**
    * @return An {@link Optional} containing the {@link BuildRule} whose output {@code sourcePath}
-   *         refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a
-   *         {@link BuildRule}.
+   *     refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a {@link
+   *     BuildRule}.
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
@@ -62,9 +61,7 @@ public class SourcePathRuleFinder {
     }
   }
 
-  /**
-   * @return The {@link BuildRule} whose output {@code sourcePath} refers to its output.
-   */
+  /** @return The {@link BuildRule} whose output {@code sourcePath} refers to its output. */
   public BuildRule getRuleOrThrow(BuildTargetSourcePath<?> sourcePath) {
     return Preconditions.checkNotNull(ruleResolver.getRule(sourcePath.getTarget()));
   }

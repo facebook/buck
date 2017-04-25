@@ -19,16 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.base.Suppliers;
 
-/**
- * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
- */
+/** Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}. */
 public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   @Override
   public <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph,
-      BuildRuleResolver ruleResolver,
-      TargetNode<T, U> targetNode)
+      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode)
       throws NoSuchBuildTargetException {
     U description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
@@ -36,19 +32,15 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared
     // via a SourcePath.
-    BuildRuleParams params = new BuildRuleParams(
-        targetNode.getBuildTarget(),
-        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
-        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
-        ruleResolver.requireAllRules(targetNode.getTargetGraphOnlyDeps()),
-        targetNode.getFilesystem()
-    );
+    BuildRuleParams params =
+        new BuildRuleParams(
+            targetNode.getBuildTarget(),
+            Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
+            Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
+            ruleResolver.requireAllRules(targetNode.getTargetGraphOnlyDeps()),
+            targetNode.getFilesystem());
 
     return description.createBuildRule(
-        targetGraph,
-        params,
-        ruleResolver,
-        targetNode.getCellNames(),
-        arg);
+        targetGraph, params, ruleResolver, targetNode.getCellNames(), arg);
   }
 }

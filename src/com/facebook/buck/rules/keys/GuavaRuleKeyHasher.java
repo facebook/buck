@@ -28,16 +28,12 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
-/**
- * An implementation of {@link RuleKeyHasher} that wraps Guava's {@link Hasher}.
- */
+/** An implementation of {@link RuleKeyHasher} that wraps Guava's {@link Hasher}. */
 public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
-
 
   private final Hasher hasher;
 

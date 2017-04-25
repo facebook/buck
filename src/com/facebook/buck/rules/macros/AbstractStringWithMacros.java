@@ -25,16 +25,12 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
-/**
- * A class representing a string containing ordered, embedded, strongly typed macros.
- */
+/** A class representing a string containing ordered, embedded, strongly typed macros. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractStringWithMacros implements TargetTranslatable<StringWithMacros> {
@@ -42,9 +38,7 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
   // The components of the macro string.  Each part is either a plain string or a macro.
   abstract ImmutableList<Either<String, Macro>> getParts();
 
-  /**
-   * @return the list of all {@link Macro}s in the macro string.
-   */
+  /** @return the list of all {@link Macro}s in the macro string. */
   public ImmutableList<Macro> getMacros() {
     return RichStream.from(getParts())
         .filter(Either::isRight)
@@ -62,16 +56,15 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
 
   /**
    * @return format the macro string into a {@link String}, using {@code mapper} to stringify the
-   *         embedded {@link Macro}s.
+   *     embedded {@link Macro}s.
    */
   public String format(Function<? super Macro, ? extends CharSequence> mapper) {
-    return map(s -> s, mapper).stream()
-        .collect(Collectors.joining());
+    return map(s -> s, mapper).stream().collect(Collectors.joining());
   }
 
   /**
-   * @return a new {@link StringWithMacros} with the string components transformed by
-   *         {@code mapper}.
+   * @return a new {@link StringWithMacros} with the string components transformed by {@code
+   *     mapper}.
    */
   public StringWithMacros mapStrings(Function<String, String> mapper) {
     return StringWithMacros.of(
@@ -103,5 +96,4 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
     }
     return modified ? Optional.of(StringWithMacros.of(parts.build())) : Optional.empty();
   }
-
 }

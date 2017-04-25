@@ -21,9 +21,7 @@ import com.facebook.buck.model.MacroReplacer;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
-/**
- * A @{link MacroReplacer} wrapping a @{link Function}.
- */
+/** A @{link MacroReplacer} wrapping a @{link Function}. */
 public class FunctionMacroReplacer implements MacroReplacer {
 
   private final Function<String, String> function;
@@ -36,5 +34,4 @@ public class FunctionMacroReplacer implements MacroReplacer {
   public String replace(ImmutableList<String> input) throws MacroException {
     return function.apply(input.get(0));
   }
-
 }

@@ -20,10 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
-public interface MetadataProvidingDescription<T>  {
+public interface MetadataProvidingDescription<T> {
 
   <A extends T, U> Optional<U> createMetadata(
       BuildTarget buildTarget,

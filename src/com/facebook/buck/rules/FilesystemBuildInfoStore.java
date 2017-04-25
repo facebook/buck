@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -37,9 +36,8 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   }
 
   @Override
-  public void updateMetadata(
-      BuildTarget buildTarget,
-      Map<String, String> metadata) throws IOException {
+  public void updateMetadata(BuildTarget buildTarget, Map<String, String> metadata)
+      throws IOException {
     Path metadataPath = pathToMetadata(buildTarget);
     filesystem.mkdirs(metadataPath);
 
@@ -54,8 +52,7 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   }
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 
   private final Path pathToMetadata(BuildTarget target) {
     return BuildInfo.getPathToMetadataDirectory(target, filesystem);

@@ -22,15 +22,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-
-/**
- * Annotates that a {@link Description}'s constructor arg has no 'name' attribute.
- */
+/** Annotates that a {@link Description}'s constructor arg has no 'name' attribute. */
 @Retention(RUNTIME)
 @Target({TYPE})
 public @interface TargetName {
-  /**
-   * @return The name to always be given to this rule.
-   */
+  /** @return The name to always be given to this rule. */
   String name();
 }

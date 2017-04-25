@@ -26,5 +26,6 @@ import java.lang.annotation.Target;
 @Target(FIELD)
 public @interface AddToRuleKey {
   RuleKeyFieldCategory category() default RuleKeyFieldCategory.UNKNOWN;
+
   boolean stringify() default false;
 }

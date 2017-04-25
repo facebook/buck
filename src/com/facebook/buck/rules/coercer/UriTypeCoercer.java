@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -35,7 +34,8 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
 
     if (object instanceof URI) {
       return (URI) object;
@@ -46,9 +46,7 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
         return new URI((String) object);
       } catch (URISyntaxException e) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "Cannot covert to a URI: " + object);
+            object, getOutputClass(), "Cannot covert to a URI: " + object);
       }
     }
 

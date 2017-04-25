@@ -21,7 +21,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.List;
 
@@ -30,12 +29,10 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
   private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
 
   SourceListTypeCoercer(
-      TypeCoercer<String> stringTypeCoercer,
-      TypeCoercer<SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<String> stringTypeCoercer, TypeCoercer<SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
-    this.namedHeadersTypeCoercer = new SortedMapTypeCoercer<>(
-        stringTypeCoercer,
-        sourcePathTypeCoercer);
+    this.namedHeadersTypeCoercer =
+        new SortedMapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);
   }
 
   @Override
@@ -45,8 +42,8 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return unnamedHeadersTypeCoercer.hasElementClass(types) ||
-        namedHeadersTypeCoercer.hasElementClass(types);
+    return unnamedHeadersTypeCoercer.hasElementClass(types)
+        || namedHeadersTypeCoercer.hasElementClass(types);
   }
 
   @Override
@@ -66,21 +63,15 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof List) {
       return SourceList.ofUnnamedSources(
           unnamedHeadersTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
     } else {
       return SourceList.ofNamedSources(
-          namedHeadersTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          namedHeadersTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
   }
 }

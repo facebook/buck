@@ -18,9 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.cache.FileHashCache;
 
-/**
- * Functionality used in the {@link CachingBuildEngine} when running a distributed build.
- */
+/** Functionality used in the {@link CachingBuildEngine} when running a distributed build. */
 public interface CachingBuildEngineDelegate {
 
   FileHashCache getFileHashCache();

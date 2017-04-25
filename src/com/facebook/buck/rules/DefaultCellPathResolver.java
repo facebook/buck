@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -36,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
-
 
 public class DefaultCellPathResolver implements CellPathResolver {
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
@@ -50,13 +48,17 @@ public class DefaultCellPathResolver implements CellPathResolver {
   public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
     this.root = root;
     this.cellPaths = cellPaths;
-    this.canonicalNames = cellPaths.entrySet().stream().collect(
-        Collectors.collectingAndThen(
-            Collectors.toMap(
-                Map.Entry::getValue,
-                Map.Entry::getKey,
-                BinaryOperator.minBy(Comparator.<String>naturalOrder())),
-            ImmutableMap::copyOf));
+    this.canonicalNames =
+        cellPaths
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.collectingAndThen(
+                    Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey,
+                        BinaryOperator.minBy(Comparator.<String>naturalOrder())),
+                    ImmutableMap::copyOf));
   }
 
   public DefaultCellPathResolver(Path root, Config config) {
@@ -64,20 +66,20 @@ public class DefaultCellPathResolver implements CellPathResolver {
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
-      Path root,
-      ImmutableMap<String, String> repositoriesSection) {
+      Path root, ImmutableMap<String, String> repositoriesSection) {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             repositoriesSection,
-            input -> root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
-                .normalize()));
+            input ->
+                root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
+                    .normalize()));
   }
 
   /**
    * Recursively walks configuration files to find all possible {@link Cell} locations.
    *
-   * @return MultiMap of Path to cell name. The map will contain multiple names for a path if
-   *         that cell is reachable through different paths from the current cell.
+   * @return MultiMap of Path to cell name. The map will contain multiple names for a path if that
+   *     cell is reachable through different paths from the current cell.
    */
   public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
@@ -86,11 +88,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     HashSet<Path> seenPaths = new HashSet<>();
     seenPaths.add(root);
 
-    constructFullMapping(
-        builder,
-        seenPaths,
-        RelativeCellName.of(ImmutableList.of()),
-        this);
+    constructFullMapping(builder, seenPaths, RelativeCellName.of(ImmutableList.of()), this);
     return builder.build();
   }
 
@@ -146,10 +144,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
         continue;
       }
       constructFullMapping(
-          result,
-          pathStack,
-          relativeCellName,
-          new DefaultCellPathResolver(cellRoot, config));
+          result, pathStack, relativeCellName, new DefaultCellPathResolver(cellRoot, config));
       pathStack.remove(cellRoot);
     }
   }

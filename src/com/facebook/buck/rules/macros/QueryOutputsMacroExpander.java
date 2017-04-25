@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
@@ -33,16 +32,15 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Used to expand the macro {@literal $(query_outputs "some(query(:expression))")} to the
- * set of the outputs of the targets matching the query.
- * Example queries
+ * Used to expand the macro {@literal $(query_outputs "some(query(:expression))")} to the set of the
+ * outputs of the targets matching the query. Example queries
+ *
  * <pre>
  *   '$(query_outputs "deps(:foo)")'
  *   '$(query_outputs "filter(bar, classpath(:bar))")'
@@ -75,10 +73,11 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     return resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-        })
+        .map(
+            queryTarget -> {
+              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+            })
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .map(pathResolver::getAbsolutePath)
@@ -99,15 +98,16 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
     // Return a list of SourcePaths to the outputs of our query results. This enables input-based
     // rule key hits.
     return resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          try {
-            return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-          } catch (NoSuchBuildTargetException e) {
-            throw new RuntimeException(
-                new MacroException("Error extracting rule key appendables", e));
-          }
-        })
+        .map(
+            queryTarget -> {
+              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+              try {
+                return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+              } catch (NoSuchBuildTargetException e) {
+                throw new RuntimeException(
+                    new MacroException("Error extracting rule key appendables", e));
+              }
+            })
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
@@ -126,12 +126,14 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       QueryOutputsMacro input)
       throws MacroException {
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    return ImmutableList.copyOf(resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-        })
-        .sorted()
-        .collect(Collectors.toList()));
+    return ImmutableList.copyOf(
+        resolveQuery(target, cellNames, resolver, queryExpression)
+            .map(
+                queryTarget -> {
+                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                  return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                })
+            .sorted()
+            .collect(Collectors.toList()));
   }
 }

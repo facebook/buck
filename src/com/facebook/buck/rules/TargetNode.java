@@ -25,15 +25,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * A {@link TargetNode} represents a node in the target graph which is created by the
- * {@link com.facebook.buck.parser.Parser} as a result of parsing BUCK files in a project. It is
+ * A {@link TargetNode} represents a node in the target graph which is created by the {@link
+ * com.facebook.buck.parser.Parser} as a result of parsing BUCK files in a project. It is
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
@@ -85,15 +84,10 @@ public class TargetNode<T, U extends Description<T>>
     this.targetGraphOnlyDeps = targetGraphOnlyDeps;
     this.inputs = paths;
     this.selectedVersions = selectedVersions;
-    this.visibilityChecker = new VisibilityChecker(
-        this,
-        visibilityPatterns,
-        withinViewPatterns);
+    this.visibilityChecker = new VisibilityChecker(this, visibilityPatterns, withinViewPatterns);
   }
 
-  /**
-   * @return A hash of the raw input from the build file used to construct the node.
-   */
+  /** @return A hash of the raw input from the build file used to construct the node. */
   public HashCode getRawInputsHashCode() {
     return rawInputsHashCode;
   }
@@ -127,16 +121,14 @@ public class TargetNode<T, U extends Description<T>>
     return extraDeps;
   }
 
-  /**
-   * @return all targets which must be built before this one can be.
-   */
+  /** @return all targets which must be built before this one can be. */
   public Set<BuildTarget> getBuildDeps() {
     return Sets.union(declaredDeps, extraDeps);
   }
 
   /**
-   * @return all targets which must be present in the TargetGraph before this one can be
-   * transformed into a BuildRule.
+   * @return all targets which must be present in the TargetGraph before this one can be transformed
+   *     into a BuildRule.
    */
   public Set<BuildTarget> getParseDeps() {
     return Sets.union(getBuildDeps(), targetGraphOnlyDeps);
@@ -146,18 +138,18 @@ public class TargetNode<T, U extends Description<T>>
    * Stream-style API for getting dependencies. This may return duplicates if certain dependencies
    * are in both declared deps and exported deps.
    *
-   * This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals and
-   * set operations are not necessary, as it avoids creating the intermediate set.
+   * <p>This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals
+   * and set operations are not necessary, as it avoids creating the intermediate set.
    */
   public Stream<BuildTarget> getBuildDepsStream() {
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
   /**
-   * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode,
-   * but whose steps don't need executing in order to build this TargetNode's BuildRules.
+   * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode, but
+   * whose steps don't need executing in order to build this TargetNode's BuildRules.
    *
-   * A TargetNode may require metadata from other targets in order to be constructed, but may not
+   * <p>A TargetNode may require metadata from other targets in order to be constructed, but may not
    * actually require those targets' build output. For example, some targets may execute queries
    * against the TargetGraph (e.g. detecting the names of rules of a certain type) but don't use the
    * output of those detected rules.
@@ -178,15 +170,11 @@ public class TargetNode<T, U extends Description<T>>
   public void isVisibleToOrThrow(TargetNode<?, ?> viewer) {
     if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
-          "%s depends on %s, which is not visible",
-          viewer,
-          getBuildTarget());
+          "%s depends on %s, which is not visible", viewer, getBuildTarget());
     }
   }
 
-  /**
-   * Type safe checked cast of the constructor arg.
-   */
+  /** Type safe checked cast of the constructor arg. */
   @SuppressWarnings("unchecked")
   public <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls) {
     if (cls.isInstance(constructorArg)) {
@@ -271,5 +259,4 @@ public class TargetNode<T, U extends Description<T>>
   public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions() {
     return selectedVersions;
   }
-
 }

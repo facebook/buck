@@ -22,7 +22,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Objects;
 
 /**
@@ -39,8 +38,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
-  private final Supplier<String> typeSupplier = Suppliers.memoize(
-      this::getTypeForClass);
+  private final Supplier<String> typeSupplier = Suppliers.memoize(this::getTypeForClass);
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     this.buildTarget = buildRuleParams.getBuildTarget();
@@ -74,9 +72,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     return extraDeps.get();
   }
 
-  /**
-   * See {@link TargetNode#getTargetGraphOnlyDeps}.
-   */
+  /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
   public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;
   }
@@ -91,10 +87,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     if (clazz.isAnonymousClass()) {
       clazz = clazz.getSuperclass();
     }
-    return CaseFormat
-        .UPPER_CAMEL
-        .to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName())
-        .intern();
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName()).intern();
   }
 
   @Override
@@ -108,8 +101,8 @@ public abstract class AbstractBuildRule implements BuildRule {
       return false;
     }
     AbstractBuildRule that = (AbstractBuildRule) obj;
-    return Objects.equals(this.buildTarget, that.buildTarget) &&
-        Objects.equals(this.getType(), that.getType());
+    return Objects.equals(this.buildTarget, that.buildTarget)
+        && Objects.equals(this.getType(), that.getType());
   }
 
   @Override
@@ -126,5 +119,4 @@ public abstract class AbstractBuildRule implements BuildRule {
   public boolean isCacheable() {
     return true;
   }
-
 }

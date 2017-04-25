@@ -18,13 +18,12 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.EnumSet;
 
 /**
- * Token provided by the result of
- * {@link BuildEngine#build(BuildEngineBuildContext, com.facebook.buck.step.ExecutionContext, BuildRule)},
- * demonstrating that the associated {@link BuildRule} was built successfully.
+ * Token provided by the result of {@link BuildEngine#build(BuildEngineBuildContext,
+ * com.facebook.buck.step.ExecutionContext, BuildRule)}, demonstrating that the associated {@link
+ * BuildRule} was built successfully.
  */
 public enum BuildRuleSuccessType {
 
@@ -33,54 +32,43 @@ public enum BuildRuleSuccessType {
       "BUILT",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
-      Property.OUTPUTS_HAVE_CHANGED
-  ),
+      Property.OUTPUTS_HAVE_CHANGED),
 
   /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache}. */
-  FETCHED_FROM_CACHE(
-      "CACHE",
-      Property.OUTPUTS_HAVE_CHANGED
-  ),
+  FETCHED_FROM_CACHE("CACHE", Property.OUTPUTS_HAVE_CHANGED),
 
   /** Computed {@link RuleKey} matches the one on disk. */
-  MATCHING_RULE_KEY(
-      "FOUND"
-  ),
+  MATCHING_RULE_KEY("FOUND"),
 
-  /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
-   * rule key. */
+  /**
+   * Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
+   * rule key.
+   */
   FETCHED_FROM_CACHE_INPUT_BASED(
       "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
-      Property.OUTPUTS_HAVE_CHANGED
-  ),
+      Property.OUTPUTS_HAVE_CHANGED),
 
-  /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
-   * rule key. */
+  /**
+   * Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
+   * rule key.
+   */
   FETCHED_FROM_CACHE_MANIFEST_BASED(
       "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
-      Property.OUTPUTS_HAVE_CHANGED
-  ),
+      Property.OUTPUTS_HAVE_CHANGED),
 
   /** Computed input-based {@link RuleKey} matches the one on disk. */
   MATCHING_INPUT_BASED_RULE_KEY(
       "FOUND",
       // TODO(#8364892): We should re-upload to the cache under the main rule key once local
       // caching performance is better and we don't hurt the incremental workflow as much.
-      Property.SHOULD_UPDATE_METADATA_ON_DISK
-  ),
+      Property.SHOULD_UPDATE_METADATA_ON_DISK),
 
-  /**
-   * Computed dep-file {@link RuleKey} matches the one on disk
-   */
-  MATCHING_DEP_FILE_RULE_KEY(
-      "FOUND",
-      Property.SHOULD_UPDATE_METADATA_ON_DISK
-  ),
-
+  /** Computed dep-file {@link RuleKey} matches the one on disk */
+  MATCHING_DEP_FILE_RULE_KEY("FOUND", Property.SHOULD_UPDATE_METADATA_ON_DISK),
   ;
 
   private final String shortDescription;
@@ -97,9 +85,8 @@ public enum BuildRuleSuccessType {
   }
 
   public boolean shouldWriteRecordedMetadataToDiskAfterBuilding() {
-    return properties.contains(Property.SHOULD_UPDATE_METADATA_ON_DISK) ||
-        properties.contains(Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK);
-
+    return properties.contains(Property.SHOULD_UPDATE_METADATA_ON_DISK)
+        || properties.contains(Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK);
   }
 
   public boolean shouldClearAndOverwriteMetadataOnDisk() {
@@ -110,9 +97,7 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
   }
 
-  /**
-   * @return whether a rule completing with this success type may have changed it's outputs.
-   */
+  /** @return whether a rule completing with this success type may have changed it's outputs. */
   public boolean outputsHaveChanged() {
     return properties.contains(Property.OUTPUTS_HAVE_CHANGED);
   }
@@ -127,5 +112,4 @@ public enum BuildRuleSuccessType {
     SHOULD_UPDATE_METADATA_ON_DISK,
     OUTPUTS_HAVE_CHANGED,
   }
-
 }

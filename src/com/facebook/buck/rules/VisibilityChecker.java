@@ -46,8 +46,8 @@ public class VisibilityChecker {
       }
     }
 
-    if (owner.getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath()) &&
-        owner.getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
+    if (owner.getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath())
+        && owner.getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
       return true;
     }
 

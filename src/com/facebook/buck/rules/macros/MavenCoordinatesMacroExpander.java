@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
 /**
@@ -47,25 +46,20 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
     if (!coordinates.isPresent()) {
       throw new MacroException(
           String.format(
-              "%s used in maven macro does not have maven coordinates",
-              rule.getBuildTarget()));
+              "%s used in maven macro does not have maven coordinates", rule.getBuildTarget()));
     }
     return coordinates.get();
   }
 
   @Override
   protected MavenCoordinatesMacro parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     return MavenCoordinatesMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
-      throws MacroException {
+  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
     return getMavenCoordinates(rule);
   }
-
 }

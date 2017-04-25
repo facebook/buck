@@ -22,26 +22,24 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
+import org.immutables.value.Value;
 
 public interface DependencyFileRuleKeyFactory {
 
   /**
-   * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of
-   *     explicit {@code inputs} and an {@link ImmutableSet} of the members of
-   *     possibleDepFileSourcePaths that were actually used in constructing the key.
+   * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
+   *     {@code inputs} and an {@link ImmutableSet} of the members of possibleDepFileSourcePaths
+   *     that were actually used in constructing the key.
    */
   RuleKeyAndInputs build(
-      SupportsDependencyFileRuleKey rule,
-      ImmutableList<DependencyFileEntry> inputs) throws IOException;
+      SupportsDependencyFileRuleKey rule, ImmutableList<DependencyFileEntry> inputs)
+      throws IOException;
 
   /**
-   * @return the {@link RuleKey} used to index the manifest database and the list of inputs
-   *         that should appear in the manifest (i.e., those that appeared in the dependency file,
-   *         because all other inputs would be accounted for in the manifest key itself).
+   * @return the {@link RuleKey} used to index the manifest database and the list of inputs that
+   *     should appear in the manifest (i.e., those that appeared in the dependency file, because
+   *     all other inputs would be accounted for in the manifest key itself).
    */
   RuleKeyAndInputs buildManifestKey(SupportsDependencyFileRuleKey rule) throws IOException;
 
@@ -49,7 +47,7 @@ public interface DependencyFileRuleKeyFactory {
   @BuckStyleTuple
   interface AbstractRuleKeyAndInputs {
     RuleKey getRuleKey();
+
     ImmutableSet<SourcePath> getInputs();
   }
-
 }

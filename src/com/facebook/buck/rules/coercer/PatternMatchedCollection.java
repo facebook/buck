@@ -23,7 +23,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -65,9 +64,9 @@ public class PatternMatchedCollection<T>
       TargetNodeTranslator translator) {
     Optional<ImmutableList<Pair<Pattern, T>>> translatedValues =
         translator.translate(cellPathResolver, pattern, values);
-    return translatedValues.isPresent() ?
-        Optional.of(new PatternMatchedCollection<>(translatedValues.get())) :
-        Optional.empty();
+    return translatedValues.isPresent()
+        ? Optional.of(new PatternMatchedCollection<>(translatedValues.get()))
+        : Optional.empty();
   }
 
   public static <T> PatternMatchedCollection<T> of() {

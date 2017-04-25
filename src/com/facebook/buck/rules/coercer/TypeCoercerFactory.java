@@ -21,5 +21,4 @@ import java.lang.reflect.Type;
 public interface TypeCoercerFactory {
 
   TypeCoercer<?> typeCoercerForType(Type type);
-
 }

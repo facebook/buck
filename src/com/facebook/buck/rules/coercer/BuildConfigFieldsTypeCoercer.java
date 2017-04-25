@@ -20,14 +20,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-
 import java.nio.file.Path;
 import java.util.List;
 
 /**
- * {@link TypeCoercer} that takes a list of strings and transforms it into a
- * {@link BuildConfigFields}. This class takes care of parsing each string, making sure it conforms
- * to the specification in {@link BuildConfigFields}.
+ * {@link TypeCoercer} that takes a list of strings and transforms it into a {@link
+ * BuildConfigFields}. This class takes care of parsing each string, making sure it conforms to the
+ * specification in {@link BuildConfigFields}.
  */
 public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFields> {
 
@@ -41,23 +40,25 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
 
     List<?> list = (List<?>) object;
-    List<String> values = list.stream()
-        .map(input -> {
-          if (input instanceof String) {
-            return (String) input;
-          } else {
-            throw new HumanReadableException(
-                "Expected string for build config values but was: %s",
-                input);
-          }
-        })
-        .collect(MoreCollectors.toImmutableList());
+    List<String> values =
+        list.stream()
+            .map(
+                input -> {
+                  if (input instanceof String) {
+                    return (String) input;
+                  } else {
+                    throw new HumanReadableException(
+                        "Expected string for build config values but was: %s", input);
+                  }
+                })
+            .collect(MoreCollectors.toImmutableList());
     return BuildConfigFields.fromFieldDeclarations(values);
   }
 }

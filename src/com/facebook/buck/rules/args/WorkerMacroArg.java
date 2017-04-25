@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -49,48 +48,43 @@ public class WorkerMacroArg extends MacroArg {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String unexpanded) throws MacroException {
+      String unexpanded)
+      throws MacroException {
     super(macroHandler, target, cellNames, resolver, unexpanded);
     for (MacroMatchResult matchResult : macroHandler.getMacroMatchResults(unexpanded)) {
-      if (macroHandler.getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander &&
-          matchResult.getStartIndex() != 0) {
-        throw new MacroException(String.format(
-            "the worker macro in \"%s\" must be at the beginning",
-            unexpanded));
+      if (macroHandler.getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander
+          && matchResult.getStartIndex() != 0) {
+        throw new MacroException(
+            String.format("the worker macro in \"%s\" must be at the beginning", unexpanded));
       }
     }
 
     // extract the BuildTargets referenced in any macros
     ImmutableList.Builder<BuildTarget> targetsBuilder = new ImmutableList.Builder<>();
     macroHandler.extractParseTimeDeps(
-        target,
-        cellNames,
-        unexpanded,
-        targetsBuilder,
-        new ImmutableSet.Builder<>());
+        target, cellNames, unexpanded, targetsBuilder, new ImmutableSet.Builder<>());
     ImmutableList<BuildTarget> targets = targetsBuilder.build();
 
     if (targets.isEmpty()) {
-      throw new MacroException(String.format("Unable to extract any build targets for the macros " +
-          "used in \"%s\" of target %s",
-          unexpanded,
-          target));
+      throw new MacroException(
+          String.format(
+              "Unable to extract any build targets for the macros " + "used in \"%s\" of target %s",
+              unexpanded, target));
     }
     this.buildTarget = targets.get(0);
     BuildRule workerTool = resolver.getRule(buildTarget);
     if (!(workerTool instanceof WorkerTool)) {
-      throw new MacroException(String.format("%s used in worker macro, \"%s\", of target %s does " +
-          "not correspond to a worker_tool",
-          buildTarget,
-          unexpanded,
-          target));
+      throw new MacroException(
+          String.format(
+              "%s used in worker macro, \"%s\", of target %s does "
+                  + "not correspond to a worker_tool",
+              buildTarget, unexpanded, target));
     }
     this.workerTool = (WorkerTool) workerTool;
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Tool exe = this.workerTool.getTool();
     startupCommand = exe.getCommandPrefix(pathResolver);
     startupEnvironment = exe.getEnvironment(pathResolver);
-
   }
 
   public ImmutableList<String> getStartupCommand() {

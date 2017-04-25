@@ -24,7 +24,6 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
@@ -47,20 +46,17 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     String param = (String) object;
 
     try {
-        String baseName = UnflavoredBuildTarget.BUILD_TARGET_PREFIX +
-            MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+      String baseName =
+          UnflavoredBuildTarget.BUILD_TARGET_PREFIX
+              + MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
       return BuildTargetParser.INSTANCE.parse(
-          param,
-          BuildTargetPatternParser.forBaseName(baseName),
-          cellRoots);
+          param, BuildTargetPatternParser.forBaseName(baseName), cellRoots);
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(
               "Failed to coerce %s to %s, %s",
-              object,
-              getOutputClass(),
-              e.getHumanReadableErrorMessage()),
+              object, getOutputClass(), e.getHumanReadableErrorMessage()),
           e);
     }
   }

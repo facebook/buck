@@ -20,14 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 
 public interface ToolProvider {
 
-  /**
-   * @return the provided {@link Tool} object.
-   */
+  /** @return the provided {@link Tool} object. */
   Tool resolve(BuildRuleResolver resolver);
 
-  /**
-   * @return any dependencies required at parse time to support the provided tool.
-   */
+  /** @return any dependencies required at parse time to support the provided tool. */
   Iterable<BuildTarget> getParseTimeDeps();
-
 }

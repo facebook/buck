@@ -17,18 +17,15 @@
 package com.facebook.buck.rules.keys;
 
 /**
- * A class managing access to a {@link RuleKeyCache} for the duration of a build.  Accessing a cache
+ * A class managing access to a {@link RuleKeyCache} for the duration of a build. Accessing a cache
  * via a {@link RuleKeyCacheScope} inside of a try-resource block allows both pre-build and
  * post-build operations to always be run before and after using the cache.
  */
 public interface RuleKeyCacheScope<V> extends AutoCloseable {
 
-  /**
-   * @return the scoped {@link RuleKeyCache}.
-   */
+  /** @return the scoped {@link RuleKeyCache}. */
   RuleKeyCache<V> getCache();
 
   @Override
   void close();
-
 }

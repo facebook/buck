@@ -25,21 +25,18 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
 /**
- * Used to generate a function for use within buck.py for the rule described by a
- * {@link Description}.
+ * Used to generate a function for use within buck.py for the rule described by a {@link
+ * Description}.
  */
 public class BuckPyFunction {
 
@@ -55,15 +52,17 @@ public class BuckPyFunction {
    * the build rule being defined.
    */
   public static final String TYPE_PROPERTY_NAME = INTERNAL_PROPERTY_NAME_PREFIX + "type";
+
   public static final String BUCK_PY_FUNCTION_TEMPLATE = "BuckPyFunction.stg";
 
-  private static final Supplier<STGroup> buckPyFunctionTemplate = Suppliers.memoize(
-      () -> new STGroupFile(
-          Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
-          "UTF-8",
-          '<',
-          '>')
-  );
+  private static final Supplier<STGroup> buckPyFunctionTemplate =
+      Suppliers.memoize(
+          () ->
+              new STGroupFile(
+                  Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
+                  "UTF-8",
+                  '<',
+                  '>'));
   private final TypeCoercerFactory typeCoercerFactory;
 
   public BuckPyFunction(TypeCoercerFactory typeCoercerFactory) {
@@ -75,8 +74,9 @@ public class BuckPyFunction {
 
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
-    for (ParamInfo param : ImmutableSortedSet.copyOf(
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()))) {
+    for (ParamInfo param :
+        ImmutableSortedSet.copyOf(
+            CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()))) {
       if (isSkippable(param)) {
         continue;
       }

@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 /**
  * A wrapper of {@link RuleKeyHasher} that provides scoped hashing facilities.
  *
- * Important: Container, wrapper and key signatures only get hashed if their scope was non-empty.
+ * <p>Important: Container, wrapper and key signatures only get hashed if their scope was non-empty.
  * I.e. if at least one thing gets hashed under their scope. This is to support rule key builders
  * that ignore some fields.
  */
@@ -57,7 +57,7 @@ public class RuleKeyScopedHasher<HASH> {
   /**
    * Hashes the container iff non-empty (i.e. if any element gets hashed during its scope).
    *
-   * Note that an element scope needs to be created for each element!
+   * <p>Note that an element scope needs to be created for each element!
    */
   public ContainerScope containerScope(final RuleKeyHasher.Container container) {
     return new ContainerScope(hasher, container);

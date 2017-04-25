@@ -16,12 +16,8 @@
 package com.facebook.buck.rules;
 
 public interface VisibilityPattern {
-  boolean checkVisibility(
-      ObeysVisibility viewer,
-      ObeysVisibility viewed);
+  boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed);
 
-  /**
-   * Value used in a build file to specify this pattern.
-   */
+  /** Value used in a build file to specify this pattern. */
   String getRepresentation();
 }

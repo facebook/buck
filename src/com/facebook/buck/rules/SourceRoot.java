@@ -27,5 +27,4 @@ public class SourceRoot {
   public String getName() {
     return name;
   }
-
 }

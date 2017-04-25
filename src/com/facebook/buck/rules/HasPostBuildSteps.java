@@ -30,5 +30,4 @@ public interface HasPostBuildSteps extends BuildRule {
    *     actually ran or hit in the cache.
    */
   ImmutableList<Step> getPostBuildSteps(BuildContext context);
-
 }

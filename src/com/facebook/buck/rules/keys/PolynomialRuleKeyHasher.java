@@ -27,14 +27,13 @@ import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 /**
  * An implementation of {@link RuleKeyHasher} that uses a 32bit polynomial hash.
  *
- * This implementation doesn't satisfy strong collision resistance properties but it is fast and
+ * <p>This implementation doesn't satisfy strong collision resistance properties but it is fast and
  * occupy only 32bits which is handy for instrumentation purposes.
  */
 public class PolynomialRuleKeyHasher implements RuleKeyHasher<Integer> {

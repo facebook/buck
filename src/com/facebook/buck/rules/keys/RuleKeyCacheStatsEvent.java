@@ -24,9 +24,7 @@ public class RuleKeyCacheStatsEvent extends AbstractBuckEvent {
 
   private final CacheStats stats;
 
-  private RuleKeyCacheStatsEvent(
-      EventKey eventKey,
-      CacheStats stats) {
+  private RuleKeyCacheStatsEvent(EventKey eventKey, CacheStats stats) {
     super(eventKey);
     this.stats = stats;
   }
@@ -48,5 +46,4 @@ public class RuleKeyCacheStatsEvent extends AbstractBuckEvent {
   public CacheStats getStats() {
     return stats;
   }
-
 }

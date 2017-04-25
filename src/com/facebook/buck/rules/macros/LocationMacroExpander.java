@@ -24,9 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Expands to the path of a build rules output.
- */
+/** Expands to the path of a build rules output. */
 public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacro> {
 
   @Override
@@ -36,23 +34,19 @@ public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacr
 
   @Override
   protected LocationMacro parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input) throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+      throws MacroException {
     return LocationMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
-      throws MacroException {
+  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
     SourcePath output = rule.getSourcePathToOutput();
     if (output == null) {
       throw new MacroException(
           String.format(
-              "%s used in location macro does not produce output",
-              rule.getBuildTarget()));
+              "%s used in location macro does not produce output", rule.getBuildTarget()));
     }
     return resolver.getAbsolutePath(output).toString();
   }
-
 }

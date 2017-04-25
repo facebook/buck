@@ -20,18 +20,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * Contains functionality related to rulekey diagnostics.
- */
+/** Contains functionality related to rulekey diagnostics. */
 @ThreadSafe
 public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
 
@@ -55,9 +51,9 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
 
   /**
    * Computes the diagnostic rulekey data for the given rule and all of its appendables recursively.
-   * Previously processed rules and appendables are skipped and not fed to the consumer.
-   * Results for the newly processed rule and appendables are fed to the consumer, but not stored
-   * otherwise. Only information of whether something has been processed or not gets stored.
+   * Previously processed rules and appendables are skipped and not fed to the consumer. Results for
+   * the newly processed rule and appendables are fed to the consumer, but not stored otherwise.
+   * Only information of whether something has been processed or not gets stored.
    */
   public void processRule(BuildRule rule, Consumer<Result<RULE_KEY, DIAG_KEY>> resultConsumer) {
     if (!computed.add(rule)) {
@@ -89,13 +85,8 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
     }
 
     public static <RULE_KEY, DIAG_KEY> Result<RULE_KEY, DIAG_KEY> of(
-        RULE_KEY ruleKey,
-        RuleKeyResult<DIAG_KEY> res) {
-      return new Result<>(
-          ruleKey,
-          res.result,
-          Iterables.filter(res.deps, RuleKeyAppendable.class));
+        RULE_KEY ruleKey, RuleKeyResult<DIAG_KEY> res) {
+      return new Result<>(ruleKey, res.result, Iterables.filter(res.deps, RuleKeyAppendable.class));
     }
   }
-
 }

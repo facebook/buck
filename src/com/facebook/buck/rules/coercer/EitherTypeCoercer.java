@@ -19,14 +19,11 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Coerces a type to either type, trying the left type before the right.
- */
+/** Coerces a type to either type, trying the left type before the right. */
 public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, Right>> {
   private final TypeCoercer<Left> leftTypeCoercer;
   private final TypeCoercer<Right> rightTypeCoercer;
@@ -91,7 +88,8 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
 
     // Determine the "type" of the object we're coercing and our left and right coercers.
     Type objectType = getObjectType(object);
@@ -105,49 +103,30 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (leftCoercerType == objectType && rightCoercerType == objectType) {
       try {
         return Either.ofLeft(
-            leftTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                object));
+            leftTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(
-              rightTypeCoercer.coerce(
-                  cellRoots,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  object));
+              rightTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
         } catch (CoerceFailedException eRight) {
-          throw new CoerceFailedException(String.format(
-              "%s, or %s",
-              eLeft.getMessage(),
-              eRight.getMessage()));
+          throw new CoerceFailedException(
+              String.format("%s, or %s", eLeft.getMessage(), eRight.getMessage()));
         }
       }
-
     }
 
     // Only the left coercer matches, so use that to parse the input and let any inner
     // exceptions propagate up.
     if (leftCoercerType == objectType) {
       return Either.ofLeft(
-          leftTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          leftTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
 
     // Only the right coercer matches, so use that to parse the input and let any inner
     // exceptions propagate up.
     if (rightCoercerType == objectType) {
       return Either.ofRight(
-          rightTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          rightTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
 
     // None of our coercers matched the "type" of the object, so throw the generic

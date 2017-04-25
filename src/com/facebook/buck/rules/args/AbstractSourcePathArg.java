@@ -25,14 +25,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
-/**
- * An {@link Arg} which wraps a {@link SourcePath}.
- */
+/** An {@link Arg} which wraps a {@link SourcePath}. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
@@ -42,18 +38,15 @@ abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     builder.add(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   public void appendToCommandLineRel(
-      ImmutableCollection.Builder<String> builder,
-      Path cellPath,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, Path cellPath, SourcePathResolver pathResolver) {
     SourcePath path = getPath();
-    if (path instanceof BuildTargetSourcePath &&
-        cellPath.equals(((BuildTargetSourcePath<?>) path).getTarget().getCellPath())) {
+    if (path instanceof BuildTargetSourcePath
+        && cellPath.equals(((BuildTargetSourcePath<?>) path).getTarget().getCellPath())) {
       builder.add(pathResolver.getRelativePath(path).toString());
     } else {
       appendToCommandLine(builder, pathResolver);
@@ -75,8 +68,7 @@ abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
     sink.setReflectively("arg", getPath());
   }
 
-  public static ImmutableList<Arg> from(
-      Iterable<SourcePath> paths) {
+  public static ImmutableList<Arg> from(Iterable<SourcePath> paths) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (SourcePath path : paths) {
       converted.add(SourcePathArg.of(path));
@@ -87,5 +79,4 @@ abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
   public static ImmutableList<Arg> from(SourcePath... paths) {
     return from(ImmutableList.copyOf(paths));
   }
-
 }

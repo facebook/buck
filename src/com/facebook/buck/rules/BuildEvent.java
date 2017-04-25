@@ -24,10 +24,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
-
-/**
- * Base class for events about building.
- */
+/** Base class for events about building. */
 public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
   public BuildEvent(EventKey eventKey) {
@@ -51,8 +48,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
   }
 
   public static RuleCountCalculated ruleCountCalculated(
-      ImmutableSet<BuildTarget> buildTargets,
-      int ruleCount) {
+      ImmutableSet<BuildTarget> buildTargets, int ruleCount) {
     return new RuleCountCalculated(buildTargets, ruleCount);
   }
 

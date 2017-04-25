@@ -22,12 +22,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
+import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @JsonSerialize
@@ -42,13 +39,12 @@ abstract class AbstractDependencyFileEntry {
   @Value.Check
   protected void check() {
     Preconditions.checkState(!pathToFile().isAbsolute());
-    Preconditions.checkState(!pathWithinArchive().isPresent() ||
-        !pathWithinArchive().get().isAbsolute());
+    Preconditions.checkState(
+        !pathWithinArchive().isPresent() || !pathWithinArchive().get().isAbsolute());
   }
 
   public static DependencyFileEntry fromSourcePath(
-      SourcePath sourcePath,
-      SourcePathResolver resolver) {
+      SourcePath sourcePath, SourcePathResolver resolver) {
     final DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;

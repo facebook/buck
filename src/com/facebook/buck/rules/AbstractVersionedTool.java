@@ -21,33 +21,27 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
 /**
- * A {@link Tool} which only contributes a fixed name and version when appended to a rule key.
- * This class also holds a {@link Path} reference to the tool and additional flags used
- * when invoking the tool, which do *not* themselves contribute to the rule key.  This is useful
- * in situations such as supporting cross-compilation, in which case the different tools themselves
- * might not be bit-by-bit identical (and, similarly, they might need to invoked with slightly
- * different flags) but we know that they produce identical output, in which case they should also
- * generate identical rule keys.
+ * A {@link Tool} which only contributes a fixed name and version when appended to a rule key. This
+ * class also holds a {@link Path} reference to the tool and additional flags used when invoking the
+ * tool, which do *not* themselves contribute to the rule key. This is useful in situations such as
+ * supporting cross-compilation, in which case the different tools themselves might not be
+ * bit-by-bit identical (and, similarly, they might need to invoked with slightly different flags)
+ * but we know that they produce identical output, in which case they should also generate identical
+ * rule keys.
  */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractVersionedTool implements Tool {
 
-  /**
-   * The path to the tool.  The contents or path to the tool do not contribute to the rule key.
-   */
+  /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
   @Value.Parameter
   protected abstract Path getPath();
 
-  /**
-   * Additional flags that we pass to the tool, but which do *not* contribute to the rule key.
-   */
+  /** Additional flags that we pass to the tool, but which do *not* contribute to the rule key. */
   protected abstract ImmutableList<String> getExtraArgs();
 
   @Value.Parameter
@@ -68,10 +62,7 @@ abstract class AbstractVersionedTool implements Tool {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.<String>builder()
-        .add(getPath().toString())
-        .addAll(getExtraArgs())
-        .build();
+    return ImmutableList.<String>builder().add(getPath().toString()).addAll(getExtraArgs()).build();
   }
 
   @Override
@@ -81,8 +72,6 @@ abstract class AbstractVersionedTool implements Tool {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("name", getName())
-        .setReflectively("version", getVersion());
+    sink.setReflectively("name", getName()).setReflectively("version", getVersion());
   }
 }

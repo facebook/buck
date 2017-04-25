@@ -21,7 +21,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -32,9 +31,10 @@ import java.util.Map;
  */
 public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries> {
 
-  private final ObjectMapper objectMapper = ObjectMappers.legacyCreate()
-      .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-      .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  private final ObjectMapper objectMapper =
+      ObjectMappers.legacyCreate()
+          .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+          .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
   public Class<ManifestEntries> getOutputClass() {
@@ -46,12 +46,14 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (!(object instanceof Map)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
 
-    @SuppressWarnings("unchecked") Map<String, Object> value = (Map<String, Object>) object;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> value = (Map<String, Object>) object;
     try {
       return objectMapper.convertValue(value, ManifestEntries.class);
     } catch (IllegalArgumentException e) {

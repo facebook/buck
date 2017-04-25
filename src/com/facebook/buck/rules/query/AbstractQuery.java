@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -25,5 +24,4 @@ import org.immutables.value.Value;
 abstract class AbstractQuery {
 
   abstract String getQuery();
-
 }

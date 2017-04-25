@@ -30,20 +30,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
 
-  public static final SourceList EMPTY =
-      SourceList.ofUnnamedSources(ImmutableSortedSet.of());
+  public static final SourceList EMPTY = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
 
   public enum Type {
     UNNAMED,
@@ -74,17 +71,11 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
   }
 
   public static SourceList ofUnnamedSources(ImmutableSortedSet<SourcePath> unnamedSources) {
-    return SourceList.of(
-        Type.UNNAMED,
-        Optional.of(unnamedSources),
-        Optional.empty());
+    return SourceList.of(Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
   }
 
   public static SourceList ofNamedSources(ImmutableSortedMap<String, SourcePath> namedSources) {
-    return SourceList.of(
-        Type.NAMED,
-        Optional.empty(),
-        Optional.of(namedSources));
+    return SourceList.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
   }
 
   public boolean isEmpty() {
@@ -115,12 +106,9 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
         }
         break;
       case UNNAMED:
-        pathResolver.getSourcePathNames(
-            buildTarget,
-            parameterName,
-            getUnnamedSources().get(),
-            filter,
-            transform)
+        pathResolver
+            .getSourcePathNames(
+                buildTarget, parameterName, getUnnamedSources().get(), filter, transform)
             .forEach((name, path) -> sources.put(name, transform.apply(path)));
         break;
     }
@@ -128,9 +116,7 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
   }
 
   public ImmutableMap<String, SourcePath> toNameMap(
-      BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
-      String parameterName) {
+      BuildTarget buildTarget, SourcePathResolver pathResolver, String parameterName) {
     return toNameMap(buildTarget, pathResolver, parameterName, x -> true, x -> x);
   }
 
@@ -165,5 +151,4 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
     builder.setUnnamedSources(unNamedSources.orElse(getUnnamedSources()));
     return Optional.of(builder.build());
   }
-
 }

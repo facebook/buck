@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -33,6 +32,7 @@ abstract class AbstractBuildContext {
   public abstract SourcePathResolver getSourcePathResolver();
 
   public abstract JavaPackageFinder getJavaPackageFinder();
+
   public abstract BuckEventBus getEventBus();
 
   @Value.Default

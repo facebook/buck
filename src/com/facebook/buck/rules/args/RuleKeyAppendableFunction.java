@@ -23,6 +23,4 @@ import com.google.common.base.Function;
  * A simple shorthand for {@link Function} and {@link RuleKeyAppendable}, useful when creating
  * anonymous classes.
  */
-public interface RuleKeyAppendableFunction<T, F> extends Function<T, F>, RuleKeyAppendable {
-
-}
+public interface RuleKeyAppendableFunction<T, F> extends Function<T, F>, RuleKeyAppendable {}

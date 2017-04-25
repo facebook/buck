@@ -20,9 +20,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * An abstraction for describing some tools used as part of the build.
- */
+/** An abstraction for describing some tools used as part of the build. */
 public interface Tool extends RuleKeyAppendable {
 
   /**
@@ -31,14 +29,10 @@ public interface Tool extends RuleKeyAppendable {
    */
   ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
-  /**
-   * @return all {@link SourcePath}s this tool requires to run.
-   */
+  /** @return all {@link SourcePath}s this tool requires to run. */
   ImmutableCollection<SourcePath> getInputs();
 
-  /**
-   * @return the prefix command use to run this tool.
-   */
+  /** @return the prefix command use to run this tool. */
   ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);
 
   /**
@@ -46,5 +40,4 @@ public interface Tool extends RuleKeyAppendable {
    * @param resolver
    */
   ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
-
 }

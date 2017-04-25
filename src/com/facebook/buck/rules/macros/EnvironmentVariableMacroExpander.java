@@ -42,9 +42,7 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
 
   @Override
   protected String parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException(String.format("expected a single argument: %s", input));
@@ -54,10 +52,7 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
 
   @Override
   public String expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String var)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String var)
       throws MacroException {
     if (platform == Platform.WINDOWS) {
       if ("pwd".equalsIgnoreCase(var)) {
@@ -68,5 +63,4 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
       return "${" + var + "}";
     }
   }
-
 }

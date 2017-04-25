@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Primitives;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -85,74 +84,71 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             // deps fields.
             // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
-            return BuildTargetPatternParser.forVisibilityArgument().parse(
-                cellRoots,
-                (String) object);
+            return BuildTargetPatternParser.forVisibilityArgument()
+                .parse(cellRoots, (String) object);
           }
         };
     TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
-    TypeCoercer<SourcePath> sourcePathTypeCoercer = new SourcePathTypeCoercer(
-        buildTargetTypeCoercer,
-        pathTypeCoercer);
-    TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer = new SourceWithFlagsTypeCoercer(
-        sourcePathTypeCoercer,
-        new ListTypeCoercer<>(stringTypeCoercer));
-    TypeCoercer<OcamlSource> ocamlSourceTypeCoercer = new OcamlSourceTypeCoercer(
-        sourcePathTypeCoercer);
+    TypeCoercer<SourcePath> sourcePathTypeCoercer =
+        new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+    TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
+        new SourceWithFlagsTypeCoercer(
+            sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
+    TypeCoercer<OcamlSource> ocamlSourceTypeCoercer =
+        new OcamlSourceTypeCoercer(sourcePathTypeCoercer);
     TypeCoercer<Float> floatTypeCoercer = new NumberTypeCoercer<>(Float.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
-            floatTypeCoercer,
-            buildTargetTypeCoercer,
-            stringTypeCoercer);
-    nonParameterizedTypeCoercers = new TypeCoercer<?>[] {
-        // special classes
-        pathTypeCoercer,
-        flavorTypeCoercer,
-        sourcePathTypeCoercer,
-        buildTargetTypeCoercer,
-        buildTargetPatternTypeCoercer,
+            floatTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
+    nonParameterizedTypeCoercers =
+        new TypeCoercer<?>[] {
+          // special classes
+          pathTypeCoercer,
+          flavorTypeCoercer,
+          sourcePathTypeCoercer,
+          buildTargetTypeCoercer,
+          buildTargetPatternTypeCoercer,
 
-        // identity
-        stringTypeCoercer,
-        new IdentityTypeCoercer<>(Boolean.class),
+          // identity
+          stringTypeCoercer,
+          new IdentityTypeCoercer<>(Boolean.class),
 
-        // numeric
-        new NumberTypeCoercer<>(Integer.class),
-        new NumberTypeCoercer<>(Double.class),
-        floatTypeCoercer,
-        new NumberTypeCoercer<>(Long.class),
-        new NumberTypeCoercer<>(Short.class),
-        new NumberTypeCoercer<>(Byte.class),
+          // numeric
+          new NumberTypeCoercer<>(Integer.class),
+          new NumberTypeCoercer<>(Double.class),
+          floatTypeCoercer,
+          new NumberTypeCoercer<>(Long.class),
+          new NumberTypeCoercer<>(Short.class),
+          new NumberTypeCoercer<>(Byte.class),
 
-        // other simple
-        sourceWithFlagsTypeCoercer,
-        ocamlSourceTypeCoercer,
-        new BuildConfigFieldsTypeCoercer(),
-        new UriTypeCoercer(),
-        new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
-        new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
-        new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
-        new LogLevelTypeCoercer(),
-        new ManifestEntriesTypeCoercer(),
-        patternTypeCoercer,
-        neededCoverageSpecTypeCoercer,
-        new ConstraintTypeCoercer(),
-        new VersionTypeCoercer(),
-        new QueryCoercer(),
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of(
-                "classpath", ClasspathMacro.class,
-                "exe", ExecutableMacro.class,
-                "location", LocationMacro.class,
-                "maven_coords", MavenCoordinatesMacro.class),
-            ImmutableList.of(
-                new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
-                new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
-                new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer))),
-    };
+          // other simple
+          sourceWithFlagsTypeCoercer,
+          ocamlSourceTypeCoercer,
+          new BuildConfigFieldsTypeCoercer(),
+          new UriTypeCoercer(),
+          new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
+          new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
+          new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
+          new LogLevelTypeCoercer(),
+          new ManifestEntriesTypeCoercer(),
+          patternTypeCoercer,
+          neededCoverageSpecTypeCoercer,
+          new ConstraintTypeCoercer(),
+          new VersionTypeCoercer(),
+          new QueryCoercer(),
+          StringWithMacrosTypeCoercer.from(
+              ImmutableMap.of(
+                  "classpath", ClasspathMacro.class,
+                  "exe", ExecutableMacro.class,
+                  "location", LocationMacro.class,
+                  "maven_coords", MavenCoordinatesMacro.class),
+              ImmutableList.of(
+                  new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
+                  new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
+                  new LocationMacroTypeCoercer(buildTargetTypeCoercer),
+                  new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer))),
+        };
   }
 
   @Override
@@ -204,14 +200,18 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
       Class<?> rawClass = (Class<?>) rawType;
       if (rawClass.equals(Either.class)) {
-        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters", parameterizedType);
+        Preconditions.checkState(
+            parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters",
+            parameterizedType);
         return new EitherTypeCoercer<>(
             typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
       } else if (rawClass.equals(Pair.class)) {
-        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters", parameterizedType);
+        Preconditions.checkState(
+            parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters",
+            parameterizedType);
         return new PairTypeCoercer<>(
             typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
@@ -226,27 +226,31 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         // be assigned to something of type Set, but not vice versa.
         Type elementType = getSingletonTypeParameter(parameterizedType);
         @SuppressWarnings({"rawtypes", "unchecked"})
-        SortedSetTypeCoercer<?> sortedSetTypeCoercer = new SortedSetTypeCoercer(
-            typeCoercerForComparableType(elementType));
+        SortedSetTypeCoercer<?> sortedSetTypeCoercer =
+            new SortedSetTypeCoercer(typeCoercerForComparableType(elementType));
         return sortedSetTypeCoercer;
       } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
-        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters", parameterizedType);
+        Preconditions.checkState(
+            parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters",
+            parameterizedType);
         return new MapTypeCoercer<>(
             typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
       } else if (rawClass.isAssignableFrom(ImmutableSortedMap.class)) {
-        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters", parameterizedType);
+        Preconditions.checkState(
+            parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters",
+            parameterizedType);
         @SuppressWarnings({"rawtypes", "unchecked"})
-        SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer = new SortedMapTypeCoercer(
-            typeCoercerForComparableType(parameterizedType.getActualTypeArguments()[0]),
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
+        SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer =
+            new SortedMapTypeCoercer(
+                typeCoercerForComparableType(parameterizedType.getActualTypeArguments()[0]),
+                typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
         return sortedMapTypeCoercer;
       } else if (rawClass.isAssignableFrom(PatternMatchedCollection.class)) {
         return new PatternMatchedCollectionTypeCoercer<>(
-            patternTypeCoercer,
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
+            patternTypeCoercer, typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
       } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
         return new VersionMatchedCollectionTypeCoercer<>(
             new MapTypeCoercer<>(new BuildTargetTypeCoercer(), new VersionTypeCoercer()),
@@ -274,8 +278,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   private static Type getSingletonTypeParameter(ParameterizedType type) {
-    Preconditions.checkState(type.getActualTypeArguments().length == 1,
-        "expected type '%s' to have one parameter", type);
+    Preconditions.checkState(
+        type.getActualTypeArguments().length == 1,
+        "expected type '%s' to have one parameter",
+        type);
     return type.getActualTypeArguments()[0];
   }
 
@@ -284,8 +290,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     if (!(obj instanceof DefaultTypeCoercerFactory)) {
       return false;
     }
-    return pathExistenceVerificationMode ==
-        ((DefaultTypeCoercerFactory) obj).pathExistenceVerificationMode;
+    return pathExistenceVerificationMode
+        == ((DefaultTypeCoercerFactory) obj).pathExistenceVerificationMode;
   }
 
   @Override

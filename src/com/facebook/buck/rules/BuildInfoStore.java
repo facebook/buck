@@ -17,24 +17,19 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Repository of build metadata.
- */
+/** Repository of build metadata. */
 interface BuildInfoStore extends Closeable {
   Optional<String> readMetadata(BuildTarget buildTarget, String key);
 
   @Override
   void close();
 
-  void updateMetadata(
-      BuildTarget buildTarget,
-      Map<String, String> metadata) throws IOException;
+  void updateMetadata(BuildTarget buildTarget, Map<String, String> metadata) throws IOException;
 
   void deleteMetadata(BuildTarget buildTarget) throws IOException;
 }

@@ -14,8 +14,6 @@
  * under the License.
  */
 
-
-
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
@@ -32,14 +30,13 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Used to expand the macro {@literal $(query_targets "some(query(:expression))")} to the
- * set of targets matching the query.
- * Example queries
+ * Used to expand the macro {@literal $(query_targets "some(query(:expression))")} to the set of
+ * targets matching the query. Example queries
+ *
  * <pre>
  *   '$(query_targets "deps(:foo)")'
  *   '$(query_targets "filter(bar, classpath(:bar))")'
@@ -71,11 +68,12 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
       throws MacroException {
     String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     return resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          BuildRule rule = resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-          return rule.getBuildTarget().toString();
-        })
+        .map(
+            queryTarget -> {
+              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+              BuildRule rule = resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+              return rule.getBuildTarget().toString();
+            })
         .sorted()
         .collect(Collectors.joining(" "));
   }

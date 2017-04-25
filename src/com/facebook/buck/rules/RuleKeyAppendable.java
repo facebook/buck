@@ -20,5 +20,4 @@ package com.facebook.buck.rules;
 public interface RuleKeyAppendable {
 
   void appendToRuleKey(RuleKeyObjectSink sink);
-
 }

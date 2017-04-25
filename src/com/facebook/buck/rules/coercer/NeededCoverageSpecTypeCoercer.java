@@ -20,15 +20,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-/**
- * A type coercer to handle needed coverage specification for python_test.
- */
+/** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
   private final TypeCoercer<Float> floatTypeCoercer;
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
@@ -50,9 +47,9 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return floatTypeCoercer.hasElementClass(types) ||
-        buildTargetTypeCoercer.hasElementClass(types) ||
-        pathNameTypeCoercer.hasElementClass(types);
+    return floatTypeCoercer.hasElementClass(types)
+        || buildTargetTypeCoercer.hasElementClass(types)
+        || pathNameTypeCoercer.hasElementClass(types);
   }
 
   @Override
@@ -70,7 +67,8 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof NeededCoverageSpec) {
       return (NeededCoverageSpec) object;
     }
@@ -79,30 +77,21 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() == 2 || collection.size() == 3) {
         Iterator<?> iter = collection.iterator();
-        Float neededRatio = floatTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            iter.next());
+        Float neededRatio =
+            floatTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, iter.next());
         if (neededRatio < 0 || neededRatio > 1) {
           throw CoerceFailedException.simple(
-              object,
-              getOutputClass(),
-              "the needed coverage ratio should be in range [0; 1]");
+              object, getOutputClass(), "the needed coverage ratio should be in range [0; 1]");
         }
-        BuildTarget buildTarget = buildTargetTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            iter.next());
+        BuildTarget buildTarget =
+            buildTargetTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, iter.next());
         Optional<String> pathName = Optional.empty();
         if (iter.hasNext()) {
-          pathName = Optional.of(
-              pathNameTypeCoercer.coerce(
-                  cellRoots,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  iter.next()));
+          pathName =
+              Optional.of(
+                  pathNameTypeCoercer.coerce(
+                      cellRoots, filesystem, pathRelativeToProjectRoot, iter.next()));
         }
         return NeededCoverageSpec.of(neededRatio, buildTarget, pathName);
       }

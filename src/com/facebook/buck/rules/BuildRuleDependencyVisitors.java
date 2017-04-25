@@ -23,19 +23,17 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
 public class BuildRuleDependencyVisitors {
-  private BuildRuleDependencyVisitors() {
-  }
+  private BuildRuleDependencyVisitors() {}
 
   /**
    * Given dependencies in inputs builds graph of transitive dependencies filtering them by
    * instanceOf T.
    *
-   * @param inputs      initial dependencies from which to build transitive closure
-   * @param filter      predicate to determine whether a node should be included
-   * @param traverse    predicate to determine whether this node should be traversed
-   * @param <T>         class to fitler on
-   * @return            filtered BuildRule DAG of transitive dependencies
-   *
+   * @param inputs initial dependencies from which to build transitive closure
+   * @param filter predicate to determine whether a node should be included
+   * @param traverse predicate to determine whether this node should be traversed
+   * @param <T> class to fitler on
+   * @return filtered BuildRule DAG of transitive dependencies
    * @see com.facebook.buck.rules.BuildRule
    */
   public static <T> DirectedAcyclicGraph<BuildRule> getBuildRuleDirectedGraphFilteredBy(

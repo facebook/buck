@@ -28,11 +28,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class OutputToFileExpander implements MacroExpander {
@@ -47,16 +45,15 @@ public class OutputToFileExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
+      ImmutableList<String> input)
+      throws MacroException {
 
     try {
       String expanded;
       if (delegate instanceof MacroExpanderWithCustomFileOutput) {
-        expanded = ((MacroExpanderWithCustomFileOutput) delegate).expandForFile(
-            target,
-            cellNames,
-            resolver,
-            input);
+        expanded =
+            ((MacroExpanderWithCustomFileOutput) delegate)
+                .expandForFile(target, cellNames, resolver, input);
       } else {
         expanded = delegate.expand(target, cellNames, resolver, input);
       }
@@ -93,11 +90,7 @@ public class OutputToFileExpander implements MacroExpander {
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
     delegate.extractParseTimeDeps(
-        target,
-        cellNames,
-        input,
-        buildDepsBuilder,
-        targetGraphOnlyDepsBuilder);
+        target, cellNames, input, buildDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   @Override
@@ -111,9 +104,7 @@ public class OutputToFileExpander implements MacroExpander {
     return delegate.extractRuleKeyAppendables(target, cellNames, resolver, input);
   }
 
-  /**
-   * @return The absolute path to the temp file.
-   */
+  /** @return The absolute path to the temp file. */
   private Path createTempFile(ProjectFilesystem filesystem, BuildTarget target, String input)
       throws IOException {
     Path directory = BuildTargets.getScratchPath(filesystem, target, "%s/tmp");
@@ -123,11 +114,13 @@ public class OutputToFileExpander implements MacroExpander {
     // the same file. We won't optimise for this case, since it's actually unlikely to happen within
     // a single run, but using a random name would cause 'buck-out' to expand in an uncontrolled
     // manner.
-    String prefix = Hashing.sha1().newHasher()
-        .putString(delegate.getClass().getName(), UTF_8)
-        .putString(input, UTF_8)
-        .hash()
-        .toString();
+    String prefix =
+        Hashing.sha1()
+            .newHasher()
+            .putString(delegate.getClass().getName(), UTF_8)
+            .putString(input, UTF_8)
+            .hash()
+            .toString();
 
     return filesystem.createTempFile(directory, prefix, ".macro");
   }

@@ -16,9 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
-/**
- * A class that keeps track of size and throws an exception if the size limit is exceeded.
- */
+/** A class that keeps track of size and throws an exception if the size limit is exceeded. */
 public class SizeLimiter {
 
   public static class SizeLimitException extends RuntimeException {}

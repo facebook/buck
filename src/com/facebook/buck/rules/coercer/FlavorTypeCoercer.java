@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.CellPathResolver;
-
 import java.nio.file.Path;
 
 public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
@@ -34,7 +33,8 @@ public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       return InternalFlavor.of((String) object);
     }

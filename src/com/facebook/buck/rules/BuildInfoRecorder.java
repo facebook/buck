@@ -47,7 +47,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -60,7 +59,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.Nullable;
 
 /**
@@ -90,9 +88,7 @@ public class BuildInfoRecorder {
   private final Map<String, String> buildMetadata;
   private final AtomicBoolean warnedUserOfCacheStoreFailure;
 
-  /**
-   * Every value in this set is a path relative to the project root.
-   */
+  /** Every value in this set is a path relative to the project root. */
   private final Set<Path> pathsToOutputs;
 
   BuildInfoRecorder(
@@ -151,8 +147,7 @@ public class BuildInfoRecorder {
                     .put("build_id", buildId.toString())
                     .put(
                         "timestamp",
-                        String.valueOf(
-                            TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())))
+                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())))
                     .putAll(artifactExtraData)
                     .build()))
         .putAll(buildMetadata)
@@ -160,8 +155,8 @@ public class BuildInfoRecorder {
   }
 
   /**
-   * Writes the metadata currently stored in memory to the directory returned by
-   * {@link BuildInfo#getPathToMetadataDirectory(BuildTarget, ProjectFilesystem)}.
+   * Writes the metadata currently stored in memory to the directory returned by {@link
+   * BuildInfo#getPathToMetadataDirectory(BuildTarget, ProjectFilesystem)}.
    */
   public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
     if (clearExistingMetadata) {
@@ -173,8 +168,7 @@ public class BuildInfoRecorder {
     buildInfoStore.updateMetadata(buildTarget, getBuildMetadata());
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
       projectFilesystem.writeContentsToPath(
-          entry.getValue(),
-          pathToMetadataDirectory.resolve(entry.getKey()));
+          entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
     }
   }
 
@@ -204,8 +198,7 @@ public class BuildInfoRecorder {
   private ImmutableSortedSet<Path> getRecordedMetadataFiles() {
     return FluentIterable.from(metadataToWrite.keySet())
         .transform(Paths::get)
-        .transform(
-            pathToMetadataDirectory::resolve)
+        .transform(pathToMetadataDirectory::resolve)
         .toSortedSet(Ordering.natural());
   }
 
@@ -218,18 +211,14 @@ public class BuildInfoRecorder {
           output,
           new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(
-                Path file,
-                BasicFileAttributes attrs)
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
               paths.add(file);
               return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult preVisitDirectory(
-                Path dir,
-                BasicFileAttributes attrs)
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                 throws IOException {
               paths.add(dir);
               return FileVisitResult.CONTINUE;
@@ -247,9 +236,7 @@ public class BuildInfoRecorder {
         .build();
   }
 
-  /**
-   * @return the outputs paths as recorded by the rule.
-   */
+  /** @return the outputs paths as recorded by the rule. */
   public ImmutableSortedSet<Path> getOutputPaths() {
     return ImmutableSortedSet.copyOf(pathsToOutputs);
   }
@@ -293,9 +280,8 @@ public class BuildInfoRecorder {
       return;
     }
 
-    ArtifactCompressionEvent.Started started = ArtifactCompressionEvent.started(
-        ArtifactCompressionEvent.Operation.COMPRESS,
-        ruleKeys);
+    ArtifactCompressionEvent.Started started =
+        ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
     eventBus.post(started);
 
     final Path zip;
@@ -303,15 +289,16 @@ public class BuildInfoRecorder {
     ImmutableMap<String, String> buildMetadata;
     try {
       pathsToIncludeInZip = getRecordedDirsAndFiles();
-      zip = Files.createTempFile(
-          "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
-          ".zip");
+      zip =
+          Files.createTempFile(
+              "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip");
       buildMetadata = getBuildMetadata();
       projectFilesystem.createZip(pathsToIncludeInZip, zip);
     } catch (IOException e) {
-      eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
-          buildTarget,
-          Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
+      eventBus.post(
+          ConsoleEvent.info(
+              "Failed to create zip for %s containing:\n%s",
+              buildTarget, Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
       e.printStackTrace();
       return;
     } finally {
@@ -319,9 +306,10 @@ public class BuildInfoRecorder {
     }
 
     // Store the artifact, including any additional metadata.
-    ListenableFuture<Void> storeFuture = artifactCache.store(
-        ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
-        BorrowablePath.borrowablePath(zip));
+    ListenableFuture<Void> storeFuture =
+        artifactCache.store(
+            ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
+            BorrowablePath.borrowablePath(zip));
     Futures.addCallback(
         storeFuture,
         new FutureCallback<Void>() {
@@ -336,8 +324,8 @@ public class BuildInfoRecorder {
             LOG.info(t, "Failed storing RuleKeys %s to the cache.", ruleKeys);
             if (warnedUserOfCacheStoreFailure.compareAndSet(false, true)) {
               eventBus.post(
-                  ConsoleEvent.severe("Failed storing an artifact to the cache," +
-                      "see log for details."));
+                  ConsoleEvent.severe(
+                      "Failed storing an artifact to the cache," + "see log for details."));
             }
           }
 
@@ -351,15 +339,10 @@ public class BuildInfoRecorder {
         });
   }
 
-  /**
-   * @param pathToArtifact Relative path to the project root.
-   */
+  /** @param pathToArtifact Relative path to the project root. */
   public void recordArtifact(Path pathToArtifact) {
     Preconditions.checkArgument(
-        !pathToArtifact.isAbsolute(),
-        ABSOLUTE_PATH_ERROR_FORMAT,
-        buildTarget,
-        pathToArtifact);
+        !pathToArtifact.isAbsolute(), ABSOLUTE_PATH_ERROR_FORMAT, buildTarget, pathToArtifact);
     pathsToOutputs.add(pathToArtifact);
   }
 
@@ -372,5 +355,4 @@ public class BuildInfoRecorder {
   Optional<String> getBuildMetadataFor(String key) {
     return Optional.ofNullable(buildMetadata.get(key));
   }
-
 }

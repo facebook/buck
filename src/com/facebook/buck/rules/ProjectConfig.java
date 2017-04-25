@@ -19,26 +19,19 @@ package com.facebook.buck.rules;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 
 public class ProjectConfig extends NoopBuildRule {
 
-  @Nullable
-  private final BuildRule srcRule;
+  @Nullable private final BuildRule srcRule;
 
   /** Likely empty for a directory that contains only an android_binary() rule. */
-  @Nullable
-  private final ImmutableList<SourceRoot> srcSourceRoots;
+  @Nullable private final ImmutableList<SourceRoot> srcSourceRoots;
 
-  @Nullable
-  private final BuildRule testRule;
+  @Nullable private final BuildRule testRule;
 
-  @Nullable
-  private final ImmutableList<SourceRoot> testsSourceRoots;
+  @Nullable private final ImmutableList<SourceRoot> testsSourceRoots;
 
   private final boolean isIntelliJPlugin;
 
@@ -50,26 +43,26 @@ public class ProjectConfig extends NoopBuildRule {
       @Nullable List<String> testRoots,
       boolean isIntelliJPlugin) {
     super(params);
-    Preconditions.checkArgument(srcRule != null || testRule != null,
+    Preconditions.checkArgument(
+        srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
         params.getBuildTarget().getFullyQualifiedName());
-    Preconditions.checkArgument(testRule == null || testRule instanceof TestRule,
-        "The test_target for a project_config() must correspond to a test rule, if specified, " +
-        "but was %s.",
+    Preconditions.checkArgument(
+        testRule == null || testRule instanceof TestRule,
+        "The test_target for a project_config() must correspond to a test rule, if specified, "
+            + "but was %s.",
         testRule);
 
     this.srcRule = srcRule;
     if (srcRoots != null) {
-      this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots,
-          SourceRoot::new));
+      this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots, SourceRoot::new));
     } else {
       this.srcSourceRoots = null;
     }
 
     this.testRule = testRule;
     if (testRoots != null) {
-      this.testsSourceRoots = ImmutableList.copyOf(Iterables.transform(testRoots,
-          SourceRoot::new));
+      this.testsSourceRoots = ImmutableList.copyOf(Iterables.transform(testRoots, SourceRoot::new));
     } else {
       this.testsSourceRoots = null;
     }
@@ -78,8 +71,8 @@ public class ProjectConfig extends NoopBuildRule {
   }
 
   /**
-   * @return the BuildRule that should determine the type of IDE project to create. This will be
-   *     the srcRule, if it is present; otherwise, it will be the test rule.
+   * @return the BuildRule that should determine the type of IDE project to create. This will be the
+   *     srcRule, if it is present; otherwise, it will be the test rule.
    */
   @Nullable
   public BuildRule getProjectRule() {
@@ -113,5 +106,4 @@ public class ProjectConfig extends NoopBuildRule {
   public boolean getIsIntelliJPlugin() {
     return isIntelliJPlugin;
   }
-
 }

@@ -19,13 +19,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.stream.Stream;
 
 /**
  * Supplies dependencies that are archives. For normal rule-key generation, each archive is treated
- * as a single {@link SourcePath}. For input-based rule-key generation, each archive is treated
- * as a set of {@link SourcePath}s, one for each member of the archive.
+ * as a single {@link SourcePath}. For input-based rule-key generation, each archive is treated as a
+ * set of {@link SourcePath}s, one for each member of the archive.
  */
 public interface ArchiveDependencySupplier extends Supplier<ImmutableSortedSet<SourcePath>> {
   @Override

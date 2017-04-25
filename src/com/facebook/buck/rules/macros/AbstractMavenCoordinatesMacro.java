@@ -17,10 +17,8 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractMavenCoordinatesMacro extends BuildTargetMacro {
-}
+abstract class AbstractMavenCoordinatesMacro extends BuildTargetMacro {}

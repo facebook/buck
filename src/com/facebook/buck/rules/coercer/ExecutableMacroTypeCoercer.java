@@ -34,5 +34,4 @@ public class ExecutableMacroTypeCoercer extends BuildTargetMacroTypeCoercer<Exec
   ExecutableMacro create(BuildTarget target) {
     return ExecutableMacro.of(target);
   }
-
 }

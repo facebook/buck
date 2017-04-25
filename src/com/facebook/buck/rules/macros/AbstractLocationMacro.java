@@ -17,13 +17,9 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
-/**
- * Macro that resolves to the output location of a build rule.
- */
+/** Macro that resolves to the output location of a build rule. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractLocationMacro extends BuildTargetMacro {
-}
+abstract class AbstractLocationMacro extends BuildTargetMacro {}

@@ -21,19 +21,14 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.versions.TargetNodeTranslator;
-
 import java.util.Optional;
 
-/**
- * Base class for macros that embed a query string.
- */
+/** Base class for macros that embed a query string. */
 abstract class QueryMacro implements Macro {
 
   abstract Query getQuery();
 
-  /**
-   * @return a copy of this {@link QueryMacro} with the given {@link Query}.
-   */
+  /** @return a copy of this {@link QueryMacro} with the given {@link Query}. */
   abstract QueryMacro withQuery(Query query);
 
   @Override
@@ -43,5 +38,4 @@ abstract class QueryMacro implements Macro {
       TargetNodeTranslator translator) {
     return translator.translate(cellPathResolver, pattern, getQuery()).map(this::withQuery);
   }
-
 }

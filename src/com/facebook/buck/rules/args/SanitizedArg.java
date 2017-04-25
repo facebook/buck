@@ -24,15 +24,15 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Objects;
 
 /**
- * An {@link Arg} which must be sanitized before contributing to a
- * {@link com.facebook.buck.rules.RuleKey}.
+ * An {@link Arg} which must be sanitized before contributing to a {@link
+ * com.facebook.buck.rules.RuleKey}.
+ *
  * <p>
- * <pre>
- * {@code
+ *
+ * <pre>{@code
  * ImmutableMap<String, String> toolchainRoots =
  *     ImmutableMap.of("/opt/toolchain", "$TOOLCHAIN_ROOT");
  * Path toolchainRoot = Paths.get("/opt/toolchain");
@@ -40,8 +40,7 @@ import java.util.Objects;
  *     new SanitizedArg(
  *         Functions.forMap(toolchainRoots),
  *         "/opt/toolchain/bin/tool");
- * }
- * </pre>
+ * }</pre>
  */
 public class SanitizedArg extends Arg {
 
@@ -55,8 +54,7 @@ public class SanitizedArg extends Arg {
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     builder.add(unsanitzed);
   }
 
@@ -89,8 +87,8 @@ public class SanitizedArg extends Arg {
       return false;
     }
     SanitizedArg sanitizedArg = (SanitizedArg) o;
-    return Objects.equals(sanitizer, sanitizedArg.sanitizer) &&
-        Objects.equals(unsanitzed, sanitizedArg.unsanitzed);
+    return Objects.equals(sanitizer, sanitizedArg.sanitizer)
+        && Objects.equals(unsanitzed, sanitizedArg.unsanitzed);
   }
 
   @Override
@@ -105,5 +103,4 @@ public class SanitizedArg extends Arg {
     }
     return converted.build();
   }
-
 }

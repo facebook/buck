@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.google.common.base.Charsets;
-
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
@@ -40,11 +39,9 @@ public class RocksDBMetadataDumper {
       }
     }
     RocksDB.loadLibrary();
-    try (
-        Options options = new Options();
+    try (Options options = new Options();
         RocksDB db = RocksDB.open(options, dbPath);
-        RocksIterator it = db.newIterator()
-    ) {
+        RocksIterator it = db.newIterator()) {
       byte[] target = targetStr.getBytes(Charsets.UTF_8);
       it.seek(target);
       for (it.seek(target); it.isValid() && startsWith(it.key(), target); it.next()) {

@@ -21,9 +21,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.google.common.cache.CacheStats;
 
-/**
- * A {@link RuleKeyCacheScope} which logs stats on close.
- */
+/** A {@link RuleKeyCacheScope} which logs stats on close. */
 public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
 
   private final BuckEventBus buckEventBus;
@@ -31,14 +29,12 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
 
   private final CacheStats startStats;
 
-  public EventPostingRuleKeyCacheScope(
-      BuckEventBus buckEventBus,
-      RuleKeyCache<V> cache) {
+  public EventPostingRuleKeyCacheScope(BuckEventBus buckEventBus, RuleKeyCache<V> cache) {
     this.buckEventBus = buckEventBus;
     this.cache = cache;
 
     try (SimplePerfEvent.Scope scope =
-             SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_setup"))) {
+        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_setup"))) {
 
       // Record the initial stats.
       startStats = cache.getStats();
@@ -48,17 +44,11 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
     }
   }
 
-  /**
-   * Additional setup.  To be implemented by sub-classes.
-   */
-  protected void setup(
-      @SuppressWarnings("unused") SimplePerfEvent.Scope scope) {}
+  /** Additional setup. To be implemented by sub-classes. */
+  protected void setup(@SuppressWarnings("unused") SimplePerfEvent.Scope scope) {}
 
-  /**
-   * Additional cleanup.  To be implemented by sub-classes.
-   */
-  protected void cleanup(
-      @SuppressWarnings("unused") SimplePerfEvent.Scope scope) {}
+  /** Additional cleanup. To be implemented by sub-classes. */
+  protected void cleanup(@SuppressWarnings("unused") SimplePerfEvent.Scope scope) {}
 
   @Override
   public final RuleKeyCache<V> getCache() {
@@ -68,7 +58,7 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
   @Override
   public final void close() {
     try (SimplePerfEvent.Scope scope =
-             SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_cleanup"))) {
+        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_cleanup"))) {
 
       // Log stats.
       CacheStats stats = cache.getStats().minus(startStats);
@@ -83,5 +73,4 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
       cleanup(scope);
     }
   }
-
 }

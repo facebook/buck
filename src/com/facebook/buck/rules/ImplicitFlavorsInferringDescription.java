@@ -17,14 +17,12 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.Flavor;
-
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
- * While building up the target graph, we allow descriptions to apply default
- * flavors (e.g., #iphonesimulator-x86_64 for C++ or Objective-C libraries built in an
- * iPhone simulator environment) from the .buckconfig file.
- *
+ * While building up the target graph, we allow descriptions to apply default flavors (e.g.,
+ * #iphonesimulator-x86_64 for C++ or Objective-C libraries built in an iPhone simulator
+ * environment) from the .buckconfig file.
  */
 public interface ImplicitFlavorsInferringDescription {
   ImmutableSortedSet<Flavor> addImplicitFlavors(ImmutableSortedSet<Flavor> argDefaultFlavors);

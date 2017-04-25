@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.query.Query;
-
 import java.nio.file.Path;
 
 public class QueryCoercer extends LeafTypeCoercer<Query> {
@@ -34,11 +33,11 @@ public class QueryCoercer extends LeafTypeCoercer<Query> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       return Query.of((String) object);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }
-
 }

@@ -26,13 +26,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * A factory for generating {@link RuleKey}s that only take into the account the path of a file
- * and not the contents(hash) of the file.
+ * A factory for generating {@link RuleKey}s that only take into the account the path of a file and
+ * not the contents(hash) of the file.
  */
 public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
@@ -57,7 +56,6 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
           throw new AssertionError();
         }
-
       };
 
   private final SingleBuildRuleKeyCache<RuleKey> ruleKeyCache = new SingleBuildRuleKeyCache<>();

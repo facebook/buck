@@ -23,14 +23,14 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableList;
 
 /**
- * {@link MacroExpander}s that also implement this interface can provide different output when
- * they are expanding to a file.
+ * {@link MacroExpander}s that also implement this interface can provide different output when they
+ * are expanding to a file.
  */
 public interface MacroExpanderWithCustomFileOutput {
 
   /**
-   * Expand the input given for the this macro to some string, which is intended to be written to
-   * a file.
+   * Expand the input given for the this macro to some string, which is intended to be written to a
+   * file.
    */
   String expandForFile(
       BuildTarget target,
@@ -38,5 +38,4 @@ public interface MacroExpanderWithCustomFileOutput {
       BuildRuleResolver resolver,
       ImmutableList<String> input)
       throws MacroException;
-
 }

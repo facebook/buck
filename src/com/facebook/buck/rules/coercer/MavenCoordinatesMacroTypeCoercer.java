@@ -35,5 +35,4 @@ public class MavenCoordinatesMacroTypeCoercer
   MavenCoordinatesMacro create(BuildTarget target) {
     return MavenCoordinatesMacro.of(target);
   }
-
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -33,22 +32,22 @@ import com.google.common.cache.LoadingCache;
  *
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
- *
  */
 public interface Description<T> {
 
   static final LoadingCache<Class<? extends Description<?>>, BuildRuleType>
-      BUILD_RULE_TYPES_BY_CLASS = CacheBuilder.newBuilder().build(
-        new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
-          @Override
-          public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
-            return Description.getBuildRuleType(key.getSimpleName());
-          }
-        });
+      BUILD_RULE_TYPES_BY_CLASS =
+          CacheBuilder.newBuilder()
+              .build(
+                  new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
+                    @Override
+                    public BuildRuleType load(Class<? extends Description<?>> key)
+                        throws Exception {
+                      return Description.getBuildRuleType(key.getSimpleName());
+                    }
+                  });
 
-  /**
-   * @return The {@link BuildRuleType} being described.
-   */
+  /** @return The {@link BuildRuleType} being described. */
   static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
     return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
@@ -70,14 +69,13 @@ public interface Description<T> {
   /**
    * @return An instance of the argument that must later be passed to createBuildRule().
    * @see ConstructorArgMarshaller
-   *
    */
   T createUnpopulatedConstructorArg();
 
   /**
-   * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the
-   * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
-   * {@link Flavor} to create.
+   * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
+   * com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the {@link
+   * Flavor} to create.
    *
    * @param resolver For querying for build rules by their targets.
    * @param cellRoots The roots of known cells.
@@ -89,5 +87,6 @@ public interface Description<T> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException;
+      A args)
+      throws NoSuchBuildTargetException;
 }

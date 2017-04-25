@@ -14,12 +14,10 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -36,7 +34,8 @@ public class CellPathResolverSerializer {
   public static ImmutableMap<String, Object> serialize(CellPathResolver resolver) {
     Preconditions.checkArgument(
         resolver instanceof DefaultCellPathResolver,
-        "Unsupported CellPathResolver class: %s", resolver.getClass());
+        "Unsupported CellPathResolver class: %s",
+        resolver.getClass());
 
     DefaultCellPathResolver defaultResolver = (DefaultCellPathResolver) resolver;
 
@@ -54,25 +53,25 @@ public class CellPathResolverSerializer {
 
   @SuppressWarnings("unchecked")
   public static CellPathResolver deserialize(Map<String, Object> data) {
-    String type = (String) Preconditions.checkNotNull(
-        data.get(TYPE),
-        "Expected to have value for key %s", TYPE);
+    String type =
+        (String)
+            Preconditions.checkNotNull(data.get(TYPE), "Expected to have value for key %s", TYPE);
     Preconditions.checkArgument(
         type.equals(TYPE_DEFAULT),
         "Only CellPathResolver with type '%s' are supported, but found '%s' type",
         TYPE_DEFAULT,
         type);
 
-    String rootPathAsString = (String) Preconditions.checkNotNull(
-        data.get(ROOT_PATH),
-        "Expected to have value for key %s",
-        ROOT_PATH);
+    String rootPathAsString =
+        (String)
+            Preconditions.checkNotNull(
+                data.get(ROOT_PATH), "Expected to have value for key %s", ROOT_PATH);
     Path rootPath = Paths.get(rootPathAsString);
 
-    Map<String, String> cellPathsAsStrings = (Map<String, String>) Preconditions.checkNotNull(
-        data.get(CELL_PATHS),
-        "Expected to have value for key %s",
-        CELL_PATHS);
+    Map<String, String> cellPathsAsStrings =
+        (Map<String, String>)
+            Preconditions.checkNotNull(
+                data.get(CELL_PATHS), "Expected to have value for key %s", CELL_PATHS);
 
     ImmutableMap.Builder<String, Path> cellPaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : cellPathsAsStrings.entrySet()) {

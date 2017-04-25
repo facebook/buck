@@ -18,8 +18,5 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.versions.TargetTranslatable;
 
-/**
- * Base class for strongly typed macros.
- */
-public interface Macro extends TargetTranslatable<Macro> {
-}
+/** Base class for strongly typed macros. */
+public interface Macro extends TargetTranslatable<Macro> {}

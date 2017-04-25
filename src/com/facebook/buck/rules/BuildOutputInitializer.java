@@ -17,9 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.io.IOException;
-
 import javax.annotation.Nullable;
 
 /**
@@ -31,12 +29,10 @@ public class BuildOutputInitializer<T> {
   private final BuildTarget buildTarget;
   private final InitializableFromDisk<T> initializableFromDisk;
 
-  @Nullable
-  private T buildOutput;
+  @Nullable private T buildOutput;
 
   public BuildOutputInitializer(
-      BuildTarget buildTarget,
-      InitializableFromDisk<T> initializableFromDisk) {
+      BuildTarget buildTarget, InitializableFromDisk<T> initializableFromDisk) {
     this.buildTarget = buildTarget;
     this.initializableFromDisk = initializableFromDisk;
   }
@@ -46,9 +42,11 @@ public class BuildOutputInitializer<T> {
   }
 
   /**
-   * This should be invoked only by the build engine (currently, {@link CachingBuildEngine})
-   * that invoked {@link #initializeFromDisk(OnDiskBuildInfo)}.
+   * This should be invoked only by the build engine (currently, {@link CachingBuildEngine}) that
+   * invoked {@link #initializeFromDisk(OnDiskBuildInfo)}.
+   *
    * <p>
+   *
    * @throws IllegalStateException if this method has already been invoked.
    */
   public void setBuildOutput(T buildOutput) throws IllegalStateException {

@@ -26,10 +26,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
 
 public class TargetNodeFactory {
   private final TypeCoercerFactory typeCoercerFactory;
@@ -41,10 +39,11 @@ public class TargetNodeFactory {
   /**
    * This factory method lets the wildcard be bound, so the constructor can be casted to it.
    *
-   * This does no checking that the type of {@code constructorArg} is correct, since
-   * {@code Description} does not hold the Class of the constructor arg.
+   * <p>This does no checking that the type of {@code constructorArg} is correct, since {@code
+   * Description} does not hold the Class of the constructor arg.
    *
-   * See <a href="https://docs.oracle.com/javase/tutorial/java/generics/capture.html">Wildcard Capture and Helper Methods</a>.
+   * <p>See <a href="https://docs.oracle.com/javase/tutorial/java/generics/capture.html">Wildcard
+   * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
   public <T, U extends Description<T>> TargetNode<T, U> createFromObject(
@@ -92,32 +91,25 @@ public class TargetNodeFactory {
     T arg = description.createUnpopulatedConstructorArg();
     for (ParamInfo info :
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, arg.getClass())) {
-      if (info.isDep() && info.isInput() &&
-          info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
+      if (info.isDep()
+          && info.isInput()
+          && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForConstructorArg(
-            extraDepsBuilder,
-            pathsBuilder,
-            info,
-            constructorArg);
+            extraDepsBuilder, pathsBuilder, info, constructorArg);
       }
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
-        ((ImplicitDepsInferringDescription<T>) description).findDepsForTargetFromConstructorArgs(
-            buildTarget,
-            cellRoots,
-            constructorArg,
-            extraDepsBuilder,
-            targetGraphOnlyDepsBuilder);
+      ((ImplicitDepsInferringDescription<T>) description)
+          .findDepsForTargetFromConstructorArgs(
+              buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
-      pathsBuilder
-          .addAll(
-              ((ImplicitInputsInferringDescription<T>) description)
-                  .inferInputsFromConstructorArgs(
-                      buildTarget.getUnflavoredBuildTarget(),
-                      constructorArg));
+      pathsBuilder.addAll(
+          ((ImplicitInputsInferringDescription<T>) description)
+              .inferInputsFromConstructorArgs(
+                  buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
     return new TargetNode<>(
@@ -141,7 +133,8 @@ public class TargetNodeFactory {
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
-      Object constructorArg) throws NoSuchBuildTargetException {
+      Object constructorArg)
+      throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 
     try {
@@ -167,8 +160,7 @@ public class TargetNodeFactory {
 
   @SuppressWarnings("unchecked")
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
-      TargetNode<?, ?> originalNode,
-      U description) {
+      TargetNode<?, ?> originalNode, U description) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),
@@ -190,8 +182,7 @@ public class TargetNodeFactory {
   }
 
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
-      TargetNode<T, U> originalNode,
-      ImmutableSet<Flavor> flavors) {
+      TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),

@@ -17,19 +17,18 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nullable;
 
 /**
  * A noop build rule used to aggregate dependencies shared amongst many rules.
- * <p/>
- * In cases where many rules require largely the same sets of dependencies, such as cxx compilation
- * of files in a target, explicitly copying the dependencies to every such rule imposes slow down
- * and memory usage proportional to the number of rules that share a dependency set. This class
- * curtails the copying of all shared dependencies between rules, and instead allow each rule to
- * depend on this single rule, which captures the shared dependencies.
- * <p/>
- * This class is distinct from {@link NoopBuildRule} to make clear the requirements for its
+ *
+ * <p>In cases where many rules require largely the same sets of dependencies, such as cxx
+ * compilation of files in a target, explicitly copying the dependencies to every such rule imposes
+ * slow down and memory usage proportional to the number of rules that share a dependency set. This
+ * class curtails the copying of all shared dependencies between rules, and instead allow each rule
+ * to depend on this single rule, which captures the shared dependencies.
+ *
+ * <p>This class is distinct from {@link NoopBuildRule} to make clear the requirements for its
  * operation, namely, that it cannot be cached. This rule must not be cached in order for its
  * dependencies to always be evaluated in different build strategies (in particular, top-down).
  */

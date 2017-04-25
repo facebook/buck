@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -106,7 +105,8 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     // At the moment, it is difficult to make SizeLimitException be a checked exception. Due to how
     // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
     // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
-    Throwables.getCausalChain(throwable).stream()
+    Throwables.getCausalChain(throwable)
+        .stream()
         .filter(t -> t instanceof SizeLimiter.SizeLimitException)
         .findFirst()
         .ifPresent(Throwables::throwIfUnchecked);
@@ -209,15 +209,14 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     protected Builder<RULE_KEY> setBuildRule(BuildRule rule) {
       throw new IllegalStateException(
           String.format(
-              "Input-based rule key builders cannot process build rules. " +
-                  "Was given %s to add to rule key.",
+              "Input-based rule key builders cannot process build rules. "
+                  + "Was given %s to add to rule key.",
               rule));
     }
 
     public <RESULT> Result<RESULT> buildResult(Function<RULE_KEY, RESULT> mapper) {
       return new Result<>(this.build(mapper), Iterables.concat(deps.build()));
     }
-
   }
 
   protected static class Result<RULE_KEY> {
@@ -238,5 +237,4 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       return deps;
     }
   }
-
 }

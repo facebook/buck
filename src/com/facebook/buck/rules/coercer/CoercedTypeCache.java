@@ -20,54 +20,52 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-/**
- * Caches the set of possible {@link ParamInfo}s for each param on a coercable type.
- */
+/** Caches the set of possible {@link ParamInfo}s for each param on a coercable type. */
 public class CoercedTypeCache {
 
   public static final CoercedTypeCache INSTANCE = new CoercedTypeCache();
 
-  private final LoadingCache<
-      TypeCoercerFactory,
-      LoadingCache<Class<?>, ImmutableSet<ParamInfo>>> coercedTypeCache;
+  private final LoadingCache<TypeCoercerFactory, LoadingCache<Class<?>, ImmutableSet<ParamInfo>>>
+      coercedTypeCache;
 
   private CoercedTypeCache() {
-    coercedTypeCache = CacheBuilder.newBuilder()
-        .build(
-            new CacheLoader<TypeCoercerFactory, LoadingCache<Class<?>, ImmutableSet<ParamInfo>>>() {
-              @Override
-              public LoadingCache<Class<?>, ImmutableSet<ParamInfo>> load(
-                  TypeCoercerFactory typeCoercerFactory) throws Exception {
-                return CacheBuilder.newBuilder()
-                    .build(new CacheLoader<Class<?>, ImmutableSet<ParamInfo>>() {
-                      @Override
-                      public ImmutableSet<ParamInfo> load(Class<?> coercableType) throws Exception {
-                        ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
+    coercedTypeCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<
+                    TypeCoercerFactory, LoadingCache<Class<?>, ImmutableSet<ParamInfo>>>() {
+                  @Override
+                  public LoadingCache<Class<?>, ImmutableSet<ParamInfo>> load(
+                      TypeCoercerFactory typeCoercerFactory) throws Exception {
+                    return CacheBuilder.newBuilder()
+                        .build(
+                            new CacheLoader<Class<?>, ImmutableSet<ParamInfo>>() {
+                              @Override
+                              public ImmutableSet<ParamInfo> load(Class<?> coercableType)
+                                  throws Exception {
+                                ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
 
-                        for (Field field : coercableType.getFields()) {
-                          if (Modifier.isFinal(field.getModifiers())) {
-                            continue;
-                          }
-                          allInfo.add(new ParamInfo(typeCoercerFactory, coercableType, field));
-                        }
+                                for (Field field : coercableType.getFields()) {
+                                  if (Modifier.isFinal(field.getModifiers())) {
+                                    continue;
+                                  }
+                                  allInfo.add(
+                                      new ParamInfo(typeCoercerFactory, coercableType, field));
+                                }
 
-                        return allInfo.build();
-                      }
+                                return allInfo.build();
+                              }
+                            });
+                  }
                 });
-          }
-        });
   }
 
-  /**
-   * @return All {@link ParamInfo}s for coercableType.
-   */
+  /** @return All {@link ParamInfo}s for coercableType. */
   public ImmutableSet<ParamInfo> getAllParamInfo(
-      TypeCoercerFactory typeCoercerFactory,
-      Class<?> coercableType) {
+      TypeCoercerFactory typeCoercerFactory, Class<?> coercableType) {
     return coercedTypeCache.getUnchecked(typeCoercerFactory).getUnchecked(coercableType);
   }
 }

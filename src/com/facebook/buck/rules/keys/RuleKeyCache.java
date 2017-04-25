@@ -22,43 +22,34 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Interface for caches for rule keys.
- */
+/** Interface for caches for rule keys. */
 public interface RuleKeyCache<V> {
 
   /**
    * @return the rule key value for the given {@code rule}, either serving it form cache or by
-   *         running the given function.
+   *     running the given function.
    */
   V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create);
 
   /**
    * @return the rule key value for the given {@code appendable}, either serving it form cache or by
-   *         running the given function.
+   *     running the given function.
    */
   V get(RuleKeyAppendable appendable, Function<? super RuleKeyAppendable, RuleKeyResult<V>> create);
 
-  /**
-   * @return the contents of the {@link RuleKeyCache}.
-   */
+  /** @return the contents of the {@link RuleKeyCache}. */
   default ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * Invalidate the given inputs and all their transitive dependents.
-   */
+  /** Invalidate the given inputs and all their transitive dependents. */
   void invalidateInputs(Iterable<RuleKeyInput> inputs);
 
-  /**
-   * Invalidate all inputs from any {@link ProjectFilesystem} matching the given relative path.
-   */
+  /** Invalidate all inputs from any {@link ProjectFilesystem} matching the given relative path. */
   void invalidateInputsMatchingRelativePath(Path path);
 
   /**
@@ -72,14 +63,9 @@ public interface RuleKeyCache<V> {
    */
   void invalidateFilesystem(ProjectFilesystem filesystem);
 
-  /**
-   * Invalidate everything in the cache.
-   */
+  /** Invalidate everything in the cache. */
   void invalidateAll();
 
-  /**
-   * @return a snapshot of the current cache statistics.
-   */
+  /** @return a snapshot of the current cache statistics. */
   CacheStats getStats();
-
 }
