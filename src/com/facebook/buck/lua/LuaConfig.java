@@ -22,50 +22,40 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-
 import java.util.Optional;
 
 public interface LuaConfig {
 
   Tool getLua(BuildRuleResolver resolver);
+
   Optional<BuildTarget> getNativeStarterLibrary();
+
   Optional<BuildTarget> getLuaCxxLibraryTarget();
+
   AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver);
+
   Optional<LuaBinaryDescription.StarterType> getStarterType();
+
   String getExtension();
 
-  /**
-   * @return the {@link PackageStyle} to use for Lua executables.
-   */
+  /** @return the {@link PackageStyle} to use for Lua executables. */
   PackageStyle getPackageStyle();
 
-  /**
-   * @return the {@link ToolProvider} which packages standalone Lua executables.
-   */
+  /** @return the {@link ToolProvider} which packages standalone Lua executables. */
   ToolProvider getPackager();
 
-  /**
-   * @return whether to cache Lua executable packages.
-   */
+  /** @return whether to cache Lua executable packages. */
   boolean shouldCacheBinaries();
 
-  /**
-   * @return the native link strategy to use for binaries.
-   */
+  /** @return the native link strategy to use for binaries. */
   NativeLinkStrategy getNativeLinkStrategy();
 
   enum PackageStyle {
 
-    /**
-     * Build Lua executables into standalone, relocatable packages.
-     */
+    /** Build Lua executables into standalone, relocatable packages. */
     STANDALONE,
 
-    /**
-     * Build Lua executables that can only be run from their build location.
-     */
+    /** Build Lua executables that can only be run from their build location. */
     INPLACE,
-
   }
-
 }

@@ -26,40 +26,29 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.immutables.value.Value;
 
-/**
- * Components that contribute to a Lua package.
- */
+/** Components that contribute to a Lua package. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
 
-  /**
-   * @return mapping of module names to their respective {@link SourcePath}s.
-   */
+  /** @return mapping of module names to their respective {@link SourcePath}s. */
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getModules();
 
-  /**
-   * @return mapping of python module names to their respective {@link SourcePath}s.
-   */
+  /** @return mapping of python module names to their respective {@link SourcePath}s. */
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getPythonModules();
 
-  /**
-   * @return a mapping of shared native library names to their respective {@link SourcePath}s.
-   */
+  /** @return a mapping of shared native library names to their respective {@link SourcePath}s. */
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getNativeLibraries();
 
   public static void addComponents(
-      LuaPackageComponents.Builder builder,
-      LuaPackageComponents components) {
+      LuaPackageComponents.Builder builder, LuaPackageComponents components) {
     builder.putAllModules(components.getModules());
     builder.putAllPythonModules(components.getPythonModules());
     builder.putAllNativeLibraries(components.getNativeLibraries());
@@ -88,9 +77,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
         .build();
   }
 
-  /**
-   * @return whether any components may be prebuilt native libraries.
-   */
+  /** @return whether any components may be prebuilt native libraries. */
   public boolean hasNativeCode(CxxPlatform cxxPlatform) {
     for (String module : getModules().keySet()) {
       if (module.endsWith(cxxPlatform.getSharedLibraryExtension())) {
@@ -119,10 +106,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
       SourcePath existing = modules.get(name);
       if (existing != null && !existing.equals(path)) {
         throw new HumanReadableException(
-            "conflicting modules for %s: %s != %s",
-            name,
-            path,
-            existing);
+            "conflicting modules for %s: %s != %s", name, path, existing);
       }
       modules.put(name, path);
       return this;
@@ -139,10 +123,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
       SourcePath existing = pythonModules.get(name);
       if (existing != null && !existing.equals(path)) {
         throw new HumanReadableException(
-            "conflicting python modules for %s: %s != %s",
-            name,
-            path,
-            existing);
+            "conflicting python modules for %s: %s != %s", name, path, existing);
       }
       pythonModules.put(name, path);
       return this;
@@ -159,10 +140,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
       SourcePath existing = nativeLibraries.get(name);
       if (existing != null && !existing.equals(path)) {
         throw new HumanReadableException(
-            "conflicting native libraries for %s: %s != %s",
-            name,
-            path,
-            existing);
+            "conflicting native libraries for %s: %s != %s", name, path, existing);
       }
       nativeLibraries.put(name, path);
       return this;
@@ -178,7 +156,5 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     public LuaPackageComponents build() {
       return LuaPackageComponents.of(modules, pythonModules, nativeLibraries);
     }
-
   }
-
 }

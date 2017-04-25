@@ -52,8 +52,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
-  }
+  public void addToCollector(AndroidPackageableCollector collector) {}
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
@@ -62,16 +61,14 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility)
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
       throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.EMPTY;
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility)
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
       throws NoSuchBuildTargetException {
     return ImmutableMap.of();
   }
@@ -88,12 +85,8 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type)
-      throws NoSuchBuildTargetException {
-    return NativeLinkableInput.builder()
-        .addAllArgs(StringArg.from("-llua"))
-        .build();
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    return NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
   }
 
   @Override

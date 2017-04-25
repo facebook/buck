@@ -35,36 +35,27 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Builds a Lua executable into a standalone package using a given packager tool.
- */
+/** Builds a Lua executable into a standalone package using a given packager tool. */
 public class LuaStandaloneBinary extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool builder;
+  @AddToRuleKey private final Tool builder;
 
-  @AddToRuleKey
-  private final ImmutableList<String> builderArgs;
+  @AddToRuleKey private final ImmutableList<String> builderArgs;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  @AddToRuleKey
-  private final Optional<SourcePath> starter;
+  @AddToRuleKey private final Optional<SourcePath> starter;
 
-  @AddToRuleKey
-  private final LuaPackageComponents components;
+  @AddToRuleKey private final LuaPackageComponents components;
 
-  @AddToRuleKey
-  private final String mainModule;
+  @AddToRuleKey private final String mainModule;
 
-  @AddToRuleKey
-  private final Tool lua;
+  @AddToRuleKey private final Tool lua;
 
   private final boolean cache;
 
@@ -91,8 +82,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -118,21 +108,15 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
                           "modules",
                           Maps.transformValues(
                               components.getModules(),
-                              Functions.compose(
-                                  Object::toString,
-                                  resolver::getAbsolutePath)),
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
                           "pythonModules",
                           Maps.transformValues(
                               components.getPythonModules(),
-                              Functions.compose(
-                                  Object::toString,
-                                  resolver::getAbsolutePath)),
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
                           "nativeLibraries",
                           Maps.transformValues(
                               components.getNativeLibraries(),
-                              Functions.compose(
-                                  Object::toString,
-                                  resolver::getAbsolutePath)))));
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)))));
             } catch (IOException e) {
               throw new RuntimeException(e);
             }
@@ -158,9 +142,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
           public String getShortName() {
             return "lua_package";
           }
-
         });
-
 
     return steps.build();
   }

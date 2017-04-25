@@ -28,7 +28,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -39,18 +38,12 @@ public class LuaBuckConfig implements LuaConfig {
   private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
       new SystemLuaCxxLibrary(
           BuildTarget.of(
-              UnflavoredBuildTarget.of(
-                  Paths.get(""),
-                  Optional.empty(),
-                  "//system",
-                  "lua")));
+              UnflavoredBuildTarget.of(Paths.get(""), Optional.empty(), "//system", "lua")));
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
 
-  public LuaBuckConfig(
-      BuckConfig delegate,
-      ExecutableFinder finder) {
+  public LuaBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
     this.delegate = delegate;
     this.finder = finder;
   }
@@ -73,8 +66,7 @@ public class LuaBuckConfig implements LuaConfig {
     }
 
     throw new HumanReadableException(
-        "No lua interpreter found in .buckconfig (%s.lua) or on system",
-        SECTION);
+        "No lua interpreter found in .buckconfig (%s.lua) or on system", SECTION);
   }
 
   @Override
@@ -90,8 +82,7 @@ public class LuaBuckConfig implements LuaConfig {
           resolver.getRuleOptionalWithType(luaCxxLibrary.get(), AbstractCxxLibrary.class);
       if (!rule.isPresent()) {
         throw new HumanReadableException(
-            ".buckconfig: cannot find C/C++ library rule %s",
-            luaCxxLibrary.get());
+            ".buckconfig: cannot find C/C++ library rule %s", luaCxxLibrary.get());
       }
       return rule.get();
     }
@@ -115,10 +106,9 @@ public class LuaBuckConfig implements LuaConfig {
 
   @Override
   public PackageStyle getPackageStyle() {
-    return delegate.getEnum(
-        SECTION,
-        "package_style",
-        PackageStyle.class).orElse(PackageStyle.INPLACE);
+    return delegate
+        .getEnum(SECTION, "package_style", PackageStyle.class)
+        .orElse(PackageStyle.INPLACE);
   }
 
   @Override
@@ -137,8 +127,8 @@ public class LuaBuckConfig implements LuaConfig {
 
   @Override
   public NativeLinkStrategy getNativeLinkStrategy() {
-    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class).orElse(
-        NativeLinkStrategy.SEPARATE);
+    return delegate
+        .getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
+        .orElse(NativeLinkStrategy.SEPARATE);
   }
-
 }

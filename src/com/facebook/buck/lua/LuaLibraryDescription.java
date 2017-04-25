@@ -31,12 +31,11 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class LuaLibraryDescription implements
-    Description<LuaLibraryDescription.Arg>,
-    VersionPropagator<LuaLibraryDescription.Arg> {
+public class LuaLibraryDescription
+    implements Description<LuaLibraryDescription.Arg>,
+        VersionPropagator<LuaLibraryDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
@@ -62,8 +61,7 @@ public class LuaLibraryDescription implements
                     pathResolver,
                     "srcs",
                     LuaUtil.getBaseModule(params.getBuildTarget(), args.baseModule),
-                    ImmutableList.of(
-                        args.srcs)))
+                    ImmutableList.of(args.srcs)))
             .build();
       }
     };
@@ -75,5 +73,4 @@ public class LuaLibraryDescription implements
     public Optional<String> baseModule;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
-
 }

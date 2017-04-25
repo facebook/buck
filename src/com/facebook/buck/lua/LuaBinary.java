@@ -32,13 +32,10 @@ import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class LuaBinary
-    extends AbstractBuildRule
-    implements BinaryBuildRule, HasRuntimeDeps {
+public class LuaBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Path output;
   private final Tool wrappedBinary;
@@ -80,8 +77,7 @@ public class LuaBinary
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

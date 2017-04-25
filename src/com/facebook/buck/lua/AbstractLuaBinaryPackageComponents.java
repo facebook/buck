@@ -18,15 +18,13 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
-/**
- * The package components in a Lua binary.
- */
+/** The package components in a Lua binary. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractLuaBinaryPackageComponents {
   public abstract SourcePath getStarter();
+
   public abstract LuaPackageComponents getComponents();
 }

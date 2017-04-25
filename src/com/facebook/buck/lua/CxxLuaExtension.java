@@ -33,5 +33,4 @@ public abstract class CxxLuaExtension extends NoopBuildRule implements NativeLin
 
   public abstract SourcePath getExtension(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
-
 }
