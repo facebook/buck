@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,15 +32,13 @@ public class ServerContentsProvider implements FileContentsProvider {
   }
 
   @Override
-  public boolean materializeFileContents(
-      BuildJobStateFileHashEntry entry,
-      Path targetAbsPath) throws IOException {
+  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+      throws IOException {
     Preconditions.checkState(
-        entry.isSetHashCode(),
-        String.format("File hash missing for file [%s]", entry.getPath()));
+        entry.isSetHashCode(), String.format("File hash missing for file [%s]", entry.getPath()));
 
     try (InputStream inputStream = service.fetchSourceFile(entry.getHashCode());
-         OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
+        OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
       ByteStreams.copy(inputStream, outputStream);
     }
 

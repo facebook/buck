@@ -18,7 +18,6 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
-
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -29,12 +28,10 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final StampedeId stampedeId;
 
   public CoordinatorModeRunner(
-      int coordinatorPort,
-      BuildTargetsQueue queue, StampedeId stampedeId) {
+      int coordinatorPort, BuildTargetsQueue queue, StampedeId stampedeId) {
     this.stampedeId = stampedeId;
     Preconditions.checkArgument(
-        coordinatorPort > 0,
-        "The coordinator's port needs to be a positive integer.");
+        coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
   }

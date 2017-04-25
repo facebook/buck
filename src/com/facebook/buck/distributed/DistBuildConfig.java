@@ -19,11 +19,9 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 
 public class DistBuildConfig {
@@ -31,8 +29,7 @@ public class DistBuildConfig {
   public static final String STAMPEDE_SECTION = "stampede";
 
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
-  private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE =
-      TimeUnit.SECONDS.toMillis(60);
+  private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(60);
 
   private static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
 
@@ -60,13 +57,14 @@ public class DistBuildConfig {
   }
 
   public long getFrontendRequestTimeoutMillis() {
-    return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS).orElse(
-        REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
+        .orElse(REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
   }
 
   /**
-   * Whether buck distributed build should stop building if remote/distributed build fails (true)
-   * or if it should fallback to building locally if remote/distributed build fails (false).
+   * Whether buck distributed build should stop building if remote/distributed build fails (true) or
+   * if it should fallback to building locally if remote/distributed build fails (false).
    */
   public boolean isSlowLocalBuildFallbackModeEnabled() {
     return buckConfig.getBooleanValue(

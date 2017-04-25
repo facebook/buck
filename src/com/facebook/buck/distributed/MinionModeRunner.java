@@ -23,7 +23,6 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,15 +40,11 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private final StampedeId stampedeId;
 
   public MinionModeRunner(
-      String coordinatorAddress,
-      int coordinatorPort,
-      LocalBuilder builder,
-      StampedeId stampedeId) {
+      String coordinatorAddress, int coordinatorPort, LocalBuilder builder, StampedeId stampedeId) {
     this.builder = builder;
     this.stampedeId = stampedeId;
     Preconditions.checkArgument(
-        coordinatorPort > 0,
-        "The coordinator's port needs to be a positive integer.");
+        coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
     this.coordinatorPort = coordinatorPort;
   }
@@ -57,7 +52,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
     try (ThriftCoordinatorClient client =
-             new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
+        new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
       client.start();
       final String minionId = generateNewMinionId();
       while (true) {
@@ -65,19 +60,16 @@ public class MinionModeRunner implements DistBuildModeRunner {
         switch (response.getAction()) {
           case BUILD_TARGETS:
             List<String> targetsToBuild = Lists.newArrayList(response.getBuildTargets());
-            LOG.debug(String.format(
-                "Minion [%s] is about to build [%d] targets: [%s]",
-                minionId,
-                targetsToBuild.size(),
-                Joiner.on(", ").join(targetsToBuild)));
+            LOG.debug(
+                String.format(
+                    "Minion [%s] is about to build [%d] targets: [%s]",
+                    minionId, targetsToBuild.size(), Joiner.on(", ").join(targetsToBuild)));
             int buildExitCode = builder.buildLocallyAndReturnExitCode(targetsToBuild);
-            LOG.debug(String.format(
-                "Minion [%s] finished with exit code [%d].",
-                minionId,
-                buildExitCode));
-            FinishedBuildingResponse finishedResponse = client.finishedBuilding(
-                minionId,
-                buildExitCode);
+            LOG.debug(
+                String.format(
+                    "Minion [%s] finished with exit code [%d].", minionId, buildExitCode));
+            FinishedBuildingResponse finishedResponse =
+                client.finishedBuilding(minionId, buildExitCode);
             if (!finishedResponse.isContinueBuilding()) {
               return 0;
             }
@@ -96,9 +88,9 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
           case UNKNOWN:
           default:
-            throw new RuntimeException(String.format(
-                "CoordinatorClient received unexpected action [%s].",
-                response.getAction()));
+            throw new RuntimeException(
+                String.format(
+                    "CoordinatorClient received unexpected action [%s].", response.getAction()));
         }
       }
     }

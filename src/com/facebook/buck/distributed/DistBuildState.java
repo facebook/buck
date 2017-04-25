@@ -42,38 +42,34 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Saves and restores the state of a build to/from a thrift data structure.
- */
+/** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
 
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
 
-
-  private DistBuildState(
-      BuildJobState remoteState,
-      final ImmutableBiMap<Integer, Cell> cells) {
+  private DistBuildState(BuildJobState remoteState, final ImmutableBiMap<Integer, Cell> cells) {
     this.remoteState = remoteState;
     this.cells = cells;
-    this.fileHashes = Maps.uniqueIndex(
-        remoteState.getFileHashes(),
-        input -> {
-          int cellIndex = input.getCellIndex();
-          Cell cell = Preconditions.checkNotNull(
-              cells.get(cellIndex),
-              "Unknown cell index %s. Distributed build state dump corrupt?",
-              cellIndex);
-          return cell.getFilesystem();
-        });
+    this.fileHashes =
+        Maps.uniqueIndex(
+            remoteState.getFileHashes(),
+            input -> {
+              int cellIndex = input.getCellIndex();
+              Cell cell =
+                  Preconditions.checkNotNull(
+                      cells.get(cellIndex),
+                      "Unknown cell index %s. Distributed build state dump corrupt?",
+                      cellIndex);
+              return cell.getFilesystem();
+            });
   }
 
   public static BuildJobState dump(
@@ -81,14 +77,13 @@ public class DistBuildState {
       DistBuildFileHashes fileHashes,
       DistBuildTargetGraphCodec targetGraphCodec,
       TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> topLevelTargets) throws IOException, InterruptedException {
+      ImmutableSet<BuildTarget> topLevelTargets)
+      throws IOException, InterruptedException {
     Preconditions.checkArgument(topLevelTargets.size() > 0);
     BuildJobState jobState = new BuildJobState();
     jobState.setFileHashes(fileHashes.getFileHashes());
     jobState.setTargetGraph(
-        targetGraphCodec.dump(
-            targetGraph.getNodes(),
-            distributedBuildCellIndexer));
+        targetGraphCodec.dump(targetGraph.getNodes(), distributedBuildCellIndexer));
     jobState.setCells(distributedBuildCellIndexer.getState());
 
     for (BuildTarget target : topLevelTargets) {
@@ -101,20 +96,22 @@ public class DistBuildState {
       Optional<BuckConfig> localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
+      throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
     ImmutableMap.Builder<Path, DistBuildCellParams> cellParams = ImmutableMap.builder();
     ImmutableMap.Builder<Integer, Path> cellIndex = ImmutableMap.builder();
 
-    Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
-        rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
+    Path sandboxPath =
+        rootCellFilesystem
+            .getRootPath()
+            .resolve(rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
     rootCellFilesystem.mkdirs(sandboxPath);
 
     Path uniqueBuildRoot = Files.createTempDirectory(sandboxPath, "build");
 
-    for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry :
-        jobState.getCells().entrySet()) {
+    for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry : jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
 
       Path cellRoot = uniqueBuildRoot.resolve(remoteCell.getNameHint());
@@ -127,17 +124,15 @@ public class DistBuildState {
           remoteCell.getCanonicalName().isEmpty()
               ? Optional.empty()
               : Optional.of(remoteCell.getCanonicalName());
-      cellParams.put(
-          cellRoot,
-          DistBuildCellParams.of(buckConfig, projectFilesystem, cellName));
+      cellParams.put(cellRoot, DistBuildCellParams.of(buckConfig, projectFilesystem, cellName));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
     CellProvider cellProvider =
         CellProvider.createForDistributedBuild(cellParams.build(), knownBuildRuleTypesFactory);
 
-    ImmutableBiMap<Integer, Cell> cells = ImmutableBiMap.copyOf(
-        Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
+    ImmutableBiMap<Integer, Cell> cells =
+        ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
     return new DistBuildState(jobState, cells);
   }
 
@@ -146,18 +141,18 @@ public class DistBuildState {
   }
 
   public static Config createConfig(
-      BuildJobStateBuckConfig remoteBuckConfig,
-      Optional<BuckConfig> overrideConfig) {
-    ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.copyOf(
-        Maps.transformValues(
-            remoteBuckConfig.getRawBuckConfig(),
-            input -> {
-              ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-              for (OrderedStringMapEntry entry : input) {
-                builder.put(entry.getKey(), entry.getValue());
-              }
-              return builder.build();
-            }));
+      BuildJobStateBuckConfig remoteBuckConfig, Optional<BuckConfig> overrideConfig) {
+    ImmutableMap<String, ImmutableMap<String, String>> rawConfig =
+        ImmutableMap.copyOf(
+            Maps.transformValues(
+                remoteBuckConfig.getRawBuckConfig(),
+                input -> {
+                  ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+                  for (OrderedStringMapEntry entry : input) {
+                    builder.put(entry.getKey(), entry.getValue());
+                  }
+                  return builder.build();
+                }));
     RawConfig.Builder rawConfigBuilder = RawConfig.builder();
     rawConfigBuilder.putAll(rawConfig);
 
@@ -176,8 +171,8 @@ public class DistBuildState {
     Architecture localArchitecture = Architecture.detect();
     Preconditions.checkState(
         remoteArchitecture.equals(localArchitecture),
-        "Trying to load config with architecture %s on a machine that is %s. " +
-            "This is not supported.",
+        "Trying to load config with architecture %s on a machine that is %s. "
+            + "This is not supported.",
         remoteArchitecture,
         localArchitecture);
 
@@ -208,9 +203,7 @@ public class DistBuildState {
 
   public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
       throws IOException {
-    return codec.createTargetGraph(
-        remoteState.getTargetGraph(),
-        Functions.forMap(cells));
+    return codec.createTargetGraph(remoteState.getTargetGraph(), Functions.forMap(cells));
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {
@@ -227,8 +220,7 @@ public class DistBuildState {
   }
 
   public ProjectFileHashCache createMaterializerAndPreload(
-      ProjectFileHashCache decoratedCache,
-      FileContentsProvider provider) throws IOException {
+      ProjectFileHashCache decoratedCache, FileContentsProvider provider) throws IOException {
     BuildJobStateFileHashes remoteFileHashes = fileHashes.get(decoratedCache.getFilesystem());
     if (remoteFileHashes == null) {
       // Roots that have no BuildJobStateFileHashes are deemed as not being Cells and don't get
@@ -236,10 +228,8 @@ public class DistBuildState {
       return decoratedCache;
     }
 
-    MaterializerProjectFileHashCache materializer = new MaterializerProjectFileHashCache(
-        decoratedCache,
-        remoteFileHashes,
-        provider);
+    MaterializerProjectFileHashCache materializer =
+        new MaterializerProjectFileHashCache(decoratedCache, remoteFileHashes, provider);
 
     // Create all symlinks and touch all other files.
     // TODO(alisdair): remove this once action graph doesn't read from file system.

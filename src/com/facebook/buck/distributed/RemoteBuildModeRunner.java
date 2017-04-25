@@ -22,9 +22,7 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
   private final LocalBuilder localBuilder;
   private final Iterable<String> topLevelTargetsToBuild;
 
-  public RemoteBuildModeRunner(
-      LocalBuilder localBuilder,
-      Iterable<String> topLevelTargetsToBuild) {
+  public RemoteBuildModeRunner(LocalBuilder localBuilder, Iterable<String> topLevelTargetsToBuild) {
     this.localBuilder = localBuilder;
     this.topLevelTargetsToBuild = topLevelTargetsToBuild;
   }

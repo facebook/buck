@@ -38,7 +38,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -47,9 +46,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Saves and loads the {@link TargetNode}s needed for the build.
- */
+/** Saves and loads the {@link TargetNode}s needed for the build. */
 public class DistBuildTargetGraphCodec {
 
   private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
@@ -66,10 +63,8 @@ public class DistBuildTargetGraphCodec {
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?, ?>> targetNodes,
-      DistBuildCellIndexer cellIndexer) {
+      Collection<TargetNode<?, ?>> targetNodes, DistBuildCellIndexer cellIndexer) {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
-
 
     for (TargetNode<?, ?> targetNode : targetNodes) {
       Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
@@ -97,24 +92,26 @@ public class DistBuildTargetGraphCodec {
       remoteTarget.setCellName(buildTarget.getCell().get());
     }
     remoteTarget.setFlavors(
-        buildTarget.getFlavors().stream()
-            .map(Object::toString)
-            .collect(Collectors.toSet()));
+        buildTarget.getFlavors().stream().map(Object::toString).collect(Collectors.toSet()));
     return remoteTarget;
   }
 
   public static BuildTarget decodeBuildTarget(BuildJobStateBuildTarget remoteTarget, Cell cell) {
 
-    UnflavoredBuildTarget unflavoredBuildTarget = UnflavoredBuildTarget.builder()
-        .setShortName(remoteTarget.getShortName())
-        .setBaseName(remoteTarget.getBaseName())
-        .setCellPath(cell.getRoot())
-        .setCell(Optional.ofNullable(remoteTarget.getCellName()))
-        .build();
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        UnflavoredBuildTarget.builder()
+            .setShortName(remoteTarget.getShortName())
+            .setBaseName(remoteTarget.getBaseName())
+            .setCellPath(cell.getRoot())
+            .setCell(Optional.ofNullable(remoteTarget.getCellName()))
+            .build();
 
-    ImmutableSet<Flavor> flavors = remoteTarget.flavors.stream()
-        .map(InternalFlavor::of)
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<Flavor> flavors =
+        remoteTarget
+            .flavors
+            .stream()
+            .map(InternalFlavor::of)
+            .collect(MoreCollectors.toImmutableSet());
 
     return BuildTarget.builder()
         .setUnflavoredBuildTarget(unflavoredBuildTarget)
@@ -123,12 +120,11 @@ public class DistBuildTargetGraphCodec {
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph,
-      Function<Integer, Cell> cellLookup) throws IOException {
+      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
+      throws IOException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
         ImmutableMap.builder();
-
 
     ImmutableSet.Builder<BuildTarget> buildTargetsBuilder = ImmutableSet.builder();
 
@@ -142,16 +138,16 @@ public class DistBuildTargetGraphCodec {
 
       @SuppressWarnings("unchecked")
       Map<String, Object> rawNode = ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
-      Path buildFilePath = projectFilesystem
-          .resolve(target.getBasePath())
-          .resolve(cell.getBuildFileName());
+      Path buildFilePath =
+          projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
 
-      TargetNode<?, ?> targetNode = parserTargetNodeFactory.createTargetNode(
-          cell,
-          buildFilePath,
-          target,
-          rawNode,
-          input -> SimplePerfEvent.scope(Optional.empty(), input));
+      TargetNode<?, ?> targetNode =
+          parserTargetNodeFactory.createTargetNode(
+              cell,
+              buildFilePath,
+              target,
+              rawNode,
+              input -> SimplePerfEvent.scope(Optional.empty(), input));
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
 
@@ -165,13 +161,11 @@ public class DistBuildTargetGraphCodec {
       mutableTargetGraph.addNode(targetNode);
       for (BuildTarget dep : targetNode.getParseDeps()) {
         mutableTargetGraph.addEdge(
-            targetNode,
-            Preconditions.checkNotNull(targetNodeIndex.get(dep)));
+            targetNode, Preconditions.checkNotNull(targetNodeIndex.get(dep)));
       }
     }
 
-    TargetGraph targetGraph =
-        new TargetGraph(mutableTargetGraph, targetNodeIndex);
+    TargetGraph targetGraph = new TargetGraph(mutableTargetGraph, targetNodeIndex);
 
     return TargetGraphAndBuildTargets.builder()
         .setTargetGraph(targetGraph)

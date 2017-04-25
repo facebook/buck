@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -116,7 +115,8 @@ public class DistBuildClientExecutor {
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
-      BuckEventBus eventBus) throws IOException, InterruptedException {
+      BuckEventBus eventBus)
+      throws IOException, InterruptedException {
     BuildJob job = distBuildService.createBuild();
     final StampedeId stampedeId = job.getStampedeId();
     LOG.info("Created job. Build id = " + stampedeId.getId());
@@ -125,25 +125,24 @@ public class DistBuildClientExecutor {
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
     LOG.info("Uploading local changes.");
-    asyncJobs.add(distBuildService.uploadMissingFilesAsync(
-        buildJobState.fileHashes,
-        networkExecutorService));
+    asyncJobs.add(
+        distBuildService.uploadMissingFilesAsync(buildJobState.fileHashes, networkExecutorService));
 
     LOG.info("Uploading target graph.");
-    asyncJobs.add(networkExecutorService.submit(() -> {
-      try {
-        distBuildService.uploadTargetGraph(buildJobState, stampedeId);
-      } catch (IOException e) {
-        throw new RuntimeException("Failed to upload target graph with exception.", e);
-      }
-    }));
+    asyncJobs.add(
+        networkExecutorService.submit(
+            () -> {
+              try {
+                distBuildService.uploadTargetGraph(buildJobState, stampedeId);
+              } catch (IOException e) {
+                throw new RuntimeException("Failed to upload target graph with exception.", e);
+              }
+            }));
 
     LOG.info("Uploading buck dot-files.");
-    asyncJobs.add(distBuildService.uploadBuckDotFilesAsync(
-        stampedeId,
-        projectFilesystem,
-        fileHashCache,
-        networkExecutorService));
+    asyncJobs.add(
+        distBuildService.uploadBuckDotFilesAsync(
+            stampedeId, projectFilesystem, fileHashCache, networkExecutorService));
 
     try {
       Futures.allAsList(asyncJobs).get();
@@ -163,17 +162,15 @@ public class DistBuildClientExecutor {
   }
 
   private void checkTerminateScheduledUpdates(BuildJob job) {
-    if (job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
-        job.getStatus().equals(BuildStatus.FAILED)) {
+    if (job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
+        || job.getStatus().equals(BuildStatus.FAILED)) {
       // Terminate scheduled tasks with a custom exception to indicate success.
       throw new JobCompletedException(job);
     }
   }
 
   private BuildJob fetchBuildInformationFromServer(
-      BuildJob job,
-      BuckEventBus eventBus,
-      ListeningExecutorService networkExecutorService) {
+      BuildJob job, BuckEventBus eventBus, ListeningExecutorService networkExecutorService) {
     final StampedeId stampedeId = job.getStampedeId();
 
     try {
@@ -189,16 +186,12 @@ public class DistBuildClientExecutor {
       return job;
     }
 
-    ListenableFuture<?> slaveEventsFuture = fetchAndPostBuildSlaveEventsAsync(
-        job,
-        eventBus,
-        networkExecutorService);
-    ListenableFuture<List<BuildSlaveStatus>> slaveStatusesFuture = fetchBuildSlaveStatusesAsync(
-        job,
-        networkExecutorService);
-    ListenableFuture<?> logStreamingFuture = fetchAndProcessRealTimeSlaveLogsAsync(
-        job,
-        networkExecutorService);
+    ListenableFuture<?> slaveEventsFuture =
+        fetchAndPostBuildSlaveEventsAsync(job, eventBus, networkExecutorService);
+    ListenableFuture<List<BuildSlaveStatus>> slaveStatusesFuture =
+        fetchBuildSlaveStatusesAsync(job, networkExecutorService);
+    ListenableFuture<?> logStreamingFuture =
+        fetchAndProcessRealTimeSlaveLogsAsync(job, networkExecutorService);
 
     try {
       postDistBuildStatusEvent(eventBus, job, slaveStatusesFuture.get());
@@ -221,22 +214,17 @@ public class DistBuildClientExecutor {
       BuckEventBus eventBus)
       throws IOException, InterruptedException {
 
-    final BuildJob initJob = initBuild(
-        networkExecutorService,
-        projectFilesystem,
-        fileHashCache,
-        eventBus);
+    final BuildJob initJob =
+        initBuild(networkExecutorService, projectFilesystem, fileHashCache, eventBus);
     BuildJob finalJob;
 
     nextEventIdBySlaveRunId.clear();
-    ScheduledFuture<?> distBuildStatusUpdatingFuture = scheduler.scheduleWithFixedDelay(
-        () -> fetchBuildInformationFromServer(
-            initJob,
-            eventBus,
-            networkExecutorService),
-        0,
-        statusPollIntervalMillis,
-        TimeUnit.MILLISECONDS);
+    ScheduledFuture<?> distBuildStatusUpdatingFuture =
+        scheduler.scheduleWithFixedDelay(
+            () -> fetchBuildInformationFromServer(initJob, eventBus, networkExecutorService),
+            0,
+            statusPollIntervalMillis,
+            TimeUnit.MILLISECONDS);
 
     try {
       distBuildStatusUpdatingFuture.get();
@@ -288,12 +276,13 @@ public class DistBuildClientExecutor {
     }
 
     String stage = statusOverride == null ? job.getStatus().toString() : statusOverride;
-    DistBuildStatus status = DistBuildStatus.builder()
-        .setStatus(stage)
-        .setMessage(lastLine)
-        .setLogBook(logBook)
-        .setSlaveStatuses(slaveStatuses)
-        .build();
+    DistBuildStatus status =
+        DistBuildStatus.builder()
+            .setStatus(stage)
+            .setMessage(lastLine)
+            .setLogBook(logBook)
+            .setSlaveStatuses(slaveStatuses)
+            .build();
     eventBus.post(new DistBuildStatusEvent(status));
   }
 
@@ -308,8 +297,7 @@ public class DistBuildClientExecutor {
 
   @VisibleForTesting
   ListenableFuture<List<BuildSlaveStatus>> fetchBuildSlaveStatusesAsync(
-      BuildJob job,
-      ListeningExecutorService networkExecutorService) {
+      BuildJob job, ListeningExecutorService networkExecutorService) {
     if (!job.isSetSlaveInfoByRunId()) {
       return Futures.immediateFuture(ImmutableList.of());
     }
@@ -323,24 +311,22 @@ public class DistBuildClientExecutor {
       runId.setId(id);
       slaveStatusFutures.add(
           networkExecutorService.submit(
-              () -> distBuildService.fetchBuildSlaveStatus(stampedeId, runId))
-      );
+              () -> distBuildService.fetchBuildSlaveStatus(stampedeId, runId)));
     }
 
     return Futures.transform(
         Futures.allAsList(slaveStatusFutures),
-        slaveStatusList -> slaveStatusList.stream()
-            .filter(Optional::isPresent)
-            .map(x -> x.get())
-            .collect(Collectors.toList())
-    );
+        slaveStatusList ->
+            slaveStatusList
+                .stream()
+                .filter(Optional::isPresent)
+                .map(x -> x.get())
+                .collect(Collectors.toList()));
   }
 
   @VisibleForTesting
   ListenableFuture<?> fetchAndPostBuildSlaveEventsAsync(
-      BuildJob job,
-      BuckEventBus eventBus,
-      ListeningExecutorService networkExecutorService) {
+      BuildJob job, BuckEventBus eventBus, ListeningExecutorService networkExecutorService) {
     if (!job.isSetSlaveInfoByRunId()) {
       return Futures.immediateFuture(null);
     }
@@ -351,61 +337,67 @@ public class DistBuildClientExecutor {
     for (String id : job.getSlaveInfoByRunId().keySet()) {
       RunId runId = new RunId();
       runId.setId(id);
-      fetchEventQueries.add(distBuildService.createBuildSlaveEventsQuery(
-          stampedeId, runId, nextEventIdBySlaveRunId.getOrDefault(runId, 0)));
+      fetchEventQueries.add(
+          distBuildService.createBuildSlaveEventsQuery(
+              stampedeId, runId, nextEventIdBySlaveRunId.getOrDefault(runId, 0)));
     }
     ListenableFuture<List<Pair<Integer, BuildSlaveEvent>>> fetchEventsFuture =
         networkExecutorService.submit(
             () -> distBuildService.multiGetBuildSlaveEvents(fetchEventQueries));
 
-    ListenableFuture<?> postEventsFuture = Futures.transform(
-        fetchEventsFuture,
-        sequenceIdAndEvents -> {
+    ListenableFuture<?> postEventsFuture =
+        Futures.transform(
+            fetchEventsFuture,
+            sequenceIdAndEvents -> {
 
-          // Sort such that all events from the same RunId come together, and in increasing order
-          // of their sequence IDs. Also, we cannot directly sort sequenceIdAndEvents as it might
-          // be an ImmutableList, hence we make it a stream.
-          sequenceIdAndEvents = sequenceIdAndEvents.stream().sorted((event1, event2) -> {
+              // Sort such that all events from the same RunId come together, and in increasing order
+              // of their sequence IDs. Also, we cannot directly sort sequenceIdAndEvents as it might
+              // be an ImmutableList, hence we make it a stream.
+              sequenceIdAndEvents =
+                  sequenceIdAndEvents
+                      .stream()
+                      .sorted(
+                          (event1, event2) -> {
+                            RunId runId1 = event1.getSecond().getRunId();
+                            RunId runId2 = event2.getSecond().getRunId();
 
-            RunId runId1 = event1.getSecond().getRunId();
-            RunId runId2 = event2.getSecond().getRunId();
+                            int result = runId1.compareTo(runId2);
+                            if (result == 0) {
+                              result = event1.getFirst().compareTo(event2.getFirst());
+                            }
 
-            int result = runId1.compareTo(runId2);
-            if (result == 0) {
-              result = event1.getFirst().compareTo(event2.getFirst());
-            }
+                            return result;
+                          })
+                      .collect(Collectors.toList());
 
-            return result;
-          }).collect(Collectors.toList());
-
-          for (Pair<Integer, BuildSlaveEvent> sequenceIdAndEvent : sequenceIdAndEvents) {
-            BuildSlaveEvent slaveEvent = sequenceIdAndEvent.getSecond();
-            nextEventIdBySlaveRunId.put(slaveEvent.getRunId(), sequenceIdAndEvent.getFirst() + 1);
-            switch (slaveEvent.getEventType()) {
-              case CONSOLE_EVENT:
-                ConsoleEvent consoleEvent =
-                    DistBuildUtil.createConsoleEvent(
-                        slaveEvent.getConsoleEvent());
-                eventBus.post(consoleEvent);
-                break;
-              case UNKNOWN:
-              default:
-                LOG.error(String.format(
-                    "Unknown type of BuildSlaveEvent received: [%d]",
-                    slaveEvent.getEventType().getValue()));
-                break;
-            }
-          }
-          return null;
-        });
+              for (Pair<Integer, BuildSlaveEvent> sequenceIdAndEvent : sequenceIdAndEvents) {
+                BuildSlaveEvent slaveEvent = sequenceIdAndEvent.getSecond();
+                nextEventIdBySlaveRunId.put(
+                    slaveEvent.getRunId(), sequenceIdAndEvent.getFirst() + 1);
+                switch (slaveEvent.getEventType()) {
+                  case CONSOLE_EVENT:
+                    ConsoleEvent consoleEvent =
+                        DistBuildUtil.createConsoleEvent(slaveEvent.getConsoleEvent());
+                    eventBus.post(consoleEvent);
+                    break;
+                  case UNKNOWN:
+                  default:
+                    LOG.error(
+                        String.format(
+                            "Unknown type of BuildSlaveEvent received: [%d]",
+                            slaveEvent.getEventType().getValue()));
+                    break;
+                }
+              }
+              return null;
+            });
 
     return postEventsFuture;
   }
 
   @VisibleForTesting
   ListenableFuture<?> fetchAndProcessRealTimeSlaveLogsAsync(
-      BuildJob job,
-      ListeningExecutorService networkExecutorService) {
+      BuildJob job, ListeningExecutorService networkExecutorService) {
     if (!job.isSetSlaveInfoByRunId()) {
       return Futures.immediateFuture(null);
     }
@@ -416,17 +408,18 @@ public class DistBuildClientExecutor {
       return Futures.immediateFuture(null);
     }
 
-    return networkExecutorService.submit(() -> {
-      try {
-        MultiGetBuildSlaveRealTimeLogsResponse slaveLogsResponse =
-            distBuildService.fetchSlaveLogLines(job.getStampedeId(), newLogLineRequests);
-        Preconditions.checkState(slaveLogsResponse.isSetMultiStreamLogs());
+    return networkExecutorService.submit(
+        () -> {
+          try {
+            MultiGetBuildSlaveRealTimeLogsResponse slaveLogsResponse =
+                distBuildService.fetchSlaveLogLines(job.getStampedeId(), newLogLineRequests);
+            Preconditions.checkState(slaveLogsResponse.isSetMultiStreamLogs());
 
-        distBuildLogStateTracker.processStreamLogs(slaveLogsResponse.getMultiStreamLogs());
-      } catch (IOException e) {
-        LOG.error(e, "Encountered error while streaming logs from BuildSlave(s).");
-      }
-    });
+            distBuildLogStateTracker.processStreamLogs(slaveLogsResponse.getMultiStreamLogs());
+          } catch (IOException e) {
+            LOG.error(e, "Encountered error while streaming logs from BuildSlave(s).");
+          }
+        });
   }
 
   @VisibleForTesting
@@ -435,15 +428,15 @@ public class DistBuildClientExecutor {
       return;
     }
 
-    List<RunId> runIds = distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(
-        job.getSlaveInfoByRunId().values());
+    List<RunId> runIds =
+        distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values());
     if (runIds.size() == 0) {
       return;
     }
 
     try {
-      MultiGetBuildSlaveLogDirResponse logDirsResponse = distBuildService.fetchBuildSlaveLogDir(
-          job.stampedeId, runIds);
+      MultiGetBuildSlaveLogDirResponse logDirsResponse =
+          distBuildService.fetchBuildSlaveLogDir(job.stampedeId, runIds);
       Preconditions.checkState(logDirsResponse.isSetLogDirs());
 
       distBuildLogStateTracker.materializeLogDirs(logDirsResponse.getLogDirs());

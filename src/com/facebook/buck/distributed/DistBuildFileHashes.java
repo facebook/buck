@@ -46,7 +46,6 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,8 +65,7 @@ public class DistBuildFileHashes {
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
   private final ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashes;
-  private final ListenableFuture<ImmutableMap<BuildRule, RuleKey>>
-      ruleKeys;
+  private final ListenableFuture<ImmutableMap<BuildRule, RuleKey>> ruleKeys;
 
   public DistBuildFileHashes(
       ActionGraph actionGraph,
@@ -81,32 +79,25 @@ public class DistBuildFileHashes {
 
     this.remoteFileHashes = new HashMap<>();
 
-    StackedFileHashCache recordingHashCache = originalHashCache.newDecoratedFileHashCache(
-        originalCache -> {
-          Path fsRootPath = originalCache.getFilesystem().getRootPath();
-          RecordedFileHashes fileHashes = getRemoteFileHashes(cellIndexer.getCellIndex(fsRootPath));
-          if (rootCell.getKnownRoots().contains(fsRootPath)) {
-            Cell cell = rootCell.getCell(fsRootPath);
-            return RecordingProjectFileHashCache.createForCellRoot(
-                originalCache,
-                fileHashes,
-                new DistBuildConfig(cell.getBuckConfig()));
-          } else {
-            return RecordingProjectFileHashCache.createForNonCellRoot(
-                originalCache,
-                fileHashes);
-          }
-        });
+    StackedFileHashCache recordingHashCache =
+        originalHashCache.newDecoratedFileHashCache(
+            originalCache -> {
+              Path fsRootPath = originalCache.getFilesystem().getRootPath();
+              RecordedFileHashes fileHashes =
+                  getRemoteFileHashes(cellIndexer.getCellIndex(fsRootPath));
+              if (rootCell.getKnownRoots().contains(fsRootPath)) {
+                Cell cell = rootCell.getCell(fsRootPath);
+                return RecordingProjectFileHashCache.createForCellRoot(
+                    originalCache, fileHashes, new DistBuildConfig(cell.getBuckConfig()));
+              } else {
+                return RecordingProjectFileHashCache.createForNonCellRoot(
+                    originalCache, fileHashes);
+              }
+            });
 
     this.ruleKeyFactories =
-
-        createRuleKeyFactories(
-            sourcePathResolver,
-            ruleFinder,
-            recordingHashCache,
-            keySeed);
-    this.ruleKeys =
-        ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
+        createRuleKeyFactories(sourcePathResolver, ruleFinder, recordingHashCache, keySeed);
+    this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
         fileHashesComputation(
             Futures.transform(this.ruleKeys, Functions.constant(null)),
@@ -123,25 +114,21 @@ public class DistBuildFileHashes {
     return remoteFileHashes.get(cellIndex);
   }
 
-  public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
-  createRuleKeyFactories(
+  public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> createRuleKeyFactories(
       final SourcePathResolver sourcePathResolver,
       final SourcePathRuleFinder ruleFinder,
       final FileHashCache fileHashCache,
       final int keySeed) {
 
-    return CacheBuilder.newBuilder().build(
-        new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
-          @Override
-          public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
-            return new DefaultRuleKeyFactory(
-                new RuleKeyFieldLoader(keySeed),
-                fileHashCache,
-                sourcePathResolver,
-                ruleFinder
-            );
-          }
-        });
+    return CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
+              @Override
+              public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
+                return new DefaultRuleKeyFactory(
+                    new RuleKeyFieldLoader(keySeed), fileHashCache, sourcePathResolver, ruleFinder);
+              }
+            });
   }
 
   private static ListenableFuture<ImmutableMap<BuildRule, RuleKey>> ruleKeyComputation(
@@ -152,9 +139,9 @@ public class DistBuildFileHashes {
     for (final BuildRule rule : actionGraph.getNodes()) {
       ruleKeyEntries.add(
           executorService.submit(
-              () -> Maps.immutableEntry(
-                  rule,
-                  ruleKeyFactories.get(rule.getProjectFilesystem()).build(rule))));
+              () ->
+                  Maps.immutableEntry(
+                      rule, ruleKeyFactories.get(rule.getProjectFilesystem()).build(rule))));
     }
     ListenableFuture<List<Map.Entry<BuildRule, RuleKey>>> ruleKeyComputation =
         Futures.allAsList(ruleKeyEntries);
@@ -184,15 +171,16 @@ public class DistBuildFileHashes {
         executorService);
   }
 
-  public List<BuildJobStateFileHashes> getFileHashes()
-      throws IOException, InterruptedException {
+  public List<BuildJobStateFileHashes> getFileHashes() throws IOException, InterruptedException {
     try {
 
-      ImmutableList<BuildJobStateFileHashes> hashes = fileHashes.get()
-          .stream()
-          .map(recordedHash -> recordedHash.getRemoteFileHashes())
-          .filter(x -> x.getEntriesSize() > 0)
-          .collect(MoreCollectors.toImmutableList());
+      ImmutableList<BuildJobStateFileHashes> hashes =
+          fileHashes
+              .get()
+              .stream()
+              .map(recordedHash -> recordedHash.getRemoteFileHashes())
+              .filter(x -> x.getEntriesSize() > 0)
+              .collect(MoreCollectors.toImmutableList());
       checkNoDuplicates(hashes);
       return hashes;
     } catch (ExecutionException e) {
@@ -210,42 +198,38 @@ public class DistBuildFileHashes {
     }
   }
 
-  /**
-   * Creates a {@link FileHashCache} that returns the hash codes cached on the remote end.
-   */
+  /** Creates a {@link FileHashCache} that returns the hash codes cached on the remote end. */
   public static ProjectFileHashCache createFileHashCache(
-      ProjectFileHashCache decoratedFileHashCache,
-      BuildJobStateFileHashes remoteFileHashes) {
+      ProjectFileHashCache decoratedFileHashCache, BuildJobStateFileHashes remoteFileHashes) {
     return new RemoteStateBasedFileHashCache(decoratedFileHashCache, remoteFileHashes);
   }
 
   public static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
-      final ProjectFilesystem projectFilesystem,
-      BuildJobStateFileHashes remoteFileHashes) {
+      final ProjectFilesystem projectFilesystem, BuildJobStateFileHashes remoteFileHashes) {
     if (!remoteFileHashes.isSetEntries()) {
       return ImmutableMap.of();
     }
     return FluentIterable.from(remoteFileHashes.entries)
         .filter(input -> !input.isPathIsAbsolute() && !input.isSetArchiveMemberPath())
         .uniqueIndex(
-            input -> projectFilesystem.resolve(
-                MorePaths.pathWithPlatformSeparators(input.getPath().getPath())));
+            input ->
+                projectFilesystem.resolve(
+                    MorePaths.pathWithPlatformSeparators(input.getPath().getPath())));
   }
 
   public static ImmutableMap<ArchiveMemberPath, BuildJobStateFileHashEntry>
-  indexEntriesByArchivePath(
-      final ProjectFilesystem projectFilesystem,
-      BuildJobStateFileHashes remoteFileHashes) {
+      indexEntriesByArchivePath(
+          final ProjectFilesystem projectFilesystem, BuildJobStateFileHashes remoteFileHashes) {
     if (!remoteFileHashes.isSetEntries()) {
       return ImmutableMap.of();
     }
     return FluentIterable.from(remoteFileHashes.entries)
         .filter(input -> !input.isPathIsAbsolute() && input.isSetArchiveMemberPath())
         .uniqueIndex(
-            input -> ArchiveMemberPath.of(
-                projectFilesystem.resolve(
-                    MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
-                Paths.get(input.getArchiveMemberPath())
-            ));
+            input ->
+                ArchiveMemberPath.of(
+                    projectFilesystem.resolve(
+                        MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
+                    Paths.get(input.getArchiveMemberPath())));
   }
 }

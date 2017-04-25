@@ -28,12 +28,6 @@ import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.apache.thrift.TException;
-import org.apache.thrift.server.TThreadedSelectorServer;
-import org.apache.thrift.transport.TNonblockingServerSocket;
-import org.apache.thrift.transport.TTransportException;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -41,8 +35,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import javax.annotation.Nullable;
+import org.apache.thrift.TException;
+import org.apache.thrift.server.TThreadedSelectorServer;
+import org.apache.thrift.transport.TNonblockingServerSocket;
+import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorServer implements Closeable {
 
@@ -62,12 +59,9 @@ public class ThriftCoordinatorServer implements Closeable {
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
 
-  @Nullable
-  private TNonblockingServerSocket transport;
-  @Nullable
-  private TThreadedSelectorServer server;
-  @Nullable
-  private Thread serverThread;
+  @Nullable private TNonblockingServerSocket transport;
+  @Nullable private TThreadedSelectorServer server;
+  @Nullable private Thread serverThread;
 
   public ThriftCoordinatorServer(int port, BuildTargetsQueue queue, StampedeId stampedeId) {
     this.stampedeId = stampedeId;
@@ -146,35 +140,34 @@ public class ThriftCoordinatorServer implements Closeable {
     @Override
     public GetTargetsToBuildResponse getTargetsToBuild(GetTargetsToBuildRequest request)
         throws TException {
-      LOG.debug(String.format(
-          "Minion [%s] is requesting for new targets to build.",
-          request.minionId));
+      LOG.debug(
+          String.format("Minion [%s] is requesting for new targets to build.", request.minionId));
       checkBuildId(request.getStampedeId());
       synchronized (lock) {
         Preconditions.checkArgument(request.isSetMinionId());
 
         GetTargetsToBuildResponse response = new GetTargetsToBuildResponse();
         if (allocator.isBuildFinished()) {
-          LOG.debug(String.format(
-              "Minion [%s] is being told to exit because the build has finished.",
-              request.minionId));
+          LOG.debug(
+              String.format(
+                  "Minion [%s] is being told to exit because the build has finished.",
+                  request.minionId));
           return response.setAction(GetTargetsToBuildAction.CLOSE_CLIENT);
         }
 
         ImmutableList<String> targets = allocator.getTargetsToBuild(request.getMinionId());
         if (targets.isEmpty()) {
-          LOG.debug(String.format(
-              "Minion [%s] is being told to retry getting more workload later.",
-              request.minionId));
+          LOG.debug(
+              String.format(
+                  "Minion [%s] is being told to retry getting more workload later.",
+                  request.minionId));
           return response.setAction(GetTargetsToBuildAction.RETRY_LATER);
         } else {
-          LOG.debug(String.format(
-              "Minion [%s] is being handed [%d] BuildTargets to build: [%s]",
-              request.minionId,
-              targets.size(),
-              Joiner.on(", ").join(targets)));
-          return response.setAction(GetTargetsToBuildAction.BUILD_TARGETS)
-              .setBuildTargets(targets);
+          LOG.debug(
+              String.format(
+                  "Minion [%s] is being handed [%d] BuildTargets to build: [%s]",
+                  request.minionId, targets.size(), Joiner.on(", ").join(targets)));
+          return response.setAction(GetTargetsToBuildAction.BUILD_TARGETS).setBuildTargets(targets);
         }
       }
     }
@@ -182,9 +175,7 @@ public class ThriftCoordinatorServer implements Closeable {
     @Override
     public FinishedBuildingResponse finishedBuilding(FinishedBuildingRequest request)
         throws TException {
-      LOG.info(String.format(
-          "Minion [%s] has finished building.",
-          request.getMinionId()));
+      LOG.info(String.format("Minion [%s] has finished building.", request.getMinionId()));
       checkBuildId(request.getStampedeId());
       synchronized (lock) {
         Preconditions.checkArgument(request.isSetMinionId());

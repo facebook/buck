@@ -23,11 +23,9 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
@@ -61,24 +59,16 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDistBuildStatus {
-    /**
-     * @return dist-build status
-     */
+    /** @return dist-build status */
     abstract String getStatus();
 
-    /**
-     * @return the message to display
-     */
+    /** @return the message to display */
     abstract Optional<String> getMessage();
 
-    /**
-     * @return the debug info received
-     */
+    /** @return the debug info received */
     abstract Optional<List<LogRecord>> getLogBook();
 
-    /**
-     * @return the status of each build slave
-     */
+    /** @return the status of each build slave */
     abstract ImmutableList<BuildSlaveStatus> getSlaveStatuses();
   }
 }

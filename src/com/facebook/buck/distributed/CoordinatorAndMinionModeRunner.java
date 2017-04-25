@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.log.Logger;
-
 import java.io.IOException;
 
 public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
@@ -27,8 +26,7 @@ public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
   private final MinionModeRunner minionModeRunner;
 
   public CoordinatorAndMinionModeRunner(
-      CoordinatorModeRunner coordinatorModeRunner,
-      MinionModeRunner minionModeRunner) {
+      CoordinatorModeRunner coordinatorModeRunner, MinionModeRunner minionModeRunner) {
     this.coordinatorModeRunner = coordinatorModeRunner;
     this.minionModeRunner = minionModeRunner;
   }
@@ -37,7 +35,7 @@ public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
   public int runAndReturnExitCode() throws IOException, InterruptedException {
     LOG.debug("Running the Coordinator in async mode...");
     try (CoordinatorModeRunner.AsyncCoordinatorRun coordinatorRun =
-             coordinatorModeRunner.runAsyncAndReturnExitCode()) {
+        coordinatorModeRunner.runAsyncAndReturnExitCode()) {
       LOG.debug("Running the Minion with the Coordinator in the background...");
       try {
         // We only care about the Coordinator exit code that is controlling this process.

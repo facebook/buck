@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -25,7 +24,6 @@ public interface FileContentsProvider {
   /**
    * @param entry to fetch the contents for.
    * @param targetAbsPath where the file should be written to.
-   *
    * @return true if the operation succeed, false otherwise.
    */
   boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)

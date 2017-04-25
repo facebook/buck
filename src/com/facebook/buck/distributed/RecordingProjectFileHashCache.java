@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -50,8 +48,10 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
   private final ProjectFileHashCache delegate;
   private final ProjectFilesystem projectFilesystem;
+
   @GuardedBy("this")
   private final RecordedFileHashes remoteFileHashes;
+
   private final boolean allRecordedPathsAreAbsolute;
   private boolean materializeCurrentFileDuringPreloading = false;
 
@@ -60,18 +60,12 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       RecordedFileHashes remoteFileHashes,
       DistBuildConfig distBuildConfig) {
     return new RecordingProjectFileHashCache(
-        decoratedCache,
-        remoteFileHashes,
-        Optional.of(distBuildConfig));
+        decoratedCache, remoteFileHashes, Optional.of(distBuildConfig));
   }
 
   public static RecordingProjectFileHashCache createForNonCellRoot(
-      ProjectFileHashCache decoratedCache,
-      RecordedFileHashes remoteFileHashes) {
-    return new RecordingProjectFileHashCache(
-        decoratedCache,
-        remoteFileHashes,
-        Optional.empty());
+      ProjectFileHashCache decoratedCache, RecordedFileHashes remoteFileHashes) {
+    return new RecordingProjectFileHashCache(decoratedCache, remoteFileHashes, Optional.empty());
   }
 
   private RecordingProjectFileHashCache(
@@ -130,9 +124,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
   private static void checkIsRelative(Path path) {
     Preconditions.checkArgument(
-        !path.isAbsolute(),
-        "Path must be relative. Found [%s] instead.",
-        path);
+        !path.isAbsolute(), "Path must be relative. Found [%s] instead.", path);
   }
 
   private Path findRealPath(Path path) {
@@ -169,18 +161,17 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   private Pair<Path, Path> findSymlinkRoot(Path symlinkPath) {
     int projectPathComponents = projectFilesystem.getRootPath().getNameCount();
     for (int pathEndIndex = (projectPathComponents + 1);
-         pathEndIndex <= symlinkPath.getNameCount();
-         pathEndIndex++) {
+        pathEndIndex <= symlinkPath.getNameCount();
+        pathEndIndex++) {
       // Note: subpath(..) does not return a rooted path, so we need to prepend an additional '/'.
-      Path symlinkSubpath = symlinkPath.getRoot().resolve(symlinkPath.subpath(
-          0, pathEndIndex));
+      Path symlinkSubpath = symlinkPath.getRoot().resolve(symlinkPath.subpath(0, pathEndIndex));
       Path realSymlinkSubpath = findRealPath(symlinkSubpath);
       boolean realPathOutsideProject =
           !projectFilesystem.getPathRelativeToProjectRoot(realSymlinkSubpath).isPresent();
       if (realPathOutsideProject) {
         return new Pair<>(
-            projectFilesystem.getPathRelativeToProjectRoot(
-                symlinkSubpath).get(), realSymlinkSubpath);
+            projectFilesystem.getPathRelativeToProjectRoot(symlinkSubpath).get(),
+            realSymlinkSubpath);
       }
     }
 
@@ -188,7 +179,6 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
         String.format(
             "Failed to find root symlink for symlink with path [%s]",
             symlinkPath.toAbsolutePath()));
-
   }
 
   private synchronized void record(
@@ -203,9 +193,10 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
     boolean pathIsAbsolute = allRecordedPathsAreAbsolute;
     fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
-    Path entryKey = pathIsAbsolute ?
-        projectFilesystem.resolve(relPath).toAbsolutePath() :
-        pathRelativeToProjectRoot.get();
+    Path entryKey =
+        pathIsAbsolute
+            ? projectFilesystem.resolve(relPath).toAbsolutePath()
+            : pathRelativeToProjectRoot.get();
     boolean isDirectory = projectFilesystem.isDirectory(relPath);
     Path realPath = findRealPath(relPath);
     boolean realPathInsideProject =
@@ -224,19 +215,18 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       Path symLinkRoot =
           projectFilesystem.getPathRelativeToProjectRoot(symLinkRootAndTarget.getFirst()).get();
       fileHashEntry.setRootSymLink(
-          new PathWithUnixSeparators()
-              .setPath(MorePaths.pathWithUnixSeparators(symLinkRoot)));
+          new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(symLinkRoot)));
       fileHashEntry.setRootSymLinkTarget(
           new PathWithUnixSeparators()
-              .setPath(MorePaths.pathWithUnixSeparators(
-              symLinkRootAndTarget.getSecond().toAbsolutePath())));
+              .setPath(
+                  MorePaths.pathWithUnixSeparators(
+                      symLinkRootAndTarget.getSecond().toAbsolutePath())));
     }
 
     fileHashEntry.setIsDirectory(isDirectory);
     fileHashEntry.setHashCode(hashCode.toString());
     fileHashEntry.setPath(
-        new PathWithUnixSeparators()
-            .setPath(MorePaths.pathWithUnixSeparators(entryKey)));
+        new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(entryKey)));
     if (memRelPath.isPresent()) {
       fileHashEntry.setArchiveMemberPath(memRelPath.get().toString());
     }
@@ -299,9 +289,9 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     try {
       for (Path absPath : whitelist.get()) {
         Optional<Path> relPathOpt = projectFilesystem.getPathRelativeToProjectRoot(absPath);
-        if (!relPathOpt.isPresent() ||
-            !willGet(relPathOpt.get()) ||
-            !projectFilesystem.exists(relPathOpt.get())) {
+        if (!relPathOpt.isPresent()
+            || !willGet(relPathOpt.get())
+            || !projectFilesystem.exists(relPathOpt.get())) {
           continue;
         }
 

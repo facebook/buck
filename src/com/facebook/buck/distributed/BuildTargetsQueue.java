@@ -23,7 +23,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +35,7 @@ public class BuildTargetsQueue {
   private final Map<String, EnqueuedTarget> allEnqueuedTargets;
 
   private BuildTargetsQueue(
-      List<EnqueuedTarget> zeroDependencyTargets,
-      Map<String, EnqueuedTarget> allEnqueuedTargets) {
+      List<EnqueuedTarget> zeroDependencyTargets, Map<String, EnqueuedTarget> allEnqueuedTargets) {
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
   }
@@ -47,19 +45,20 @@ public class BuildTargetsQueue {
   }
 
   public static BuildTargetsQueue newQueue(
-      BuildRuleResolver resolver,
-      Iterable<BuildTarget> targetsToBuild) {
+      BuildRuleResolver resolver, Iterable<BuildTarget> targetsToBuild) {
     // Build the reverse dependency graph by traversing the action graph Top-Down.
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
     Map<String, Integer> numberOfDependencies = new HashMap<>();
     Set<String> visitedTargets = Sets.newHashSet();
-    Queue<BuildRule> buildRulesToProcess = Lists.newLinkedList(
-        FluentIterable.from(targetsToBuild).transform(
-            x -> {
-              BuildRule rule = resolver.getRule(x);
-              visitedTargets.add(ruleToTarget(rule));
-              return rule;
-            }));
+    Queue<BuildRule> buildRulesToProcess =
+        Lists.newLinkedList(
+            FluentIterable.from(targetsToBuild)
+                .transform(
+                    x -> {
+                      BuildRule rule = resolver.getRule(x);
+                      visitedTargets.add(ruleToTarget(rule));
+                      return rule;
+                    }));
     while (!buildRulesToProcess.isEmpty()) {
       BuildRule rule = buildRulesToProcess.remove();
       String target = ruleToTarget(rule);
@@ -89,10 +88,11 @@ public class BuildTargetsQueue {
         currentRevDeps = new ArrayList<>();
       }
 
-      EnqueuedTarget enqueuedTarget = new EnqueuedTarget(
-          target,
-          ImmutableList.copyOf(currentRevDeps),
-          Preconditions.checkNotNull(numberOfDependencies.get(target)));
+      EnqueuedTarget enqueuedTarget =
+          new EnqueuedTarget(
+              target,
+              ImmutableList.copyOf(currentRevDeps),
+              Preconditions.checkNotNull(numberOfDependencies.get(target)));
       allEnqueuedTargets.put(target, enqueuedTarget);
 
       if (enqueuedTarget.areAllDependenciesResolved()) {
@@ -117,8 +117,9 @@ public class BuildTargetsQueue {
     }
 
     // Return all the Targets that have all dependencies resolved.
-    ImmutableList<String> targetsReadyToBuild = ImmutableList.copyOf(
-        FluentIterable.from(zeroDependencyTargets).transform(x -> x.getBuildTarget()));
+    ImmutableList<String> targetsReadyToBuild =
+        ImmutableList.copyOf(
+            FluentIterable.from(zeroDependencyTargets).transform(x -> x.getBuildTarget()));
     zeroDependencyTargets.clear();
     return targetsReadyToBuild;
   }
@@ -133,9 +134,7 @@ public class BuildTargetsQueue {
     private int unsatisfiedDependencies;
 
     private EnqueuedTarget(
-        String buildTarget,
-        ImmutableList<String> dependentTargets,
-        int numberOfDependencies) {
+        String buildTarget, ImmutableList<String> dependentTargets, int numberOfDependencies) {
       this.buildTarget = buildTarget;
       this.dependentTargets = dependentTargets;
       this.unsatisfiedDependencies = numberOfDependencies;
@@ -162,11 +161,15 @@ public class BuildTargetsQueue {
 
     @Override
     public String toString() {
-      return "EnqueuedTarget{" +
-          "buildTarget='" + buildTarget + '\'' +
-          ", unsatisfiedDependencies=" + unsatisfiedDependencies +
-          ", dependentTargets=" + dependentTargets +
-          '}';
+      return "EnqueuedTarget{"
+          + "buildTarget='"
+          + buildTarget
+          + '\''
+          + ", unsatisfiedDependencies="
+          + unsatisfiedDependencies
+          + ", dependentTargets="
+          + dependentTargets
+          + '}';
     }
   }
 }

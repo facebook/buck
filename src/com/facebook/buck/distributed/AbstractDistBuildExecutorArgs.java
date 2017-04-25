@@ -31,10 +31,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.util.Map;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable

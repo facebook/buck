@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -27,15 +26,14 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   private final Optional<LocalFsContentsProvider> localFsProvider;
   private final InlineContentsProvider inlineProvider;
 
-  public MultiSourceContentsProvider(
-      DistBuildService service,
-      Optional<Path> localCacheAbsPath) throws IOException {
+  public MultiSourceContentsProvider(DistBuildService service, Optional<Path> localCacheAbsPath)
+      throws IOException {
     this(new ServerContentsProvider(service), localCacheAbsPath);
   }
 
   public MultiSourceContentsProvider(
-      FileContentsProvider serverContentProvider,
-      Optional<Path> localCacheAbsPath) throws IOException {
+      FileContentsProvider serverContentProvider, Optional<Path> localCacheAbsPath)
+      throws IOException {
     this.inlineProvider = new InlineContentsProvider();
     if (localCacheAbsPath.isPresent()) {
       this.localFsProvider = Optional.of(new LocalFsContentsProvider(localCacheAbsPath.get()));
@@ -47,16 +45,15 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   }
 
   @Override
-  public boolean materializeFileContents(
-      BuildJobStateFileHashEntry entry,
-      Path targetAbsPath) throws IOException {
+  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+      throws IOException {
 
     if (inlineProvider.materializeFileContents(entry, targetAbsPath)) {
       return true;
     }
 
-    if (localFsProvider.isPresent() &&
-        localFsProvider.get().materializeFileContents(entry, targetAbsPath)) {
+    if (localFsProvider.isPresent()
+        && localFsProvider.get().materializeFileContents(entry, targetAbsPath)) {
       return true;
     }
 

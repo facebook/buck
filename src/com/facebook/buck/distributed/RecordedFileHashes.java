@@ -20,7 +20,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.util.Set;
 

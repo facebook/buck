@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,9 +29,8 @@ public class InlineContentsProvider implements FileContentsProvider {
   public InlineContentsProvider() {}
 
   @Override
-  public boolean materializeFileContents(
-      BuildJobStateFileHashEntry entry,
-      Path targetAbsPath) throws IOException {
+  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+      throws IOException {
 
     if (entry.isSetContents()) {
       try (OutputStream outputStream = newOutputStream(targetAbsPath)) {

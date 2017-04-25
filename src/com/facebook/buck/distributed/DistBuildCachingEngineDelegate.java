@@ -25,12 +25,11 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
-
 import java.util.concurrent.ExecutionException;
 
 /**
- * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file
- * in distributed build.
+ * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file in
+ * distributed build.
  */
 public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
   private final StackedFileHashCache remoteStackedFileHashCache;
@@ -40,7 +39,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
 
   /**
    * @param sourcePathResolver Distributed build source parse resolver.
-   * @param ruleFinder         Used by the distributed build rule key factories.
+   * @param ruleFinder Used by the distributed build rule key factories.
    * @param remoteStackedFileHashCache Cache that only requires SHA1.
    * @param materializingStackedFileHashCache Cache that writes the files to the disk.
    */
@@ -50,11 +49,9 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
       StackedFileHashCache remoteStackedFileHashCache,
       StackedFileHashCache materializingStackedFileHashCache) {
     this.remoteStackedFileHashCache = remoteStackedFileHashCache;
-    materializingRuleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
-        sourcePathResolver,
-        ruleFinder,
-        materializingStackedFileHashCache,
-        /* keySeed */ 0);
+    materializingRuleKeyFactories =
+        DistBuildFileHashes.createRuleKeyFactories(
+            sourcePathResolver, ruleFinder, materializingStackedFileHashCache, /* keySeed */ 0);
   }
 
   @Override

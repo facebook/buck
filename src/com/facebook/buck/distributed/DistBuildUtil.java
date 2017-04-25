@@ -21,7 +21,6 @@ import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,8 +33,7 @@ public class DistBuildUtil {
   private DistBuildUtil() {}
 
   public static BuildSlaveConsoleEvent createBuildSlaveConsoleEvent(
-      ConsoleEvent event,
-      long timestampMillis) {
+      ConsoleEvent event, long timestampMillis) {
     BuildSlaveConsoleEvent buildSlaveConsoleEvent = new BuildSlaveConsoleEvent();
     buildSlaveConsoleEvent.setTimestampMillis(timestampMillis);
     buildSlaveConsoleEvent.setMessage(event.getMessage());
@@ -65,11 +63,11 @@ public class DistBuildUtil {
       case SEVERE:
         return ConsoleEvent.create(Level.SEVERE, timestampPrefix + event.getMessage());
       default:
-        LOG.error(String.format(
-            "Unsupported type of ConsoleEventSeverity received in BuildSlaveConsoleEvent: [%d]" +
-                "Defaulting to SEVERE.",
-            event.getSeverity().getValue()
-        ));
+        LOG.error(
+            String.format(
+                "Unsupported type of ConsoleEventSeverity received in BuildSlaveConsoleEvent: [%d]"
+                    + "Defaulting to SEVERE.",
+                event.getSeverity().getValue()));
         return ConsoleEvent.create(Level.SEVERE, timestampPrefix + event.getMessage());
     }
   }

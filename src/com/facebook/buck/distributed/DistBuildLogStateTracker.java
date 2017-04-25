@@ -32,7 +32,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.FileOutputStream;
@@ -57,14 +56,10 @@ public class DistBuildLogStateTracker implements Closeable {
   private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
   private Set<String> createdLogDirRootsByRunId = Sets.newHashSet();
 
-
-  public DistBuildLogStateTracker(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
+  public DistBuildLogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
     this.logDirectoryPath = logDirectoryPath;
     this.filesystem = filesystem;
   }
-
 
   public List<LogLineBatchRequest> createRealtimeLogRequests(
       Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
@@ -82,8 +77,7 @@ public class DistBuildLogStateTracker implements Closeable {
       if (streamLogs.isSetErrorMessage()) {
         LOG.error(
             "Failed to get stream logs for runId [%]. Error: %s",
-            streamLogs.slaveStream.runId,
-            streamLogs.errorMessage);
+            streamLogs.slaveStream.runId, streamLogs.errorMessage);
 
         continue;
       }
@@ -111,9 +105,7 @@ public class DistBuildLogStateTracker implements Closeable {
     for (LogDir logDir : logDirs) {
       if (logDir.isSetErrorMessage()) {
         LOG.error(
-            "Failed to fetch log dir for runId [%s]. Error: %s",
-            logDir.runId,
-            logDir.errorMessage);
+            "Failed to fetch log dir for runId [%s]. Error: %s", logDir.runId, logDir.errorMessage);
         continue;
       }
 
@@ -126,8 +118,7 @@ public class DistBuildLogStateTracker implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException {}
 
   /*
    *******************************
@@ -143,18 +134,15 @@ public class DistBuildLogStateTracker implements Closeable {
     SlaveStreamState seenStreamState =
         Preconditions.checkNotNull(seenSlaveLogs.get(streamLogs.slaveStream));
 
-
     LogLineBatch lastReceivedBatch =
         streamLogs.logLineBatches.get(streamLogs.logLineBatches.size() - 1);
 
-    if (seenStreamState.seenBatchNumber > lastReceivedBatch.batchNumber || (
-        seenStreamState.seenBatchNumber == lastReceivedBatch.batchNumber &&
-            seenStreamState.seenBatchLineCount >= lastReceivedBatch.lines.size()
-    )) {
+    if (seenStreamState.seenBatchNumber > lastReceivedBatch.batchNumber
+        || (seenStreamState.seenBatchNumber == lastReceivedBatch.batchNumber
+            && seenStreamState.seenBatchLineCount >= lastReceivedBatch.lines.size())) {
       LOG.warn(
           "Received stale logs for runID [%s] and stream [%s]",
-          streamLogs.slaveStream.runId,
-          streamLogs.slaveStream.streamType);
+          streamLogs.slaveStream.runId, streamLogs.slaveStream.streamType);
       return;
     }
 
@@ -182,11 +170,8 @@ public class DistBuildLogStateTracker implements Closeable {
     seenStreamState.seenBatchLineCount = lastReceivedBatch.lines.size();
   }
 
-
   private void createRealtimeLogRequests(
-      BuildSlaveInfo buildSlaveInfo,
-      LogStreamType streamType,
-      List<LogLineBatchRequest> requests) {
+      BuildSlaveInfo buildSlaveInfo, LogStreamType streamType, List<LogLineBatchRequest> requests) {
     RunId runId = buildSlaveInfo.runId;
     SlaveStream slaveStream = new SlaveStream();
     slaveStream.setRunId(runId);
@@ -208,9 +193,9 @@ public class DistBuildLogStateTracker implements Closeable {
     int latestBatchLineNumber = getLatestBatchLineNumber(buildSlaveInfo, streamType);
     SlaveStreamState seenState = seenSlaveLogs.get(slaveStream);
     // Logs exists, but we have seen them all already.
-    if (seenState.seenBatchNumber > latestBatchNumber ||
-        (seenState.seenBatchNumber == latestBatchNumber &&
-            seenState.seenBatchLineCount >= latestBatchLineNumber)) {
+    if (seenState.seenBatchNumber > latestBatchNumber
+        || (seenState.seenBatchNumber == latestBatchNumber
+            && seenState.seenBatchLineCount >= latestBatchLineNumber)) {
       return;
     }
 
@@ -231,8 +216,7 @@ public class DistBuildLogStateTracker implements Closeable {
   }
 
   private static int getLatestBatchLineNumber(
-      BuildSlaveInfo buildSlaveInfo,
-      LogStreamType streamType) {
+      BuildSlaveInfo buildSlaveInfo, LogStreamType streamType) {
     switch (streamType) {
       case STDOUT:
         return buildSlaveInfo.getStdOutCurrentBatchLineCount();
@@ -258,9 +242,10 @@ public class DistBuildLogStateTracker implements Closeable {
    */
 
   private Path getLogDirForRunId(String runId) {
-    Path runIdLogDir = filesystem.resolve(logDirectoryPath).resolve(String.format(
-        BuckConstant.DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE,
-        runId));
+    Path runIdLogDir =
+        filesystem
+            .resolve(logDirectoryPath)
+            .resolve(String.format(BuckConstant.DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE, runId));
 
     if (!createdLogDirRootsByRunId.contains(runId)) {
       try {
@@ -289,22 +274,16 @@ public class DistBuildLogStateTracker implements Closeable {
    */
 
   private void writeLogStreamLinesToDisk(SlaveStream slaveStream, List<String> newLines) {
-    Path outputLogFilePath = getStreamLogFilePath(
-        slaveStream.runId.id,
-        slaveStream.streamType.toString());
-    try (OutputStream outputStream = new BufferedOutputStream(
-        new FileOutputStream(
-            outputLogFilePath.toFile(),
-            true))) {
+    Path outputLogFilePath =
+        getStreamLogFilePath(slaveStream.runId.id, slaveStream.streamType.toString());
+    try (OutputStream outputStream =
+        new BufferedOutputStream(new FileOutputStream(outputLogFilePath.toFile(), true))) {
       for (String logLine : newLines) {
         outputStream.write(logLine.getBytes(Charsets.UTF_8));
       }
       outputStream.flush();
     } catch (IOException e) {
-      LOG.debug(
-          "Failed to write to %s",
-          outputLogFilePath.toAbsolutePath(),
-          e);
+      LOG.debug("Failed to write to %s", outputLogFilePath.toAbsolutePath(), e);
     }
   }
 
@@ -316,8 +295,9 @@ public class DistBuildLogStateTracker implements Closeable {
 
   private void writeLogDirToDisk(LogDir logDir) throws IOException {
     if (logDir.data.array().length == 0) {
-      LOG.warn("Skipping materialiation of buck-out dir for runId [%s]" +
-          " as content length was zero", logDir.runId);
+      LOG.warn(
+          "Skipping materialiation of buck-out dir for runId [%s]" + " as content length was zero",
+          logDir.runId);
       return;
     }
 
@@ -325,7 +305,10 @@ public class DistBuildLogStateTracker implements Closeable {
 
     try (NamedTemporaryFile zipFile = new NamedTemporaryFile("runBuckOut", "zip")) {
       Files.write(zipFile.get(), logDir.data.array());
-      Unzip.extractZipFile(zipFile.get(), filesystem, buckOutUnzipPath,
+      Unzip.extractZipFile(
+          zipFile.get(),
+          filesystem,
+          buckOutUnzipPath,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     }
   }

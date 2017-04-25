@@ -19,14 +19,13 @@ package com.facebook.buck.distributed;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Allocates and keeps track of what BuildTargets are allocated to which Minions.
- * NOTE: Not thread safe.
+ * Allocates and keeps track of what BuildTargets are allocated to which Minions. NOTE: Not thread
+ * safe.
  */
 public class MinionWorkloadAllocator {
 

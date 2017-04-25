@@ -26,19 +26,16 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransportException;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 public class ThriftCoordinatorClient implements Closeable {
   private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
@@ -69,9 +66,10 @@ public class ThriftCoordinatorClient implements Closeable {
         break;
       } catch (TTransportException e) {
         if (stopwatch.elapsed(TimeUnit.SECONDS) > MAX_CONNECT_TIMEOUT_SECONDS) {
-          throw new IOException(String.format(
-              "Failed to connect. Coordinator is still not healthy after [%d] seconds.",
-              MAX_CONNECT_TIMEOUT_SECONDS));
+          throw new IOException(
+              String.format(
+                  "Failed to connect. Coordinator is still not healthy after [%d] seconds.",
+                  MAX_CONNECT_TIMEOUT_SECONDS));
         }
 
         LOG.debug("Coordinator server currently not available. Retrying in a bit...");
@@ -96,13 +94,11 @@ public class ThriftCoordinatorClient implements Closeable {
     return this;
   }
 
-  public GetTargetsToBuildResponse getTargetsToBuild(String minionId)
-      throws IOException {
+  public GetTargetsToBuildResponse getTargetsToBuild(String minionId) throws IOException {
     LOG.debug(String.format("Minion [%s] is requesting targets to build.", minionId));
     Preconditions.checkNotNull(client, "Client was not started.");
-    GetTargetsToBuildRequest request = new GetTargetsToBuildRequest()
-        .setMinionId(minionId)
-        .setStampedeId(stampedeId);
+    GetTargetsToBuildRequest request =
+        new GetTargetsToBuildRequest().setMinionId(minionId).setStampedeId(stampedeId);
     try {
       GetTargetsToBuildResponse response = client.getTargetsToBuild(request);
       return response;
@@ -113,14 +109,13 @@ public class ThriftCoordinatorClient implements Closeable {
 
   public FinishedBuildingResponse finishedBuilding(String minionId, int minionExitCode)
       throws IOException {
-    LOG.debug(String.format(
-        "Minion [%s] is reporting that it finished building.",
-        minionId));
+    LOG.debug(String.format("Minion [%s] is reporting that it finished building.", minionId));
     Preconditions.checkNotNull(client, "Client was not started.");
-    FinishedBuildingRequest request = new FinishedBuildingRequest()
-        .setStampedeId(stampedeId)
-        .setMinionId(minionId)
-        .setBuildExitCode(minionExitCode);
+    FinishedBuildingRequest request =
+        new FinishedBuildingRequest()
+            .setStampedeId(stampedeId)
+            .setMinionId(minionId)
+            .setBuildExitCode(minionExitCode);
     try {
       FinishedBuildingResponse response = client.finishedBuilding(request);
       return response;
