@@ -18,9 +18,7 @@ package com.facebook.buck.timing;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Provides a fake implementation of a {@link Clock} which always returns a constant time.
- */
+/** Provides a fake implementation of a {@link Clock} which always returns a constant time. */
 public class FakeClock implements Clock {
   private final long nanoTime;
 
