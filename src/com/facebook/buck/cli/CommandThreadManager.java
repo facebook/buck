@@ -27,11 +27,9 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * Encapsulates a group of threads which operate a {@link ListeningExecutorService}, providing an
@@ -76,9 +74,7 @@ public class CommandThreadManager implements AutoCloseable {
                 MostExecutors.newMultiThreadExecutor(
                     new ThreadFactoryBuilder()
                         .setNameFormat(name + "-%d")
-                        .setThreadFactory(
-                            new CommandThreadFactory(
-                                r -> new Thread(threadGroup, r)))
+                        .setThreadFactory(new CommandThreadFactory(r -> new Thread(threadGroup, r)))
                         .build(),
                     managedThreadCount)));
     this.shutdownTimeout = shutdownTimeout;
@@ -96,10 +92,8 @@ public class CommandThreadManager implements AutoCloseable {
         defaultAmounts,
         managedThreadCount,
         DEFAULT_SHUTDOWN_TIMEOUT,
-        DEFAULT_SHUTDOWN_TIMEOUT_UNIT
-    );
+        DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
   }
-
 
   public CommandThreadManager(
       String name,
@@ -109,22 +103,15 @@ public class CommandThreadManager implements AutoCloseable {
     this(
         name,
         new ListeningMultiSemaphore(
-            concurrencyLimit.maximumAmounts,
-            concurrencyLimit.resourceAllocationFairness),
+            concurrencyLimit.maximumAmounts, concurrencyLimit.resourceAllocationFairness),
         concurrencyLimit.defaultAmounts,
         concurrencyLimit.managedThreadCount,
         shutdownTimeout,
         shutdownTimeoutUnit);
   }
 
-  public CommandThreadManager(
-      String name,
-      ConcurrencyLimit concurrencyLimit) {
-    this(
-        name,
-        concurrencyLimit,
-        DEFAULT_SHUTDOWN_TIMEOUT,
-        DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
+  public CommandThreadManager(String name, ConcurrencyLimit concurrencyLimit) {
+    this(name, concurrencyLimit, DEFAULT_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
   }
 
   public WeightedListeningExecutorService getExecutor() {
@@ -133,19 +120,13 @@ public class CommandThreadManager implements AutoCloseable {
 
   @Override
   public void close() throws InterruptedException {
-    boolean shutdown = MostExecutors.shutdown(
-        executor,
-        shutdownTimeout,
-        shutdownTimeoutUnit);
+    boolean shutdown = MostExecutors.shutdown(executor, shutdownTimeout, shutdownTimeoutUnit);
 
     // If the shutdown failed, print the stacks for all the blocked threads.
     if (!shutdown) {
       List<String> parts = new ArrayList<>();
 
-      parts.add(
-          String.format(
-              "Shutdown timed out for thread pool %s",
-              threadGroup.getName()));
+      parts.add(String.format("Shutdown timed out for thread pool %s", threadGroup.getName()));
 
       Thread[] threads = new Thread[threadGroup.activeCount()];
       threadGroup.enumerate(threads);
@@ -161,5 +142,4 @@ public class CommandThreadManager implements AutoCloseable {
       throw new RuntimeException(Joiner.on("\n").join(parts));
     }
   }
-
 }

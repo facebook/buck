@@ -20,11 +20,10 @@ import java.util.Optional;
 
 public interface ConfigPathGetter {
   /**
-   *
    * @param sectionName
    * @param key
-   * @return Optional.EMPTY if entry does not exist for [section] and key, otherwise
-   * returns an Optional containing the corresponding value.
+   * @return Optional.EMPTY if entry does not exist for [section] and key, otherwise returns an
+   *     Optional containing the corresponding value.
    */
   Optional<Path> getPath(String sectionName, String key);
 }

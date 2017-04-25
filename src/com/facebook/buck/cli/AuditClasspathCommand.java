@@ -46,45 +46,40 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
-
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class AuditClasspathCommand extends AbstractCommand {
 
   /**
    * Expected usage:
+   *
    * <pre>
    * buck audit classpath --dot //java/com/facebook/pkg:pkg > /tmp/graph.dot
    * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
    * </pre>
    */
-  @Option(name = "--dot",
-      usage = "Print dependencies as Dot graph")
+  @Option(name = "--dot", usage = "Print dependencies as Dot graph")
   private boolean generateDotOutput;
 
   public boolean shouldGenerateDotOutput() {
     return generateDotOutput;
   }
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -100,32 +95,39 @@ public class AuditClasspathCommand extends AbstractCommand {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<BuildTarget> targets =
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()).stream()
-            .map(input -> BuildTargetParser.INSTANCE.parse(
-                input,
-                BuildTargetPatternParser.fullyQualified(),
-                params.getCell().getCellPathResolver()))
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
+            .stream()
+            .map(
+                input ->
+                    BuildTargetParser.INSTANCE.parse(
+                        input,
+                        BuildTargetPatternParser.fullyQualified(),
+                        params.getCell().getCellPathResolver()))
             .collect(MoreCollectors.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify at least one build target."));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe("Please specify at least one build target."));
       return 1;
     }
 
     TargetGraph targetGraph;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      targetGraph = params.getParser().buildTargetGraph(
-          params.getBuckEventBus(),
-          params.getCell(),
-          getEnableParserProfiling(),
-          pool.getExecutor(),
-          targets);
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+      targetGraph =
+          params
+              .getParser()
+              .buildTargetGraph(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  pool.getExecutor(),
+                  targets);
     } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
@@ -149,12 +151,13 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
-    Dot<TargetNode<?, ?>> dot = new Dot<>(
-        targetGraph,
-        "target_graph",
-        targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
-        targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName(),
-        params.getConsole().getStdOut());
+    Dot<TargetNode<?, ?>> dot =
+        new Dot<>(
+            targetGraph,
+            "target_graph",
+            targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
+            targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName(),
+            params.getConsole().getStdOut());
     try {
       dot.writeOutput();
     } catch (IOException e) {
@@ -165,9 +168,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   int printClasspath(
-      CommandRunnerParams params,
-      TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> targets)
+      CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws NoSuchBuildTargetException, InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {
@@ -176,8 +177,10 @@ public class AuditClasspathCommand extends AbstractCommand {
               .getTargetGraph();
     }
 
-    BuildRuleResolver resolver = Preconditions.checkNotNull(
-        ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(
+                ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph))
+            .getResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
@@ -186,11 +189,10 @@ public class AuditClasspathCommand extends AbstractCommand {
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(
-            pathResolver.getAllAbsolutePaths(
-                hasClasspathEntries.getTransitiveClasspaths()));
+            pathResolver.getAllAbsolutePaths(hasClasspathEntries.getTransitiveClasspaths()));
       } else {
-        throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
-            " build target");
+        throw new HumanReadableException(
+            rule.getFullyQualifiedName() + " is not a java-based" + " build target");
       }
     }
 
@@ -203,9 +205,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   int printJsonClasspath(
-      CommandRunnerParams params,
-      TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> targets)
+      CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws IOException, NoSuchBuildTargetException, InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {
@@ -214,8 +214,10 @@ public class AuditClasspathCommand extends AbstractCommand {
               .getTargetGraph();
     }
 
-    BuildRuleResolver resolver = Preconditions.checkNotNull(
-        ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
+    BuildRuleResolver resolver =
+        Preconditions.checkNotNull(
+                ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph))
+            .getResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
@@ -227,7 +229,9 @@ public class AuditClasspathCommand extends AbstractCommand {
       }
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          hasClasspathEntries.getTransitiveClasspaths().stream()
+          hasClasspathEntries
+              .getTransitiveClasspaths()
+              .stream()
               .map(pathResolver::getAbsolutePath)
               .map(Object::toString)
               .collect(MoreCollectors.toImmutableList()));
@@ -251,5 +255,4 @@ public class AuditClasspathCommand extends AbstractCommand {
   public String getShortDescription() {
     return "provides facilities to audit build targets' classpaths";
   }
-
 }

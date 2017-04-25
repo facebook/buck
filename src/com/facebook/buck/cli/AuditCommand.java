@@ -17,27 +17,25 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
+import java.util.Optional;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
-
-import java.util.Optional;
 
 public class AuditCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-      @SubCommand(name = "alias", impl = AuditAliasCommand.class),
-      @SubCommand(name = "cell", impl = AuditCellCommand.class),
-      @SubCommand(name = "classpath", impl = AuditClasspathCommand.class),
-      @SubCommand(name = "config", impl = AuditConfigCommand.class),
-      @SubCommand(name = "dependencies", impl = AuditDependenciesCommand.class),
-      @SubCommand(name = "flavors", impl = AuditFlavorsCommand.class),
-      @SubCommand(name = "input", impl = AuditInputCommand.class),
-      @SubCommand(name = "owner", impl = AuditOwnerCommand.class),
-      @SubCommand(name = "rules", impl = AuditRulesCommand.class),
-      @SubCommand(name = "tests", impl = AuditTestsCommand.class),
+    @SubCommand(name = "alias", impl = AuditAliasCommand.class),
+    @SubCommand(name = "cell", impl = AuditCellCommand.class),
+    @SubCommand(name = "classpath", impl = AuditClasspathCommand.class),
+    @SubCommand(name = "config", impl = AuditConfigCommand.class),
+    @SubCommand(name = "dependencies", impl = AuditDependenciesCommand.class),
+    @SubCommand(name = "flavors", impl = AuditFlavorsCommand.class),
+    @SubCommand(name = "input", impl = AuditInputCommand.class),
+    @SubCommand(name = "owner", impl = AuditOwnerCommand.class),
+    @SubCommand(name = "rules", impl = AuditRulesCommand.class),
+    @SubCommand(name = "tests", impl = AuditTestsCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
@@ -61,5 +59,4 @@ public class AuditCommand extends AbstractContainerCommand {
   public Optional<Command> getSubcommand() {
     return Optional.ofNullable(subcommand);
   }
-
 }

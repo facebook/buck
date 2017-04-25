@@ -20,7 +20,6 @@ import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
@@ -34,6 +33,7 @@ public class VersionCommand implements Command {
   /**
    * Returns current Buck version, in the form {@code [*]<git-commit-hash>}, where {@code *}
    * indicates that the working tree of the Buck repository is dirty.
+   *
    * @return The version of Buck currently running
    */
   private String getBuckVersion() {

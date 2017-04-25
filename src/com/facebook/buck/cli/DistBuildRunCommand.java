@@ -34,9 +34,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,8 +42,8 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Option;
 
 public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
@@ -58,28 +55,30 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private String buildStateFile;
 
   @Nullable
-  @Option(name = "--coordinator-port",
-      usage = "The local port that the build coordinator thrift server will listen on.")
+  @Option(
+    name = "--coordinator-port",
+    usage = "The local port that the build coordinator thrift server will listen on."
+  )
   private int coordinatorPort = -1;
 
   @Nullable
-  @Option(name = "--build-mode",
-      usage = "The mode in which the distributed build is going to run.")
+  @Option(name = "--build-mode", usage = "The mode in which the distributed build is going to run.")
   private DistBuildMode distBuildMode = DistBuildMode.REMOTE_BUILD;
 
   @Nullable
-  @Option(name = "--global-cache-dir",
-      usage = "Full path to an existing directory that will contain a global cache across builds.")
+  @Option(
+    name = "--global-cache-dir",
+    usage = "Full path to an existing directory that will contain a global cache across builds."
+  )
   private Path globalCacheDir;
 
   private static final String RUN_ID_ARG_NAME = "--buildslave-run-id";
-  @Nullable
-  @Option(name = RUN_ID_ARG_NAME,
-      usage = "Stampede RunId for this instance of BuildSlave.")
-  private String runId;
 
   @Nullable
-  private DistBuildSlaveEventBusListener slaveEventListener;
+  @Option(name = RUN_ID_ARG_NAME, usage = "Stampede RunId for this instance of BuildSlave.")
+  private String runId;
+
+  @Nullable private DistBuildSlaveEventBusListener slaveEventListener;
 
   @Override
   public boolean isReadOnly() {
@@ -101,41 +100,40 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       }
 
       try {
-        Pair<BuildJobState, String> jobStateAndBuildName = getBuildJobStateAndBuildName(
-            params.getCell().getFilesystem(),
-            console,
-            service);
+        Pair<BuildJobState, String> jobStateAndBuildName =
+            getBuildJobStateAndBuildName(params.getCell().getFilesystem(), console, service);
         BuildJobState jobState = jobStateAndBuildName.getFirst();
         String buildName = jobStateAndBuildName.getSecond();
 
-        console.getStdOut().println(String.format(
-            "BuildJob depends on a total of [%d] input deps.",
-            jobState.getFileHashesSize()));
-        try (CommandThreadManager pool = new CommandThreadManager(
-            getClass().getName(),
-            getConcurrencyLimit(params.getBuckConfig()))) {
-          DistBuildSlaveExecutor distBuildExecutor = DistBuildFactory.createDistBuildExecutor(
-              jobState,
-              params,
-              pool.getExecutor(),
-              service,
-              Preconditions.checkNotNull(distBuildMode),
-              coordinatorPort,
-              getStampedeIdOptional(),
-              getGlobalCacheDirOptional());
+        console
+            .getStdOut()
+            .println(
+                String.format(
+                    "BuildJob depends on a total of [%d] input deps.",
+                    jobState.getFileHashesSize()));
+        try (CommandThreadManager pool =
+            new CommandThreadManager(
+                getClass().getName(), getConcurrencyLimit(params.getBuckConfig()))) {
+          DistBuildSlaveExecutor distBuildExecutor =
+              DistBuildFactory.createDistBuildExecutor(
+                  jobState,
+                  params,
+                  pool.getExecutor(),
+                  service,
+                  Preconditions.checkNotNull(distBuildMode),
+                  coordinatorPort,
+                  getStampedeIdOptional(),
+                  getGlobalCacheDirOptional());
           int returnCode = distBuildExecutor.buildAndReturnExitCode();
           if (returnCode == 0) {
-            console.printSuccess(String.format(
-                "Successfully ran distributed build [%s] in [%d millis].",
-                buildName,
-                stopwatch.elapsed(
-                    TimeUnit.MILLISECONDS)));
+            console.printSuccess(
+                String.format(
+                    "Successfully ran distributed build [%s] in [%d millis].",
+                    buildName, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
           } else {
             console.printErrorText(
                 "Failed distributed build [%s] in [%d millis].",
-                buildName,
-                stopwatch.elapsed(
-                    TimeUnit.MILLISECONDS));
+                buildName, stopwatch.elapsed(TimeUnit.MILLISECONDS));
           }
           return returnCode;
         }
@@ -149,12 +147,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     }
   }
 
-  /**
-   * Logs a severe error message prefixed with {@code BUILD SLAVE FAILED} to the frontend.
-   */
+  /** Logs a severe error message prefixed with {@code BUILD SLAVE FAILED} to the frontend. */
   private static void logBuildFailureEvent(
-      String failureMessage,
-      @Nullable DistBuildSlaveEventBusListener slaveEventListener) {
+      String failureMessage, @Nullable DistBuildSlaveEventBusListener slaveEventListener) {
     if (slaveEventListener != null) {
       slaveEventListener.logEvent(
           ConsoleEvent.severe(String.format("BUILD SLAVE FAILED: %s", failureMessage)));
@@ -162,23 +157,22 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   }
 
   public Pair<BuildJobState, String> getBuildJobStateAndBuildName(
-      ProjectFilesystem filesystem,
-      Console console,
-      DistBuildService service) throws IOException {
+      ProjectFilesystem filesystem, Console console, DistBuildService service) throws IOException {
 
     if (buildStateFile != null) {
       Path buildStateFilePath = Paths.get(buildStateFile);
-      console.getStdOut().println(String.format(
-          "Retrieving BuildJobState for from file [%s].",
-          buildStateFilePath));
+      console
+          .getStdOut()
+          .println(
+              String.format("Retrieving BuildJobState for from file [%s].", buildStateFilePath));
       return new Pair<>(
           BuildJobStateSerializer.deserialize(filesystem.newFileInputStream(buildStateFilePath)),
           String.format("LocalFile=[%s]", buildStateFile));
     } else {
       StampedeId stampedeId = getStampedeId();
-      console.getStdOut().println(String.format(
-          "Retrieving BuildJobState for build [%s].",
-          stampedeId));
+      console
+          .getStdOut()
+          .println(String.format("Retrieving BuildJobState for build [%s].", stampedeId));
       return new Pair<>(
           service.fetchBuildJobState(stampedeId),
           String.format("DistBuild=[%s]", stampedeId.toString()));
@@ -206,11 +200,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   private void checkArgs() {
     if (buildStateFile == null && (!getStampedeIdOptional().isPresent() || runId == null)) {
-        throw new HumanReadableException(String.format(
-            "Options '%s' and '%s' are both required when '%s' is not provided.",
-            STAMPEDE_ID_ARG_NAME,
-            RUN_ID_ARG_NAME,
-            BUILD_STATE_FILE_ARG_NAME));
+      throw new HumanReadableException(
+          String.format(
+              "Options '%s' and '%s' are both required when '%s' is not provided.",
+              STAMPEDE_ID_ARG_NAME, RUN_ID_ARG_NAME, BUILD_STATE_FILE_ARG_NAME));
     }
   }
 
@@ -221,11 +214,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       runId.setId(this.runId);
 
       ScheduledExecutorService networkScheduler = Executors.newScheduledThreadPool(1);
-      slaveEventListener = new DistBuildSlaveEventBusListener(
-          getStampedeId(),
-          runId,
-          new DefaultClock(),
-          networkScheduler);
+      slaveEventListener =
+          new DistBuildSlaveEventBusListener(
+              getStampedeId(), runId, new DefaultClock(), networkScheduler);
     }
   }
 

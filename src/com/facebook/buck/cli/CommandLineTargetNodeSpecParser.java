@@ -22,7 +22,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
 public class CommandLineTargetNodeSpecParser {
@@ -31,8 +30,7 @@ public class CommandLineTargetNodeSpecParser {
   private final BuildTargetPatternTargetNodeParser parser;
 
   public CommandLineTargetNodeSpecParser(
-      BuckConfig config,
-      BuildTargetPatternTargetNodeParser parser) {
+      BuckConfig config, BuildTargetPatternTargetNodeParser parser) {
     this.config = config;
     this.parser = parser;
   }
@@ -95,5 +93,4 @@ public class CommandLineTargetNodeSpecParser {
     }
     return specs.build();
   }
-
 }

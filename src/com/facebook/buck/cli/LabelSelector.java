@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
 public class LabelSelector {

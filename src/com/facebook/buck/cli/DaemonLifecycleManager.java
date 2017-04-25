@@ -20,11 +20,9 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -36,16 +34,13 @@ import javax.annotation.concurrent.ThreadSafe;
 class DaemonLifecycleManager {
   private static final Logger LOG = Logger.get(DaemonLifecycleManager.class);
 
-  @Nullable
-  private volatile Daemon daemon;
+  @Nullable private volatile Daemon daemon;
 
   boolean hasDaemon() {
     return daemon != null;
   }
 
-  /**
-   * Get or create Daemon.
-   */
+  /** Get or create Daemon. */
   synchronized Daemon getDaemon(Cell rootCell) throws IOException {
     Path rootPath = rootCell.getFilesystem().getRootPath();
     if (daemon == null) {
@@ -59,8 +54,8 @@ class DaemonLifecycleManager {
       // creating a new daemon object.
       Path parserRoot = rootCell.getFilesystem().getRootPath();
       if (!rootPath.equals(parserRoot)) {
-        throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
-            rootPath, parserRoot));
+        throw new HumanReadableException(
+            String.format("Unsupported root path change from %s to %s", rootPath, parserRoot));
       }
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
@@ -68,8 +63,7 @@ class DaemonLifecycleManager {
       if (!daemon.getRootCell().equals(rootCell)) {
         LOG.warn(
             "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
-            daemon.getRootCell(),
-            rootCell);
+            daemon.getRootCell(), rootCell);
         Optional<WebServer> webServer;
         if (shouldReuseWebServer(rootCell)) {
           webServer = daemon.getWebServer();
@@ -84,15 +78,13 @@ class DaemonLifecycleManager {
     return daemon;
   }
 
-  /**
-   * Manually kill the daemon instance, used for testing.
-   */
+  /** Manually kill the daemon instance, used for testing. */
   synchronized void resetDaemon() {
     if (daemon != null) {
       try {
         LOG.info("Closing daemon on reset request.");
         daemon.close();
-      } catch (IOException e) {  // NOPMD
+      } catch (IOException e) { // NOPMD
         // Swallow exceptions while closing daemon.
       }
     }
@@ -105,8 +97,7 @@ class DaemonLifecycleManager {
     }
     Optional<Integer> portFromOldConfig =
         Daemon.getValidWebServerPort(daemon.getRootCell().getBuckConfig());
-    Optional<Integer> portFromUpdatedConfig =
-        Daemon.getValidWebServerPort(newCell.getBuckConfig());
+    Optional<Integer> portFromUpdatedConfig = Daemon.getValidWebServerPort(newCell.getBuckConfig());
 
     return portFromOldConfig.equals(portFromUpdatedConfig);
   }

@@ -16,23 +16,18 @@
 
 package com.facebook.buck.cli;
 
-import org.kohsuke.args4j.Argument;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.kohsuke.args4j.Argument;
 
 public class AuditCellCommand extends AbstractCommand {
 
   String getCell(BuckConfig buckConfig, Optional<String> cellName) {
     return String.format(
-        "%s: %s",
-        cellName,
-        buckConfig
-            .getCellPathResolver()
-            .getCellPath(cellName));
+        "%s: %s", cellName, buckConfig.getCellPathResolver().getCellPath(cellName));
   }
 
   Stream<String> getCells(BuckConfig buckConfig) {
@@ -44,8 +39,7 @@ public class AuditCellCommand extends AbstractCommand {
         .map((entry) -> String.format("%s: %s", entry.getKey(), entry.getValue()));
   }
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -57,9 +51,8 @@ public class AuditCellCommand extends AbstractCommand {
     if (getArguments().isEmpty()) {
       cellList = getCells(params.getBuckConfig());
     } else {
-      cellList = getArguments()
-        .stream()
-        .map((arg) -> getCell(params.getBuckConfig(), Optional.of(arg)));
+      cellList =
+          getArguments().stream().map((arg) -> getCell(params.getBuckConfig(), Optional.of(arg)));
     }
 
     cellList.forEachOrdered(params.getConsole().getStdOut()::println);

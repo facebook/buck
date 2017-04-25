@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,8 +27,7 @@ public class VerbosityParser {
 
   @VisibleForTesting static final String VERBOSE_SHORT_ARG = "-v";
 
-  @VisibleForTesting
-  static final Verbosity DEFAULT_VERBOSITY = Verbosity.STANDARD_INFORMATION;
+  @VisibleForTesting static final Verbosity DEFAULT_VERBOSITY = Verbosity.STANDARD_INFORMATION;
 
   private static final Pattern VERBOSE_ARG_PATTERN =
       Pattern.compile("(?:" + VERBOSE_LONG_ARG + "|" + VERBOSE_SHORT_ARG + ")=(\\d+)");

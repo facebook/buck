@@ -24,48 +24,37 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-
 import java.io.IOException;
 import java.util.Set;
 
 public abstract class CommandHelper {
 
   public static void printJSON(
-      CommandRunnerParams params,
-      Multimap<String, QueryTarget> targetsAndResults)
+      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndResults)
       throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
-            targetsAndResults,
-            input -> Preconditions.checkNotNull(input.toString()));
+            targetsAndResults, input -> Preconditions.checkNotNull(input.toString()));
     ObjectMappers.WRITER.writeValue(
-        params.getConsole().getStdOut(),
-        targetsAndResultsNames.asMap());
+        params.getConsole().getStdOut(), targetsAndResultsNames.asMap());
   }
 
-  public static void printJSON(
-      CommandRunnerParams params,
-      Set<QueryTarget> targets) throws IOException {
-    Set<String> targetsNames = ImmutableSet.copyOf(
-        Collections2.transform(
-            targets,
-            input -> Preconditions.checkNotNull(input.toString())));
-    ObjectMappers.WRITER.writeValue(
-        params.getConsole().getStdOut(),
-        targetsNames);
+  public static void printJSON(CommandRunnerParams params, Set<QueryTarget> targets)
+      throws IOException {
+    Set<String> targetsNames =
+        ImmutableSet.copyOf(
+            Collections2.transform(targets, input -> Preconditions.checkNotNull(input.toString())));
+    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetsNames);
   }
 
   public static void printToConsole(
-      CommandRunnerParams params,
-      Multimap<String, QueryTarget> targetsAndDependencies) {
+      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndDependencies) {
     for (QueryTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
       params.getConsole().getStdOut().println(target);
     }
   }
 
-  public static void printToConsole(
-      CommandRunnerParams params,
-      Set<QueryTarget> targets) {
+  public static void printToConsole(CommandRunnerParams params, Set<QueryTarget> targets) {
     for (QueryTarget target : targets) {
       params.getConsole().getStdOut().println(target);
     }

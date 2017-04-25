@@ -35,19 +35,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.deployment.DeployResult;
-import org.eclipse.aether.deployment.DeploymentException;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.deployment.DeployResult;
+import org.eclipse.aether.deployment.DeploymentException;
+import org.kohsuke.args4j.Option;
 
 public class PublishCommand extends BuildCommand {
   public static final String REMOTE_REPO_LONG_ARG = "--remote-repo";
@@ -60,57 +57,66 @@ public class PublishCommand extends BuildCommand {
   public static final String DRY_RUN_LONG_ARG = "--dry-run";
 
   @Option(
-      name = REMOTE_REPO_LONG_ARG,
-      aliases = REMOTE_REPO_SHORT_ARG,
-      usage = "A url of the remote repository to publish artifact(s) to")
+    name = REMOTE_REPO_LONG_ARG,
+    aliases = REMOTE_REPO_SHORT_ARG,
+    usage = "A url of the remote repository to publish artifact(s) to"
+  )
   @Nullable
   private URL remoteRepo = null;
 
   @Option(
-      name = TO_MAVEN_CENTRAL_LONG_ARG,
-      usage = "Same as \"" + REMOTE_REPO_LONG_ARG + " " + Publisher.MAVEN_CENTRAL_URL + "\"")
+    name = TO_MAVEN_CENTRAL_LONG_ARG,
+    usage = "Same as \"" + REMOTE_REPO_LONG_ARG + " " + Publisher.MAVEN_CENTRAL_URL + "\""
+  )
   private boolean toMavenCentral = false;
 
   @Option(
-      name = INCLUDE_SOURCE_LONG_ARG,
-      aliases = INCLUDE_SOURCE_SHORT_ARG,
-      usage = "Publish source code as well")
+    name = INCLUDE_SOURCE_LONG_ARG,
+    aliases = INCLUDE_SOURCE_SHORT_ARG,
+    usage = "Publish source code as well"
+  )
   private boolean includeSource = false;
 
   @Option(
-      name = INCLUDE_DOCS_LONG_ARG,
-      aliases = INCLUDE_DOCS_SHORT_ARG,
-      usage = "Publish docs as well")
+    name = INCLUDE_DOCS_LONG_ARG,
+    aliases = INCLUDE_DOCS_SHORT_ARG,
+    usage = "Publish docs as well"
+  )
   private boolean includeDocs = false;
 
-  @Option(
-      name = DRY_RUN_LONG_ARG,
-      usage = "Just print the artifacts to be published")
+  @Option(name = DRY_RUN_LONG_ARG, usage = "Just print the artifacts to be published")
   private boolean dryRun = false;
 
   @Option(
-      name = "--username",
-      aliases = "-u",
-      usage = "User name to use to authenticate with the server")
+    name = "--username",
+    aliases = "-u",
+    usage = "User name to use to authenticate with the server"
+  )
   @Nullable
   private String username = null;
 
   @Option(
-      name = "--password",
-      aliases = "-p",
-      usage = "Password to use to authenticate with the server")
+    name = "--password",
+    aliases = "-p",
+    usage = "Password to use to authenticate with the server"
+  )
   @Nullable
   private String password = null;
-
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     // Input validation
     if (remoteRepo == null && !toMavenCentral) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify a remote repository to publish to.\n" +
-              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.severe(
+                  "Please specify a remote repository to publish to.\n"
+                      + "Use "
+                      + REMOTE_REPO_LONG_ARG
+                      + " <URL> or "
+                      + TO_MAVEN_CENTRAL_LONG_ARG));
       return 1;
     }
 
@@ -125,8 +131,7 @@ public class PublishCommand extends BuildCommand {
   }
 
   private boolean publishTargets(
-      ImmutableList<BuildTarget> buildTargets,
-      CommandRunnerParams params) {
+      ImmutableList<BuildTarget> buildTargets, CommandRunnerParams params) {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {
@@ -140,35 +145,42 @@ public class PublishCommand extends BuildCommand {
       Preconditions.checkNotNull(buildRule);
 
       if (!(buildRule instanceof MavenPublishable)) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            "Cannot publish rule of type %s",
-            buildRule.getClass().getName()));
+        params
+            .getBuckEventBus()
+            .post(
+                ConsoleEvent.severe(
+                    "Cannot publish rule of type %s", buildRule.getClass().getName()));
         success &= false;
         continue;
       }
 
       MavenPublishable publishable = (MavenPublishable) buildRule;
       if (!publishable.getMavenCoords().isPresent()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            "No maven coordinates specified for %s",
-            buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName()));
+        params
+            .getBuckEventBus()
+            .post(
+                ConsoleEvent.severe(
+                    "No maven coordinates specified for %s",
+                    buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName()));
         success &= false;
         continue;
       }
       publishables.add(publishable);
     }
 
-    Publisher publisher = new Publisher(
-        params.getCell().getFilesystem(),
-        Optional.ofNullable(remoteRepo),
-        Optional.ofNullable(username),
-        Optional.ofNullable(password),
-        dryRun);
+    Publisher publisher =
+        new Publisher(
+            params.getCell().getFilesystem(),
+            Optional.ofNullable(remoteRepo),
+            Optional.ofNullable(username),
+            Optional.ofNullable(password),
+            dryRun);
 
     try {
-      ImmutableSet<DeployResult> deployResults = publisher.publish(
-          new SourcePathResolver(new SourcePathRuleFinder(getBuild().getRuleResolver())),
-          publishables.build());
+      ImmutableSet<DeployResult> deployResults =
+          publisher.publish(
+              new SourcePathResolver(new SourcePathRuleFinder(getBuild().getRuleResolver())),
+              publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }
@@ -180,15 +192,16 @@ public class PublishCommand extends BuildCommand {
   }
 
   private static void printArtifactsInformation(
-      CommandRunnerParams params,
-      DeployResult deployResult) {
-    params.getConsole().getStdOut().println(
-        "\nPublished artifacts:\n" +
-            Joiner.on('\n').join(
-                FluentIterable
-                    .from(deployResult.getArtifacts())
-                    .transform(
-                        PublishCommand::artifactToString)));
+      CommandRunnerParams params, DeployResult deployResult) {
+    params
+        .getConsole()
+        .getStdOut()
+        .println(
+            "\nPublished artifacts:\n"
+                + Joiner.on('\n')
+                    .join(
+                        FluentIterable.from(deployResult.getArtifacts())
+                            .transform(PublishCommand::artifactToString)));
     params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
   }
 
@@ -199,16 +212,14 @@ public class PublishCommand extends BuildCommand {
   @Override
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
-        config,
-        targetsAsArgs);
+    ImmutableList<TargetNodeSpec> specs =
+        super.parseArgumentsAsTargetNodeSpecs(config, targetsAsArgs);
 
     Map<BuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
     for (TargetNodeSpec spec : specs) {
       if (!(spec instanceof BuildTargetSpec)) {
         throw new IllegalArgumentException(
-            "Need to specify build targets explicitly when publishing. " +
-                "Cannot modify " + spec);
+            "Need to specify build targets explicitly when publishing. " + "Cannot modify " + spec);
       }
 
       BuildTargetSpec targetSpec = (BuildTargetSpec) spec;

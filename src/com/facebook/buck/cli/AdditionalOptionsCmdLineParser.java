@@ -17,7 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.google.common.collect.Sets;
-
+import java.lang.reflect.Field;
+import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.ClassParser;
 import org.kohsuke.args4j.CmdLineException;
@@ -26,29 +27,23 @@ import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.Setters;
 
-import java.lang.reflect.Field;
-import java.util.Set;
-
 /**
  * {@link CmdLineParser} with nested options via the {@link AdditionalOptions} annotation.
- * <p>
- * Fields annotated with it should be of classes which have a default constructor, and will be
+ *
+ * <p>Fields annotated with it should be of classes which have a default constructor, and will be
  * automatically instantiated.
  */
 public class AdditionalOptionsCmdLineParser extends CmdLineParser {
 
   /**
-   * Creates a new command line owner that parses arguments/options and set them into
-   * the given object.
+   * Creates a new command line owner that parses arguments/options and set them into the given
+   * object.
    *
-   * @param bean
-   *      instance of a class annotated by {@link Option}, {@link Argument}
-   *      and {@link AdditionalOptions}.
-   *      This object will receive values. If this is null, the processing will
-   *      be skipped, which is useful if you'd like to feed metadata from other sources.
-   *
-   * @throws IllegalAnnotationError
-   *      if the option bean class is using args4j annotations incorrectly.
+   * @param bean instance of a class annotated by {@link Option}, {@link Argument} and {@link
+   *     AdditionalOptions}. This object will receive values. If this is null, the processing will
+   *     be skipped, which is useful if you'd like to feed metadata from other sources.
+   * @throws IllegalAnnotationError if the option bean class is using args4j annotations
+   *     incorrectly.
    * @see CmdLineParser#CmdLineParser(Object)
    */
   public AdditionalOptionsCmdLineParser(Object bean) {
@@ -84,5 +79,4 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
       }
     }
   }
-
 }

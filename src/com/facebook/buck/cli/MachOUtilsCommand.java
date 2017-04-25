@@ -16,19 +16,17 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
+import java.util.Optional;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
-
-import java.util.Optional;
 
 public class MachOUtilsCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-      @SubCommand(name = "fix_compdir", impl = MachOFixCompDirCommand.class),
-      @SubCommand(name = "absolutify_object_paths", impl = MachOAbsolutifyObjectPathsCommand.class),
+    @SubCommand(name = "fix_compdir", impl = MachOFixCompDirCommand.class),
+    @SubCommand(name = "absolutify_object_paths", impl = MachOAbsolutifyObjectPathsCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;

@@ -18,30 +18,29 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.Map;
+import org.kohsuke.args4j.Option;
 
 public class AuditAliasCommand extends AbstractCommand {
 
-  @Option(
-      name = "--list",
-      usage = "List known build target aliases.")
+  @Option(name = "--list", usage = "List known build target aliases.")
   private boolean listAliases = false;
 
   @Option(
-      name = "--list-map",
-      usage = "List known build target aliases with their mappings to build targets.")
+    name = "--list-map",
+    usage = "List known build target aliases with their mappings to build targets."
+  )
   private boolean listAliasesMap = false;
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (listAliasesMap) {
       for (Map.Entry<String, BuildTarget> entry : params.getBuckConfig().getAliases().entries()) {
-        params.getConsole().getStdOut().println(
-            entry.getKey() + " = " + entry.getValue().getFullyQualifiedName());
+        params
+            .getConsole()
+            .getStdOut()
+            .println(entry.getKey() + " = " + entry.getValue().getFullyQualifiedName());
       }
       return 0;
     }

@@ -22,13 +22,8 @@ public final class RootCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    String path = params
-        .getCell()
-        .getFilesystem()
-        .getRootPath()
-        .normalize()
-        .toAbsolutePath()
-        .toString();
+    String path =
+        params.getCell().getFilesystem().getRootPath().normalize().toAbsolutePath().toString();
 
     params.getConsole().getStdOut().println(path);
     return 0;

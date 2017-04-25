@@ -16,18 +16,16 @@
 
 package com.facebook.buck.cli;
 
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
 
 public class HelpCommand extends AbstractCommand {
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   @Override
   public boolean isReadOnly() {
@@ -47,8 +45,8 @@ public class HelpCommand extends AbstractCommand {
   /**
    * This overload runs the actual help subcommand.
    *
-   * Used by {@link BuckCommand#runHelp} to run the help subcommand without initializing
-   * {@link CommandRunnerParams}.
+   * <p>Used by {@link BuckCommand#runHelp} to run the help subcommand without initializing {@link
+   * CommandRunnerParams}.
    */
   public int run(PrintStream stream) {
     BuckCommand command = new BuckCommand();

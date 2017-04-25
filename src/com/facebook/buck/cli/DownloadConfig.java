@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;

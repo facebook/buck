@@ -36,36 +36,35 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public final class RunCommand extends AbstractCommand {
 
   /**
    * Expected usage:
+   *
    * <pre>
    *   buck run //java/com/facebook/tools/munge:munge --mungearg /tmp/input
    * </pre>
    */
-  @Argument
-  private List<String> noDashArguments = new ArrayList<>();
+  @Argument private List<String> noDashArguments = new ArrayList<>();
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();
 
-  private final Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
-      () -> {
-        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-        builder.addAll(noDashArguments);
-        builder.addAll(withDashArguments);
-        return builder.build();
-      });
+  private final Supplier<ImmutableList<String>> arguments =
+      Suppliers.memoize(
+          () -> {
+            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+            builder.addAll(noDashArguments);
+            builder.addAll(withDashArguments);
+            return builder.build();
+          });
 
   @VisibleForTesting
   ImmutableList<String> getArguments() {
@@ -83,8 +82,8 @@ public final class RunCommand extends AbstractCommand {
 
   /** @return the normalized target name for command to run. */
   private String getTarget(BuckConfig buckConfig) {
-      return Iterables.getOnlyElement(
-          getCommandLineBuildTargetNormalizer(buckConfig).normalize(arguments.get().get(0)));
+    return Iterables.getOnlyElement(
+        getCommandLineBuildTargetNormalizer(buckConfig).normalize(arguments.get().get(0)));
   }
 
   @Override
@@ -95,26 +94,23 @@ public final class RunCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "No target given to run"));
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "buck run <target> <arg1> <arg2>..."));
+      params.getBuckEventBus().post(ConsoleEvent.severe("No target given to run"));
+      params.getBuckEventBus().post(ConsoleEvent.severe("buck run <target> <arg1> <arg2>..."));
       return 1;
     }
 
     // Make sure the target is built.
-    BuildCommand buildCommand = new BuildCommand(
-        ImmutableList.of(getTarget(params.getBuckConfig())));
+    BuildCommand buildCommand =
+        new BuildCommand(ImmutableList.of(getTarget(params.getBuckConfig())));
     int exitCode = buildCommand.runWithoutHelp(params);
     if (exitCode != 0) {
       return exitCode;
     }
 
     String targetName = getTarget(params.getBuckConfig());
-    BuildTarget target = Iterables.getOnlyElement(
-        getBuildTargets(
-            params.getCell().getCellPathResolver(),
-            ImmutableSet.of(targetName)));
+    BuildTarget target =
+        Iterables.getOnlyElement(
+            getBuildTargets(params.getCell().getCellPathResolver(), ImmutableSet.of(targetName)));
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule;
@@ -128,8 +124,13 @@ public final class RunCommand extends AbstractCommand {
       binaryBuildRule = (BinaryBuildRule) targetRule;
     }
     if (binaryBuildRule == null) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "target " + targetName + " is not a binary rule (only binary rules can be `run`)"));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.severe(
+                  "target "
+                      + targetName
+                      + " is not a binary rule (only binary rules can be `run`)"));
       return 1;
     }
 
@@ -175,5 +176,4 @@ public final class RunCommand extends AbstractCommand {
   public boolean isReadOnly() {
     return false;
   }
-
 }

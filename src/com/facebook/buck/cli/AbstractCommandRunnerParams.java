@@ -41,13 +41,11 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import org.immutables.value.Value;
 
 @Value.Immutable()
 @BuckStyleImmutable

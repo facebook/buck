@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.List;
 
 /**
@@ -33,25 +32,35 @@ import java.util.List;
  * do is tab-complete file paths. For this reason, the "//" and ":" are added, when appropriate. For
  * example, if the following argument were specified on the command line when a build target was
  * expected:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:orca
  * </pre>
+ *
  * It would also normalize it to the same thing if it contained a trailing slash:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * Similarly, if the argument were:
+ *
  * <pre>
  * src/com/facebook/orca:messenger
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:messenger
  * </pre>
+ *
  * This makes it easier to tab-complete to the directory with the desired build target, and then
  * append the name of the build target by typing it out. Note that because of how the normalizer
  * works, it makes sense to name the most commonly built target in the package as the same name as
@@ -63,14 +72,15 @@ class CommandLineBuildTargetNormalizer {
   private final Function<String, ImmutableSet<String>> normalizer;
 
   CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
-    this.normalizer = arg -> {
-      ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
-      if (!aliasValues.isEmpty()) {
-        return aliasValues;
-      } else {
-        return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
-      }
-    };
+    this.normalizer =
+        arg -> {
+          ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
+          if (!aliasValues.isEmpty()) {
+            return aliasValues;
+          } else {
+            return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
+          }
+        };
   }
 
   public ImmutableSet<String> normalize(String argument) {

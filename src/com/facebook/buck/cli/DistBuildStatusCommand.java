@@ -24,7 +24,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.io.IOException;
 
 public class DistBuildStatusCommand extends AbstractDistBuildCommand {
@@ -42,18 +41,17 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     StampedeId stampedeId = getStampedeId();
     Console console = params.getConsole();
-    ObjectMapper objectMapper = ObjectMappers.legacyCreate()
-        .enable(SerializationFeature.INDENT_OUTPUT)
-        .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+    ObjectMapper objectMapper =
+        ObjectMappers.legacyCreate()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
 
-    try (DistBuildService service =
-             DistBuildFactory.newDistBuildService(params)) {
+    try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       BuildJob buildJob = service.getCurrentBuildJobState(getStampedeId());
       objectMapper.writeValue(console.getStdOut(), buildJob);
       console.getStdOut().println();
-      console.printSuccess(String.format(
-          "Successfully fetched the build status for [%s].",
-          stampedeId));
+      console.printSuccess(
+          String.format("Successfully fetched the build status for [%s].", stampedeId));
       return 0;
     }
   }

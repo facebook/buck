@@ -35,7 +35,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +49,8 @@ final class OwnersReport {
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
 
-  OwnersReport(SetMultimap<TargetNode<?, ?>, Path> owners,
+  OwnersReport(
+      SetMultimap<TargetNode<?, ?>, Path> owners,
       Set<Path> inputsWithNoOwners,
       Set<String> nonExistentInputs,
       Set<String> nonFileInputs) {
@@ -62,15 +62,11 @@ final class OwnersReport {
 
   static OwnersReport emptyReport() {
     return new OwnersReport(
-        ImmutableSetMultimap.of(),
-        Sets.newHashSet(),
-        Sets.newHashSet(),
-        Sets.newHashSet());
+        ImmutableSetMultimap.of(), Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
   }
 
   OwnersReport updatedWith(OwnersReport other) {
-    SetMultimap<TargetNode<?, ?>, Path> updatedOwners =
-        TreeMultimap.create(owners);
+    SetMultimap<TargetNode<?, ?>, Path> updatedOwners = TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
 
     return new OwnersReport(
@@ -80,9 +76,7 @@ final class OwnersReport {
         Sets.union(nonFileInputs, other.nonFileInputs));
   }
 
-  /**
-   * @return relative paths under the project root
-   */
+  /** @return relative paths under the project root */
   static Iterable<Path> getArgumentsAsPaths(Path projectRoot, Iterable<String> args)
       throws IOException {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, args)
@@ -91,9 +85,7 @@ final class OwnersReport {
 
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
-      Cell rootCell,
-      TargetNode<?, ?> targetNode,
-      Iterable<String> filePaths) {
+      Cell rootCell, TargetNode<?, ?> targetNode, Iterable<String> filePaths) {
 
     // Process arguments assuming they are all relative file paths.
     Set<Path> inputs = Sets.newHashSet();
@@ -119,8 +111,8 @@ final class OwnersReport {
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
 
       Set<Path> ruleInputs = targetNode.getInputs();
-      if (ruleInputs.contains(commandInput) ||
-          FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
+      if (ruleInputs.contains(commandInput)
+          || FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
         inputsWithNoOwners.remove(commandInput);
         owners.put(targetNode, commandInput);
       }
@@ -129,10 +121,7 @@ final class OwnersReport {
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
-  static Builder builder(Cell rootCell,
-      Parser parser,
-      BuckEventBus eventBus,
-      Console console) {
+  static Builder builder(Cell rootCell, Parser parser, BuckEventBus eventBus, Console console) {
     return new Builder(rootCell, parser, eventBus, console);
   }
 
@@ -142,10 +131,7 @@ final class OwnersReport {
     private final BuckEventBus eventBus;
     private final Console console;
 
-    private Builder(Cell rootCell,
-        Parser parser,
-        BuckEventBus eventBus,
-        Console console) {
+    private Builder(Cell rootCell, Parser parser, BuckEventBus eventBus, Console console) {
 
       this.rootCell = rootCell;
       this.parser = parser;
@@ -153,9 +139,8 @@ final class OwnersReport {
       this.console = console;
     }
 
-    OwnersReport build(BuildFileTree buildFileTree,
-        ListeningExecutorService executor,
-        Iterable<String> arguments)
+    OwnersReport build(
+        BuildFileTree buildFileTree, ListeningExecutorService executor, Iterable<String> arguments)
         throws IOException, BuildFileParseException {
       ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
       final Path rootPath = cellFilesystem.getRootPath();
@@ -166,17 +151,17 @@ final class OwnersReport {
       for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
         Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
         if (!basePath.isPresent()) {
-          report = report.updatedWith(
-              new OwnersReport(
-                  ImmutableSetMultimap.of(),
-                /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                  Sets.newHashSet(),
-                  Sets.newHashSet()));
+          report =
+              report.updatedWith(
+                  new OwnersReport(
+                      ImmutableSetMultimap.of(),
+                      /* inputWithNoOwners */ ImmutableSet.of(filePath),
+                      Sets.newHashSet(),
+                      Sets.newHashSet()));
           continue;
         }
 
-        Path buckFile = cellFilesystem.resolve(basePath.get())
-            .resolve(rootCell.getBuildFileName());
+        Path buckFile = cellFilesystem.resolve(basePath.get()).resolve(rootCell.getBuildFileName());
         Preconditions.checkState(cellFilesystem.exists(buckFile));
 
         // Parse buck files and load target nodes.
@@ -185,29 +170,25 @@ final class OwnersReport {
             targetNodes.put(
                 buckFile,
                 parser.getAllTargetNodes(
-                    eventBus,
-                    rootCell,
-                  /* enable profiling */ false,
-                    executor,
-                    buckFile));
+                    eventBus, rootCell, /* enable profiling */ false, executor, buckFile));
           } catch (BuildFileParseException e) {
             Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
             String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
 
             console
                 .getStdErr()
-                .format("Could not parse build targets for %s: %s%n", targetBaseName,
-                    e.getHumanReadableErrorMessage());
+                .format(
+                    "Could not parse build targets for %s: %s%n",
+                    targetBaseName, e.getHumanReadableErrorMessage());
             throw e;
           }
         }
 
         for (TargetNode<?, ?> targetNode : targetNodes.get(buckFile)) {
-          report = report.updatedWith(
-              generateOwnersReport(
-                  rootCell,
-                  targetNode,
-                  ImmutableList.of(filePath.toString())));
+          report =
+              report.updatedWith(
+                  generateOwnersReport(
+                      rootCell, targetNode, ImmutableList.of(filePath.toString())));
         }
       }
       return report;

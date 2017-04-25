@@ -34,8 +34,7 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
   private final ImmutableSet.Builder<BuildTarget> downloadableTargets;
   private final DefaultTargetNodeToBuildRuleTransformer delegate;
 
-  public FetchTargetNodeToBuildRuleTransformer(
-      ImmutableSet<Description<?>> descriptions) {
+  public FetchTargetNodeToBuildRuleTransformer(ImmutableSet<Description<?>> descriptions) {
     this.descriptions = descriptions;
 
     this.downloadableTargets = ImmutableSet.builder();
@@ -44,9 +43,8 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
 
   @Override
   public <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph,
-      BuildRuleResolver ruleResolver,
-      TargetNode<T, U> targetNode) throws NoSuchBuildTargetException {
+      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode)
+      throws NoSuchBuildTargetException {
     TargetNode<?, ?> node = substituteTargetNodeIfNecessary(targetNode);
     return delegate.transform(targetGraph, ruleResolver, node);
   }

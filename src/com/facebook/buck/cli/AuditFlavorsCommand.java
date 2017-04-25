@@ -34,24 +34,19 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
-/**
- * List flavor domains for build targets.
- */
+/** List flavor domains for build targets. */
 public class AuditFlavorsCommand extends AbstractCommand {
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
@@ -63,8 +58,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
     return "List flavor domains for build targets.";
   }
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -77,36 +71,42 @@ public class AuditFlavorsCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets =
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()).stream()
-            .map(input -> BuildTargetParser.INSTANCE.parse(
-                input,
-                BuildTargetPatternParser.fullyQualified(),
-                params.getCell().getCellPathResolver()))
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
+            .stream()
+            .map(
+                input ->
+                    BuildTargetParser.INSTANCE.parse(
+                        input,
+                        BuildTargetPatternParser.fullyQualified(),
+                        params.getCell().getCellPathResolver()))
             .collect(MoreCollectors.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify at least one build target."));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe("Please specify at least one build target."));
       return 1;
     }
 
     ImmutableList.Builder<TargetNode<?, ?>> builder = ImmutableList.builder();
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        getConcurrencyLimit(params.getBuckConfig()))) {
-          for (BuildTarget target : targets) {
-            TargetNode<?, ?> targetNode = params.getParser().getTargetNode(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableParserProfiling(),
-                pool.getExecutor(),
-                target
-            );
-            builder.add(targetNode);
-          }
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+      for (BuildTarget target : targets) {
+        TargetNode<?, ?> targetNode =
+            params
+                .getParser()
+                .getTargetNode(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableParserProfiling(),
+                    pool.getExecutor(),
+                    target);
+        builder.add(targetNode);
+      }
     } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
     ImmutableList<TargetNode<?, ?>> targetNodes = builder.build();
@@ -126,8 +126,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
   }
 
   private void printFlavors(
-      ImmutableList<TargetNode<?, ?>> targetNodes,
-      CommandRunnerParams params) {
+      ImmutableList<TargetNode<?, ?>> targetNodes, CommandRunnerParams params) {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
     for (TargetNode<?, ?> node : targetNodes) {
       Description<?> description = node.getDescription();
@@ -137,9 +136,10 @@ public class AuditFlavorsCommand extends AbstractCommand {
             ((Flavored) description).flavorDomains();
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
-            ImmutableSet<UserFlavor> userFlavors = RichStream.from(domain.getFlavors().stream())
-                .filter(UserFlavor.class)
-                .collect(MoreCollectors.toImmutableSet());
+            ImmutableSet<UserFlavor> userFlavors =
+                RichStream.from(domain.getFlavors().stream())
+                    .filter(UserFlavor.class)
+                    .collect(MoreCollectors.toImmutableSet());
             if (userFlavors.isEmpty()) {
               continue;
             }
@@ -164,8 +164,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
   }
 
   private void printJsonFlavors(
-      ImmutableList<TargetNode<?, ?>> targetNodes,
-      CommandRunnerParams params) throws IOException {
+      ImmutableList<TargetNode<?, ?>> targetNodes, CommandRunnerParams params) throws IOException {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
     SortedMap<String, SortedMap<String, SortedMap<String, String>>> targetsJson = new TreeMap<>();
     for (TargetNode<?, ?> node : targetNodes) {
@@ -177,16 +176,19 @@ public class AuditFlavorsCommand extends AbstractCommand {
             ((Flavored) description).flavorDomains();
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
-            ImmutableSet<UserFlavor> userFlavors = RichStream.from(domain.getFlavors().stream())
-                .filter(UserFlavor.class)
-                .collect(MoreCollectors.toImmutableSet());
+            ImmutableSet<UserFlavor> userFlavors =
+                RichStream.from(domain.getFlavors().stream())
+                    .filter(UserFlavor.class)
+                    .collect(MoreCollectors.toImmutableSet());
             if (userFlavors.isEmpty()) {
               continue;
             }
             SortedMap<String, String> flavorsJson =
-            userFlavors.stream()
-                .collect(MoreCollectors.toImmutableSortedMap(
-                    UserFlavor::getName, UserFlavor::getDescription));
+                userFlavors
+                    .stream()
+                    .collect(
+                        MoreCollectors.toImmutableSortedMap(
+                            UserFlavor::getName, UserFlavor::getDescription));
             flavorDomainsJson.put(domain.getName(), flavorsJson);
           }
         } else {

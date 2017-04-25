@@ -22,7 +22,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -34,32 +33,34 @@ import org.kohsuke.args4j.spi.Setter;
 public class TestSelectorOptions {
 
   @Option(
-      name = "--test-selectors",
-      aliases = {"--filter", "-f"},
-      usage =
-          "Select tests to run using <class>, #<method> or <class>#<method>.  " +
-          "Selectors are interpreted as java.util.regex regular expressions.  " +
-          "If selectors are given, test result caching is disabled.  " +
-          "If the class (or method) part is omitted, all classes (or methods) will match.  " +
-          "If both the class and method is omitted (the string '#') then all tests will match.  " +
-          "Prefix a selector with '!' to exclude a class or method.  " +
-          "If multiple selectors are given, the first matching selector is used " +
-          "to include (or exclude) a test.  " +
-          "By default, all tests are excluded unless a selector includes them.  " +
-          "However, if all selectors are exclusive then the default is to include.  " +
-          "Use the format '@/path/to/file' to load selectors, one per line, from a file.  " +
-          "Examples: 'com.example.MyTest' to run all tests in MyTest; " +
-          "'com.example.MyTest#testFoo' or 'MyTest#Foo' to just run the testFoo test; " +
-          "'!MyTest#Foo' to run everything except the testFoo test; " +
-          "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC " +
-          "and run everything else.)",
-      handler = TestSelectorsOptionHandler.class)
+    name = "--test-selectors",
+    aliases = {"--filter", "-f"},
+    usage =
+        "Select tests to run using <class>, #<method> or <class>#<method>.  "
+            + "Selectors are interpreted as java.util.regex regular expressions.  "
+            + "If selectors are given, test result caching is disabled.  "
+            + "If the class (or method) part is omitted, all classes (or methods) will match.  "
+            + "If both the class and method is omitted (the string '#') then all tests will match.  "
+            + "Prefix a selector with '!' to exclude a class or method.  "
+            + "If multiple selectors are given, the first matching selector is used "
+            + "to include (or exclude) a test.  "
+            + "By default, all tests are excluded unless a selector includes them.  "
+            + "However, if all selectors are exclusive then the default is to include.  "
+            + "Use the format '@/path/to/file' to load selectors, one per line, from a file.  "
+            + "Examples: 'com.example.MyTest' to run all tests in MyTest; "
+            + "'com.example.MyTest#testFoo' or 'MyTest#Foo' to just run the testFoo test; "
+            + "'!MyTest#Foo' to run everything except the testFoo test; "
+            + "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC "
+            + "and run everything else.)",
+    handler = TestSelectorsOptionHandler.class
+  )
   @SuppressFieldNotInitialized
   public Supplier<TestSelectorList> testSelectorListSupplier;
 
   @Option(
-      name = "--explain-test-selectors",
-      usage = "Buck will say how it interpreted your test selectors before running tests.")
+    name = "--explain-test-selectors",
+    usage = "Buck will say how it interpreted your test selectors before running tests."
+  )
   private boolean shouldExplain = false;
 
   public TestSelectorList getTestSelectorList() {
@@ -75,9 +76,8 @@ public class TestSelectorOptions {
     private final TestSelectorList.Builder builder = TestSelectorList.builder();
 
     public TestSelectorsOptionHandler(
-        CmdLineParser parser,
-        OptionDef option,
-        Setter<Supplier<TestSelectorList>> setter) throws CmdLineException {
+        CmdLineParser parser, OptionDef option, Setter<Supplier<TestSelectorList>> setter)
+        throws CmdLineException {
       super(parser, option, setter);
       setter.addValue(Suppliers.memoize(builder::build));
     }

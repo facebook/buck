@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -59,15 +58,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Daemon used to monitor the file system and cache build rules between Main() method
- * invocations is static so that it can outlive Main() objects and survive for the lifetime
- * of the potentially long running Buck process.
+ * Daemon used to monitor the file system and cache build rules between Main() method invocations is
+ * static so that it can outlive Main() objects and survive for the lifetime of the potentially long
+ * running Buck process.
  */
 final class Daemon implements Closeable {
   private static final Logger LOG = Logger.get(Daemon.class);
 
-  private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
-      "buck.path_to_static_content", "webserver/static");
+  private static final String STATIC_CONTENT_DIRECTORY =
+      System.getProperty("buck.path_to_static_content", "webserver/static");
 
   private final Cell rootCell;
   private final Parser parser;
@@ -81,9 +80,7 @@ final class Daemon implements Closeable {
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
 
-  Daemon(
-      Cell rootCell,
-      Optional<WebServer> webServerToReuse) {
+  Daemon(Cell rootCell, Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
 
@@ -91,11 +88,12 @@ final class Daemon implements Closeable {
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder = ImmutableList.builder();
-    allCells.forEach(subCell -> {
-      WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
-      fileEventBus.register(watchedCache);
-      hashCachesBuilder.add(watchedCache);
-    });
+    allCells.forEach(
+        subCell -> {
+          WatchedFileHashCache watchedCache = new WatchedFileHashCache(subCell.getFilesystem());
+          fileEventBus.register(watchedCache);
+          hashCachesBuilder.add(watchedCache);
+        });
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
             rootCell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
@@ -107,11 +105,12 @@ final class Daemon implements Closeable {
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    this.parser = new Parser(
-        this.broadcastEventListener,
-        rootCell.getBuckConfig().getView(ParserConfig.class),
-        typeCoercerFactory,
-        new ConstructorArgMarshaller(typeCoercerFactory));
+    this.parser =
+        new Parser(
+            this.broadcastEventListener,
+            rootCell.getBuckConfig().getView(ParserConfig.class),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory));
     fileEventBus.register(parser);
     fileEventBus.register(actionGraphCache);
 
@@ -130,9 +129,9 @@ final class Daemon implements Closeable {
     if (!initWebServer()) {
       LOG.warn("Can't start web server");
     }
-    if (rootCell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor() ==
-        WatchmanWatcher.CursorType.CLOCK_ID &&
-        !rootCell.getWatchman().getClockIds().isEmpty()) {
+    if (rootCell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
+            == WatchmanWatcher.CursorType.CLOCK_ID
+        && !rootCell.getWatchman().getClockIds().isEmpty()) {
       cursor = rootCell.getWatchman().buildClockWatchmanCursorMap();
     } else {
       LOG.debug("Falling back to named cursors: %s", rootCell.getWatchman().getProjectWatches());
@@ -148,14 +147,10 @@ final class Daemon implements Closeable {
   }
 
   private static Optional<WebServer> createWebServer(
-      BuckConfig config,
-      ProjectFilesystem filesystem) {
+      BuckConfig config, ProjectFilesystem filesystem) {
     Optional<Integer> port = getValidWebServerPort(config);
     if (port.isPresent()) {
-      WebServer webServer = new WebServer(
-          port.get(),
-          filesystem,
-          STATIC_CONTENT_DIRECTORY);
+      WebServer webServer = new WebServer(port.get(), filesystem, STATIC_CONTENT_DIRECTORY);
       return Optional.of(webServer);
     } else {
       return Optional.empty();
@@ -169,8 +164,7 @@ final class Daemon implements Closeable {
   static Optional<Integer> getValidWebServerPort(BuckConfig config) {
     // Enable the web httpserver if it is given by command line parameter or specified in
     // .buckconfig. The presence of a nonnegative port number is sufficient.
-    Optional<String> serverPort =
-        Optional.ofNullable(System.getProperty("buck.httpserver.port"));
+    Optional<String> serverPort = Optional.ofNullable(System.getProperty("buck.httpserver.port"));
     if (!serverPort.isPresent()) {
       serverPort = config.getValue("httpserver", "port");
     }
@@ -257,24 +251,19 @@ final class Daemon implements Closeable {
       FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
       eventBus.post(started);
       try {
-        watchmanWatcher.postEvents(
-            eventBus,
-            watchmanFreshInstanceAction
-        );
+        watchmanWatcher.postEvents(eventBus, watchmanFreshInstanceAction);
       } finally {
         eventBus.post(FileHashCacheEvent.invalidationFinished(started));
       }
     }
   }
 
-  /**
-   * @return true if the web server was started successfully.
-   */
+  /** @return true if the web server was started successfully. */
   private boolean initWebServer() {
     if (webServer.isPresent()) {
-      Optional<ArtifactCache> servedCache = ArtifactCaches.newServedCache(
-          new ArtifactCacheBuckConfig(rootCell.getBuckConfig()),
-          rootCell.getFilesystem());
+      Optional<ArtifactCache> servedCache =
+          ArtifactCaches.newServedCache(
+              new ArtifactCacheBuckConfig(rootCell.getBuckConfig()), rootCell.getFilesystem());
       try {
         webServer.get().updateAndStartIfNeeded(servedCache);
         return true;

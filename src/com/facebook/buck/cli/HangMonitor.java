@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
-
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,9 +37,7 @@ public class HangMonitor extends AbstractScheduledService {
   private final Duration hangCheckTimeout;
   private volatile String mostRecentReport;
 
-  public HangMonitor(
-      Consumer<String> hangReportConsumer,
-      Duration hangCheckTimeout) {
+  public HangMonitor(Consumer<String> hangReportConsumer, Duration hangCheckTimeout) {
     this.hangReportConsumer = hangReportConsumer;
     this.eventsSeenSinceLastCheck = new AtomicInteger(0);
     this.hangCheckTimeout = hangCheckTimeout;
@@ -86,18 +83,14 @@ public class HangMonitor extends AbstractScheduledService {
   @Override
   protected Scheduler scheduler() {
     return Scheduler.newFixedRateSchedule(
-        hangCheckTimeout.toMillis(),
-        hangCheckTimeout.toMillis(),
-        TimeUnit.MILLISECONDS);
+        hangCheckTimeout.toMillis(), hangCheckTimeout.toMillis(), TimeUnit.MILLISECONDS);
   }
 
   public static class AutoStartInstance {
     private final HangMonitor hangMonitor;
     private final ServiceManager serviceManager;
 
-    public AutoStartInstance(
-        Consumer<String> hangReportConsumer,
-        Duration hangCheckTimeout) {
+    public AutoStartInstance(Consumer<String> hangReportConsumer, Duration hangCheckTimeout) {
 
       LOG.info("HangMonitorAutoStart");
       hangMonitor = new HangMonitor(hangReportConsumer, hangCheckTimeout);
@@ -109,5 +102,4 @@ public class HangMonitor extends AbstractScheduledService {
       return hangMonitor;
     }
   }
-
 }

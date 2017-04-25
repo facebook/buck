@@ -21,22 +21,21 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.SubCommand;
-import org.kohsuke.args4j.spi.SubCommands;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
 import java.util.OptionalInt;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.SubCommand;
+import org.kohsuke.args4j.spi.SubCommands;
 
 public abstract class AbstractContainerCommand implements Command {
 
   @Option(
-      name = "--help",
-      aliases = {"-h"},
-      usage = "Shows this screen and exits.")
+    name = "--help",
+    aliases = {"-h"},
+    usage = "Shows this screen and exits."
+  )
   @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean helpScreen;
 
@@ -87,10 +86,10 @@ public abstract class AbstractContainerCommand implements Command {
 
     SubCommands subCommands;
     try {
-      subCommands = this
-          .getClass()
-          .getDeclaredField(getSubcommandsFieldName())
-          .getAnnotation(SubCommands.class);
+      subCommands =
+          this.getClass()
+              .getDeclaredField(getSubcommandsFieldName())
+              .getAnnotation(SubCommands.class);
     } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
     }
@@ -126,17 +125,13 @@ public abstract class AbstractContainerCommand implements Command {
   @Override
   public CellConfig getConfigOverrides() {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent()
-        ? cmd.get().getConfigOverrides()
-        : CellConfig.of();
+    return cmd.isPresent() ? cmd.get().getConfigOverrides() : CellConfig.of();
   }
 
   @Override
   public LogConfigSetup getLogConfig() {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent()
-        ? cmd.get().getLogConfig()
-        : LogConfigSetup.DEFAULT_SETUP;
+    return cmd.isPresent() ? cmd.get().getLogConfig() : LogConfigSetup.DEFAULT_SETUP;
   }
 
   @Override

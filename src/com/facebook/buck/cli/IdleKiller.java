@@ -20,18 +20,16 @@ import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * A background task in the buck daemon that kills the daemon after it's been idle for a while.
- */
+/** A background task in the buck daemon that kills the daemon after it's been idle for a while. */
 @ThreadSafe
 final class IdleKiller {
 
   interface CommandExecutionScope extends AutoCloseable {
-    @Override void close();
+    @Override
+    void close();
   }
 
   private final ScheduledExecutorService scheduledExecutorService;
@@ -52,20 +50,18 @@ final class IdleKiller {
 
   synchronized CommandExecutionScope newCommandExecutionScope() {
     activeCommands++;
-    clearIdleKillTask();  // Cancel any pending kill tasks as we are no longer idle.
+    clearIdleKillTask(); // Cancel any pending kill tasks as we are no longer idle.
     return () -> {
       synchronized (IdleKiller.this) {
         activeCommands--;
-        if (activeCommands == 0) {  // Schedule a kill task since we are once again idle.
+        if (activeCommands == 0) { // Schedule a kill task since we are once again idle.
           setIdleKillTask();
         }
       }
     };
   }
 
-  /**
-   * Clear any existing kill tasks.
-   */
+  /** Clear any existing kill tasks. */
   private void clearIdleKillTask() {
     if (idleKillTask != null) {
       idleKillTask.cancel(false);
@@ -73,14 +69,11 @@ final class IdleKiller {
     }
   }
 
-  /**
-   * Clear any existing kill tasks and set up a new kill task to fire after idle delay.
-   */
+  /** Clear any existing kill tasks and set up a new kill task to fire after idle delay. */
   private void setIdleKillTask() {
     clearIdleKillTask();
-    idleKillTask = scheduledExecutorService.schedule(
-        killTask,
-        idleKillDelay.toMillis(),
-        TimeUnit.MILLISECONDS);
+    idleKillTask =
+        scheduledExecutorService.schedule(
+            killTask, idleKillDelay.toMillis(), TimeUnit.MILLISECONDS);
   }
 }

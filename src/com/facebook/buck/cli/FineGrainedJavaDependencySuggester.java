@@ -35,7 +35,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -50,8 +49,8 @@ import java.util.TreeSet;
  * Tool that implements the bulk of the work for {@code buck suggest}. For a given build target in
  * the target graph, it will divide its {@code srcs} into strongly connected components and use
  * those to suggest a new set of build rule definitions with maximally fine-grained dependencies.
- * <p>
- * Note that because this is a tool that is trying to provide information about the user's
+ *
+ * <p>Note that because this is a tool that is trying to provide information about the user's
  * dependencies, it generally favors printing errors to stderr rather than throwing exceptions and
  * halting. As a tool, it would be less useful if it did not provide any information until the user
  * cleaned up all of his or her code. The user is likely running {@code buck suggest} to enable them
@@ -77,6 +76,7 @@ class FineGrainedJavaDependencySuggester {
 
   /**
    * Suggests a refactoring by printing it to stdout (with warnings printed to stderr).
+   *
    * @throws IllegalArgumentException
    */
   void suggestRefactoring() {
@@ -93,10 +93,7 @@ class FineGrainedJavaDependencySuggester {
     Map<String, PathSourcePath> providedSymbolToSrc = new HashMap<>();
     for (SourcePath src : arg.srcs) {
       extractProvidedSymbolInfoFromSourceFile(
-          src,
-          javaFileParser,
-          providedSymbolToRequiredSymbols,
-          providedSymbolToSrc);
+          src, javaFileParser, providedSymbolToRequiredSymbols, providedSymbolToSrc);
     }
 
     // Create a MutableDirectedGraph from the providedSymbolToRequiredSymbols.
@@ -108,16 +105,16 @@ class FineGrainedJavaDependencySuggester {
       // Add a node for the providedSymbol in case it has no edges.
       symbolsDependencies.addNode(providedSymbol);
       for (String requiredSymbol : providedSymbolToRequiredSymbols.get(providedSymbol)) {
-        if (providedSymbolToRequiredSymbols.containsKey(requiredSymbol) &&
-            !providedSymbol.equals(requiredSymbol)) {
+        if (providedSymbolToRequiredSymbols.containsKey(requiredSymbol)
+            && !providedSymbol.equals(requiredSymbol)) {
           symbolsDependencies.addEdge(providedSymbol, requiredSymbol);
         }
       }
     }
 
     // Determine the strongly connected components.
-    Set<Set<String>> stronglyConnectedComponents = symbolsDependencies
-        .findStronglyConnectedComponents();
+    Set<Set<String>> stronglyConnectedComponents =
+        symbolsDependencies.findStronglyConnectedComponents();
     // Maps a providedSymbol to the component that contains it.
     Map<String, NamedStronglyConnectedComponent> namedComponentsIndex = new TreeMap<>();
     Set<NamedStronglyConnectedComponent> namedComponents = new TreeSet<>();
@@ -130,9 +127,8 @@ class FineGrainedJavaDependencySuggester {
             "A strongly connected component was created with zero nodes.");
       }
 
-      NamedStronglyConnectedComponent namedComponent = new NamedStronglyConnectedComponent(
-          name,
-          stronglyConnectedComponent);
+      NamedStronglyConnectedComponent namedComponent =
+          new NamedStronglyConnectedComponent(name, stronglyConnectedComponent);
       namedComponents.add(namedComponent);
       for (String providedSymbol : stronglyConnectedComponent) {
         namedComponentsIndex.put(providedSymbol, namedComponent);
@@ -141,10 +137,10 @@ class FineGrainedJavaDependencySuggester {
 
     // Visibility argument.
     StringBuilder visibilityBuilder = new StringBuilder("  visibility = [\n");
-    SortedSet<String> visibilities = FluentIterable
-        .from(suggestedNode.getVisibilityPatterns())
-        .transform(VisibilityPattern::getRepresentation)
-        .toSortedSet(Ordering.natural());
+    SortedSet<String> visibilities =
+        FluentIterable.from(suggestedNode.getVisibilityPatterns())
+            .transform(VisibilityPattern::getRepresentation)
+            .toSortedSet(Ordering.natural());
     for (String visibility : visibilities) {
       visibilityBuilder.append("    '" + visibility + "',\n");
     }
@@ -152,36 +148,33 @@ class FineGrainedJavaDependencySuggester {
     String visibilityArg = visibilityBuilder.toString();
 
     // Print out the new version of the original rule.
-    console.getStdOut().printf(
-        "java_library(\n" +
-        "  name = '%s',\n" +
-        "  exported_deps = [\n", suggestedTarget.getShortName());
+    console
+        .getStdOut()
+        .printf(
+            "java_library(\n" + "  name = '%s',\n" + "  exported_deps = [\n",
+            suggestedTarget.getShortName());
     for (NamedStronglyConnectedComponent namedComponent : namedComponents) {
       console.getStdOut().printf("    ':%s',\n", namedComponent.name);
     }
-    console.getStdOut().print(
-        "  ],\n" +
-        visibilityArg +
-        ")\n");
+    console.getStdOut().print("  ],\n" + visibilityArg + ")\n");
 
     // Print out a rule for each of the strongly connected components.
     JavaDepsFinder.DependencyInfo dependencyInfo = javaDepsFinder.findDependencyInfoForGraph(graph);
     for (NamedStronglyConnectedComponent namedComponent : namedComponents) {
-      String buildRuleDefinition = createBuildRuleDefinition(
-          namedComponent,
-          providedSymbolToSrc,
-          providedSymbolToRequiredSymbols,
-          namedComponentsIndex,
-          dependencyInfo,
-          symbolsDependencies,
-          visibilityArg);
+      String buildRuleDefinition =
+          createBuildRuleDefinition(
+              namedComponent,
+              providedSymbolToSrc,
+              providedSymbolToRequiredSymbols,
+              namedComponentsIndex,
+              dependencyInfo,
+              symbolsDependencies,
+              visibilityArg);
       console.getStdOut().print(buildRuleDefinition);
     }
   }
 
-  /**
-   * Extracts the features from {@code src} and updates the collections accordingly.
-   */
+  /** Extracts the features from {@code src} and updates the collections accordingly. */
   private void extractProvidedSymbolInfoFromSourceFile(
       SourcePath src,
       JavaFileParser javaFileParser,
@@ -195,19 +188,18 @@ class FineGrainedJavaDependencySuggester {
     ProjectFilesystem filesystem = path.getFilesystem();
     Optional<String> contents = filesystem.readFileIfItExists(path.getRelativePath());
     if (!contents.isPresent()) {
-      throw new RuntimeException(
-          String.format("Could not read file '%s'", path.getRelativePath()));
+      throw new RuntimeException(String.format("Could not read file '%s'", path.getRelativePath()));
     }
 
-    JavaFileParser.JavaFileFeatures features = javaFileParser.extractFeaturesFromJavaCode(
-        contents.get());
+    JavaFileParser.JavaFileFeatures features =
+        javaFileParser.extractFeaturesFromJavaCode(contents.get());
     // If there are multiple provided symbols, that is because there are inner classes. Choosing
     // the shortest name will effectively select the top-level type.
     String providedSymbol = Iterables.getFirst(features.providedSymbols, /* defaultValue */ null);
     if (providedSymbol == null) {
-      console.getStdErr().printf(
-          "%s cowardly refuses to provide any types.\n",
-          path.getRelativePath());
+      console
+          .getStdErr()
+          .printf("%s cowardly refuses to provide any types.\n", path.getRelativePath());
       return;
     }
 
@@ -216,9 +208,7 @@ class FineGrainedJavaDependencySuggester {
     providedSymbolToRequiredSymbols.putAll(providedSymbol, features.exportedSymbols);
   }
 
-  /**
-   * Creates the build rule definition for the {@code namedComponent}.
-   */
+  /** Creates the build rule definition for the {@code namedComponent}. */
   private String createBuildRuleDefinition(
       NamedStronglyConnectedComponent namedComponent,
       Map<String, PathSourcePath> providedSymbolToSrc,
@@ -238,8 +228,8 @@ class FineGrainedJavaDependencySuggester {
         // First, check to see whether the requiredSymbol is in one of the newly created
         // strongly connected components. If so, add it to the deps so long as it is not the
         // strongly connected component that we are currently exploring.
-        NamedStronglyConnectedComponent requiredComponent = namedComponentsIndex.get(
-            requiredSymbol);
+        NamedStronglyConnectedComponent requiredComponent =
+            namedComponentsIndex.get(requiredSymbol);
         if (requiredComponent != null) {
           if (!requiredComponent.equals(namedComponent)) {
             deps.add(":" + requiredComponent.name);
@@ -253,17 +243,19 @@ class FineGrainedJavaDependencySuggester {
           continue;
         }
 
-        depProviders = FluentIterable.from(depProviders)
-            .filter(provider -> provider.isVisibleTo(suggestedNode))
-            .toSet();
+        depProviders =
+            FluentIterable.from(depProviders)
+                .filter(provider -> provider.isVisibleTo(suggestedNode))
+                .toSet();
         TargetNode<?, ?> depProvider;
         if (depProviders.size() == 1) {
           depProvider = Iterables.getOnlyElement(depProviders);
         } else {
-          console.getStdErr().printf(
-              "# Suspicious: no lone provider for '%s': [%s]\n",
-              requiredSymbol,
-              Joiner.on(", ").join(depProviders));
+          console
+              .getStdErr()
+              .printf(
+                  "# Suspicious: no lone provider for '%s': [%s]\n",
+                  requiredSymbol, Joiner.on(", ").join(depProviders));
           continue;
         }
 
@@ -283,20 +275,18 @@ class FineGrainedJavaDependencySuggester {
     }
 
     final Path basePathForSuggestedTarget = suggestedTarget.getBasePath();
-    Iterable<String> relativeSrcs = FluentIterable.from(srcs)
-        .transform(input ->
-            basePathForSuggestedTarget.relativize(input.getRelativePath()).toString());
+    Iterable<String> relativeSrcs =
+        FluentIterable.from(srcs)
+            .transform(
+                input -> basePathForSuggestedTarget.relativize(input.getRelativePath()).toString());
 
-    StringBuilder rule = new StringBuilder(
-        "\njava_library(\n" +
-        "  name = '" + namedComponent.name + "',\n" +
-        "  srcs = [\n");
+    StringBuilder rule =
+        new StringBuilder(
+            "\njava_library(\n" + "  name = '" + namedComponent.name + "',\n" + "  srcs = [\n");
     for (String src : relativeSrcs) {
       rule.append(String.format("    '%s',\n", src));
     }
-    rule.append(
-        "  ],\n" +
-        "  deps = [\n");
+    rule.append("  ],\n" + "  deps = [\n");
     for (String dep : deps) {
       rule.append(String.format("    '%s',\n", dep));
     }
@@ -325,15 +315,16 @@ class FineGrainedJavaDependencySuggester {
     }
   }
 
-  private static final Comparator<String> LOCAL_DEPS_FIRST_COMPARATOR = (dep1, dep2) -> {
-    boolean isDep1Local = dep1.startsWith(":");
-    boolean isDep2Local = dep2.startsWith(":");
-    if (isDep1Local == isDep2Local) {
-      return dep1.compareTo(dep2);
-    } else if (isDep1Local) {
-      return -1;
-    } else {
-      return 1;
-    }
-  };
+  private static final Comparator<String> LOCAL_DEPS_FIRST_COMPARATOR =
+      (dep1, dep2) -> {
+        boolean isDep1Local = dep1.startsWith(":");
+        boolean isDep2Local = dep2.startsWith(":");
+        if (isDep1Local == isDep2Local) {
+          return dep1.compareTo(dep2);
+        } else if (isDep1Local) {
+          return -1;
+        } else {
+          return 1;
+        }
+      };
 }

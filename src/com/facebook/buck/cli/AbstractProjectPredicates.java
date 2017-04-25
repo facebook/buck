@@ -23,35 +23,22 @@ import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicate;
-
 import org.immutables.value.Value;
 
-/**
- * Value type containing predicates to identify nodes associated
- * with an IDE project.
- */
+/** Value type containing predicates to identify nodes associated with an IDE project. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProjectPredicates {
 
-  /**
-   * {@link Predicate} returning nodes that represent roots of the IDE
-   * project.
-   */
+  /** {@link Predicate} returning nodes that represent roots of the IDE project. */
   @Value.Parameter
   public abstract Predicate<TargetNode<?, ?>> getProjectRootsPredicate();
 
-  /**
-   * {@link AssociatedTargetNodePredicate} returning nodes associated
-   * with the IDE project.
-   */
+  /** {@link AssociatedTargetNodePredicate} returning nodes associated with the IDE project. */
   @Value.Parameter
   public abstract AssociatedTargetNodePredicate getAssociatedProjectPredicate();
 
-  /**
-   * Creates a {@link ProjectPredicates} value type configured for
-   * the specified IDE.
-   */
+  /** Creates a {@link ProjectPredicates} value type configured for the specified IDE. */
   public static ProjectPredicates forIde(ProjectCommand.Ide targetIde) {
     Predicate<TargetNode<?, ?>> projectRootsPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
@@ -59,31 +46,28 @@ abstract class AbstractProjectPredicates {
     // Prepare the predicates to create the project graph based on the IDE.
     switch (targetIde) {
       case INTELLIJ:
-        projectRootsPredicate =
-            input ->
-                input.getDescription() instanceof ProjectConfigDescription;
-        associatedProjectPredicate = (targetNode, targetGraph) -> {
-          ProjectConfigDescription.Arg projectArg;
-          if (targetNode.getDescription() instanceof
-              ProjectConfigDescription) {
-            projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
-          } else {
-            return false;
-          }
+        projectRootsPredicate = input -> input.getDescription() instanceof ProjectConfigDescription;
+        associatedProjectPredicate =
+            (targetNode, targetGraph) -> {
+              ProjectConfigDescription.Arg projectArg;
+              if (targetNode.getDescription() instanceof ProjectConfigDescription) {
+                projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
+              } else {
+                return false;
+              }
 
-          BuildTarget projectTarget = null;
-          if (projectArg.srcTarget.isPresent()) {
-            projectTarget = projectArg.srcTarget.get();
-          } else if (projectArg.testTarget.isPresent()) {
-            projectTarget = projectArg.testTarget.get();
-          }
-          return (projectTarget != null && targetGraph.getOptional(projectTarget).isPresent());
-        };
+              BuildTarget projectTarget = null;
+              if (projectArg.srcTarget.isPresent()) {
+                projectTarget = projectArg.srcTarget.get();
+              } else if (projectArg.testTarget.isPresent()) {
+                projectTarget = projectArg.testTarget.get();
+              }
+              return (projectTarget != null && targetGraph.getOptional(projectTarget).isPresent());
+            };
         break;
       case XCODE:
         projectRootsPredicate =
-            input ->
-                input.getDescription() instanceof XcodeWorkspaceConfigDescription;
+            input -> input.getDescription() instanceof XcodeWorkspaceConfigDescription;
         associatedProjectPredicate = (targetNode, targetGraph) -> false;
         break;
       default:
@@ -91,8 +75,6 @@ abstract class AbstractProjectPredicates {
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
     }
 
-    return ProjectPredicates.of(
-        projectRootsPredicate,
-        associatedProjectPredicate);
+    return ProjectPredicates.of(projectRootsPredicate, associatedProjectPredicate);
   }
 }

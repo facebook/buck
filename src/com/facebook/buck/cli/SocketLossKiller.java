@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +28,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -61,10 +59,10 @@ class SocketLossKiller {
   /**
    * Start the service, recording the current socket file info.
    *
-   * If the socket does not exist or can't be accessed, the kill task will be called.
+   * <p>If the socket does not exist or can't be accessed, the kill task will be called.
    *
-   * This is meant to be called after the server is started and socket created, such as in
-   * {@code NailMain}. Repeated calls are no-ops.
+   * <p>This is meant to be called after the server is started and socket created, such as in {@code
+   * NailMain}. Repeated calls are no-ops.
    */
   public synchronized void arm() {
     if (isArmed.getAndSet(true)) {
@@ -73,11 +71,9 @@ class SocketLossKiller {
     }
     try {
       BasicFileAttributes socketFileAttributes = readFileAttributes(absolutePathToSocket);
-      checkSocketTask = scheduledExecutorService.scheduleAtFixedRate(
-          () -> checkSocket(socketFileAttributes),
-          0,
-          5000,
-          TimeUnit.MILLISECONDS);
+      checkSocketTask =
+          scheduledExecutorService.scheduleAtFixedRate(
+              () -> checkSocket(socketFileAttributes), 0, 5000, TimeUnit.MILLISECONDS);
     } catch (IOException e) {
       LOG.error(e, "Failed to read socket when arming SocketLossKiller.");
       cancelAndKill();
@@ -107,12 +103,11 @@ class SocketLossKiller {
       // Check modified time in addition to creation time because Windows lies about creation time
       // ("file system tunneling"). This feature is is still enabled in Windows 10.
       // See: https://support.microsoft.com/en-us/kb/172190
-      if (newAttributes.fileKey() != null &&
-          !newAttributes.fileKey().equals(originalAttributes.fileKey())) {
+      if (newAttributes.fileKey() != null
+          && !newAttributes.fileKey().equals(originalAttributes.fileKey())) {
         cancelAndKill();
-      } else if (
-          !newAttributes.creationTime().equals(originalAttributes.creationTime()) ||
-          !newAttributes.lastModifiedTime().equals(originalAttributes.lastModifiedTime())) {
+      } else if (!newAttributes.creationTime().equals(originalAttributes.creationTime())
+          || !newAttributes.lastModifiedTime().equals(originalAttributes.lastModifiedTime())) {
         cancelAndKill();
       }
     }

@@ -18,16 +18,14 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.HumanReadableException;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Option;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
 
   protected static final String STAMPEDE_ID_ARG_NAME = "--stampede-id";
+
   @Nullable
   @Option(name = STAMPEDE_ID_ARG_NAME, usage = "Stampede distributed build id.")
   private String stampedeId;

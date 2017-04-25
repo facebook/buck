@@ -41,10 +41,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -53,6 +49,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class QueryCommand extends AbstractCommand {
 
@@ -60,27 +58,28 @@ public class QueryCommand extends AbstractCommand {
 
   /**
    * Example usage:
+   *
    * <pre>
    * buck query "allpaths('//path/to:target', '//path/to:other')" --dot > /tmp/graph.dot
    * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
    * </pre>
    */
-  @Option(name = "--dot",
-      usage = "Print result as Dot graph")
+  @Option(name = "--dot", usage = "Print result as Dot graph")
   private boolean generateDotOutput;
 
-  @Option(name = "--bfs",
-      usage = "Sort the dot output in bfs order")
+  @Option(name = "--bfs", usage = "Sort the dot output in bfs order")
   private boolean generateBFSOutput;
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
-  @Option(name = "--output-attributes",
-      usage = "List of attributes to output, --output-attributes attr1 att2 ... attrN. " +
-              "Attributes can be regular expressions. ",
-      handler = StringSetOptionHandler.class)
+  @Option(
+    name = "--output-attributes",
+    usage =
+        "List of attributes to output, --output-attributes attr1 att2 ... attrN. "
+            + "Attributes can be regular expressions. ",
+    handler = StringSetOptionHandler.class
+  )
   @SuppressFieldNotInitialized
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributes;
@@ -101,8 +100,7 @@ public class QueryCommand extends AbstractCommand {
     return !outputAttributes.get().isEmpty();
   }
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
@@ -112,22 +110,23 @@ public class QueryCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Must specify at least the query expression"));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe("Must specify at least the query expression"));
       return 1;
     }
 
     try (CommandThreadManager pool =
-             new CommandThreadManager("Query", getConcurrencyLimit(params.getBuckConfig()));
-         PerBuildState parserState =
-             new PerBuildState(
-                 params.getParser(),
-                 params.getBuckEventBus(),
-                 pool.getExecutor(),
-                 params.getCell(),
-                 getEnableParserProfiling(),
-                 SpeculativeParsing.of(true),
-                 /* ignoreBuckAutodepsFiles */ false)) {
+            new CommandThreadManager("Query", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState parserState =
+            new PerBuildState(
+                params.getParser(),
+                params.getBuckEventBus(),
+                pool.getExecutor(),
+                params.getCell(),
+                getEnableParserProfiling(),
+                SpeculativeParsing.of(true),
+                /* ignoreBuckAutodepsFiles */ false)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, getEnableParserProfiling());
       ListeningExecutorService executor = pool.getExecutor();
@@ -139,9 +138,7 @@ public class QueryCommand extends AbstractCommand {
 
   @VisibleForTesting
   int formatAndRunQuery(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      ListeningExecutorService executor)
+      CommandRunnerParams params, BuckQueryEnvironment env, ListeningExecutorService executor)
       throws IOException, InterruptedException, QueryException {
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
@@ -149,12 +146,7 @@ public class QueryCommand extends AbstractCommand {
       return runSingleQueryWithSet(params, env, executor, queryFormat, formatArgs);
     } else if (queryFormat.contains("%s")) {
       return runMultipleQuery(
-          params,
-          env,
-          executor,
-          queryFormat,
-          formatArgs,
-          shouldGenerateJsonOutput());
+          params, env, executor, queryFormat, formatArgs, shouldGenerateJsonOutput());
     } else if (formatArgs.size() > 0) {
       throw new HumanReadableException(
           "Must not specify format arguments without a %s or %Ss in the query");
@@ -163,31 +155,24 @@ public class QueryCommand extends AbstractCommand {
     }
   }
 
-  /**
-   * Format and evaluate the query using list substitution
-   */
+  /** Format and evaluate the query using list substitution */
   int runSingleQueryWithSet(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       ListeningExecutorService executor,
       String queryFormat,
-      List<String> formatArgs
-  ) throws InterruptedException, QueryException, IOException {
-    String argsList = Joiner.on(' ').join(
-        Iterables.transform(formatArgs, input -> "'" + input + "'")
-    );
+      List<String> formatArgs)
+      throws InterruptedException, QueryException, IOException {
+    String argsList =
+        Joiner.on(' ').join(Iterables.transform(formatArgs, input -> "'" + input + "'"));
     String setRepresentation = "set(" + argsList + ")";
     String formattedQuery = queryFormat.replace("%Ss", setRepresentation);
-    return runSingleQuery(
-        params,
-        env,
-        executor,
-        formattedQuery);
+    return runSingleQuery(params, env, executor, formattedQuery);
   }
 
   /**
-   * Evaluate multiple queries in a single `buck query` run. Usage:
-   *   buck query <query format> <input1> <input2> <...> <inputN>
+   * Evaluate multiple queries in a single `buck query` run. Usage: buck query <query format>
+   * <input1> <input2> <...> <inputN>
    */
   static int runMultipleQuery(
       CommandRunnerParams params,
@@ -198,8 +183,11 @@ public class QueryCommand extends AbstractCommand {
       boolean generateJsonOutput)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Specify one or more input targets after the query expression format"));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.severe(
+                  "Specify one or more input targets after the query expression format"));
       return 1;
     }
 
@@ -253,9 +241,7 @@ public class QueryCommand extends AbstractCommand {
   }
 
   private void printDotOutput(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      Set<QueryTarget> queryResult)
+      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws IOException, QueryException {
     Dot.writeSubgraphOutput(
         env.getTargetGraph(),
@@ -268,9 +254,7 @@ public class QueryCommand extends AbstractCommand {
   }
 
   private void collectAndPrintAttributes(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      Set<QueryTarget> queryResult)
+      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     SortedMap<String, SortedMap<String, Object>> result = new TreeMap<>();
@@ -280,13 +264,14 @@ public class QueryCommand extends AbstractCommand {
       }
       TargetNode<?, ?> node = env.getNode(target);
       try {
-        SortedMap<String, Object> sortedTargetRule =  params.getParser().getRawTargetNode(
-            env.getParserState(),
-            params.getCell(),
-            node);
+        SortedMap<String, Object> sortedTargetRule =
+            params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
         if (sortedTargetRule == null) {
-          params.getConsole().printErrorText(
-              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+          params
+              .getConsole()
+              .printErrorText(
+                  "unable to find rule for target "
+                      + node.getBuildTarget().getFullyQualifiedName());
           continue;
         }
         SortedMap<String, Object> attributes = new TreeMap<>();
@@ -300,11 +285,12 @@ public class QueryCommand extends AbstractCommand {
         }
 
         result.put(
-            node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
-            attributes);
+            node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(), attributes);
       } catch (BuildFileParseException e) {
-        params.getConsole().printErrorText(
-            "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+        params
+            .getConsole()
+            .printErrorText(
+                "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
         continue;
       }
     }
@@ -330,10 +316,7 @@ public class QueryCommand extends AbstractCommand {
   }
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
-    return Joiner.on(" ").join(
-        Lists.transform(
-            arguments,
-            arg -> "'" + arg + "'"));
+    return Joiner.on(" ").join(Lists.transform(arguments, arg -> "'" + arg + "'"));
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {
@@ -348,10 +331,7 @@ public class QueryCommand extends AbstractCommand {
 
   /** @return the equivalent 'buck query' call to 'buck audit dependencies'. */
   static String buildAuditDependenciesQueryExpression(
-      List<String> arguments,
-      boolean isTransitive,
-      boolean includeTests,
-      boolean jsonOutput) {
+      List<String> arguments, boolean isTransitive, boolean includeTests, boolean jsonOutput) {
     StringBuilder queryBuilder = new StringBuilder("buck query ");
     queryBuilder.append("\"" + getAuditDependenciesQueryFormat(isTransitive, includeTests) + "\" ");
     queryBuilder.append(getEscapedArgumentsListAsString(arguments));

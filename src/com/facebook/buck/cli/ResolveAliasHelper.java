@@ -24,24 +24,19 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Helper class with functionality to resolve alias in `targets` command.
- */
+/** Helper class with functionality to resolve alias in `targets` command. */
 public class ResolveAliasHelper {
-  private ResolveAliasHelper() {
-  }
+  private ResolveAliasHelper() {}
 
   /**
-   * Assumes each argument passed to this command is an alias defined in .buckconfig,
-   * or a fully qualified (non-alias) target to be verified by checking the build files.
-   * Prints the build target that each alias maps to on its own line to standard out.
+   * Assumes each argument passed to this command is an alias defined in .buckconfig, or a fully
+   * qualified (non-alias) target to be verified by checking the build files. Prints the build
+   * target that each alias maps to on its own line to standard out.
    */
   public static int resolveAlias(
       CommandRunnerParams params,
@@ -53,12 +48,9 @@ public class ResolveAliasHelper {
     for (String alias : aliases) {
       ImmutableSet<String> buildTargets;
       if (alias.startsWith("//")) {
-        String buildTarget = validateBuildTargetForFullyQualifiedTarget(
-            params,
-            executor,
-            enableProfiling,
-            alias,
-            params.getParser());
+        String buildTarget =
+            validateBuildTargetForFullyQualifiedTarget(
+                params, executor, enableProfiling, alias, params.getParser());
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
@@ -79,9 +71,7 @@ public class ResolveAliasHelper {
     return 0;
   }
 
-  /**
-   * Verify that the given target is a valid full-qualified (non-alias) target.
-   */
+  /** Verify that the given target is a valid full-qualified (non-alias) target. */
   @Nullable
   static String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params,
@@ -103,12 +93,9 @@ public class ResolveAliasHelper {
     // Get all valid targets in our target directory by reading the build file.
     ImmutableSet<TargetNode<?, ?>> targetNodes;
     try {
-      targetNodes = parser.getAllTargetNodes(
-          params.getBuckEventBus(),
-          owningCell,
-          enableProfiling,
-          executor,
-          buildFile);
+      targetNodes =
+          parser.getAllTargetNodes(
+              params.getBuckEventBus(), owningCell, enableProfiling, executor, buildFile);
     } catch (BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -129,8 +116,7 @@ public class ResolveAliasHelper {
 
   /** @return the build target identified by the specified full path or {@code null}. */
   private static BuildTarget getBuildTargetForFullyQualifiedTarget(
-      BuckConfig buckConfig,
-      String target) {
+      BuckConfig buckConfig, String target) {
     return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
   }
 }

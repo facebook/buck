@@ -38,23 +38,23 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class UninstallCommand extends AbstractCommand {
 
   public static class UninstallOptions {
     @VisibleForTesting static final String KEEP_LONG_ARG = "--keep";
     @VisibleForTesting static final String KEEP_SHORT_ARG = "-k";
+
     @Option(
-        name = KEEP_LONG_ARG,
-        aliases = { KEEP_SHORT_ARG },
-        usage = "Keep user data when uninstalling.")
+      name = KEEP_LONG_ARG,
+      aliases = {KEEP_SHORT_ARG},
+      usage = "Keep user data when uninstalling."
+    )
     private boolean keepData = false;
 
     public boolean shouldKeepUserData() {
@@ -62,20 +62,14 @@ public class UninstallCommand extends AbstractCommand {
     }
   }
 
-  @AdditionalOptions
-  @SuppressFieldNotInitialized
-  private UninstallOptions uninstallOptions;
+  @AdditionalOptions @SuppressFieldNotInitialized private UninstallOptions uninstallOptions;
 
-  @AdditionalOptions
-  @SuppressFieldNotInitialized
-  private AdbCommandLineOptions adbOptions;
+  @AdditionalOptions @SuppressFieldNotInitialized private AdbCommandLineOptions adbOptions;
 
-  @AdditionalOptions
-  @SuppressFieldNotInitialized
+  @AdditionalOptions @SuppressFieldNotInitialized
   private TargetDeviceCommandLineOptions deviceOptions;
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -99,38 +93,42 @@ public class UninstallCommand extends AbstractCommand {
     // Parse all of the build targets specified by the user.
     BuildRuleResolver resolver;
     ImmutableSet<BuildTarget> buildTargets;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Uninstall",
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      TargetGraphAndBuildTargets result = params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              pool.getExecutor(),
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()),
-              /* ignoreBuckAutodepsFiles */ false);
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()))) {
+      TargetGraphAndBuildTargets result =
+          params
+              .getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  pool.getExecutor(),
+                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+                  /* ignoreBuckAutodepsFiles */ false);
       buildTargets = result.getBuildTargets();
-      resolver = Preconditions.checkNotNull(
-          params.getActionGraphCache().getActionGraph(
-              params.getBuckEventBus(),
-              params.getBuckConfig().isActionGraphCheckingEnabled(),
-              params.getBuckConfig().isSkipActionGraphCache(),
-              result.getTargetGraph(),
-              params.getBuckConfig().getKeySeed())
-          ).getResolver();
+      resolver =
+          Preconditions.checkNotNull(
+                  params
+                      .getActionGraphCache()
+                      .getActionGraph(
+                          params.getBuckEventBus(),
+                          params.getBuckConfig().isActionGraphCheckingEnabled(),
+                          params.getBuckConfig().isSkipActionGraphCache(),
+                          result.getTargetGraph(),
+                          params.getBuckConfig().getKeySeed()))
+              .getResolver();
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
     // Make sure that only one build target is specified.
     if (buildTargets.size() != 1) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Must specify exactly one android_binary() rule."));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe("Must specify exactly one android_binary() rule."));
       return 1;
     }
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
@@ -143,33 +141,34 @@ public class UninstallCommand extends AbstractCommand {
       throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
     if (!(buildRule instanceof HasInstallableApk)) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-          "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
-          buildRule.getFullyQualifiedName(),
-          buildRule.getType())));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.severe(
+                  String.format(
+                      "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
+                      buildRule.getFullyQualifiedName(), buildRule.getType())));
       return 1;
     }
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
     try (ExecutionContext context = createExecutionContext(params)) {
-      final AdbHelper adbHelper = new AdbHelper(
-          adbOptions(params.getBuckConfig()),
-          targetDeviceOptions(),
-          context,
-          params.getConsole(),
-          params.getBuckEventBus(),
-          params.getBuckConfig().getRestartAdbOnFailure());
+      final AdbHelper adbHelper =
+          new AdbHelper(
+              adbOptions(params.getBuckConfig()),
+              targetDeviceOptions(),
+              context,
+              params.getConsole(),
+              params.getBuckEventBus(),
+              params.getBuckConfig().getRestartAdbOnFailure());
 
       // Find application package name from manifest and uninstall from matching devices.
       SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-      String appId = AdbHelper.tryToExtractPackageNameFromManifest(
-          pathResolver,
-          hasInstallableApk.getApkInfo());
-      return adbHelper.uninstallApp(
-          appId,
-          uninstallOptions().shouldKeepUserData()
-      ) ? 0 : 1;
+      String appId =
+          AdbHelper.tryToExtractPackageNameFromManifest(
+              pathResolver, hasInstallableApk.getApkInfo());
+      return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
     }
   }
 
@@ -182,5 +181,4 @@ public class UninstallCommand extends AbstractCommand {
   public boolean isReadOnly() {
     return false;
   }
-
 }

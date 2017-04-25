@@ -21,23 +21,17 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import org.kohsuke.args4j.Option;
 
 public class ServerStatusCommand extends AbstractCommand {
 
-  @Option(
-      name = "--http-port",
-      usage = "Print the port that the server is running on.")
+  @Option(name = "--http-port", usage = "Print the port that the server is running on.")
   private boolean showHttpserverPort = false;
 
-  @Option(
-      name = "--json",
-      usage = "Print the output in a json format.")
+  @Option(name = "--json", usage = "Print the output in a json format.")
   private boolean printJson = false;
 
   public boolean isShowHttpserverPort() {

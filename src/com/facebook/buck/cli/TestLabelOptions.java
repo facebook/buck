@@ -21,7 +21,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -30,21 +35,15 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Options for including and excluding rules by label.
- * <p>
- * If we were starting from scratch, we'd just have a single command line option: --labels !foo bar
- * <p>
- * However, we have to support the historical dual-option form: --exclude foo --include bar
- * <p>
- * Order is significant as the first matching include/exclude rule wins.  To support the legacy
+ *
+ * <p>If we were starting from scratch, we'd just have a single command line option: --labels !foo
+ * bar
+ *
+ * <p>However, we have to support the historical dual-option form: --exclude foo --include bar
+ *
+ * <p>Order is significant as the first matching include/exclude rule wins. To support the legacy
  * --include and --exclude options and yet still respect order, we use a special option handler
  * {@link com.facebook.buck.cli.TestLabelOptions.LabelsOptionHandler} which keeps track of the
  * argument position of each label-rule in the respective maps populated by those options.
@@ -54,49 +53,53 @@ class TestLabelOptions {
   public static final String LABEL_SEPERATOR = "+";
 
   @Option(
-      name = "--exclude",
-      usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
-      handler = LabelsOptionHandler.class)
+    name = "--exclude",
+    usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
+    handler = LabelsOptionHandler.class
+  )
   @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> excludedLabelSets;
 
   @Option(
-      name = "--labels",
-      aliases = {"--include"},
-      usage =
-          "Labels to include (or exclude, when prefixed with '!') when running test rules.  " +
-          "The first matching statement is used to decide whether to " +
-          "include or exclude a test rule.",
-      handler = LabelsOptionHandler.class)
+    name = "--labels",
+    aliases = {"--include"},
+    usage =
+        "Labels to include (or exclude, when prefixed with '!') when running test rules.  "
+            + "The first matching statement is used to decide whether to "
+            + "include or exclude a test rule.",
+    handler = LabelsOptionHandler.class
+  )
   @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> includedLabelSets;
 
   @Option(
-      name = "--always-exclude",
-      aliases = {"--always_exclude"},
-      usage =
-          "If set, an exclude filter will win over a target on the command line, so tests " +
-          "that were both specified to run on the command line and are excluded through either " +
-          "the '--exclude' option or in the .buckconfig will not run.")
+    name = "--always-exclude",
+    aliases = {"--always_exclude"},
+    usage =
+        "If set, an exclude filter will win over a target on the command line, so tests "
+            + "that were both specified to run on the command line and are excluded through either "
+            + "the '--exclude' option or in the .buckconfig will not run."
+  )
   private boolean alwaysExclude;
 
   private Supplier<ImmutableList<LabelSelector>> supplier =
-      Suppliers.memoize(new Supplier<ImmutableList<LabelSelector>>() {
-        @Override
-        public ImmutableList<LabelSelector> get() {
-          TreeMap<Integer, LabelSelector> all = new TreeMap<>();
-          all.putAll(includedLabelSets);
+      Suppliers.memoize(
+          new Supplier<ImmutableList<LabelSelector>>() {
+            @Override
+            public ImmutableList<LabelSelector> get() {
+              TreeMap<Integer, LabelSelector> all = new TreeMap<>();
+              all.putAll(includedLabelSets);
 
-          // Invert the sense of anything given to --exclude.
-          // This means we could --exclude !includeMe  ...lolololol
-          for (Integer ordinal : excludedLabelSets.keySet()) {
-            LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
-            all.put(ordinal, original.invert());
-          }
+              // Invert the sense of anything given to --exclude.
+              // This means we could --exclude !includeMe  ...lolololol
+              for (Integer ordinal : excludedLabelSets.keySet()) {
+                LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
+                all.put(ordinal, original.invert());
+              }
 
-          return ImmutableList.copyOf(all.values());
-        }
-      });
+              return ImmutableList.copyOf(all.values());
+            }
+          });
 
   public boolean shouldExcludeWin() {
     return alwaysExclude;
@@ -140,9 +143,8 @@ class TestLabelOptions {
     private final Map<Integer, LabelSelector> labels = new HashMap<>();
 
     public LabelsOptionHandler(
-        CmdLineParser parser,
-        OptionDef option,
-        Setter<Map<Integer, LabelSelector>> setter) throws CmdLineException {
+        CmdLineParser parser, OptionDef option, Setter<Map<Integer, LabelSelector>> setter)
+        throws CmdLineException {
       super(parser, option, setter);
       setter.addValue(labels);
     }

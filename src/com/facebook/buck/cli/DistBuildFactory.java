@@ -35,11 +35,9 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-
 import okhttp3.OkHttpClient;
 
 public abstract class DistBuildFactory {
@@ -56,20 +54,15 @@ public abstract class DistBuildFactory {
     return new DistBuildLogStateTracker(logDir, fileSystem);
   }
 
-
-  public static FrontendService newFrontendService(
-      CommandRunnerParams params) {
+  public static FrontendService newFrontendService(CommandRunnerParams params) {
     DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
-    ClientSideSlb slb = config.getFrontendConfig().createClientSideSlb(
-        params.getClock(),
-        params.getBuckEventBus());
+    ClientSideSlb slb =
+        config.getFrontendConfig().createClientSideSlb(params.getClock(), params.getBuckEventBus());
     OkHttpClient client = config.createOkHttpClient();
 
     return new FrontendService(
-        ThriftOverHttpServiceConfig.of(new LoadBalancedService(
-            slb,
-            client,
-            params.getBuckEventBus())));
+        ThriftOverHttpServiceConfig.of(
+            new LoadBalancedService(slb, client, params.getBuckEventBus())));
   }
 
   public static DistBuildSlaveExecutor createDistBuildExecutor(
@@ -80,12 +73,14 @@ public abstract class DistBuildFactory {
       DistBuildMode mode,
       int coordinatorPort,
       Optional<StampedeId> stampedeId,
-      Optional<Path> globalCacheDir) throws IOException {
-    DistBuildState state = DistBuildState.load(
-        Optional.of(params.getBuckConfig()),
-        jobState,
-        params.getCell(),
-        params.getKnownBuildRuleTypesFactory());
+      Optional<Path> globalCacheDir)
+      throws IOException {
+    DistBuildState state =
+        DistBuildState.load(
+            Optional.of(params.getBuckConfig()),
+            jobState,
+            params.getCell(),
+            params.getKnownBuildRuleTypesFactory());
 
     Preconditions.checkArgument(state.getCells().size() > 0);
 
@@ -95,26 +90,27 @@ public abstract class DistBuildFactory {
     ArtifactCacheFactory distBuildArtifactCacheFactory =
         params.getArtifactCacheFactory().cloneWith(rootCell.getBuckConfig());
 
-    DistBuildSlaveExecutor executor = new DistBuildSlaveExecutor(
-        DistBuildExecutorArgs.builder()
-            .setBuckEventBus(params.getBuckEventBus())
-            .setPlatform(params.getPlatform())
-            .setClock(params.getClock())
-            .setArtifactCache(distBuildArtifactCacheFactory.newInstance(true))
-            .setState(state)
-            .setRootCell(params.getCell())
-            .setParser(params.getParser())
-            .setExecutorService(executorService)
-            .setActionGraphCache(params.getActionGraphCache())
-            .setCacheKeySeed(params.getBuckConfig().getKeySeed())
-            .setConsole(params.getConsole())
-            .setProvider(new MultiSourceContentsProvider(service, globalCacheDir))
-            .setExecutors(params.getExecutors())
-            .setDistBuildMode(mode)
-            .setCoordinatorPort(coordinatorPort)
-            .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
-            .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
-            .build());
+    DistBuildSlaveExecutor executor =
+        new DistBuildSlaveExecutor(
+            DistBuildExecutorArgs.builder()
+                .setBuckEventBus(params.getBuckEventBus())
+                .setPlatform(params.getPlatform())
+                .setClock(params.getClock())
+                .setArtifactCache(distBuildArtifactCacheFactory.newInstance(true))
+                .setState(state)
+                .setRootCell(params.getCell())
+                .setParser(params.getParser())
+                .setExecutorService(executorService)
+                .setActionGraphCache(params.getActionGraphCache())
+                .setCacheKeySeed(params.getBuckConfig().getKeySeed())
+                .setConsole(params.getConsole())
+                .setProvider(new MultiSourceContentsProvider(service, globalCacheDir))
+                .setExecutors(params.getExecutors())
+                .setDistBuildMode(mode)
+                .setCoordinatorPort(coordinatorPort)
+                .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
+                .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
+                .build());
     return executor;
   }
 }

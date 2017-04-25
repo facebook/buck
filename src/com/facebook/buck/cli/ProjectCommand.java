@@ -84,15 +84,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.OptionDef;
-import org.kohsuke.args4j.spi.OptionHandler;
-import org.kohsuke.args4j.spi.Parameters;
-import org.kohsuke.args4j.spi.Setter;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -105,8 +96,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.OptionHandler;
+import org.kohsuke.args4j.spi.Parameters;
+import org.kohsuke.args4j.spi.Setter;
 
 public class ProjectCommand extends BuildCommand {
 
@@ -128,111 +125,134 @@ public class ProjectCommand extends BuildCommand {
           throw new HumanReadableException("Invalid ide value %s.", string);
       }
     }
-
   }
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
 
   @Option(
-      name = "--combined-project",
-      usage = "Generate an xcode project of a target and its dependencies.")
+    name = "--combined-project",
+    usage = "Generate an xcode project of a target and its dependencies."
+  )
   private boolean combinedProject;
 
   @Option(
-      name = "--build-with-buck",
-      usage = "Use Buck to build the generated project instead of delegating the build to the IDE.")
+    name = "--build-with-buck",
+    usage = "Use Buck to build the generated project instead of delegating the build to the IDE."
+  )
   boolean buildWithBuck;
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
 
   @Option(
-      name = "--without-tests",
-      usage = "When generating a project slice, exclude tests that test the code in that slice")
+    name = "--without-tests",
+    usage = "When generating a project slice, exclude tests that test the code in that slice"
+  )
   private boolean withoutTests = false;
 
   @Option(
-      name = "--with-tests",
-      usage = "When generating a project slice, generate with all the tests")
+    name = "--with-tests",
+    usage = "When generating a project slice, generate with all the tests"
+  )
   private boolean withTests = false;
 
   @Option(
-      name = "--without-dependencies-tests",
-      usage = "When generating a project slice, includes tests that test code in main target, " +
-          "but exclude tests that test dependencies")
+    name = "--without-dependencies-tests",
+    usage =
+        "When generating a project slice, includes tests that test code in main target, "
+            + "but exclude tests that test dependencies"
+  )
   private boolean withoutDependenciesTests = false;
 
   @Option(
-      name = "--ide",
-      usage = "The type of IDE for which to generate a project. You may specify it in the " +
-          ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
+    name = "--ide",
+    usage =
+        "The type of IDE for which to generate a project. You may specify it in the "
+            + ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project"
+  )
   @Nullable
   private Ide ide = null;
 
   @Option(
-      name = "--read-only",
-      usage = "If true, generate project files read-only. Defaults to '" +
-          DEFAULT_READ_ONLY_VALUE + "' if not specified in .buckconfig. (Only " +
-          "applies to generated Xcode projects.)")
+    name = "--read-only",
+    usage =
+        "If true, generate project files read-only. Defaults to '"
+            + DEFAULT_READ_ONLY_VALUE
+            + "' if not specified in .buckconfig. (Only "
+            + "applies to generated Xcode projects.)"
+  )
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
   @Option(
-      name = "--dry-run",
-      usage = "Instead of actually generating the project, only print out the targets that " +
-          "would be included.")
+    name = "--dry-run",
+    usage =
+        "Instead of actually generating the project, only print out the targets that "
+            + "would be included."
+  )
   private boolean dryRun = false;
 
   @Option(
-      name = "--intellij-aggregation-mode",
-      handler = AggregationModeOptionHandler.class,
-      usage = "Changes how modules are aggregated. Valid options are 'none' (no aggregation), " +
-          "'shallow' (Minimum of 3 directory levels deep), 'auto' (based on project size), or an " +
-          "integer to specify the minimum directory depth modules should be aggregated to (e.g." +
-          "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). " +
-          "Defaults to 'auto' if not specified in .buckconfig.")
+    name = "--intellij-aggregation-mode",
+    handler = AggregationModeOptionHandler.class,
+    usage =
+        "Changes how modules are aggregated. Valid options are 'none' (no aggregation), "
+            + "'shallow' (Minimum of 3 directory levels deep), 'auto' (based on project size), or an "
+            + "integer to specify the minimum directory depth modules should be aggregated to (e.g."
+            + "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). "
+            + "Defaults to 'auto' if not specified in .buckconfig."
+  )
   @Nullable
   private AggregationMode intellijAggregationMode = null;
 
   @Option(
-      name = "--run-ij-cleaner",
-      usage = "After generating an IntelliJ project using --experimental-ij-generation, start a " +
-          "cleaner which removes any .iml files which weren't generated as part of the project.")
+    name = "--run-ij-cleaner",
+    usage =
+        "After generating an IntelliJ project using --experimental-ij-generation, start a "
+            + "cleaner which removes any .iml files which weren't generated as part of the project."
+  )
   private boolean runIjCleaner = false;
 
   @Option(
-      name = "--remove-unused-ij-libraries",
-      usage = "After generating an IntelliJ project remove all IntelliJ libraries that are not " +
-          "used in the project.")
+    name = "--remove-unused-ij-libraries",
+    usage =
+        "After generating an IntelliJ project remove all IntelliJ libraries that are not "
+            + "used in the project."
+  )
   private boolean removeUnusedLibraries = false;
 
   @Option(
-      name = "--exclude-artifacts",
-      usage = "Don't include references to the artifacts created by compiling a target in" +
-          "the module representing that target.")
+    name = "--exclude-artifacts",
+    usage =
+        "Don't include references to the artifacts created by compiling a target in"
+            + "the module representing that target."
+  )
   private boolean excludeArtifacts = false;
 
   @Option(
-      name = "--skip-build",
-      usage = "Don't try to build any of the targets for the generated project.")
+    name = "--skip-build",
+    usage = "Don't try to build any of the targets for the generated project."
+  )
   private boolean skipBuild = false;
 
-  @Option(
-      name = "--build",
-      usage = "Also build all the targets in the project.")
+  @Option(name = "--build", usage = "Also build all the targets in the project.")
   private boolean build = true;
 
   @Option(
-      name = "--focus",
-      usage = "Space separated list of build target full qualified names that should be part of " +
-          "focused project. " +
-          "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib")
+    name = "--focus",
+    usage =
+        "Space separated list of build target full qualified names that should be part of "
+            + "focused project. "
+            + "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib"
+  )
   @Nullable
   private String modulesToFocusOn = null;
 
   @Option(
-      name = "--file-with-list-of-generated-files",
-      usage = "If present, forces command to save the list of generated file names to a provided" +
-          " file")
+    name = "--file-with-list-of-generated-files",
+    usage =
+        "If present, forces command to save the list of generated file names to a provided"
+            + " file"
+  )
   @Nullable
   private String generatedFilesListFilename = null;
 
@@ -264,8 +284,8 @@ public class ProjectCommand extends BuildCommand {
   }
 
   /**
-   * Returns true if Buck should prompt to kill a running IDE before changing its files,
-   * false otherwise.
+   * Returns true if Buck should prompt to kill a running IDE before changing its files, false
+   * otherwise.
    */
   public boolean getIdePrompt(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue("project", "ide_prompt", true);
@@ -313,9 +333,8 @@ public class ProjectCommand extends BuildCommand {
       return rc;
     }
 
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Project",
-        getConcurrencyLimit(params.getBuckConfig()))) {
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
 
       ImmutableSet<BuildTarget> passedInTargetsSet;
       TargetGraph projectGraph;
@@ -332,28 +351,27 @@ public class ProjectCommand extends BuildCommand {
         passedInTargetsSet =
             ImmutableSet.copyOf(
                 Iterables.concat(
-                    params.getParser().resolveTargetSpecs(
-                        params.getBuckEventBus(),
-                        params.getCell(),
-                        getEnableParserProfiling(),
-                        pool.getExecutor(),
-                        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
-                        SpeculativeParsing.of(true),
-                        parserConfig.getDefaultFlavorsMode())));
-        projectGraph = getProjectGraphForIde(
-            params,
-            pool.getExecutor(),
-            passedInTargetsSet);
+                    params
+                        .getParser()
+                        .resolveTargetSpecs(
+                            params.getBuckEventBus(),
+                            params.getCell(),
+                            getEnableParserProfiling(),
+                            pool.getExecutor(),
+                            parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
+                            SpeculativeParsing.of(true),
+                            parserConfig.getDefaultFlavorsMode())));
+        projectGraph = getProjectGraphForIde(params, pool.getExecutor(), passedInTargetsSet);
       } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        params
+            .getBuckEventBus()
+            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
 
-      projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
-          params.getBuckConfig(),
-          passedInTargetsSet,
-          Optional.of(projectGraph));
+      projectIde =
+          getIdeBasedOnPassedInTargetsAndProjectGraph(
+              params.getBuckConfig(), passedInTargetsSet, Optional.of(projectGraph));
       if (projectIde == ProjectCommand.Ide.XCODE) {
         checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
       }
@@ -362,30 +380,31 @@ public class ProjectCommand extends BuildCommand {
 
       ImmutableSet<BuildTarget> graphRoots;
       if (passedInTargetsSet.isEmpty()) {
-        graphRoots = getRootsFromPredicate(
-            projectGraph,
-            projectPredicates.getProjectRootsPredicate());
+        graphRoots =
+            getRootsFromPredicate(projectGraph, projectPredicates.getProjectRootsPredicate());
       } else {
         graphRoots = passedInTargetsSet;
       }
 
       TargetGraphAndTargets targetGraphAndTargets;
       try {
-        targetGraphAndTargets = createTargetGraph(
-            params,
-            projectGraph,
-            graphRoots,
-            projectPredicates.getAssociatedProjectPredicate(),
-            isWithTests(params.getBuckConfig()),
-            isWithDependenciesTests(params.getBuckConfig()),
-            passedInTargetsSet.isEmpty(),
-            pool.getExecutor());
-      } catch (BuildFileParseException |
-          TargetGraph.NoSuchNodeException |
-          BuildTargetException |
-          HumanReadableException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        targetGraphAndTargets =
+            createTargetGraph(
+                params,
+                projectGraph,
+                graphRoots,
+                projectPredicates.getAssociatedProjectPredicate(),
+                isWithTests(params.getBuckConfig()),
+                isWithDependenciesTests(params.getBuckConfig()),
+                passedInTargetsSet.isEmpty(),
+                pool.getExecutor());
+      } catch (BuildFileParseException
+          | TargetGraph.NoSuchNodeException
+          | BuildTargetException
+          | HumanReadableException e) {
+        params
+            .getBuckEventBus()
+            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
 
@@ -405,11 +424,9 @@ public class ProjectCommand extends BuildCommand {
             result = runIntellijProjectGenerator(params, targetGraphAndTargets);
             break;
           case XCODE:
-            result = runXcodeProjectGenerator(
-                params,
-                pool.getExecutor(),
-                targetGraphAndTargets,
-                passedInTargetsSet);
+            result =
+                runXcodeProjectGenerator(
+                    params, pool.getExecutor(), targetGraphAndTargets, passedInTargetsSet);
             break;
           default:
             // unreachable
@@ -437,20 +454,22 @@ public class ProjectCommand extends BuildCommand {
       for (BuildTarget buildTarget : passedInTargetsSet) {
         Optional<TargetNode<?, ?>> node = projectGraph.get().getOptional(buildTarget);
         if (!node.isPresent()) {
-          throw new HumanReadableException("Project graph %s doesn't contain build target " +
-              "%s", projectGraph.get(), buildTarget);
+          throw new HumanReadableException(
+              "Project graph %s doesn't contain build target " + "%s",
+              projectGraph.get(), buildTarget);
         }
         Description<?> description = node.get().getDescription();
         boolean canGenerateXcodeProject = canGenerateImplicitWorkspaceForDescription(description);
-        canGenerateXcodeProject |=
-            description instanceof XcodeWorkspaceConfigDescription;
+        canGenerateXcodeProject |= description instanceof XcodeWorkspaceConfigDescription;
         if (guessedIde == null && canGenerateXcodeProject) {
           guessedIde = Ide.XCODE;
-        } else if (guessedIde == Ide.XCODE && !canGenerateXcodeProject ||
-            guessedIde == Ide.INTELLIJ && canGenerateXcodeProject) {
-          throw new HumanReadableException("Passed targets (%s) contain both Xcode and Idea " +
-              "projects.\nCan't choose Ide from this mixed set. " +
-              "Please pass only Xcode targets or only Idea targets.", passedInTargetsSet);
+        } else if (guessedIde == Ide.XCODE && !canGenerateXcodeProject
+            || guessedIde == Ide.INTELLIJ && canGenerateXcodeProject) {
+          throw new HumanReadableException(
+              "Passed targets (%s) contain both Xcode and Idea "
+                  + "projects.\nCan't choose Ide from this mixed set. "
+                  + "Please pass only Xcode targets or only Idea targets.",
+              passedInTargetsSet);
         } else {
           guessedIde = Ide.INTELLIJ;
         }
@@ -458,8 +477,8 @@ public class ProjectCommand extends BuildCommand {
       projectIde = guessedIde;
     }
     if (projectIde == null) {
-      throw new HumanReadableException("Please specify ide using --ide option or set ide in " +
-          ".buckconfig");
+      throw new HumanReadableException(
+          "Please specify ide using --ide option or set ide in " + ".buckconfig");
     }
     return projectIde;
   }
@@ -470,9 +489,7 @@ public class ProjectCommand extends BuildCommand {
   }
 
   public static ImmutableSet<BuildTarget> getRootBuildTargetsForIntelliJ(
-      ProjectCommand.Ide ide,
-      TargetGraph projectGraph,
-      ProjectPredicates projectPredicates) {
+      ProjectCommand.Ide ide, TargetGraph projectGraph, ProjectPredicates projectPredicates) {
     if (ide != ProjectCommand.Ide.INTELLIJ) {
       return ImmutableSet.of();
     }
@@ -480,17 +497,13 @@ public class ProjectCommand extends BuildCommand {
         projectGraph,
         Predicates.and(
             input -> input.getBuildTarget() != null && input.getBuildTarget().isInCellRoot(),
-            projectPredicates.getProjectRootsPredicate()
-        )
-    );
+            projectPredicates.getProjectRootsPredicate()));
   }
 
-  /**
-   * Run intellij specific project generation actions.
-   */
+  /** Run intellij specific project generation actions. */
   int runIntellijProjectGenerator(
-      CommandRunnerParams params,
-      final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
+      CommandRunnerParams params, final TargetGraphAndTargets targetGraphAndTargets)
+      throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> requiredBuildTargets =
         writeProjectAndGetRequiredBuildTargets(params, targetGraphAndTargets);
 
@@ -505,46 +518,48 @@ public class ProjectCommand extends BuildCommand {
       return 0;
     }
 
-    return shouldProcessAnnotations() ?
-        buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-            params,
-            targetGraphAndTargets,
-            requiredBuildTargets) :
-        runBuild(params, requiredBuildTargets);
+    return shouldProcessAnnotations()
+        ? buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+            params, targetGraphAndTargets, requiredBuildTargets)
+        : runBuild(params, requiredBuildTargets);
   }
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
-      CommandRunnerParams params,
-      final TargetGraphAndTargets targetGraphAndTargets
-  ) throws IOException {
-    ActionGraphAndResolver result = Preconditions.checkNotNull(
-        params.getActionGraphCache().getActionGraph(
-            params.getBuckEventBus(),
-            params.getBuckConfig().isActionGraphCheckingEnabled(),
-            params.getBuckConfig().isSkipActionGraphCache(),
-            targetGraphAndTargets.getTargetGraph(),
-            params.getBuckConfig().getKeySeed()));
+      CommandRunnerParams params, final TargetGraphAndTargets targetGraphAndTargets)
+      throws IOException {
+    ActionGraphAndResolver result =
+        Preconditions.checkNotNull(
+            params
+                .getActionGraphCache()
+                .getActionGraph(
+                    params.getBuckEventBus(),
+                    params.getBuckConfig().isActionGraphCheckingEnabled(),
+                    params.getBuckConfig().isSkipActionGraphCache(),
+                    targetGraphAndTargets.getTargetGraph(),
+                    params.getBuckConfig().getKeySeed()));
 
     BuckConfig buckConfig = params.getBuckConfig();
     BuildRuleResolver ruleResolver = result.getResolver();
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
-    IjProjectConfig projectConfig = IjProjectBuckConfig.create(
-        buckConfig,
-        intellijAggregationMode,
-        generatedFilesListFilename,
-        runIjCleaner,
-        removeUnusedLibraries,
-        excludeArtifacts);
+    IjProjectConfig projectConfig =
+        IjProjectBuckConfig.create(
+            buckConfig,
+            intellijAggregationMode,
+            generatedFilesListFilename,
+            runIjCleaner,
+            removeUnusedLibraries,
+            excludeArtifacts);
 
-    IjProject project = new IjProject(
-        targetGraphAndTargets,
-        getJavaPackageFinder(buckConfig),
-        JavaFileParser.createJavaFileParser(javacOptions),
-        ruleResolver,
-        params.getCell().getFilesystem(),
-        projectConfig);
+    IjProject project =
+        new IjProject(
+            targetGraphAndTargets,
+            getJavaPackageFinder(buckConfig),
+            JavaFileParser.createJavaFileParser(javacOptions),
+            ruleResolver,
+            params.getCell().getFilesystem(),
+            projectConfig);
 
     return project.write();
   }
@@ -555,9 +570,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> requiredBuildTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> annotatedTargets =
-        getTargetsWithAnnotations(
-            targetGraphAndTargets.getTargetGraph(),
-            requiredBuildTargets);
+        getTargetsWithAnnotations(targetGraphAndTargets.getTargetGraph(), requiredBuildTargets);
 
     ImmutableSet<BuildTarget> unannotatedTargets =
         Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
@@ -579,48 +592,44 @@ public class ProjectCommand extends BuildCommand {
     return exitCode == 0 ? annotationExitCode : exitCode;
   }
 
-  private int runBuild(
-      CommandRunnerParams params,
-      ImmutableSet<BuildTarget> targets)
+  private int runBuild(CommandRunnerParams params, ImmutableSet<BuildTarget> targets)
       throws IOException, InterruptedException {
     return runBuild(params, targets, false);
   }
 
   private int runBuild(
-      CommandRunnerParams params,
-      ImmutableSet<BuildTarget> targets,
-      boolean disableCaching)
+      CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
-    BuildCommand buildCommand = new BuildCommand(targets.stream()
-        .map(Object::toString)
-        .collect(MoreCollectors.toImmutableList()));
+    BuildCommand buildCommand =
+        new BuildCommand(
+            targets.stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
     buildCommand.setKeepGoing(true);
     buildCommand.setArtifactCacheDisabled(disableCaching);
     return buildCommand.run(params);
   }
 
-
   private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
-      final TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> buildTargets) {
-    return FluentIterable
-        .from(buildTargets)
-        .filter(input -> {
-          TargetNode<?, ?> targetNode = targetGraph.get(input);
-          return targetNode != null && isTargetWithAnnotations(targetNode);
-        })
+      final TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
+    return FluentIterable.from(buildTargets)
+        .filter(
+            input -> {
+              TargetNode<?, ?> targetNode = targetGraph.get(input);
+              return targetNode != null && isTargetWithAnnotations(targetNode);
+            })
         .toSet();
   }
 
   private void addBuildFailureError(CommandRunnerParams params) {
-    params.getConsole().getAnsi().printHighlightedSuccessText(
-        params.getConsole().getStdErr(),
-        "Because the build did not complete successfully some parts of the project may not\n" +
-            "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
+    params
+        .getConsole()
+        .getAnsi()
+        .printHighlightedSuccessText(
+            params.getConsole().getStdErr(),
+            "Because the build did not complete successfully some parts of the project may not\n"
+                + "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
   }
 
-  private int runPreprocessScriptIfNeeded(
-      CommandRunnerParams params)
+  private int runPreprocessScriptIfNeeded(CommandRunnerParams params)
       throws IOException, InterruptedException {
     Optional<String> pathToPreProcessScript = getPathToPreProcessScript(params.getBuckConfig());
     if (!pathToPreProcessScript.isPresent()) {
@@ -629,12 +638,13 @@ public class ProjectCommand extends BuildCommand {
 
     String pathToScript = pathToPreProcessScript.get();
     if (!Paths.get(pathToScript).isAbsolute()) {
-      pathToScript = params
-          .getCell()
-          .getFilesystem()
-          .getPathForRelativePath(pathToScript)
-          .toAbsolutePath()
-          .toString();
+      pathToScript =
+          params
+              .getCell()
+              .getFilesystem()
+              .getPathForRelativePath(pathToScript)
+              .toAbsolutePath()
+              .toString();
     }
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
@@ -664,9 +674,7 @@ public class ProjectCommand extends BuildCommand {
     }
   }
 
-  /**
-   * Run xcode specific project generation actions.
-   */
+  /** Run xcode specific project generation actions. */
   private int runXcodeProjectGenerator(
       final CommandRunnerParams params,
       ListeningExecutorService executor,
@@ -675,51 +683,58 @@ public class ProjectCommand extends BuildCommand {
       throws IOException, InterruptedException {
     int exitCode = 0;
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
-    ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
-        getReadOnly(params.getBuckConfig()),
-        isWithTests(params.getBuckConfig()),
-        isWithDependenciesTests(params.getBuckConfig()),
-        getCombinedProject(),
-        appleConfig.shouldUseHeaderMapsInXcodeProject(),
-        appleConfig.shouldMergeHeaderMapsInXcodeProject(),
-        appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
+    ImmutableSet<ProjectGenerator.Option> options =
+        buildWorkspaceGeneratorOptions(
+            getReadOnly(params.getBuckConfig()),
+            isWithTests(params.getBuckConfig()),
+            isWithDependenciesTests(params.getBuckConfig()),
+            getCombinedProject(),
+            appleConfig.shouldUseHeaderMapsInXcodeProject(),
+            appleConfig.shouldMergeHeaderMapsInXcodeProject(),
+            appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
 
-    ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
-        params,
-        targetGraphAndTargets,
-        passedInTargetsSet,
-        options,
-        getFocusModules(params, executor),
-        new HashMap<>(),
-        getCombinedProject());
+    ImmutableSet<BuildTarget> requiredBuildTargets =
+        generateWorkspacesForTargets(
+            params,
+            targetGraphAndTargets,
+            passedInTargetsSet,
+            options,
+            getFocusModules(params, executor),
+            new HashMap<>(),
+            getCombinedProject());
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableMultimap<Path, String> cellPathToCellName =
           params.getCell().getCellPathResolver().getCellPaths().asMultimap().inverse();
-      BuildCommand buildCommand = new BuildCommand(
-          RichStream.from(requiredBuildTargets)
-              .map(target -> {
-                if (!target.getCellPath().equals(params.getCell().getRoot())) {
-                  Optional<String> cellName =
-                      cellPathToCellName.get(target.getCellPath()).stream().findAny();
-                  if (cellName.isPresent()) {
-                    return target.withUnflavoredBuildTarget(
-                        UnflavoredBuildTarget.of(
-                            target.getCellPath(),
-                            cellName,
-                            target.getBaseName(),
-                            target.getShortName()));
-                  } else {
-                    throw new IllegalStateException(
-                        "Failed to find cell name for cell path while constructing parameters to " +
-                            "build dependencies for project generation. " +
-                            "Build target: " + target + " cell path: " + target.getCellPath());
-                  }
-                } else {
-                  return target;
-                }
-              })
-              .map(Object::toString)
-              .toImmutableList());
+      BuildCommand buildCommand =
+          new BuildCommand(
+              RichStream.from(requiredBuildTargets)
+                  .map(
+                      target -> {
+                        if (!target.getCellPath().equals(params.getCell().getRoot())) {
+                          Optional<String> cellName =
+                              cellPathToCellName.get(target.getCellPath()).stream().findAny();
+                          if (cellName.isPresent()) {
+                            return target.withUnflavoredBuildTarget(
+                                UnflavoredBuildTarget.of(
+                                    target.getCellPath(),
+                                    cellName,
+                                    target.getBaseName(),
+                                    target.getShortName()));
+                          } else {
+                            throw new IllegalStateException(
+                                "Failed to find cell name for cell path while constructing parameters to "
+                                    + "build dependencies for project generation. "
+                                    + "Build target: "
+                                    + target
+                                    + " cell path: "
+                                    + target.getCellPath());
+                          }
+                        } else {
+                          return target;
+                        }
+                      })
+                  .map(Object::toString)
+                  .toImmutableList());
       exitCode = buildCommand.runWithoutHelp(params);
     }
     return exitCode;
@@ -737,9 +752,12 @@ public class ProjectCommand extends BuildCommand {
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
-      targets = targetGraphAndTargets.getProjectRoots().stream()
-          .map(TargetNode::getBuildTarget)
-          .collect(MoreCollectors.toImmutableSet());
+      targets =
+          targetGraphAndTargets
+              .getProjectRoots()
+              .stream()
+              .map(TargetNode::getBuildTarget)
+              .collect(MoreCollectors.toImmutableSet());
     } else {
       targets = passedInTargetsSet;
     }
@@ -767,39 +785,40 @@ public class ProjectCommand extends BuildCommand {
       CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
       SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
-      CxxPlatform defaultCxxPlatform = params.getCell().getKnownBuildRuleTypes().
-          getDefaultCxxPlatforms();
-      WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-          params.getCell(),
-          targetGraphAndTargets.getTargetGraph(),
-          workspaceArgs,
-          inputTarget,
-          options,
-          combinedProject,
-          focusModules,
-          !appleConfig.getXcodeDisableParallelizeBuild(),
-          defaultCxxPlatform,
-          params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-          input ->
-              ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
-                  targetGraphAndTargets.getTargetGraph().getSubgraph(
-                  ImmutableSet.of(input))).getResolver(),
-          params.getBuckEventBus(),
-          halideBuckConfig,
-          cxxBuckConfig,
-          swiftBuckConfig);
-      ListeningExecutorService executorService = params.getExecutors().get(
-          ExecutorPool.PROJECT);
+      CxxPlatform defaultCxxPlatform =
+          params.getCell().getKnownBuildRuleTypes().getDefaultCxxPlatforms();
+      WorkspaceAndProjectGenerator generator =
+          new WorkspaceAndProjectGenerator(
+              params.getCell(),
+              targetGraphAndTargets.getTargetGraph(),
+              workspaceArgs,
+              inputTarget,
+              options,
+              combinedProject,
+              focusModules,
+              !appleConfig.getXcodeDisableParallelizeBuild(),
+              defaultCxxPlatform,
+              params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
+              input ->
+                  ActionGraphCache.getFreshActionGraph(
+                          params.getBuckEventBus(),
+                          targetGraphAndTargets
+                              .getTargetGraph()
+                              .getSubgraph(ImmutableSet.of(input)))
+                      .getResolver(),
+              params.getBuckEventBus(),
+              halideBuckConfig,
+              cxxBuckConfig,
+              swiftBuckConfig);
+      ListeningExecutorService executorService = params.getExecutors().get(ExecutorPool.PROJECT);
       Preconditions.checkNotNull(
-          executorService,
-          "CommandRunnerParams does not have executor for PROJECT pool");
+          executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
       LOG.debug(
           "Required build targets for workspace %s: %s",
-          inputTarget,
-          requiredBuildTargetsForWorkspace);
+          inputTarget, requiredBuildTargetsForWorkspace);
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
     }
 
@@ -807,8 +826,7 @@ public class ProjectCommand extends BuildCommand {
   }
 
   private FocusedModuleTargetMatcher getFocusModules(
-      CommandRunnerParams params,
-      ListeningExecutorService executor)
+      CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
       return FocusedModuleTargetMatcher.noFocus();
@@ -824,20 +842,25 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet<BuildTarget> passedInTargetsSet;
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     try {
-      passedInTargetsSet = params.getParser().resolveTargetSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
-              specs,
-              SpeculativeParsing.of(false),
-              parserConfig.getDefaultFlavorsMode()).stream()
-          .flatMap(Collection::stream)
-          .map(target -> target.withoutCell())
-          .collect(MoreCollectors.toImmutableSet());
+      passedInTargetsSet =
+          params
+              .getParser()
+              .resolveTargetSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  executor,
+                  specs,
+                  SpeculativeParsing.of(false),
+                  parserConfig.getDefaultFlavorsMode())
+              .stream()
+              .flatMap(Collection::stream)
+              .map(target -> target.withoutCell())
+              .collect(MoreCollectors.toImmutableSet());
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return FocusedModuleTargetMatcher.noFocus();
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
@@ -908,27 +931,37 @@ public class ProjectCommand extends BuildCommand {
 
     boolean canPromptResult = canPrompt(params.getEnvironment());
     if (enablePrompt && canPromptResult) {
-      if (
-          prompt(
-              params,
-              "Xcode is currently running. Buck will modify files Xcode currently has " +
-                  "open, which can cause it to become unstable.\n\n" +
-                  "Kill Xcode and continue?")) {
+      if (prompt(
+          params,
+          "Xcode is currently running. Buck will modify files Xcode currently has "
+              + "open, which can cause it to become unstable.\n\n"
+              + "Kill Xcode and continue?")) {
         processManager.get().killProcess(XCODE_PROCESS_NAME);
       } else {
-        params.getConsole().getStdOut().println(
-            params.getConsole().getAnsi().asWarningText(
-                "Xcode is running. Generated projects might be lost or corrupted if Xcode " +
-                    "currently has them open."));
+        params
+            .getConsole()
+            .getStdOut()
+            .println(
+                params
+                    .getConsole()
+                    .getAnsi()
+                    .asWarningText(
+                        "Xcode is running. Generated projects might be lost or corrupted if Xcode "
+                            + "currently has them open."));
       }
-      params.getConsole().getStdOut().format(
-          "To disable this prompt in the future, add the following to %s: \n\n" +
-              "[project]\n" +
-              "  ide_prompt = false\n\n",
-          params.getCell().getFilesystem()
-              .getRootPath()
-              .resolve(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME)
-              .toAbsolutePath());
+      params
+          .getConsole()
+          .getStdOut()
+          .format(
+              "To disable this prompt in the future, add the following to %s: \n\n"
+                  + "[project]\n"
+                  + "  ide_prompt = false\n\n",
+              params
+                  .getCell()
+                  .getFilesystem()
+                  .getRootPath()
+                  .resolve(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME)
+                  .toAbsolutePath());
     } else {
       LOG.debug(
           "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",
@@ -956,20 +989,18 @@ public class ProjectCommand extends BuildCommand {
 
     Optional<String> result;
     try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);
-         BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
+        BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
       result = Optional.ofNullable(bufferedStdinReader.readLine());
     }
     LOG.debug("Result of prompt: [%s]", result);
-    return result.isPresent() &&
-        (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
+    return result.isPresent()
+        && (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
   }
 
   @VisibleForTesting
   static ImmutableSet<BuildTarget> getRootsFromPredicate(
-      TargetGraph projectGraph,
-      Predicate<TargetNode<?, ?>> rootsPredicate) {
-    return FluentIterable
-        .from(projectGraph.getNodes())
+      TargetGraph projectGraph, Predicate<TargetNode<?, ?>> rootsPredicate) {
+    return FluentIterable.from(projectGraph.getNodes())
         .filter(rootsPredicate)
         .transform(TargetNode::getBuildTarget)
         .toSet();
@@ -978,11 +1009,12 @@ public class ProjectCommand extends BuildCommand {
   private TargetGraph getProjectGraphForIde(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      ImmutableSet<BuildTarget> passedInTargets
-  ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      ImmutableSet<BuildTarget> passedInTargets)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     if (passedInTargets.isEmpty()) {
-      return params.getParser()
+      return params
+          .getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
@@ -991,21 +1023,19 @@ public class ProjectCommand extends BuildCommand {
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
                       x -> true,
-                      BuildFileSpec.fromRecursivePath(
-                          Paths.get(""),
-                          params.getCell().getRoot()))),
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), params.getCell().getRoot()))),
               /* ignoreBuckAutodepsFiles */ false)
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return params.getParser()
+    return params
+        .getParser()
         .buildTargetGraph(
             params.getBuckEventBus(),
             params.getCell(),
             getEnableParserProfiling(),
             executor,
             passedInTargets);
-
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -1016,8 +1046,7 @@ public class ProjectCommand extends BuildCommand {
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
-      ListeningExecutorService executor
-  )
+      ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
@@ -1027,38 +1056,40 @@ public class ProjectCommand extends BuildCommand {
     if (isWithTests) {
       FocusedModuleTargetMatcher focusedModules = getFocusModules(params, executor);
 
-      explicitTestTargets = getExplicitTestTargets(
-          graphRootsOrSourceTargets,
-          projectGraph,
-          isWithDependenciesTests,
-          focusedModules);
+      explicitTestTargets =
+          getExplicitTestTargets(
+              graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
       if (!needsFullRecursiveParse) {
-        projectGraph = params.getParser().buildTargetGraph(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableParserProfiling(),
-            executor,
-            Sets.union(graphRoots, explicitTestTargets));
+        projectGraph =
+            params
+                .getParser()
+                .buildTargetGraph(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableParserProfiling(),
+                    executor,
+                    Sets.union(graphRoots, explicitTestTargets));
       } else {
-        projectGraph = params.getParser().buildTargetGraph(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableParserProfiling(),
-            executor,
-            Sets.union(
-                projectGraph.getNodes().stream()
-                    .map(TargetNode::getBuildTarget)
-                    .collect(MoreCollectors.toImmutableSet()),
-                explicitTestTargets));
+        projectGraph =
+            params
+                .getParser()
+                .buildTargetGraph(
+                    params.getBuckEventBus(),
+                    params.getCell(),
+                    getEnableParserProfiling(),
+                    executor,
+                    Sets.union(
+                        projectGraph
+                            .getNodes()
+                            .stream()
+                            .map(TargetNode::getBuildTarget)
+                            .collect(MoreCollectors.toImmutableSet()),
+                        explicitTestTargets));
       }
     }
 
     return TargetGraphAndTargets.create(
-        graphRoots,
-        projectGraph,
-        associatedProjectPredicate,
-        isWithTests,
-        explicitTestTargets);
+        graphRoots, projectGraph, associatedProjectPredicate, isWithTests, explicitTestTargets);
   }
 
   public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
@@ -1086,15 +1117,15 @@ public class ProjectCommand extends BuildCommand {
     // We weren't given a workspace target, but we may have been given something that could
     // still turn into a workspace (for example, a library or an actual app rule). If that's the
     // case we still want to generate a workspace.
-    return description instanceof AppleBinaryDescription ||
-        description instanceof AppleBundleDescription ||
-        description instanceof AppleLibraryDescription;
+    return description instanceof AppleBinaryDescription
+        || description instanceof AppleBundleDescription
+        || description instanceof AppleLibraryDescription;
   }
 
   /**
    * @param sourceTargetNode - The TargetNode which will act as our fake workspaces `src_target`
    * @return Workspace Args that describe a generic Xcode workspace containing `src_target` and its
-   * tests
+   *     tests
    */
   private static XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
       TargetNode<?, ?> sourceTargetNode) {
@@ -1127,8 +1158,7 @@ public class ProjectCommand extends BuildCommand {
   /**
    * @param buildTargets The set of targets for which we would like to find tests
    * @param projectGraph A TargetGraph containing all nodes and their tests.
-   * @param shouldIncludeDependenciesTests Should or not include tests
-   * that test dependencies
+   * @param shouldIncludeDependenciesTests Should or not include tests that test dependencies
    * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
    */
   @VisibleForTesting
@@ -1151,13 +1181,10 @@ public class ProjectCommand extends BuildCommand {
             .iterator());
   }
 
-  public static class AggregationModeOptionHandler
-      extends OptionHandler<AggregationMode> {
+  public static class AggregationModeOptionHandler extends OptionHandler<AggregationMode> {
 
     public AggregationModeOptionHandler(
-        CmdLineParser parser,
-        OptionDef option,
-        Setter<? super AggregationMode> setter) {
+        CmdLineParser parser, OptionDef option, Setter<? super AggregationMode> setter) {
       super(parser, option, setter);
     }
 
@@ -1174,5 +1201,4 @@ public class ProjectCommand extends BuildCommand {
       return null;
     }
   }
-
 }

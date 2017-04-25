@@ -17,18 +17,16 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
+import java.util.Optional;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
-
-import java.util.Optional;
 
 public class ServerCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-      @SubCommand(name = "status", impl = ServerStatusCommand.class),
+    @SubCommand(name = "status", impl = ServerStatusCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
@@ -52,5 +50,4 @@ public class ServerCommand extends AbstractContainerCommand {
   public Optional<Command> getSubcommand() {
     return Optional.ofNullable(subcommand);
   }
-
 }

@@ -22,18 +22,15 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class AuditDependenciesCommand extends AbstractCommand {
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
@@ -41,18 +38,21 @@ public class AuditDependenciesCommand extends AbstractCommand {
   }
 
   @Option(
-      name = "--include-tests",
-      usage = "Includes a target's tests with its dependencies. With the transitive flag, this " +
-          "prints the dependencies of the tests as well")
+    name = "--include-tests",
+    usage =
+        "Includes a target's tests with its dependencies. With the transitive flag, this "
+            + "prints the dependencies of the tests as well"
+  )
   private boolean includeTests = false;
 
-  @Option(name = "--transitive",
-      aliases = { "-t" },
-      usage = "Whether to include transitive dependencies in the output")
+  @Option(
+    name = "--transitive",
+    aliases = {"-t"},
+    usage = "Whether to include transitive dependencies in the output"
+  )
   private boolean transitive = false;
 
-  @Argument
-  private List<String> arguments = new ArrayList<>();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
@@ -73,38 +73,40 @@ public class AuditDependenciesCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
-    final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+    final ImmutableSet<String> fullyQualifiedBuildTargets =
+        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Must specify at least one build target."));
+      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one build target."));
       return 1;
     }
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
-      params.getBuckEventBus().post(ConsoleEvent.info(
-          "'buck audit dependencies' is deprecated. Please use 'buck query' instead.\n" +
-          "The equivalent 'buck query' command is:\n$ %s\n\nThe query language is documented at " +
-          "https://buckbuild.com/command/query.html",
-          QueryCommand.buildAuditDependenciesQueryExpression(
-              getArguments(),
-              shouldShowTransitiveDependencies(),
-              shouldIncludeTests(),
-              shouldGenerateJsonOutput())));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  "'buck audit dependencies' is deprecated. Please use 'buck query' instead.\n"
+                      + "The equivalent 'buck query' command is:\n$ %s\n\nThe query language is documented at "
+                      + "https://buckbuild.com/command/query.html",
+                  QueryCommand.buildAuditDependenciesQueryExpression(
+                      getArguments(),
+                      shouldShowTransitiveDependencies(),
+                      shouldIncludeTests(),
+                      shouldGenerateJsonOutput())));
     }
 
     try (CommandThreadManager pool =
-             new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
-         PerBuildState parserState =
-             new PerBuildState(
-                 params.getParser(),
-                 params.getBuckEventBus(),
-                 pool.getExecutor(),
-                 params.getCell(),
-                 getEnableParserProfiling(),
-                 SpeculativeParsing.of(true),
-                 /* ignoreBuckAutodepsFiles */ false)) {
+            new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState parserState =
+            new PerBuildState(
+                params.getParser(),
+                params.getBuckEventBus(),
+                pool.getExecutor(),
+                params.getCell(),
+                getEnableParserProfiling(),
+                SpeculativeParsing.of(true),
+                /* ignoreBuckAutodepsFiles */ false)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, getEnableParserProfiling());
       return QueryCommand.runMultipleQuery(
@@ -112,16 +114,16 @@ public class AuditDependenciesCommand extends AbstractCommand {
           env,
           pool.getExecutor(),
           QueryCommand.getAuditDependenciesQueryFormat(
-              shouldShowTransitiveDependencies(),
-              shouldIncludeTests()),
+              shouldShowTransitiveDependencies(), shouldIncludeTests()),
           getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
           shouldGenerateJsonOutput());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
       }
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
   }
@@ -135,5 +137,4 @@ public class AuditDependenciesCommand extends AbstractCommand {
   public String getShortDescription() {
     return "provides facilities to audit build targets' dependencies";
   }
-
 }
