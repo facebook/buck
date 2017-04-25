@@ -24,12 +24,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class GraphqlLibrary extends NoopBuildRule {
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  public GraphqlLibrary(
-      BuildRuleParams ruleParams,
-      ImmutableSortedSet<SourcePath> srcs) {
+  public GraphqlLibrary(BuildRuleParams ruleParams, ImmutableSortedSet<SourcePath> srcs) {
     super(ruleParams);
     this.srcs = srcs;
   }

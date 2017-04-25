@@ -42,11 +42,10 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
 
-    return new GraphqlLibrary(
-        params,
-        args.srcs);
+    return new GraphqlLibrary(params, args.srcs);
   }
 
   @SuppressFieldNotInitialized
