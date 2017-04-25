@@ -17,27 +17,19 @@
 package com.facebook.buck.cxx;
 
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.ByteBuffer;
 
-/**
- * Encapsulates the various properties and data for a debug section of a native file format.
- */
+/** Encapsulates the various properties and data for a debug section of a native file format. */
 public class DebugSection {
 
-  /**
-   * Properties describing the debug section data.
-   */
+  /** Properties describing the debug section data. */
   public final ImmutableSet<DebugSectionProperty> properties;
 
-  /**
-   * The buffer holding the contents of the debug section.
-   */
+  /** The buffer holding the contents of the debug section. */
   public final ByteBuffer body;
 
   public DebugSection(ImmutableSet<DebugSectionProperty> properties, ByteBuffer body) {
     this.properties = properties;
     this.body = body.duplicate();
   }
-
 }

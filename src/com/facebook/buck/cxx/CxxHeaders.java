@@ -26,30 +26,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Encapsulates headers from a single root location.
- */
+/** Encapsulates headers from a single root location. */
 public abstract class CxxHeaders implements RuleKeyAppendable {
 
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
-  /**
-   * @return the root of the includes.
-   */
+  /** @return the root of the includes. */
   public abstract SourcePath getRoot();
 
-  /**
-   * @return the path to the optional header map to use for this header pack.
-   */
+  /** @return the path to the optional header map to use for this header pack. */
   public abstract Optional<SourcePath> getHeaderMap();
 
   /**
-   * @return the path to add to the preprocessor search path to find the includes.  This defaults
-   *     to the root, but can be overridden to use an alternate path.
+   * @return the path to add to the preprocessor search path to find the includes. This defaults to
+   *     the root, but can be overridden to use an alternate path.
    */
   public abstract SourcePath getIncludeRoot();
 
@@ -58,15 +51,11 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
    */
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
-  /**
-   * @return all deps required by this header pack.
-   */
+  /** @return all deps required by this header pack. */
   public abstract Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
   private static Path resolveSourcePathAndShorten(
-      SourcePathResolver resolver,
-      SourcePath path,
-      Optional<PathShortener> pathShortener) {
+      SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
     Path resolvedPath = resolver.getAbsolutePath(path);
     return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
   }
@@ -104,8 +93,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
     // headers match there before system ("-isystem") ones.
     ImmutableSet<CxxPreprocessables.IncludeType> includeTypes =
         ImmutableSet.of(
-            CxxPreprocessables.IncludeType.LOCAL,
-            CxxPreprocessables.IncludeType.SYSTEM);
+            CxxPreprocessables.IncludeType.LOCAL, CxxPreprocessables.IncludeType.SYSTEM);
 
     // Apply the header maps first, so that headers that matching there avoid falling back to
     // stat'ing files in the normal include roots.
@@ -122,5 +110,4 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
 
     return args.build();
   }
-
 }

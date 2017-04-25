@@ -42,7 +42,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -56,18 +55,18 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   public static final Flavor UBER_COMPILATION_DATABASE =
       InternalFlavor.of("uber-compilation-database");
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+  @AddToRuleKey private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
+
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   public static CxxCompilationDatabase createCompilationDatabase(
-      BuildRuleParams params,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
+      BuildRuleParams params, Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
-        .naturalOrder();
+    ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules =
+        ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessAndCompile compileRule : compileAndPreprocessRules) {
       compileRules.add(compileRule);
       deps.addAll(compileRule.getBuildDeps());
@@ -88,25 +87,23 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     super(buildRuleParams);
     LOG.debug(
         "Creating compilation database %s with runtime deps %s",
-        buildRuleParams.getBuildTarget(),
-        runtimeDeps);
+        buildRuleParams.getBuildTarget(), runtimeDeps);
     this.compileRules = compileRules;
-    this.outputJsonFile = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        buildRuleParams.getBuildTarget(),
-        "__%s.json");
+    this.outputJsonFile =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__%s.json");
     this.runtimeDeps = runtimeDeps;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(MkdirStep.of(getProjectFilesystem(), outputJsonFile.getParent()));
-    steps.add(new GenerateCompilationCommandsJson(
-        context.getSourcePathResolver(),
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
+    steps.add(
+        new GenerateCompilationCommandsJson(
+            context.getSourcePathResolver(),
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
     return steps.build();
   }
 
@@ -140,8 +137,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     private final Path outputRelativePath;
 
     public GenerateCompilationCommandsJson(
-        SourcePathResolver pathResolver,
-        Path outputRelativePath) {
+        SourcePathResolver pathResolver, Path outputRelativePath) {
       super("generate compile_commands.json");
       this.pathResolver = pathResolver;
       this.outputRelativePath = outputRelativePath;
@@ -167,21 +163,17 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       SourcePath inputSourcePath = compileRule.getInput();
       ProjectFilesystem inputFilesystem = compileRule.getProjectFilesystem();
 
-      String fileToCompile = inputFilesystem
-          .resolve(pathResolver.getAbsolutePath(inputSourcePath))
-          .toString();
+      String fileToCompile =
+          inputFilesystem.resolve(pathResolver.getAbsolutePath(inputSourcePath)).toString();
       ImmutableList<String> arguments = compileRule.getCommand(pathResolver);
       return CxxCompilationDatabaseEntry.of(
-          inputFilesystem.getRootPath().toString(),
-          fileToCompile,
-          arguments);
+          inputFilesystem.getRootPath().toString(), fileToCompile, arguments);
     }
 
     private int writeOutput(
-        Iterable<CxxCompilationDatabaseEntry> entries,
-        ExecutionContext context) {
+        Iterable<CxxCompilationDatabaseEntry> entries, ExecutionContext context) {
       try (OutputStream outputStream =
-               getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
+          getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
         ObjectMappers.WRITER.writeValue(outputStream, entries);
       } catch (IOException e) {
         logError(e, context);
@@ -193,10 +185,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
 
     private void logError(Throwable throwable, ExecutionContext context) {
       context.logError(
-          throwable,
-          "Failed writing to %s in %s.",
-          outputRelativePath,
-          getBuildTarget());
+          throwable, "Failed writing to %s in %s.", outputRelativePath, getBuildTarget());
     }
   }
 }

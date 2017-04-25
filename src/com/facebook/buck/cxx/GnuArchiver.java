@@ -38,8 +38,7 @@ public class GnuArchiver implements Archiver {
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
     return ImmutableList.of(
-        ObjectFileScrubbers.createDateUidGidScrubber(
-            ObjectFileScrubbers.PaddingStyle.LEFT));
+        ObjectFileScrubbers.createDateUidGidScrubber(ObjectFileScrubbers.PaddingStyle.LEFT));
   }
 
   @Override
@@ -85,9 +84,6 @@ public class GnuArchiver implements Archiver {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
-
 }

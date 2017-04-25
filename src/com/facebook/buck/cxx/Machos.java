@@ -20,7 +20,6 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.primitives.Ints;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -75,8 +74,10 @@ public class Machos {
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length);
 
     byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
-    return Arrays.equals(MH_MAGIC, magic) || Arrays.equals(MH_CIGAM, magic) ||
-        Arrays.equals(MH_MAGIC_64, magic) || Arrays.equals(MH_CIGAM_64, magic);
+    return Arrays.equals(MH_MAGIC, magic)
+        || Arrays.equals(MH_CIGAM, magic)
+        || Arrays.equals(MH_MAGIC_64, magic)
+        || Arrays.equals(MH_CIGAM_64, magic);
   }
 
   static void relativizeOsoSymbols(FileChannel file, ImmutableCollection<Path> cellRoots)
@@ -218,8 +219,7 @@ public class Machos {
             for (Path root : cellRoots) {
               String rootPrefix = root + "/";
               Optional<String> fixed =
-                  MoreStrings
-                      .stripPrefix(string, rootPrefix).map(input -> "./" + input);
+                  MoreStrings.stripPrefix(string, rootPrefix).map(input -> "./" + input);
               if (fixed.isPresent()) {
                 string = fixed.get();
                 break;
@@ -253,8 +253,7 @@ public class Machos {
 
     map.position(segmentSizePosition);
     ObjectFileScrubbers.putLittleEndianInt(
-        map,
-        segmentSize + (newStringTableSize - stringTableSize));
+        map, segmentSize + (newStringTableSize - stringTableSize));
 
     file.truncate(currentStringTableOffset);
   }
@@ -293,5 +292,4 @@ public class Machos {
       super(msg);
     }
   }
-
 }

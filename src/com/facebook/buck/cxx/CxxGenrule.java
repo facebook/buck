@@ -29,10 +29,7 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
   private final BuildRuleResolver resolver;
   private final String output;
 
-  public CxxGenrule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      String output) {
+  public CxxGenrule(BuildRuleParams params, BuildRuleResolver resolver, String output) {
     super(params);
     this.resolver = resolver;
     this.output = output;
@@ -44,9 +41,9 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
   }
 
   public SourcePath getGenrule(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    Genrule rule = (Genrule) resolver.requireRule(
-        getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
+    Genrule rule =
+        (Genrule)
+            resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
     return rule.getSourcePathToOutput();
   }
-
 }

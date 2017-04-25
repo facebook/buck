@@ -26,13 +26,12 @@ import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import org.immutables.value.Value;
 
 /**
- * An {@link Arg} implementation that represents a thin archive.  As opposed to normal archives,
- * thin archives also need to propagate their inputs as build time deps to consumers, since they
- * only embed relative paths to the inputs, which need to exist at build time.
+ * An {@link Arg} implementation that represents a thin archive. As opposed to normal archives, thin
+ * archives also need to propagate their inputs as build time deps to consumers, since they only
+ * embed relative paths to the inputs, which need to exist at build time.
  */
 @Value.Immutable
 @BuckStyleTuple
@@ -40,21 +39,18 @@ abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
 
   @Override
   public abstract SourcePath getPath();
+
   protected abstract ImmutableList<SourcePath> getContents();
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     builder.add(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.<SourcePath>builder()
-        .add(getPath())
-        .addAll(getContents())
-        .build();
+    return ImmutableList.<SourcePath>builder().add(getPath()).addAll(getContents()).build();
   }
 
   @Override
@@ -64,9 +60,6 @@ abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("archive", getPath())
-        .setReflectively("inputs", getContents());
+    sink.setReflectively("archive", getPath()).setReflectively("inputs", getContents());
   }
-
 }

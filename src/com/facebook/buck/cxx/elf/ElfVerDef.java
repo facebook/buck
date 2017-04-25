@@ -20,7 +20,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.ByteBuffer;
 
 public class ElfVerDef {
@@ -87,9 +86,9 @@ public class ElfVerDef {
                           verdauxes.size(),
                           verdef.vd_hash,
                           verdauxes.size() == 0 ? 0 : Verdef.BYTES,
-                          verdefIndex == entries.size() - 1 ?
-                              0 :
-                              Verdef.BYTES + Verdaux.BYTES * verdauxes.size()),
+                          verdefIndex == entries.size() - 1
+                              ? 0
+                              : Verdef.BYTES + Verdaux.BYTES * verdauxes.size()),
                       RichStream.from(MoreIterables.enumerate(verdauxes))
                           .map(
                               vdxp ->
@@ -175,7 +174,6 @@ public class ElfVerDef {
         Elf.Elf64.putElf64Word(buffer, (int) vd_next);
       }
     }
-
   }
 
   public static class Verdaux {
@@ -196,13 +194,9 @@ public class ElfVerDef {
 
     private static Verdaux parse(ElfHeader.EIClass eiClass, ByteBuffer buffer) {
       if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
-        return new Verdaux(
-            Elf.Elf32.getElf32Word(buffer),
-            Elf.Elf32.getElf32Word(buffer));
+        return new Verdaux(Elf.Elf32.getElf32Word(buffer), Elf.Elf32.getElf32Word(buffer));
       } else {
-        return new Verdaux(
-            Elf.Elf64.getElf64Word(buffer),
-            Elf.Elf64.getElf64Word(buffer));
+        return new Verdaux(Elf.Elf64.getElf64Word(buffer), Elf.Elf64.getElf64Word(buffer));
       }
     }
 
@@ -215,7 +209,5 @@ public class ElfVerDef {
         Elf.Elf64.putElf64Word(buffer, (int) vda_next);
       }
     }
-
   }
-
 }

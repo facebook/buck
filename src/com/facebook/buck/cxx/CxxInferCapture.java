@@ -36,30 +36,24 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-/**
- * Generate the CFG for a source file
- */
-public class CxxInferCapture
-    extends AbstractBuildRule
-    implements SupportsDependencyFileRuleKey {
+/** Generate the CFG for a source file */
+public class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFileRuleKey {
 
-  @AddToRuleKey
-  private final InferBuckConfig inferConfig;
+  @AddToRuleKey private final InferBuckConfig inferConfig;
   private final CxxToolFlags preprocessorFlags;
   private final CxxToolFlags compilerFlags;
-  @AddToRuleKey
-  private final SourcePath input;
+  @AddToRuleKey private final SourcePath input;
   private final CxxSource.Type inputType;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @AddToRuleKey
-  private final PreprocessorDelegate preprocessorDelegate;
+
+  @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
 
   private final Path resultsDir;
   private final DebugPathSanitizer sanitizer;
@@ -103,6 +97,7 @@ public class CxxInferCapture
         .add("@" + getArgfile())
         .build();
   }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
@@ -118,9 +113,7 @@ public class CxxInferCapture
         .add(new WriteArgFileStep(inputRelativePath))
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(),
-                frontendCommand,
-                ImmutableMap.of()))
+                getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
         .build();
   }
 
@@ -137,19 +130,15 @@ public class CxxInferCapture
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    sink
-        .setReflectively(
+    sink.setReflectively(
             "platformPreprocessorFlags",
             sanitizer.sanitizeFlags(preprocessorFlags.getPlatformFlags()))
         .setReflectively(
-            "rulePreprocessorFlags",
-            sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()))
+            "rulePreprocessorFlags", sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()))
         .setReflectively(
-            "platformCompilerFlags",
-            sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()))
+            "platformCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()))
         .setReflectively(
-            "ruleCompilerFlags",
-            sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+            "ruleCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
   @Override
@@ -173,14 +162,15 @@ public class CxxInferCapture
 
     ImmutableList<Path> depFileLines;
     try {
-      depFileLines = Depfiles.parseAndOutputBuckCompatibleDepfile(
-          context.getEventBus(),
-          getProjectFilesystem(),
-          preprocessorDelegate.getHeaderPathNormalizer(),
-          preprocessorDelegate.getHeaderVerification(),
-          getDepFilePath(),
-          context.getSourcePathResolver().getRelativePath(input),
-          output);
+      depFileLines =
+          Depfiles.parseAndOutputBuckCompatibleDepfile(
+              context.getEventBus(),
+              getProjectFilesystem(),
+              preprocessorDelegate.getHeaderPathNormalizer(),
+              preprocessorDelegate.getHeaderVerification(),
+              getDepFilePath(),
+              context.getSourcePathResolver().getRelativePath(input),
+              output);
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }
@@ -197,8 +187,9 @@ public class CxxInferCapture
   }
 
   private Path getArgfile() {
-    return output.getFileSystem().getPath(
-        output.getParent().resolve("infer-capture.argsfile").toString());
+    return output
+        .getFileSystem()
+        .getPath(output.getParent().resolve("infer-capture.argsfile").toString());
   }
 
   private Path getDepFilePath() {
@@ -216,9 +207,9 @@ public class CxxInferCapture
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      getProjectFilesystem().writeLinesToPath(
-          Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER),
-          getArgfile());
+      getProjectFilesystem()
+          .writeLinesToPath(
+              Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER), getArgfile());
       return StepExecutionResult.SUCCESS;
     }
 

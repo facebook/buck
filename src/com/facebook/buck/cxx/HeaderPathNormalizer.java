@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
@@ -54,10 +53,7 @@ public class HeaderPathNormalizer {
   }
 
   public static HeaderPathNormalizer empty(SourcePathResolver pathResolver) {
-    return new HeaderPathNormalizer(
-        pathResolver,
-        ImmutableMap.of(),
-        ImmutableMap.of());
+    return new HeaderPathNormalizer(pathResolver, ImmutableMap.of(), ImmutableMap.of());
   }
 
   private static <T> Optional<Map.Entry<Path, T>> pathLookup(Path path, Map<Path, T> map) {
@@ -78,20 +74,16 @@ public class HeaderPathNormalizer {
       return Optional.empty();
     }
     return Optional.of(
-        pathResolver.getAbsolutePath(result.get().getValue())
+        pathResolver
+            .getAbsolutePath(result.get().getValue())
             .resolve(result.get().getKey().relativize(unnormalizedPath)));
   }
 
-  /**
-   * @return the {@link SourcePath} which corresponds to the given absolute path.
-   */
+  /** @return the {@link SourcePath} which corresponds to the given absolute path. */
   public SourcePath getSourcePathForAbsolutePath(Path absolutePath) {
     Preconditions.checkArgument(absolutePath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> path = pathLookup(absolutePath, headers);
-    Preconditions.checkState(
-        path.isPresent(),
-        "no headers mapped to %s",
-        absolutePath);
+    Preconditions.checkState(path.isPresent(), "no headers mapped to %s", absolutePath);
     return path.get().getValue();
   }
 
@@ -115,9 +107,10 @@ public class HeaderPathNormalizer {
       // containing exported headers of all transitive dependencies of a library. This amounts to
       // large memory usage. See t15541313. Once that is fixed, this hack can be deleted.
       V previous = map.put(MorePaths.dropInternalCaches(key), value);
-      Preconditions.checkState(previous == null || previous.equals(value),
-          "Expected header path to be consistent but key %s mapped to different values: " +
-              "(old: %s, new: %s)",
+      Preconditions.checkState(
+          previous == null || previous.equals(value),
+          "Expected header path to be consistent but key %s mapped to different values: "
+              + "(old: %s, new: %s)",
           key,
           previous,
           value);
@@ -160,11 +153,7 @@ public class HeaderPathNormalizer {
 
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
-          pathResolver,
-          ImmutableMap.copyOf(headers),
-          ImmutableMap.copyOf(normalized));
+          pathResolver, ImmutableMap.copyOf(headers), ImmutableMap.copyOf(normalized));
     }
-
   }
-
 }

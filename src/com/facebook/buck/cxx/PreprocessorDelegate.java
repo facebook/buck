@@ -36,16 +36,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-/**
- * Helper class for handling preprocessing related tasks of a cxx compilation rule.
- */
+/** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
 final class PreprocessorDelegate implements RuleKeyAppendable {
 
   // Fields that are added to rule key as is.
@@ -63,9 +60,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   private final Optional<SymlinkTree> sandbox;
 
   /**
-   * If present, these paths will be added first (prior to the current rule's list of paths)
-   * when building the list of compiler flags, in
-   * {@link #getFlagsWithSearchPaths(Optional)}.
+   * If present, these paths will be added first (prior to the current rule's list of paths) when
+   * building the list of compiler flags, in {@link #getFlagsWithSearchPaths(Optional)}.
    */
   private final Optional<CxxIncludePaths> leadingIncludePaths;
 
@@ -76,8 +72,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
           new Supplier<HeaderPathNormalizer>() {
             @Override
             public HeaderPathNormalizer get() {
-              HeaderPathNormalizer.Builder builder =
-                  new HeaderPathNormalizer.Builder(resolver);
+              HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(resolver);
               for (CxxHeaders include : preprocessorFlags.getIncludes()) {
                 include.addToHeaderPathNormalizer(builder);
               }
@@ -89,9 +84,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
                 builder.addPrefixHeader(headerPath);
               }
               if (sandbox.isPresent()) {
-                ExplicitBuildTargetSourcePath root = new ExplicitBuildTargetSourcePath(
-                    sandbox.get().getBuildTarget(),
-                    sandbox.get().getRoot());
+                ExplicitBuildTargetSourcePath root =
+                    new ExplicitBuildTargetSourcePath(
+                        sandbox.get().getBuildTarget(), sandbox.get().getRoot());
                 builder.addSymlinkTree(root, sandbox.get().getLinks());
               }
               return builder.build();
@@ -107,7 +102,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SymlinkTree> sandbox,
-      Optional<CxxIncludePaths> leadingIncludePaths) throws ConflictingHeadersException {
+      Optional<CxxIncludePaths> leadingIncludePaths)
+      throws ConflictingHeadersException {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
     this.sanitizer = sanitizer;
@@ -122,8 +118,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     checkForConflictingHeaders();
   }
 
-  public PreprocessorDelegate withLeadingIncludePaths(
-      CxxIncludePaths leadingIncludePaths) throws ConflictingHeadersException {
+  public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths)
+      throws ConflictingHeadersException {
     return new PreprocessorDelegate(
         this.resolver,
         this.sanitizer,
@@ -158,8 +154,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
    * @param compilerFlags flags to append.
    */
   public ImmutableList<String> getCommand(
-      CxxToolFlags compilerFlags,
-      Optional<CxxPrecompiledHeader> pch) {
+      CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.<String>builder()
         .addAll(getCommandPrefix())
         .addAll(getArguments(compilerFlags, pch))
@@ -171,13 +166,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public ImmutableList<String> getArguments(
-      CxxToolFlags compilerFlags,
-      Optional<CxxPrecompiledHeader> pch) {
+      CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.copyOf(
-        CxxToolFlags.concat(
-            getFlagsWithSearchPaths(pch),
-            compilerFlags)
-        .getAllFlags());
+        CxxToolFlags.concat(getFlagsWithSearchPaths(pch), compilerFlags).getAllFlags());
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -187,11 +178,14 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   public CxxToolFlags getFlagsWithSearchPaths(Optional<CxxPrecompiledHeader> pch) {
     CxxToolFlags leadingFlags;
     if (leadingIncludePaths.isPresent()) {
-      leadingFlags = leadingIncludePaths.get().toToolFlags(
-          resolver,
-          minLengthPathRepresentation,
-          frameworkPathSearchPathFunction,
-          preprocessor);
+      leadingFlags =
+          leadingIncludePaths
+              .get()
+              .toToolFlags(
+                  resolver,
+                  minLengthPathRepresentation,
+                  frameworkPathSearchPathFunction,
+                  preprocessor);
     } else {
       leadingFlags = CxxToolFlags.of();
     }
@@ -208,6 +202,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   /**
    * Get all the preprocessor's include paths.
+   *
    * @see PreprocessorFlags#getCxxIncludePaths()
    */
   public CxxIncludePaths getCxxIncludePaths() {
@@ -224,10 +219,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
    */
   public CxxToolFlags getIncludePathFlags() {
     return preprocessorFlags.getIncludePathFlags(
-        resolver,
-        minLengthPathRepresentation,
-        frameworkPathSearchPathFunction,
-        preprocessor);
+        resolver, minLengthPathRepresentation, frameworkPathSearchPathFunction, preprocessor);
   }
 
   private void checkForConflictingHeaders() throws ConflictingHeadersException {
@@ -235,23 +227,17 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     for (CxxHeaders cxxHeaders : this.preprocessorFlags.getIncludes()) {
       if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
         CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
-        for (Map.Entry<Path, SourcePath> entry :
-            symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
           SourcePath original = headers.put(entry.getKey(), entry.getValue());
           if (original != null && !original.equals(entry.getValue())) {
-            throw new ConflictingHeadersException(
-                entry.getKey(),
-                original,
-                entry.getValue());
+            throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
           }
         }
       }
     }
   }
 
-  /**
-   * @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey
-   */
+  /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> depFileLines) {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
@@ -300,11 +286,11 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   /**
    * Generate a digest of the compiler flags.
    *
-   * Generated PCH files can only be used when compiling with similar compiler flags. This
+   * <p>Generated PCH files can only be used when compiling with similar compiler flags. This
    * guarantees the uniqueness of the generated file.
    *
-   * Note: when building the hash for identifying the PCH itself, just pass
-   * {@code Optional.empty()}.
+   * <p>Note: when building the hash for identifying the PCH itself, just pass {@code
+   * Optional.empty()}.
    */
   public String hashCommand(CxxToolFlags flags, Optional<CxxPrecompiledHeader> pch) {
     return hashCommand(getCommand(flags, pch));
@@ -328,24 +314,16 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
   @SuppressWarnings("serial")
   public static class ConflictingHeadersException extends Exception {
     public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
-      super(
-          String.format(
-              "'%s' maps to both %s.",
-              key,
-              ImmutableSortedSet.of(value1, value2)));
+      super(String.format("'%s' maps to both %s.", key, ImmutableSortedSet.of(value1, value2)));
     }
 
     public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
       return new HumanReadableException(
-          this,
-          "Target '%s' uses conflicting header file mappings. %s",
-          buildTarget,
-          getMessage());
+          this, "Target '%s' uses conflicting header file mappings. %s", buildTarget, getMessage());
     }
   }
 
   public PreprocessorFlags getPreprocessorFlags() {
     return preprocessorFlags;
   }
-
 }

@@ -32,7 +32,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -40,29 +39,28 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nonnull;
 
 /**
  * This sanitizer works by munging the compiler output to replace paths. Currently, this just
- * supports sanitizing the compilation directory that compilers typically embed in binaries
- * when including debug sections (e.g. using "-g" with gcc/clang inserts the compilation
- * directory in the DW_AT_comp_dir DWARF field).
+ * supports sanitizing the compilation directory that compilers typically embed in binaries when
+ * including debug sections (e.g. using "-g" with gcc/clang inserts the compilation directory in the
+ * DW_AT_comp_dir DWARF field).
  */
 public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   private static final DebugSectionFinder DEBUG_SECTION_FINDER = new DebugSectionFinder();
   protected final ImmutableBiMap<Path, Path> other;
   private final LoadingCache<Path, ImmutableBiMap<Path, Path>> pathCache =
-      CacheBuilder
-          .newBuilder()
+      CacheBuilder.newBuilder()
           .softValues()
-          .build(new CacheLoader<Path, ImmutableBiMap<Path, Path>>() {
-            @Override
-            public ImmutableBiMap<Path, Path> load(@Nonnull Path key) {
-              return getAllPathsWork(key);
-            }
-          });
+          .build(
+              new CacheLoader<Path, ImmutableBiMap<Path, Path>>() {
+                @Override
+                public ImmutableBiMap<Path, Path> load(@Nonnull Path key) {
+                  return getAllPathsWork(key);
+                }
+              });
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -70,18 +68,14 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    * @param compilationDirectory the desired path to replace the actual compilation directory with.
    */
   public MungingDebugPathSanitizer(
-      int pathSize,
-      char separator,
-      Path compilationDirectory,
-      ImmutableBiMap<Path, Path> other) {
+      int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, Path> other) {
     super(separator, pathSize, compilationDirectory);
     this.other = other;
   }
 
   @Override
   public ImmutableMap<String, String> getCompilationEnvironment(
-      Path workingDir,
-      boolean shouldSanitize) {
+      Path workingDir, boolean shouldSanitize) {
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
     // the compiler to embed this into the binary -- all we can do set the PWD environment to
     // variations of the actual current working directory (e.g. /actual/dir or
@@ -94,9 +88,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
     //   2) in the case where we're using post-linkd debug path replacement, we reserve room
     //      to expand the path later.
     return ImmutableMap.of(
-        "PWD", shouldSanitize ?
-            getExpandedPath(workingDir) :
-            workingDir.toString());
+        "PWD", shouldSanitize ? getExpandedPath(workingDir) : workingDir.toString());
   }
 
   @Override
@@ -112,8 +104,8 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   /**
-   * @return a {@link ByteBufferReplacer} suitable for replacing {@code workingDir} with
-   *     {@code compilationDirectory}.
+   * @return a {@link ByteBufferReplacer} suitable for replacing {@code workingDir} with {@code
+   *     compilationDirectory}.
    */
   protected ByteBufferReplacer getCompilationDirectoryReplacer(Path workingDir) {
     return new ByteBufferReplacer(
@@ -161,9 +153,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
     try {
       return pathCache.get(workingDir.get());
     } catch (ExecutionException e) {
-      Logger.get(DebugPathSanitizer.class).error(
-          "Problem loading paths into cache",
-          e);
+      Logger.get(DebugPathSanitizer.class).error("Problem loading paths into cache", e);
       return getAllPathsWork(workingDir.get());
     }
   }

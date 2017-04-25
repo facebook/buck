@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -40,18 +39,15 @@ public class HeaderSymlinkTree extends SymlinkTree {
   /**
    * Get path to use as an include path to get access to the files in the tree.
    *
-   * If {@link #getHeaderMap()} is present, then the path it returns needs to be passed as an
+   * <p>If {@link #getHeaderMap()} is present, then the path it returns needs to be passed as an
    * include path as well and it has to be passed before the path returned from this method.
    */
   public Path getIncludePath() {
     return getRoot();
   }
 
-  /**
-   * Get path of the header map indexing this tree if one exists.
-   */
+  /** Get path of the header map indexing this tree if one exists. */
   public Optional<Path> getHeaderMap() {
     return Optional.empty();
   }
-
 }

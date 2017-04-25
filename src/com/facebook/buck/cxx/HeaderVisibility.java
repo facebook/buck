@@ -21,7 +21,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
 
 public enum HeaderVisibility implements FlavorConvertible {
-
   PUBLIC(InternalFlavor.of("public-header-visibility")),
   PRIVATE(InternalFlavor.of("private-header-visibility")),
   ;
@@ -36,5 +35,4 @@ public enum HeaderVisibility implements FlavorConvertible {
   public Flavor getFlavor() {
     return flavor;
   }
-
 }

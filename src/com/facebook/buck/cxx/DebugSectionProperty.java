@@ -16,21 +16,13 @@
 
 package com.facebook.buck.cxx;
 
-/**
- * Properties describing debug sections found in native file formats.
- */
+/** Properties describing debug sections found in native file formats. */
 public enum DebugSectionProperty {
 
-  /**
-   * The section contents are compressed.
-   */
+  /** The section contents are compressed. */
   COMPRESSED,
 
-  /**
-   * The section contents contain user-defined strings.
-   */
+  /** The section contents contain user-defined strings. */
   STRINGS,
-
   ;
-
 }

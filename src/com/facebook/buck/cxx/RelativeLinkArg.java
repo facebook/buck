@@ -27,7 +27,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -55,8 +54,7 @@ public class RelativeLinkArg extends Arg {
 
   @Override
   public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     builder.addAll(link);
   }
 
@@ -86,5 +84,4 @@ public class RelativeLinkArg extends Arg {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("relative_link_lib", library);
   }
-
 }

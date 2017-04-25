@@ -32,24 +32,20 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 
 /**
- * Merge all the json reports together into one and emit a list of results dirs of each
- * capture and analysis target involved for the analysis itself.
+ * Merge all the json reports together into one and emit a list of results dirs of each capture and
+ * analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRule
-    implements HasPostBuildSteps {
+public class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;
   private Path outputDirectory;
   private Path reportOutput;
 
-  public CxxInferComputeReport(
-      BuildRuleParams buildRuleParams,
-      CxxInferAnalyze analysisToReport) {
+  public CxxInferComputeReport(BuildRuleParams buildRuleParams, CxxInferAnalyze analysisToReport) {
     super(buildRuleParams);
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
@@ -60,8 +56,7 @@ public class CxxInferComputeReport extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(reportOutput);
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
         FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
@@ -69,11 +64,14 @@ public class CxxInferComputeReport extends AbstractBuildRule
             .transform(context.getSourcePathResolver()::getAbsolutePath)
             .toSortedSet(Ordering.natural());
 
-    ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.<Path>naturalOrder()
-        .addAll(reportsToMergeFromDeps)
-        .add(context.getSourcePathResolver().getAbsolutePath(
-            analysisToReport.getSourcePathToOutput()))
-        .build();
+    ImmutableSortedSet<Path> reportsToMerge =
+        ImmutableSortedSet.<Path>naturalOrder()
+            .addAll(reportsToMergeFromDeps)
+            .add(
+                context
+                    .getSourcePathResolver()
+                    .getAbsolutePath(analysisToReport.getSourcePathToOutput()))
+            .build();
 
     return ImmutableList.<Step>builder()
         .add(MkdirStep.of(projectFilesystem, outputDirectory))
@@ -100,8 +98,7 @@ public class CxxInferComputeReport extends AbstractBuildRule
             CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
                 analysisToReport,
                 getProjectFilesystem(),
-                this.outputDirectory.resolve("infer-deps.txt"))
-        )
+                this.outputDirectory.resolve("infer-deps.txt")))
         .build();
   }
 }

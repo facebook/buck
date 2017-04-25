@@ -34,7 +34,7 @@ public interface SymbolNameTool {
    *
    * @param target the name to use when creating the rule which extracts the symbols.
    * @return a {@link SourcePath} referring to a file containing all undefined symbols, one per
-   *         line, in the given inputs.
+   *     line, in the given inputs.
    */
   SourcePath createUndefinedSymbolsFile(
       BuildRuleParams baseParams,
@@ -42,5 +42,4 @@ public interface SymbolNameTool {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs);
-
 }

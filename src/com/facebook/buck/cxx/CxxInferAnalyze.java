@@ -39,22 +39,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class CxxInferAnalyze extends AbstractBuildRule {
 
-  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze>
-      captureAndAnalyzeRules;
+  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules;
 
   private final Path resultsDir;
   private final Path reportFile;
   private final Path specsDir;
   private final Path specsPathList;
 
-  @AddToRuleKey
-  private final InferBuckConfig inferConfig;
+  @AddToRuleKey private final InferBuckConfig inferConfig;
 
   CxxInferAnalyze(
       BuildRuleParams buildRuleParams,
@@ -62,10 +59,8 @@ public class CxxInferAnalyze extends AbstractBuildRule {
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules) {
     super(buildRuleParams);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
-    this.resultsDir = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        this.getBuildTarget(),
-        "infer-analysis-%s");
+    this.resultsDir =
+        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");
     this.specsDir = this.resultsDir.resolve("specs");
     this.specsPathList = this.resultsDir.resolve("specs_path_list.txt");
@@ -75,9 +70,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
         .transform(
-            (Function<CxxInferAnalyze, SourcePath>) input -> new ExplicitBuildTargetSourcePath(
-                input.getBuildTarget(), input.getSpecsDir())
-        )
+            (Function<CxxInferAnalyze, SourcePath>)
+                input ->
+                    new ExplicitBuildTargetSourcePath(input.getBuildTarget(), input.getSpecsDir()))
         .toSortedSet(Ordering.natural());
   }
 
@@ -111,8 +106,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(specsDir);
     buildableContext.recordArtifact(
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
@@ -121,7 +115,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
-                captureAndAnalyzeRules.captureRules.stream()
+                captureAndAnalyzeRules
+                    .captureRules
+                    .stream()
                     .map(CxxInferCapture::getSourcePathToOutput)
                     .map(context.getSourcePathResolver()::getRelativePath)
                     .collect(MoreCollectors.toImmutableList()),
@@ -133,9 +129,11 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                   throws IOException {
                 try {
                   ImmutableList<String> specsDirsWithAbsolutePath =
-                      getSpecsOfAllDeps().stream()
-                          .map(input ->
-                              context.getSourcePathResolver().getAbsolutePath(input).toString())
+                      getSpecsOfAllDeps()
+                          .stream()
+                          .map(
+                              input ->
+                                  context.getSourcePathResolver().getAbsolutePath(input).toString())
                           .collect(MoreCollectors.toImmutableList());
                   getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 } catch (IOException e) {
@@ -148,9 +146,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
             })
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(),
-                getAnalyzeCommand(),
-                ImmutableMap.of()))
+                getProjectFilesystem().getRootPath(), getAnalyzeCommand(), ImmutableMap.of()))
         .build();
   }
 

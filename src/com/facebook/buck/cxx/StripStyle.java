@@ -21,24 +21,20 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 
-  /**
-   * Defines the level of symbol stripping to be performed on the linked product of the build.
-   */
+/** Defines the level of symbol stripping to be performed on the linked product of the build. */
 public enum StripStyle implements FlavorConvertible {
-  /**
-   * Strips debugging symbols, but saves local and global symbols.
-   */
+  /** Strips debugging symbols, but saves local and global symbols. */
   DEBUGGING_SYMBOLS(InternalFlavor.of("strip-debug"), ImmutableList.of("-S")),
 
   /**
-   * Strips non-global symbols, but saves external symbols.
-   * This is preferred for dynamic shared libraries.
+   * Strips non-global symbols, but saves external symbols. This is preferred for dynamic shared
+   * libraries.
    */
   NON_GLOBAL_SYMBOLS(InternalFlavor.of("strip-non-global"), ImmutableList.of("-x")),
 
   /**
-   * Completely strips the binary, removing the symbol table and relocation information.
-   * This is preferred for executable files.
+   * Completely strips the binary, removing the symbol table and relocation information. This is
+   * preferred for executable files.
    */
   ALL_SYMBOLS(InternalFlavor.of("strip-all"), ImmutableList.of()),
   ;

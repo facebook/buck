@@ -22,7 +22,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -50,13 +49,13 @@ public class StripSymbolsStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     return (new DefaultShellStep(
-        projectFilesystem.getRootPath(),
-        ImmutableList.<String>builder()
-            .addAll(stripCommandPrefix)
-            .addAll(stripToolArgs)
-            .add(projectFilesystem.resolve(input).toString())
-            .build(),
-        stripEnvironment))
+            projectFilesystem.getRootPath(),
+            ImmutableList.<String>builder()
+                .addAll(stripCommandPrefix)
+                .addAll(stripToolArgs)
+                .add(projectFilesystem.resolve(input).toString())
+                .build(),
+            stripEnvironment))
         .execute(context);
   }
 

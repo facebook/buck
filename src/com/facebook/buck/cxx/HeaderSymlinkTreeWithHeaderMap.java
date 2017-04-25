@@ -37,11 +37,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
-
-import org.stringtemplate.v4.ST;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.stringtemplate.v4.ST;
 
 public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
@@ -53,10 +51,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   private static String getTemplate(String template) {
     try {
       return Resources.toString(
-          Resources.getResource(
-              HeaderSymlinkTreeWithHeaderMap.class,
-              template),
-          Charsets.UTF_8);
+          Resources.getResource(HeaderSymlinkTreeWithHeaderMap.class, template), Charsets.UTF_8);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -65,8 +60,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   @AddToRuleKey(stringify = true)
   private final Path headerMapPath;
 
-  @AddToRuleKey
-  private final boolean shouldCreateModule;
+  @AddToRuleKey private final boolean shouldCreateModule;
 
   private HeaderSymlinkTreeWithHeaderMap(
       BuildTarget target,
@@ -88,16 +82,10 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       ImmutableMap<Path, SourcePath> links,
       SourcePathRuleFinder ruleFinder) {
     Path headerMapPath = getPath(filesystem, target);
-    boolean shouldCreateModule = target.getFlavors()
-        .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+    boolean shouldCreateModule =
+        target.getFlavors().contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     return new HeaderSymlinkTreeWithHeaderMap(
-        target,
-        filesystem,
-        root,
-        links,
-        ruleFinder,
-        headerMapPath,
-        shouldCreateModule);
+        target, filesystem, root, links, ruleFinder, headerMapPath, shouldCreateModule);
   }
 
   @Override
@@ -107,8 +95,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
     Path buckOut =
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
@@ -122,9 +109,11 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       // aligning in order to get this to work. May we find peace in another life.
       headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)));
     }
-    ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .addAll(super.getBuildSteps(context, buildableContext))
-        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()));
+    ImmutableList.Builder<Step> builder =
+        ImmutableList.<Step>builder()
+            .addAll(super.getBuildSteps(context, buildableContext))
+            .add(
+                new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()));
 
     if (shouldCreateModule) {
       Optional<String> umbrellaHeader = getUmbrellaHeader(getBuildTarget().getShortName());
@@ -140,16 +129,19 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
    * umbrella header of the module of that target.
    */
   private Optional<String> getUmbrellaHeader(String moduleName) {
-    return getLinks().keySet().stream()
+    return getLinks()
+        .keySet()
+        .stream()
         .filter(input -> moduleName.equals(MorePaths.getNameWithoutExtension(input)))
         .map(Path::toString)
         .findFirst();
   }
 
   private Step createCreateModuleStep(String moduleName, Optional<String> umbrellaHeader) {
-    ST st = new ST(MODULEMAP_TEMPLATE_PATH)
-        .add("module_name", moduleName)
-        .add("use_umbrella_header", umbrellaHeader.isPresent());
+    ST st =
+        new ST(MODULEMAP_TEMPLATE_PATH)
+            .add("module_name", moduleName)
+            .add("use_umbrella_header", umbrellaHeader.isPresent());
     if (umbrellaHeader.isPresent()) {
       st.add("umbrella_header_name", umbrellaHeader.get());
     } else {

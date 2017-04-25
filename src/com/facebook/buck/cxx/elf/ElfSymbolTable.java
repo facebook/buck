@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx.elf;
 
 import com.google.common.collect.ImmutableList;
-
 import java.nio.ByteBuffer;
 
 // CHECKSTYLE.OFF: LocalVariableName
@@ -44,9 +43,7 @@ public class ElfSymbolTable {
     }
   }
 
-  /**
-   * Encapsulate the data in an ELF section header.
-   */
+  /** Encapsulate the data in an ELF section header. */
   public static class Entry {
 
     // CHECKSTYLE.OFF: MemberName
@@ -59,12 +56,7 @@ public class ElfSymbolTable {
     // CHECKSTYLE.ON: MemberName
 
     public Entry(
-        long st_name,
-        Info st_info,
-        int st_other,
-        int st_shndx,
-        long st_value,
-        long st_size) {
+        long st_name, Info st_info, int st_other, int st_shndx, long st_value, long st_size) {
       this.st_name = st_name;
       this.st_info = st_info;
       this.st_other = st_other;
@@ -136,7 +128,6 @@ public class ElfSymbolTable {
       }
 
       public enum Bind {
-
         STB_LOCAL(0),
         STB_GLOBAL(1),
         STB_WEAK(2),
@@ -156,11 +147,9 @@ public class ElfSymbolTable {
           }
           throw new IllegalArgumentException();
         }
-
       }
 
       public enum Type {
-
         STT_NOTYPE(0),
         STT_OBJECT(1),
         STT_FUNC(2),
@@ -184,11 +173,7 @@ public class ElfSymbolTable {
           }
           throw new IllegalArgumentException();
         }
-
       }
-
     }
-
   }
-
 }

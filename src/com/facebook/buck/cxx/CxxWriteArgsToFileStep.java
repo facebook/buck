@@ -28,15 +28,14 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * This step takes a list of args, stringify, escape them (if escaper is present), and
- * finally store to a file {@link #argFilePath}.
+ * This step takes a list of args, stringify, escape them (if escaper is present), and finally store
+ * to a file {@link #argFilePath}.
  */
 public class CxxWriteArgsToFileStep implements Step {
 
@@ -51,9 +50,11 @@ public class CxxWriteArgsToFileStep implements Step {
       SourcePathResolver pathResolver) {
     ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
-      argFileContents = argFileContents.stream()
-          .map(escaper.get()::apply)
-          .collect(MoreCollectors.toImmutableList());
+      argFileContents =
+          argFileContents
+              .stream()
+              .map(escaper.get()::apply)
+              .collect(MoreCollectors.toImmutableList());
     }
     return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }
@@ -64,16 +65,12 @@ public class CxxWriteArgsToFileStep implements Step {
   }
 
   static ImmutableList<String> stringify(
-      ImmutableCollection<Arg> args,
-      Path currentCellPath,
-      SourcePathResolver pathResolver) {
+      ImmutableCollection<Arg> args, Path currentCellPath, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
-        ((FileListableLinkerInputArg) arg).appendToCommandLineRel(
-            builder,
-            currentCellPath,
-            pathResolver);
+        ((FileListableLinkerInputArg) arg)
+            .appendToCommandLineRel(builder, currentCellPath, pathResolver);
       } else if (arg instanceof SourcePathArg) {
         ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath, pathResolver);
       } else {
@@ -82,7 +79,6 @@ public class CxxWriteArgsToFileStep implements Step {
     }
     return builder.build();
   }
-
 
   @Override
   public StepExecutionResult execute(ExecutionContext context)

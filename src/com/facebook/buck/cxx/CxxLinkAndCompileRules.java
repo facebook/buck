@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class CxxLinkAndCompileRules {
@@ -50,5 +49,4 @@ public class CxxLinkAndCompileRules {
       return cxxLink;
     }
   }
-
 }

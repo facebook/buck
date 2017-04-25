@@ -38,19 +38,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Represents a precompilable header file, along with dependencies.
  *
- * Rules which depend on this will inherit this rule's of dependencies.  For example if a given
- * rule R uses a precompiled header rule P, then all of P's {@code deps} will get merged into
- * R's {@code deps} list.
+ * <p>Rules which depend on this will inherit this rule's of dependencies. For example if a given
+ * rule R uses a precompiled header rule P, then all of P's {@code deps} will get merged into R's
+ * {@code deps} list.
  */
-public class CxxPrecompiledHeaderTemplate
-    extends NoopBuildRule
+public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
     implements NativeLinkable, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
@@ -62,13 +60,9 @@ public class CxxPrecompiledHeaderTemplate
   public final SourcePathRuleFinder ruleFinder;
   public final SourcePathResolver pathResolver;
 
-  /**
-   * @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps}
-   */
+  /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   CxxPrecompiledHeaderTemplate(
-      BuildRuleParams buildRuleParams,
-      BuildRuleResolver ruleResolver,
-      SourcePath sourcePath) {
+      BuildRuleParams buildRuleParams, BuildRuleResolver ruleResolver, SourcePath sourcePath) {
     super(buildRuleParams);
     this.params = buildRuleParams;
     this.ruleResolver = ruleResolver;
@@ -82,8 +76,8 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   /**
-   * Returns our {@link #getBuildDeps()},
-   * limited to the subset of those which are {@link NativeLinkable}.
+   * Returns our {@link #getBuildDeps()}, limited to the subset of those which are {@link
+   * NativeLinkable}.
    */
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
@@ -91,8 +85,8 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   /**
-   * Returns our {@link #getExportedDeps()},
-   * limited to the subset of those which are {@link NativeLinkable}.
+   * Returns our {@link #getExportedDeps()}, limited to the subset of those which are {@link
+   * NativeLinkable}.
    */
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
@@ -100,31 +94,27 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   /**
-   * Pick a linkage, any linkage.  Just pick your favorite.  This will be overridden
-   * by config anyway.
+   * Pick a linkage, any linkage. Just pick your favorite. This will be overridden by config anyway.
    */
   @Override
   public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return Linkage.SHARED;
   }
 
-  /**
-   * Doesn't really apply to us.  No shared libraries to add here.
-   */
+  /** Doesn't really apply to us. No shared libraries to add here. */
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 
   /**
-   * This class doesn't add any native linkable code of its own, it just has deps
-   * which need to be passed along and up to the top-level (e.g. a `cxx_binary`) rule.
-   * Take all our linkable deps, then, and pass it along as our linker input.
+   * This class doesn't add any native linkable code of its own, it just has deps which need to be
+   * passed along and up to the top-level (e.g. a `cxx_binary`) rule. Take all our linkable deps,
+   * then, and pass it along as our linker input.
    */
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform,
         getBuildDeps(),
@@ -139,21 +129,21 @@ public class CxxPrecompiledHeaderTemplate
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-        CxxPlatform cxxPlatform,
-        HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.EMPTY;
   }
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-        > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-        CxxPlatform cxxPlatform,
-        HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     return transitiveCxxPreprocessorInputCache.getUnchecked(
         ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
@@ -162,7 +152,7 @@ public class CxxPrecompiledHeaderTemplate
     ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
     try {
       for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
-           getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).entrySet()) {
+          getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).entrySet()) {
         builder.add(entry.getValue());
       }
     } catch (NoSuchBuildTargetException e) {
@@ -172,13 +162,15 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   private ImmutableList<CxxHeaders> getIncludes(CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInputs(cxxPlatform).stream()
+    return getCxxPreprocessorInputs(cxxPlatform)
+        .stream()
         .flatMap(input -> input.getIncludes().stream())
         .collect(MoreCollectors.toImmutableList());
   }
 
   private ImmutableSet<FrameworkPath> getFrameworks(CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInputs(cxxPlatform).stream()
+    return getCxxPreprocessorInputs(cxxPlatform)
+        .stream()
         .flatMap(input -> input.getFrameworks().stream())
         .collect(MoreCollectors.toImmutableSet());
   }
@@ -202,9 +194,9 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   private BuildTarget createAggregatedDepsTarget(CxxPlatform cxxPlatform) {
-    return params.getBuildTarget().withAppendedFlavors(
-        cxxPlatform.getFlavor(),
-        AGGREGATED_PREPROCESS_DEPS_FLAVOR);
+    return params
+        .getBuildTarget()
+        .withAppendedFlavors(cxxPlatform.getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
   }
 
   public DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
@@ -216,11 +208,12 @@ public class CxxPrecompiledHeaderTemplate
       return existingRule.get();
     }
 
-    BuildRuleParams depAggParams = params
-        .withBuildTarget(depAggTarget)
-        .copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+    BuildRuleParams depAggParams =
+        params
+            .withBuildTarget(depAggTarget)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
+                Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     DependencyAggregation depAgg = new DependencyAggregation(depAggParams);
     ruleResolver.addToIndex(depAgg);
@@ -228,9 +221,7 @@ public class CxxPrecompiledHeaderTemplate
   }
 
   public PreprocessorDelegate buildPreprocessorDelegate(
-      CxxPlatform cxxPlatform,
-      Preprocessor preprocessor,
-      CxxToolFlags preprocessorFlags) {
+      CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
     try {
       return new PreprocessorDelegate(
           pathResolver,
@@ -250,5 +241,4 @@ public class CxxPrecompiledHeaderTemplate
       throw new RuntimeException(e);
     }
   }
-
 }

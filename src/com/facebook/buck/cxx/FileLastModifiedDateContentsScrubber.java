@@ -16,17 +16,15 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileAttributesScrubber;
-
 import java.nio.file.Path;
 
-/**
- * Resets the file's last modification date.
- */
+/** Resets the file's last modification date. */
 public class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
 
   @Override
   public void scrubFileWithPath(Path path) {
-    path.toFile().setLastModified(
-        (long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
+    path.toFile()
+        .setLastModified(
+            (long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
   }
 }

@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,23 +38,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 
-/**
- * Specialized parser for .d Makefiles emitted by {@code gcc -MD}.
- */
+/** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
 public class Depfiles {
 
   private Depfiles() {}
 
   private enum State {
-      LOOKING_FOR_TARGET,
-      FOUND_TARGET
+    LOOKING_FOR_TARGET,
+    FOUND_TARGET
   }
 
   private enum Action {
-      NONE,
-      APPEND_TO_IDENTIFIER,
-      SET_TARGET,
-      ADD_PREREQ
+    NONE,
+    APPEND_TO_IDENTIFIER,
+    SET_TARGET,
+    ADD_PREREQ
   }
 
   private static final String WHITESPACE_CHARS = " \n\r\t";
@@ -63,8 +60,8 @@ public class Depfiles {
   private static final String ESCAPED_PREREQ_CHARS = " #";
 
   /**
-   * Parses the input as a .d Makefile as emitted by {@code gcc -MD}
-   * and returns the (target, [dep, dep2, ...]) inside.
+   * Parses the input as a .d Makefile as emitted by {@code gcc -MD} and returns the (target, [dep,
+   * dep2, ...]) inside.
    */
   public static Depfile parseDepfile(Readable readable) throws IOException {
     String target = null;
@@ -178,17 +175,17 @@ public class Depfiles {
    * @param eventBus Used for outputting perf events and messages.
    * @param filesystem Used to access the filesystem and handle String to Path conversion.
    * @param headerPathNormalizer Used to convert raw paths into absolutized paths that can be
-   *                             resolved to SourcePaths.
+   *     resolved to SourcePaths.
    * @param headerVerification Setting for how to respond to untracked header errors.
    * @param sourceDepFile Path to the raw dep file
-   * @param inputPath Path to source file input, used to skip any leading entries from
-   *                  {@code -fsanitize-blacklist}.
+   * @param inputPath Path to source file input, used to skip any leading entries from {@code
+   *     -fsanitize-blacklist}.
    * @param outputPath Path to object file output, used for stat tracking.
-   * @return Normalized path objects suitable for use as arguments to
-   *   {@link HeaderPathNormalizer#getSourcePathForAbsolutePath(Path)}.
+   * @return Normalized path objects suitable for use as arguments to {@link
+   *     HeaderPathNormalizer#getSourcePathForAbsolutePath(Path)}.
    * @throws IOException if an IO error occurs.
-   * @throws HeaderVerificationException
-   *  if HeaderVerification error occurs and {@code headerVerification == ERROR}.
+   * @throws HeaderVerificationException if HeaderVerification error occurs and {@code
+   *     headerVerification == ERROR}.
    */
   public static ImmutableList<Path> parseAndOutputBuckCompatibleDepfile(
       BuckEventBus eventBus,
@@ -197,8 +194,8 @@ public class Depfiles {
       HeaderVerification headerVerification,
       Path sourceDepFile,
       Path inputPath,
-      Path outputPath
-  ) throws IOException, HeaderVerificationException {
+      Path outputPath)
+      throws IOException, HeaderVerificationException {
     // Process the dependency file, fixing up the paths, and write it out to it's final location.
     // The paths of the headers written out to the depfile are the paths to the symlinks from the
     // root of the repo if the compilation included them from the header search paths pointing to
@@ -208,12 +205,12 @@ public class Depfiles {
     Logger.get(Depfiles.class).debug("Processing dependency file %s as Makefile", sourceDepFile);
     ImmutableList.Builder<Path> resultBuilder = ImmutableList.builder();
     try (InputStream input = filesystem.newFileInputStream(sourceDepFile);
-         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-         SimplePerfEvent.Scope perfEvent = SimplePerfEvent.scope(
-             eventBus,
-             PerfEventId.of("depfile-parse"),
-             ImmutableMap.of(
-                 "input", inputPath, "output", outputPath))) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        SimplePerfEvent.Scope perfEvent =
+            SimplePerfEvent.scope(
+                eventBus,
+                PerfEventId.of("depfile-parse"),
+                ImmutableMap.of("input", inputPath, "output", outputPath))) {
       ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
 
       // Additional files passed in via command-line flags (e.g. `-fsanitize-blacklist=<file>`)
@@ -240,20 +237,20 @@ public class Depfiles {
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
           resultBuilder.add(absolutePath.get());
-        } else if (
-            headerVerification.getMode() != HeaderVerification.Mode.IGNORE &&
-                !(headerVerification.isWhitelisted(header.toString()) ||
-                    repoRelativePath.map(path -> headerVerification.isWhitelisted(path.toString()))
-                        .orElse(false))) {
-          String errorMessage = String.format(
-              "%s: included an untracked header \"%s\"",
-              inputPath,
-              repoRelativePath.orElse(header));
+        } else if (headerVerification.getMode() != HeaderVerification.Mode.IGNORE
+            && !(headerVerification.isWhitelisted(header.toString())
+                || repoRelativePath
+                    .map(path -> headerVerification.isWhitelisted(path.toString()))
+                    .orElse(false))) {
+          String errorMessage =
+              String.format(
+                  "%s: included an untracked header \"%s\"",
+                  inputPath, repoRelativePath.orElse(header));
           eventBus.post(
               ConsoleEvent.create(
-                  headerVerification.getMode() == HeaderVerification.Mode.ERROR ?
-                      Level.SEVERE :
-                      Level.WARNING,
+                  headerVerification.getMode() == HeaderVerification.Mode.ERROR
+                      ? Level.SEVERE
+                      : Level.WARNING,
                   errorMessage));
           if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
             throw new HeaderVerificationException(errorMessage);

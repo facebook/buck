@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.elf;
 
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,9 +48,7 @@ public class Elf {
     return header.e_shnum;
   }
 
-  /**
-   * @return the parsed section header for the section at the given index.
-   */
+  /** @return the parsed section header for the section at the given index. */
   public ElfSection getSectionByIndex(int index) {
     Preconditions.checkArgument(index >= 0 && index < header.e_shnum);
     ElfSection section = sections.get(index);
@@ -63,17 +60,13 @@ public class Elf {
     return section;
   }
 
-  /**
-   * @return the name of the section found in the section header string table.
-   */
+  /** @return the name of the section found in the section header string table. */
   public String getSectionName(ElfSectionHeader sectionHeader) {
     ElfSection stringTable = getSectionByIndex(header.e_shstrndx);
     return stringTable.lookupString(sectionHeader.sh_name);
   }
 
-  /**
-   * @return the parsed section header for the section of the given name.
-   */
+  /** @return the parsed section header for the section of the given name. */
   public Optional<Pair<Integer, ElfSection>> getSectionByName(String name) {
     ElfSection stringTable = getSectionByIndex(header.e_shstrndx);
     for (int index = 0; index < header.e_shnum; index++) {
@@ -86,20 +79,17 @@ public class Elf {
     return Optional.empty();
   }
 
-  /**
-   * @return whether the data this buffer points to is most likely ELF.
-   */
+  /** @return whether the data this buffer points to is most likely ELF. */
   public static boolean isElf(ByteBuffer buffer) {
     byte[] magic = new byte[4];
     if (buffer.remaining() < magic.length) {
       return false;
     }
     buffer.slice().get(magic);
-    return (
-        magic[ElfHeader.EI_MAG0] == ElfHeader.ELFMAG0 &&
-        magic[ElfHeader.EI_MAG1] == ElfHeader.ELFMAG1 &&
-        magic[ElfHeader.EI_MAG2] == ElfHeader.ELFMAG2 &&
-        magic[ElfHeader.EI_MAG3] == ElfHeader.ELFMAG3);
+    return (magic[ElfHeader.EI_MAG0] == ElfHeader.ELFMAG0
+        && magic[ElfHeader.EI_MAG1] == ElfHeader.ELFMAG1
+        && magic[ElfHeader.EI_MAG2] == ElfHeader.ELFMAG2
+        && magic[ElfHeader.EI_MAG3] == ElfHeader.ELFMAG3);
   }
 
   public static class Elf32 {
@@ -137,7 +127,6 @@ public class Elf {
     public static void putElf32Sword(ByteBuffer buffer, int val) {
       buffer.putInt(val);
     }
-
   }
 
   public static class Elf64 {
@@ -183,7 +172,5 @@ public class Elf {
     public static void putElf64Sxword(ByteBuffer buffer, long val) {
       buffer.putLong(val);
     }
-
   }
-
 }

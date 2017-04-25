@@ -32,29 +32,27 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * A step which scrubs an ELF symbol table of information relevant to dynamic linking.
- */
+/** A step which scrubs an ELF symbol table of information relevant to dynamic linking. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractElfSymbolTableScrubberStep implements Step {
 
-  @VisibleForTesting
-  static final int STABLE_SECTION = 1;
+  @VisibleForTesting static final int STABLE_SECTION = 1;
 
   abstract ProjectFilesystem getFilesystem();
+
   abstract Path getPath();
+
   abstract String getSection();
+
   abstract boolean isAllowMissing();
 
   private ElfSymbolTable fixUpSymbolTable(ElfSymbolTable table) {
@@ -65,7 +63,8 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
     entries.add(table.entries.get(0));
 
     // Fixup and add the remaining entries.
-    RichStream.from(MoreIterables.enumerate(table.entries)).skip(1)
+    RichStream.from(MoreIterables.enumerate(table.entries))
+        .skip(1)
         // Generate a new sanitized symbol table entry.
         .map(
             pair ->
@@ -83,9 +82,9 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
                     // symbol table.
                     pair.getSecond().st_value == 0 ? 0 : pair.getFirst(),
                     // For functions, set the size to zero.
-                    pair.getSecond().st_info.st_type == ElfSymbolTable.Entry.Info.Type.STT_FUNC ?
-                        0 :
-                        pair.getSecond().st_size))
+                    pair.getSecond().st_info.st_type == ElfSymbolTable.Entry.Info.Type.STT_FUNC
+                        ? 0
+                        : pair.getSecond().st_size))
         .forEach(entries::add);
 
     return new ElfSymbolTable(entries.build());
@@ -94,10 +93,10 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (FileChannel channel =
-             FileChannel.open(
-                 getFilesystem().resolve(getPath()),
-                 StandardOpenOption.READ,
-                 StandardOpenOption.WRITE)) {
+        FileChannel.open(
+            getFilesystem().resolve(getPath()),
+            StandardOpenOption.READ,
+            StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
 
@@ -109,9 +108,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
         } else {
           throw new IOException(
               String.format(
-                  "Error parsing ELF file %s: no such section \"%s\"",
-                  getPath(),
-                  getSection()));
+                  "Error parsing ELF file %s: no such section \"%s\"", getPath(), getSection()));
         }
       }
 
@@ -135,5 +132,4 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("Scrub ELF symbol table %s in %s", getSection(), getPath());
   }
-
 }

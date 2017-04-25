@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
 import java.util.Optional;
 
 @SuppressFieldNotInitialized

@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,9 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
-/**
- * A step that preprocesses and/or compiles C/C++ sources in a single step.
- */
+/** A step that preprocesses and/or compiles C/C++ sources in a single step. */
 public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
@@ -66,10 +63,9 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final DebugPathSanitizer assemblerSanitizer;
   private final Compiler compiler;
 
-  /**
-   * Directory to use to store intermediate/temp files used for compilation.
-   */
+  /** Directory to use to store intermediate/temp files used for compilation. */
   private final Path scratchDir;
+
   private final boolean useArgfile;
 
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
@@ -111,8 +107,8 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   @Override
   public String getShortName() {
-    Optional<CxxSource.Type> type = CxxSource.Type.fromExtension(
-        Files.getFileExtension(input.getFileName().toString()));
+    Optional<CxxSource.Type> type =
+        CxxSource.Type.fromExtension(Files.getFileExtension(input.getFileName().toString()));
     String fileType;
     if (type.isPresent()) {
       fileType = type.get().getLanguage();
@@ -128,14 +124,13 @@ public class CxxPreprocessAndCompileStep implements Step {
    * @return Half-configured ProcessExecutorParams.Builder
    */
   private ProcessExecutorParams.Builder makeSubprocessBuilder(
-      ExecutionContext context,
-      Map<String, String> additionalEnvironment) {
+      ExecutionContext context, Map<String, String> additionalEnvironment) {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
 
     env.putAll(
-        getSanitizer().getCompilationEnvironment(
-            filesystem.getRootPath().toAbsolutePath(),
-            shouldSanitizeOutputBinary()));
+        getSanitizer()
+            .getCompilationEnvironment(
+                filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
@@ -191,14 +186,12 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private int executeCompilation(ExecutionContext context) throws Exception {
-    ProcessExecutorParams.Builder builder =
-        makeSubprocessBuilder(context, ImmutableMap.of());
+    ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context, ImmutableMap.of());
 
     if (useArgfile) {
       filesystem.writeLinesToPath(
           Iterables.transform(
-              getArguments(context.getAnsi().isAnsiTerminal()),
-              Escaper.ARGFILE_ESCAPER),
+              getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER),
           getArgfile());
       builder.setCommand(
           ImmutableList.<String>builder()
@@ -215,10 +208,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
     ProcessExecutorParams params = builder.build();
 
-    LOG.debug(
-        "Running command (pwd=%s): %s",
-        params.getDirectory(),
-        getDescription(context));
+    LOG.debug("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
 
     // Start the process.
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
@@ -231,8 +221,8 @@ public class CxxPreprocessAndCompileStep implements Step {
     int exitCode;
     try {
       try (LineProcessorRunnable errorProcessor =
-               createErrorTransformerFactory(context)
-                   .createTransformerThread(context, compiler.getErrorStream(process), error)) {
+          createErrorTransformerFactory(context)
+              .createTransformerThread(context, compiler.getErrorStream(process), error)) {
         errorProcessor.start();
         errorProcessor.waitFor();
       } catch (Throwable thrown) {
@@ -248,23 +238,25 @@ public class CxxPreprocessAndCompileStep implements Step {
     // If we generated any error output, print that to the console.
     String err = new String(error.toByteArray());
     if (!err.isEmpty()) {
-      context.getBuckEventBus().post(
-          createConsoleEvent(
-              context,
-              preprocessorCommand.map(Optional::of).orElse(compilerCommand).get()
-                  .supportsColorsInDiagnostics(),
-              exitCode == 0 ? Level.WARNING : Level.SEVERE,
-              err));
+      context
+          .getBuckEventBus()
+          .post(
+              createConsoleEvent(
+                  context,
+                  preprocessorCommand
+                      .map(Optional::of)
+                      .orElse(compilerCommand)
+                      .get()
+                      .supportsColorsInDiagnostics(),
+                  exitCode == 0 ? Level.WARNING : Level.SEVERE,
+                  err));
     }
 
     return exitCode;
   }
 
   private ConsoleEvent createConsoleEvent(
-      ExecutionContext context,
-      boolean commandOutputsColor,
-      Level level,
-      String message) {
+      ExecutionContext context, boolean commandOutputsColor, Level level, String message) {
     if (context.getAnsi().isAnsiTerminal() && commandOutputsColor) {
       return ConsoleEvent.createForMessageWithAnsiEscapeCodes(level, message);
     } else {
@@ -274,9 +266,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
     return new CxxErrorTransformerFactory(
-        filesystem,
-        context.shouldReportAbsolutePaths(),
-        headerPathNormalizer);
+        filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
   }
 
   @Override
@@ -293,9 +283,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       if (exitCode == 0 && shouldSanitizeOutputBinary()) {
         try {
           Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
-          getSanitizer().restoreCompilationDirectory(
-              path,
-              filesystem.getRootPath().toAbsolutePath());
+          getSanitizer()
+              .restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
           FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
@@ -334,7 +323,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         return compilerCommand.get().getCommandPrefix();
       case GENERATE_PCH:
         return preprocessorCommand.get().getCommandPrefix();
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new RuntimeException("invalid operation type");
     }
@@ -351,17 +340,18 @@ public class CxxPreprocessAndCompileStep implements Step {
             allowColorsInDiagnostics);
       case GENERATE_PCH:
         return makeGeneratePchArguments(allowColorsInDiagnostics);
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new RuntimeException("invalid operation type");
     }
   }
 
   public String getDescriptionNoContext() {
-    return Joiner.on(' ').join(
-        FluentIterable.from(getCommandPrefix())
-            .append(getArguments(false))
-            .transform(Escaper.SHELL_ESCAPER));
+    return Joiner.on(' ')
+        .join(
+            FluentIterable.from(getCommandPrefix())
+                .append(getArguments(false))
+                .transform(Escaper.SHELL_ESCAPER));
   }
 
   @Override
@@ -377,25 +367,19 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private boolean shouldSanitizeOutputBinary() {
-    return inputType.isAssembly() ||
-        (operation == Operation.PREPROCESS_AND_COMPILE && compiler.shouldSanitizeOutputBinary());
+    return inputType.isAssembly()
+        || (operation == Operation.PREPROCESS_AND_COMPILE && compiler.shouldSanitizeOutputBinary());
   }
 
   public enum Operation {
-    /**
-     * Run only the compiler on source files.
-     */
+    /** Run only the compiler on source files. */
     COMPILE,
-    /**
-     * Run the preprocessor and compiler on source files.
-     */
+    /** Run the preprocessor and compiler on source files. */
     PREPROCESS_AND_COMPILE,
     GENERATE_PCH,
     ;
 
-    /**
-     * Returns whether the step has a preprocessor component.
-     */
+    /** Returns whether the step has a preprocessor component. */
     public boolean isPreprocess() {
       switch (this) {
         case PREPROCESS_AND_COMPILE:
@@ -407,9 +391,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       throw new RuntimeException("unhandled case");
     }
 
-    /**
-     * Returns whether the step has a compilation component.
-     */
+    /** Returns whether the step has a compilation component. */
     public boolean isCompile() {
       switch (this) {
         case COMPILE:
@@ -462,5 +444,4 @@ public class CxxPreprocessAndCompileStep implements Step {
       return flagsForColorDiagnostics.isPresent();
     }
   }
-
 }

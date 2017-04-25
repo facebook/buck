@@ -29,7 +29,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
 public class CxxPlatforms {
@@ -47,11 +46,10 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   // Utility class, do not instantiate.
-  private CxxPlatforms() { }
+  private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory(
-      CxxBuckConfig config,
-      Platform platform) {
+      CxxBuckConfig config, Platform platform) {
     Optional<SharedLibraryInterfaceFactory> sharedLibraryInterfaceFactory = Optional.empty();
     if (config.shouldUseSharedLibraryInterfaces()) {
       switch (platform) {
@@ -60,7 +58,7 @@ public class CxxPlatforms {
               Optional.of(
                   ElfSharedLibraryInterfaceFactory.of(config.getToolProvider("objcopy").get()));
           break;
-        // $CASES-OMITTED$
+          // $CASES-OMITTED$
         default:
       }
     }
@@ -99,8 +97,8 @@ public class CxxPlatforms {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
-    final Archiver arDelegate = ar instanceof LazyDelegatingArchiver ?
-        ((LazyDelegatingArchiver) ar).getDelegate() : ar;
+    final Archiver arDelegate =
+        ar instanceof LazyDelegatingArchiver ? ((LazyDelegatingArchiver) ar).getDelegate() : ar;
 
     builder
         .setFlavor(flavor)
@@ -116,10 +114,12 @@ public class CxxPlatforms {
         .setAsmpp(config.getPreprocessorProvider("asmpp"))
         .setLd(config.getLinkerProvider("ld", ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
-        .setAr(new LazyDelegatingArchiver(() ->
-            getTool("ar", config)
-                .map(getArchiver(arDelegate.getClass(), config)::apply)
-                .orElse(arDelegate)))
+        .setAr(
+            new LazyDelegatingArchiver(
+                () ->
+                    getTool("ar", config)
+                        .map(getArchiver(arDelegate.getClass(), config)::apply)
+                        .orElse(arDelegate)))
         .setRanlib(new LazyDelegatingTool(() -> getTool("ranlib", config).orElse(ranlib)))
         .setStrip(getTool("strip", config).orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
@@ -134,15 +134,16 @@ public class CxxPlatforms {
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());
 
-
-    builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(() -> {
-      Optional<Tool> configNm = getTool("nm", config);
-      if (configNm.isPresent()) {
-        return new PosixNmSymbolNameTool(configNm.get());
-      } else {
-        return nm;
-      }
-    }));
+    builder.setSymbolNameTool(
+        new LazyDelegatingSymbolNameTool(
+            () -> {
+              Optional<Tool> configNm = getTool("nm", config);
+              if (configNm.isPresent()) {
+                return new PosixNmSymbolNameTool(configNm.get());
+              } else {
+                return nm;
+              }
+            }));
 
     builder.setSharedLibraryInterfaceFactory(getSharedLibraryInterfaceFactory(config, platform));
 
@@ -157,14 +158,11 @@ public class CxxPlatforms {
   }
 
   /**
-   * Creates a CxxPlatform with a defined flavor for a CxxBuckConfig with default values
-   * provided from another default CxxPlatform
+   * Creates a CxxPlatform with a defined flavor for a CxxBuckConfig with default values provided
+   * from another default CxxPlatform
    */
   public static CxxPlatform copyPlatformWithFlavorAndConfig(
-      CxxPlatform defaultPlatform,
-      Platform platform,
-      CxxBuckConfig config,
-      Flavor flavor) {
+      CxxPlatform defaultPlatform, Platform platform, CxxBuckConfig config, Flavor flavor) {
     return CxxPlatforms.build(
         flavor,
         platform,
@@ -196,11 +194,12 @@ public class CxxPlatforms {
         defaultPlatform.getHeaderVerification());
   }
 
-  private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
-      final CxxBuckConfig config) {
+  private static Function<Tool, Archiver> getArchiver(
+      final Class<? extends Archiver> arClass, final CxxBuckConfig config) {
     return input -> {
       try {
-        return config.getArchiver(input)
+        return config
+            .getArchiver(input)
             .orElse(arClass.getConstructor(Tool.class).newInstance(input));
       } catch (ReflectiveOperationException e) {
         throw new RuntimeException(e);
@@ -211,11 +210,11 @@ public class CxxPlatforms {
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {
     // TODO(coneko): base the host flavor on architecture, too.
     return ImmutableMap.<String, Flavor>builder()
-       .put(Platform.LINUX.getAutoconfName(), InternalFlavor.of("linux-x86_64"))
-       .put(Platform.MACOS.getAutoconfName(), InternalFlavor.of("macosx-x86_64"))
-       .put(Platform.WINDOWS.getAutoconfName(), InternalFlavor.of("windows-x86_64"))
-       .put(Platform.FREEBSD.getAutoconfName(), InternalFlavor.of("freebsd-x86_64"))
-       .build();
+        .put(Platform.LINUX.getAutoconfName(), InternalFlavor.of("linux-x86_64"))
+        .put(Platform.MACOS.getAutoconfName(), InternalFlavor.of("macosx-x86_64"))
+        .put(Platform.WINDOWS.getAutoconfName(), InternalFlavor.of("windows-x86_64"))
+        .put(Platform.FREEBSD.getAutoconfName(), InternalFlavor.of("freebsd-x86_64"))
+        .build();
   }
 
   public static ImmutableSet<Flavor> getAllPossibleHostFlavors() {
@@ -232,14 +231,12 @@ public class CxxPlatforms {
     return hostFlavor;
   }
 
-  public static void addToolFlagsFromConfig(
-      CxxBuckConfig config,
-      CxxPlatform.Builder builder) {
+  public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
     ImmutableList<String> asflags = config.getFlags("asflags").orElse(DEFAULT_ASFLAGS);
     ImmutableList<String> cflags = config.getFlags("cflags").orElse(DEFAULT_CFLAGS);
     ImmutableList<String> cxxflags = config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS);
-    ImmutableList<String> compilerOnlyFlags = config.getFlags("compiler_only_flags").orElse(
-        DEFAULT_COMPILER_ONLY_FLAGS);
+    ImmutableList<String> compilerOnlyFlags =
+        config.getFlags("compiler_only_flags").orElse(DEFAULT_COMPILER_ONLY_FLAGS);
 
     builder
         .addAllAsflags(asflags)
@@ -266,8 +263,7 @@ public class CxxPlatforms {
     CxxPlatform defaultCxxPlatform;
     Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
     if (defaultPlatform.isPresent()) {
-      defaultCxxPlatform = cxxPlatformsMap.get(
-          InternalFlavor.of(defaultPlatform.get()));
+      defaultCxxPlatform = cxxPlatformsMap.get(InternalFlavor.of(defaultPlatform.get()));
       if (defaultCxxPlatform == null) {
         LOG.warn(
             "Couldn't find default platform %s, falling back to system default",
@@ -308,7 +304,8 @@ public class CxxPlatforms {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
-    cxxPlatform.getSharedLibraryInterfaceFactory()
+    cxxPlatform
+        .getSharedLibraryInterfaceFactory()
         .ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }
@@ -320,5 +317,4 @@ public class CxxPlatforms {
     }
     return deps.build();
   }
-
 }

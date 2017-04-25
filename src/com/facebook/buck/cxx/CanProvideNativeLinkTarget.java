@@ -19,8 +19,7 @@ package com.facebook.buck.cxx;
 import java.util.Optional;
 
 /**
- * Helper interface for nodes which conditionally support the {@link NativeLinkTarget}
- * interface.
+ * Helper interface for nodes which conditionally support the {@link NativeLinkTarget} interface.
  */
 public interface CanProvideNativeLinkTarget {
   Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform);

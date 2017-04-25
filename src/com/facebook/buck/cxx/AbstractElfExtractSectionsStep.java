@@ -30,14 +30,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import org.immutables.value.Value;
 
 /**
  * A step which extracts specific sections from an ELF file and compacts them into a new ELF file.
@@ -47,9 +45,13 @@ import java.nio.file.StandardOpenOption;
 abstract class AbstractElfExtractSectionsStep implements Step {
 
   abstract ProjectFilesystem getFilesystem();
+
   abstract ImmutableList<String> getObjcopyPrefix();
+
   abstract Path getInput();
+
   abstract Path getOutput();
+
   abstract ImmutableSet<String> getSections();
 
   // We want to compact the sections into the new ELF file, so find out the new addresses of each
@@ -57,9 +59,7 @@ abstract class AbstractElfExtractSectionsStep implements Step {
   private ImmutableMap<String, Long> getNewSectionAddresses() throws IOException {
     ImmutableMap.Builder<String, Long> addresses = ImmutableMap.builder();
     try (FileChannel channel =
-             FileChannel.open(
-                 getFilesystem().resolve(getInput()),
-                 StandardOpenOption.READ)) {
+        FileChannel.open(getFilesystem().resolve(getInput()), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
 
@@ -86,8 +86,10 @@ abstract class AbstractElfExtractSectionsStep implements Step {
       Long address = addresses.get(section);
       if (address != null) {
         args.add(
-            "--only-section", section,
-            "--change-section-address", String.format("%s=0x%x", section, address));
+            "--only-section",
+            section,
+            "--change-section-address",
+            String.format("%s=0x%x", section, address));
       }
     }
     args.add(getInput().toString());
@@ -115,9 +117,6 @@ abstract class AbstractElfExtractSectionsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format(
-        "Extract sections %s from %s",
-        Joiner.on(", ").join(getSections()),
-        getInput());
+        "Extract sections %s from %s", Joiner.on(", ").join(getSections()), getInput());
   }
-
 }

@@ -38,13 +38,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.stream.Stream;
 
-public class CxxBinary
-    extends AbstractBuildRule
-    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesLinkedBinaryDeps,
-               SupportsInputBasedRuleKey {
+public class CxxBinary extends AbstractBuildRule
+    implements BinaryBuildRule,
+        NativeTestable,
+        HasRuntimeDeps,
+        ProvidesLinkedBinaryDeps,
+        SupportsInputBasedRuleKey {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -83,18 +84,24 @@ public class CxxBinary
     Preconditions.checkArgument(
         linkRule instanceof CxxLink || linkRule instanceof CxxStrip,
         "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip",
-        this, linkRule);
+        this,
+        linkRule);
     Preconditions.checkArgument(
         getBuildDeps().contains(linkRule),
         "CxxBinary (%s) must depend on its link rule (%s) via deps",
-        this, linkRule);
+        this,
+        linkRule);
     Preconditions.checkArgument(
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
-        "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise " +
-            "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
-        this, CxxStrip.RULE_FLAVOR, this, linkRule);
+        "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise "
+            + "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
+        this,
+        CxxStrip.RULE_FLAVOR,
+        this,
+        linkRule);
     Preconditions.checkArgument(
-        this.platformlessTarget.getUnflavoredBuildTarget()
+        this.platformlessTarget
+            .getUnflavoredBuildTarget()
             .equals(this.params.getBuildTarget().getUnflavoredBuildTarget()));
   }
 
@@ -112,8 +119,7 @@ public class CxxBinary
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(),
-        Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
+        getBuildTarget(), Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
   }
 
   public BuildRule getLinkRule() {
@@ -127,8 +133,8 @@ public class CxxBinary
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
         params.withBuildTarget(platformlessTarget),
         ruleResolver,
@@ -169,5 +175,4 @@ public class CxxBinary
   public CxxPlatform getCxxPlatform() {
     return cxxPlatform;
   }
-
 }

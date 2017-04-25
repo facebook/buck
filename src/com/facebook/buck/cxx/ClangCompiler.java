@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -30,8 +29,7 @@ public class ClangCompiler extends DefaultCompiler {
 
   @Override
   public ImmutableList<String> getFlagsForReproducibleBuild(
-      String altCompilationDir,
-      Path currentCellPath) {
+      String altCompilationDir, Path currentCellPath) {
     return ImmutableList.of("-Xclang", "-fdebug-compilation-dir", "-Xclang", altCompilationDir);
   }
 
@@ -44,5 +42,4 @@ public class ClangCompiler extends DefaultCompiler {
   public boolean isArgFileSupported() {
     return true;
   }
-
 }

@@ -33,5 +33,4 @@ public interface LinkerProvider {
     WINDOWS,
     UNKNOWN,
   }
-
 }

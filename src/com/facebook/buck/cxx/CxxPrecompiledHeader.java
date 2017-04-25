@@ -39,7 +39,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,40 +50,35 @@ import java.util.function.Predicate;
 /**
  * Rule to generate a precompiled header from an existing header.
  *
- * Precompiled headers are only useful for compilation style where preprocessing and compiling are
- * both done in the same process. If a preprocessed output needs to be serialized and later read
- * back in, the entire rationale of using a precompiled header, to avoid parsing excess headers,
- * is obviated.
+ * <p>Precompiled headers are only useful for compilation style where preprocessing and compiling
+ * are both done in the same process. If a preprocessed output needs to be serialized and later read
+ * back in, the entire rationale of using a precompiled header, to avoid parsing excess headers, is
+ * obviated.
  *
- * PCH files are not very portable, and so they are not cached.
+ * <p>PCH files are not very portable, and so they are not cached.
+ *
  * <ul>
- *   <li>The compiler verifies that header mtime identical to that recorded in the PCH file.</li>
- *   <li>
- *     PCH file records absolute paths, limited support for "relocatable" pch exists in Clang, but
- *     it is not very flexible.
- *   </li>
+ *   <li>The compiler verifies that header mtime identical to that recorded in the PCH file.
+ *   <li>PCH file records absolute paths, limited support for "relocatable" pch exists in Clang, but
+ *       it is not very flexible.
  * </ul>
+ *
  * While the problems are not impossible to overcome, PCH generation is fast enough that it isn't a
  * significant problem. The PCH file is only generated when a source file needs to be compiled,
  * anyway.
  *
- * Additionally, since PCH files contain information like timestamps, absolute paths, and
+ * <p>Additionally, since PCH files contain information like timestamps, absolute paths, and
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-public class CxxPrecompiledHeader
-    extends AbstractBuildRule
+public class CxxPrecompiledHeader extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   // Fields that are added to rule key as is.
-  @AddToRuleKey
-  private final PreprocessorDelegate preprocessorDelegate;
-  @AddToRuleKey
-  private final CompilerDelegate compilerDelegate;
-  @AddToRuleKey
-  private final SourcePath input;
-  @AddToRuleKey
-  private final CxxSource.Type inputType;
+  @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
+  @AddToRuleKey private final CompilerDelegate compilerDelegate;
+  @AddToRuleKey private final SourcePath input;
+  @AddToRuleKey private final CxxSource.Type inputType;
 
   // Fields that added to the rule key with some processing.
   private final CxxToolFlags compilerFlags;
@@ -126,17 +120,14 @@ public class CxxPrecompiledHeader
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
     sink.setReflectively(
-        "compilerFlagsPlatform",
-        compilerSanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
+        "compilerFlagsPlatform", compilerSanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
     sink.setReflectively(
-        "compilerFlagsRule",
-        compilerSanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+        "compilerFlagsRule", compilerSanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
     return new ImmutableList.Builder<Step>()
@@ -209,16 +200,18 @@ public class CxxPrecompiledHeader
   public ImmutableList<Path> readDepFileLines(BuildContext context)
       throws IOException, Depfiles.HeaderVerificationException {
     try {
-      return depFileCache.get(context, () ->
-          Depfiles.parseAndOutputBuckCompatibleDepfile(
-              context.getEventBus(),
-              getProjectFilesystem(),
-              preprocessorDelegate.getHeaderPathNormalizer(),
-              preprocessorDelegate.getHeaderVerification(),
-              getDepFilePath(context.getSourcePathResolver()),
-              // TODO(10194465): This uses relative path so as to get relative paths in the dep file
-              context.getSourcePathResolver().getRelativePath(input),
-              output));
+      return depFileCache.get(
+          context,
+          () ->
+              Depfiles.parseAndOutputBuckCompatibleDepfile(
+                  context.getEventBus(),
+                  getProjectFilesystem(),
+                  preprocessorDelegate.getHeaderPathNormalizer(),
+                  preprocessorDelegate.getHeaderVerification(),
+                  getDepFilePath(context.getSourcePathResolver()),
+                  // TODO(10194465): This uses relative path so as to get relative paths in the dep file
+                  context.getSourcePathResolver().getRelativePath(input),
+                  output));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
@@ -245,12 +238,12 @@ public class CxxPrecompiledHeader
                 preprocessorDelegate.getCommandPrefix(),
                 ImmutableList.copyOf(
                     CxxToolFlags.explicitBuilder()
-                        .addAllRuleFlags(getCxxIncludePaths().getFlags(
-                            resolver,
-                            preprocessorDelegate.getPreprocessor()))
-                        .addAllRuleFlags(preprocessorDelegate.getArguments(
-                            compilerFlags,
-                            /* no pch */ Optional.empty()))
+                        .addAllRuleFlags(
+                            getCxxIncludePaths()
+                                .getFlags(resolver, preprocessorDelegate.getPreprocessor()))
+                        .addAllRuleFlags(
+                            preprocessorDelegate.getArguments(
+                                compilerFlags, /* no pch */ Optional.empty()))
                         .build()
                         .getAllFlags()),
                 preprocessorDelegate.getEnvironment(),
@@ -267,18 +260,18 @@ public class CxxPrecompiledHeader
   /**
    * Helper method for dealing with compiler flags in a precompiled header build.
    *
-   * Triage the given list of compiler flags, and divert {@code -I} flags' arguments to
-   * {@code iDirsBuilder}, do similar for {@code -isystem} flags and {@code iSystemDirsBuilder},
-   * and finally output other non-include-path related stuff to {@code nonIncludeFlagsBuilder}.
+   * <p>Triage the given list of compiler flags, and divert {@code -I} flags' arguments to {@code
+   * iDirsBuilder}, do similar for {@code -isystem} flags and {@code iSystemDirsBuilder}, and
+   * finally output other non-include-path related stuff to {@code nonIncludeFlagsBuilder}.
    *
-   * Note that while Buck doesn't tend to produce {@code -I} and {@code -isystem} flags without
-   * a space between the flag and its argument, though historically compilers have accepted that.
+   * <p>Note that while Buck doesn't tend to produce {@code -I} and {@code -isystem} flags without a
+   * space between the flag and its argument, though historically compilers have accepted that.
    * We'll accept that here as well, inserting a break between the flag and its parameter.
    *
-   * @param iDirsBuilder a builder which will receive a list of directories provided with the
-   *        {@code -I} option (the flag itself will not be added to this builder)
+   * @param iDirsBuilder a builder which will receive a list of directories provided with the {@code
+   *     -I} option (the flag itself will not be added to this builder)
    * @param iSystemDirsBuilder a builder which will receive a list of directories provided with the
-   *        {@code -isystem} option (the flag itself will not be added to this builder)
+   *     {@code -isystem} option (the flag itself will not be added to this builder)
    * @param nonIncludeFlagsBuilder builder that receives all the stuff not outputted to the above.
    */
   public static void separateIncludePathArgs(

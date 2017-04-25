@@ -20,11 +20,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -66,8 +64,7 @@ public class GccPreprocessor extends AbstractPreprocessor {
 
   @Override
   public final Iterable<String> prefixHeaderArgs(
-      SourcePathResolver resolver,
-      SourcePath prefixHeader) {
+      SourcePathResolver resolver, SourcePath prefixHeader) {
     return ImmutableList.of("-include", resolver.getAbsolutePath(prefixHeader).toString());
   }
 
@@ -76,10 +73,8 @@ public class GccPreprocessor extends AbstractPreprocessor {
     // Tell GCC "-include file.h"; it'll automatically find the already-precompiled "file.h.gch".
     String pchFilename = pchOutputPath.toString();
     Preconditions.checkArgument(
-        pchFilename.endsWith(".h.gch"),
-        "Expected a precompiled '.gch' file, got: " + pchFilename);
+        pchFilename.endsWith(".h.gch"), "Expected a precompiled '.gch' file, got: " + pchFilename);
     String hFilename = pchFilename.substring(0, pchFilename.length() - 4);
     return ImmutableList.of("-include", hFilename);
   }
-
 }

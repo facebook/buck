@@ -20,7 +20,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -32,9 +31,7 @@ public class ElfStringTable {
   private ElfStringTable() {}
 
   private static ImmutableList<Integer> writeStringTable(
-      Iterable<Entry> entries,
-      OutputStream output)
-      throws IOException {
+      Iterable<Entry> entries, OutputStream output) throws IOException {
 
     // Build a list from the original input strings storing them with the index of their original
     // input index.
@@ -101,10 +98,7 @@ public class ElfStringTable {
    * indices.
    */
   public static ImmutableList<Integer> writeStringTableFromStringTable(
-      byte[] data,
-      Iterable<Integer> indices,
-      OutputStream output)
-      throws IOException {
+      byte[] data, Iterable<Integer> indices, OutputStream output) throws IOException {
     return writeStringTable(
         RichStream.from(indices)
             .map(index -> new Entry(data, index, getLengthForStringTableAndOffset(data, index)))
@@ -116,16 +110,12 @@ public class ElfStringTable {
    * Writes a string table from the given strings.
    *
    * @return a list of offsets into the written string table for the input strings (where each
-   *         offset positionally corresponds to a string in the input strings iterable).
+   *     offset positionally corresponds to a string in the input strings iterable).
    */
   public static ImmutableList<Integer> writeStringTableFromStrings(
-      Iterable<String> strings,
-      OutputStream output)
-      throws IOException {
+      Iterable<String> strings, OutputStream output) throws IOException {
     return writeStringTable(
-        RichStream.from(strings)
-            .map(s -> new Entry(s.getBytes(Charsets.UTF_8)))
-            .toImmutableList(),
+        RichStream.from(strings).map(s -> new Entry(s.getBytes(Charsets.UTF_8))).toImmutableList(),
         output);
   }
 
@@ -176,8 +166,8 @@ public class ElfStringTable {
         return false;
       }
       for (int idx = offset + (len - other.len), oidx = other.offset;
-           idx < offset + len;
-           idx++, oidx++) {
+          idx < offset + len;
+          idx++, oidx++) {
         if (data[idx] != other.data[oidx]) {
           return false;
         }
@@ -189,7 +179,5 @@ public class ElfStringTable {
     public String toString() {
       return new String(data, offset, len, Charsets.UTF_8);
     }
-
   }
-
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -43,17 +42,11 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
       SourcePathRuleFinder ruleFinder,
       SourcePath library) {
     return ElfSharedLibraryInterface.from(
-        target,
-        baseParams,
-        pathResolver,
-        ruleFinder,
-        getObjcopy().resolve(resolver),
-        library);
+        target, baseParams, pathResolver, ruleFinder, getObjcopy().resolve(resolver), library);
   }
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps() {
     return getObjcopy().getParseTimeDeps();
   }
-
 }

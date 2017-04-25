@@ -27,39 +27,36 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 /**
- * An object wrapping a linker, providing its source path and an interface to decorate
- * arguments with specific flags.
+ * An object wrapping a linker, providing its source path and an interface to decorate arguments
+ * with specific flags.
  */
 public interface Linker extends Tool {
 
   ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots);
 
   /**
-   * @return the platform-specific way to specify that the library represented by the
-   *     given argument should be linked whole.
+   * @return the platform-specific way to specify that the library represented by the given argument
+   *     should be linked whole.
    */
   Iterable<Arg> linkWhole(Arg input);
 
   /**
-   * @return the platform-specific way to specify that linker should use the given soname
-   *     when linking a shared library.
+   * @return the platform-specific way to specify that linker should use the given soname when
+   *     linking a shared library.
    */
   Iterable<String> soname(String soname);
 
   /**
-   * Specifies that the linker should link the files listed in file.
-   * This is an alternative to listing the files on the command line.
-   * The file names are listed one per line separated only by newlines.
-   * Spaces and tabs are assumed to be part of the file name.
+   * Specifies that the linker should link the files listed in file. This is an alternative to
+   * listing the files on the command line. The file names are listed one per line separated only by
+   * newlines. Spaces and tabs are assumed to be part of the file name.
    *
    * @param fileListPath the path to file which contains contents for file list to link
-   *
-   * @return the platform-specific way to support the feature.
-   * Empty list if feature is not supported.
+   * @return the platform-specific way to support the feature. Empty list if feature is not
+   *     supported.
    */
   Iterable<Arg> fileList(Path fileListPath);
 
@@ -75,14 +72,10 @@ public interface Linker extends Tool {
    */
   String libOrigin();
 
-  /**
-   * @return the name of the environment variable for the shared library runtime search path.
-   */
+  /** @return the name of the environment variable for the shared library runtime search path. */
   String searchPathEnvVar();
 
-  /**
-   * @return the name of the environment variable for the shared library preload search path.
-   */
+  /** @return the name of the environment variable for the shared library preload search path. */
   String preloadEnvVar();
 
   /**
@@ -91,21 +84,19 @@ public interface Linker extends Tool {
    */
   Iterable<String> getNoAsNeededSharedLibsFlags();
 
-  /**
-   * @return arguments to pass to the linker so that it ignores undefined symbols when linking.
-   */
+  /** @return arguments to pass to the linker so that it ignores undefined symbols when linking. */
   Iterable<String> getIgnoreUndefinedSymbolsFlags();
 
   /**
-   * Generate a necessary linker arguments to propagate undefined symbols to a link command.  May
+   * Generate a necessary linker arguments to propagate undefined symbols to a link command. May
    * need to create a {@link BuildRule}, in which case, {@code target} will be used as its name.
    *
    * @param target the name to give any {@link BuildRule} that needs to be created to facilitate
-   *               generating the arguments,
+   *     generating the arguments,
    * @param symbolFiles the symbols files, each listing undefined symbols, one per line, to add to
-   *                    the link.
+   *     the link.
    * @return the list of linker arguments needed to propagate the list of undefined symbols to the
-   *         link command.
+   *     link command.
    */
   ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
@@ -120,9 +111,7 @@ public interface Linker extends Tool {
 
   boolean hasFilePathSizeLimitations();
 
-  /**
-   * The various ways to link an output file.
-   */
+  /** The various ways to link an output file. */
   enum LinkType {
 
     // Link as standalone executable.
@@ -134,12 +123,9 @@ public interface Linker extends Tool {
     // Mach-O only: Link as a bundle, which can be loaded into a process image and
     // use that image's symbols.
     MACH_O_BUNDLE,
-
   }
 
-  /**
-   * The various ways to link in dependencies.
-   */
+  /** The various ways to link in dependencies. */
   enum LinkableDepType {
 
     // Provide input suitable for statically linking this linkable (e.g. return references to
@@ -153,11 +139,10 @@ public interface Linker extends Tool {
     // Provide input suitable for dynamically linking this linkable (e.g. return references to
     // shared libraries, libfoo.so).
     SHARED
-
   }
 
   /**
-   * The various styles of runtime library to which we can link shared objects.  In some cases, it's
+   * The various styles of runtime library to which we can link shared objects. In some cases, it's
    * useful to link against a static version of the usual dynamic support library.
    */
   enum CxxRuntimeType {
@@ -166,6 +151,5 @@ public interface Linker extends Tool {
 
     // Link in the C++ runtime statically
     STATIC,
-
   }
 }

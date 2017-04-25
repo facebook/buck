@@ -26,14 +26,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- * The components that get contributed to a top-level run of the C++ preprocessor.
- */
+/** The components that get contributed to a top-level run of the C++ preprocessor. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
@@ -53,8 +49,7 @@ abstract class AbstractCxxPreprocessorInput {
   protected abstract ImmutableSet<BuildTarget> getRules();
 
   public Iterable<BuildRule> getDeps(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder) {
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
     for (CxxHeaders cxxHeaders : getIncludes()) {
       builder.addAll(cxxHeaders.getDeps(ruleFinder));
@@ -63,8 +58,7 @@ abstract class AbstractCxxPreprocessorInput {
 
     for (FrameworkPath frameworkPath : getFrameworks()) {
       if (frameworkPath.getSourcePath().isPresent()) {
-        Optional<BuildRule> frameworkRule =
-            ruleFinder.getRule(frameworkPath.getSourcePath().get());
+        Optional<BuildRule> frameworkRule = ruleFinder.getRule(frameworkPath.getSourcePath().get());
         if (frameworkRule.isPresent()) {
           builder.add(frameworkRule.get());
         }
@@ -78,7 +72,7 @@ abstract class AbstractCxxPreprocessorInput {
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
-      ImmutableMultimap.builder();
+        ImmutableMultimap.builder();
     ImmutableList.Builder<CxxHeaders> headers = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
@@ -91,10 +85,6 @@ abstract class AbstractCxxPreprocessorInput {
     }
 
     return CxxPreprocessorInput.of(
-        preprocessorFlags.build(),
-        headers.build(),
-        frameworks.build(),
-        rules.build());
+        preprocessorFlags.build(), headers.build(), frameworks.build(), rules.build());
   }
-
 }

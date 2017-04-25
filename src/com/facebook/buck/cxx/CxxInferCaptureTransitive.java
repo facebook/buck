@@ -31,7 +31,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -42,8 +41,7 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   private Path outputDirectory;
 
   public CxxInferCaptureTransitive(
-      BuildRuleParams params,
-      ImmutableSet<CxxInferCapture> captureRules) {
+      BuildRuleParams params, ImmutableSet<CxxInferCapture> captureRules) {
     super(params);
     this.captureRules = captureRules;
     this.outputDirectory =
@@ -78,10 +76,7 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
         .add(MkdirStep.of(getProjectFilesystem(), outputDirectory))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
-                this,
-                getProjectFilesystem(),
-                this.outputDirectory.resolve("infer-deps.txt"))
-        )
+                this, getProjectFilesystem(), this.outputDirectory.resolve("infer-deps.txt")))
         .build();
   }
 }

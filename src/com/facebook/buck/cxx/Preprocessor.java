@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -46,8 +45,8 @@ public interface Preprocessor extends Tool {
   /**
    * @param prefixHeader the {@code prefix_hedaer} param for the rule.
    * @param pchOutputPath either a {@code precompiled_header} path, or the result of precompiling
-   *        {@code prefixHeader}.  Not mutually exclusive with {@code prefixHeader}; if both are
-   *        given, the precompiled version of it is preferred.
+   *     {@code prefixHeader}. Not mutually exclusive with {@code prefixHeader}; if both are given,
+   *     the precompiled version of it is preferred.
    */
   default Iterable<String> prefixOrPCHArgs(
       SourcePathResolver resolver,
@@ -64,5 +63,4 @@ public interface Preprocessor extends Tool {
     }
     return builder.build();
   }
-
 }

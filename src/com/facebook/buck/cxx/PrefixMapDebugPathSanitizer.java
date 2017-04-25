@@ -22,12 +22,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-
 
 /**
  * This sanitizer works by depending on the compiler's -fdebug-prefix-map flag to properly ensure
@@ -52,9 +50,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
       Path realCompilationDirectory,
       CxxToolProvider.Type cxxType,
       ProjectFilesystem projectFilesystem) {
-    super(
-        separator, pathSize,
-        fakeCompilationDirectory);
+    super(separator, pathSize, fakeCompilationDirectory);
     this.projectFilesystem = projectFilesystem;
     this.isGcc = cxxType == CxxToolProvider.Type.GCC;
     this.compilationDir = realCompilationDirectory;
@@ -72,9 +68,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
         FluentIterable.from(other.entrySet())
             .toSortedList(
                 (left, right) ->
-                    right.getKey().toString().length() - left.getKey().toString().length()
-                )
-    );
+                    right.getKey().toString().length() - left.getKey().toString().length()));
     // We assume that nothing in other is a prefix of realCompilationDirectory (though the reverse
     // is fine).
     pathsBuilder.put(realCompilationDirectory, fakeCompilationDirectory);
@@ -86,16 +80,14 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  ImmutableMap<String, String> getCompilationEnvironment(
-      Path workingDir, boolean shouldSanitize) {
+  ImmutableMap<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize) {
     if (!workingDir.equals(compilationDir)) {
-      throw new AssertionError(String.format(
-          "Expected working dir (%s) to be same as compilation dir (%s)",
-          workingDir,
-          compilationDir));
+      throw new AssertionError(
+          String.format(
+              "Expected working dir (%s) to be same as compilation dir (%s)",
+              workingDir, compilationDir));
     }
-    return ImmutableMap.of(
-        "PWD", workingDir.toString());
+    return ImmutableMap.of("PWD", workingDir.toString());
   }
 
   @Override
@@ -121,12 +113,8 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     return flags.build();
   }
 
-
   private String getDebugPrefixMapFlag(Path realPath, Path fakePath) {
-    return String.format(
-        "-fdebug-prefix-map=%s=%s",
-        realPath,
-        fakePath);
+    return String.format("-fdebug-prefix-map=%s=%s", realPath, fakePath);
   }
 
   @Override

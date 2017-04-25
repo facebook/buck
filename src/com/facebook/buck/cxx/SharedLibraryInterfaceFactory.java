@@ -24,9 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
-/**
- * Factory class which produces a {@link BuildRule} that generates a shared library interface.
- */
+/** Factory class which produces a {@link BuildRule} that generates a shared library interface. */
 public interface SharedLibraryInterfaceFactory {
 
   BuildRule createSharedInterfaceLibrary(
@@ -38,5 +36,4 @@ public interface SharedLibraryInterfaceFactory {
       SourcePath library);
 
   Iterable<BuildTarget> getParseTimeDeps();
-
 }

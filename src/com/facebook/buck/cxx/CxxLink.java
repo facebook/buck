@@ -22,8 +22,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
@@ -39,25 +39,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
 
-public class CxxLink
-    extends AbstractBuildRule
+public class CxxLink extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
 
-  @AddToRuleKey
-  private final Linker linker;
+  @AddToRuleKey private final Linker linker;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @AddToRuleKey
-  private final ImmutableList<Arg> args;
+
+  @AddToRuleKey private final ImmutableList<Arg> args;
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
-  @AddToRuleKey
-  private boolean thinLto;
+  @AddToRuleKey private boolean thinLto;
 
   public CxxLink(
       BuildRuleParams params,
@@ -79,19 +76,18 @@ public class CxxLink
 
   private void performChecks(BuildRuleParams params) {
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
-            !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR)
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
         "CxxLink should not be created with CxxStrip flavors");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     Optional<Path> linkerMapPath = getLinkerMapPath();
-    if (linkerMapPath.isPresent() &&
-        LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
+    if (linkerMapPath.isPresent()
+        && LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
       buildableContext.recordArtifact(linkerMapPath.get());
     }
     if (linker instanceof HasThinLTO && thinLto) {
@@ -99,10 +95,18 @@ public class CxxLink
     }
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
-    Path argFilePath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
-    Path fileListPath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+    Path argFilePath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
+    Path fileListPath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 
     // Try to find all the cell roots used during the link.  This isn't technically correct since,
     // in theory not all inputs need to come from build rules, but it probably works in practice.
@@ -118,25 +122,26 @@ public class CxxLink
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
         .add(RmStep.of(getProjectFilesystem(), argFilePath))
         .add(RmStep.of(getProjectFilesystem(), fileListPath))
-        .addAll(CxxPrepareForLinkStep.create(
-            argFilePath,
-            fileListPath,
-            linker.fileList(fileListPath),
-            output,
-            args,
-            linker,
-            getBuildTarget().getCellPath(),
-            context.getSourcePathResolver()))
-        .add(new CxxLinkStep(
-            getProjectFilesystem().getRootPath(),
-            linker.getEnvironment(context.getSourcePathResolver()),
-            linker.getCommandPrefix(context.getSourcePathResolver()),
-            argFilePath,
-            getProjectFilesystem().getRootPath().resolve(scratchDir)))
-        .add(new FileScrubberStep(
-            getProjectFilesystem(),
-            output,
-            linker.getScrubbers(cellRoots.build())))
+        .addAll(
+            CxxPrepareForLinkStep.create(
+                argFilePath,
+                fileListPath,
+                linker.fileList(fileListPath),
+                output,
+                args,
+                linker,
+                getBuildTarget().getCellPath(),
+                context.getSourcePathResolver()))
+        .add(
+            new CxxLinkStep(
+                getProjectFilesystem().getRootPath(),
+                linker.getEnvironment(context.getSourcePathResolver()),
+                linker.getCommandPrefix(context.getSourcePathResolver()),
+                argFilePath,
+                getProjectFilesystem().getRootPath().resolve(scratchDir)))
+        .add(
+            new FileScrubberStep(
+                getProjectFilesystem(), output, linker.getScrubbers(cellRoots.build())))
         .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST))
         .add(RmStep.of(getProjectFilesystem(), argFilePath))
         .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST))

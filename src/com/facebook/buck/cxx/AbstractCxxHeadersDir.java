@@ -21,14 +21,10 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- * Wraps a header directory to add to the preprocessors search path.
- */
+/** Wraps a header directory to add to the preprocessors search path. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxHeadersDir extends CxxHeaders {
@@ -66,5 +62,4 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
     sink.setReflectively("type", getIncludeType());
     sink.setReflectively("root", getRoot());
   }
-
 }

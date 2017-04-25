@@ -19,29 +19,21 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
-/**
- * Interface marking a rule as having tests.
- */
+/** Interface marking a rule as having tests. */
 public interface NativeTestable {
 
-  /**
-   * Return true if this rule is tested by {@code testTarget}, false
-   * otherwise.
-   */
+  /** Return true if this rule is tested by {@code testTarget}, false otherwise. */
   boolean isTestedBy(BuildTarget testTarget);
 
   /**
-   * Return the {@link CxxPreprocessorInput} to expose symbols of
-   * this rule.
+   * Return the {@link CxxPreprocessorInput} to expose symbols of this rule.
    *
-   * Note: This is duplicated from CxxPreprocessorDep.
+   * <p>Note: This is duplicated from CxxPreprocessorDep.
    *
-   * We need the same information to expose the headers of a target
-   * under test to its tests, but any rule that implements
-   * CxxPreprocessorDep gets automatically invoked by CxxDescriptionEnhancer
-   * to get preprocessor information, which is not what we want.
+   * <p>We need the same information to expose the headers of a target under test to its tests, but
+   * any rule that implements CxxPreprocessorDep gets automatically invoked by
+   * CxxDescriptionEnhancer to get preprocessor information, which is not what we want.
    */
   CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
 }

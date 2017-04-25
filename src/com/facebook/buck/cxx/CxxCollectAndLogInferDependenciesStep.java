@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -45,14 +44,9 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   public static CxxCollectAndLogInferDependenciesStep fromAnalyzeRule(
-      CxxInferAnalyze analyzeRule,
-      ProjectFilesystem projectFilesystem,
-      Path outputFile) {
+      CxxInferAnalyze analyzeRule, ProjectFilesystem projectFilesystem, Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.of(analyzeRule),
-        Optional.empty(),
-        projectFilesystem,
-        outputFile);
+        Optional.of(analyzeRule), Optional.empty(), projectFilesystem, outputFile);
   }
 
   public static CxxCollectAndLogInferDependenciesStep fromCaptureOnlyRule(
@@ -60,16 +54,13 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.empty(),
-        Optional.of(captureOnlyRule),
-        projectFilesystem,
-        outputFile);
+        Optional.empty(), Optional.of(captureOnlyRule), projectFilesystem, outputFile);
   }
 
   private String processCaptureRule(CxxInferCapture captureRule) {
     return InferLogLine.fromBuildTarget(
-        captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput())
-      .toString();
+            captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput())
+        .toString();
   }
 
   private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
@@ -81,11 +72,10 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   private void processAnalysisRuleHelper(
-      CxxInferAnalyze analysisRule,
-      ImmutableList.Builder<String> accumulator) {
+      CxxInferAnalyze analysisRule, ImmutableList.Builder<String> accumulator) {
     accumulator.add(
         InferLogLine.fromBuildTarget(
-            analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
+                analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
             .toString());
     accumulator.addAll(
         analysisRule.getCaptureRules().stream().map(this::processCaptureRule).iterator());

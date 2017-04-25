@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;

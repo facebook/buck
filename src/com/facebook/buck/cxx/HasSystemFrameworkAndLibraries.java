@@ -22,10 +22,11 @@ import com.google.common.collect.ImmutableSortedSet;
 /**
  * Constructor args which specify system framework and library fields.
  *
- * E.g. fields with members in the form of {@code $SDKROOT/user/lib/libz.dylib} or
- * {@code $SDKROOT/System/Library/Frameworks/Foundation.framework}.
+ * <p>E.g. fields with members in the form of {@code $SDKROOT/user/lib/libz.dylib} or {@code
+ * $SDKROOT/System/Library/Frameworks/Foundation.framework}.
  */
 public interface HasSystemFrameworkAndLibraries {
   ImmutableSortedSet<FrameworkPath> getFrameworks();
+
   ImmutableSortedSet<FrameworkPath> getLibraries();
 }

@@ -27,40 +27,30 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractPreprocessorFlags {
 
-  /**
-   * File set via {@code -include}.
-   */
+  /** File set via {@code -include}. */
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
 
-  /**
-   * Other flags included as is.
-   */
+  /** Other flags included as is. */
   @Value.Parameter
   @Value.Default
   public CxxToolFlags getOtherFlags() {
     return CxxToolFlags.of();
   }
 
-  /**
-   * Directories set via {@code -I}.
-   */
+  /** Directories set via {@code -I}. */
   @Value.Parameter
   public abstract ImmutableSet<CxxHeaders> getIncludes();
 
-  /**
-   * Directories set via {@code -F}.
-   */
+  /** Directories set via {@code -F}. */
   @Value.Parameter
   public abstract ImmutableSet<FrameworkPath> getFrameworkPaths();
 
@@ -81,9 +71,7 @@ abstract class AbstractPreprocessorFlags {
     return deps.build();
   }
 
-  /**
-   * Append to rule key the members which are not handled elsewhere.
-   */
+  /** Append to rule key the members which are not handled elsewhere. */
   public void appendToRuleKey(RuleKeyObjectSink sink, DebugPathSanitizer sanitizer) {
     sink.setReflectively("prefixHeader", getPrefixHeader());
     sink.setReflectively("includes", getIncludes());
@@ -92,11 +80,9 @@ abstract class AbstractPreprocessorFlags {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
     sink.setReflectively(
-        "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(getOtherFlags().getPlatformFlags()));
+        "platformPreprocessorFlags", sanitizer.sanitizeFlags(getOtherFlags().getPlatformFlags()));
     sink.setReflectively(
-        "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
+        "rulePreprocessorFlags", sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
   }
 
   public CxxToolFlags getIncludePathFlags(
@@ -106,18 +92,13 @@ abstract class AbstractPreprocessorFlags {
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(
-            getCxxIncludePaths().getFlags(
-                resolver,
-                pathShortener,
-                frameworkPathTransformer,
-                preprocessor))
+            getCxxIncludePaths()
+                .getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor))
         .build();
   }
 
   public CxxToolFlags getNonIncludePathFlags(
-      SourcePathResolver resolver,
-      Optional<CxxPrecompiledHeader> pch,
-      Preprocessor preprocessor) {
+      SourcePathResolver resolver, Optional<CxxPrecompiledHeader> pch, Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     builder.addAllRuleFlags(
@@ -138,5 +119,4 @@ abstract class AbstractPreprocessorFlags {
         getNonIncludePathFlags(resolver, pch, preprocessor),
         getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
-
 }

@@ -22,11 +22,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
 public abstract class AbstractPreprocessor implements Preprocessor {
@@ -64,9 +62,6 @@ public abstract class AbstractPreprocessor implements Preprocessor {
 
   @Override
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
-
 }

@@ -21,10 +21,10 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -32,9 +32,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
-
 
 @SuppressFieldNotInitialized
 public class CxxConstructorArg extends AbstractDescriptionArg
@@ -68,7 +66,9 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
   public ImmutableList<String> includeDirs = ImmutableList.of();
 
-  @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+  @Hint(isDep = false)
+  public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
   public ImmutableMap<String, Flavor> defaults = ImmutableMap.of();
 
   @Override
@@ -93,9 +93,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg
     return libraries;
   }
 
-  /**
-   * @return the C/C++ deps this rule builds against.
-   */
+  /** @return the C/C++ deps this rule builds against. */
   public CxxDeps getCxxDeps() {
     return CxxDeps.builder()
         .addDeps(deps)
@@ -103,5 +101,4 @@ public class CxxConstructorArg extends AbstractDescriptionArg
         .addDep(precompiledHeader)
         .build();
   }
-
 }

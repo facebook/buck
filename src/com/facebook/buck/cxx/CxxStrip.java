@@ -31,30 +31,27 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Controls how strip tool is invoked. To have better understanding please refer to `man strip`.
- * If you don't want stripping, you should depend on CxxLink directly.
+ * Controls how strip tool is invoked. To have better understanding please refer to `man strip`. If
+ * you don't want stripping, you should depend on CxxLink directly.
  */
 public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   /**
-   * Used to identify this rule in the graph. This should be appended ONLY to build target
-   * that is passed to the CxxStrip constructor when you create instance of this class.
-   * Appending it in other places is does nothing except adds a unnecessary flavor that will skew
-   * output paths of other build rules.
+   * Used to identify this rule in the graph. This should be appended ONLY to build target that is
+   * passed to the CxxStrip constructor when you create instance of this class. Appending it in
+   * other places is does nothing except adds a unnecessary flavor that will skew output paths of
+   * other build rules.
    */
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("stripped");
 
-  @AddToRuleKey
-  private final StripStyle stripStyle;
-  @AddToRuleKey
-  private final SourcePath cxxLinkSourcePath;
-  @AddToRuleKey
-  private final Tool strip;
+  @AddToRuleKey private final StripStyle stripStyle;
+  @AddToRuleKey private final SourcePath cxxLinkSourcePath;
+  @AddToRuleKey private final Tool strip;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
 
@@ -75,16 +72,18 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   private void performChecks(BuildTarget buildTarget) {
     Preconditions.checkArgument(
         buildTarget.getFlavors().contains(RULE_FLAVOR),
-        "CxxStrip rule %s should contain %s flavor", this, RULE_FLAVOR);
+        "CxxStrip rule %s should contain %s flavor",
+        this,
+        RULE_FLAVOR);
     Preconditions.checkArgument(
         StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxStrip rule %s should contain one of the strip style flavors (%s)",
-        this, StripStyle.FLAVOR_DOMAIN.getFlavors());
+        this,
+        StripStyle.FLAVOR_DOMAIN.getFlavors());
   }
 
   public static BuildRuleParams removeStripStyleFlavorInParams(
-      BuildRuleParams params,
-      Optional<StripStyle> flavoredStripStyle) {
+      BuildRuleParams params, Optional<StripStyle> flavoredStripStyle) {
     params = params.withoutFlavor(CxxStrip.RULE_FLAVOR);
     if (flavoredStripStyle.isPresent()) {
       params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
@@ -93,8 +92,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   }
 
   public static BuildRuleParams restoreStripStyleFlavorInParams(
-      BuildRuleParams params,
-      Optional<StripStyle> flavoredStripStyle) {
+      BuildRuleParams params, Optional<StripStyle> flavoredStripStyle) {
     if (flavoredStripStyle.isPresent()) {
       // we should not append CxxStrip.RULE_FLAVOR here because it must be appended
       // to CxxStrip rule only. Other users of CxxStrip flavors must not append it.

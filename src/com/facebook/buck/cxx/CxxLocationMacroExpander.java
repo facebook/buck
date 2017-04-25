@@ -32,9 +32,7 @@ public class CxxLocationMacroExpander extends LocationMacroExpander {
   }
 
   @Override
-  protected BuildRule resolve(
-      BuildRuleResolver resolver,
-      LocationMacro input)
+  protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
       throws MacroException {
     BuildRule rule = super.resolve(resolver, input);
     if (rule instanceof CxxGenrule) {
@@ -47,5 +45,4 @@ public class CxxLocationMacroExpander extends LocationMacroExpander {
     }
     return rule;
   }
-
 }

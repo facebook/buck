@@ -22,9 +22,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * Builder suitable for generating the dependency list of a build rule.
- */
+/** Builder suitable for generating the dependency list of a build rule. */
 public class DepsBuilder {
   private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
   private final SourcePathRuleFinder ruleFinder;

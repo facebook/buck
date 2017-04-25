@@ -26,12 +26,9 @@ import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-
 import java.util.Objects;
 
-/**
- * A base class for {@link Arg}s which wrap a {@link FrameworkPath}.
- */
+/** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
 public abstract class FrameworkPathArg extends Arg {
 
   protected final ImmutableCollection<FrameworkPath> frameworkPaths;
@@ -42,14 +39,15 @@ public abstract class FrameworkPathArg extends Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
-    FluentIterable<SourcePath> sourcePaths = FluentIterable.from(frameworkPaths)
-        .transformAndConcat(
-            new Function<FrameworkPath, Iterable<SourcePath>>() {
-              @Override
-              public Iterable<SourcePath> apply(FrameworkPath input) {
-                return OptionalCompat.asSet(input.getSourcePath());
-              }
-            });
+    FluentIterable<SourcePath> sourcePaths =
+        FluentIterable.from(frameworkPaths)
+            .transformAndConcat(
+                new Function<FrameworkPath, Iterable<SourcePath>>() {
+                  @Override
+                  public Iterable<SourcePath> apply(FrameworkPath input) {
+                    return OptionalCompat.asSet(input.getSourcePath());
+                  }
+                });
     return ruleFinder.filterBuildRuleInputs(sourcePaths);
   }
 

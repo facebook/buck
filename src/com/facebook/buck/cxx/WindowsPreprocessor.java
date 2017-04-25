@@ -19,10 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 
 public class WindowsPreprocessor extends AbstractPreprocessor {
@@ -62,9 +60,7 @@ public class WindowsPreprocessor extends AbstractPreprocessor {
   }
 
   @Override
-  public Iterable<String> prefixHeaderArgs(
-      SourcePathResolver resolver,
-      SourcePath prefixHeader) {
+  public Iterable<String> prefixHeaderArgs(SourcePathResolver resolver, SourcePath prefixHeader) {
     throw new UnsupportedOperationException("prefix header not supported by " + getClass());
     // TODO(steveo) Should be easy to add support; will try @ later time,
     // when I can test w/ Windows.
@@ -83,5 +79,4 @@ public class WindowsPreprocessor extends AbstractPreprocessor {
     // E.g. something like this flag (no space between "/Yu" and its argument):
     // return ImmutableList.of("/Yu" + pchOutputPath);
   }
-
 }

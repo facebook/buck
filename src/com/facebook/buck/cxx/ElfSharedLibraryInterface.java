@@ -36,32 +36,21 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * Build a shared library interface from an ELF shared library.
- */
-class ElfSharedLibraryInterface
-    extends AbstractBuildRuleWithResolver
+/** Build a shared library interface from an ELF shared library. */
+class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey {
 
   // We only care about sections relevant to dynamic linking.
   private static final ImmutableSet<String> SECTIONS =
       ImmutableSet.of(
-          ".dynamic",
-          ".dynsym",
-          ".dynstr",
-          ".gnu.version",
-          ".gnu.version_d",
-          ".gnu.version_r");
+          ".dynamic", ".dynsym", ".dynstr", ".gnu.version", ".gnu.version_d", ".gnu.version_r");
 
   private final SourcePathResolver pathResolver;
-  @AddToRuleKey
-  private final Tool objcopy;
+  @AddToRuleKey private final Tool objcopy;
 
-  @AddToRuleKey
-  private final SourcePath input;
+  @AddToRuleKey private final SourcePath input;
 
   private ElfSharedLibraryInterface(
       BuildRuleParams buildRuleParams,
@@ -106,29 +95,25 @@ class ElfSharedLibraryInterface
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path output = getOutputDir().resolve(getSharedAbiLibraryName());
     buildableContext.recordArtifact(output);
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputDir()))
-        .add(ElfExtractSectionsStep.of(
-            getProjectFilesystem(),
-            objcopy.getCommandPrefix(context.getSourcePathResolver()),
-            context.getSourcePathResolver().getAbsolutePath(input),
-            output,
-            SECTIONS))
+        .add(
+            ElfExtractSectionsStep.of(
+                getProjectFilesystem(),
+                objcopy.getCommandPrefix(context.getSourcePathResolver()),
+                context.getSourcePathResolver().getAbsolutePath(input),
+                output,
+                SECTIONS))
         .add(ElfClearProgramHeadersStep.of(getProjectFilesystem(), output))
-        .add(ElfSymbolTableScrubberStep.of(
-            getProjectFilesystem(),
-            output,
-            /* section */ ".dynsym",
-            /* allowMissing */ false))
-        .add(ElfSymbolTableScrubberStep.of(
-            getProjectFilesystem(),
-            output,
-            /* section */ ".symtab",
-            /* allowMissing */ true))
+        .add(
+            ElfSymbolTableScrubberStep.of(
+                getProjectFilesystem(), output, /* section */ ".dynsym", /* allowMissing */ false))
+        .add(
+            ElfSymbolTableScrubberStep.of(
+                getProjectFilesystem(), output, /* section */ ".symtab", /* allowMissing */ true))
         .add(ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output))
         .build();
   }
@@ -136,7 +121,6 @@ class ElfSharedLibraryInterface
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        getOutputDir().resolve(getSharedAbiLibraryName()));
+        getBuildTarget(), getOutputDir().resolve(getSharedAbiLibraryName()));
   }
 }

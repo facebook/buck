@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -28,5 +27,4 @@ abstract class AbstractCxxCompilationDatabaseDependencies {
 
   @Value.Parameter
   abstract ImmutableSet<SourcePath> getSourcePaths();
-
 }

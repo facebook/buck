@@ -29,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -41,9 +40,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-/**
- * Create an object archive with ar.
- */
+/** Create an object archive with ar. */
 public class ArchiveStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -109,16 +106,16 @@ public class ArchiveStep implements Step {
   }
 
   private ProcessExecutor.Result runArchiver(
-      ExecutionContext context,
-      final ImmutableList<String> command)
+      ExecutionContext context, final ImmutableList<String> command)
       throws IOException, InterruptedException {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
     env.putAll(environment);
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setDirectory(filesystem.getRootPath())
-        .setEnvironment(ImmutableMap.copyOf(env))
-        .setCommand(command)
-        .build();
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setDirectory(filesystem.getRootPath())
+            .setEnvironment(ImmutableMap.copyOf(env))
+            .setCommand(command)
+            .build();
     ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
     if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
       context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
@@ -154,12 +151,13 @@ public class ArchiveStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList.Builder<String> command = ImmutableList.<String>builder()
-        .add("ar")
-        .addAll(archiverFlags)
-        .addAll(archiverExtraFlags)
-        .addAll(archiver.outputArgs(output.toString()))
-        .addAll(Iterables.transform(inputs, Object::toString));
+    ImmutableList.Builder<String> command =
+        ImmutableList.<String>builder()
+            .add("ar")
+            .addAll(archiverFlags)
+            .addAll(archiverExtraFlags)
+            .addAll(archiver.outputArgs(output.toString()))
+            .addAll(Iterables.transform(inputs, Object::toString));
     return Joiner.on(' ').join(command.build());
   }
 
@@ -167,5 +165,4 @@ public class ArchiveStep implements Step {
   public String getShortName() {
     return "archive";
   }
-
 }

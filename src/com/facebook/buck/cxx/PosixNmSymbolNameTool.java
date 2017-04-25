@@ -24,8 +24,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteSource;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -74,34 +73,31 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs) {
-    UndefinedSymbolsFile rule = ruleResolver.addToIndex(
-        new UndefinedSymbolsFile(
-            baseParams
-                .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(nm.getDeps(ruleFinder))
-                            .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
-                            .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
-            nm,
-            linkerInputs));
+    UndefinedSymbolsFile rule =
+        ruleResolver.addToIndex(
+            new UndefinedSymbolsFile(
+                baseParams
+                    .withBuildTarget(target)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(
+                            ImmutableSortedSet.<BuildRule>naturalOrder()
+                                .addAll(nm.getDeps(ruleFinder))
+                                .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
+                                .build()),
+                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                nm,
+                linkerInputs));
     return rule.getSourcePathToOutput();
   }
 
   private static class UndefinedSymbolsFile extends AbstractBuildRule {
 
-    @AddToRuleKey
-    private final Tool nm;
+    @AddToRuleKey private final Tool nm;
 
-    @AddToRuleKey
-    private final Iterable<? extends SourcePath> inputs;
+    @AddToRuleKey private final Iterable<? extends SourcePath> inputs;
 
     public UndefinedSymbolsFile(
-        BuildRuleParams buildRuleParams,
-        Tool nm,
-        Iterable<? extends SourcePath> inputs) {
+        BuildRuleParams buildRuleParams, Tool nm, Iterable<? extends SourcePath> inputs) {
       super(buildRuleParams);
       this.nm = nm;
       this.inputs = inputs;
@@ -109,15 +105,12 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     private Path getUndefinedSymbolsPath() {
       return BuildTargets.getGenPath(
-          getProjectFilesystem(),
-          getBuildTarget(),
-          "%s/undefined_symbols.txt");
+          getProjectFilesystem(), getBuildTarget(), "%s/undefined_symbols.txt");
     }
 
     @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
-        final BuildableContext buildableContext) {
+        BuildContext context, final BuildableContext buildableContext) {
       final Path output = getUndefinedSymbolsPath();
 
       // Cache the symbols file.
@@ -147,8 +140,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
               nm.getEnvironment(context.getSourcePathResolver())) {
             @Override
             protected void addOptions(
-                ExecutionContext context,
-                ImmutableSet.Builder<ProcessExecutor.Option> options) {
+                ExecutionContext context, ImmutableSet.Builder<ProcessExecutor.Option> options) {
               options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
             }
           };
@@ -164,8 +156,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   Set<String> symbols = new LinkedHashSet<>();
                   Pattern pattern = Pattern.compile("^\\S+: (?<name>\\S+) .*");
                   try (BufferedReader reader =
-                           new BufferedReader(
-                               new StringReader(shellStep.getStdout()))) {
+                      new BufferedReader(new StringReader(shellStep.getStdout()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                       Matcher matcher = pattern.matcher(line);
@@ -179,8 +170,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                     builder.append(symbol);
                     builder.append(System.lineSeparator());
                   }
-                  return new ByteArrayInputStream(
-                      builder.toString().getBytes(Charsets.UTF_8));
+                  return new ByteArrayInputStream(builder.toString().getBytes(Charsets.UTF_8));
                 }
               },
               output,
@@ -193,7 +183,5 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     public SourcePath getSourcePathToOutput() {
       return new ExplicitBuildTargetSourcePath(getBuildTarget(), getUndefinedSymbolsPath());
     }
-
   }
-
 }

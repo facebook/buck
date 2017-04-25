@@ -33,7 +33,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,24 +75,19 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
     return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRoots),
-        new LcUuidContentsScrubber());
+        new OsoSymbolsContentsScrubber(cellRoots), new LcUuidContentsScrubber());
   }
 
   @Override
   public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(
-        StringArg.of("-Xlinker"),
-        StringArg.of("-force_load"),
-        StringArg.of("-Xlinker"),
-        input);
+        StringArg.of("-Xlinker"), StringArg.of("-force_load"), StringArg.of("-Xlinker"), input);
   }
 
   @Override
   public Iterable<Arg> linkerMap(Path output) {
     // Build up the arguments to pass to the linker.
-    return StringArg.from(
-        "-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());
+    return StringArg.from("-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());
   }
 
   @Override
@@ -183,17 +177,15 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
 
   /**
    * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
    * linker via the `-u` argument.
    *
-   * NOTE: this is prone to overrunning command line argument limits, but it's not clear of another
-   * way to do this (perhaps other than creating a dymmy object file whose symbol table only
+   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
+   * another way to do this (perhaps other than creating a dymmy object file whose symbol table only
    * contains the undefined symbols listed in the symbol files).
    */
   private static class UndefinedSymbolsArg extends Arg {
@@ -218,13 +210,11 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
     // `-u` command line option.
     @Override
     public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder,
-        SourcePathResolver pathResolver) {
+        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
-          symbols.addAll(
-              Files.readAllLines(pathResolver.getAbsolutePath(path), Charsets.UTF_8));
+          symbols.addAll(Files.readAllLines(pathResolver.getAbsolutePath(path), Charsets.UTF_8));
         }
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -260,7 +250,5 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("symbolFiles", symbolFiles);
     }
-
   }
-
 }

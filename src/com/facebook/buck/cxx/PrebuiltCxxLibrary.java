@@ -20,8 +20,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.google.common.collect.ImmutableList;
 
-public abstract class PrebuiltCxxLibrary
-    extends NoopBuildRule
+public abstract class PrebuiltCxxLibrary extends NoopBuildRule
     implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
   PrebuiltCxxLibrary(BuildRuleParams params) {
@@ -29,5 +28,4 @@ public abstract class PrebuiltCxxLibrary
   }
 
   public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);
-
 }

@@ -21,7 +21,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
@@ -39,10 +38,6 @@ abstract class AbstractCxxCompilationDatabaseEntry {
 
   @Value.Derived
   public String getCommand() {
-    return Joiner.on(' ').join(
-        Iterables.transform(
-            getArguments(),
-            Escaper.SHELL_ESCAPER));
+    return Joiner.on(' ').join(Iterables.transform(getArguments(), Escaper.SHELL_ESCAPER));
   }
-
 }

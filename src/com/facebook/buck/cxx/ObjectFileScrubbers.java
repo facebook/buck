@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
-
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -75,13 +74,13 @@ public class ObjectFileScrubbers {
           // Iterate over all the file meta-data entries, injecting zero's for timestamp,
           // UID, and GID.
           final int entrySize =
-              16 /* fileName */ +
-              12 /* file modification time */ +
-              6 /* owner ID */ +
-              6 /* group ID */ +
-              8 /* file mode */ +
-              10 /* file size */ +
-              2 /* file magic */;
+              16 /* fileName */
+                  + 12 /* file modification time */
+                  + 6 /* owner ID */
+                  + 6 /* group ID */
+                  + 8 /* file mode */
+                  + 10 /* file size */
+                  + 2 /* file magic */;
 
           long start = GLOBAL_HEADER_SIZE;
           ByteBuffer buffer = ByteBuffer.allocate(entrySize);
@@ -110,9 +109,7 @@ public class ObjectFileScrubbers {
 
             // Lastly, grab the file magic entry and verify it's accurate.
             byte[] fileMagic = getBytes(buffer, 2);
-            checkArchive(
-                Arrays.equals(END_OF_FILE_HEADER_MARKER, fileMagic),
-                "invalid file magic");
+            checkArchive(Arrays.equals(END_OF_FILE_HEADER_MARKER, fileMagic), "invalid file magic");
 
             // write the changes
             buffer.position(0); // position points just past the last byte accessed, need to reset
@@ -214,10 +211,7 @@ public class ObjectFileScrubbers {
   }
 
   public static void putIntAsOctalString(
-      ByteBuffer buffer,
-      int len,
-      int value,
-      PaddingStyle paddingStyle) {
+      ByteBuffer buffer, int len, int value, PaddingStyle paddingStyle) {
     if (paddingStyle == PaddingStyle.LEFT) {
       putSpaceLeftPaddedString(buffer, len, String.format("0%o", value));
     } else {
@@ -226,10 +220,7 @@ public class ObjectFileScrubbers {
   }
 
   public static void putIntAsDecimalString(
-      ByteBuffer buffer,
-      int len,
-      int value,
-      PaddingStyle paddingStyle) {
+      ByteBuffer buffer, int len, int value, PaddingStyle paddingStyle) {
     if (paddingStyle == PaddingStyle.LEFT) {
       putSpaceLeftPaddedString(buffer, len, String.format("%d", value));
     } else {
@@ -239,14 +230,15 @@ public class ObjectFileScrubbers {
 
   public static void putLittleEndianLong(ByteBuffer buffer, long value) {
     byte[] bytes = Longs.toByteArray(value);
-    byte[] flipped =
-        {bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]};
+    byte[] flipped = {
+      bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]
+    };
     buffer.put(flipped);
   }
 
   public static void putLittleEndianInt(ByteBuffer buffer, int value) {
     byte[] bytes = Ints.toByteArray(value);
-    byte[] flipped = { bytes[3], bytes[2], bytes[1], bytes[0]};
+    byte[] flipped = {bytes[3], bytes[2], bytes[1], bytes[0]};
     buffer.put(flipped);
   }
 
@@ -262,5 +254,4 @@ public class ObjectFileScrubbers {
       throw new FileContentsScrubber.ScrubException(msg);
     }
   }
-
 }

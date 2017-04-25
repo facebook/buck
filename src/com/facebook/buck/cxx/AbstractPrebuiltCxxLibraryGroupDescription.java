@@ -49,25 +49,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
-    Description<AbstractPrebuiltCxxLibraryGroupDescription.Args>,
-    VersionPropagator<AbstractPrebuiltCxxLibraryGroupDescription.Args> {
+abstract class AbstractPrebuiltCxxLibraryGroupDescription
+    implements Description<AbstractPrebuiltCxxLibraryGroupDescription.Args>,
+        VersionPropagator<AbstractPrebuiltCxxLibraryGroupDescription.Args> {
 
   private static final MacroFinder FINDER = new MacroFinder();
   private static final String LIB_MACRO = "lib";
   private static final String REL_LIB_MACRO = "rel-lib";
 
-  /**
-   * If the arg contains a library reference, parse it and return it's name and argument.
-   */
+  /** If the arg contains a library reference, parse it and return it's name and argument. */
   private Optional<Pair<String, String>> getLibRef(ImmutableSet<String> macros, String arg) {
     Optional<MacroMatchResult> result;
     try {
@@ -95,12 +91,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
   /**
    * @return the link args formed from the user-provided static link line after resolving library
-   *         macro references.
+   *     macro references.
    */
   private Iterable<Arg> getStaticLinkArgs(
-      BuildTarget target,
-      ImmutableList<SourcePath> libs,
-      ImmutableList<String> args) {
+      BuildTarget target, ImmutableList<SourcePath> libs, ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
     for (String arg : args) {
       Optional<Pair<String, String>> libRef = getLibRef(ImmutableSet.of(LIB_MACRO), arg);
@@ -124,12 +118,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
   /**
    * @return the link args formed from the user-provided shared link line after resolving library
-   *         macro references.
+   *     macro references.
    */
   private Iterable<Arg> getSharedLinkArgs(
-      BuildTarget target,
-      ImmutableMap<String, SourcePath> libs,
-      ImmutableList<String> args) {
+      BuildTarget target, ImmutableMap<String, SourcePath> libs, ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
     for (String arg : args) {
       Optional<Pair<String, String>> libRef =
@@ -139,9 +131,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         if (lib == null) {
           throw new HumanReadableException(
               "%s: library \"%s\" (in \"%s\") must refer to keys in the `sharedLibs` parameter",
-              target,
-              libRef.get().getSecond(),
-              arg);
+              target, libRef.get().getSecond(), arg);
         }
         Arg libArg;
         if (libRef.get().getFirst().equals(LIB_MACRO)) {
@@ -149,8 +139,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         } else if (libRef.get().getFirst().equals(REL_LIB_MACRO)) {
           if (!(lib instanceof PathSourcePath)) {
             throw new HumanReadableException(
-                "%s: can only link prebuilt DSOs without sonames",
-                target);
+                "%s: can only link prebuilt DSOs without sonames", target);
           }
           libArg = new RelativeLinkArg((PathSourcePath) lib);
         } else {
@@ -170,15 +159,16 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args) throws NoSuchBuildTargetException {
+      final A args)
+      throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new CustomPrebuiltCxxLibrary(params) {
 
       private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-          > transitiveCxxPreprocessorInputCache =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+              CxxPreprocessables.CxxPreprocessorInputCacheKey,
+              ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+          transitiveCxxPreprocessorInputCache =
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables() {
@@ -196,14 +186,12 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return FluentIterable.from(getBuildDeps())
-            .filter(CxxPreprocessorDep.class);
+        return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
       }
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility)
+          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
@@ -231,8 +219,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility)
+          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
           throws NoSuchBuildTargetException {
         return transitiveCxxPreprocessorInputCache.getUnchecked(
             ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
@@ -240,8 +227,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
-        return FluentIterable.from(params.getDeclaredDeps().get())
-            .filter(NativeLinkable.class);
+        return FluentIterable.from(params.getDeclaredDeps().get()).filter(NativeLinkable.class);
       }
 
       @Override
@@ -253,9 +239,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform,
-          Linker.LinkableDepType type)
-          throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
         }
@@ -266,10 +250,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     CxxGenruleDescription.fixupSourcePaths(
-                        resolver,
-                        ruleFinder,
-                        cxxPlatform,
-                        args.staticLibs),
+                        resolver, ruleFinder, cxxPlatform, args.staticLibs),
                     args.staticLink));
             break;
           case STATIC_PIC:
@@ -277,10 +258,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     CxxGenruleDescription.fixupSourcePaths(
-                        resolver,
-                        ruleFinder,
-                        cxxPlatform,
-                        args.staticPicLibs),
+                        resolver, ruleFinder, cxxPlatform, args.staticPicLibs),
                     args.staticPicLink));
             break;
           case SHARED:
@@ -305,8 +283,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
 
         // If we both shared and static libs, we support any linkage.
-        if (!args.sharedLink.isEmpty() &&
-            !(args.staticLink.isEmpty() && args.staticPicLink.isEmpty())) {
+        if (!args.sharedLink.isEmpty()
+            && !(args.staticLink.isEmpty() && args.staticPicLink.isEmpty())) {
           return Linkage.ANY;
         }
 
@@ -352,16 +330,16 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       }
 
       private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-        return !args.supportedPlatformsRegex.isPresent() ||
-            args.supportedPlatformsRegex.get()
+        return !args.supportedPlatformsRegex.isPresent()
+            || args.supportedPlatformsRegex
+                .get()
                 .matcher(cxxPlatform.getFlavor().toString())
                 .find();
       }
     };
   }
 
-  private abstract static class CustomPrebuiltCxxLibrary
-      extends NoopBuildRule
+  private abstract static class CustomPrebuiltCxxLibrary extends NoopBuildRule
       implements AbstractCxxLibrary {
     public CustomPrebuiltCxxLibrary(BuildRuleParams params) {
       super(params);
@@ -374,42 +352,29 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
     public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
     public ImmutableList<SourcePath> includeDirs = ImmutableList.of();
 
-    /**
-     * The link arguments to use when linking using the static link style.
-     */
+    /** The link arguments to use when linking using the static link style. */
     public ImmutableList<String> staticLink = ImmutableList.of();
 
-    /**
-     * Libraries references in the static link args above.
-     */
+    /** Libraries references in the static link args above. */
     public ImmutableList<SourcePath> staticLibs = ImmutableList.of();
 
-    /**
-     * The link arguments to use when linking using the static-pic link style.
-     */
+    /** The link arguments to use when linking using the static-pic link style. */
     public ImmutableList<String> staticPicLink = ImmutableList.of();
 
-    /**
-     * Libraries references in the static-pic link args above.
-     */
+    /** Libraries references in the static-pic link args above. */
     public ImmutableList<SourcePath> staticPicLibs = ImmutableList.of();
 
-    /**
-     * The link arguments to use when linking using the shared link style.
-     */
+    /** The link arguments to use when linking using the shared link style. */
     public ImmutableList<String> sharedLink = ImmutableList.of();
 
-    /**
-     * Libraries references in the shared link args above.
-     */
+    /** Libraries references in the shared link args above. */
     public ImmutableMap<String, SourcePath> sharedLibs = ImmutableMap.of();
+
     public ImmutableMap<String, SourcePath> providedSharedLibs = ImmutableMap.of();
 
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
 
     public Optional<Pattern> supportedPlatformsRegex;
-
   }
-
 }

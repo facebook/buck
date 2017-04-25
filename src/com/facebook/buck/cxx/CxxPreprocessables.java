@@ -40,15 +40,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.annotation.Nonnull;
+import org.immutables.value.Value;
 
 public class CxxPreprocessables {
 
@@ -56,17 +53,13 @@ public class CxxPreprocessables {
 
   public enum HeaderMode implements FlavorConvertible {
 
-    /**
-     * Creates the tree of symbolic links of headers.
-     */
+    /** Creates the tree of symbolic links of headers. */
     SYMLINK_TREE_ONLY,
-    /**
-     * Creates the header map that references the headers directly in the source tree.
-     */
+    /** Creates the header map that references the headers directly in the source tree. */
     HEADER_MAP_ONLY,
     /**
-     * Creates the tree of symbolic links of headers and creates the header map that
-     * references the symbolic links to the headers.
+     * Creates the tree of symbolic links of headers and creates the header map that references the
+     * symbolic links to the headers.
      */
     SYMLINK_TREE_WITH_HEADER_MAP,
     ;
@@ -86,14 +79,11 @@ public class CxxPreprocessables {
     public Flavor getFlavor() {
       return flavor;
     }
-
   }
 
   public enum IncludeType {
 
-    /**
-     * Headers should be included with `-I`.
-     */
+    /** Headers should be included with `-I`. */
     LOCAL {
       @Override
       public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
@@ -101,9 +91,7 @@ public class CxxPreprocessables {
       }
     },
 
-    /**
-     * Headers should be included with `-isystem`.
-     */
+    /** Headers should be included with `-isystem`. */
     SYSTEM {
       @Override
       public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
@@ -111,9 +99,7 @@ public class CxxPreprocessables {
       }
     },
 
-    /**
-     * Headers should be included with `-iquote`.
-     */
+    /** Headers should be included with `-iquote`. */
     IQUOTE {
       @Override
       public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
@@ -123,16 +109,14 @@ public class CxxPreprocessables {
     ;
 
     public abstract Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots);
-
   }
 
   /**
-   * Resolve the map of name to {@link SourcePath} to a map of full header name to
-   * {@link SourcePath}.
+   * Resolve the map of name to {@link SourcePath} to a map of full header name to {@link
+   * SourcePath}.
    */
   public static ImmutableMap<Path, SourcePath> resolveHeaderMap(
-      Path basePath,
-      ImmutableMap<String, SourcePath> headers) {
+      Path basePath, ImmutableMap<String, SourcePath> headers) {
 
     ImmutableMap.Builder<Path, SourcePath> headerMap = ImmutableMap.builder();
 
@@ -147,13 +131,14 @@ public class CxxPreprocessables {
   }
 
   /**
-   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep}
-   * found while traversing the dependencies starting from the {@link BuildRule} objects given.
+   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found
+   * while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse) throws NoSuchBuildTargetException {
+      final Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -166,10 +151,7 @@ public class CxxPreprocessables {
       public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(
-              dep.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform,
-                  HeaderVisibility.PUBLIC));
+          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
           return ImmutableSet.of();
         }
         return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
@@ -181,18 +163,15 @@ public class CxxPreprocessables {
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs) throws NoSuchBuildTargetException {
-    return getTransitiveCxxPreprocessorInput(
-        cxxPlatform,
-        inputs,
-        x -> true);
+      final CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs)
+      throws NoSuchBuildTargetException {
+    return getTransitiveCxxPreprocessorInput(cxxPlatform, inputs, x -> true);
   }
 
   /**
-   * Build the {@link HeaderSymlinkTree} rule using the original build params from a target node.
-   * In particular, make sure to drop all dependencies from the original build rule params,
-   * as these are modeled via {@link CxxPreprocessAndCompile}.
+   * Build the {@link HeaderSymlinkTree} rule using the original build params from a target node. In
+   * particular, make sure to drop all dependencies from the original build rule params, as these
+   * are modeled via {@link CxxPreprocessAndCompile}.
    */
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
@@ -203,33 +182,18 @@ public class CxxPreprocessables {
       SourcePathRuleFinder ruleFinder) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return HeaderSymlinkTreeWithHeaderMap.create(
-            target,
-            filesystem,
-            root,
-            links,
-            ruleFinder);
+        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
       case HEADER_MAP_ONLY:
-        return new DirectHeaderMap(
-            target,
-            filesystem,
-            root,
-            links,
-            ruleFinder);
+        return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
       default:
       case SYMLINK_TREE_ONLY:
-        return new HeaderSymlinkTree(
-            target,
-            filesystem,
-            root,
-            links,
-            ruleFinder);
+        return new HeaderSymlinkTree(target, filesystem, root, links, ruleFinder);
     }
   }
 
   /**
-   * @return adds a the header {@link com.facebook.buck.rules.SymlinkTree} for the given rule to
-   *     the {@link CxxPreprocessorInput}.
+   * @return adds a the header {@link com.facebook.buck.rules.SymlinkTree} for the given rule to the
+   *     {@link CxxPreprocessorInput}.
    */
   public static CxxPreprocessorInput.Builder addHeaderSymlinkTree(
       CxxPreprocessorInput.Builder builder,
@@ -237,13 +201,15 @@ public class CxxPreprocessables {
       BuildRuleResolver ruleResolver,
       CxxPlatform platform,
       HeaderVisibility headerVisibility,
-      IncludeType includeType) throws NoSuchBuildTargetException {
-    BuildRule rule = ruleResolver.requireRule(
-        BuildTarget.builder(target)
-            .addFlavors(
-                platform.getFlavor(),
-                CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
-            .build());
+      IncludeType includeType)
+      throws NoSuchBuildTargetException {
+    BuildRule rule =
+        ruleResolver.requireRule(
+            BuildTarget.builder(target)
+                .addFlavors(
+                    platform.getFlavor(),
+                    CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
+                .build());
     Preconditions.checkState(
         rule instanceof HeaderSymlinkTree,
         "Attempt to add %s of type %s and class %s to %s",
@@ -256,9 +222,7 @@ public class CxxPreprocessables {
     return builder;
   }
 
-  /**
-   * Builds a {@link CxxPreprocessorInput} for a rule.
-   */
+  /** Builds a {@link CxxPreprocessorInput} for a rule. */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -267,16 +231,12 @@ public class CxxPreprocessables {
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Iterable<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
+      Iterable<FrameworkPath> frameworks)
+      throws NoSuchBuildTargetException {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     if (hasHeaderSymlinkTree) {
       addHeaderSymlinkTree(
-          builder,
-          params.getBuildTarget(),
-          ruleResolver,
-          platform,
-          headerVisibility,
-          includeType);
+          builder, params.getBuildTarget(), ruleResolver, platform, headerVisibility, includeType);
     }
     return builder
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
@@ -285,30 +245,25 @@ public class CxxPreprocessables {
   }
 
   public static LoadingCache<
-        CxxPreprocessorInputCacheKey,
-        ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      > getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
+          CxxPreprocessorInputCacheKey, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<
-                CxxPreprocessorInputCacheKey,
-                ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
+                CxxPreprocessorInputCacheKey, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
               @Override
               public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
-                  @Nonnull CxxPreprocessorInputCacheKey key)
-                  throws Exception {
+                  @Nonnull CxxPreprocessorInputCacheKey key) throws Exception {
                 Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
                 builder.put(
                     preprocessorDep.getBuildTarget(),
                     preprocessorDep.getCxxPreprocessorInput(
-                        key.getPlatform(),
-                        key.getVisibility()));
+                        key.getPlatform(), key.getVisibility()));
                 for (CxxPreprocessorDep dep :
                     preprocessorDep.getCxxPreprocessorDeps(key.getPlatform())) {
                   builder.putAll(
                       dep.getTransitiveCxxPreprocessorInput(
-                          key.getPlatform(),
-                          key.getVisibility()));
+                          key.getPlatform(), key.getVisibility()));
                 }
                 return ImmutableMap.copyOf(builder);
               }
@@ -332,7 +287,5 @@ public class CxxPreprocessables {
           .compare(getVisibility(), o.getVisibility())
           .result();
     }
-
   }
-
 }

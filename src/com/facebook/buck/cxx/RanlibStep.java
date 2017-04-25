@@ -22,7 +22,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 public class RanlibStep extends ShellStep {
@@ -64,5 +63,4 @@ public class RanlibStep extends ShellStep {
   public String getShortName() {
     return "ranlib";
   }
-
 }

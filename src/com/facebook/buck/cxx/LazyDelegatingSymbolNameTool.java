@@ -38,11 +38,8 @@ public class LazyDelegatingSymbolNameTool implements SymbolNameTool {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs) {
-    return delegate.get().createUndefinedSymbolsFile(
-        baseParams,
-        ruleResolver,
-        ruleFinder,
-        target,
-        linkerInputs);
+    return delegate
+        .get()
+        .createUndefinedSymbolsFile(baseParams, ruleResolver, ruleFinder, target, linkerInputs);
   }
 }

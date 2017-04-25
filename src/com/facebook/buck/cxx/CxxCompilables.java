@@ -22,16 +22,11 @@ public class CxxCompilables {
 
   private CxxCompilables() {}
 
-  /**
-   * Source files that can be preprocessed and compiled.
-   */
+  /** Source files that can be preprocessed and compiled. */
   public static final ImmutableSet<String> SOURCE_EXTENSIONS =
       ImmutableSet.of("c", "cc", "cpp", "cxx", "m", "mm", "C", "cp", "CPP", "c++");
 
-  /**
-   * Header files that can be included in preprocessing.
-   */
+  /** Header files that can be included in preprocessing. */
   public static final ImmutableSet<String> HEADER_EXTENSIONS =
       ImmutableSet.of("h", "hh", "hpp", "hxx", "H", "hp", "HPP", "h++", "tcc");
-
 }

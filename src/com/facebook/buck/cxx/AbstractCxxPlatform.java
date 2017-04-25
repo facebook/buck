@@ -22,15 +22,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
-
-import org.immutables.value.Value;
-
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Interface describing a C/C++ toolchain and platform to build for.
- */
+/** Interface describing a C/C++ toolchain and platform to build for. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractCxxPlatform extends FlavorConvertible {
@@ -39,57 +35,75 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   Flavor getFlavor();
 
   CompilerProvider getAs();
+
   List<String> getAsflags();
 
   PreprocessorProvider getAspp();
+
   List<String> getAsppflags();
 
   CompilerProvider getCc();
+
   List<String> getCflags();
 
   CompilerProvider getCxx();
+
   List<String> getCxxflags();
 
   PreprocessorProvider getCpp();
+
   List<String> getCppflags();
 
   PreprocessorProvider getCxxpp();
+
   List<String> getCxxppflags();
 
   Optional<PreprocessorProvider> getCudapp();
+
   List<String> getCudappflags();
 
   Optional<CompilerProvider> getCuda();
+
   List<String> getCudaflags();
 
   Optional<PreprocessorProvider> getAsmpp();
+
   List<String> getAsmppflags();
 
   Optional<CompilerProvider> getAsm();
+
   List<String> getAsmflags();
 
   LinkerProvider getLd();
+
   List<String> getLdflags();
+
   Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();
 
   Tool getStrip();
+
   List<String> getStripFlags();
 
   Archiver getAr();
+
   List<String> getArflags();
 
   Tool getRanlib();
+
   List<String> getRanlibflags();
 
   SymbolNameTool getSymbolNameTool();
 
   String getSharedLibraryExtension();
+
   String getSharedLibraryVersionedExtensionFormat();
 
   String getStaticLibraryExtension();
+
   String getObjectFileExtension();
 
   DebugPathSanitizer getCompilerDebugPathSanitizer();
+
   DebugPathSanitizer getAssemblerDebugPathSanitizer();
 
   HeaderVerification getHeaderVerification();
@@ -102,22 +116,19 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   /**
    * @return a factory used to generated shared library interfaces, which are used for linking in
-   *         liu of the original shared library.
+   *     liu of the original shared library.
    */
   Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory();
 
   Optional<String> getBinaryExtension();
 
   /**
-    * When building or creating a project, create symlinks for the public headers if it's true.
-    * It would allow public headers to include an other public header with #include "foobar.h"\
-    * even if it's not in the same folder.
-    */
+   * When building or creating a project, create symlinks for the public headers if it's true. It
+   * would allow public headers to include an other public header with #include "foobar.h"\ even if
+   * it's not in the same folder.
+   */
   boolean getPublicHeadersSymlinksEnabled();
 
-  /**
-    * When building or creating a project, create symlinks for the public headers if it's true.
-    */
+  /** When building or creating a project, create symlinks for the public headers if it's true. */
   boolean getPrivateHeadersSymlinksEnabled();
-
 }

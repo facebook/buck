@@ -31,7 +31,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 /**
@@ -135,8 +134,8 @@ public class WindowsLinker implements Linker {
   }
 
   /**
-   * https://msdn.microsoft.com/en-us/library/ts7eyw4s.aspx -
-   * LNK1104 error if Path for filename expands to more than 260 characters.
+   * https://msdn.microsoft.com/en-us/library/ts7eyw4s.aspx - LNK1104 error if Path for filename
+   * expands to more than 260 characters.
    */
   @Override
   public boolean hasFilePathSizeLimitations() {
@@ -145,9 +144,6 @@ public class WindowsLinker implements Linker {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
-
 }

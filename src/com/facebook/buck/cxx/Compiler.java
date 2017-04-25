@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -27,8 +26,7 @@ import java.util.Optional;
 public interface Compiler extends Tool {
 
   ImmutableList<String> getFlagsForReproducibleBuild(
-      String alternativeCompilationDir,
-      Path currentCellPath);
+      String alternativeCompilationDir, Path currentCellPath);
 
   Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
 

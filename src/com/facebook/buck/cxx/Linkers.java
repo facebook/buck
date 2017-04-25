@@ -23,16 +23,15 @@ public class Linkers {
   private Linkers() {}
 
   /**
-   * Prefixes each of the given linker arguments with "-Xlinker" so that the compiler linker
-   * driver will pass these arguments directly down to the linker rather than interpreting them
-   * itself.
+   * Prefixes each of the given linker arguments with "-Xlinker" so that the compiler linker driver
+   * will pass these arguments directly down to the linker rather than interpreting them itself.
    *
-   * e.g. ["-rpath", "hello/world"] -&gt; ["-Xlinker", "-rpath", "-Xlinker", "hello/world"]
+   * <p>e.g. ["-rpath", "hello/world"] -&gt; ["-Xlinker", "-rpath", "-Xlinker", "hello/world"]
    *
-   * Arguments that do not contain commas can instead be passed using the shorter
-   * "-Wl,ARGUMENT" form.
+   * <p>Arguments that do not contain commas can instead be passed using the shorter "-Wl,ARGUMENT"
+   * form.
    *
-   * e.g., ["-rpath", "hello/world"] -&gt; ["-Wl,-rpath", "-Wl,hello/world" ]
+   * <p>e.g., ["-rpath", "hello/world"] -&gt; ["-Wl,-rpath", "-Wl,hello/world" ]
    *
    * @param args arguments for the linker.
    * @return arguments to be passed to the compiler linker driver.
@@ -54,5 +53,4 @@ public class Linkers {
   public static Iterable<String> iXlinker(String... args) {
     return iXlinker(ImmutableList.copyOf(args));
   }
-
 }

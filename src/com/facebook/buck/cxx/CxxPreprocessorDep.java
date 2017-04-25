@@ -20,11 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 
-
 /**
  * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
- * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level
- * file (e.g. a C++ source from a C++ library rule).
+ * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level file
+ * (e.g. a C++ source from a C++ library rule).
  */
 public interface CxxPreprocessorDep {
 
@@ -33,11 +32,8 @@ public interface CxxPreprocessorDep {
   Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
 
   CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
 
   ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
-
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
 }

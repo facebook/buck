@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class InferLogLine {
@@ -43,10 +42,10 @@ public class InferLogLine {
 
   @Override
   public String toString() {
-    return buildTarget.toString() +
-        SPLIT_TOKEN +
-        flavors.toString() +
-        SPLIT_TOKEN +
-        output.toString();
+    return buildTarget.toString()
+        + SPLIT_TOKEN
+        + flavors.toString()
+        + SPLIT_TOKEN
+        + output.toString();
   }
 }

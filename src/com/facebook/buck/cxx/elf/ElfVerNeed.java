@@ -20,7 +20,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.ByteBuffer;
 
 public class ElfVerNeed {
@@ -85,10 +84,10 @@ public class ElfVerNeed {
                           vernauxes.size(),
                           verneed.vn_file,
                           vernauxes.size() == 0 ? 0 : ElfVerNeed.Verneed.BYTES,
-                          verneedIndex == entries.size() - 1 ?
-                              0 :
-                              ElfVerNeed.Verneed.BYTES +
-                                  ElfVerNeed.Vernaux.BYTES * vernauxes.size()),
+                          verneedIndex == entries.size() - 1
+                              ? 0
+                              : ElfVerNeed.Verneed.BYTES
+                                  + ElfVerNeed.Vernaux.BYTES * vernauxes.size()),
                       RichStream.from(MoreIterables.enumerate(vernauxes))
                           .map(
                               vnxp ->
@@ -97,9 +96,9 @@ public class ElfVerNeed {
                                       vnxp.getSecond().vna_flags,
                                       vnxp.getSecond().vna_other,
                                       vnxp.getSecond().vna_name,
-                                      vnxp.getFirst() == vernauxes.size() - 1 ?
-                                          0 :
-                                          ElfVerNeed.Vernaux.BYTES))
+                                      vnxp.getFirst() == vernauxes.size() - 1
+                                          ? 0
+                                          : ElfVerNeed.Vernaux.BYTES))
                           .toImmutableList());
                 })
             .toImmutableList());
@@ -160,7 +159,6 @@ public class ElfVerNeed {
         Elf.Elf64.putElf64Word(buffer, (int) vn_next);
       }
     }
-
   }
 
   public static class Vernaux {
@@ -218,7 +216,5 @@ public class ElfVerNeed {
         Elf.Elf64.putElf64Word(buffer, (int) vna_next);
       }
     }
-
   }
-
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.collect.ImmutableCollection;
-
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;

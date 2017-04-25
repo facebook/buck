@@ -28,19 +28,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.immutables.value.Value;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.immutables.value.Value;
 
 /**
- * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++
- * descriptions logical C/C++ deps used to find dependency {@link NativeLinkable}s or
- * {@link CxxPreprocessorDep}s.
+ * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++ descriptions
+ * logical C/C++ deps used to find dependency {@link NativeLinkable}s or {@link
+ * CxxPreprocessorDep}s.
  */
 @Value.Immutable
 @BuckStyleTuple
@@ -49,19 +47,23 @@ abstract class AbstractCxxDeps {
   public static final CxxDeps EMPTY = CxxDeps.of(ImmutableList.of(), ImmutableList.of());
 
   abstract ImmutableList<BuildTarget> getDeps();
+
   abstract ImmutableList<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>>
       getPlatformDeps();
 
   private Stream<BuildTarget> getSpecificPlatformDeps(CxxPlatform cxxPlatform) {
-    return getPlatformDeps().stream()
+    return getPlatformDeps()
+        .stream()
         .flatMap(
             p ->
                 p.getMatchingValues(cxxPlatform.getFlavor().toString())
-                    .stream().flatMap(Collection::stream));
+                    .stream()
+                    .flatMap(Collection::stream));
   }
 
   private Stream<BuildTarget> getAllPlatformDeps() {
-    return getPlatformDeps().stream()
+    return getPlatformDeps()
+        .stream()
         .flatMap(p -> p.getValues().stream().flatMap(Collection::stream));
   }
 
@@ -83,8 +85,7 @@ abstract class AbstractCxxDeps {
 
   public static CxxDeps concat(Iterable<CxxDeps> cxxDeps) {
     CxxDeps.Builder builder = CxxDeps.builder();
-    RichStream.from(cxxDeps)
-        .forEach(builder::addDeps);
+    RichStream.from(cxxDeps).forEach(builder::addDeps);
     return builder.build();
   }
 
@@ -97,8 +98,7 @@ abstract class AbstractCxxDeps {
   }
 
   public static Builder builder(CxxDeps deps) {
-    return new Builder()
-        .addDeps(deps);
+    return new Builder().addDeps(deps);
   }
 
   public static class Builder {
@@ -146,7 +146,5 @@ abstract class AbstractCxxDeps {
     public CxxDeps build() {
       return CxxDeps.of(deps, platformDeps);
     }
-
   }
-
 }

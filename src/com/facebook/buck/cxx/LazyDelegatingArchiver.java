@@ -88,5 +88,4 @@ public class LazyDelegatingArchiver implements Archiver {
   public Archiver getDelegate() {
     return delegate.get();
   }
-
 }

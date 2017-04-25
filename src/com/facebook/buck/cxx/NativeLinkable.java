@@ -30,8 +30,8 @@ public interface NativeLinkable {
   BuildTarget getBuildTarget();
 
   /**
-   * @return All native linkable dependencies that are required by this linkable
-   * on a specific platform.
+   * @return All native linkable dependencies that are required by this linkable on a specific
+   *     platform.
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
@@ -40,8 +40,8 @@ public interface NativeLinkable {
   }
 
   /**
-   * @return All native linkable exported dependencies that are required by this linkable
-   * on a specific platform.
+   * @return All native linkable exported dependencies that are required by this linkable on a
+   *     specific platform.
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
@@ -50,20 +50,20 @@ public interface NativeLinkable {
   }
 
   /**
-   * @return All native linkable dependencies that might be required by this linkable
-   * on any platform.
+   * @return All native linkable dependencies that might be required by this linkable on any
+   *     platform.
    */
   Iterable<? extends NativeLinkable> getNativeLinkableDeps();
 
   /**
-   * @return All native linkable exported dependencies that might be required by this linkable
-   * on any platform.
+   * @return All native linkable exported dependencies that might be required by this linkable on
+   *     any platform.
    */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
 
   /**
-   * Return input that *dependents* should put on their link line
-   * when linking against this linkable.
+   * Return input that *dependents* should put on their link line when linking against this
+   * linkable.
    */
   NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
       throws NoSuchBuildTargetException;
@@ -71,8 +71,8 @@ public interface NativeLinkable {
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
   /**
-   * @return a map of shared library SONAME to shared library path for the given
-   *     {@link CxxPlatform}.
+   * @return a map of shared library SONAME to shared library path for the given {@link
+   *     CxxPlatform}.
    */
   ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
@@ -82,5 +82,4 @@ public interface NativeLinkable {
     STATIC,
     SHARED,
   }
-
 }
