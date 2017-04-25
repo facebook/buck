@@ -6,5 +6,4 @@ public class MockTest {
   public void passingTest() {
     System.out.println("passed!");
   }
-
 }

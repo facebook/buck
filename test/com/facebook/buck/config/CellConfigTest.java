@@ -20,34 +20,34 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class CellConfigTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void getOverridesByPath() throws Exception {
     String section = "section";
-    CellConfig cellConfig = CellConfig.builder()
-        .put(RelativeCellName.ROOT_CELL_NAME, section, "root_cell", "root")
-        .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, section, "all_cells", "all")
-        .put(RelativeCellName.fromComponents("cell"), section, "cell", "cell")
-        .build();
+    CellConfig cellConfig =
+        CellConfig.builder()
+            .put(RelativeCellName.ROOT_CELL_NAME, section, "root_cell", "root")
+            .put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, section, "all_cells", "all")
+            .put(RelativeCellName.fromComponents("cell"), section, "cell", "cell")
+            .build();
 
-    ImmutableMap<Path, RawConfig> overridesByPath = cellConfig.getOverridesByPath(
-        ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME, Paths.get("root"),
-            RelativeCellName.fromComponents("cell"), Paths.get("cell")
-        ));
+    ImmutableMap<Path, RawConfig> overridesByPath =
+        cellConfig.getOverridesByPath(
+            ImmutableMap.of(
+                RelativeCellName.ROOT_CELL_NAME,
+                Paths.get("root"),
+                RelativeCellName.fromComponents("cell"),
+                Paths.get("cell")));
 
     assertThat(
         overridesByPath,
@@ -55,9 +55,9 @@ public class CellConfigTest {
             ImmutableMap.of(
                 Paths.get("root"),
                 RawConfig.builder()
-                .put(section, "root_cell", "root")
-                .put(section, "all_cells", "all")
-                .build(),
+                    .put(section, "root_cell", "root")
+                    .put(section, "all_cells", "all")
+                    .build(),
                 Paths.get("cell"),
                 RawConfig.builder()
                     .put(section, "cell", "cell")
@@ -68,50 +68,59 @@ public class CellConfigTest {
   @Test
   public void throwsOnAmbiguousOverrides() throws Exception {
     String section = "section";
-    CellConfig cellConfig = CellConfig.builder()
-        .put(RelativeCellName.fromComponents("firstpath"), section, "cell", "cell")
-        .build();
+    CellConfig cellConfig =
+        CellConfig.builder()
+            .put(RelativeCellName.fromComponents("firstpath"), section, "cell", "cell")
+            .build();
 
     expectedException.expect(CellConfig.MalformedOverridesException.class);
     expectedException.expectMessage(
         Matchers.stringContainsInOrder("root", "firstpath", "secondpath"));
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME, Paths.get("root"),
-            RelativeCellName.fromComponents("firstpath"), Paths.get("cell"),
-            RelativeCellName.fromComponents("root", "secondpath"), Paths.get("cell")
-        ));
+            RelativeCellName.ROOT_CELL_NAME,
+            Paths.get("root"),
+            RelativeCellName.fromComponents("firstpath"),
+            Paths.get("cell"),
+            RelativeCellName.fromComponents("root", "secondpath"),
+            Paths.get("cell")));
   }
 
   @Test
   public void doesNotThrowWhenAmbiguousCellNotOverridden() throws Exception {
     String section = "section";
-    CellConfig cellConfig = CellConfig.builder()
-        .put(RelativeCellName.fromComponents("ok"), section, "cell", "cell")
-        .build();
+    CellConfig cellConfig =
+        CellConfig.builder()
+            .put(RelativeCellName.fromComponents("ok"), section, "cell", "cell")
+            .build();
 
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME, Paths.get("root"),
-            RelativeCellName.fromComponents("ok"), Paths.get("cell"),
-            RelativeCellName.fromComponents("root", "firstpath"), Paths.get("bad"),
-            RelativeCellName.fromComponents("root", "secondpath"), Paths.get("bad")
-        ));
+            RelativeCellName.ROOT_CELL_NAME,
+            Paths.get("root"),
+            RelativeCellName.fromComponents("ok"),
+            Paths.get("cell"),
+            RelativeCellName.fromComponents("root", "firstpath"),
+            Paths.get("bad"),
+            RelativeCellName.fromComponents("root", "secondpath"),
+            Paths.get("bad")));
   }
 
   @Test
   public void testThrowsOnUnknownCell() throws Exception {
     String section = "section";
-    CellConfig cellConfig = CellConfig.builder()
-        .put(RelativeCellName.fromComponents("unknown"), section, "cell", "cell")
-        .build();
+    CellConfig cellConfig =
+        CellConfig.builder()
+            .put(RelativeCellName.fromComponents("unknown"), section, "cell", "cell")
+            .build();
 
     expectedException.expect(CellConfig.MalformedOverridesException.class);
     expectedException.expectMessage(Matchers.stringContainsInOrder("unknown"));
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
-            RelativeCellName.ROOT_CELL_NAME, Paths.get("root"),
-            RelativeCellName.fromComponents("somecell"), Paths.get("cell")
-        ));
+            RelativeCellName.ROOT_CELL_NAME,
+            Paths.get("root"),
+            RelativeCellName.fromComponents("somecell"),
+            Paths.get("cell")));
   }
 }

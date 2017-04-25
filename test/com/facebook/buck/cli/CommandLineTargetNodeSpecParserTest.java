@@ -29,10 +29,8 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class CommandLineTargetNodeSpecParserTest {
 
@@ -40,29 +38,21 @@ public class CommandLineTargetNodeSpecParserTest {
       new CommandLineTargetNodeSpecParser(
           FakeBuckConfig.builder()
               .setSections(
-                  "[alias]",
-                  "  foo = //some:thing",
-                  "  bar = //some:thing //some/other:thing"
-              ).build(),
+                  "[alias]", "  foo = //some:thing", "  bar = //some:thing //some/other:thing")
+              .build(),
           new BuildTargetPatternTargetNodeParser());
 
   @Test
   public void trailingDotDotDot() {
     ProjectFilesystem root = new FakeProjectFilesystem();
     assertEquals(
-        BuildFileSpec.fromRecursivePath(
-            Paths.get("hello").toAbsolutePath(),
-            root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(Paths.get("hello").toAbsolutePath(), root.getRootPath()),
         parseOne(createCellRoots(root), "//hello/...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(
-            Paths.get("").toAbsolutePath(),
-            root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath(), root.getRootPath()),
         parseOne(createCellRoots(root), "//...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(
-            Paths.get("").toAbsolutePath(),
-            root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath(), root.getRootPath()),
         parseOne(createCellRoots(root), "...").getBuildFileSpec());
     assertEquals(
         BuildTargetSpec.from(BuildTargetFactory.newInstance("//hello:...")),
@@ -89,9 +79,7 @@ public class CommandLineTargetNodeSpecParserTest {
   @Test
   public void tailingColon() {
     assertEquals(
-        BuildFileSpec.fromPath(
-            Paths.get("hello").toAbsolutePath(),
-            Paths.get("").toAbsolutePath()),
+        BuildFileSpec.fromPath(Paths.get("hello").toAbsolutePath(), Paths.get("").toAbsolutePath()),
         parseOne(createCellRoots(null), "//hello:").getBuildFileSpec());
   }
 
@@ -108,10 +96,9 @@ public class CommandLineTargetNodeSpecParserTest {
   }
 
   @Test
-  public void crossCellTargets(){
+  public void crossCellTargets() {
     assertEquals("@other//:", PARSER.normalizeBuildTargetString("@other//:"));
     assertEquals("+other//...", PARSER.normalizeBuildTargetString("+other//..."));
     assertEquals("other//:", PARSER.normalizeBuildTargetString("other//"));
   }
-
 }

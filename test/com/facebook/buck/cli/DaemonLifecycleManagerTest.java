@@ -23,17 +23,14 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class DaemonLifecycleManagerTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
   private DaemonLifecycleManager daemonLifecycleManager;
@@ -45,34 +42,44 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void whenBuckConfigChangesParserInvalidated()
-      throws IOException, InterruptedException {
-    Object daemon = daemonLifecycleManager.getDaemon(
-        new TestCellBuilder().setBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
-            .setFilesystem(filesystem)
-            .build());
+  public void whenBuckConfigChangesParserInvalidated() throws IOException, InterruptedException {
+    Object daemon =
+        daemonLifecycleManager.getDaemon(
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "somesection", ImmutableMap.of("somename", "somevalue")))
+                        .build())
+                .setFilesystem(filesystem)
+                .build());
 
     assertEquals(
-        "Daemon should not be replaced when config equal.", daemon,
+        "Daemon should not be replaced when config equal.",
+        daemon,
         daemonLifecycleManager.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
-                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
-                    .build())
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "somesection", ImmutableMap.of("somename", "somevalue")))
+                        .build())
                 .setFilesystem(filesystem)
                 .build()));
 
     assertNotEquals(
-        "Daemon should be replaced when config not equal.", daemon,
+        "Daemon should be replaced when config not equal.",
+        daemon,
         daemonLifecycleManager.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder().setSections(
-                    ImmutableMap.of(
-                        "somesection",
-                        ImmutableMap.of("somename", "someothervalue"))).build())
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "somesection", ImmutableMap.of("somename", "someothervalue")))
+                        .build())
                 .setFilesystem(filesystem)
                 .build()));
   }
@@ -81,31 +88,24 @@ public class DaemonLifecycleManagerTest {
   public void whenAndroidNdkVersionChangesParserInvalidated()
       throws IOException, InterruptedException {
 
-    BuckConfig buckConfig1 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "something")))
-        .build();
+    BuckConfig buckConfig1 =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("ndk", ImmutableMap.of("ndk_version", "something")))
+            .build();
 
-    BuckConfig buckConfig2 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "different")))
-        .build();
+    BuckConfig buckConfig2 =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("ndk", ImmutableMap.of("ndk_version", "different")))
+            .build();
 
-    Object daemon = daemonLifecycleManager.getDaemon(
-        new TestCellBuilder()
-            .setBuckConfig(buckConfig1)
-            .setFilesystem(filesystem)
-            .build());
+    Object daemon =
+        daemonLifecycleManager.getDaemon(
+            new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build());
 
     assertNotEquals(
-        "Daemon should be replaced when not equal.", daemon,
+        "Daemon should be replaced when not equal.",
+        daemon,
         daemonLifecycleManager.getDaemon(
-            new TestCellBuilder()
-                .setBuckConfig(buckConfig2)
-                .setFilesystem(filesystem)
-                .build()));
+            new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build()));
   }
-
 }

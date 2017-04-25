@@ -38,18 +38,16 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TargetsCommandIntegrationTest {
 
@@ -59,115 +57,94 @@ public class TargetsCommandIntegrationTest {
   private static final CharMatcher LOWER_CASE_HEX_DIGITS =
       CharMatcher.inRange('0', '9').or(CharMatcher.inRange('a', 'f'));
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testOutputPath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output",
-        "//:test",
-        "//:another-test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-output", "//:test", "//:another-test");
     result.assertSuccess();
     assertEquals(
-        "//:another-test " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output") +
-            "\n" +
-            "//:test " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
-            "\n",
+        "//:another-test "
+            + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output")
+            + "\n"
+            + "//:test "
+            + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
+            + "\n",
         result.getStdout());
   }
 
   @Test
   public void testRuleKeyWithOneTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        "//:test");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-rulekey", "//:test");
     result.assertSuccess();
     assertThat(result.getStdout().trim(), Matchers.matchesPattern("//:test [a-f0-9]{40}"));
   }
 
   @Test
   public void testRuleKey() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        "//:test",
-        "//:another-test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-rulekey", "//:test", "//:another-test");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(
-        result.getStdout(),
-        "//:another-test",
-        "//:test");
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
   }
 
   @Test
   public void testBothOutputAndRuleKey() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        "--show-output",
-        "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-rulekey", "--show-output", "//:test");
     result.assertSuccess();
     assertThat(
         result.getStdout().trim(),
         Matchers.matchesPattern(
-            "//:test [a-f0-9]{40} " +
-                Pattern.quote(
+            "//:test [a-f0-9]{40} "
+                + Pattern.quote(
                     MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"))));
   }
 
   @Test
   public void testOutputWithoutTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output");
     result.assertSuccess();
     assertEquals(
-        "//:another-test " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output") +
-            "\n" +
-            "//:test " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
-            "\n",
+        "//:another-test "
+            + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output")
+            + "\n"
+            + "//:test "
+            + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
+            + "\n",
         result.getStdout());
   }
 
   @Test
   public void testRuleKeyWithoutTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-rulekey");
     result.assertSuccess();
     assertThat(
         result.getStdout().trim(),
@@ -176,47 +153,39 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testCellPath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-cell-path",
-        "//:test");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-cell-path", "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test " +
-        MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()) +
-        "\n",
+        "//:test " + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()) + "\n",
         result.getStdout());
   }
 
   @Test
   public void testCellPathAndOutput() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output",
-        "--show-cell-path",
-        "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-output", "--show-cell-path", "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test " +
-        MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()) + " " +
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
-        "\n",
+        "//:test "
+            + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath())
+            + " "
+            + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
+            + "\n",
         result.getStdout());
   }
 
   private ImmutableList<String> parseAndVerifyTargetsAndHashes(
-      String outputLine,
-      String... targets) {
-    List<String> lines = Splitter.on('\n').splitToList(
-        CharMatcher.whitespace().trimFrom(outputLine));
+      String outputLine, String... targets) {
+    List<String> lines =
+        Splitter.on('\n').splitToList(CharMatcher.whitespace().trimFrom(outputLine));
     assertEquals(targets.length, lines.size());
     ImmutableList.Builder<String> hashes = ImmutableList.builder();
     for (int i = 0; i < targets.length; ++i) {
@@ -228,8 +197,8 @@ public class TargetsCommandIntegrationTest {
   }
 
   private String parseAndVerifyTargetAndHash(String outputLine, String target) {
-    List<String> targetAndHash = Splitter.on(' ').splitToList(
-        CharMatcher.whitespace().trimFrom(outputLine));
+    List<String> targetAndHash =
+        Splitter.on(' ').splitToList(CharMatcher.whitespace().trimFrom(outputLine));
     assertEquals(2, targetAndHash.size());
     assertEquals(target, targetAndHash.get(0));
     assertFalse(targetAndHash.get(1).isEmpty());
@@ -239,128 +208,96 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashWithoutTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-target-hash");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(
-        result.getStdout(),
-        "//:another-test",
-        "//:test");
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
   }
 
   @Test
   public void testRuleKeyWithReferencedFiles() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "java_library_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        "--referenced-file",
-        "Test.java");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-rulekey", "--referenced-file", "Test.java");
     result.assertSuccess();
     parseAndVerifyTargetAndHash(result.getStdout(), "//:test");
   }
 
   @Test
   public void testRuleKeyWithReferencedFilesAndDetectTestChanges() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "java_library_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-rulekey",
-        "--detect-test-changes",
-        "--referenced-file",
-        "Test.java");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-rulekey", "--detect-test-changes", "--referenced-file", "Test.java");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(
-        result.getStdout(),
-        "//:lib",
-        "//:test");
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:lib", "//:test");
   }
 
   @Test
   public void testTargetHash() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "//:test",
-        "//:another-test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-target-hash", "//:test", "//:another-test");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(
-        result.getStdout(),
-        "//:another-test",
-        "//:test");
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
   }
 
   @Test
   public void testTargetHashAndRuleKeyThrows() throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot show rule key and target hash at the same time.");
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--show-rulekey",
-        "//:test");
+    workspace.runBuckCommand("targets", "--show-target-hash", "--show-rulekey", "//:test");
   }
 
   @Test
   public void testTargetHashAndRuleKeyAndOutputThrows() throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot show rule key and target hash at the same time.");
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
     workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--show-rulekey",
-        "--show-output",
-        "//:test");
+        "targets", "--show-target-hash", "--show-rulekey", "--show-output", "//:test");
   }
 
   @Test
   public void testTargetHashXcodeWorkspaceWithTests() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result.assertSuccess();
     parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
   }
 
   @Test
   public void testTargetHashXcodeWorkspaceWithTestsForAllTargets() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-target-hash", "--detect-test-changes");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(
         result.getStdout(),
@@ -373,37 +310,32 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashWithBrokenTargets() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "detect_test_changes_with_broken_targets", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "detect_test_changes_with_broken_targets", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//:test");
     result.assertSuccess();
     parseAndVerifyTargetAndHash(result.getStdout(), "//:test");
   }
 
   @Test
   public void testTargetHashXcodeWorkspaceWithoutTestsDiffersFromWithTests() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result.assertSuccess();
     String hash = parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
 
-    ProcessResult result2 = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "//workspace:workspace");
+    ProcessResult result2 =
+        workspace.runBuckCommand("targets", "--show-target-hash", "//workspace:workspace");
     result2.assertSuccess();
     String hash2 = parseAndVerifyTargetAndHash(result2.getStdout(), "//workspace:workspace");
     assertNotEquals(hash, hash2);
@@ -411,68 +343,58 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashChangesAfterModifyingSourceFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result.assertSuccess();
-    String hash = parseAndVerifyTargetAndHash(
-        result.getStdout(),
-        "//workspace:workspace");
+    String hash = parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
 
     String fileName = "test/Test.m";
     Files.write(workspace.getPath(fileName), "// This is not a test\n".getBytes(UTF_8));
-    ProcessResult result2 = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result2 =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result2.assertSuccess();
-    String hash2 = parseAndVerifyTargetAndHash(
-        result2.getStdout(),
-        "//workspace:workspace");
+    String hash2 = parseAndVerifyTargetAndHash(result2.getStdout(), "//workspace:workspace");
 
     assertNotEquals(hash, hash2);
   }
 
   @Test
   public void testTargetHashChangesAfterModifyingSourceFileForAllTargets() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-target-hash", "--detect-test-changes");
     result.assertSuccess();
-    List<String> hashes = parseAndVerifyTargetsAndHashes(
-        result.getStdout(),
-        "//bin:bin",
-        "//bin:genrule",
-        "//lib:lib",
-        "//test:test",
-        "//workspace:workspace");
+    List<String> hashes =
+        parseAndVerifyTargetsAndHashes(
+            result.getStdout(),
+            "//bin:bin",
+            "//bin:genrule",
+            "//lib:lib",
+            "//test:test",
+            "//workspace:workspace");
 
     String fileName = "test/Test.m";
     Files.write(workspace.getPath(fileName), "// This is not a test\n".getBytes(UTF_8));
-    ProcessResult result2 = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes");
+    ProcessResult result2 =
+        workspace.runBuckCommand("targets", "--show-target-hash", "--detect-test-changes");
     result2.assertSuccess();
-    List<String> hashesAfterModification = parseAndVerifyTargetsAndHashes(
-        result2.getStdout(),
-        "//bin:bin",
-        "//bin:genrule",
-        "//lib:lib",
-        "//test:test",
-        "//workspace:workspace");
+    List<String> hashesAfterModification =
+        parseAndVerifyTargetsAndHashes(
+            result2.getStdout(),
+            "//bin:bin",
+            "//bin:genrule",
+            "//lib:lib",
+            "//test:test",
+            "//workspace:workspace");
 
     assertNotEquals(hashes.get(0), hashesAfterModification.get(0));
     // bin:genrule wasn't changed
@@ -484,32 +406,24 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashChangesAfterDeletingSourceFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result.assertSuccess();
-    String hash = parseAndVerifyTargetAndHash(
-        result.getStdout(),
-        "//workspace:workspace");
+    String hash = parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
 
     String fileName = "test/Test.m";
     Files.delete(workspace.getPath(fileName));
-    ProcessResult result2 = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "--detect-test-changes",
-        "//workspace:workspace");
+    ProcessResult result2 =
+        workspace.runBuckCommand(
+            "targets", "--show-target-hash", "--detect-test-changes", "//workspace:workspace");
     result2.assertSuccess();
 
-    String hash2 = parseAndVerifyTargetAndHash(
-        result2.getStdout(),
-        "//workspace:workspace");
+    String hash2 = parseAndVerifyTargetAndHash(result2.getStdout(), "//workspace:workspace");
     assertNotEquals(hash, hash2);
   }
 
@@ -517,39 +431,40 @@ public class TargetsCommandIntegrationTest {
   public void testBuckTargetsReferencedFileWithFileOutsideOfProject() throws IOException {
     // The contents of the project are not relevant for this test. We just want a non-empty project
     // to prevent against a regression where all of the build rules are printed.
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_slice", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "project_slice", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--referenced-file",
-        ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS);
-    result.assertSuccess("Even though the file is outside the project, " +
-        "`buck targets` should succeed.");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "--referenced-file",
+            ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS);
+    result.assertSuccess(
+        "Even though the file is outside the project, " + "`buck targets` should succeed.");
     assertEquals("Because no targets match, stdout should be empty.", "", result.getStdout());
   }
 
   @Test
   public void testBuckTargetsReferencedFileWithFilesInAndOutsideOfProject() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_slice", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "project_slice", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--type",
-        "prebuilt_jar",
-        "--referenced-file",
-        ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS,
-        "libs/guava.jar", // relative path in project
-        tmp.getRoot().resolve("libs/junit.jar").toString()); // absolute path in project
-    result.assertSuccess("Even though one referenced file is outside the project, " +
-        "`buck targets` should succeed.");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "--type",
+            "prebuilt_jar",
+            "--referenced-file",
+            ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS,
+            "libs/guava.jar", // relative path in project
+            tmp.getRoot().resolve("libs/junit.jar").toString()); // absolute path in project
+    result.assertSuccess(
+        "Even though one referenced file is outside the project, "
+            + "`buck targets` should succeed.");
     assertEquals(
-        ImmutableSet.of(
-            "//libs:guava",
-            "//libs:junit"),
+        ImmutableSet.of("//libs:guava", "//libs:junit"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
   }
 
@@ -557,28 +472,26 @@ public class TargetsCommandIntegrationTest {
   public void testBuckTargetsReferencedFileWithNonExistentFile() throws IOException {
     // The contents of the project are not relevant for this test. We just want a non-empty project
     // to prevent against a regression where all of the build rules are printed.
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_slice", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "project_slice", tmp);
     workspace.setUp();
 
     String pathToNonExistentFile = "modules/dep1/dep2/hello.txt";
     assertFalse(Files.exists(workspace.getPath(pathToNonExistentFile)));
-    ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--referenced-file",
-        pathToNonExistentFile);
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--referenced-file", pathToNonExistentFile);
     result.assertSuccess("Even though the file does not exist, buck targets` should succeed.");
     assertEquals("Because no targets match, stdout should be empty.", "", result.getStdout());
   }
 
   @Test
   public void testValidateBuildTargetForNonAliasTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "target_validation", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "target_validation", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--resolve-alias", "//:test-library");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--resolve-alias", "//:test-library");
     assertTrue(result.getStdout(), result.getStdout().contains("//:test-library"));
 
     try {
@@ -602,41 +515,37 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testJsonOutputWithShowOptions() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--json", "--show-output", "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-output", "//:test");
 
     // Parse the observed JSON.
-    JsonNode observed = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(result.getStdout()));
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
     System.out.println(observed.toString());
 
     String expectedJson = workspace.getFileContents("output_path_json.js");
-    JsonNode expected = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(normalizeNewlines(expectedJson))
-    );
+    JsonNode expected =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
     MatcherAssert.assertThat(
-        "Output from targets command should match expected JSON.",
-        observed,
-        equalTo(expected));
+        "Output from targets command should match expected JSON.", observed, equalTo(expected));
   }
 
   @Test
   public void testJsonOutputWithShowCellPath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--json", "--show-cell-path", "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-cell-path", "//:test");
 
     // Parse the observed JSON.
-    JsonNode observed = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(result.getStdout())
-    );
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
     assertTrue(observed.isArray());
     JsonNode targetNode = observed.get(0);
@@ -644,22 +553,20 @@ public class TargetsCommandIntegrationTest {
     JsonNode cellPath = targetNode.get("buck.cell_path");
     assertNotNull(cellPath);
     assertEquals(
-      cellPath.asText(),
-      MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()));
+        cellPath.asText(), MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()));
   }
 
   @Test
   public void testJsonOutputWithShowFullOutput() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--json", "--show-full-output", "//:test");
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-full-output", "//:test");
 
     // Parse the observed JSON.
-    JsonNode observed = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(result.getStdout())
-    );
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
     assertTrue(observed.isArray());
     JsonNode targetNode = observed.get(0);
     assertTrue(targetNode.isObject());
@@ -672,75 +579,59 @@ public class TargetsCommandIntegrationTest {
     assertEquals(expectedRootPath, cellPath.asText());
   }
 
-
   @Test
   public void testShowAllTargets() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xcode_workspace_with_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets");
+    ProcessResult result = workspace.runBuckCommand("targets");
     result.assertSuccess();
     assertEquals(
         ImmutableSet.of(
-            "//bin:bin",
-            "//bin:genrule",
-            "//lib:lib",
-            "//test:test",
-            "//workspace:workspace"),
+            "//bin:bin", "//bin:genrule", "//lib:lib", "//test:test", "//workspace:workspace"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
   }
 
   @Test
   public void testShowAllTargetsWithJson() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--json", "--show-output");
+    ProcessResult result = workspace.runBuckCommand("targets", "--json", "--show-output");
     result.assertSuccess();
 
     // Parse the observed JSON.
-    JsonNode observed = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(result.getStdout())
-    );
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
     String expectedJson = workspace.getFileContents("output_path_json_all.js");
-    JsonNode expected = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(normalizeNewlines(expectedJson))
-    );
+    JsonNode expected =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
-    assertEquals(
-        "Output from targets command should match expected JSON.",
-        observed,
-        expected);
+    assertEquals("Output from targets command should match expected JSON.", observed, expected);
   }
 
   @Test
   public void testSpecificAttributesWithJson() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "output_path", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "targets", "--json", "--show-output", "--output-attributes", "buck.outputPath", "name");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--json", "--show-output", "--output-attributes", "buck.outputPath", "name");
     result.assertSuccess();
 
     // Parse the observed JSON.
-    JsonNode observed = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(result.getStdout())
-    );
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
     String expectedJson = workspace.getFileContents("output_path_json_all_filtered.js");
-    JsonNode expected = ObjectMappers.READER.readTree(
-        ObjectMappers.createParser(normalizeNewlines(expectedJson))
-    );
+    JsonNode expected =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
-    assertEquals(
-        "Output from targets command should match expected JSON.",
-        observed,
-        expected);
+    assertEquals("Output from targets command should match expected JSON.", observed, expected);
   }
 }

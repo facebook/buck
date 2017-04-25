@@ -25,7 +25,6 @@ import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
@@ -34,10 +33,10 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinder() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "java",
-            ImmutableMap.of("src_roots", "src, test"))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("java", ImmutableMap.of("src_roots", "src, test")))
+            .build();
     DefaultJavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.of(), javaPackageFinder.getPathsFromRoot());
@@ -48,7 +47,7 @@ public class BuildCommandOptionsTest {
   public void testCreateJavaPackageFinderFromEmptyBuckConfig() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     DefaultJavaPackageFinder javaPackageFinder =
-      buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
+        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.<String>of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of(), javaPackageFinder.getPathsFromRoot());
   }
@@ -60,9 +59,10 @@ public class BuildCommandOptionsTest {
     AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
     parser.parseArgument("--num-threads", "42");
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+            .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }
 }

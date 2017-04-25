@@ -21,13 +21,11 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.util.concurrent.SettableFuture;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class HangMonitorTest {
 
@@ -53,23 +51,24 @@ public class HangMonitorTest {
     final AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
     final SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
     try {
-      Thread sleepingThread = new Thread("testThread") {
-        @Override
-        public void run() {
-          hangForHangMonitorTestReport();
-        }
-
-        private void hangForHangMonitorTestReport() {
-          sleepingThreadRunning.set(null);
-          try {
-            while (sleepingThreadShouldRun.get()) {
-              Thread.sleep(1000);
+      Thread sleepingThread =
+          new Thread("testThread") {
+            @Override
+            public void run() {
+              hangForHangMonitorTestReport();
             }
-          } catch (InterruptedException e) {
-            // Ignore.
-          }
-        }
-      };
+
+            private void hangForHangMonitorTestReport() {
+              sleepingThreadRunning.set(null);
+              try {
+                while (sleepingThreadShouldRun.get()) {
+                  Thread.sleep(1000);
+                }
+              } catch (InterruptedException e) {
+                // Ignore.
+              }
+            }
+          };
       sleepingThread.start();
       sleepingThreadRunning.get(1, TimeUnit.SECONDS);
 
@@ -87,9 +86,8 @@ public class HangMonitorTest {
   @Test
   public void workAdvanceEventsSuppressReport() throws Exception {
     final AtomicBoolean didGetReport = new AtomicBoolean(false);
-    HangMonitor hangMonitor = new HangMonitor(
-        input -> didGetReport.set(true),
-        Duration.ofMillis(10));
+    HangMonitor hangMonitor =
+        new HangMonitor(input -> didGetReport.set(true), Duration.ofMillis(10));
     hangMonitor.onWorkAdvance(new WorkEvent());
     hangMonitor.runOneIteration();
     assertThat(didGetReport.get(), Matchers.is(false));

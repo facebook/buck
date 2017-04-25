@@ -19,28 +19,25 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-
 public class AuditAliasCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckAliasList() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "alias", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list");
@@ -56,15 +53,13 @@ public class AuditAliasCommandIntegrationTest {
         "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
         3,
         aliases.size());
-    assertEquals(
-        ImmutableSet.of("foo", "bar", "bar_ex"),
-        ImmutableSet.copyOf(aliases));
+    assertEquals(ImmutableSet.of("foo", "bar", "bar_ex"), ImmutableSet.copyOf(aliases));
   }
 
   @Test
   public void testBuckAliasListMap() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "alias", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list-map");

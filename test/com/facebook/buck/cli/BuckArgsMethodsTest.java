@@ -22,118 +22,86 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class BuckArgsMethodsTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testArgFileExpansion() throws IOException {
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"arg1"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1")
-    );
+        Matchers.arrayContaining("arg1"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"arg1", "arg@a"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg@a")
-    );
+        Matchers.arrayContaining("arg1", "arg@a"));
 
     Path arg = tmp.newFile("argsfile");
-    Files.write(arg, ImmutableList.of(
-        "arg2",
-        "arg3"
-    ));
+    Files.write(arg, ImmutableList.of("arg2", "arg3"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + arg.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3")
-    );
+        Matchers.arrayContaining("arg1", "arg2", "arg3"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + arg.toString(), "arg4"},
-            tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4")
-    );
+            new String[] {"arg1", "@" + arg.toString(), "arg4"}, tmp.getRoot()),
+        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"@" + arg.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg2", "arg3")
-    );
+        Matchers.arrayContaining("arg2", "arg3"));
 
     Path arg4 = tmp.newFile("argsfile4");
-    Files.write(arg4, ImmutableList.of(
-        "arg4"
-    ));
+    Files.write(arg4, ImmutableList.of("arg4"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
             new String[] {"arg1", "@" + arg.toString(), "@" + arg4.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4")
-    );
+        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4"));
 
     Path argWithSpace = tmp.newFile("argsfile_space");
-    Files.write(argWithSpace, ImmutableList.of(
-        "arg "
-    ));
+    Files.write(argWithSpace, ImmutableList.of("arg "));
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"@" + argWithSpace.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg ")
-    );
+        Matchers.arrayContaining("arg "));
   }
-
 
   @Test
   public void testArgsFiltering() {
     assertThat(
         BuckArgsMethods.filterArgs(
-            ImmutableList.of("arg1", "--option1", "value1", "arg2"),
-            ImmutableSet.of()
-        ),
-        Matchers.contains("arg1", "--option1", "value1", "arg2")
-    );
+            ImmutableList.of("arg1", "--option1", "value1", "arg2"), ImmutableSet.of()),
+        Matchers.contains("arg1", "--option1", "value1", "arg2"));
 
     assertThat(
         BuckArgsMethods.filterArgs(
-            ImmutableList.of("arg1", "--option1", "value1", "arg2"),
-            ImmutableSet.of("--option1")
-        ),
-        Matchers.contains("arg1", "arg2")
-    );
+            ImmutableList.of("arg1", "--option1", "value1", "arg2"), ImmutableSet.of("--option1")),
+        Matchers.contains("arg1", "arg2"));
 
     assertThat(
         BuckArgsMethods.filterArgs(
             ImmutableList.of("arg1", "--option1", "value1", "--option1", "value2"),
-            ImmutableSet.of("--option1")
-        ),
-        Matchers.contains("arg1")
-    );
+            ImmutableSet.of("--option1")),
+        Matchers.contains("arg1"));
 
     assertThat(
         BuckArgsMethods.filterArgs(
             ImmutableList.of("--option1", "value1", "--option1", "value2"),
-            ImmutableSet.of("--option1")
-        ),
-        Matchers.empty()
-    );
+            ImmutableSet.of("--option1")),
+        Matchers.empty());
 
     assertThat(
         BuckArgsMethods.filterArgs(
             ImmutableList.of("--option1", "value1", "--option1", "value2", "arg1", "arg2"),
-            ImmutableSet.of("--option1")
-        ),
-        Matchers.contains("arg1", "arg2")
-    );
+            ImmutableSet.of("--option1")),
+        Matchers.contains("arg1", "arg2"));
   }
-
 }

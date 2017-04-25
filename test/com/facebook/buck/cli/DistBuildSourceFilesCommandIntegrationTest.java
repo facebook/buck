@@ -19,33 +19,30 @@ package com.facebook.buck.cli;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DistBuildSourceFilesCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void runCommandAndCheckOutputFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "dist_build_source_files_example", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "dist_build_source_files_example", tmp);
     workspace.setUp();
     Path outputFile = tmp.newFile();
-    workspace.runBuckCommand(
-        "distbuild",
-        "sourcefiles",
-        "--output-file=" + outputFile.toAbsolutePath(),
-        ":libA").assertSuccess();
+    workspace
+        .runBuckCommand(
+            "distbuild", "sourcefiles", "--output-file=" + outputFile.toAbsolutePath(), ":libA")
+        .assertSuccess();
     Assert.assertTrue(Files.exists(outputFile));
     List<String> lines = Files.readAllLines(outputFile);
     Collections.sort(lines);

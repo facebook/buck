@@ -33,12 +33,13 @@ public class CommandLineBuildTargetNormalizerTest {
     assertEquals("//src/com/facebook/orca:orca", normalize("//src/com/facebook/orca/"));
 
     assertEquals("//src/com/facebook/orca:messenger", normalize("src/com/facebook/orca:messenger"));
-    assertEquals("//src/com/facebook/orca:messenger",
-        normalize("//src/com/facebook/orca:messenger"));
+    assertEquals(
+        "//src/com/facebook/orca:messenger", normalize("//src/com/facebook/orca:messenger"));
 
     // Because tab-completing a directory name often includes the trailing slash, we want to support
     // the user tab-completing, then typing the colon, followed by the short name.
-    assertEquals("Slash before colon should be stripped",
+    assertEquals(
+        "Slash before colon should be stripped",
         "//src/com/facebook/orca:messenger",
         normalize("src/com/facebook/orca/:messenger"));
 

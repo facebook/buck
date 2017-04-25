@@ -19,126 +19,107 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AuditConfigCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testTabbedUI() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "audit_config",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "config",
-        "--tab",
-        "missing_section.badvalue",
-        "ignored_section.dotted.value",
-        "ignored_section.short_value",
-        "ignored_section.long_value"
-    );
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "config",
+            "--tab",
+            "missing_section.badvalue",
+            "ignored_section.dotted.value",
+            "ignored_section.short_value",
+            "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config"), result.getStdout());
   }
 
   @Test
   public void testConfigJsonUI() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "audit_config",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "config",
-        "--json",
-        "missing_section.badvalue",
-        "ignored_section.dotted.value",
-        "ignored_section.short_value",
-        "ignored_section.long_value"
-    );
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "config",
+            "--json",
+            "missing_section.badvalue",
+            "ignored_section.dotted.value",
+            "ignored_section.short_value",
+            "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
   }
 
   @Test
   public void testConfigJsonUIWithWholeSection() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "audit_config",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "config",
-        "--json",
-        "missing_section.badvalue",
-        "ignored_section"
-    );
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit", "config", "--json", "missing_section.badvalue", "ignored_section");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
   }
 
   @Test
   public void testConfigBuckConfigUI() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "audit_config",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "config",
-        "missing_section.badvalue",
-        "ignored_section",
-        "ignored_section.dotted.value",
-        "second_section.some_property",
-        "ignored_section.short_value",
-        "ignored_section.long_value"
-    );
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "config",
+            "missing_section.badvalue",
+            "ignored_section",
+            "ignored_section.dotted.value",
+            "second_section.some_property",
+            "ignored_section.short_value",
+            "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-buckconfig"), result.getStdout());
   }
 
   @Test
   public void testErrorOnBothTabAndJson() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "audit_config",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "config",
-        "--tab",
-        "--json",
-        "missing_section.badvalue",
-        "ignored_section",
-        "ignored_section.dotted.value",
-        "second_section.some_property",
-        "ignored_section.short_value",
-        "ignored_section.long_value"
-    );
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "config",
+            "--tab",
+            "--json",
+            "missing_section.badvalue",
+            "ignored_section",
+            "ignored_section.dotted.value",
+            "second_section.some_property",
+            "ignored_section.short_value",
+            "ignored_section.long_value");
     result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        containsString("--json and --tab cannot both be specified"));
+    assertThat(result.getStderr(), containsString("--json and --tab cannot both be specified"));
   }
 }

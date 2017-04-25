@@ -16,36 +16,34 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-
 public class FilteredTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void filteredTestsAreNeverBuilt() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "filtered_tests", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filtered_tests", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        Joiner.on('\n').join(
-            ImmutableList.of(
-                "[python]",
-                "  path_to_python_test_main = " +
-                    Paths.get("src/com/facebook/buck/python/__test_main__.py")
-                        .toAbsolutePath()
-                        .toString())),
+        Joiner.on('\n')
+            .join(
+                ImmutableList.of(
+                    "[python]",
+                    "  path_to_python_test_main = "
+                        + Paths.get("src/com/facebook/buck/python/__test_main__.py")
+                            .toAbsolutePath()
+                            .toString())),
         ".buckconfig");
 
     // This will attempt to build the broken test, //:broken, which will fail to build.
@@ -53,12 +51,14 @@ public class FilteredTestIntegrationTest {
 
     // This will exclude building //:broken and will therefore pass the build and result
     // in a test failure while running //:bad_test.
-    workspace.runBuckCommand("test", "--all", "--exclude", "flaky")
+    workspace
+        .runBuckCommand("test", "--all", "--exclude", "flaky")
         .assertTestFailure("hello world");
 
     // As per above, but using "--build-filtered" will force //:broken to still be built
     // even though it was filtered out, resulting in a failed build.
-    workspace.runBuckCommand("test", "--all", "--exclude", "flaky", "--build-filtered")
+    workspace
+        .runBuckCommand("test", "--all", "--exclude", "flaky", "--build-filtered")
         .assertFailure();
 
     // Explicitly trying to test //:broken will fail at the build stage.
@@ -70,14 +70,15 @@ public class FilteredTestIntegrationTest {
 
     // Using "--always_exclude" causes filters to override explicitly specified targets, so this
     // means we won't build //:broken and will therefore succeed (but run no tests).
-    workspace.runBuckCommand("test", "//:broken", "--exclude", "flaky", "--always_exclude")
+    workspace
+        .runBuckCommand("test", "//:broken", "--exclude", "flaky", "--always_exclude")
         .assertSuccess();
 
     // Passing "--build-filtered" means we'll still build //:broken, even though we're filtering
     // it, causing a build failure.
-    workspace.runBuckCommand(
-        "test", "//:broken", "--exclude", "flaky", "--always_exclude", "--build-filtered")
+    workspace
+        .runBuckCommand(
+            "test", "//:broken", "--exclude", "flaky", "--always_exclude", "--build-filtered")
         .assertFailure();
   }
-
 }

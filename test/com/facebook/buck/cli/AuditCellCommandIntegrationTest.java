@@ -19,39 +19,37 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-
 public class AuditCellCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckCell() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "crosscell_file_watching/primary", tmp.newFolder());
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "crosscell_file_watching/primary", tmp.newFolder());
     workspace.setUp();
-    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "crosscell_file_watching/secondary", tmp.newFolder());
+    final ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
         workspace,
         ImmutableMap.of(
-            "repositories", ImmutableMap.of(
-                "secondary",
-                secondary.getPath(".").normalize().toString())));
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
 
     ProcessResult result = workspace.runBuckCommand("audit", "cell");
     result.assertSuccess();
@@ -62,10 +60,7 @@ public class AuditCellCommandIntegrationTest {
     stdout = stdout.substring(0, stdout.length() - 1);
 
     List<String> cells = Splitter.on('\n').splitToList(stdout);
-    assertEquals(
-        "Cells that appear in both .buckconfig should appear.",
-        1,
-        cells.size());
+    assertEquals("Cells that appear in both .buckconfig should appear.", 1, cells.size());
     assertEquals(
         ImmutableSet.of(String.format("secondary: %s", secondary.getDestPath())),
         ImmutableSet.copyOf(cells));

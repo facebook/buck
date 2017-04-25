@@ -17,14 +17,13 @@
 package com.facebook.buck.config;
 
 import com.google.common.base.Joiner;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
 public class ConfigBuilder {
   // Utility class, do not instantiate.
-  private ConfigBuilder() { }
+  private ConfigBuilder() {}
 
   public static Config createFromText(String... lines) {
     return new Config(rawFromLines(lines));

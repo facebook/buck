@@ -18,15 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.testutil.AnnotatedRunnable;
 import com.facebook.buck.testutil.FakeExecutor;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class IdleKillerTest {
 
@@ -54,8 +52,7 @@ public class IdleKillerTest {
     List<AnnotatedRunnable> scheduledRunnables = fakeExecutor.getRunnableList();
     Assert.assertEquals("Should have scheduled one task", 1, scheduledRunnables.size());
     Assert.assertTrue(
-        "That task should be cancelled",
-        scheduledRunnables.get(0).getFuture().isCancelled());
+        "That task should be cancelled", scheduledRunnables.get(0).getFuture().isCancelled());
   }
 
   @Test

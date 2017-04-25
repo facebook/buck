@@ -18,16 +18,14 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class AuditInputCommandIntegrationTest {
 
@@ -36,13 +34,12 @@ public class AuditInputCommandIntegrationTest {
   private String expectedStdoutJson =
       Platform.detect() == Platform.WINDOWS ? "stdout-windows.json" : "stdout.json";
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckAuditInputAppleResourceDirs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -53,8 +50,8 @@ public class AuditInputCommandIntegrationTest {
 
   @Test
   public void testBuckAuditInputJsonAppleResourceDirs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule in JSON format.
@@ -65,8 +62,8 @@ public class AuditInputCommandIntegrationTest {
 
   @Test
   public void testBuckAuditInputExportFileWithoutSrc() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input_no_src", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input_no_src", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.

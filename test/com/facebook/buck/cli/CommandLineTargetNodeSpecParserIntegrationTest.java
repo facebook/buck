@@ -21,23 +21,20 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CommandLineTargetNodeSpecParserIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void trailingDotDotDotBuild() throws IOException {

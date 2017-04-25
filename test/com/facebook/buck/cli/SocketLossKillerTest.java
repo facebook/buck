@@ -22,21 +22,18 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.AnnotatedRunnable;
 import com.facebook.buck.testutil.FakeExecutor;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-
 public class SocketLossKillerTest {
 
-  @Rule
-  public final TemporaryFolder tempFolder = new TemporaryFolder();
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
   private final FakeExecutor fakeExecutor = new FakeExecutor();
 

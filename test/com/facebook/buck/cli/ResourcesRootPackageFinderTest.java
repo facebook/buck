@@ -21,23 +21,19 @@ import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.ResourcesRootPackageFinder;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class ResourcesRootPackageFinderTest {
   @Test
   public void testResourcesPath() {
     Path resourcesRoot = Paths.get("java/example/resources");
-    ResourcesRootPackageFinder finder = new ResourcesRootPackageFinder(
-        resourcesRoot,
-        new FakeJavaPackageFinder());
+    ResourcesRootPackageFinder finder =
+        new ResourcesRootPackageFinder(resourcesRoot, new FakeJavaPackageFinder());
     assertEquals(
         Paths.get("com/facebook/"),
-        finder.findJavaPackageFolder(
-            Paths.get("java/example/resources/com/facebook/bar.txt")));
+        finder.findJavaPackageFolder(Paths.get("java/example/resources/com/facebook/bar.txt")));
     assertEquals(
         "com.facebook",
         finder.findJavaPackage(Paths.get("java/example/resources/com/facebook/bar.txt")));
@@ -46,9 +42,8 @@ public class ResourcesRootPackageFinderTest {
   @Test
   public void testNonmatchingPath() {
     Path resourcesRoot = Paths.get("java/example/resources");
-    ResourcesRootPackageFinder finder = new ResourcesRootPackageFinder(
-        resourcesRoot,
-        new FakeJavaPackageFinder());
+    ResourcesRootPackageFinder finder =
+        new ResourcesRootPackageFinder(resourcesRoot, new FakeJavaPackageFinder());
     assertNull(
         "Should fall back to the FakeJavaPackageFinder and return null.",
         finder.findJavaPackageFolder(Paths.get("does/not/match.txt")));

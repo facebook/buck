@@ -27,19 +27,16 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.util.Optional;
-
 public class ConfigTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldGetBooleanValues() throws IOException {
@@ -63,9 +60,7 @@ public class ConfigTest {
   @Test
   public void testGetFloat() throws IOException {
     assertEquals(
-        Optional.of(0.333f),
-        ConfigBuilder.createFromText("[a]", "  f = 0.333").getFloat("a", "f")
-    );
+        Optional.of(0.333f), ConfigBuilder.createFromText("[a]", "  f = 0.333").getFloat("a", "f"));
   }
 
   @Test
@@ -75,12 +70,11 @@ public class ConfigTest {
     ImmutableList<String> expected = builder.add("foo").add("bar").add("baz").build();
     assertEquals(
         expected,
-        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b")
-    );
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b"));
     assertEquals(
         Optional.of(expected),
-        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b")
-    );
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b"));
   }
 
   @Test
@@ -90,21 +84,18 @@ public class ConfigTest {
     ImmutableList<String> expected = builder.add("cool").add("story").add("bro").build();
     assertEquals(
         expected,
-        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b", ';')
-    );
+        ConfigBuilder.createFromText(config[0], config[1]).getListWithoutComments("a", "b", ';'));
     assertEquals(
         Optional.of(expected),
         ConfigBuilder.createFromText(config[0], config[1])
-            .getOptionalListWithoutComments("a", "b", ';')
-    );
+            .getOptionalListWithoutComments("a", "b", ';'));
   }
 
   @Test
   public void testGetEmptyList() throws IOException {
     String[] config = {"[a]", "b ="};
     assertThat(
-        ConfigBuilder.createFromText(config[0], config[1])
-            .getOptionalListWithoutComments("a", "b"),
+        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
         is(equalTo(Optional.of(ImmutableList.of()))));
   }
 
@@ -112,8 +103,7 @@ public class ConfigTest {
   public void testGetEmptyListWithComment() throws IOException {
     String[] config = {"[a]", "b = ; comment"};
     assertThat(
-        ConfigBuilder.createFromText(config[0], config[1])
-            .getOptionalListWithoutComments("a", "b"),
+        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
         is(equalTo(Optional.of(ImmutableList.of()))));
   }
 
@@ -121,8 +111,7 @@ public class ConfigTest {
   public void testGetUnspecifiedList() throws IOException {
     String[] config = {"[a]", "c ="};
     assertThat(
-        ConfigBuilder.createFromText(config[0], config[1])
-            .getOptionalListWithoutComments("a", "b"),
+        ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
         is(equalTo(Optional.empty())));
   }
 
@@ -162,9 +151,9 @@ public class ConfigTest {
         "quoted strings are decoded",
         "foo [bar]\t\"\tbaz\\\n\u001f\udbcc\udc05\u6211\r",
         ConfigBuilder.createFromText(
-            "[foo]",
-            "bar=\"foo [bar]\\t\\\"\tbaz\\\\\\n\\x1f\\U00103005\\u6211\\r\"")
-        .getValue("foo", "bar").get());
+                "[foo]", "bar=\"foo [bar]\\t\\\"\tbaz\\\\\\n\\x1f\\U00103005\\u6211\\r\"")
+            .getValue("foo", "bar")
+            .get());
   }
 
   @Test
@@ -172,66 +161,52 @@ public class ConfigTest {
     assertEquals(
         "lists with quoted parts are decoded",
         ImmutableList.of("foo bar", ",,,", ";", "\n"),
-        ConfigBuilder.createFromText(
-            "[foo]",
-            "bar=\"foo bar\" ,,, ; \"\\n\"")
-        .getListWithoutComments("foo", "bar", ' '));
+        ConfigBuilder.createFromText("[foo]", "bar=\"foo bar\" ,,, ; \"\\n\"")
+            .getListWithoutComments("foo", "bar", ' '));
   }
 
   @Test
   public void invalidEscapeSequence() throws IOException {
     String msg = "";
     try {
-      ConfigBuilder.createFromText("[foo]\nbar=\"\\z\"")
-        .getValue("foo", "bar");
+      ConfigBuilder.createFromText("[foo]\nbar=\"\\z\"").getValue("foo", "bar");
     } catch (HumanReadableException e) {
       msg = e.getMessage();
     }
-    assertEquals(
-        ".buckconfig: foo:bar: Invalid escape sequence: \\z",
-        msg);
+    assertEquals(".buckconfig: foo:bar: Invalid escape sequence: \\z", msg);
   }
 
   @Test
   public void invalidHexSequence() throws IOException {
     String msg = "";
     try {
-      ConfigBuilder.createFromText("[x]\ny=\"\\x4-\"")
-        .getValue("x", "y");
+      ConfigBuilder.createFromText("[x]\ny=\"\\x4-\"").getValue("x", "y");
     } catch (HumanReadableException e) {
       msg = e.getMessage();
     }
-    assertEquals(
-        ".buckconfig: x:y: Invalid hexadecimal digit in sequence: \\x4-",
-        msg);
+    assertEquals(".buckconfig: x:y: Invalid hexadecimal digit in sequence: \\x4-", msg);
   }
 
   @Test
   public void missingCloseQuote() throws IOException {
     String msg = "";
     try {
-      ConfigBuilder.createFromText("[foo]\nbar=xyz\"asdfasdfasdf\n")
-        .getValue("foo", "bar");
+      ConfigBuilder.createFromText("[foo]\nbar=xyz\"asdfasdfasdf\n").getValue("foo", "bar");
     } catch (HumanReadableException e) {
       msg = e.getMessage();
     }
-    assertEquals(
-        ".buckconfig: foo:bar: Input ends inside quoted string: \"asdfasdfa...",
-        msg);
+    assertEquals(".buckconfig: foo:bar: Input ends inside quoted string: \"asdfasdfa...", msg);
   }
 
   @Test
   public void shortHexSequence() throws IOException {
     String msg = "";
     try {
-      ConfigBuilder.createFromText("[foo]\nbar=\"\\u002")
-        .getValue("foo", "bar");
+      ConfigBuilder.createFromText("[foo]\nbar=\"\\u002").getValue("foo", "bar");
     } catch (HumanReadableException e) {
       msg = e.getMessage();
     }
-    assertEquals(
-        ".buckconfig: foo:bar: Input ends inside hexadecimal sequence: \\u002",
-        msg);
+    assertEquals(".buckconfig: foo:bar: Input ends inside hexadecimal sequence: \\u002", msg);
   }
 
   @Test
@@ -243,8 +218,7 @@ public class ConfigTest {
                 .put("section", "field2", "goodbye")
                 .build());
     assertThat(
-        config.get("section", "field1"),
-        Matchers.equalTo(Optional.of("hello goodbye world")));
+        config.get("section", "field1"), Matchers.equalTo(Optional.of("hello goodbye world")));
   }
 
   @Test
@@ -255,9 +229,7 @@ public class ConfigTest {
                 .put("section", "field1", "$(config section.field2) world")
                 .put("section", "field2", "goodbye")
                 .build());
-    assertThat(
-        config.get("section", "field1"),
-        Matchers.equalTo(Optional.of("goodbye world")));
+    assertThat(config.get("section", "field1"), Matchers.equalTo(Optional.of("goodbye world")));
   }
 
   @Test
@@ -306,9 +278,7 @@ public class ConfigTest {
   public void locationMacroIsPreserved() {
     Config config =
         new Config(
-            RawConfig.builder()
-                .put("section", "field", "hello $(location input) world")
-                .build());
+            RawConfig.builder().put("section", "field", "hello $(location input) world").build());
     assertThat(
         config.get("section", "field"),
         Matchers.equalTo(Optional.of("hello $(location input) world")));
@@ -317,81 +287,57 @@ public class ConfigTest {
   @Test
   public void equalsIgnoringIgnoresValueOfSingleField() {
     assertThat(
-        new Config(
-            RawConfig.builder()
-                .put("section", "field", "valueLeft")
-                .build())
-        .equalsIgnoring(
-            new Config(
-                RawConfig.builder()
-                    .put("section", "field", "valueRight")
-                    .build()),
-            ImmutableMap.of("section", ImmutableSet.of("field"))
-        ),
-        is(true)
-    );
+        new Config(RawConfig.builder().put("section", "field", "valueLeft").build())
+            .equalsIgnoring(
+                new Config(RawConfig.builder().put("section", "field", "valueRight").build()),
+                ImmutableMap.of("section", ImmutableSet.of("field"))),
+        is(true));
 
     assertThat(
         new Config(
-            RawConfig.builder()
-                .put("section", "field", "valueLeft")
-                .put("section", "field_b", "value")
-                .build())
+                RawConfig.builder()
+                    .put("section", "field", "valueLeft")
+                    .put("section", "field_b", "value")
+                    .build())
             .equalsIgnoring(
                 new Config(
                     RawConfig.builder()
                         .put("section", "field", "valueRight")
                         .put("section", "field_b", "value")
                         .build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))
-            ),
-        is(true)
-    );
+                ImmutableMap.of("section", ImmutableSet.of("field"))),
+        is(true));
   }
 
   @Test
   public void equalsIgnoringIgnoresPresenceOfIgnoredField() {
     assertThat(
-        new Config(
-            RawConfig.builder()
-                .put("section", "field", "value")
-                .build())
+        new Config(RawConfig.builder().put("section", "field", "value").build())
             .equalsIgnoring(
                 new Config(RawConfig.builder().build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))
-            ),
-        is(true)
-    );
+                ImmutableMap.of("section", ImmutableSet.of("field"))),
+        is(true));
 
     assertThat(
         new Config(
-            RawConfig.builder()
-                .put("section", "field", "value")
-                .put("section", "field_b", "value")
-                .build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder()
+                RawConfig.builder()
+                    .put("section", "field", "value")
                     .put("section", "field_b", "value")
-                    .build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))
-            ),
-        is(true)
-    );
+                    .build())
+            .equalsIgnoring(
+                new Config(RawConfig.builder().put("section", "field_b", "value").build()),
+                ImmutableMap.of("section", ImmutableSet.of("field"))),
+        is(true));
 
     assertThat(
         new Config(
-            RawConfig.builder()
-                .put("section", "field", "value")
-                .put("section_b", "field_b", "value")
-                .build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder()
+                RawConfig.builder()
+                    .put("section", "field", "value")
                     .put("section_b", "field_b", "value")
-                    .build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))
-            ),
-        is(true)
-    );
+                    .build())
+            .equalsIgnoring(
+                new Config(RawConfig.builder().put("section_b", "field_b", "value").build()),
+                ImmutableMap.of("section", ImmutableSet.of("field"))),
+        is(true));
   }
-
 }

@@ -30,7 +30,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,73 +78,60 @@ public class ProjectCommandIntellijTest {
     BuildTarget bazProjectTarget = BuildTargetFactory.newInstance("//baz:baz");
     BuildTarget dummyProjectTarget = BuildTargetFactory.newInstance("//:dummy");
 
-    dummyRootBinNode = new JavaBinaryRuleBuilder(dummyRootBinTarget)
-        .build();
-    barLibNode = JavaLibraryBuilder
-        .createBuilder(barLibTarget)
-        .build();
-    fooLibNode = JavaLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .addDep(barLibTarget)
-        .addTest(fooTestTarget)
-        .build();
-    fooBinNode = new JavaBinaryRuleBuilder(fooBinTarget)
-        .setDeps(ImmutableSortedSet.of(fooLibTarget))
-        .addTest(fooBinTestTarget)
-        .build();
-    bazLibNode = JavaLibraryBuilder
-        .createBuilder(bazLibTarget)
-        .addTest(bazTestTarget)
-        .build();
-    bazTestNode = JavaTestBuilder
-        .createBuilder(bazTestTarget)
-        .build();
-    fooTestNode = JavaTestBuilder
-        .createBuilder(fooTestTarget)
-        .addDep(bazLibTarget)
-        .build();
-    fooBinTestNode = JavaTestBuilder
-        .createBuilder(fooBinTestTarget)
-        .build();
-    quxBinNode = new JavaBinaryRuleBuilder(quxBinTarget)
-        .setDeps(ImmutableSortedSet.of(barLibTarget))
-        .build();
-    fooProjectNode = ProjectConfigBuilder
-        .createBuilder(fooProjectTarget)
-        .setSrcRule(fooBinTarget)
-        .build();
-    bazProjectNode = ProjectConfigBuilder
-        .createBuilder(bazProjectTarget)
-        .setSrcRule(bazLibTarget)
-        .build();
-    dummyProjectNode = ProjectConfigBuilder
-        .createBuilder(dummyProjectTarget)
-        .setSrcRule(dummyRootBinTarget)
-        .build();
+    dummyRootBinNode = new JavaBinaryRuleBuilder(dummyRootBinTarget).build();
+    barLibNode = JavaLibraryBuilder.createBuilder(barLibTarget).build();
+    fooLibNode =
+        JavaLibraryBuilder.createBuilder(fooLibTarget)
+            .addDep(barLibTarget)
+            .addTest(fooTestTarget)
+            .build();
+    fooBinNode =
+        new JavaBinaryRuleBuilder(fooBinTarget)
+            .setDeps(ImmutableSortedSet.of(fooLibTarget))
+            .addTest(fooBinTestTarget)
+            .build();
+    bazLibNode = JavaLibraryBuilder.createBuilder(bazLibTarget).addTest(bazTestTarget).build();
+    bazTestNode = JavaTestBuilder.createBuilder(bazTestTarget).build();
+    fooTestNode = JavaTestBuilder.createBuilder(fooTestTarget).addDep(bazLibTarget).build();
+    fooBinTestNode = JavaTestBuilder.createBuilder(fooBinTestTarget).build();
+    quxBinNode =
+        new JavaBinaryRuleBuilder(quxBinTarget)
+            .setDeps(ImmutableSortedSet.of(barLibTarget))
+            .build();
+    fooProjectNode =
+        ProjectConfigBuilder.createBuilder(fooProjectTarget).setSrcRule(fooBinTarget).build();
+    bazProjectNode =
+        ProjectConfigBuilder.createBuilder(bazProjectTarget).setSrcRule(bazLibTarget).build();
+    dummyProjectNode =
+        ProjectConfigBuilder.createBuilder(dummyProjectTarget)
+            .setSrcRule(dummyRootBinTarget)
+            .build();
 
-    targetGraph = TargetGraphFactory.newInstance(
-        dummyRootBinNode,
-        barLibNode,
-        fooLibNode,
-        fooBinNode,
-        bazLibNode,
-        bazTestNode,
-        fooTestNode,
-        fooBinTestNode,
-        quxBinNode,
-        fooProjectNode,
-        bazProjectNode,
-        dummyProjectNode);
+    targetGraph =
+        TargetGraphFactory.newInstance(
+            dummyRootBinNode,
+            barLibNode,
+            fooLibNode,
+            fooBinNode,
+            bazLibNode,
+            bazTestNode,
+            fooTestNode,
+            fooBinTestNode,
+            quxBinNode,
+            fooProjectNode,
+            bazProjectNode,
+            dummyProjectNode);
   }
 
   @Test
   public void testCreateTargetGraphWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(),
-        /* withTests = */ false,
-        /* withDependenciesTests = */ false);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(),
+            /* withTests = */ false,
+            /* withDependenciesTests = */ false);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?, ?>>of(
@@ -157,18 +143,18 @@ public class ProjectCommandIntellijTest {
             barLibNode,
             bazProjectNode,
             bazLibNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(),
-        /* withTests = */ true,
-        /* withDependenciesTests = */ true);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(),
+            /* withTests = */ true,
+            /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?, ?>>of(
@@ -183,39 +169,34 @@ public class ProjectCommandIntellijTest {
             bazProjectNode,
             bazLibNode,
             bazTestNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        /* withTests = */ false,
-        /* withDependenciesTests = */ false);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(fooProjectNode.getBuildTarget()),
+            /* withTests = */ false,
+            /* withDependenciesTests = */ false);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?, ?>>of(
-            dummyRootBinNode,
-            dummyProjectNode,
-            fooProjectNode,
-            fooBinNode,
-            fooLibNode,
-            barLibNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+            dummyRootBinNode, dummyProjectNode, fooProjectNode, fooBinNode, fooLibNode, barLibNode),
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        /* withTests = */ true,
-        /* withDependenciesTests = */ true);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(fooProjectNode.getBuildTarget()),
+            /* withTests = */ true,
+            /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?, ?>>of(
@@ -229,46 +210,37 @@ public class ProjectCommandIntellijTest {
             barLibNode,
             bazProjectNode,
             bazLibNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        /* withTests = */ false,
-        /* withDependenciesTests = */ false);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(bazProjectNode.getBuildTarget()),
+            /* withTests = */ false,
+            /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.of(
-            dummyRootBinNode,
-            dummyProjectNode,
-            bazProjectNode,
-            bazLibNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.of(dummyRootBinNode, dummyProjectNode, bazProjectNode, bazLibNode),
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        /* withTests = */ true,
-        /* withDependenciesTests = */ true);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.INTELLIJ,
+            ImmutableSet.of(bazProjectNode.getBuildTarget()),
+            /* withTests = */ true,
+            /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.of(
-            dummyRootBinNode,
-            dummyProjectNode,
-            bazProjectNode,
-            bazLibNode,
-            bazTestNode),
-        ImmutableSortedSet.copyOf(
-            targetGraphAndTargets.getTargetGraph().getNodes()));
+            dummyRootBinNode, dummyProjectNode, bazProjectNode, bazLibNode, bazTestNode),
+        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
   }
 }

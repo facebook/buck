@@ -34,7 +34,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -43,29 +42,25 @@ import java.util.Optional;
 
 public class ProjectCommandTests {
   // Utility class, do not instantiate.
-  private ProjectCommandTests() { }
+  private ProjectCommandTests() {}
 
   public static TargetGraphAndTargets createTargetGraph(
       TargetGraph projectGraph,
       ProjectCommand.Ide targetIde,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean withTests,
-      boolean withDependenciesTests
-  ) {
+      boolean withDependenciesTests) {
     ProjectPredicates projectPredicates = ProjectPredicates.forIde(targetIde);
 
     ImmutableSet<BuildTarget> graphRoots;
     if (!passedInTargetsSet.isEmpty()) {
       ImmutableSet<BuildTarget> supplementalGraphRoots =
-          ProjectCommand.getRootBuildTargetsForIntelliJ(
-              targetIde,
-              projectGraph,
-              projectPredicates);
+          ProjectCommand.getRootBuildTargetsForIntelliJ(targetIde, projectGraph, projectPredicates);
       graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
     } else {
-      graphRoots = ProjectCommand.getRootsFromPredicate(
-          projectGraph,
-          projectPredicates.getProjectRootsPredicate());
+      graphRoots =
+          ProjectCommand.getRootsFromPredicate(
+              projectGraph, projectPredicates.getProjectRootsPredicate());
     }
 
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
@@ -73,11 +68,12 @@ public class ProjectCommandTests {
 
     ImmutableSet<BuildTarget> explicitTests;
     if (withTests) {
-      explicitTests = ProjectCommand.getExplicitTestTargets(
-          graphRootsOrSourceTargets,
-          projectGraph,
-          withDependenciesTests,
-          FocusedModuleTargetMatcher.noFocus());
+      explicitTests =
+          ProjectCommand.getExplicitTestTargets(
+              graphRootsOrSourceTargets,
+              projectGraph,
+              withDependenciesTests,
+              FocusedModuleTargetMatcher.noFocus());
     } else {
       explicitTests = ImmutableSet.of();
     }
@@ -96,12 +92,13 @@ public class ProjectCommandTests {
       boolean isWithTests,
       boolean isWithDependenciesTests)
       throws IOException, InterruptedException {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
-        targetGraph,
-        ProjectCommand.Ide.XCODE,
-        passedInTargetsSet,
-        isWithTests,
-        isWithDependenciesTests);
+    TargetGraphAndTargets targetGraphAndTargets =
+        ProjectCommandTests.createTargetGraph(
+            targetGraph,
+            ProjectCommand.Ide.XCODE,
+            passedInTargetsSet,
+            isWithTests,
+            isWithDependenciesTests);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     ProjectCommand.generateWorkspacesForTargets(
@@ -124,9 +121,10 @@ public class ProjectCommandTests {
 
   private static CommandRunnerParams createCommandRunnerParamsForTests()
       throws IOException, InterruptedException {
-    Cell cell = new TestCellBuilder()
-        .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
-        .build();
+    Cell cell =
+        new TestCellBuilder()
+            .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
+            .build();
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         new TestConsole(),
         cell,

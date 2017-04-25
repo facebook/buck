@@ -19,12 +19,9 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.util.Verbosity;
-
 import org.junit.Test;
 
-/**
- * Unit test for {@link VerbosityParser}.
- */
+/** Unit test for {@link VerbosityParser}. */
 public class VerbosityParserTest {
 
   @Test

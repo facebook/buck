@@ -16,33 +16,29 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import static org.hamcrest.Matchers.containsString;
-
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class MainIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckNoArgs() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "empty_project", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
@@ -56,8 +52,8 @@ public class MainIntegrationTest {
 
   @Test
   public void testBuckHelp() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "empty_project", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
@@ -71,45 +67,48 @@ public class MainIntegrationTest {
 
   @Test
   public void testConfigOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "includes_override", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
-    workspace.runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
+    workspace
+        .runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
         .assertSuccess();
-    workspace.runBuckCommand("targets", "--config", "//buildfile.includes=//includes.py")
+    workspace
+        .runBuckCommand("targets", "--config", "//buildfile.includes=//includes.py")
         .assertSuccess();
   }
 
   @Test
   public void testNoRepositoriesConfigOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "includes_override", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
     try {
       workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
       fail("Did not expect to allow repositories override");
     } catch (HumanReadableException expected) {
-      assertEquals("Overriding repository locations from the command line " +
-          "is not supported. Please place a .buckconfig.local in the appropriate location and " +
-          "use that instead.",
+      assertEquals(
+          "Overriding repository locations from the command line "
+              + "is not supported. Please place a .buckconfig.local in the appropriate location and "
+              + "use that instead.",
           expected.getMessage());
     }
   }
 
   @Test
   public void testConfigRemoval() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "includes_removals", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "includes_removals", tmp);
     workspace.setUp();
     // BUCK file defines `ide` as idea, now lets switch to undefined one!
     // It should produce exception as we want explicit ide setting.
     try {
       workspace.runBuckCommand("project", "--config", "project.ide=");
     } catch (HumanReadableException e) {
-      assertThat(e.getHumanReadableErrorMessage(),
+      assertThat(
+          e.getHumanReadableErrorMessage(),
           Matchers.stringContainsInOrder(
-              "Please specify ide using --ide option " +
-                  "or set ide in .buckconfig"));
+              "Please specify ide using --ide option " + "or set ide in .buckconfig"));
     } catch (Exception e) {
       // other exceptions are not expected
       throw e;
@@ -117,43 +116,44 @@ public class MainIntegrationTest {
   }
 
   private String getUsageString() {
-    return Joiner.on('\n').join(
-        "buck build tool",
-        "Usage:",
-        "  buck [<options>]",
-        "  buck <command> --help",
-        "  buck <command> [<command-options>]",
-        "",
-        "Available commands:",
-        "  audit          lists the inputs for the specified target",
-        "  build          builds the specified target",
-        "  cache          makes calls to the artifact cache",
-        "  clean          deletes any generated files",
-        "  distbuild      attaches to a distributed build (experimental)",
-        "  doctor         debug and fix issues of Buck commands",
-        "  fetch          downloads remote resources to your local machine",
-        "  help           " +
-            "shows this screen (or the help page of the specified command) and exits.",
-        "  install        builds and installs an application",
-        "  machoutils     provides some utils for Mach O binary files",
-        "  project        generates project configuration files for an IDE",
-        "  publish        builds and publishes a library to a central repository",
-        "  query          " +
-            "provides facilities to query information about the target nodes graph",
-        "  rage           create a defect report",
-        "  root           prints the absolute path to the root of the current buck project",
-        "  run            runs a target as a command",
-        "  server         query and control the http server",
-        "  suggest        suggests a refactoring for the specified build target",
-        "  targets        prints the list of buildable targets",
-        "  test           builds and runs the tests for the specified target",
-        "  uninstall      uninstalls an APK",
-        "  verify-caches  Verify contents of internal Buck in-memory caches.",
-        "",
-        "Options:",
-        " --help (-h)    : Shows this screen and exits.",
-        " --version (-V) : Show version number.",
-        "",
-        "");
+    return Joiner.on('\n')
+        .join(
+            "buck build tool",
+            "Usage:",
+            "  buck [<options>]",
+            "  buck <command> --help",
+            "  buck <command> [<command-options>]",
+            "",
+            "Available commands:",
+            "  audit          lists the inputs for the specified target",
+            "  build          builds the specified target",
+            "  cache          makes calls to the artifact cache",
+            "  clean          deletes any generated files",
+            "  distbuild      attaches to a distributed build (experimental)",
+            "  doctor         debug and fix issues of Buck commands",
+            "  fetch          downloads remote resources to your local machine",
+            "  help           "
+                + "shows this screen (or the help page of the specified command) and exits.",
+            "  install        builds and installs an application",
+            "  machoutils     provides some utils for Mach O binary files",
+            "  project        generates project configuration files for an IDE",
+            "  publish        builds and publishes a library to a central repository",
+            "  query          "
+                + "provides facilities to query information about the target nodes graph",
+            "  rage           create a defect report",
+            "  root           prints the absolute path to the root of the current buck project",
+            "  run            runs a target as a command",
+            "  server         query and control the http server",
+            "  suggest        suggests a refactoring for the specified build target",
+            "  targets        prints the list of buildable targets",
+            "  test           builds and runs the tests for the specified target",
+            "  uninstall      uninstalls an APK",
+            "  verify-caches  Verify contents of internal Buck in-memory caches.",
+            "",
+            "Options:",
+            " --help (-h)    : Shows this screen and exits.",
+            " --version (-V) : Show version number.",
+            "",
+            "");
   }
 }

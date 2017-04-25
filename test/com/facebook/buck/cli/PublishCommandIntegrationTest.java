@@ -24,18 +24,16 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.FluentIterable;
-
+import java.io.IOException;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
 
 public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
@@ -44,8 +42,7 @@ public class PublishCommandIntegrationTest {
   public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private TestPublisher publisher;
 
@@ -76,13 +73,12 @@ public class PublishCommandIntegrationTest {
 
   private ProjectWorkspace.ProcessResult runValidBuckPublish(String workspaceName)
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, workspaceName, tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, workspaceName, tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = runBuckPublish(
-        workspace,
-        PublishCommand.INCLUDE_SOURCE_LONG_ARG);
+    ProjectWorkspace.ProcessResult result =
+        runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
@@ -94,56 +90,47 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testRequireRepoUrl() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "publish", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "publish",
-        "//:foo");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("publish", "//:foo");
     result.assertFailure();
     assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
   }
 
   @Test
   public void testDryDun() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "publish", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = runBuckPublish(
-        workspace,
-        PublishCommand.INCLUDE_SOURCE_LONG_ARG,
-        PublishCommand.DRY_RUN_LONG_ARG);
+    ProjectWorkspace.ProcessResult result =
+        runBuckPublish(
+            workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG, PublishCommand.DRY_RUN_LONG_ARG);
     result.assertSuccess();
 
     assertTrue(publisher.getPutRequestsHandler().getPutRequestsPaths().isEmpty());
 
     String stdOut = result.getStdout();
     assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
-    assertTrue(stdOut,
-        stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
+    assertTrue(
+        stdOut, stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
     assertTrue(stdOut, stdOut.contains(MorePaths.pathWithPlatformSeparators("/foo#maven.jar")));
     assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 
   private ProjectWorkspace.ProcessResult runBuckPublish(
-      ProjectWorkspace workspace,
-      String... extraArgs) throws IOException {
+      ProjectWorkspace workspace, String... extraArgs) throws IOException {
     return workspace.runBuckCommand(
-        FluentIterable
-            .from(new String[]{"publish"})
+        FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)
-            .append(
-                PublishCommand.REMOTE_REPO_SHORT_ARG,
-                getMockRepoUrl(),
-                TARGET)
+            .append(PublishCommand.REMOTE_REPO_SHORT_ARG, getMockRepoUrl(), TARGET)
             .toArray(String.class));
   }
 
   private String getMockRepoUrl() {
     return publisher.getHttpd().getRootUri().toString();
   }
-
 }
