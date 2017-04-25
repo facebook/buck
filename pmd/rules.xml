@@ -21,6 +21,9 @@
     -->
     <exclude name="TooManyStaticImports" />
 
+    <!--
+      google-java-format covers this one; we don't need two messages.
+    -->
     <exclude name="UnusedImports" />
   </rule>
 
