@@ -18,38 +18,27 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 @JsonDeserialize(as = RageJsonResponse.class)
 abstract class AbstractRageJsonResponse {
 
-  /**
-   * @return if the request and processing was successful from the server side.
-   */
+  /** @return if the request and processing was successful from the server side. */
   @Value.Parameter
   abstract boolean getRequestSuccessful();
 
-  /**
-   * @return get the error message if it exists.
-   */
+  /** @return get the error message if it exists. */
   @Value.Parameter
   abstract Optional<String> getErrorMessage();
 
-  /**
-   * @return if the server wants to redirect or point to a remote url it will be here.
-   */
+  /** @return if the server wants to redirect or point to a remote url it will be here. */
   @Value.Parameter
   abstract Optional<String> getRageUrl();
 
-  /**
-   * @return the message which is Json in the format/content that the server uses.
-   */
+  /** @return the message which is Json in the format/content that the server uses. */
   @Value.Parameter
   abstract Optional<String> getMessage();
-
 }

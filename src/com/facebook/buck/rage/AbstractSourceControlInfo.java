@@ -19,10 +19,8 @@ package com.facebook.buck.rage;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple

@@ -18,10 +18,8 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable

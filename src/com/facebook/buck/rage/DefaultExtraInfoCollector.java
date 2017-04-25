@@ -22,14 +22,11 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Runs an optional user-specified command to get extra info for the rage report.
- */
+/** Runs an optional user-specified command to get extra info for the rage report. */
 public class DefaultExtraInfoCollector implements ExtraInfoCollector {
 
   private static final long PROCESS_TIMEOUT_MS = 5 * 60 * 1000; // 5min.
@@ -39,9 +36,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
   private final ProcessExecutor processExecutor;
 
   public DefaultExtraInfoCollector(
-      RageConfig rageConfig,
-      ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) {
+      RageConfig rageConfig, ProjectFilesystem projectFilesystem, ProcessExecutor processExecutor) {
     this.rageConfig = rageConfig;
     this.projectFilesystem = projectFilesystem;
     this.processExecutor = processExecutor;
@@ -62,14 +57,14 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
     projectFilesystem.deleteRecursivelyIfExists(rageExtraFilesDir);
     projectFilesystem.mkdirs(rageExtraFilesDir);
 
-    String extraInfoCommandOutput = runCommandAndGetStdout(
-        Iterables.concat(
-            extraInfoCommand,
-            ImmutableList.of(
-                "--output-dir",
-                projectFilesystem.resolve(rageExtraFilesDir).toString())),
-        projectFilesystem,
-        processExecutor);
+    String extraInfoCommandOutput =
+        runCommandAndGetStdout(
+            Iterables.concat(
+                extraInfoCommand,
+                ImmutableList.of(
+                    "--output-dir", projectFilesystem.resolve(rageExtraFilesDir).toString())),
+            projectFilesystem,
+            processExecutor);
 
     ImmutableSet<Path> rageExtraFiles = projectFilesystem.getFilesUnderPath(rageExtraFilesDir);
 
@@ -88,18 +83,17 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
 
     ProcessExecutor.Result extraInfoResult;
     try {
-      extraInfoResult = processExecutor.launchAndExecute(
-          ProcessExecutorParams.builder()
-              .addAllCommand(command)
-              .setDirectory(projectFilesystem.getRootPath())
-              .build(),
-          ImmutableSet.of(
-              ProcessExecutor.Option.EXPECTING_STD_OUT,
-              ProcessExecutor.Option.PRINT_STD_ERR),
-          Optional.empty(),
-          Optional.of(PROCESS_TIMEOUT_MS),
-          Optional.empty()
-      );
+      extraInfoResult =
+          processExecutor.launchAndExecute(
+              ProcessExecutorParams.builder()
+                  .addAllCommand(command)
+                  .setDirectory(projectFilesystem.getRootPath())
+                  .build(),
+              ImmutableSet.of(
+                  ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.PRINT_STD_ERR),
+              Optional.empty(),
+              Optional.of(PROCESS_TIMEOUT_MS),
+              Optional.empty());
     } catch (IOException e) {
       throw new ExtraInfoExecutionException("Could not invoke extra report command.", e);
     }
@@ -108,8 +102,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
       throw new ExtraInfoExecutionException(
           String.format(
               "Gathering extra information for rage report from %s timed out after %d ms",
-              command,
-              PROCESS_TIMEOUT_MS));
+              command, PROCESS_TIMEOUT_MS));
     }
 
     if (extraInfoResult.getExitCode() != 0) {

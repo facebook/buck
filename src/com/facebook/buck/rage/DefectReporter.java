@@ -20,16 +20,12 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Interface around the 'backend' of submitting a defect report.
- */
+/** Interface around the 'backend' of submitting a defect report. */
 public interface DefectReporter {
   DefectSubmitResult submitReport(DefectReport defectReport) throws IOException;
 
@@ -39,35 +35,28 @@ public interface DefectReporter {
 
     /**
      * If value is empty then no request was made and report was saved locally.
+     *
      * @return if request was successful.
      */
     Optional<Boolean> getIsRequestSuccessful();
 
     /**
-     * Returns the protocol version of the request based on
-     * {@link AbstractRageConfig.RageProtocolVersion}.
+     * Returns the protocol version of the request based on {@link
+     * AbstractRageConfig.RageProtocolVersion}.
      */
     AbstractRageConfig.RageProtocolVersion getRequestProtocol();
 
-    /**
-     * @return The location where the report was saved, it can be a remote link or a local path
-     */
+    /** @return The location where the report was saved, it can be a remote link or a local path */
     Optional<String> getReportSubmitLocation();
 
-    /**
-     * @return the content of the response.
-     */
+    /** @return the content of the response. */
     Optional<String> getReportSubmitMessage();
 
-    /**
-     * @return if an error occurred it will have the error.
-     */
+    /** @return if an error occurred it will have the error. */
     Optional<String> getReportSubmitErrorMessage();
   }
 
-  /**
-   * Information helpful when diagnosing 'buck is not picking up changes' reports.
-   */
+  /** Information helpful when diagnosing 'buck is not picking up changes' reports. */
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractFileChangesIgnoredReport {
@@ -78,12 +67,19 @@ public interface DefectReporter {
   @BuckStyleImmutable
   interface AbstractDefectReport {
     Optional<UserReport> getUserReport();
+
     ImmutableSet<BuildId> getHighlightedBuildIds();
+
     ImmutableSet<Path> getIncludedPaths();
+
     BuildEnvironmentDescription getBuildEnvironmentDescription();
+
     Optional<SourceControlInfo> getSourceControlInfo();
+
     Optional<String> getExtraInfo();
+
     Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport();
+
     UserLocalConfiguration getUserLocalConfiguration();
   }
 }

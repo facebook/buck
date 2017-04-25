@@ -24,7 +24,6 @@ import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,9 +64,8 @@ public class InteractiveReport extends AbstractReport {
         watchmanDiagReportCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem);
     this.console = console;
-    this.input = new UserInput(
-        console.getStdOut(),
-        new BufferedReader(new InputStreamReader(stdin)));
+    this.input =
+        new UserInput(console.getStdOut(), new BufferedReader(new InputStreamReader(stdin)));
   }
 
   @Override
@@ -81,9 +79,8 @@ public class InteractiveReport extends AbstractReport {
         "Which buck invocations would you like to report?",
         buildLogs,
         entry -> {
-          Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
-              entry.getSize(),
-              SizeUnit.BYTES);
+          Pair<Double, SizeUnit> humanReadableSize =
+              SizeUnit.getHumanReadableSize(entry.getSize(), SizeUnit.BYTES);
           String cmdArgs = entry.getCommandArgs().orElse("unknown command");
           cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
 
@@ -106,16 +103,17 @@ public class InteractiveReport extends AbstractReport {
   @Override
   protected Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException {
-    if (!input.confirm("Would you like to attach source control information (this includes " +
-        "information about commits and changed files)?")) {
+    if (!input.confirm(
+        "Would you like to attach source control information (this includes "
+            + "information about commits and changed files)?")) {
       return Optional.empty();
     }
     return super.getSourceControlInfo();
   }
 
   private String prettyPrintExitCode(OptionalInt exitCode) {
-    String result = "Exit code: " +
-        (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
+    String result =
+        "Exit code: " + (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
     if (exitCode.isPresent() && console.getAnsi().isAnsiTerminal()) {
       if (exitCode.getAsInt() == 0) {
         return console.getAnsi().asGreenText(result);
@@ -135,5 +133,4 @@ public class InteractiveReport extends AbstractReport {
 
     return Optional.of(userReport.build());
   }
-
 }

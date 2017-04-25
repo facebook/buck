@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,16 +48,13 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
 
-/**
- * Takes care of actually writing out the report.
- */
+/** Takes care of actually writing out the report. */
 public class DefaultDefectReporter implements DefectReporter {
 
   private static final Logger LOG = Logger.get(AbstractReport.class);
@@ -74,27 +70,22 @@ public class DefaultDefectReporter implements DefectReporter {
   private final Clock clock;
 
   public DefaultDefectReporter(
-      ProjectFilesystem filesystem,
-      RageConfig rageConfig,
-      BuckEventBus buckEventBus,
-      Clock clock
-  ) {
+      ProjectFilesystem filesystem, RageConfig rageConfig, BuckEventBus buckEventBus, Clock clock) {
     this.filesystem = filesystem;
     this.rageConfig = rageConfig;
     this.buckEventBus = buckEventBus;
     this.clock = clock;
   }
 
-  private void addFilesToArchive(
-      CustomZipOutputStream out,
-      ImmutableSet<Path> paths) throws IOException {
+  private void addFilesToArchive(CustomZipOutputStream out, ImmutableSet<Path> paths)
+      throws IOException {
     for (Path logFile : paths) {
       Preconditions.checkArgument(!logFile.isAbsolute(), "Should be a relative Path.", logFile);
 
       // If the file is hidden(UNIX terms) save it as normal file.
       if (logFile.getFileName().toString().startsWith(".")) {
-        out.putNextEntry(new CustomZipEntry(
-            Paths.get(logFile.getFileName().toString().substring(1))));
+        out.putNextEntry(
+            new CustomZipEntry(Paths.get(logFile.getFileName().toString().substring(1))));
       } else {
         out.putNextEntry(new CustomZipEntry(logFile));
       }
@@ -107,8 +98,7 @@ public class DefaultDefectReporter implements DefectReporter {
   }
 
   private void addStringsAsFilesToArchive(
-      CustomZipOutputStream out,
-      ImmutableMap<String, String> files) throws IOException {
+      CustomZipOutputStream out, ImmutableMap<String, String> files) throws IOException {
     for (Map.Entry<String, String> file : files.entrySet()) {
       out.putNextEntry(new CustomZipEntry(file.getKey()));
       out.write(file.getValue().getBytes(Charsets.UTF_8));
@@ -120,7 +110,7 @@ public class DefaultDefectReporter implements DefectReporter {
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
     DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
     defectSubmitResult.setRequestProtocol(rageConfig.getProtocolVersion());
-    Optional<SlbBuckConfig>  frontendConfig = rageConfig.getFrontendConfig();
+    Optional<SlbBuckConfig> frontendConfig = rageConfig.getFrontendConfig();
 
     if (frontendConfig.isPresent()) {
       Optional<ClientSideSlb> slb =
@@ -137,10 +127,8 @@ public class DefaultDefectReporter implements DefectReporter {
     }
 
     filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
-    Path defectReportPath = filesystem.createTempFile(
-        filesystem.getBuckPaths().getBuckOut(),
-        "defect_report",
-        ".zip");
+    Path defectReportPath =
+        filesystem.createTempFile(filesystem.getBuckPaths().getBuckOut(), "defect_report", ".zip");
     try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {
       writeReport(defectReport, outputStream);
     }
@@ -149,21 +137,18 @@ public class DefaultDefectReporter implements DefectReporter {
         .setIsRequestSuccessful(Optional.empty())
         .setReportSubmitLocation(defectReportPath.toString())
         .build();
-}
+  }
 
-  private void writeReport(
-      DefectReport defectReport,
-      OutputStream outputStream) throws IOException {
+  private void writeReport(DefectReport defectReport, OutputStream outputStream)
+      throws IOException {
     try (BufferedOutputStream baseOut = new BufferedOutputStream(outputStream);
-         CustomZipOutputStream out =
-             ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
-      if (defectReport.getSourceControlInfo().isPresent() &&
-          defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
+      if (defectReport.getSourceControlInfo().isPresent()
+          && defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
         addStringsAsFilesToArchive(
             out,
             ImmutableMap.of(
-                DIFF_FILE_NAME,
-                defectReport.getSourceControlInfo().get().getDiff().get()));
+                DIFF_FILE_NAME, defectReport.getSourceControlInfo().get().getDiff().get()));
       }
       addFilesToArchive(out, defectReport.getIncludedPaths());
 
@@ -175,22 +160,25 @@ public class DefaultDefectReporter implements DefectReporter {
   private DefectSubmitResult uploadReport(
       final DefectReport defectReport,
       DefectSubmitResult.Builder defectSubmitResult,
-      ClientSideSlb slb) throws IOException {
+      ClientSideSlb slb)
+      throws IOException {
     long timeout = rageConfig.getHttpTimeout();
-    OkHttpClient httpClient = new OkHttpClient.Builder()
-        .connectTimeout(timeout, TimeUnit.MILLISECONDS)
-        .readTimeout(timeout, TimeUnit.MILLISECONDS)
-        .writeTimeout(timeout, TimeUnit.MILLISECONDS)
-        .build();
-    HttpService httpService = new RetryingHttpService(buckEventBus,
-        new LoadBalancedService(slb, httpClient, buckEventBus),
-        rageConfig.getMaxUploadRetries());
+    OkHttpClient httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(timeout, TimeUnit.MILLISECONDS)
+            .readTimeout(timeout, TimeUnit.MILLISECONDS)
+            .writeTimeout(timeout, TimeUnit.MILLISECONDS)
+            .build();
+    HttpService httpService =
+        new RetryingHttpService(
+            buckEventBus,
+            new LoadBalancedService(slb, httpClient, buckEventBus),
+            rageConfig.getMaxUploadRetries());
 
     try {
       Request.Builder requestBuilder = new Request.Builder();
       requestBuilder.addHeader(
-          REQUEST_PROTOCOL_VERSION,
-          rageConfig.getProtocolVersion().name().toLowerCase());
+          REQUEST_PROTOCOL_VERSION, rageConfig.getProtocolVersion().name().toLowerCase());
       requestBuilder.post(
           new RequestBody() {
             @Override
@@ -204,9 +192,8 @@ public class DefaultDefectReporter implements DefectReporter {
             }
           });
 
-      HttpResponse response = httpService.makeRequest(
-          rageConfig.getReportUploadPath(),
-          requestBuilder);
+      HttpResponse response =
+          httpService.makeRequest(rageConfig.getReportUploadPath(), requestBuilder);
       String responseBody;
       try (InputStream inputStream = response.getBody()) {
         responseBody = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
@@ -221,9 +208,10 @@ public class DefaultDefectReporter implements DefectReporter {
               .build();
         } else {
           // Decode Json response.
-          RageJsonResponse json = ObjectMappers.READER.readValue(
-              ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
-              RageJsonResponse.class);
+          RageJsonResponse json =
+              ObjectMappers.READER.readValue(
+                  ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
+                  RageJsonResponse.class);
           return defectSubmitResult
               .setIsRequestSuccessful(json.getRequestSuccessful())
               .setReportSubmitErrorMessage(json.getErrorMessage())
@@ -235,9 +223,7 @@ public class DefaultDefectReporter implements DefectReporter {
         throw new IOException(
             String.format(
                 "Connection to %s returned code %d and message: %s",
-                response.requestUrl(),
-                response.statusCode(),
-                responseBody));
+                response.requestUrl(), response.statusCode(), responseBody));
       }
     } catch (IOException e) {
       throw new IOException(String.format("Failed uploading report because [%s].", e.getMessage()));

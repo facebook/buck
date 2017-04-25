@@ -21,7 +21,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.util.Optional;
 
@@ -75,5 +74,4 @@ public class AutomatedReport extends AbstractReport {
   protected Optional<UserReport> getUserReport() throws IOException {
     return Optional.empty();
   }
-
 }

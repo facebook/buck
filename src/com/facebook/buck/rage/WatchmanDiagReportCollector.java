@@ -24,15 +24,12 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-/**
- * Gets watchman diagnostics using the watchman-diag command.
- */
+/** Gets watchman diagnostics using the watchman-diag command. */
 public class WatchmanDiagReportCollector {
   private final ProjectFilesystem projectFilesystem;
   private final String watchmanDiagCommand;
@@ -47,17 +44,16 @@ public class WatchmanDiagReportCollector {
     this.processExecutor = processExecutor;
   }
 
-  public Path run() throws IOException, InterruptedException,
-      ExtraInfoCollector.ExtraInfoExecutionException {
+  public Path run()
+      throws IOException, InterruptedException, ExtraInfoCollector.ExtraInfoExecutionException {
 
     Path watchmanDiagReport =
         projectFilesystem.getBuckPaths().getLogDir().resolve("watchman-diag-report");
     projectFilesystem.deleteFileAtPathIfExists(watchmanDiagReport);
 
-    String extraInfoCommandOutput = DefaultExtraInfoCollector.runCommandAndGetStdout(
-        ImmutableList.of(watchmanDiagCommand),
-        projectFilesystem,
-        processExecutor);
+    String extraInfoCommandOutput =
+        DefaultExtraInfoCollector.runCommandAndGetStdout(
+            ImmutableList.of(watchmanDiagCommand), projectFilesystem, processExecutor);
 
     projectFilesystem.writeContentsToPath(extraInfoCommandOutput, watchmanDiagReport);
 
@@ -78,16 +74,15 @@ public class WatchmanDiagReportCollector {
       if (watchmanEverUsed) {
         break;
       }
-      watchmanEverUsed = watchmanEverUsed ||
-          rootCell.getCell(cellRoot).getWatchman() != Watchman.NULL_WATCHMAN;
+      watchmanEverUsed =
+          watchmanEverUsed || rootCell.getCell(cellRoot).getWatchman() != Watchman.NULL_WATCHMAN;
     }
     if (!watchmanEverUsed) {
       return Optional.empty();
     }
 
-    Optional<Path> optionalExecutable = executableFinder.getOptionalExecutable(
-        Paths.get("watchman-diag"),
-        environment);
+    Optional<Path> optionalExecutable =
+        executableFinder.getOptionalExecutable(Paths.get("watchman-diag"), environment);
     if (!optionalExecutable.isPresent()) {
       return Optional.empty();
     }

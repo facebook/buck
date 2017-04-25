@@ -20,7 +20,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -29,9 +28,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Helper methods for handling input from the user.
- */
+/** Helper methods for handling input from the user. */
 public class UserInput {
   private static final Pattern RANGE_OR_NUMBER =
       Pattern.compile("((?<rangelo>\\d+)\\s*\\-\\s*(?<rangehi>\\d+))|(?<num>\\d+)");
@@ -54,11 +51,12 @@ public class UserInput {
   }
 
   public boolean confirm(String question) throws IOException {
-    ImmutableMap<String, Boolean> supportedResponses = ImmutableMap.of(
-        "", true,
-        "y", true,
-        "n", false);
-    for (;;) {
+    ImmutableMap<String, Boolean> supportedResponses =
+        ImmutableMap.of(
+            "", true,
+            "y", true,
+            "n", false);
+    for (; ; ) {
       output.println();
       output.println(question + " (Y/n)?");
       output.flush();
@@ -93,8 +91,7 @@ public class UserInput {
       String rangeLowString = matcher.group("rangelo");
       String rangeHighString = matcher.group("rangehi");
       Preconditions.checkArgument(
-          numberString != null || rangeHighString != null,
-          "Malformed entry %s.", element);
+          numberString != null || rangeHighString != null, "Malformed entry %s.", element);
 
       if (numberString != null) {
         result.add(Integer.parseInt(numberString));
@@ -102,9 +99,7 @@ public class UserInput {
         int rangeLow = Integer.parseInt(rangeLowString);
         int rangeHigh = Integer.parseInt(rangeHighString);
 
-        for (int i = Math.min(rangeLow, rangeHigh);
-             i <= Math.max(rangeLow, rangeHigh);
-             ++i) {
+        for (int i = Math.min(rangeLow, rangeHigh); i <= Math.max(rangeLow, rangeHigh); ++i) {
           result.add(i);
         }
       }
@@ -113,9 +108,7 @@ public class UserInput {
   }
 
   public <T> Optional<T> selectOne(
-      String prompt,
-      List<T> entries,
-      Function<T, String> entryFormatter) throws IOException {
+      String prompt, List<T> entries, Function<T, String> entryFormatter) throws IOException {
     Preconditions.checkArgument(entries.size() > 0);
 
     output.println();
@@ -135,9 +128,7 @@ public class UserInput {
       }
 
       Preconditions.checkArgument(
-          index >= 0 && index < entries.size(),
-          "Index %s out of bounds.",
-          index);
+          index >= 0 && index < entries.size(), "Index %s out of bounds.", index);
     } catch (IllegalArgumentException e) {
       output.printf("Illegal choice: %s\n", e.getMessage());
       return Optional.empty();
@@ -147,9 +138,7 @@ public class UserInput {
   }
 
   public <T> ImmutableSet<T> selectRange(
-      String prompt,
-      List<T> entries,
-      Function<T, String> entryFormatter) throws IOException {
+      String prompt, List<T> entries, Function<T, String> entryFormatter) throws IOException {
     Preconditions.checkArgument(entries.size() > 0);
 
     output.println();
@@ -160,7 +149,7 @@ public class UserInput {
     }
 
     ImmutableSet<Integer> buildIndexes;
-    for (;;) {
+    for (; ; ) {
       try {
         String response = ask("(input individual numbers or ranges, for example 1,2,3-9)");
         if (response.trim().isEmpty()) {
@@ -170,9 +159,7 @@ public class UserInput {
         }
         for (Integer index : buildIndexes) {
           Preconditions.checkArgument(
-              index >= 0 && index < entries.size(),
-              "Index %s out of bounds.",
-              index);
+              index >= 0 && index < entries.size(), "Index %s out of bounds.", index);
         }
         break;
       } catch (IllegalArgumentException e) {

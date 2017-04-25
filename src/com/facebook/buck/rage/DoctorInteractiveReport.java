@@ -21,7 +21,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.util.Optional;
 
@@ -73,5 +72,4 @@ public class DoctorInteractiveReport extends AbstractReport {
   protected Optional<UserReport> getUserReport() {
     return Optional.empty();
   }
-
 }
