@@ -17,14 +17,13 @@
 package com.facebook.buck.i18n;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import java.util.Locale;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractNumberFormatterCacheKey {
   long getThreadId();
+
   Locale getLocale();
 }

@@ -20,18 +20,14 @@ import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.Locale;
-
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * Thread-safe and i18n-safe wrapper for {@link NumberFormat} (which is not thread-safe).
- */
+/** Thread-safe and i18n-safe wrapper for {@link NumberFormat} (which is not thread-safe). */
 @ThreadSafe
 public class NumberFormatter {
   // Instead of a ThreadLocal<NumberFormat> (which leaks memory),
@@ -40,20 +36,20 @@ public class NumberFormatter {
   private final LoadingCache<NumberFormatterCacheKey, NumberFormat> numberFormatCache;
 
   /**
-   * Given a function which creates {@link NumberFormat} objects for a {@link Locale},
-   * returns a wrapper providing thread-safe access to the formatter for that locale.
+   * Given a function which creates {@link NumberFormat} objects for a {@link Locale}, returns a
+   * wrapper providing thread-safe access to the formatter for that locale.
    */
   public NumberFormatter(final Function<Locale, NumberFormat> numberFormatCreator) {
-    numberFormatCache = CacheBuilder
-        .newBuilder()
-        .maximumSize(1000)
-        .build(
-            new CacheLoader<NumberFormatterCacheKey, NumberFormat>() {
-                @Override
-                public NumberFormat load(NumberFormatterCacheKey key) {
+    numberFormatCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(
+                new CacheLoader<NumberFormatterCacheKey, NumberFormat>() {
+                  @Override
+                  public NumberFormat load(NumberFormatterCacheKey key) {
                     return numberFormatCreator.apply(key.getLocale());
-                }
-            });
+                  }
+                });
   }
 
   private NumberFormat getFormatter(Locale locale) {
@@ -61,66 +57,44 @@ public class NumberFormatter {
         NumberFormatterCacheKey.of(Thread.currentThread().getId(), locale));
   }
 
-  /**
-   * @see NumberFormat#format(double)
-   */
+  /** @see NumberFormat#format(double) */
   public String format(Locale locale, double number) {
     return getFormatter(locale).format(number);
   }
 
-  /**
-   * @see NumberFormat#format(double, StringBuffer, FieldPosition)
-   */
+  /** @see NumberFormat#format(double, StringBuffer, FieldPosition) */
   public StringBuffer format(
-      Locale locale,
-      double number,
-      StringBuffer toAppendTo,
-      FieldPosition pos) {
+      Locale locale, double number, StringBuffer toAppendTo, FieldPosition pos) {
     return getFormatter(locale).format(number, toAppendTo, pos);
   }
 
-  /**
-   * @see NumberFormat#format(long)
-   */
+  /** @see NumberFormat#format(long) */
   public String format(Locale locale, long number) {
     return getFormatter(locale).format(number);
   }
 
-  /**
-   * @see NumberFormat#format(Object)
-   */
+  /** @see NumberFormat#format(Object) */
   public String format(Locale locale, Object object) {
     return getFormatter(locale).format(object);
   }
 
-  /**
-   * @see NumberFormat#format(Object, StringBuffer, FieldPosition)
-   */
+  /** @see NumberFormat#format(Object, StringBuffer, FieldPosition) */
   public StringBuffer format(
-      Locale locale,
-      Object object,
-      StringBuffer toAppendTo,
-      FieldPosition pos) {
+      Locale locale, Object object, StringBuffer toAppendTo, FieldPosition pos) {
     return getFormatter(locale).format(object, toAppendTo, pos);
   }
 
-  /**
-   * @see NumberFormat#parse(String)
-   */
+  /** @see NumberFormat#parse(String) */
   public Number parse(Locale locale, String source) throws ParseException {
     return getFormatter(locale).parse(source);
   }
 
-  /**
-   * @see NumberFormat#parse(String, ParsePosition)
-   */
+  /** @see NumberFormat#parse(String, ParsePosition) */
   public Number parse(Locale locale, String source, ParsePosition pos) {
     return getFormatter(locale).parse(source, pos);
   }
 
-  /**
-   * @see NumberFormat#parseObject(String, ParsePosition)
-   */
+  /** @see NumberFormat#parseObject(String, ParsePosition) */
   public Object parseObject(Locale locale, String source, ParsePosition pos) {
     return getFormatter(locale).parseObject(source, pos);
   }
