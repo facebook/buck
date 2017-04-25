@@ -25,11 +25,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
 
 public class DefaultBuckEventBusTest {
 
@@ -37,28 +35,26 @@ public class DefaultBuckEventBusTest {
 
   @Test
   public void testShutdownSuccess() throws Exception {
-    DefaultBuckEventBus eb = new DefaultBuckEventBus(
-        new DefaultClock(),
-        false,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST,
-        timeoutMillis);
+    DefaultBuckEventBus eb =
+        new DefaultBuckEventBus(
+            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(1));
     long start = System.nanoTime();
     eb.close();
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
-    assertThat("Shutdown should not take a long time.",
-        durationMillis, lessThanOrEqualTo((long) timeoutMillis));
+    assertThat(
+        "Shutdown should not take a long time.",
+        durationMillis,
+        lessThanOrEqualTo((long) timeoutMillis));
   }
 
   @Test
   public void testShutdownFailure() throws IOException {
-    DefaultBuckEventBus eb = new DefaultBuckEventBus(
-        new DefaultClock(),
-        false,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST,
-        timeoutMillis);
+    DefaultBuckEventBus eb =
+        new DefaultBuckEventBus(
+            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(timeoutMillis * 3));
     long start = System.nanoTime();
@@ -66,17 +62,17 @@ public class DefaultBuckEventBusTest {
     // We'd like to test the Logger output here, but there's not a clean way to do that.
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
-    assertThat("Shutdown should not take a long time.",
-        durationMillis, lessThanOrEqualTo((long) timeoutMillis * 2));
+    assertThat(
+        "Shutdown should not take a long time.",
+        durationMillis,
+        lessThanOrEqualTo((long) timeoutMillis * 2));
   }
 
   @Test
   public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
-    DefaultBuckEventBus eb = new DefaultBuckEventBus(
-        new DefaultClock(),
-        false,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST,
-        timeoutMillis);
+    DefaultBuckEventBus eb =
+        new DefaultBuckEventBus(
+            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent event = new TestEvent();
     eb.timestamp(event);
     try {
@@ -94,11 +90,9 @@ public class DefaultBuckEventBusTest {
 
   @Test
   public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
-    DefaultBuckEventBus eb = new DefaultBuckEventBus(
-        new DefaultClock(),
-        false,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST,
-        timeoutMillis);
+    DefaultBuckEventBus eb =
+        new DefaultBuckEventBus(
+            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent timestamp = new TestEvent();
     TestEvent event = new TestEvent();
     eb.timestamp(timestamp);
@@ -111,11 +105,9 @@ public class DefaultBuckEventBusTest {
   @Test
   public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
-    DefaultBuckEventBus eb = new DefaultBuckEventBus(
-        fakeClock,
-        false,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST,
-        timeoutMillis);
+    DefaultBuckEventBus eb =
+        new DefaultBuckEventBus(
+            fakeClock, false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent event = new TestEvent();
     eb.post(event);
     eb.close();

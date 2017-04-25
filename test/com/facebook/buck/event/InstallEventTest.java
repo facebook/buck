@@ -23,39 +23,28 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTargetFactory;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class InstallEventTest {
   @Test
   public void testEquals() throws Exception {
-    InstallEvent.Started started = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent.Started startedTwo = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent.Started startedDifferentEvent = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:raz")));
-    InstallEvent finished = configureTestEvent(
-        InstallEvent.finished(
-            started,
-            true,
-            Optional.empty(),
-            Optional.empty()));
-    InstallEvent finishedDifferentEvent = configureTestEvent(
-        InstallEvent.finished(
-            startedDifferentEvent,
-            true,
-            Optional.empty(),
-            Optional.empty()));
-    InstallEvent finishedFail = configureTestEvent(
-        InstallEvent.finished(
-            started,
-            false,
-            Optional.empty(),
-            Optional.empty()));
+    InstallEvent.Started started =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent.Started startedTwo =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent.Started startedDifferentEvent =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:raz")));
+    InstallEvent finished =
+        configureTestEvent(
+            InstallEvent.finished(started, true, Optional.empty(), Optional.empty()));
+    InstallEvent finishedDifferentEvent =
+        configureTestEvent(
+            InstallEvent.finished(startedDifferentEvent, true, Optional.empty(), Optional.empty()));
+    InstallEvent finishedFail =
+        configureTestEvent(
+            InstallEvent.finished(started, false, Optional.empty(), Optional.empty()));
 
     assertNotEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);

@@ -48,15 +48,6 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.easymock.Capture;
-import org.easymock.CaptureType;
-import org.easymock.EasyMock;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +55,13 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import org.easymock.Capture;
+import org.easymock.CaptureType;
+import org.easymock.EasyMock;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DistBuildSlaveEventBusListenerTest {
 
@@ -85,12 +83,9 @@ public class DistBuildSlaveEventBusListenerTest {
   }
 
   private void setUpDistBuildSlaveEventBusListener() {
-    listener = new DistBuildSlaveEventBusListener(
-        stampedeId,
-        runId,
-        clock,
-        Executors.newScheduledThreadPool(1),
-        1);
+    listener =
+        new DistBuildSlaveEventBusListener(
+            stampedeId, runId, clock, Executors.newScheduledThreadPool(1), 1);
     eventBus.register(listener);
     listener.setDistBuildService(distBuildServiceMock);
   }
@@ -115,9 +110,7 @@ public class DistBuildSlaveEventBusListenerTest {
 
     Capture<List<BuildSlaveConsoleEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId),
-        eq(runId),
-        capture(capturedEventLists));
+        eq(stampedeId), eq(runId), capture(capturedEventLists));
     expectLastCall().atLeastOnce();
     replay(distBuildServiceMock);
     setUpDistBuildSlaveEventBusListener();
@@ -131,14 +124,14 @@ public class DistBuildSlaveEventBusListenerTest {
     verify(distBuildServiceMock);
 
     List<BuildSlaveConsoleEvent> capturedEvents =
-        capturedEventLists.getValues().stream()
-            .flatMap(List::stream)
-            .collect(Collectors.toList());
+        capturedEventLists.getValues().stream().flatMap(List::stream).collect(Collectors.toList());
     Assert.assertEquals(capturedEvents.size(), 3);
-    Assert.assertTrue(capturedEvents.containsAll(ImmutableList.of(
-        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(2), 20),
-        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(3), 30),
-        DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(5), 50))));
+    Assert.assertTrue(
+        capturedEvents.containsAll(
+            ImmutableList.of(
+                DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(2), 20),
+                DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(3), 30),
+                DistBuildUtil.createBuildSlaveConsoleEvent(consoleEvents.get(5), 50))));
   }
 
   @Test

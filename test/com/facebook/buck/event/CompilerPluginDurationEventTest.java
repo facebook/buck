@@ -25,12 +25,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 
-
 public class CompilerPluginDurationEventTest {
-
 
   @Test
   public void testEquals() throws Exception {
@@ -38,18 +35,14 @@ public class CompilerPluginDurationEventTest {
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";
 
-    CompilerPluginDurationEvent startedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.of()));
-    CompilerPluginDurationEvent startedEventTwo = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.of()));
+    CompilerPluginDurationEvent startedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent startedEventTwo =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
 
     assertEquals(startedEventOne, startedEventOne);
     assertNotEquals(startedEventOne, startedEventTwo);
@@ -61,22 +54,17 @@ public class CompilerPluginDurationEventTest {
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";
 
-    CompilerPluginDurationEvent.Started startedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.of()));
-    CompilerPluginDurationEvent.Started startedEventTwo = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.of()));
-    CompilerPluginDurationEvent finishedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.finished(
-            startedEventOne,
-            ImmutableMap.of()));
+    CompilerPluginDurationEvent.Started startedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent.Started startedEventTwo =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent finishedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.finished(startedEventOne, ImmutableMap.of()));
 
     assertTrue(startedEventOne.isRelatedTo(finishedEventOne));
     assertTrue(finishedEventOne.isRelatedTo(startedEventOne));

@@ -41,19 +41,17 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * While it may seem that the main purpose of this test is to annoy anyone making changes to the
  * Events under test, the purpose of this test is to make sure we're not making accidental changes
- * to the serialized JSON representation of this events, as that JSON is the public API exposed
- * via the websocket to the IntelliJ plugin and anyone else who might be listening.
+ * to the serialized JSON representation of this events, as that JSON is the public API exposed via
+ * the websocket to the IntelliJ plugin and anyone else who might be listening.
  */
 public class EventSerializationTest {
 
@@ -82,10 +80,12 @@ public class EventSerializationTest {
     ConsoleEvent event = ConsoleEvent.severe("Something happened");
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"type\":\"ConsoleEvent\",\"eventKey\":{\"value\":4242}," +
-        "\"level\": {\"name\":\"SEVERE\",\"resourceBundleName\":" +
-        "\"sun.util.logging.resources.logging\",\"localizedName\":\"SEVERE\"}," +
-        " \"message\":\"Something happened\"}", message);
+    assertJsonEquals(
+        "{%s,\"type\":\"ConsoleEvent\",\"eventKey\":{\"value\":4242},"
+            + "\"level\": {\"name\":\"SEVERE\",\"resourceBundleName\":"
+            + "\"sun.util.logging.resources.logging\",\"localizedName\":\"SEVERE\"},"
+            + " \"message\":\"Something happened\"}",
+        message);
   }
 
   @Test
@@ -93,8 +93,8 @@ public class EventSerializationTest {
     ProjectGenerationEvent.Finished event = ProjectGenerationEvent.finished();
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"type\":\"ProjectGenerationFinished\"," +
-        "\"eventKey\":{\"value\":4242}}", message);
+    assertJsonEquals(
+        "{%s,\"type\":\"ProjectGenerationFinished\"," + "\"eventKey\":{\"value\":4242}}", message);
   }
 
   @Test
@@ -102,8 +102,8 @@ public class EventSerializationTest {
     ProjectGenerationEvent.Started event = ProjectGenerationEvent.started();
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"type\":\"ProjectGenerationStarted\"," +
-        "\"eventKey\":{\"value\":4242}}", message);
+    assertJsonEquals(
+        "{%s,\"type\":\"ProjectGenerationStarted\"," + "\"eventKey\":{\"value\":4242}}", message);
   }
 
   @Test
@@ -111,21 +111,24 @@ public class EventSerializationTest {
     ParseEvent.Started event = ParseEvent.started(ImmutableList.of());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"buildTargets\":[],\"type\":\"ParseStarted\"," +
-        "\"eventKey\":{\"value\":4242}}", message);
+    assertJsonEquals(
+        "{%s,\"buildTargets\":[],\"type\":\"ParseStarted\"," + "\"eventKey\":{\"value\":4242}}",
+        message);
   }
 
   @Test
   public void testParseEventFinished() throws IOException {
-    ParseEvent.Started started = ParseEvent.started(ImmutableList.of(
-            BuildTargetFactory.newInstance("//base:short#flv")));
+    ParseEvent.Started started =
+        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s," +
-        "\"buildTargets\":[{\"baseName\":\"//base\"," +
-        "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"," +
-        "\"eventKey\":{\"value\":4242}}", message);
+    assertJsonEquals(
+        "{%s,"
+            + "\"buildTargets\":[{\"baseName\":\"//base\","
+            + "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\","
+            + "\"eventKey\":{\"value\":4242}}",
+        message);
   }
 
   @Test
@@ -133,21 +136,22 @@ public class EventSerializationTest {
     BuildEvent.Started event = BuildEvent.started(ImmutableSet.of("//base:short"));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"eventKey\":{\"value\":4242}," +
-            "\"buildArgs\":[\"//base:short\"]," + "\"type\":\"BuildStarted\"}",
+    assertJsonEquals(
+        "{%s,\"eventKey\":{\"value\":4242},"
+            + "\"buildArgs\":[\"//base:short\"],"
+            + "\"type\":\"BuildStarted\"}",
         message);
   }
 
   @Test
   public void testBuildEventFinished() throws IOException {
-    BuildEvent.Finished event = BuildEvent.finished(
-        BuildEvent.started(ImmutableSet.of("//base:short")),
-        0);
+    BuildEvent.Finished event =
+        BuildEvent.finished(BuildEvent.started(ImmutableSet.of("//base:short")), 0);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s,\"eventKey\":{\"value\":4242}," +
-        "\"buildArgs\":[\"//base:short\"], \"exitCode\":0,\"type\":\"BuildFinished\"}",
+        "{%s,\"eventKey\":{\"value\":4242},"
+            + "\"buildArgs\":[\"//base:short\"], \"exitCode\":0,\"type\":\"BuildFinished\"}",
         message);
   }
 
@@ -158,10 +162,10 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s,\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-        "\"type\":\"BuildRuleStarted\",\"duration\":{\"wallMillisDuration\":0,\"nanoDuration\":0," +
-            "\"threadUserNanoDuration\":0},\"ruleRunningAfterThisEvent\":true," +
-            "\"eventKey\":{\"value\":1024186770}}",
+        "{%s,\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"},"
+            + "\"type\":\"BuildRuleStarted\",\"duration\":{\"wallMillisDuration\":0,\"nanoDuration\":0,"
+            + "\"threadUserNanoDuration\":0},\"ruleRunningAfterThisEvent\":true,"
+            + "\"eventKey\":{\"value\":1024186770}}",
         message);
   }
 
@@ -179,51 +183,56 @@ public class EventSerializationTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
-            Optional.empty(), Optional.empty());
+            Optional.empty(),
+            Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\"}," +
-            "\"buildRule\":{\"type\":" +
-            "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-            "\"type\":\"BuildRuleFinished\"," +
-            "\"duration\":{" +
-            "\"wallMillisDuration\":11,\"nanoDuration\":12,\"threadUserNanoDuration\":13}," +
-            "\"ruleRunningAfterThisEvent\":false," +
-            "\"eventKey\":{\"value\":1024186770}," +
-            "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}}}",
+        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\"},"
+            + "\"buildRule\":{\"type\":"
+            + "\"fake_build_rule\",\"name\":\"//fake:rule\"},"
+            + "\"type\":\"BuildRuleFinished\","
+            + "\"duration\":{"
+            + "\"wallMillisDuration\":11,\"nanoDuration\":12,\"threadUserNanoDuration\":13},"
+            + "\"ruleRunningAfterThisEvent\":false,"
+            + "\"eventKey\":{\"value\":1024186770},"
+            + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}}}",
         message);
   }
 
   @Test
   public void testTestRunEventStarted() throws IOException {
-    TestRunEvent.Started event = TestRunEvent.started(
-        true, TestSelectorList.empty(), false, ImmutableSet.of());
+    TestRunEvent.Started event =
+        TestRunEvent.started(true, TestSelectorList.empty(), false, ImmutableSet.of());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"runAllTests\":true," +
-        "\"eventKey\":{\"value\":256329280}," +
-        "\"targetNames\":[],\"type\":\"RunStarted\"}", message);
+    assertJsonEquals(
+        "{%s,\"runAllTests\":true,"
+            + "\"eventKey\":{\"value\":256329280},"
+            + "\"targetNames\":[],\"type\":\"RunStarted\"}",
+        message);
   }
 
   @Test
   public void testTestRunEventFinished() throws IOException {
-    TestRunEvent.Finished event = TestRunEvent.finished(
-        ImmutableSet.of("target"),
-        ImmutableList.of(FakeTestResults.newFailedInstance("Test1")));
+    TestRunEvent.Finished event =
+        TestRunEvent.finished(
+            ImmutableSet.of("target"),
+            ImmutableList.of(FakeTestResults.newFailedInstance("Test1")));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s," +
-        "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{" +
-        "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}]," +
-        "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
-        "\"success\":false}]," +
-        "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
-        "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
-        "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"flavor\":\"\"}," +
-        "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":" +
-        "{\"value\":-624576559}}",
+    assertJsonEquals(
+        "{%s,"
+            + "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{"
+            + "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
+            + "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0,"
+            + "\"success\":false}],"
+            + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"
+            + "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0,"
+            + "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
+            + "\"flavor\":\"\"},"
+            + "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":"
+            + "{\"value\":-624576559}}",
         message);
   }
 
@@ -232,51 +241,50 @@ public class EventSerializationTest {
     IndividualTestEvent.Started event = IndividualTestEvent.started(ImmutableList.of(""));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"type\":\"AwaitingResults\",\"eventKey\":{\"value\":-594614447}}",
-        message);
+    assertJsonEquals(
+        "{%s,\"type\":\"AwaitingResults\",\"eventKey\":{\"value\":-594614447}}", message);
   }
 
   @Test
   public void testIndividualTestEventFinished() throws IOException {
-    IndividualTestEvent.Finished event = IndividualTestEvent.finished(ImmutableList.of(),
-        FakeTestResults.newFailedInstance("Test1"));
+    IndividualTestEvent.Finished event =
+        IndividualTestEvent.finished(
+            ImmutableList.of(), FakeTestResults.newFailedInstance("Test1"));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s,\"eventKey\":{\"value\":-594614477}," +
-        "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{" +
-        "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}]," +
-        "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
-        "\"success\":false}]," +
-        "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
-        "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
-        "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"flavor\":\"\"}," +
-        "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
+    assertJsonEquals(
+        "{%s,\"eventKey\":{\"value\":-594614477},"
+            + "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{"
+            + "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
+            + "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0,"
+            + "\"success\":false}],"
+            + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"
+            + "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0,"
+            + "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
+            + "\"flavor\":\"\"},"
+            + "\"success\":false},\"type\":\"ResultsAvailable\"}",
+        message);
   }
-
 
   @Test
   public void testSimplePerfEvent() throws IOException {
-    SimplePerfEvent.Started event = SimplePerfEvent.started(
-        PerfEventId.of("PerfId"),
-        "value", "Some value");
+    SimplePerfEvent.Started event =
+        SimplePerfEvent.started(PerfEventId.of("PerfId"), "value", "Some value");
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
-    assertJsonEquals("{%s," +
-            "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\"," +
-            "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEventPerfIdStarted\"}",
+    assertJsonEquals(
+        "{%s,"
+            + "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\","
+            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEventPerfIdStarted\"}",
         message);
   }
 
   private void assertJsonEquals(String expected, String actual) throws IOException {
-    String commonHeader = String.format(
-        "\"timestamp\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d," +
-            "\"threadId\":%d,\"buildId\":\"%s\"",
-        timestamp,
-        nanoTime,
-        threadUserNanoTime,
-        threadId,
-        buildId);
+    String commonHeader =
+        String.format(
+            "\"timestamp\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d,"
+                + "\"threadId\":%d,\"buildId\":\"%s\"",
+            timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     assertThat(actual, new JsonMatcher(String.format(expected, commonHeader)));
   }
 }

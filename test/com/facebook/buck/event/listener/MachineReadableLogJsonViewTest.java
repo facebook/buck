@@ -41,19 +41,18 @@ import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.hash.HashCode;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
+import org.junit.Before;
+import org.junit.Test;
 
 public class MachineReadableLogJsonViewTest {
 
-  private static final ObjectWriter WRITER = ObjectMappers.legacyCreate()
-      .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
-      .writerWithView(JsonViews.MachineReadableLog.class);
+  private static final ObjectWriter WRITER =
+      ObjectMappers.legacyCreate()
+          .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
+          .writerWithView(JsonViews.MachineReadableLog.class);
 
   private long timestamp;
   private long nanoTime;
@@ -118,8 +117,7 @@ public class MachineReadableLogJsonViewTest {
     assertJsonEquals("{%s}", WRITER.writeValueAsString(startEvent));
     assertJsonEquals("{%s}", WRITER.writeValueAsString(finishedEvent));
     assertJsonEquals(
-        "{%s,\"output\":\"output string\\n\"}",
-        WRITER.writeValueAsString(failedEvent));
+        "{%s,\"output\":\"output string\\n\"}", WRITER.writeValueAsString(failedEvent));
   }
 
   @Test
@@ -144,16 +142,17 @@ public class MachineReadableLogJsonViewTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.of(HashCode.fromString("abcd42")),
-            Optional.empty(), Optional.empty());
+            Optional.empty(),
+            Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = WRITER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\"," +
-            "\"cacheSource\":\"my-secret-source\"}," +
-            "\"buildRule\":{\"name\":\"//fake:rule\"}," +
-            "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}," +
-            "\"inputRuleKey\":{\"hashCode\":\"bbbb\"}}," +
-            "\"outputHash\":\"abcd42\"},",
+        "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\","
+            + "\"cacheSource\":\"my-secret-source\"},"
+            + "\"buildRule\":{\"name\":\"//fake:rule\"},"
+            + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"},"
+            + "\"inputRuleKey\":{\"hashCode\":\"bbbb\"}},"
+            + "\"outputHash\":\"abcd42\"},",
         message);
   }
 
@@ -168,22 +167,22 @@ public class MachineReadableLogJsonViewTest {
                 .setActionGraphTimeMs(16L)
                 .setBuildTimeMs(23L)
                 .setInstallTimeMs(42L)
-            .build());
+                .build());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
 
     String message = WRITER.writeValueAsString(event);
     assertJsonEquals(
-        "{%s," +
-            "\"perfTimesStats\":{" +
-            "\"pythonTimeMs\":4," +
-            "\"initTimeMs\":8," +
-            "\"parseTimeMs\":0," +
-            "\"processingTimeMs\":15," +
-            "\"actionGraphTimeMs\":16," +
-            "\"rulekeyTimeMs\":0," +
-            "\"fetchTimeMs\":0," +
-            "\"buildTimeMs\":23," +
-            "\"installTimeMs\":42}}",
+        "{%s,"
+            + "\"perfTimesStats\":{"
+            + "\"pythonTimeMs\":4,"
+            + "\"initTimeMs\":8,"
+            + "\"parseTimeMs\":0,"
+            + "\"processingTimeMs\":15,"
+            + "\"actionGraphTimeMs\":16,"
+            + "\"rulekeyTimeMs\":0,"
+            + "\"fetchTimeMs\":0,"
+            + "\"buildTimeMs\":23,"
+            + "\"installTimeMs\":42}}",
         message);
   }
 
@@ -191,5 +190,4 @@ public class MachineReadableLogJsonViewTest {
     String commonHeader = String.format("\"timestamp\":%d", timestamp);
     assertThat(actual, new JsonMatcher(String.format(expected, commonHeader)));
   }
-
 }

@@ -23,17 +23,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class SimplePerfEventTest {
 
-  private void assertPerfEvent(BuckEvent event,
+  private void assertPerfEvent(
+      BuckEvent event,
       PerfEventId id,
       SimplePerfEvent.Type type,
       ImmutableMap<String, String> info) {
@@ -71,8 +70,7 @@ public class SimplePerfEventTest {
         ImmutableMap.of("k1", "v1", "k2", "v2"));
 
     assertPerfEvent(
-        SimplePerfEvent.started(testEventId,
-            ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
+        SimplePerfEvent.started(testEventId, ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
         testEventId,
         SimplePerfEvent.Type.STARTED,
         ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3"));
@@ -106,8 +104,8 @@ public class SimplePerfEventTest {
         ImmutableMap.of("k1", "v1", "k2", "v2"));
 
     assertPerfEvent(
-        newStartedEvent(testEventId).createUpdateEvent(
-            ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
+        newStartedEvent(testEventId)
+            .createUpdateEvent(ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
         testEventId,
         SimplePerfEvent.Type.UPDATED,
         ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3"));
@@ -136,8 +134,8 @@ public class SimplePerfEventTest {
         ImmutableMap.of("k1", "v1", "k2", "v2"));
 
     assertPerfEvent(
-        newStartedEvent(testEventId).createFinishedEvent(
-            ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
+        newStartedEvent(testEventId)
+            .createFinishedEvent(ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3")),
         testEventId,
         SimplePerfEvent.Type.FINISHED,
         ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3"));
@@ -173,8 +171,7 @@ public class SimplePerfEventTest {
     eventBus.register(listener);
 
     // This does absolutely nothing, but shouldn't crash either.
-    try (SimplePerfEvent.Scope scope =
-             SimplePerfEvent.scope(Optional.empty(), testEventId)) {
+    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(Optional.empty(), testEventId)) {
       scope.appendFinishedInfo("finished", "info");
       scope.update(ImmutableMap.of("update", "updateValue"));
     }
@@ -189,10 +186,7 @@ public class SimplePerfEventTest {
     assertThat(perfEvents, Matchers.hasSize(4));
 
     assertPerfEvent(
-        perfEvents.get(0),
-        testEventId,
-        SimplePerfEvent.Type.STARTED,
-        ImmutableMap.of());
+        perfEvents.get(0), testEventId, SimplePerfEvent.Type.STARTED, ImmutableMap.of());
 
     assertPerfEvent(
         perfEvents.get(1),
@@ -228,24 +222,16 @@ public class SimplePerfEventTest {
       clock.advanceTimeNanos(10L);
 
       try (SimplePerfEvent.Scope scope =
-               SimplePerfEvent.scopeIgnoringShortEvents(
-                   eventBus,
-                   ignoredEventId,
-                   parent,
-                   1,
-                   TimeUnit.SECONDS)) {
+          SimplePerfEvent.scopeIgnoringShortEvents(
+              eventBus, ignoredEventId, parent, 1, TimeUnit.SECONDS)) {
         clock.advanceTimeNanos(10L);
       }
 
       clock.advanceTimeNanos(10L);
 
       try (SimplePerfEvent.Scope scope =
-               SimplePerfEvent.scopeIgnoringShortEvents(
-                   eventBus,
-                   loggedEventId,
-                   parent,
-                   1,
-                   TimeUnit.MILLISECONDS)) {
+          SimplePerfEvent.scopeIgnoringShortEvents(
+              eventBus, loggedEventId, parent, 1, TimeUnit.MILLISECONDS)) {
         clock.advanceTimeNanos(TimeUnit.MILLISECONDS.toNanos(2));
       }
     }
@@ -253,23 +239,13 @@ public class SimplePerfEventTest {
     ImmutableList<SimplePerfEvent> perfEvents = listener.getPerfEvents();
     assertThat(perfEvents, Matchers.hasSize(4));
 
-    assertPerfEvent(
-        perfEvents.get(0),
-        parentId,
-        SimplePerfEvent.Type.STARTED,
-        ImmutableMap.of());
+    assertPerfEvent(perfEvents.get(0), parentId, SimplePerfEvent.Type.STARTED, ImmutableMap.of());
 
     assertPerfEvent(
-        perfEvents.get(1),
-        loggedEventId,
-        SimplePerfEvent.Type.STARTED,
-        ImmutableMap.of());
+        perfEvents.get(1), loggedEventId, SimplePerfEvent.Type.STARTED, ImmutableMap.of());
 
     assertPerfEvent(
-        perfEvents.get(2),
-        loggedEventId,
-        SimplePerfEvent.Type.FINISHED,
-        ImmutableMap.of());
+        perfEvents.get(2), loggedEventId, SimplePerfEvent.Type.FINISHED, ImmutableMap.of());
 
     assertPerfEvent(
         perfEvents.get(3),
@@ -277,7 +253,6 @@ public class SimplePerfEventTest {
         SimplePerfEvent.Type.FINISHED,
         ImmutableMap.of(
             "IgnoreMe_accumulated_count", "1",
-            "IgnoreMe_accumulated_duration_ns", "10"
-        ));
+            "IgnoreMe_accumulated_duration_ns", "10"));
   }
 }

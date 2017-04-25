@@ -30,10 +30,7 @@ public class TestEventConfigurator {
   }
 
   public static <T extends AbstractBuckEvent> T configureTestEventAtTime(
-      T event,
-      long time,
-      TimeUnit timeUnit,
-      long threadid) {
+      T event, long time, TimeUnit timeUnit, long threadid) {
     return from(event)
         .setCurrentTimeMillis(timeUnit.toMillis(time))
         .setTimestampNanos(timeUnit.toNanos(time))

@@ -22,15 +22,14 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
 /**
  * Factory to create a {@link BuckEventBus} for tests.
- * <p>
- * Also provides access to fields of a {@link BuckEventBus} that are not visible to the business
+ *
+ * <p>Also provides access to fields of a {@link BuckEventBus} that are not visible to the business
  * logic.
  */
 public class BuckEventBusFactory {
@@ -55,18 +54,14 @@ public class BuckEventBusFactory {
    * that would not otherwise be noticed.
    */
   public static BuckEventBus newInstance(Clock clock, BuildId buildId) {
-    BuckEventBus buckEventBus = new DefaultBuckEventBus(
-        clock,
-        false,
-        buildId,
-        DefaultBuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
+    BuckEventBus buckEventBus =
+        new DefaultBuckEventBus(
+            clock, false, buildId, DefaultBuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
     buckEventBus.register(new ErrorListener());
     return buckEventBus;
   }
 
-  /**
-   * Error listener that prints events at level {@link Level#WARNING} or higher.
-   */
+  /** Error listener that prints events at level {@link Level#WARNING} or higher. */
   private static class ErrorListener {
     @Subscribe
     public void logEvent(ConsoleEvent event) {
@@ -86,9 +81,7 @@ public class BuckEventBusFactory {
     }
 
     public List<String> getLogMessages() {
-      return logEvents.stream()
-          .map(Object::toString)
-          .collect(MoreCollectors.toImmutableList());
+      return logEvents.stream().map(Object::toString).collect(MoreCollectors.toImmutableList());
     }
   }
 }

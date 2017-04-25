@@ -24,35 +24,32 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Charsets;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MachineReadableLoggerIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testOutputForParsingAndInvocationEvents() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "just_build", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo").assertSuccess();
 
     // The folder should have only one command.
     Path logDir = workspace.resolve("buck-out/log/");
-    File[] commandLogDirectoriesList =
-        (logDir.toFile()).listFiles(File::isDirectory);
+    File[] commandLogDirectoriesList = (logDir.toFile()).listFiles(File::isDirectory);
     assertEquals(commandLogDirectoriesList.length, 1);
 
     // The build folder should have only one machine-readable log.
-    File[] logfiles = commandLogDirectoriesList[0].listFiles(
-        pathname -> pathname.getName().equals(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
+    File[] logfiles =
+        commandLogDirectoriesList[0].listFiles(
+            pathname -> pathname.getName().equals(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
     assertEquals(logfiles.length, 1);
 
     String data = new String(Files.readAllBytes(logfiles[0].toPath()), Charsets.UTF_8);
@@ -63,5 +60,4 @@ public class MachineReadableLoggerIntegrationTest {
     assertTrue("log contains InvocationInfo.", data.contains("InvocationInfo"));
     assertTrue("log contains ExitCode.", data.contains("ExitCode"));
   }
-
 }

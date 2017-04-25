@@ -29,11 +29,9 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class CacheRateStatsKeeperTest {
   @Test
@@ -52,8 +50,8 @@ public class CacheRateStatsKeeperTest {
   BuildRuleEvent.Finished finishedEvent(CacheResult cacheResult) {
     BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleDurationTracker durationTracker = new BuildRuleDurationTracker();
-    BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
-        BuildRuleEvent.started(rule, durationTracker));
+    BuildRuleEvent.Started started =
+        TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));
     return BuildRuleEvent.finished(
         started,
         BuildRuleKeys.of(new RuleKey("aa")),
@@ -62,7 +60,8 @@ public class CacheRateStatsKeeperTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
-        Optional.empty(), Optional.empty());
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Test
@@ -85,8 +84,7 @@ public class CacheRateStatsKeeperTest {
   public void cacheHit() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(
-            ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.hit("dir")));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();
@@ -103,8 +101,7 @@ public class CacheRateStatsKeeperTest {
   public void cacheMiss() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(
-            ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.miss()));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();
@@ -121,8 +118,7 @@ public class CacheRateStatsKeeperTest {
   public void cacheError() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(
-            ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.error("dir", "error")));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();
@@ -139,8 +135,7 @@ public class CacheRateStatsKeeperTest {
   public void cacheIgnored() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(
-            ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.ignored()));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();
@@ -157,8 +152,7 @@ public class CacheRateStatsKeeperTest {
   public void cacheLocalUnchangedHitDoesntAffectCounters() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(
-            ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.localKeyUnchangedHit()));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();

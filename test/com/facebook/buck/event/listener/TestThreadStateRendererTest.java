@@ -33,15 +33,13 @@ import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import org.junit.Test;
 
 public class TestThreadStateRendererTest {
 
@@ -55,67 +53,59 @@ public class TestThreadStateRendererTest {
 
   @Test
   public void emptyInput() {
-    TestThreadStateRenderer renderer = createRenderer(
-        2100,
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableMap.of());
-    assertThat(
-        renderLines(renderer, true),
-        is(equalTo(ImmutableList.<String>of())));
-    assertThat(
-        renderLines(renderer, false),
-        is(equalTo(ImmutableList.<String>of())));
-    assertThat(
-        renderShortStatus(renderer, true),
-        is(equalTo(ImmutableList.<String>of())));
-    assertThat(
-        renderShortStatus(renderer, false),
-        is(equalTo(ImmutableList.<String>of())));
+    TestThreadStateRenderer renderer =
+        createRenderer(
+            2100, ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
+    assertThat(renderLines(renderer, true), is(equalTo(ImmutableList.<String>of())));
+    assertThat(renderLines(renderer, false), is(equalTo(ImmutableList.<String>of())));
+    assertThat(renderShortStatus(renderer, true), is(equalTo(ImmutableList.<String>of())));
+    assertThat(renderShortStatus(renderer, false), is(equalTo(ImmutableList.<String>of())));
   }
 
   @Test
   public void commonCase() {
-    TestThreadStateRenderer renderer = createRenderer(
-        4200,
-        ImmutableMap.of(
-            1L, createTestStartedEventOptional(1, 1000, TARGET2),
-            3L, createTestStartedEventOptional(3, 2300, TARGET3),
-            4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.empty(),
-            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-        ImmutableMap.of(
-            1L, Optional.empty(),
-            3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-            4L, Optional.empty(),
-            5L, Optional.empty(),
-            8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
-        ImmutableMap.of(),
-        ImmutableMap.of(
-            1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.empty(),
-            4L, Optional.empty(),
-            5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")));
+    TestThreadStateRenderer renderer =
+        createRenderer(
+            4200,
+            ImmutableMap.of(
+                1L, createTestStartedEventOptional(1, 1000, TARGET2),
+                3L, createTestStartedEventOptional(3, 2300, TARGET3),
+                4L, createTestStartedEventOptional(4, 1100, TARGET1),
+                5L, Optional.empty(),
+                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+            ImmutableMap.of(
+                1L, Optional.empty(),
+                3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
+            ImmutableMap.of(),
+            ImmutableMap.of(
+                1L, createStepStartedEventOptional(1, 1500, "step A"),
+                3L, Optional.empty(),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
-        is(equalTo(
-            ImmutableList.of(
-                " |=> //:target2...  3.2s (running step A[2.7s])",
-                " |=> //:target1...  3.1s",
-                " |=> //:target3...  1.9s (running Test A[2.6s])",
-                " |=> //:target4...  1.2s (running Test B[0.4s])",
-                " |=> IDLE"))));
+        is(
+            equalTo(
+                ImmutableList.of(
+                    " |=> //:target2...  3.2s (running step A[2.7s])",
+                    " |=> //:target1...  3.1s",
+                    " |=> //:target3...  1.9s (running Test A[2.6s])",
+                    " |=> //:target4...  1.2s (running Test B[0.4s])",
+                    " |=> IDLE"))));
     assertThat(
         renderLines(renderer, false),
-        is(equalTo(
-            ImmutableList.of(
-                " |=> //:target2...  3.2s (running step A[2.7s])",
-                " |=> //:target3...  1.9s (running Test A[2.6s])",
-                " |=> //:target1...  3.1s",
-                " |=> IDLE",
-                " |=> //:target4...  1.2s (running Test B[0.4s])"))));
+        is(
+            equalTo(
+                ImmutableList.of(
+                    " |=> //:target2...  3.2s (running step A[2.7s])",
+                    " |=> //:target3...  1.9s (running Test A[2.6s])",
+                    " |=> //:target1...  3.1s",
+                    " |=> IDLE",
+                    " |=> //:target4...  1.2s (running Test B[0.4s])"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
@@ -126,41 +116,43 @@ public class TestThreadStateRendererTest {
 
   @Test
   public void withTestStatusMessageEvents() {
-    TestThreadStateRenderer renderer = createRenderer(
-        4200,
-        ImmutableMap.of(
-            1L, createTestStartedEventOptional(1, 1000, TARGET2),
-            3L, createTestStartedEventOptional(3, 2300, TARGET3),
-            4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.empty(),
-            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-        ImmutableMap.of(
-            1L, Optional.empty(),
-            3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-            4L, Optional.empty(),
-            5L, Optional.empty(),
-            8L, Optional.empty()),
-        ImmutableMap.of(
-            1L, Optional.empty(),
-            3L, Optional.empty(),
-            4L, Optional.empty(),
-            5L, Optional.empty(),
-            8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
-        ImmutableMap.of(
-            1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.empty(),
-            4L, Optional.empty(),
-            5L, Optional.empty(),
-            8L, createStepStartedEventOptional(1, 3700, "step B")));
+    TestThreadStateRenderer renderer =
+        createRenderer(
+            4200,
+            ImmutableMap.of(
+                1L, createTestStartedEventOptional(1, 1000, TARGET2),
+                3L, createTestStartedEventOptional(3, 2300, TARGET3),
+                4L, createTestStartedEventOptional(4, 1100, TARGET1),
+                5L, Optional.empty(),
+                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+            ImmutableMap.of(
+                1L, Optional.empty(),
+                3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, Optional.empty()),
+            ImmutableMap.of(
+                1L, Optional.empty(),
+                3L, Optional.empty(),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
+            ImmutableMap.of(
+                1L, createStepStartedEventOptional(1, 1500, "step A"),
+                3L, Optional.empty(),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, createStepStartedEventOptional(1, 3700, "step B")));
     assertThat(
         renderLines(renderer, true),
-        is(equalTo(
-            ImmutableList.of(
-                " |=> //:target2...  3.2s (running step A[2.7s])",
-                " |=> //:target1...  3.1s",
-                " |=> //:target3...  1.9s (running Test A[2.6s])",
-                " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
-                " |=> IDLE"))));
+        is(
+            equalTo(
+                ImmutableList.of(
+                    " |=> //:target2...  3.2s (running step A[2.7s])",
+                    " |=> //:target1...  3.1s",
+                    " |=> //:target3...  1.9s (running Test A[2.6s])",
+                    " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
+                    " |=> IDLE"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
@@ -171,53 +163,47 @@ public class TestThreadStateRendererTest {
     // SuperConsoleEventBusListener stores the data it passes to the renderer in a map that might
     // be concurrently modified from other threads. It is important that the renderer can handle
     // data containing inconsistencies.
-    TestThreadStateRenderer renderer = createRenderer(
-        4200,
-        ImmutableMap.of(
-            3L, createTestStartedEventOptional(3, 2300, TARGET3),
-            4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.empty(),
-            8L, createTestStartedEventOptional(6, 3000, TARGET4)),
-        ImmutableMap.of(
-            1L, Optional.empty(),
-            4L, Optional.empty(),
-            5L, Optional.empty()),
-        ImmutableMap.of(),
-        ImmutableMap.of(
-            1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.empty(),
-            5L, Optional.empty()));
+    TestThreadStateRenderer renderer =
+        createRenderer(
+            4200,
+            ImmutableMap.of(
+                3L, createTestStartedEventOptional(3, 2300, TARGET3),
+                4L, createTestStartedEventOptional(4, 1100, TARGET1),
+                5L, Optional.empty(),
+                8L, createTestStartedEventOptional(6, 3000, TARGET4)),
+            ImmutableMap.of(
+                1L, Optional.empty(),
+                4L, Optional.empty(),
+                5L, Optional.empty()),
+            ImmutableMap.of(),
+            ImmutableMap.of(
+                1L, createStepStartedEventOptional(1, 1500, "step A"),
+                3L, Optional.empty(),
+                5L, Optional.empty()));
     assertThat(
         renderLines(renderer, true),
-        is(equalTo(
-            ImmutableList.of(
-                // missing test rule - no output
-                " |=> //:target1...  3.1s", // missing test summary
-                " |=> //:target3...  1.9s", // missing step information
-                " |=> //:target4...  1.2s",
-                " |=> IDLE")))); // missing accumulated time - show as IDLE
+        is(
+            equalTo(
+                ImmutableList.of(
+                    // missing test rule - no output
+                    " |=> //:target1...  3.1s", // missing test summary
+                    " |=> //:target3...  1.9s", // missing step information
+                    " |=> //:target4...  1.2s",
+                    " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[ ]"))));
   }
 
   private static Optional<? extends TestRuleEvent> createTestStartedEventOptional(
-      long threadId,
-      long timeMs,
-      BuildTarget buildTarget) {
+      long threadId, long timeMs, BuildTarget buildTarget) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            TestRuleEvent.started(buildTarget),
-            timeMs,
-            TimeUnit.MILLISECONDS,
-            threadId));
+            TestRuleEvent.started(buildTarget), timeMs, TimeUnit.MILLISECONDS, threadId));
   }
 
   private static Optional<? extends TestSummaryEvent> createTestSummaryEventOptional(
-      long threadId,
-      long timeMs,
-      String testCaseName,
-      String testName) {
+      long threadId, long timeMs, String testCaseName, String testName) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
             TestSummaryEvent.started(UUID.randomUUID(), testCaseName, testName),
@@ -227,26 +213,17 @@ public class TestThreadStateRendererTest {
   }
 
   private static Optional<? extends TestStatusMessageEvent> createTestStatusMessageEventOptional(
-      long threadId,
-      long timeMs,
-      String message,
-      Level level) {
+      long threadId, long timeMs, String message, Level level) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            TestStatusMessageEvent.started(
-                TestStatusMessage.of(
-                    message,
-                    level,
-                    timeMs)),
+            TestStatusMessageEvent.started(TestStatusMessage.of(message, level, timeMs)),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));
   }
 
   private static Optional<? extends LeafEvent> createStepStartedEventOptional(
-      long threadId,
-      long timeMs,
-      String name) {
+      long threadId, long timeMs, String name) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
             StepEvent.started(name, name + " description", UUID.randomUUID()),
@@ -268,9 +245,7 @@ public class TestThreadStateRendererTest {
         testSummaries,
         testStatusMessages,
         runningSteps,
-        new BuildRuleThreadTracker(
-            ImmutableMap.of(),
-            testEvents));
+        new BuildRuleThreadTracker(ImmutableMap.of(), testEvents));
   }
 
   private ImmutableList<String> renderLines(TestThreadStateRenderer renderer, boolean sortByTime) {
@@ -284,8 +259,7 @@ public class TestThreadStateRendererTest {
   }
 
   private ImmutableList<String> renderShortStatus(
-      TestThreadStateRenderer renderer,
-      boolean sortByTime) {
+      TestThreadStateRenderer renderer, boolean sortByTime) {
     ImmutableList.Builder<String> status = ImmutableList.builder();
     for (long threadId : renderer.getSortedExecutorIds(sortByTime)) {
       status.add(renderer.renderShortStatus(threadId));

@@ -20,10 +20,8 @@ import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import org.junit.Test;
-
 import java.util.logging.Level;
-
+import org.junit.Test;
 
 public class ConsoleEventTest {
 
@@ -42,12 +40,12 @@ public class ConsoleEventTest {
 
   @Test
   public void testMessageFormatting() {
-      ConsoleEvent event1 = ConsoleEvent.info("Hello %s");
-      ConsoleEvent event2 = ConsoleEvent.info("Hello %s", "asm");
-      ConsoleEvent event3 = ConsoleEvent.info("Hello %F"); // invalid format
+    ConsoleEvent event1 = ConsoleEvent.info("Hello %s");
+    ConsoleEvent event2 = ConsoleEvent.info("Hello %s", "asm");
+    ConsoleEvent event3 = ConsoleEvent.info("Hello %F"); // invalid format
 
-      assertEquals("Hello %s", event1.getMessage());
-      assertEquals("Hello asm", event2.getMessage());
-      assertEquals("Hello %F", event3.getMessage());
+    assertEquals("Hello %s", event1.getMessage());
+    assertEquals("Hello asm", event2.getMessage());
+    assertEquals("Hello %F", event3.getMessage());
   }
 }

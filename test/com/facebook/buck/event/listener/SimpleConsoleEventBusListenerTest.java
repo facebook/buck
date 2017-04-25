@@ -56,15 +56,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
@@ -86,16 +84,15 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus = BuckEventBusFactory.newInstance(fakeClock);
     console = new TestConsole();
 
-    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
-        console,
-        fakeClock,
-        TestResultSummaryVerbosity.of(false, false),
-        Locale.US,
-        logPath,
-        new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()),
-            System.getProperties())
-    );
+    SimpleConsoleEventBusListener listener =
+        new SimpleConsoleEventBusListener(
+            console,
+            fakeClock,
+            TestResultSummaryVerbosity.of(false, false),
+            Locale.US,
+            logPath,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()), System.getProperties()));
 
     eventBus.register(listener);
   }
@@ -105,31 +102,23 @@ public class SimpleConsoleEventBusListenerTest {
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-    FakeBuildRule fakeRule = new FakeBuildRule(
-        fakeTarget,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
-        ImmutableSortedSet.of());
+    FakeBuildRule fakeRule =
+        new FakeBuildRule(
+            fakeTarget,
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            ImmutableSortedSet.of());
 
     final long threadId = 0;
 
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            buildEventStarted,
-            0L,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(buildEventStarted, 0L, TimeUnit.MILLISECONDS, threadId));
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            parseStarted,
-            0L,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
 
     assertOutput("", console);
 
@@ -145,17 +134,13 @@ public class SimpleConsoleEventBusListenerTest {
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            started,
-            600L,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(started, 600L, TimeUnit.MILLISECONDS, threadId));
 
-    HttpArtifactCacheEvent.Scheduled storeScheduledOne = postStoreScheduled(
-        eventBus, threadId, TARGET_ONE, 700L);
+    HttpArtifactCacheEvent.Scheduled storeScheduledOne =
+        postStoreScheduled(eventBus, threadId, TARGET_ONE, 700L);
 
-    HttpArtifactCacheEvent.Scheduled storeScheduledTwo = postStoreScheduled(
-        eventBus, threadId, TARGET_TWO, 700L);
+    HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
+        postStoreScheduled(eventBus, threadId, TARGET_TWO, 700L);
 
     HttpArtifactCacheEvent.Started storeStartedOne =
         postStoreStarted(eventBus, threadId, 710L, storeScheduledOne);
@@ -170,7 +155,8 @@ public class SimpleConsoleEventBusListenerTest {
                 Optional.empty(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                 Optional.empty(),
-                Optional.empty(), Optional.empty()),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -178,34 +164,29 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    expectedOutput += "BUILT  0.4s //banana:stand\n" +
-        "[-] BUILDING...FINISHED 0.8s\n" +
-        "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
+    expectedOutput +=
+        "BUILT  0.4s //banana:stand\n"
+            + "[-] BUILDING...FINISHED 0.8s\n"
+            + "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
     assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ConsoleEvent.severe(SEVERE_MESSAGE),
-            1500L,
-            TimeUnit.MILLISECONDS,
-            threadId));
+            ConsoleEvent.severe(SEVERE_MESSAGE), 1500L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput += SEVERE_MESSAGE + "\n";
     assertOutput(expectedOutput, console);
 
-    InstallEvent.Started installEventStarted = configureTestEventAtTime(
-        InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId);
+    InstallEvent.Started installEventStarted =
+        configureTestEventAtTime(
+            InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId);
     eventBus.postWithoutConfiguring(installEventStarted);
 
     assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            InstallEvent.finished(
-                installEventStarted,
-                true,
-                Optional.empty(),
-                Optional.empty()),
+            InstallEvent.finished(installEventStarted, true, Optional.empty(), Optional.empty()),
             4000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -224,10 +205,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            HttpArtifactCacheEvent.newShutdownEvent(),
-            6000L,
-            TimeUnit.MILLISECONDS,
-            threadId));
+            HttpArtifactCacheEvent.newShutdownEvent(), 6000L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput +=
         "[-] HTTP CACHE UPLOAD...FINISHED 1.50 MB (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
@@ -247,10 +225,7 @@ public class SimpleConsoleEventBusListenerTest {
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            buildEventStarted,
-            200L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
+            buildEventStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -260,8 +235,7 @@ public class SimpleConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     assertOutput(
-        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n",
-        console);
+        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n", console);
   }
 
   @Test
@@ -274,11 +248,7 @@ public class SimpleConsoleEventBusListenerTest {
     // This sequencing occurs when running `buck project`
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            parseStarted,
-            100L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
+        configureTestEventAtTime(parseStarted, 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ParseEvent.finished(parseStarted, Optional.empty()),
@@ -292,10 +262,7 @@ public class SimpleConsoleEventBusListenerTest {
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            actionGraphStarted,
-            300L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
+            actionGraphStarted, 300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ActionGraphEvent.finished(actionGraphStarted),
@@ -306,10 +273,7 @@ public class SimpleConsoleEventBusListenerTest {
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            buildEventStarted,
-            500L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
+            buildEventStarted, 500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0),

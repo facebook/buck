@@ -21,7 +21,6 @@ import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAt
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -30,20 +29,12 @@ public class ConsoleTestUtils {
   private ConsoleTestUtils() {}
 
   public static HttpArtifactCacheEvent.Scheduled postStoreScheduled(
-      BuckEventBus eventBus,
-      long threadId,
-      String target,
-      long timeInMs) {
+      BuckEventBus eventBus, long threadId, String target, long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of(target), ImmutableSet.of());
+        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of(target), ImmutableSet.of());
 
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            storeScheduled,
-            timeInMs,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(storeScheduled, timeInMs, TimeUnit.MILLISECONDS, threadId));
     return storeScheduled;
   }
 
@@ -56,11 +47,7 @@ public class ConsoleTestUtils {
         HttpArtifactCacheEvent.newStoreStartedEvent(storeScheduled);
 
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            storeStartedOne,
-            timeInMs,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(storeStartedOne, timeInMs, TimeUnit.MILLISECONDS, threadId));
     return storeStartedOne;
   }
 
@@ -73,15 +60,12 @@ public class ConsoleTestUtils {
       HttpArtifactCacheEvent.Started storeStartedOne) {
     HttpArtifactCacheEvent.Finished.Builder storeFinished =
         HttpArtifactCacheEvent.newFinishedEventBuilder(storeStartedOne);
-    storeFinished.getStoreBuilder()
-            .setWasStoreSuccessful(success)
-            .setArtifactSizeBytes(artifactSizeInBytes);
+    storeFinished
+        .getStoreBuilder()
+        .setWasStoreSuccessful(success)
+        .setArtifactSizeBytes(artifactSizeInBytes);
 
     eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            storeFinished.build(),
-            timeInMs,
-            TimeUnit.MILLISECONDS,
-            threadId));
+        configureTestEventAtTime(storeFinished.build(), timeInMs, TimeUnit.MILLISECONDS, threadId));
   }
 }

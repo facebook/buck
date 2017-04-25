@@ -26,49 +26,48 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.eventbus.Subscribe;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BroadcastEventListenerTest {
 
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void tryBroadcastInMultipleBuses() {
-    BuckEventBus bus1 = BuckEventBusFactory.newInstance(
-        new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)),
-        new BuildId("bus1"));
-    BuckEventBus bus2 = BuckEventBusFactory.newInstance(
-        new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)),
-        new BuildId("bus2"));
+    BuckEventBus bus1 =
+        BuckEventBusFactory.newInstance(
+            new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)), new BuildId("bus1"));
+    BuckEventBus bus2 =
+        BuckEventBusFactory.newInstance(
+            new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)), new BuildId("bus2"));
 
-    bus1.register(new Object() {
-      @Subscribe
-      public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
-        trackedEvents.add(event);
-      }
-    });
+    bus1.register(
+        new Object() {
+          @Subscribe
+          public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
+            trackedEvents.add(event);
+          }
+        });
 
-    bus2.register(new Object() {
-      @Subscribe
-      public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
-        trackedEvents.add(event);
-      }
+    bus2.register(
+        new Object() {
+          @Subscribe
+          public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
+            trackedEvents.add(event);
+          }
 
-      @Subscribe
-      public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
-        trackedEvents.add(event);
-      }
-    });
+          @Subscribe
+          public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
+            trackedEvents.add(event);
+          }
+        });
 
     BroadcastEventListener listener = new BroadcastEventListener();
     listener.addEventBus(bus1);
@@ -97,5 +96,4 @@ public class BroadcastEventListenerTest {
     }
     return i;
   }
-
 }

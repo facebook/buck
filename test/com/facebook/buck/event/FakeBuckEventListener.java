@@ -18,7 +18,6 @@ package com.facebook.buck.event;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-
 import java.util.LinkedList;
 import java.util.List;
 

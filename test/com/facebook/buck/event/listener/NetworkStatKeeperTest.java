@@ -21,7 +21,6 @@ import static org.easymock.EasyMock.expect;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.timing.Clock;
-
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,29 +41,26 @@ public class NetworkStatKeeperTest {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
     networkStatsKeeper.stopScheduler();
 
-    HttpArtifactCacheEvent.Started startEvent1 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent1 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent1.getTimestamp()).andReturn(300L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent1 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent1.getTimestamp()).andReturn(600L).anyTimes();
 
-    HttpArtifactCacheEvent.Started startEvent2 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent2 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent2.getTimestamp()).andReturn(400L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent2 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent2.getTimestamp()).andReturn(500L).anyTimes();
 
-    HttpArtifactCacheEvent.Started startEvent3 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent3 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent3.getTimestamp()).andReturn(700L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent3 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent3.getTimestamp()).andReturn(900L).anyTimes();
 
-    EasyMock.replay(startEvent1, startEvent2, startEvent3,
-        finishedEvent1, finishedEvent2, finishedEvent3);
+    EasyMock.replay(
+        startEvent1, startEvent2, startEvent3, finishedEvent1, finishedEvent2, finishedEvent3);
 
     //first interval
     networkStatsKeeper.artifactDownloadedStarted(startEvent1);
@@ -74,43 +70,37 @@ public class NetworkStatKeeperTest {
     networkStatsKeeper.artifactDownloadFinished(finishedEvent2);
     networkStatsKeeper.artifactDownloadFinished(finishedEvent1);
     networkStatsKeeper.calculateDownloadSpeedInLastInterval();
-    Assert.assertEquals(83333.33333333333,
-        networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
-    Assert.assertEquals(83333.33333333333,
-        networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(83333.33333333333, networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(
+        83333.33333333333, networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
 
-   //second interval
+    //second interval
     networkStatsKeeper.artifactDownloadedStarted(startEvent3);
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(10000));
     networkStatsKeeper.artifactDownloadFinished(finishedEvent3);
     networkStatsKeeper.calculateDownloadSpeedInLastInterval();
-    Assert.assertEquals(50000.0, networkStatsKeeper.
-        getDownloadSpeed().getFirst(), delta);
-    Assert.assertEquals(70000.0, networkStatsKeeper.
-        getAverageDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(50000.0, networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(70000.0, networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
   }
 
   @Test
-  public void calculateDownloadSpeedWhenInterleaved(){
+  public void calculateDownloadSpeedWhenInterleaved() {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
     networkStatsKeeper.stopScheduler();
 
-    HttpArtifactCacheEvent.Started startEvent1 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent1 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent1.getTimestamp()).andReturn(300L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent1 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent1.getTimestamp()).andReturn(700L).anyTimes();
 
-    HttpArtifactCacheEvent.Started startEvent2 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent2 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent2.getTimestamp()).andReturn(400L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent2 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent2.getTimestamp()).andReturn(500L).anyTimes();
 
-    HttpArtifactCacheEvent.Started startEvent3 =
-        createMock(HttpArtifactCacheEvent.Started.class);
+    HttpArtifactCacheEvent.Started startEvent3 = createMock(HttpArtifactCacheEvent.Started.class);
     expect(startEvent3.getTimestamp()).andReturn(800L).anyTimes();
     HttpArtifactCacheEvent.Finished finishedEvent3 =
         createMock(HttpArtifactCacheEvent.Finished.class);
@@ -119,8 +109,14 @@ public class NetworkStatKeeperTest {
     Clock clock = createMock(Clock.class);
     expect(clock.currentTimeMillis()).andReturn(600L);
 
-    EasyMock.replay(startEvent1, startEvent2, startEvent3,
-        finishedEvent1, finishedEvent2, finishedEvent3, clock);
+    EasyMock.replay(
+        startEvent1,
+        startEvent2,
+        startEvent3,
+        finishedEvent1,
+        finishedEvent2,
+        finishedEvent3,
+        clock);
     networkStatsKeeper.setClock(clock);
 
     networkStatsKeeper.artifactDownloadedStarted(startEvent1);
@@ -129,8 +125,7 @@ public class NetworkStatKeeperTest {
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(15000));
     networkStatsKeeper.artifactDownloadFinished(finishedEvent2);
     networkStatsKeeper.calculateDownloadSpeedInLastInterval();
-    Assert.assertEquals(83333.33333333333,
-        networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(83333.33333333333, networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
 
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(10000));
     networkStatsKeeper.artifactDownloadFinished(finishedEvent1);
@@ -138,15 +133,13 @@ public class NetworkStatKeeperTest {
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(5000));
     networkStatsKeeper.artifactDownloadFinished(finishedEvent3);
     networkStatsKeeper.calculateDownloadSpeedInLastInterval();
-    Assert.assertEquals(37500.0,
-        networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
-    Assert.assertEquals(57142.857142857145,
-        networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
-
+    Assert.assertEquals(37500.0, networkStatsKeeper.getDownloadSpeed().getFirst(), delta);
+    Assert.assertEquals(
+        57142.857142857145, networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
   }
 
   @Test
-  public void artifactDownloadCountTest(){
+  public void artifactDownloadCountTest() {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
     HttpArtifactCacheEvent.Finished finishedEvent1 =
         createMock(HttpArtifactCacheEvent.Finished.class);
@@ -155,7 +148,6 @@ public class NetworkStatKeeperTest {
     HttpArtifactCacheEvent.Finished finishedEvent2 =
         createMock(HttpArtifactCacheEvent.Finished.class);
     expect(finishedEvent2.getTimestamp()).andReturn(400L);
-
 
     networkStatsKeeper.artifactDownloadFinished(finishedEvent1);
     networkStatsKeeper.artifactDownloadFinished(finishedEvent2);

@@ -44,12 +44,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,10 +51,13 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.junit.Before;
+import org.junit.Test;
 
 public class PublicAnnouncementManagerIntegrationTest {
 
@@ -72,7 +69,7 @@ public class PublicAnnouncementManagerIntegrationTest {
 
   @Before
   public void createTestLogFile() {
-      logPath = Jimfs.newFileSystem(Configuration.unix()).getPath("log.txt");
+    logPath = Jimfs.newFileSystem(Configuration.unix()).getPath("log.txt");
   }
 
   @Test
@@ -87,7 +84,8 @@ public class PublicAnnouncementManagerIntegrationTest {
                 String s,
                 Request request,
                 HttpServletRequest httpServletRequest,
-                HttpServletResponse httpServletResponse) throws IOException, ServletException {
+                HttpServletResponse httpServletResponse)
+                throws IOException, ServletException {
               httpServletResponse.setStatus(200);
               request.setHandled(true);
               if (request.getUri().getPath().equals("/status.php")) {
@@ -102,7 +100,7 @@ public class PublicAnnouncementManagerIntegrationTest {
                   thriftRequest.getAnnouncementRequest().getRepository().equals(REPOSITORY));
 
               try (DataOutputStream out =
-                       new DataOutputStream(httpServletResponse.getOutputStream())) {
+                  new DataOutputStream(httpServletResponse.getOutputStream())) {
                 Announcement announcement = new Announcement();
                 announcement.setErrorMessage(ERROR_MSG);
                 announcement.setSolutionMessage(SOLUTION_MSG);
@@ -120,38 +118,40 @@ public class PublicAnnouncementManagerIntegrationTest {
 
       Clock clock = new DefaultClock();
       BuckEventBus eventBus = BuckEventBusFactory.newInstance(clock);
-      ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
-          ImmutableMap.copyOf(System.getenv()),
-          System.getProperties());
-      BuckConfig buckConfig = new FakeBuckConfig.Builder()
-          .setSections(ImmutableMap.of(
-              "log", ImmutableMap.of(
-                  "slb_server_pool",
-                  "http://localhost:" + httpd.getRootUri().getPort()
-              )
-          ))
-          .build();
+      ExecutionEnvironment executionEnvironment =
+          new DefaultExecutionEnvironment(
+              ImmutableMap.copyOf(System.getenv()), System.getProperties());
+      BuckConfig buckConfig =
+          new FakeBuckConfig.Builder()
+              .setSections(
+                  ImmutableMap.of(
+                      "log",
+                      ImmutableMap.of(
+                          "slb_server_pool", "http://localhost:" + httpd.getRootUri().getPort())))
+              .build();
 
       TestConsole console = new TestConsole();
-      SuperConsoleEventBusListener listener = new SuperConsoleEventBusListener(
-          new SuperConsoleConfig(FakeBuckConfig.builder().build()),
-          console,
-          clock,
-        /* verbosity */ TestResultSummaryVerbosity.of(false, false),
-          executionEnvironment,
-          Optional.empty(),
-          Locale.US,
-          logPath,
-          TimeZone.getTimeZone("UTC"));
+      SuperConsoleEventBusListener listener =
+          new SuperConsoleEventBusListener(
+              new SuperConsoleConfig(FakeBuckConfig.builder().build()),
+              console,
+              clock,
+              /* verbosity */ TestResultSummaryVerbosity.of(false, false),
+              executionEnvironment,
+              Optional.empty(),
+              Locale.US,
+              logPath,
+              TimeZone.getTimeZone("UTC"));
       eventBus.register(listener);
 
-      PublicAnnouncementManager manager = new PublicAnnouncementManager(
-          clock,
-          eventBus,
-          listener,
-          REPOSITORY,
-          new RemoteLogBuckConfig(buckConfig),
-          MoreExecutors.newDirectExecutorService());
+      PublicAnnouncementManager manager =
+          new PublicAnnouncementManager(
+              clock,
+              eventBus,
+              listener,
+              REPOSITORY,
+              new RemoteLogBuckConfig(buckConfig),
+              MoreExecutors.newDirectExecutorService());
 
       manager.getAndPostAnnouncements();
 
@@ -159,10 +159,10 @@ public class PublicAnnouncementManagerIntegrationTest {
       assertEquals(
           "The header and the message",
           announcements.get(),
-          "**-------------------------------**\n" +
-              "**- Sticky Public Announcements -**\n" +
-              "**-------------------------------**\n" +
-              "** This is the error message. This is the solution message.");
+          "**-------------------------------**\n"
+              + "**- Sticky Public Announcements -**\n"
+              + "**-------------------------------**\n"
+              + "** This is the error message. This is the solution message.");
     }
   }
 }
