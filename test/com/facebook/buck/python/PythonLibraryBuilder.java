@@ -25,21 +25,17 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class PythonLibraryBuilder extends AbstractNodeBuilder<
-    PythonLibraryDescription.Arg,
-    PythonLibraryDescription,
-    PythonLibrary> {
+public class PythonLibraryBuilder
+    extends AbstractNodeBuilder<
+        PythonLibraryDescription.Arg, PythonLibraryDescription, PythonLibrary> {
 
   PythonLibraryBuilder(
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new PythonLibraryDescription(pythonPlatforms, cxxPlatforms),
-        target);
+    super(new PythonLibraryDescription(pythonPlatforms, cxxPlatforms), target);
   }
 
   public PythonLibraryBuilder(BuildTarget target) {
@@ -92,5 +88,4 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<
     arg.versionedResources = Optional.of(versionedResources);
     return this;
   }
-
 }

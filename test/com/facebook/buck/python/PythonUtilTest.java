@@ -18,10 +18,10 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -31,34 +31,29 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class PythonUtilTest {
 
   @Test
   public void toModuleMapWithExplicitMap() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
-        target,
-        new SourcePathResolver(new SourcePathRuleFinder(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        )),
-        "srcs",
-        target.getBasePath(),
-        ImmutableList.of(
-            SourceList.ofNamedSources(
-                ImmutableSortedMap.of(
-                    "hello.py", new FakeSourcePath("goodbye.py")))));
+    ImmutableMap<Path, SourcePath> srcs =
+        PythonUtil.toModuleMap(
+            target,
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            "srcs",
+            target.getBasePath(),
+            ImmutableList.of(
+                SourceList.ofNamedSources(
+                    ImmutableSortedMap.of("hello.py", new FakeSourcePath("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(
-            target.getBasePath().resolve("hello.py"),
-            new FakeSourcePath("goodbye.py")),
+            target.getBasePath().resolve("hello.py"), new FakeSourcePath("goodbye.py")),
         srcs);
   }
-
 }

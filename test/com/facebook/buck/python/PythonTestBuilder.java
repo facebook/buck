@@ -29,7 +29,6 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class PythonTestBuilder
@@ -59,8 +58,7 @@ public class PythonTestBuilder
   }
 
   public static PythonTestBuilder create(
-      BuildTarget target,
-      FlavorDomain<PythonPlatform> pythonPlatforms) {
+      BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonTestBuilder(
@@ -137,5 +135,4 @@ public class PythonTestBuilder
     arg.versionedResources = Optional.of(versionedResources);
     return this;
   }
-
 }

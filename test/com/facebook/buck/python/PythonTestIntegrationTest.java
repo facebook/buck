@@ -31,9 +31,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
@@ -41,15 +41,13 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.IOException;
-import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class PythonTestIntegrationTest {
@@ -60,21 +58,17 @@ public class PythonTestIntegrationTest {
         ImmutableList.copyOf(PythonBuckConfig.PackageStyle.values()));
   }
 
-  @Parameterized.Parameter
-  public PythonBuckConfig.PackageStyle packageStyle;
+  @Parameterized.Parameter public PythonBuckConfig.PackageStyle packageStyle;
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "python_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        "[python]\npackage_style = " + packageStyle.toString().toLowerCase() + "\n",
-        ".buckconfig");
+        "[python]\npackage_style = " + packageStyle.toString().toLowerCase() + "\n", ".buckconfig");
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
   }
@@ -105,17 +99,20 @@ public class PythonTestIntegrationTest {
 
   @Test
   public void testPythonTestSelectors() throws IOException {
-    ProcessResult result = workspace.runBuckCommand(
-        "test", "--test-selectors", "Test#test_that_passes", "//:test-failure");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "Test#test_that_passes", "//:test-failure");
     result.assertSuccess();
 
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!Test#test_that_fails", "//:test-failure");
+    result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "!Test#test_that_fails", "//:test-failure");
     result.assertSuccess();
     workspace.resetBuildLogFile();
 
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!test_failure.Test#", "//:test-failure");
+    result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "!test_failure.Test#", "//:test-failure");
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("1 Passed"));
   }
@@ -158,9 +155,7 @@ public class PythonTestIntegrationTest {
   public void testRunPythonTest() throws IOException {
     ProcessResult result = workspace.runBuckCommand("run", "//:test-success");
     result.assertSuccess();
-    assertThat(
-        result.getStderr(),
-        containsString("test_that_passes (test_success.Test) ... ok"));
+    assertThat(result.getStderr(), containsString("test_that_passes (test_success.Test) ... ok"));
   }
 
   @Test
@@ -172,10 +167,9 @@ public class PythonTestIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "FAILURE test_setup_class_failure_with_test_suite.Test test_that_passes:" +
-                " Exception: setup failure!"));
+            "FAILURE test_setup_class_failure_with_test_suite.Test test_that_passes:"
+                + " Exception: setup failure!"));
   }
-
 
   @Test
   public void testPythonTestCached() throws IOException {
@@ -200,11 +194,9 @@ public class PythonTestIntegrationTest {
     assumeTrue(
         String.format(
             "Needs at least Python-%s, but found Python-%s: %s",
-            expectedVersion,
-            actualVersion,
-            message),
-        new VersionStringComparator().compare(
-            actualVersion.getVersionString(), expectedVersion) >= 0);
+            expectedVersion, actualVersion, message),
+        new VersionStringComparator().compare(actualVersion.getVersionString(), expectedVersion)
+            >= 0);
   }
 
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
@@ -217,9 +209,6 @@ public class PythonTestIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(
-        buckConfig,
-        new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
   }
-
 }

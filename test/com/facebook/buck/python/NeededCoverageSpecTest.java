@@ -28,11 +28,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class NeededCoverageSpecTest {
 
@@ -62,5 +60,4 @@ public class NeededCoverageSpecTest {
         translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
         Matchers.equalTo(Optional.empty()));
   }
-
 }

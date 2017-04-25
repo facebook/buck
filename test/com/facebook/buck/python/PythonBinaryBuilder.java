@@ -29,13 +29,11 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-public class PythonBinaryBuilder extends AbstractNodeBuilder<
-    PythonBinaryDescription.Arg,
-    PythonBinaryDescription,
-    PythonBinary> {
+public class PythonBinaryBuilder
+    extends AbstractNodeBuilder<
+        PythonBinaryDescription.Arg, PythonBinaryDescription, PythonBinary> {
 
   public PythonBinaryBuilder(
       BuildTarget target,
@@ -54,8 +52,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<
   }
 
   public static PythonBinaryBuilder create(
-      BuildTarget target,
-      FlavorDomain<PythonPlatform> pythonPlatforms) {
+      BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonBinaryBuilder(
@@ -130,5 +127,4 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<
     arg.linkerFlags = linkerFlags;
     return this;
   }
-
 }

@@ -27,29 +27,29 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
 public class PythonPackageableComponentsTest {
 
   @Test
   public void testMergeZipSafe() {
-    PythonPackageComponents compA = PythonPackageComponents.of(
-        ImmutableMap.of(Paths.get("test"), new FakeSourcePath("sourceA")),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.of(true));
-    PythonPackageComponents compB = PythonPackageComponents.of(
-        ImmutableMap.of(Paths.get("test2"), new FakeSourcePath("sourceB")),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.of(false));
+    PythonPackageComponents compA =
+        PythonPackageComponents.of(
+            ImmutableMap.of(Paths.get("test"), new FakeSourcePath("sourceA")),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.of(true));
+    PythonPackageComponents compB =
+        PythonPackageComponents.of(
+            ImmutableMap.of(Paths.get("test2"), new FakeSourcePath("sourceB")),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.of(false));
 
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
@@ -79,18 +79,20 @@ public class PythonPackageableComponentsTest {
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     Path dest = Paths.get("test");
-    PythonPackageComponents compA = PythonPackageComponents.of(
-        ImmutableMap.of(dest, new FakeSourcePath("sourceA")),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.empty());
-    PythonPackageComponents compB = PythonPackageComponents.of(
-        ImmutableMap.of(dest, new FakeSourcePath("sourceB")),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.empty());
+    PythonPackageComponents compA =
+        PythonPackageComponents.of(
+            ImmutableMap.of(dest, new FakeSourcePath("sourceA")),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.empty());
+    PythonPackageComponents compB =
+        PythonPackageComponents.of(
+            ImmutableMap.of(dest, new FakeSourcePath("sourceB")),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     try {
@@ -107,22 +109,23 @@ public class PythonPackageableComponentsTest {
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     Path dest = Paths.get("test");
     SourcePath path = new FakeSourcePath("source");
-    PythonPackageComponents compA = PythonPackageComponents.of(
-        ImmutableMap.of(dest, path),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.empty());
-    PythonPackageComponents compB = PythonPackageComponents.of(
-        ImmutableMap.of(dest, path),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSet.of(),
-        Optional.empty());
+    PythonPackageComponents compA =
+        PythonPackageComponents.of(
+            ImmutableMap.of(dest, path),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.empty());
+    PythonPackageComponents compB =
+        PythonPackageComponents.of(
+            ImmutableMap.of(dest, path),
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     builder.addComponent(compB, them);
     builder.build();
   }
-
 }

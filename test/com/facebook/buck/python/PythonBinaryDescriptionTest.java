@@ -76,14 +76,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class PythonBinaryDescriptionTest {
 
@@ -113,9 +111,7 @@ public class PythonBinaryDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            genruleBuilder.build(),
-            libBuilder.build(),
-            binaryBuilder.build());
+            genruleBuilder.build(), libBuilder.build(), binaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -154,8 +150,7 @@ public class PythonBinaryDescriptionTest {
             .setMain(source)
             .build(
                 new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         normal.getComponents().getModules().keySet(),
         Matchers.hasItem(target.getBasePath().resolve(sourceName)));
@@ -168,8 +163,7 @@ public class PythonBinaryDescriptionTest {
             .setBaseModule(baseModule)
             .build(
                 new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(
         withBaseModule.getComponents().getModules().keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
@@ -182,9 +176,7 @@ public class PythonBinaryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     String mainModule = "foo.main";
     PythonBinary binary =
-        PythonBinaryBuilder.create(target)
-            .setMainModule(mainModule)
-            .build(resolver);
+        PythonBinaryBuilder.create(target).setMainModule(mainModule).build(resolver);
     assertThat(mainModule, Matchers.equalTo(binary.getMainModule()));
   }
 
@@ -196,10 +188,11 @@ public class PythonBinaryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonBuckConfig config =
         new PythonBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of(
-                    "python",
-                    ImmutableMap.of("pex_extension", ".different_extension"))).build(),
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "python", ImmutableMap.of("pex_extension", ".different_extension")))
+                .build(),
             new AlwaysFoundExecutableFinder());
     PythonBinaryBuilder builder =
         new PythonBinaryBuilder(
@@ -208,13 +201,11 @@ public class PythonBinaryDescriptionTest {
             PythonTestUtils.PYTHON_PLATFORMS,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS);
-    PythonBinary binary =
-        builder
-            .setMainModule("main")
-            .build(resolver);
+    PythonBinary binary = builder.setMainModule("main").build(resolver);
     assertThat(
-        pathResolver.getRelativePath(
-            Preconditions.checkNotNull(binary.getSourcePathToOutput())).toString(),
+        pathResolver
+            .getRelativePath(Preconditions.checkNotNull(binary.getSourcePathToOutput()))
+            .toString(),
         Matchers.endsWith(".different_extension"));
   }
 
@@ -226,13 +217,11 @@ public class PythonBinaryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonBinaryBuilder builder = PythonBinaryBuilder.create(target);
     PythonBinary binary =
-        builder
-            .setMainModule("main")
-            .setExtension(".different_extension")
-            .build(resolver);
+        builder.setMainModule("main").setExtension(".different_extension").build(resolver);
     assertThat(
-        pathResolver.getRelativePath(
-            Preconditions.checkNotNull(binary.getSourcePathToOutput())).toString(),
+        pathResolver
+            .getRelativePath(Preconditions.checkNotNull(binary.getSourcePathToOutput()))
+            .toString(),
         Matchers.endsWith(".different_extension"));
   }
 
@@ -248,11 +237,10 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .setBuildArgs(buildArgs)
             .build(resolver);
-    ImmutableList<Step> buildSteps = binary.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
-    PexStep pexStep = FluentIterable.from(buildSteps)
-        .filter(PexStep.class)
-        .get(0);
+    ImmutableList<Step> buildSteps =
+        binary.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+    PexStep pexStep = FluentIterable.from(buildSteps).filter(PexStep.class).get(0);
     assertThat(
         pexStep.getCommandPrefix(),
         Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
@@ -280,16 +268,14 @@ public class PythonBinaryDescriptionTest {
             .setPlatform(platform1.getFlavor().toString())
             .build(
                 new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(binary1.getPythonPlatform(), Matchers.equalTo(platform1));
     PythonBinary binary2 =
         builder
             .setPlatform(platform2.getFlavor().toString())
             .build(
                 new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer()));
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     assertThat(binary2.getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
@@ -309,20 +295,15 @@ public class PythonBinaryDescriptionTest {
               .setPackageStyle(packageStyle);
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(
-              cxxBinaryBuilder.build(),
-              pythonLibraryBuilder.build(),
-              pythonBinaryBuilder.build());
+              cxxBinaryBuilder.build(), pythonLibraryBuilder.build(), pythonBinaryBuilder.build());
       BuildRuleResolver resolver =
           new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
       BuildRule cxxBinary = cxxBinaryBuilder.build(resolver, filesystem, targetGraph);
       pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
-      PythonBinary pythonBinary =
-          pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
+      PythonBinary pythonBinary = pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
       assertThat(
           String.format(
-              "Transitive runtime deps of %s [%s]",
-              pythonBinary,
-              packageStyle.toString()),
+              "Transitive runtime deps of %s [%s]", pythonBinary, packageStyle.toString()),
           BuildRules.getTransitiveRuntimeDeps(pythonBinary, resolver),
           Matchers.hasItem(cxxBinary.getBuildTarget()));
     }
@@ -350,9 +331,7 @@ public class PythonBinaryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     PythonPackagedBinary binary =
-        (PythonPackagedBinary) builder
-            .setMainModule("main")
-            .build(resolver);
+        (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(
         binary.getExecutableCommand().getCommandPrefix(pathResolver),
         Matchers.contains(
@@ -367,9 +346,8 @@ public class PythonBinaryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonPackagedBinary binary =
-        (PythonPackagedBinary) PythonBinaryBuilder.create(target)
-            .setMainModule("main")
-        .build(resolver);
+        (PythonPackagedBinary)
+            PythonBinaryBuilder.create(target).setMainModule("main").build(resolver);
     assertThat(
         binary.getExecutableCommand().getCommandPrefix(pathResolver),
         Matchers.contains(
@@ -392,6 +370,7 @@ public class PythonBinaryDescriptionTest {
           public PackageStyle getPackageStyle() {
             return PackageStyle.STANDALONE;
           }
+
           @Override
           public Tool getPexTool(BuildRuleResolver resolver) {
             return new CommandTool.Builder()
@@ -407,12 +386,8 @@ public class PythonBinaryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     PythonPackagedBinary binary =
-        (PythonPackagedBinary) builder
-            .setMainModule("main")
-            .build(resolver);
-    assertThat(
-        binary.getBuildDeps(),
-        Matchers.hasItem(pexTool));
+        (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(pexTool));
   }
 
   @Test
@@ -460,9 +435,7 @@ public class PythonBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
     assertThat(
-        Iterables.transform(
-            binary.getComponents().getNativeLibraries().keySet(),
-            Object::toString),
+        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
@@ -511,9 +484,7 @@ public class PythonBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
     assertThat(
-        Iterables.transform(
-            binary.getComponents().getNativeLibraries().keySet(),
-            Object::toString),
+        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
   }
 
@@ -553,9 +524,7 @@ public class PythonBinaryDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            python2Builder.build(),
-            extensionBuilder.build(),
-            binaryBuilder.build());
+            python2Builder.build(), extensionBuilder.build(), binaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -564,13 +533,9 @@ public class PythonBinaryDescriptionTest {
     extensionBuilder.build(resolver, filesystem, targetGraph);
     PythonBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
 
+    assertThat(binary.getComponents().getNativeLibraries().entrySet(), Matchers.empty());
     assertThat(
-        binary.getComponents().getNativeLibraries().entrySet(),
-        Matchers.empty());
-    assertThat(
-        Iterables.transform(
-            binary.getComponents().getModules().keySet(),
-            Object::toString),
+        Iterables.transform(binary.getComponents().getModules().keySet(), Object::toString),
         Matchers.containsInAnyOrder(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 
@@ -619,12 +584,9 @@ public class PythonBinaryDescriptionTest {
     transitiveCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
-    PythonBinary binary =
-        pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
+    PythonBinary binary = pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        Iterables.transform(
-            binary.getComponents().getNativeLibraries().keySet(),
-            Object::toString),
+        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.hasItem("libtransitive_cxx.so"));
   }
 
@@ -637,9 +599,7 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
             .build(resolver);
-    assertThat(
-        pythonBinary,
-        Matchers.instanceOf(PythonInPlaceBinary.class));
+    assertThat(pythonBinary, Matchers.instanceOf(PythonInPlaceBinary.class));
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     pythonBinary =
@@ -647,9 +607,7 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
-    assertThat(
-        pythonBinary,
-        Matchers.instanceOf(PythonPackagedBinary.class));
+    assertThat(pythonBinary, Matchers.instanceOf(PythonPackagedBinary.class));
   }
 
   @Test
@@ -660,8 +618,7 @@ public class PythonBinaryDescriptionTest {
               .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.c"))));
       PythonBuckConfig config =
           new PythonBuckConfig(
-              FakeBuckConfig.builder().build(),
-              new AlwaysFoundExecutableFinder()) {
+              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
@@ -678,16 +635,11 @@ public class PythonBinaryDescriptionTest {
       binaryBuilder.setPreloadDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
       BuildRuleResolver resolver =
           new BuildRuleResolver(
-              TargetGraphFactory.newInstance(
-                  cxxLibraryBuilder.build(),
-                  binaryBuilder.build()),
+              TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()),
               new DefaultTargetNodeToBuildRuleTransformer());
       cxxLibraryBuilder.build(resolver);
       PythonBinary binary = binaryBuilder.build(resolver);
-      assertThat(
-          "Using " + strategy,
-          binary.getPreloadLibraries(),
-          Matchers.hasItems("libdep.so"));
+      assertThat("Using " + strategy, binary.getPreloadLibraries(), Matchers.hasItems("libdep.so"));
       assertThat(
           "Using " + strategy,
           binary.getComponents().getNativeLibraries().keySet(),
@@ -709,19 +661,14 @@ public class PythonBinaryDescriptionTest {
                         ImmutableMap.of(
                             "python",
                             ImmutableMap.of(
-                                "path_to_pex_executer",
-                                pexExecutorBuilder.getTarget().toString())))
+                                "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
                     .build(),
                 new AlwaysFoundExecutableFinder()),
             PythonTestUtils.PYTHON_PLATFORMS,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS);
-    builder
-        .setMainModule("main")
-        .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
-    assertThat(
-        builder.build().getExtraDeps(),
-        Matchers.hasItem(pexExecutorBuilder.getTarget()));
+    builder.setMainModule("main").setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
+    assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
   }
 
   @Test
@@ -755,9 +702,7 @@ public class PythonBinaryDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(
-                cxxDepBuilder.build(),
-                cxxBuilder.build(),
-                binaryBuilder.build()),
+                cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     cxxDepBuilder.build(resolver);
@@ -765,11 +710,10 @@ public class PythonBinaryDescriptionTest {
     PythonBinary binary = binaryBuilder.build(resolver);
     for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
       CxxLink link =
-          resolver.getRuleOptionalWithType(
-              ((BuildTargetSourcePath<?>) path).getTarget(), CxxLink.class).get();
-      assertThat(
-          Arg.stringify(link.getArgs(), pathResolver),
-          Matchers.hasItem("-flag"));
+          resolver
+              .getRuleOptionalWithType(((BuildTargetSourcePath<?>) path).getTarget(), CxxLink.class)
+              .get();
+      assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
     }
   }
 
@@ -786,8 +730,7 @@ public class PythonBinaryDescriptionTest {
               .setForceStatic(true);
       PythonBuckConfig config =
           new PythonBuckConfig(
-              FakeBuckConfig.builder().build(),
-              new AlwaysFoundExecutableFinder()) {
+              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
@@ -803,13 +746,10 @@ public class PythonBinaryDescriptionTest {
       binaryBuilder.setMainModule("main");
       binaryBuilder.setDeps(
           ImmutableSortedSet.of(
-              cxxLibraryBuilder.getTarget(),
-              prebuiltCxxLibraryBuilder.getTarget()));
+              cxxLibraryBuilder.getTarget(), prebuiltCxxLibraryBuilder.getTarget()));
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(
-              cxxLibraryBuilder.build(),
-              prebuiltCxxLibraryBuilder.build(),
-              binaryBuilder.build());
+              cxxLibraryBuilder.build(), prebuiltCxxLibraryBuilder.build(), binaryBuilder.build());
       BuildRuleResolver resolver =
           new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
       cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
@@ -839,8 +779,7 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
     CxxLibraryBuilder preloadCxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:preload_cxx"))
-            .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("preload_cxx.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("preload_cxx.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
@@ -876,14 +815,9 @@ public class PythonBinaryDescriptionTest {
     preloadCxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
     assertThat(
-        Iterables.transform(
-            binary.getComponents().getNativeLibraries().keySet(),
-            Object::toString),
+        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.containsInAnyOrder(
-            "libomnibus.so",
-            "libcxx.so",
-            "libpreload_cxx.so",
-            "libtransitive_dep.so"));
+            "libomnibus.so", "libcxx.so", "libpreload_cxx.so", "libtransitive_dep.so"));
   }
 
   @Test
@@ -899,22 +833,22 @@ public class PythonBinaryDescriptionTest {
 
     PythonBinaryBuilder inplaceBinary =
         new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS)
-        .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
+                BuildTargetFactory.newInstance("//:bin"),
+                config,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORMS)
+            .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonBinaryBuilder standaloneBinary =
         new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS)
-        .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
+                BuildTargetFactory.newInstance("//:bin"),
+                config,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORMS)
+            .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
 
@@ -922,8 +856,7 @@ public class PythonBinaryDescriptionTest {
   public void pexToolBuilderAddedToRuntimeDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(
-            TargetGraphFactory.newInstance(),
-            new DefaultTargetNodeToBuildRuleTransformer());
+            TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
 
     ShBinary pyTool =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:py_tool"))
@@ -940,11 +873,11 @@ public class PythonBinaryDescriptionTest {
 
     PythonBinary standaloneBinary =
         new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS)
+                BuildTargetFactory.newInstance("//:bin"),
+                config,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setMainModule("hello")
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
@@ -963,9 +896,7 @@ public class PythonBinaryDescriptionTest {
           PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
               .setMainModule("main")
               .setPackageStyle(packageStyle);
-      TargetGraph targetGraph =
-          TargetGraphFactory.newInstance(
-              pythonBinaryBuilder.build());
+      TargetGraph targetGraph = TargetGraphFactory.newInstance(pythonBinaryBuilder.build());
       BuildRuleResolver resolver =
           new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
       PythonBinary pythonBinaryWithoutDep =
@@ -977,9 +908,7 @@ public class PythonBinaryDescriptionTest {
           new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
       pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
       targetGraph =
-          TargetGraphFactory.newInstance(
-              cxxBinaryBuilder.build(),
-              pythonBinaryBuilder.build());
+          TargetGraphFactory.newInstance(cxxBinaryBuilder.build(), pythonBinaryBuilder.build());
       resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
       cxxBinaryBuilder.build(resolver, filesystem, targetGraph);
       PythonBinary pythonBinaryWithDep =
@@ -1017,9 +946,7 @@ public class PythonBinaryDescriptionTest {
                     .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            libraryABuilder.build(),
-            libraryBBuilder.build(),
-            binaryBuilder.build());
+            libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PythonBinary binary = (PythonBinary) resolver.requireRule(binaryBuilder.getTarget());
@@ -1039,24 +966,24 @@ public class PythonBinaryDescriptionTest {
     SourcePath libASrc = new FakeSourcePath("libA.py");
     PythonLibraryBuilder libraryABuilder =
         new PythonLibraryBuilder(
-            BuildTargetFactory.newInstance("//:libA"),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            cxxPlatforms)
+                BuildTargetFactory.newInstance("//:libA"),
+                PythonTestUtils.PYTHON_PLATFORMS,
+                cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = new FakeSourcePath("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         new PythonLibraryBuilder(
-            BuildTargetFactory.newInstance("//:libB"),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            cxxPlatforms)
+                BuildTargetFactory.newInstance("//:libB"),
+                PythonTestUtils.PYTHON_PLATFORMS,
+                cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonBinaryBuilder binaryBuilder =
         new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            PythonTestUtils.PYTHON_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            cxxPlatforms)
+                BuildTargetFactory.newInstance("//:bin"),
+                PythonTestUtils.PYTHON_CONFIG,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                cxxPlatforms)
             .setMainModule("main")
             .setCxxPlatform(platformA.getFlavor())
             .setPlatformDeps(
@@ -1070,9 +997,7 @@ public class PythonBinaryDescriptionTest {
                     .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            libraryABuilder.build(),
-            libraryBBuilder.build(),
-            binaryBuilder.build());
+            libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PythonBinary binary = (PythonBinary) resolver.requireRule(binaryBuilder.getTarget());
@@ -1093,5 +1018,4 @@ public class PythonBinaryDescriptionTest {
             ruleFinder);
     return ruleKeyFactory.build(rule);
   }
-
 }

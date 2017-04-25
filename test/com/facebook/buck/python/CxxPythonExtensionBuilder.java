@@ -23,15 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class CxxPythonExtensionBuilder
-    extends
-    AbstractCxxSourceBuilder<
-        CxxPythonExtensionDescription.Arg,
-        CxxPythonExtensionDescription,
-        CxxPythonExtension,
+    extends AbstractCxxSourceBuilder<
+        CxxPythonExtensionDescription.Arg, CxxPythonExtensionDescription, CxxPythonExtension,
         CxxPythonExtensionBuilder> {
 
   public CxxPythonExtensionBuilder(
@@ -62,5 +58,4 @@ public class CxxPythonExtensionBuilder
   protected CxxPythonExtensionBuilder getThis() {
     return this;
   }
-
 }

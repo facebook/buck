@@ -20,7 +20,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -29,19 +28,14 @@ public class PythonTestUtils {
   private PythonTestUtils() {}
 
   public static final PythonBuckConfig PYTHON_CONFIG =
-      new PythonBuckConfig(
-          FakeBuckConfig.builder().build(),
-          new ExecutableFinder());
+      new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
 
   public static final PythonPlatform PYTHON_PLATFORM =
       PythonPlatform.of(
           InternalFlavor.of("default"),
-          new PythonEnvironment(
-              Paths.get("python"),
-              PythonVersion.of("CPython", "2.6")),
+          new PythonEnvironment(Paths.get("python"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =
       FlavorDomain.of("python", PYTHON_PLATFORM);
-
 }
