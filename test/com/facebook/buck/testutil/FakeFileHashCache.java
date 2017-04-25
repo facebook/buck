@@ -20,7 +20,6 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -28,9 +27,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * FileHashCache that is populated with a fixed set of entries.
- */
+/** FileHashCache that is populated with a fixed set of entries. */
 public class FakeFileHashCache implements FileHashCache {
 
   private final Map<Path, HashCode> pathsToHashes;
@@ -67,8 +64,7 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   private static FakeFileHashCache createFromStrings(
-      ProjectFilesystem filesystem,
-      Map<String, String> pathsToHashes) {
+      ProjectFilesystem filesystem, Map<String, String> pathsToHashes) {
     Map<Path, HashCode> cachedValues = new HashMap<>();
     for (Map.Entry<String, String> entry : pathsToHashes.entrySet()) {
       // Retain the original behaviour
@@ -130,5 +126,4 @@ public class FakeFileHashCache implements FileHashCache {
   public boolean contains(Path path) {
     return pathsToHashes.containsKey(path);
   }
-
 }

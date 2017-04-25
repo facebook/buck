@@ -21,9 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.martiansoftware.nailgun.NGContext;
-
-import org.ini4j.Ini;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,14 +35,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.tools.ToolProvider;
+import org.ini4j.Ini;
 
 /**
  * Utility to locate the {@code testdata} directory relative to an integration test.
- * <p>
- * Integration tests will often have a sample project layout in a directory under a directory named
- * {@code testdata}. The name of the directory should correspond to the scenario being tested.
+ *
+ * <p>Integration tests will often have a sample project layout in a directory under a directory
+ * named {@code testdata}. The name of the directory should correspond to the scenario being tested.
  */
 public class TestDataHelper {
 
@@ -57,7 +54,6 @@ public class TestDataHelper {
 
   /** Utility class: do not instantiate. */
   private TestDataHelper() {}
-
 
   public static Path getTestDataDirectory(Object testCase) {
     return getTestDataDirectory(testCase.getClass());
@@ -72,14 +68,14 @@ public class TestDataHelper {
 
     parts.add(TESTDATA_DIRECTORY_NAME);
     String[] directories = parts.toArray(new String[0]);
-    Path result =  FileSystems.getDefault().getPath(TEST_DIRECTORY, directories);
+    Path result = FileSystems.getDefault().getPath(TEST_DIRECTORY, directories);
 
     // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
     if (!Files.exists(result)) {
-      result = Paths
-          .get("test")
-          .resolve(testCaseClass.getPackage().getName().replace('.', '/'))
-          .resolve("testdata");
+      result =
+          Paths.get("test")
+              .resolve(testCaseClass.getPackage().getName().replace('.', '/'))
+              .resolve("testdata");
     }
     return result;
   }
@@ -89,28 +85,25 @@ public class TestDataHelper {
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
-      Object testCase,
-      String scenario,
-      TemporaryPaths temporaryRoot) {
+      Object testCase, String scenario, TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new CacheClearingProjectWorkspace(templateDir, temporaryRoot.getRoot());
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
-      Object testCase,
-      String scenario,
-      Path temporaryRoot) {
+      Object testCase, String scenario, Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new CacheClearingProjectWorkspace(templateDir, temporaryRoot);
   }
 
   public static void overrideBuckconfig(
       ProjectWorkspace projectWorkspace,
-      Map<String, ? extends Map<String, String>> buckconfigOverrides) throws IOException {
+      Map<String, ? extends Map<String, String>> buckconfigOverrides)
+      throws IOException {
     String config = projectWorkspace.getFileContents(".buckconfig");
     Ini ini = new Ini(new StringReader(config));
     for (Map.Entry<String, ? extends Map<String, String>> section :
-           buckconfigOverrides.entrySet()) {
+        buckconfigOverrides.entrySet()) {
       for (Map.Entry<String, String> entry : section.getValue().entrySet()) {
         ini.put(section.getKey(), entry.getKey(), entry.getValue());
       }
@@ -130,12 +123,11 @@ public class TestDataHelper {
         Path repoRoot,
         Optional<NGContext> context,
         ImmutableMap<String, String> environmentOverrides,
-        String... args) throws IOException {
-      ProcessResult result = super.runBuckCommandWithEnvironmentOverridesAndContext(
-          repoRoot,
-          context,
-          environmentOverrides,
-          args);
+        String... args)
+        throws IOException {
+      ProcessResult result =
+          super.runBuckCommandWithEnvironmentOverridesAndContext(
+              repoRoot, context, environmentOverrides, args);
 
       // javac has a global cache of zip/jar file content listings. It determines the validity of
       // a given cache entry based on the modification time of the zip file in question. In normal
@@ -145,10 +137,11 @@ public class TestDataHelper {
       // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
       // the compiler and clearing the cache.
       try {
-        Class<?> cacheClass = Class.forName(
-            "com.sun.tools.javac.file.ZipFileIndexCache",
-            false,
-            ToolProvider.getSystemToolClassLoader());
+        Class<?> cacheClass =
+            Class.forName(
+                "com.sun.tools.javac.file.ZipFileIndexCache",
+                false,
+                ToolProvider.getSystemToolClassLoader());
 
         Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
         Method clearCacheMethod = cacheClass.getMethod("clearCache");
@@ -157,11 +150,10 @@ public class TestDataHelper {
         clearCacheMethod.invoke(cache);
 
         return result;
-      } catch (
-          ClassNotFoundException |
-          IllegalAccessException |
-          InvocationTargetException |
-          NoSuchMethodException e) {
+      } catch (ClassNotFoundException
+          | IllegalAccessException
+          | InvocationTargetException
+          | NoSuchMethodException e) {
         throw new RuntimeException(e);
       }
     }

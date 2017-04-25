@@ -16,11 +16,10 @@
 
 package com.facebook.buck.testutil;
 
+import java.util.Optional;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-
-import java.util.Optional;
 
 public class OptionalMatchers {
 
@@ -43,7 +42,6 @@ public class OptionalMatchers {
       public void describeTo(Description description) {
         description.appendText("optional should be empty");
       }
-
     };
   }
 
@@ -71,8 +69,6 @@ public class OptionalMatchers {
       public void describeTo(Description description) {
         description.appendText("optional should contain ").appendDescriptionOf(matcher);
       }
-
     };
   }
-
 }

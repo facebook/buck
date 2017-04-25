@@ -25,7 +25,6 @@ import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -41,8 +40,8 @@ import java.util.Set;
 /**
  * An abstraction for dealing with Zip files. Use it within a try-with-resources block for maximum
  * fun and profit. This differs from {@link java.util.zip.ZipFile} by providing a mechanism to add
- * content to the zip and by not providing a way of extracting individual entries (just the names
- * of the entries).
+ * content to the zip and by not providing a way of extracting individual entries (just the names of
+ * the entries).
  */
 public class Zip implements AutoCloseable {
 
@@ -54,8 +53,8 @@ public class Zip implements AutoCloseable {
   private final Path root;
 
   /**
-   * Open the zip file for reading and/or writing. Note that this constructor will create
-   * {@code zip} if {@code forWriting} is true and the file does not exist.
+   * Open the zip file for reading and/or writing. Note that this constructor will create {@code
+   * zip} if {@code forWriting} is true and the file does not exist.
    *
    * @param zip The zip file to operate on. The name must end with ".zip" or ".jar".
    * @param forWriting Whether the zip file should be opened for writing or not.
@@ -68,8 +67,7 @@ public class Zip implements AutoCloseable {
         "zip".equals(extension) || "jar".equals(extension));
 
     URI uri = URI.create("jar:" + zip.toUri());
-    fs = FileSystems.newFileSystem(
-        uri, ImmutableMap.of("create", String.valueOf(forWriting)));
+    fs = FileSystems.newFileSystem(uri, ImmutableMap.of("create", String.valueOf(forWriting)));
 
     root = Iterables.getFirst(fs.getRootDirectories(), null);
     assertNotNull("Unable to determine root of file system: " + fs, root);
@@ -96,7 +94,9 @@ public class Zip implements AutoCloseable {
 
   public Set<String> getDirNames() throws IOException {
     final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
-    Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+    Files.walkFileTree(
+        root,
+        new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
               throws IOException {
@@ -110,14 +110,17 @@ public class Zip implements AutoCloseable {
 
   public Set<String> getFileNames() throws IOException {
     final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
-    Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        // Skip the leading "/" from the path.
-        contents.add(file.toString().substring(1));
-        return FileVisitResult.CONTINUE;
-      }
-    });
+    Files.walkFileTree(
+        root,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            // Skip the leading "/" from the path.
+            contents.add(file.toString().substring(1));
+            return FileVisitResult.CONTINUE;
+          }
+        });
     return contents.build();
   }
 

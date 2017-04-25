@@ -16,10 +16,8 @@
 
 package com.facebook.buck.testutil;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
 
 public class MoreAssertsTest {
@@ -51,5 +49,4 @@ public class MoreAssertsTest {
     MoreAsserts.assertIterablesEquals(null, null);
     MoreAsserts.assertIterablesEquals(ImmutableList.of(1, 2, 3), ImmutableSortedSet.of(3, 2, 1));
   }
-
 }

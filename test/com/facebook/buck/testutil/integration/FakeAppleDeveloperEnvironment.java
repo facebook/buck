@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Suppliers;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,38 +35,39 @@ public class FakeAppleDeveloperEnvironment {
   private static final Logger LOG = Logger.get(FakeAppleDeveloperEnvironment.class);
 
   // Utility class, do not instantiate.
-  private FakeAppleDeveloperEnvironment() { }
+  private FakeAppleDeveloperEnvironment() {}
 
   private static final int numCodeSigningIdentities =
       CodeSignIdentityStore.fromSystem(
-          new DefaultProcessExecutor(new TestConsole()),
-          CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND)
+              new DefaultProcessExecutor(new TestConsole()),
+              CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND)
           .getIdentities()
           .size();
 
-  private static final boolean hasWildcardProvisioningProfile = Suppliers.memoize(
-      () -> {
-        ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-        final Path searchPath = Paths.get(System.getProperty("user.home") +
-                "/Library/MobileDevice/Provisioning Profiles");
-        if (!Files.exists(searchPath)) {
-          LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
-          return false;
-        }
-        ProvisioningProfileStore store =
-            ProvisioningProfileStore.fromSearchPath(
-                executor,
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                searchPath);
-        Optional<ProvisioningProfileMetadata> profile =
-            store.getBestProvisioningProfile(
-                "*",
-                ApplePlatform.IPHONEOS,
-                ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-                ProvisioningProfileStore.MATCH_ANY_IDENTITY);
-        return profile.isPresent();
-      }).get();
-
+  private static final boolean hasWildcardProvisioningProfile =
+      Suppliers.memoize(
+              () -> {
+                ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+                final Path searchPath =
+                    Paths.get(
+                        System.getProperty("user.home")
+                            + "/Library/MobileDevice/Provisioning Profiles");
+                if (!Files.exists(searchPath)) {
+                  LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
+                  return false;
+                }
+                ProvisioningProfileStore store =
+                    ProvisioningProfileStore.fromSearchPath(
+                        executor, ProvisioningProfileStore.DEFAULT_READ_COMMAND, searchPath);
+                Optional<ProvisioningProfileMetadata> profile =
+                    store.getBestProvisioningProfile(
+                        "*",
+                        ApplePlatform.IPHONEOS,
+                        ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
+                        ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+                return profile.isPresent();
+              })
+          .get();
 
   public static boolean supportsBuildAndInstallToDevice() {
     return supportsCodeSigning() && hasWildcardProvisioningProfile;
@@ -82,11 +82,9 @@ public class FakeAppleDeveloperEnvironment {
     return (numCodeSigningIdentities > 0);
   }
 
-  public static boolean hasDeviceCurrentlyConnected(Path pathToHelper)
-      throws InterruptedException {
-    AppleDeviceHelper helper = new AppleDeviceHelper(
-        new DefaultProcessExecutor(new TestConsole()),
-        pathToHelper);
+  public static boolean hasDeviceCurrentlyConnected(Path pathToHelper) throws InterruptedException {
+    AppleDeviceHelper helper =
+        new AppleDeviceHelper(new DefaultProcessExecutor(new TestConsole()), pathToHelper);
     return (helper.getConnectedDevices().size() > 0);
   }
 }

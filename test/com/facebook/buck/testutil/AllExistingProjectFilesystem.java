@@ -30,5 +30,4 @@ public class AllExistingProjectFilesystem extends FakeProjectFilesystem {
   protected byte[] getFileBytes(Path path) {
     return new byte[0];
   }
-
 }

@@ -20,9 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-/**
- * Unit test for {@link TestConsole}.
- */
+/** Unit test for {@link TestConsole}. */
 public class TestConsoleTest {
 
   @Test

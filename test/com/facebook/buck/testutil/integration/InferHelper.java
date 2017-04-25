@@ -16,11 +16,9 @@
 
 package com.facebook.buck.testutil.integration;
 
-
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -31,35 +29,26 @@ public class InferHelper {
 
   private InferHelper() {}
 
-  public static List<Object>
-  loadInferReport(ProjectWorkspace workspace, String jsonReport) throws IOException {
+  public static List<Object> loadInferReport(ProjectWorkspace workspace, String jsonReport)
+      throws IOException {
     String reportContent = workspace.getFileContents(jsonReport);
     Object[] records = new GsonBuilder().create().fromJson(reportContent, Object[].class);
     return Arrays.asList(records);
   }
 
   public static ProjectWorkspace setupWorkspace(
-      Object testCase,
-      final Path workspaceRoot,
-      String scenarioName) throws IOException {
-    ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
-        testCase,
-        scenarioName,
-        workspaceRoot);
+      Object testCase, final Path workspaceRoot, String scenarioName) throws IOException {
+    ProjectWorkspace projectWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(testCase, scenarioName, workspaceRoot);
     projectWorkspace.setUp();
     return projectWorkspace;
   }
 
   public static ProjectWorkspace setupCxxInferWorkspace(
-      Object testCase,
-      TemporaryPaths temporaryFolder,
-      Optional<String> rawBlacklistRegex) throws IOException {
+      Object testCase, TemporaryPaths temporaryFolder, Optional<String> rawBlacklistRegex)
+      throws IOException {
     return setupCxxInferWorkspace(
-        testCase,
-        temporaryFolder.getRoot(),
-        rawBlacklistRegex,
-        "infertest",
-        Optional.empty());
+        testCase, temporaryFolder.getRoot(), rawBlacklistRegex, "infertest", Optional.empty());
   }
 
   public static ProjectWorkspace setupCxxInferWorkspace(
@@ -67,9 +56,10 @@ public class InferHelper {
       Path temporaryFolder,
       Optional<String> rawBlacklistRegex,
       String scenarioName,
-      Optional<Path> fakeInferRootPathOpt) throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        testCase, scenarioName, temporaryFolder);
+      Optional<Path> fakeInferRootPathOpt)
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(testCase, scenarioName, temporaryFolder);
     workspace.setUp();
 
     Path fakeInferRootPath = fakeInferRootPathOpt.orElse(workspace.getPath("fake-infer"));
@@ -81,10 +71,7 @@ public class InferHelper {
     workspace.setUp();
 
     workspace.writeContentsToPath(
-        new InferConfigGenerator(
-              inferBin,
-              facebookClangPluginsRoot,
-              rawBlacklistRegex)
+        new InferConfigGenerator(inferBin, facebookClangPluginsRoot, rawBlacklistRegex)
             .toBuckConfigLines(),
         ".buckconfig");
 
@@ -92,16 +79,11 @@ public class InferHelper {
   }
 
   public static String[] getCxxCLIConfigurationArgs(
-      Path fakeInferRootPath,
-      Optional<String> rawBlacklistRegex,
-      BuildTarget buildTarget) {
+      Path fakeInferRootPath, Optional<String> rawBlacklistRegex, BuildTarget buildTarget) {
     Path inferBin = fakeInferRootPath.resolve("fake-bin");
     Path facebookClangPluginRoot = fakeInferRootPath.resolve("fake-clang");
-    return new InferConfigGenerator(
-        inferBin,
-        facebookClangPluginRoot,
-        rawBlacklistRegex)
-      .toCrossCellCLIArgs(buildTarget);
+    return new InferConfigGenerator(inferBin, facebookClangPluginRoot, rawBlacklistRegex)
+        .toCrossCellCLIArgs(buildTarget);
   }
 
   private static class InferConfigGenerator {
@@ -112,9 +94,7 @@ public class InferHelper {
     private Optional<String> rawBlacklistRegex;
 
     public InferConfigGenerator(
-        Path inferBin,
-        Path facebookClangPluginRoot,
-        Optional<String> rawBlacklistRegex) {
+        Path inferBin, Path facebookClangPluginRoot, Optional<String> rawBlacklistRegex) {
       this.inferBin = inferBin;
       this.clangCompiler = facebookClangPluginRoot.resolve("fake-clang");
       this.clangPlugin = facebookClangPluginRoot.resolve("fake-plugin");
@@ -122,28 +102,29 @@ public class InferHelper {
     }
 
     public String[] toCrossCellCLIArgs(BuildTarget buildTarget) {
-      ImmutableList<String> baseConfig = ImmutableList.of(
-          buildTarget.getFullyQualifiedName(),
-          "--config",
-          "*//infer.infer_bin=" + inferBin.toString(),
-          "--config",
-          "*//infer.clang_compiler=" + clangCompiler.toString(),
-          "--config",
-          "*//infer.clang_plugin=" + clangPlugin.toString(),
-          "--config",
-          "build.depfiles=cache"
-      );
+      ImmutableList<String> baseConfig =
+          ImmutableList.of(
+              buildTarget.getFullyQualifiedName(),
+              "--config",
+              "*//infer.infer_bin=" + inferBin.toString(),
+              "--config",
+              "*//infer.clang_compiler=" + clangCompiler.toString(),
+              "--config",
+              "*//infer.clang_plugin=" + clangPlugin.toString(),
+              "--config",
+              "build.depfiles=cache");
 
       ImmutableList<String> blacklistRegex = ImmutableList.of();
       if (rawBlacklistRegex.isPresent()) {
-        blacklistRegex = ImmutableList.of(
-            "--config",
-            "*//infer.blacklist_regex=" + rawBlacklistRegex.get()
-        );
+        blacklistRegex =
+            ImmutableList.of("--config", "*//infer.blacklist_regex=" + rawBlacklistRegex.get());
       }
 
-      return ImmutableList.builder().addAll(baseConfig).addAll(blacklistRegex).build().toArray(
-          new String[baseConfig.size() + blacklistRegex.size()]);
+      return ImmutableList.builder()
+          .addAll(baseConfig)
+          .addAll(blacklistRegex)
+          .build()
+          .toArray(new String[baseConfig.size() + blacklistRegex.size()]);
     }
 
     public String toBuckConfigLines() {
@@ -153,17 +134,14 @@ public class InferHelper {
       }
 
       return String.format(
-          "[infer]\n" +
-              "infer_bin = %s\n" +
-              "clang_compiler = %s\n" +
-              "clang_plugin = %s\n" +
-              "%s\n" +
-              "[build]\n" +
-              "depfiles = cache",
-          inferBin.toString(),
-          clangCompiler,
-          clangPlugin,
-          blacklistRegexConfig);
+          "[infer]\n"
+              + "infer_bin = %s\n"
+              + "clang_compiler = %s\n"
+              + "clang_plugin = %s\n"
+              + "%s\n"
+              + "[build]\n"
+              + "depfiles = cache",
+          inferBin.toString(), clangCompiler, clangPlugin, blacklistRegexConfig);
     }
   }
 }

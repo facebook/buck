@@ -21,7 +21,22 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -37,27 +52,7 @@ import org.eclipse.jetty.util.log.JavaUtilLog;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.StdErrLog;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-/**
-* Lightweight wrapper around an httpd to make testing using an httpd nicer.
-*/
+/** Lightweight wrapper around an httpd to make testing using an httpd nicer. */
 public class HttpdForTests implements AutoCloseable {
 
   private final HandlerList handlerList;
@@ -116,8 +111,9 @@ public class HttpdForTests implements AutoCloseable {
   }
 
   public URI getUri(String path) throws URISyntaxException, SocketException {
-    assertTrue("Server must be running before retrieving a URI, otherwise the resulting URI may " +
-            "not have an appropriate port",
+    assertTrue(
+        "Server must be running before retrieving a URI, otherwise the resulting URI may "
+            + "not have an appropriate port",
         isRunning.get());
     URI baseUri;
     try {
@@ -133,13 +129,7 @@ public class HttpdForTests implements AutoCloseable {
     // It turns out that if we got baseUri from Jetty it may have just Made Stuff Up. To avoid this,
     // we only use the scheme and port that Jetty returned.
     return new URI(
-        baseUri.getScheme(), /* user info */
-        null,
-        localhost,
-        baseUri.getPort(),
-        path,
-        null,
-        null);
+        baseUri.getScheme(), /* user info */ null, localhost, baseUri.getPort(), path, null, null);
   }
 
   /**
@@ -205,7 +195,8 @@ public class HttpdForTests implements AutoCloseable {
         String target,
         Request request,
         HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse) throws IOException, ServletException {
+        HttpServletResponse httpServletResponse)
+        throws IOException, ServletException {
       // Use an unusual charset.
       httpServletResponse.getOutputStream().write(content.getBytes(UTF_16));
       request.setHandled(true);
@@ -221,7 +212,8 @@ public class HttpdForTests implements AutoCloseable {
         String target,
         Request request,
         HttpServletRequest httpServletRequest,
-        HttpServletResponse httpServletResponse) throws IOException, ServletException {
+        HttpServletResponse httpServletResponse)
+        throws IOException, ServletException {
       if (!HttpMethod.PUT.is(request.getMethod())) {
         return;
       }

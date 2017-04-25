@@ -19,12 +19,10 @@ package com.facebook.buck.testutil;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
-
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeDiagnosingMatcher;
-
 import java.io.IOException;
 import java.util.HashSet;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
 
@@ -47,9 +45,8 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
         return false;
       }
     } catch (IOException e) {
-      description.appendText(String.format(
-          "could not parse the following into a json object: <%s>",
-          actualJson));
+      description.appendText(
+          String.format("could not parse the following into a json object: <%s>", actualJson));
       return false;
     }
     return true;
@@ -58,17 +55,14 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
   /**
    * Static method which tries to match 2 JsonNode objects recursively.
    *
-   * @param path:        Path to start matching the objects from.
-   * @param expected:    First JsonNode.
-   * @param actual:      Second JsonNode.
+   * @param path: Path to start matching the objects from.
+   * @param expected: First JsonNode.
+   * @param actual: Second JsonNode.
    * @param description: The Description to be appended to.
    * @return true if the 2 objects match, false otherwise.
    */
   private static boolean matchJsonObjects(
-      String path,
-      JsonNode expected,
-      JsonNode actual,
-      Description description) {
+      String path, JsonNode expected, JsonNode actual, Description description) {
     if (expected != null && actual != null && expected.isObject()) {
       if (!actual.isObject()) {
         description.appendText(String.format("the JsonNodeType is not OBJECT at path [%s]", path));
@@ -83,17 +77,15 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
           return false;
         }
         if (!matchJsonObjects(
-            path + "/" + field,
-            expected.get(field),
-            actual.get(field),
-            description)) {
+            path + "/" + field, expected.get(field), actual.get(field), description)) {
           return false;
         }
       }
       if (!Sets.newHashSet().equals(Sets.difference(actualFields, expectedFields))) {
-        description.appendText(String.format(
-            "found unexpected fields %s at path [%s]",
-            Sets.difference(actualFields, expectedFields).toString(), path));
+        description.appendText(
+            String.format(
+                "found unexpected fields %s at path [%s]",
+                Sets.difference(actualFields, expectedFields).toString(), path));
         return false;
       }
     }
@@ -108,5 +100,4 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
   public void describeTo(Description description) {
     description.appendText(String.format("Json string: <%s>", expectedJson));
   }
-
 }

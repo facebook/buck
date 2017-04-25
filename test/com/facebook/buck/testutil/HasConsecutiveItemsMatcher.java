@@ -18,21 +18,20 @@ package com.facebook.buck.testutil;
 
 import static org.hamcrest.core.IsEqual.equalTo;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeDiagnosingMatcher;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 /**
  * Hamcrest matcher which checks if a collection contains another collection's items in order
  * inside.
  *
- * Unlike isIn(), contains(), and containsInAnyOrder(), this matcher matches if the
- * items to match are found in order with no gaps anywhere inside the collection.
+ * <p>Unlike isIn(), contains(), and containsInAnyOrder(), this matcher matches if the items to
+ * match are found in order with no gaps anywhere inside the collection.
  */
 public class HasConsecutiveItemsMatcher<T>
     extends TypeSafeDiagnosingMatcher<Collection<? extends T>> {
@@ -44,8 +43,7 @@ public class HasConsecutiveItemsMatcher<T>
 
   @Override
   public boolean matchesSafely(
-      Collection<? extends T> itemsToMatch,
-      Description mismatchDescription) {
+      Collection<? extends T> itemsToMatch, Description mismatchDescription) {
     List<? extends T> itemsToMatchList = new ArrayList<>(itemsToMatch);
 
     for (int i = 0; i <= itemsToMatchList.size() - matchers.size(); i++) {

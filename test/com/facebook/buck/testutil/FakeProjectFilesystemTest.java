@@ -30,10 +30,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -52,11 +48,12 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class FakeProjectFilesystemTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testFilesystemReturnsAddedContents() throws IOException {
@@ -70,8 +67,7 @@ public class FakeProjectFilesystemTest {
 
     contents = filesystem.readFileIfItExists(Paths.get("B.txt"));
     assertFalse(
-        "Fake file system must not return non-existing file contents",
-        contents.isPresent());
+        "Fake file system must not return non-existing file contents", contents.isPresent());
   }
 
   @Test
@@ -82,20 +78,14 @@ public class FakeProjectFilesystemTest {
     filesystem.writeContentsToPath("\n", Paths.get("C.txt"));
 
     MoreAsserts.assertIterablesEquals(
-        ImmutableList.of("line one.", "line two."),
-        filesystem.readLines(Paths.get("A.txt")));
+        ImmutableList.of("line one.", "line two."), filesystem.readLines(Paths.get("A.txt")));
+
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), filesystem.readLines(Paths.get("B.txt")));
 
     MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(),
-        filesystem.readLines(Paths.get("B.txt")));
+        ImmutableList.of(""), filesystem.readLines(Paths.get("C.txt")));
 
-    MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(""),
-        filesystem.readLines(Paths.get("C.txt")));
-
-    MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(),
-        filesystem.readLines(Paths.get("D.txt")));
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), filesystem.readLines(Paths.get("D.txt")));
   }
 
   @Test
@@ -117,27 +107,25 @@ public class FakeProjectFilesystemTest {
 
     final List<Path> filesVisited = new ArrayList<>();
 
-    FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
-        filesVisited.add(path);
-        return FileVisitResult.CONTINUE;
-      }
-    };
+    FileVisitor<Path> fileVisitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+            filesVisited.add(path);
+            return FileVisitResult.CONTINUE;
+          }
+        };
 
     filesystem.walkRelativeFileTree(Paths.get("root"), fileVisitor);
     assertThat(
-        filesVisited, containsInAnyOrder(
-            Paths.get("root/A.txt"),
-            Paths.get("root/A/B/C.txt"),
-            Paths.get("root/A/B.txt")));
+        filesVisited,
+        containsInAnyOrder(
+            Paths.get("root/A.txt"), Paths.get("root/A/B/C.txt"), Paths.get("root/A/B.txt")));
 
     filesVisited.clear();
     filesystem.walkRelativeFileTree(Paths.get("root/A"), fileVisitor);
     assertThat(
-        filesVisited, containsInAnyOrder(
-            Paths.get("root/A/B/C.txt"),
-            Paths.get("root/A/B.txt")));
+        filesVisited, containsInAnyOrder(Paths.get("root/A/B/C.txt"), Paths.get("root/A/B.txt")));
   }
 
   @Test
@@ -147,13 +135,14 @@ public class FakeProjectFilesystemTest {
 
     final List<Path> filesVisited = new ArrayList<>();
 
-    FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
-        filesVisited.add(path);
-        return FileVisitResult.CONTINUE;
-      }
-    };
+    FileVisitor<Path> fileVisitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+            filesVisited.add(path);
+            return FileVisitResult.CONTINUE;
+          }
+        };
 
     filesystem.walkRelativeFileTree(Paths.get("A.txt"), fileVisitor);
 
@@ -166,8 +155,8 @@ public class FakeProjectFilesystemTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path path = Paths.get("hello.txt");
     filesystem.writeContentsToPath("hello world", path);
-    InputStreamReader reader = new InputStreamReader(
-        filesystem.newFileInputStream(path), Charsets.UTF_8);
+    InputStreamReader reader =
+        new InputStreamReader(filesystem.newFileInputStream(path), Charsets.UTF_8);
     String contents = CharStreams.toString(reader);
     assertEquals("hello world", contents);
   }
@@ -190,17 +179,14 @@ public class FakeProjectFilesystemTest {
   public void testWriteContentsWithSpecifiedFileAttributes() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableSet<PosixFilePermission> permissions =
-      ImmutableSet.of(
-          PosixFilePermission.OWNER_READ,
-          PosixFilePermission.GROUP_READ,
-          PosixFilePermission.OTHERS_READ);
+        ImmutableSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_READ);
     FileAttribute<?> attribute = PosixFilePermissions.asFileAttribute(permissions);
 
     Path path = Paths.get("hello.txt");
-    filesystem.writeContentsToPath(
-        "hello world",
-        Paths.get("hello.txt"),
-        attribute);
+    filesystem.writeContentsToPath("hello world", Paths.get("hello.txt"), attribute);
     assertEquals(ImmutableSet.of(attribute), filesystem.getFileAttributesAtPath(path));
   }
 
@@ -300,9 +286,8 @@ public class FakeProjectFilesystemTest {
     filesystem.mkdirs(Paths.get("foo/bar/baz"));
     assertEquals(filesystem.getLastModifiedTime(Paths.get("foo")), FileTime.fromMillis(49152));
     assertEquals(filesystem.getLastModifiedTime(Paths.get("foo/bar")), FileTime.fromMillis(49152));
-    assertEquals(filesystem.getLastModifiedTime(
-        Paths.get("foo/bar/baz")),
-        FileTime.fromMillis(49152));
+    assertEquals(
+        filesystem.getLastModifiedTime(Paths.get("foo/bar/baz")), FileTime.fromMillis(49152));
   }
 
   @Test
@@ -352,9 +337,7 @@ public class FakeProjectFilesystemTest {
 
     assertEquals(
         ImmutableSet.of(c, b, a),
-        filesystem.getMtimeSortedMatchingDirectoryContents(
-            Paths.get("foo"),
-            "*.txt"));
+        filesystem.getMtimeSortedMatchingDirectoryContents(Paths.get("foo"), "*.txt"));
   }
 
   @Test
@@ -365,9 +348,7 @@ public class FakeProjectFilesystemTest {
     filesystem.touch(bar);
     filesystem.touch(baz);
 
-    assertEquals(
-        ImmutableSet.of(bar, baz),
-        filesystem.getFilesUnderPath(Paths.get("foo")));
+    assertEquals(ImmutableSet.of(bar, baz), filesystem.getFilesUnderPath(Paths.get("foo")));
   }
 
   @Test
@@ -429,9 +410,7 @@ public class FakeProjectFilesystemTest {
     filesystem.touch(Paths.get("bar/bbbb"));
 
     AccumulatingFileVisitor visitor = new AccumulatingFileVisitor();
-    filesystem.walkRelativeFileTree(
-        Paths.get(""),
-        visitor);
+    filesystem.walkRelativeFileTree(Paths.get(""), visitor);
     assertThat(
         visitor.getSeen(),
         contains(
@@ -439,8 +418,7 @@ public class FakeProjectFilesystemTest {
             Paths.get("bar/bbbb"),
             Paths.get("bar/cccc"),
             Paths.get("foo/aaaa"),
-            Paths.get("foo/bbbb")
-            ));
+            Paths.get("foo/bbbb")));
   }
 
   @Test
@@ -478,18 +456,13 @@ public class FakeProjectFilesystemTest {
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(
-        Path dir,
-        BasicFileAttributes attrs)
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
         throws IOException {
       return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult visitFile(
-        Path file,
-        BasicFileAttributes attrs)
-        throws IOException {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       seen.add(file);
       return FileVisitResult.CONTINUE;
     }
@@ -506,7 +479,5 @@ public class FakeProjectFilesystemTest {
       }
       return FileVisitResult.CONTINUE;
     }
-
   }
-
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
-
 import java.util.Optional;
 
 public class TestBuildEnvironmentDescription {
@@ -35,7 +34,5 @@ public class TestBuildEnvironmentDescription {
           .setJsonProtocolVersion(1)
           .build();
 
-  private TestBuildEnvironmentDescription() {
-
-  }
+  private TestBuildEnvironmentDescription() {}
 }

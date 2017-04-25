@@ -25,15 +25,13 @@ import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
-
-import org.hamcrest.Matchers;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.hamcrest.Matchers;
 
 public class ZipInspector {
 
@@ -61,7 +59,7 @@ public class ZipInspector {
     assertThat(zipFileEntries, not(hasItem((pathRelativeToRoot))));
   }
 
-  public void assertFilesDoNotExist(String...pathsRelativeToRoot) {
+  public void assertFilesDoNotExist(String... pathsRelativeToRoot) {
     for (String path : pathsRelativeToRoot) {
       assertFileDoesNotExist(path);
     }
@@ -88,9 +86,7 @@ public class ZipInspector {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
       long crc = entry.getCrc();
-      Preconditions.checkState(crc != -1,
-          "Error accessing crc for entry: %s",
-          pathRelativeToRoot);
+      Preconditions.checkState(crc != -1, "Error accessing crc for entry: %s", pathRelativeToRoot);
       return crc;
     }
   }
@@ -99,9 +95,8 @@ public class ZipInspector {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
       long size = entry.getSize();
-      Preconditions.checkState(size != -1,
-          "Error accessing size for entry: %s",
-          pathRelativeToRoot);
+      Preconditions.checkState(
+          size != -1, "Error accessing size for entry: %s", pathRelativeToRoot);
       return size;
     }
   }

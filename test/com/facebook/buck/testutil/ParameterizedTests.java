@@ -22,14 +22,12 @@ public class ParameterizedTests {
 
   private ParameterizedTests() {}
 
-  /**
-   * @return the cross-product of the input iterables, useful for parameterized tests.
-   */
+  /** @return the cross-product of the input iterables, useful for parameterized tests. */
   public static ImmutableList<Object[]> getPermutations(
       ImmutableList<? extends Iterable<?>> iterables) {
     ImmutableList.Builder<Object[]> perms = ImmutableList.builder();
     if (iterables.size() == 1) {
-      iterables.get(0).forEach(o -> perms.add(new Object[]{o}));
+      iterables.get(0).forEach(o -> perms.add(new Object[] {o}));
     } else if (iterables.size() > 1) {
       ImmutableList<Object[]> childPerms = getPermutations(iterables.subList(1, iterables.size()));
       for (Object object : iterables.get(0)) {
@@ -47,5 +45,4 @@ public class ParameterizedTests {
   public static ImmutableList<Object[]> getPermutations(Iterable<?>... iterables) {
     return getPermutations(ImmutableList.copyOf(iterables));
   }
-
 }

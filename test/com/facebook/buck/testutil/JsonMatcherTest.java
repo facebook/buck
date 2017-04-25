@@ -54,5 +54,4 @@ public class JsonMatcherTest {
     json2 = "{\"a\":{\"b\":1}, \"c\":\"d\", \"e\":[1, 2], \"f\": null}";
     assertThat(json1, not(new JsonMatcher(json2)));
   }
-
 }

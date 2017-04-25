@@ -20,31 +20,25 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * FileHashCache that is populated with a fixed set of entries.
- */
+/** FileHashCache that is populated with a fixed set of entries. */
 public class FakeProjectFileHashCache implements ProjectFileHashCache {
 
   private final ProjectFilesystem filesystem;
   private final Map<Path, HashCode> pathsToHashes;
 
-  public FakeProjectFileHashCache(
-      ProjectFilesystem filesystem,
-      Map<Path, HashCode> pathsToHashes) {
+  public FakeProjectFileHashCache(ProjectFilesystem filesystem, Map<Path, HashCode> pathsToHashes) {
     this.filesystem = filesystem;
     this.pathsToHashes = pathsToHashes;
   }
 
   public static FakeProjectFileHashCache createFromStrings(
-      ProjectFilesystem filesystem,
-      Map<String, String> pathsToHashes) {
+      ProjectFilesystem filesystem, Map<String, String> pathsToHashes) {
     Map<Path, HashCode> cachedValues = new HashMap<>();
     for (Map.Entry<String, String> entry : pathsToHashes.entrySet()) {
       cachedValues.put(filesystem.getPath(entry.getKey()), HashCode.fromString(entry.getValue()));
@@ -104,5 +98,4 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
   public boolean contains(Path path) {
     return pathsToHashes.containsKey(path);
   }
-
 }

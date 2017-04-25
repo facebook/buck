@@ -17,16 +17,13 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.zip.CustomZipOutputStream;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 
-/**
- * A simple {@link CustomZipOutputStream} for testing purposes.
- */
+/** A simple {@link CustomZipOutputStream} for testing purposes. */
 public class TestCustomZipOutputStream extends CustomZipOutputStream {
   private static class Impl implements CustomZipOutputStream.Impl {
     private ZipEntry currentEntry;
@@ -52,8 +49,7 @@ public class TestCustomZipOutputStream extends CustomZipOutputStream {
     }
 
     @Override
-    public void actuallyClose() throws IOException {
-    }
+    public void actuallyClose() throws IOException {}
   }
 
   private final Impl impl;
@@ -66,7 +62,6 @@ public class TestCustomZipOutputStream extends CustomZipOutputStream {
     super(impl);
     this.impl = impl;
   }
-
 
   public List<ZipEntry> getZipEntries() {
     return impl.zipEntries;

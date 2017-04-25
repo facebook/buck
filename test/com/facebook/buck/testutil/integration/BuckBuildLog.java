@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +43,10 @@ import java.util.regex.Pattern;
 public class BuckBuildLog {
 
   private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
-      Pattern.compile(".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) " +
-              "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)" +
-              "(?: I(?<InputRuleKey>\\S+))?");
+      Pattern.compile(
+          ".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) "
+              + "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)"
+              + "(?: I(?<InputRuleKey>\\S+))?");
 
   private final Path root;
   private final Map<BuildTarget, BuildLogEntry> buildLogEntries;
@@ -72,8 +72,10 @@ public class BuckBuildLog {
   public void assertTargetIsAbsent(String buildTargetRaw) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
-      fail(String.format("Build target %s was not expected in log, but found result: %s",
-          buildTargetRaw, buildLogEntries.get(buildTarget)));
+      fail(
+          String.format(
+              "Build target %s was not expected in log, but found result: %s",
+              buildTargetRaw, buildLogEntries.get(buildTarget)));
     }
   }
 
@@ -145,11 +147,10 @@ public class BuckBuildLog {
         successType = BuildRuleSuccessType.valueOf(successTypeRaw);
       }
 
-      builder.put(buildTarget, new BuildLogEntry(
-              status,
-              Optional.ofNullable(successType),
-              Optional.ofNullable(cacheResult),
-              ruleKey));
+      builder.put(
+          buildTarget,
+          new BuildLogEntry(
+              status, Optional.ofNullable(successType), Optional.ofNullable(cacheResult), ruleKey));
     }
 
     return new BuckBuildLog(root, builder.build());
@@ -159,22 +160,21 @@ public class BuckBuildLog {
     BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertThat(
         String.format("%s should have succeeded", buildTargetRaw),
-        logEntry.getStatus(), is(BuildRuleStatus.SUCCESS));
+        logEntry.getStatus(),
+        is(BuildRuleStatus.SUCCESS));
     assertThat(
-        String.format(
-            "%s has %s",
-            buildTargetRaw,
-            logEntry),
-        logEntry.successType.get(), is(expectedType));
+        String.format("%s has %s", buildTargetRaw, logEntry),
+        logEntry.successType.get(),
+        is(expectedType));
   }
 
   public void assertNoLogEntry(String buildTargetRaw) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
-      fail(String.format(
-          "Was expecting no log entry for %s, but found: %s",
-          buildTargetRaw,
-          buildLogEntries.get(buildTarget)));
+      fail(
+          String.format(
+              "Was expecting no log entry for %s, but found: %s",
+              buildTargetRaw, buildLogEntries.get(buildTarget)));
     }
   }
 
@@ -230,7 +230,5 @@ public class BuckBuildLog {
           .add("ruleKeyHashCode", ruleKeyHashCode)
           .toString();
     }
-
   }
-
 }

@@ -24,7 +24,6 @@ import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGInputStream;
-
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
@@ -34,9 +33,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.Set;
 
-/**
- * NGContext test double.
- */
+/** NGContext test double. */
 public class TestContext extends NGContext implements Closeable {
 
   private Properties properties;
@@ -44,40 +41,32 @@ public class TestContext extends NGContext implements Closeable {
   private CapturingPrintStream serverLog;
   private boolean addListeners;
 
-  /**
-   * Simulates client that never disconnects, with normal system environment.
-   */
+  /** Simulates client that never disconnects, with normal system environment. */
   public TestContext() {
-    this(
-        ImmutableMap.copyOf(System.getenv()),
-        createDisconnectionStream(0),
-        0);
+    this(ImmutableMap.copyOf(System.getenv()), createDisconnectionStream(0), 0);
     addListeners = false; // Only track disconnections when input stream supplied.
   }
 
-  /**
-   * Simulates client that never disconnects, with given environment.
-   */
+  /** Simulates client that never disconnects, with given environment. */
   public TestContext(ImmutableMap<String, String> environment) {
-    this(environment,
-        createDisconnectionStream(0),
-        0);
+    this(environment, createDisconnectionStream(0), 0);
     addListeners = false; // Only track disconnections when input stream supplied.
   }
 
   /**
-   * Simulates client connected to given stream, with given timeout and environment.
-   * If stream blocks for longer than timeout, or throws an exception, a client disconnection
-   * is triggered as normal.
+   * Simulates client connected to given stream, with given timeout and environment. If stream
+   * blocks for longer than timeout, or throws an exception, a client disconnection is triggered as
+   * normal.
    */
-  public TestContext(ImmutableMap<String, String> environment,
-      InputStream clientStream,
-      long timeoutMillis) {
+  public TestContext(
+      ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
     serverLog = new CapturingPrintStream();
-    in = new NGInputStream(
-        new DataInputStream(Preconditions.checkNotNull(clientStream)),
-        new DataOutputStream(new ByteArrayOutputStream(0)),
-        serverLog, (int) timeoutMillis);
+    in =
+        new NGInputStream(
+            new DataInputStream(Preconditions.checkNotNull(clientStream)),
+            new DataOutputStream(new ByteArrayOutputStream(0)),
+            serverLog,
+            (int) timeoutMillis);
     out = new CapturingPrintStream();
     err = new CapturingPrintStream();
     setExitStream(new CapturingPrintStream());
@@ -110,9 +99,7 @@ public class TestContext extends NGContext implements Closeable {
     }
   }
 
-  /**
-   * Generates heartbeat chunks at a given interval.
-   */
+  /** Generates heartbeat chunks at a given interval. */
   public static InputStream createHeartBeatStream(final long heartbeatIntervalMillis) {
     return new InputStream() {
       private final int bytesPerHeartbeat = 5;
@@ -129,7 +116,6 @@ public class TestContext extends NGContext implements Closeable {
       }
     };
   }
-
 
   /**
    * @param disconnectMillis duration to wait before generating IOException.
@@ -153,5 +139,4 @@ public class TestContext extends NGContext implements Closeable {
   public void close() throws IOException {
     in.close();
   }
-
 }

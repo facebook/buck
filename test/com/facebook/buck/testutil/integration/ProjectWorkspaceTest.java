@@ -21,19 +21,16 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ProjectWorkspaceTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
   public void testWriteContentsToPath() throws IOException {

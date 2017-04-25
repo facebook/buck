@@ -32,9 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Assert;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -45,12 +42,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
+import org.junit.Assert;
 
-/**
- * Additional assertions that delegate to JUnit assertions, but with better error messages.
- */
+/** Additional assertions that delegate to JUnit assertions, but with better error messages. */
 public final class MoreAsserts {
 
   private static final int BUFFER_SIZE = 8 * 1024;
@@ -58,8 +53,8 @@ public final class MoreAsserts {
   private MoreAsserts() {}
 
   /**
-   * Asserts that two sets have the same contents.
-   * On failure, prints a readable diff of the two sets for easy debugging.
+   * Asserts that two sets have the same contents. On failure, prints a readable diff of the two
+   * sets for easy debugging.
    */
   public static <E> void assertSetEquals(Set<E> expected, Set<E> actual) {
     Set<E> missing = Sets.difference(expected, actual);
@@ -70,22 +65,14 @@ public final class MoreAsserts {
         setsEqual);
   }
 
-  /**
-   * @see #assertIterablesEquals(Iterable, Iterable)
-   */
-  public static <T extends List<?>> void assertListEquals(
-      List<?> expected,
-      List<?> observed) {
+  /** @see #assertIterablesEquals(Iterable, Iterable) */
+  public static <T extends List<?>> void assertListEquals(List<?> expected, List<?> observed) {
     assertIterablesEquals(expected, observed);
   }
 
-  /**
-   * @see #assertIterablesEquals(String, Iterable, Iterable)
-   */
+  /** @see #assertIterablesEquals(String, Iterable, Iterable) */
   public static <T extends List<?>> void assertListEquals(
-      String userMessage,
-      List<?> expected,
-      List<?> observed) {
+      String userMessage, List<?> expected, List<?> observed) {
     assertIterablesEquals(userMessage, expected, observed);
   }
 
@@ -94,8 +81,7 @@ public final class MoreAsserts {
    * fails, the message includes information about where the iterables differ.
    */
   public static <T extends Iterable<?>> void assertIterablesEquals(
-      Iterable<?> expected,
-      Iterable<?> observed) {
+      Iterable<?> expected, Iterable<?> observed) {
     assertIterablesEquals("" /* userMessage */, expected, observed);
   }
 
@@ -104,18 +90,17 @@ public final class MoreAsserts {
    * assertion fails, the message includes information about where the iterables differ.
    */
   public static <T extends Iterable<?>> void assertIterablesEquals(
-      String userMessage,
-      Iterable<?> expected,
-      Iterable<?> observed) {
+      String userMessage, Iterable<?> expected, Iterable<?> observed) {
     // The traditional assertEquals() method should be fine if either List is null.
     if (expected == null || observed == null) {
       assertEquals(userMessage, expected, observed);
       return;
     }
 
-    String errmsgPart = String.format("expected:[%s] observed:[%s]",
-        Joiner.on(", ").join(expected),
-        Joiner.on(", ").join(observed));
+    String errmsgPart =
+        String.format(
+            "expected:[%s] observed:[%s]",
+            Joiner.on(", ").join(expected), Joiner.on(", ").join(observed));
 
     // Compare each item in the list, one at a time.
     Iterator<?> expectedIter = expected.iterator();
@@ -123,14 +108,22 @@ public final class MoreAsserts {
     int index = 0;
     while (expectedIter.hasNext()) {
       if (!observedIter.hasNext()) {
-        fail(prefixWithUserMessage(userMessage, "Item " + index + " does not exist in the " +
-                "observed list (" + errmsgPart + "): " + expectedIter.next()));
+        fail(
+            prefixWithUserMessage(
+                userMessage,
+                "Item "
+                    + index
+                    + " does not exist in the "
+                    + "observed list ("
+                    + errmsgPart
+                    + "): "
+                    + expectedIter.next()));
       }
       Object expectedItem = expectedIter.next();
       Object observedItem = observedIter.next();
       assertEquals(
-          prefixWithUserMessage(userMessage, "Item " + index + " in the lists should match (" +
-              errmsgPart + ")."),
+          prefixWithUserMessage(
+              userMessage, "Item " + index + " in the lists should match (" + errmsgPart + ")."),
           expectedItem,
           observedItem);
       ++index;
@@ -146,15 +139,12 @@ public final class MoreAsserts {
   }
 
   public static <Item, Container extends Iterable<Item>> void assertContainsOne(
-      Container container,
-      Item expectedItem) {
+      Container container, Item expectedItem) {
     assertContainsOne(/* userMessage */ Iterables.toString(container), container, expectedItem);
   }
 
   public static <Item, Container extends Iterable<Item>> void assertContainsOne(
-      String userMessage,
-      Container container,
-      Item expectedItem) {
+      String userMessage, Container container, Item expectedItem) {
     int seen = 0;
     for (Item item : container) {
       if (expectedItem.equals(item)) {
@@ -162,27 +152,28 @@ public final class MoreAsserts {
       }
     }
     if (seen < 1) {
-      failWith(userMessage, "Item '" + expectedItem + "' not found in container, " +
-          "expected to find one.");
+      failWith(
+          userMessage,
+          "Item '" + expectedItem + "' not found in container, " + "expected to find one.");
     }
     if (seen > 1) {
       failWith(
           userMessage,
-          "Found " + Integer.valueOf(seen) + " occurrences of '" + expectedItem +
-              "' in container, expected to find only one.");
+          "Found "
+              + Integer.valueOf(seen)
+              + " occurrences of '"
+              + expectedItem
+              + "' in container, expected to find only one.");
     }
   }
 
   /**
-   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a
-   * {@link com.facebook.buck.shell.ShellStep} whose shell
-   * command arguments match those of the corresponding entry in the expected list.
+   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a {@link
+   * com.facebook.buck.shell.ShellStep} whose shell command arguments match those of the
+   * corresponding entry in the expected list.
    */
   public static void assertShellCommands(
-      String userMessage,
-      List<String> expected,
-      List<Step> observed,
-      ExecutionContext context) {
+      String userMessage, List<String> expected, List<Step> observed, ExecutionContext context) {
     Iterator<String> expectedIter = expected.iterator();
     Iterator<Step> observedIter = observed.iterator();
     Joiner joiner = Joiner.on(" ");
@@ -215,13 +206,12 @@ public final class MoreAsserts {
       List<String> expectedStepDescriptions,
       List<Step> observedSteps,
       final ExecutionContext executionContext) {
-    ImmutableList<String> commands = observedSteps.stream()
-        .map(step -> step.getDescription(executionContext))
-        .collect(MoreCollectors.toImmutableList());
-    assertListEquals(
-        userMessage,
-        expectedStepDescriptions,
-        commands);
+    ImmutableList<String> commands =
+        observedSteps
+            .stream()
+            .map(step -> step.getDescription(executionContext))
+            .collect(MoreCollectors.toImmutableList());
+    assertListEquals(userMessage, expectedStepDescriptions, commands);
   }
 
   public static void assertDepends(String userMessage, BuildRule rule, BuildRule dep) {
@@ -233,9 +223,7 @@ public final class MoreAsserts {
   }
 
   public static void assertDepends(
-      String userMessage,
-      Collection<BuildRule> ruleDeps,
-      BuildTarget dep) {
+      String userMessage, Collection<BuildRule> ruleDeps, BuildTarget dep) {
     for (BuildRule realDep : ruleDeps) {
       BuildTarget target = realDep.getBuildTarget();
       if (target.equals(dep)) {
@@ -246,9 +234,7 @@ public final class MoreAsserts {
   }
 
   public static <T> void assertOptionalValueEquals(
-      String userMessage,
-      T expectedValue,
-      Optional<T> optionalValue) {
+      String userMessage, T expectedValue, Optional<T> optionalValue) {
     if (!optionalValue.isPresent()) {
       failWith(userMessage, "Optional value is not present.");
     }
@@ -265,14 +251,13 @@ public final class MoreAsserts {
     }
 
     if (Files.size(one) != Files.size(two)) {
-      fail(String.format(
+      fail(
+          String.format(
               "File sizes differ: %s (%d bytes), %s (%d bytes)",
-              one, Files.size(one),
-              two, Files.size(two)));
+              one, Files.size(one), two, Files.size(two)));
     }
 
-    try (
-        InputStream ois = Files.newInputStream(one);
+    try (InputStream ois = Files.newInputStream(one);
         InputStream tis = Files.newInputStream(two)) {
       byte[] bo = new byte[BUFFER_SIZE];
       byte[] bt = new byte[BUFFER_SIZE];
@@ -306,19 +291,13 @@ public final class MoreAsserts {
   }
 
   private static List<String> chunkify(String data) {
-    return RichStream
-        .from(
-            Iterables.partition(
-                Arrays.asList(data.split("\\n")),
-                1000))
+    return RichStream.from(Iterables.partition(Arrays.asList(data.split("\\n")), 1000))
         .map((l) -> Joiner.on("\n").join(l))
         .toImmutableList();
   }
 
   private static String prefixWithUserMessage(
-      @Nullable String userMessage,
-      String message,
-      Object... formatArgs) {
+      @Nullable String userMessage, String message, Object... formatArgs) {
     return (userMessage == null ? "" : userMessage + " ") + String.format(message, formatArgs);
   }
 
