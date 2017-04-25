@@ -16,9 +16,9 @@
 
 package com.facebook.buck.crosscell;
 
-import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static com.facebook.buck.android.AndroidNdkHelper.SymbolGetter;
 import static com.facebook.buck.android.AndroidNdkHelper.SymbolsAndDtNeeded;
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.containsString;
@@ -47,11 +47,11 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -73,12 +73,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.hamcrest.Matchers;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -89,21 +83,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import org.hamcrest.Matchers;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 
-/**
- * Cross-cell related integration tests that don't fit anywhere else.
- */
+/** Cross-cell related integration tests that don't fit anywhere else. */
 public class InterCellIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void ensureThatNormalBuildsWorkAsExpected() throws IOException {
-    ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "inter-cell/export-file/secondary",
-        tmp);
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "inter-cell/export-file/secondary", tmp);
     secondary.setUp();
 
     ProjectWorkspace.ProcessResult result = secondary.runBuckBuild("//:hello");
@@ -113,9 +107,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void shouldBeAbleToUseAnExportFileXRepoTarget() throws IOException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
@@ -135,19 +128,15 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToUseTargetsCommandXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "//:cxxbinary");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
     result.assertSuccess();
 
-    ProjectWorkspace.ProcessResult result2 = primary.runBuckCommand(
-        "targets",
-        "secondary//:cxxlib");
+    ProjectWorkspace.ProcessResult result2 =
+        primary.runBuckCommand("targets", "secondary//:cxxlib");
     result2.assertSuccess();
   }
 
@@ -169,23 +158,18 @@ public class InterCellIntegrationTest {
     secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
     ternary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib2");
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
-        "query",
-        "deps(%s)",
-        "//:cxxbinary");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckCommand("query", "deps(%s)", "//:cxxbinary");
     result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(primary.getFileContents("stdout-cross-cell-dep")));
+    assertThat(result.getStdout(), is(primary.getFileContents("stdout-cross-cell-dep")));
   }
 
   @Test
   public void shouldBeAbleToUseProjectCommandXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand("project", "//:cxxbinary");
@@ -197,9 +181,8 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToUseACxxLibraryXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
     ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
@@ -230,9 +213,8 @@ public class InterCellIntegrationTest {
   public void xCellCxxLibraryBuildsShouldBeHermetic() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
@@ -241,9 +223,7 @@ public class InterCellIntegrationTest {
     ImmutableMap<String, HashCode> firstObjectFiles = findObjectFiles(secondary);
 
     // Now recreate an identical checkout
-    cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    cells = prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     primary = cells.getFirst();
     secondary = cells.getSecond();
 
@@ -262,16 +242,19 @@ public class InterCellIntegrationTest {
     final Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
     final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
-    Files.walkFileTree(buckOut, new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (MorePaths.getFileExtension(file).equals("o")) {
-          HashCode hash = MorePaths.asByteSource(file).hash(Hashing.sha1());
-          objectHashCodes.put(buckOut.relativize(file).toString(), hash);
-        }
-        return FileVisitResult.CONTINUE;
-      }
-    });
+    Files.walkFileTree(
+        buckOut,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            if (MorePaths.getFileExtension(file).equals("o")) {
+              HashCode hash = MorePaths.asByteSource(file).hash(Hashing.sha1());
+              objectHashCodes.put(buckOut.relativize(file).toString(), hash);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     ImmutableMap<String, HashCode> toReturn = objectHashCodes.build();
     Preconditions.checkState(!toReturn.isEmpty());
@@ -280,9 +263,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void shouldBeAbleToUseAJavaLibraryTargetXCell() throws IOException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/java/primary",
-        "inter-cell/java/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
     primary.runBuckBuild("//:lib").assertSuccess();
@@ -291,9 +273,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void buildFileNamesCanBeDifferentCrossCell() throws IOException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/build-file-names/primary",
-        "inter-cell/build-file-names/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/build-file-names/primary", "inter-cell/build-file-names/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
@@ -341,9 +322,8 @@ public class InterCellIntegrationTest {
 
   private void parseTargetForXCellVisibility(String targetName)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/visibility/primary",
-        "inter-cell/visibility/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/visibility/primary", "inter-cell/visibility/secondary");
 
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
@@ -353,17 +333,17 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    Parser parser = new Parser(
-        new BroadcastEventListener(),
-        primary.asCell().getBuckConfig().getView(ParserConfig.class),
-        coercerFactory,
-        new ConstructorArgMarshaller(coercerFactory));
+    Parser parser =
+        new Parser(
+            new BroadcastEventListener(),
+            primary.asCell().getBuckConfig().getView(ParserConfig.class),
+            coercerFactory,
+            new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Cell primaryCell = primary.asCell();
-    BuildTarget namedTarget = BuildTargetFactory.newInstance(
-        primaryCell.getFilesystem().getRootPath(),
-        targetName);
+    BuildTarget namedTarget =
+        BuildTargetFactory.newInstance(primaryCell.getFilesystem().getRootPath(), targetName);
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
@@ -376,25 +356,18 @@ public class InterCellIntegrationTest {
 
   @Test
   @Ignore
-  public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {
-  }
+  public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {}
 
   @Test
   public void circularCellReferencesAreAllowed() throws IOException {
-    ProjectWorkspace mainRepo = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "inter-cell/circular",
-        tmp);
+    ProjectWorkspace mainRepo =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "inter-cell/circular", tmp);
     mainRepo.setUp();
     Path primary = mainRepo.getPath("primary");
 
     ProjectWorkspace.ProcessResult result =
         mainRepo.runBuckCommandWithEnvironmentOverridesAndContext(
-            primary,
-            Optional.empty(),
-            ImmutableMap.of(),
-            "build",
-            "//:bin");
+            primary, Optional.empty(), ImmutableMap.of(), "build", "//:bin");
 
     result.assertSuccess();
   }
@@ -404,14 +377,12 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToUseCommandLineConfigOverrides() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
     try {
       primary.runBuckBuild("//:cxxbinary");
@@ -419,14 +390,12 @@ public class InterCellIntegrationTest {
     } catch (HumanReadableException expected) {
       assertEquals(
           expected.getMessage(),
-          "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n" +
-              "Overridden cxx:cc path not found: /does/not/exist");
+          "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n"
+              + "Overridden cxx:cc path not found: /does/not/exist");
     }
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild(
-        "--config",
-        "secondary//cxx.cc=",
-        "//:cxxbinary");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckBuild("--config", "secondary//cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -435,31 +404,24 @@ public class InterCellIntegrationTest {
   public void globalCommandLineConfigOverridesShouldWork() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     TestDataHelper.overrideBuckconfig(
-        primary,
-        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+        primary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
     TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
     try {
       primary.runBuckBuild("//:cxxbinary");
       fail("Did not expect to finish building");
     } catch (HumanReadableException expected) {
-      assertEquals(
-        expected.getMessage(),
-        "Overridden cxx:cc path not found: /does/not/exist");
+      assertEquals(expected.getMessage(), "Overridden cxx:cc path not found: /does/not/exist");
     }
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild(
-        "--config",
-        "cxx.cc=",
-        "//:cxxbinary");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckBuild("--config", "cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -482,8 +444,7 @@ public class InterCellIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     ProjectWorkspace workspace = createWorkspace("inter-cell/gtest/secondary");
     TestDataHelper.overrideBuckconfig(
-        workspace,
-        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
+        workspace, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//test:cxxtest");
     result.assertSuccess();
@@ -496,14 +457,12 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToTestACxxLibraryXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/gtest/primary",
-        "inter-cell/gtest/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/gtest/primary", "inter-cell/gtest/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
 
     ProjectWorkspace.ProcessResult result = primary.runBuckBuild("secondary//test:cxxtest");
     result.assertSuccess();
@@ -519,27 +478,22 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToShareGtest() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/gtest/primary",
-        "inter-cell/gtest/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/gtest/primary", "inter-cell/gtest/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     TestDataHelper.overrideBuckconfig(
-        primary,
-        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
+        primary, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
     // TODO(mzlee,dwh): secondary//gtest:gtest should be //gtest:gtest or we
     // should be able to use different cell names
     registerCell(secondary, "secondary", secondary);
     TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
 
     // TODO(mzlee,dwh): //test:cxxtest should be able to safely depend on
     // secondary//lib:cxxlib instead of having its own copy
-    ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
-        "test",
-        "//test:cxxtest",
-        "secondary//test:cxxtest");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckCommand("test", "//test:cxxtest", "secondary//test:cxxtest");
     result.assertSuccess();
   }
 
@@ -584,8 +538,8 @@ public class InterCellIntegrationTest {
       assertThat(
           e.getHumanReadableErrorMessage(),
           containsString(
-              "repositories.third must point to the same directory as the root cell's cell " +
-                  "mapping:"));
+              "repositories.third must point to the same directory as the root cell's cell "
+                  + "mapping:"));
     }
 
     // and succeeds when it is
@@ -598,9 +552,8 @@ public class InterCellIntegrationTest {
   public void testCrossCellAndroidLibrary() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/android/primary",
-        "inter-cell/android/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/android/primary", "inter-cell/android/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
     String target = "//apps/sample:app_with_cross_cell_android_lib";
@@ -613,23 +566,22 @@ public class InterCellIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/android/primary",
-        "inter-cell/android/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/android/primary", "inter-cell/android/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     TestDataHelper.overrideBuckconfig(
-        primary,
-        ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+        primary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
     TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+        secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
     NdkCxxPlatform platform =
         AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
@@ -638,8 +590,7 @@ public class InterCellIntegrationTest {
             platform.getObjdump(),
             pathResolver);
     SymbolsAndDtNeeded info;
-    Path apkPath = primary.buildAndReturnOutput(
-        "//apps/sample:app_with_merged_cross_cell_libs");
+    Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_libs");
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
@@ -666,9 +617,8 @@ public class InterCellIntegrationTest {
     // If these targets were treated as distinct targets, the rule will have duplicate symbols.
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/canonicalization/primary",
-        "inter-cell/canonicalization/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/canonicalization/primary", "inter-cell/canonicalization/secondary");
 
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
@@ -686,55 +636,46 @@ public class InterCellIntegrationTest {
   public void targetsInOtherCellsArePrintedAsRelativeToRootCell() throws Exception {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/canonicalization/primary",
-        "inter-cell/canonicalization/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/canonicalization/primary", "inter-cell/canonicalization/secondary");
 
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     registerCell(primary, "primary", primary);
     registerCell(secondary, "primary", primary);
 
-    String queryResult = primary.runBuckCommand("query", "deps(//:a.out)")
-        .assertSuccess()
-        .getStdout();
+    String queryResult =
+        primary.runBuckCommand("query", "deps(//:a.out)").assertSuccess().getStdout();
     assertEquals(
         "Should refer to root cell targets without prefix and secondary cell targets with prefix",
-        Joiner.on("\n").join(
-            "//:a.out",
-            "//:rootlib",
-            "secondary//:lib",
-            "secondary//:lib2"),
+        Joiner.on("\n").join("//:a.out", "//:rootlib", "secondary//:lib", "secondary//:lib2"),
         sortLines(queryResult));
 
-    queryResult = primary.runBuckCommand("query", "deps(secondary//:lib)")
-        .assertSuccess()
-        .getStdout();
+    queryResult =
+        primary.runBuckCommand("query", "deps(secondary//:lib)").assertSuccess().getStdout();
     assertEquals(
         "... even if query starts in a non-root cell.",
-        Joiner.on("\n").join(
-            "//:rootlib",
-            "secondary//:lib",
-            "secondary//:lib2"),
+        Joiner.on("\n").join("//:rootlib", "secondary//:lib", "secondary//:lib2"),
         sortLines(queryResult));
   }
 
   @Test
   public void testCrossCellCleanCommand() throws IOException, InterruptedException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
-    List<Path> primaryDirs = ImmutableList.of(
-        primary.getPath(primary.getBuckPaths().getScratchDir()),
-        primary.getPath(primary.getBuckPaths().getGenDir()),
-        primary.getPath(primary.getBuckPaths().getTrashDir()));
-    List<Path> secondaryDirs = ImmutableList.of(
-        secondary.getPath(secondary.getBuckPaths().getScratchDir()),
-        secondary.getPath(secondary.getBuckPaths().getGenDir()),
-        secondary.getPath(secondary.getBuckPaths().getTrashDir()));
+    List<Path> primaryDirs =
+        ImmutableList.of(
+            primary.getPath(primary.getBuckPaths().getScratchDir()),
+            primary.getPath(primary.getBuckPaths().getGenDir()),
+            primary.getPath(primary.getBuckPaths().getTrashDir()));
+    List<Path> secondaryDirs =
+        ImmutableList.of(
+            secondary.getPath(secondary.getBuckPaths().getScratchDir()),
+            secondary.getPath(secondary.getBuckPaths().getGenDir()),
+            secondary.getPath(secondary.getBuckPaths().getTrashDir()));
 
     // Set up the directories to be cleaned
     for (Path dir : primaryDirs) {
@@ -778,9 +719,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testParserFunctionsWithCells() throws IOException {
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/parser-functions/primary",
-        "inter-cell/parser-functions/secondary");
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/parser-functions/primary", "inter-cell/parser-functions/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
     // Set up the remaining cells
@@ -807,7 +747,7 @@ public class InterCellIntegrationTest {
     path = secondary.buildAndReturnOutput("//two:two");
     actual = new String(Files.readAllBytes(path), UTF_8);
     assertEquals(expected, actual);
-}
+  }
 
   private static String sortLines(String input) {
     return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
@@ -815,9 +755,8 @@ public class InterCellIntegrationTest {
         .collect(Collectors.joining("\n"));
   }
 
-  private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
-      String primaryPath,
-      String secondaryPath) throws IOException {
+  private Pair<ProjectWorkspace, ProjectWorkspace> prepare(String primaryPath, String secondaryPath)
+      throws IOException {
 
     ProjectWorkspace primary = createWorkspace(primaryPath);
     ProjectWorkspace secondary = createWorkspace(secondaryPath);
@@ -829,10 +768,8 @@ public class InterCellIntegrationTest {
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
     final Path tmpSubfolder = tmp.newFolder();
-    ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        scenarioName,
-        tmpSubfolder);
+    ProjectWorkspace projectWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenarioName, tmpSubfolder);
     projectWorkspace.setUp();
     return projectWorkspace;
   }
@@ -840,13 +777,13 @@ public class InterCellIntegrationTest {
   private void registerCell(
       ProjectWorkspace cellToModifyConfigOf,
       String cellName,
-      ProjectWorkspace cellToRegisterAsCellName) throws IOException {
+      ProjectWorkspace cellToRegisterAsCellName)
+      throws IOException {
     TestDataHelper.overrideBuckconfig(
         cellToModifyConfigOf,
         ImmutableMap.of(
             "repositories",
             ImmutableMap.of(
-                cellName,
-                cellToRegisterAsCellName.getPath(".").normalize().toString())));
+                cellName, cellToRegisterAsCellName.getPath(".").normalize().toString())));
   }
 }
