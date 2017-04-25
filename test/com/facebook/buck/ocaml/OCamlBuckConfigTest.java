@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -37,5 +36,4 @@ public class OCamlBuckConfigTest {
                 .withAsflags("-asflag"));
     assertThat(config.getCFlags(), Matchers.contains("-cppflag", "-cflag", "-asflag"));
   }
-
 }
