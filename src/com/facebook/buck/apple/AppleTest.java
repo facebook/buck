@@ -235,11 +235,6 @@ public class AppleTest
     return contacts;
   }
 
-  @Override
-  public boolean hasTestResultFiles() {
-    return getProjectFilesystem().exists(testOutputPath);
-  }
-
   public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
       ExecutionContext context,
       TestRunningOptions options,

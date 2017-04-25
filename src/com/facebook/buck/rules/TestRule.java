@@ -72,16 +72,6 @@ public interface TestRule extends BuildRule {
   };
 
   /**
-   * Returns a boolean indicating whether the files that contain the test results for this rule are
-   * present.
-   * <p>
-   * If this method returns {@code true}, then
-   * {@link #interpretTestResults(ExecutionContext, boolean)}
-   * should be able to be called directly.
-   */
-  boolean hasTestResultFiles();
-
-  /**
    * Returns the commands required to run the tests.
    * <p>
    * <strong>Note:</strong> This method may be run without

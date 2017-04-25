@@ -113,12 +113,6 @@ public class ShTest
   }
 
   @Override
-  public boolean hasTestResultFiles() {
-    // If result.json was not written, then the test needs to be run.
-    return getProjectFilesystem().isFile(getPathToTestOutputResult());
-  }
-
-  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

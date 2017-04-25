@@ -376,29 +376,6 @@ public class JavaTest
   }
 
   @Override
-  public boolean hasTestResultFiles() {
-    // It is possible that this rule was not responsible for running any tests because all tests
-    // were run by its deps. In this case, return an empty TestResults.
-    Set<String> testClassNames = getClassNamesForSources(getResolver());
-    if (testClassNames.isEmpty()) {
-      return true;
-    }
-
-    Path outputDirectory = getProjectFilesystem()
-        .getPathForRelativePath(getPathToTestOutputDirectory());
-    for (String testClass : testClassNames) {
-      // We never use cached results when using test selectors, so there's no need to incorporate
-      // the .test_selectors suffix here if we are using selectors.
-      Path testResultFile = outputDirectory.resolve(testClass + ".xml");
-      if (!Files.isRegularFile(testResultFile)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),

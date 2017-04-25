@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -339,12 +338,4 @@ public class TestCommandTest {
         Matchers.equalTo(1));
   }
 
-  @Test
-  public void testCodeCoverageDisablesResultsCache() throws Throwable {
-    TestCommand command = getCommand("--code-coverage", "//foo:bar");
-    assertEquals(
-        TestRunningOptions.TestResultCacheMode.DISABLED,
-        command.getResultsCacheMode(
-            FakeBuckConfig.builder().build()));
-  }
 }

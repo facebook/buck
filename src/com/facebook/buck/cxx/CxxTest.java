@@ -141,11 +141,6 @@ public abstract class CxxTest
       Path output);
 
   @Override
-  public boolean hasTestResultFiles() {
-    return getProjectFilesystem().isFile(getPathToTestResults());
-  }
-
-  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

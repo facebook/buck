@@ -97,11 +97,6 @@ public class RustTest
   }
 
   @Override
-  public boolean hasTestResultFiles() {
-    return false;
-  }
-
-  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

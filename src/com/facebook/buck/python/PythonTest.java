@@ -169,13 +169,8 @@ public class PythonTest
         "__test_%s_output__");
   }
 
-  public Path getPathToTestOutputResult() {
+  private Path getPathToTestOutputResult() {
     return getPathToTestOutputDirectory().resolve("results.json");
-  }
-
-  @Override
-  public boolean hasTestResultFiles() {
-    return getProjectFilesystem().isFile(getPathToTestOutputResult());
   }
 
   @Override

@@ -27,11 +27,6 @@ import java.util.Optional;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractTestRunningOptions {
-  public enum TestResultCacheMode {
-    ENABLED,
-    ENABLED_IF_PASSED,
-    DISABLED
-  }
 
   @Value.Default
   public boolean isCodeCoverageEnabled() {
@@ -51,11 +46,6 @@ abstract class AbstractTestRunningOptions {
   @Value.Default
   public boolean shouldExplainTestSelectorList() {
     return false;
-  }
-
-  @Value.Default
-  public TestResultCacheMode getTestResultCacheMode() {
-    return TestResultCacheMode.ENABLED;
   }
 
   @Value.Default

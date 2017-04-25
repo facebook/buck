@@ -90,9 +90,6 @@ import javax.annotation.Nullable;
 
 public class TestCommand extends BuildCommand {
 
-  public static final String USE_RESULTS_CACHE = "use_results_cache";
-  public static final String RERUN_ONLY_FAILING = "rerun_only_failing";
-
   private static final Logger LOG = Logger.get(TestCommand.class);
 
   @Option(name = "--all",
@@ -122,14 +119,6 @@ public class TestCommand extends BuildCommand {
       usage = "Whether the test will start a java profiling agent")
   @Nullable
   private String pathToJavaAgent = null;
-
-  @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
-  @Nullable
-  private Boolean isResultsCacheDisabled = null;
-
-  @Option(name = "--only-failing", usage = "Don't re-run tests that are cached as passed.")
-  @Nullable
-  private Boolean isOnlyFailing = null;
 
   @Option(name = "--build-filtered", usage = "Whether to build filtered out tests.")
   @Nullable
@@ -202,29 +191,6 @@ public class TestCommand extends BuildCommand {
     return isCodeCoverageEnabled;
   }
 
-  public TestRunningOptions.TestResultCacheMode getResultsCacheMode(BuckConfig buckConfig) {
-    // The option is negative (--no-X) but we prefer to reason about positives, in the code.
-    if (isResultsCacheDisabled == null) {
-      boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, false);
-      isResultsCacheDisabled = !isUseResultsCache;
-    }
-    if (isOnlyFailing == null) {
-      isOnlyFailing = buckConfig.getBooleanValue("test", RERUN_ONLY_FAILING, false);
-    }
-
-    if (isCodeCoverageEnabled()) {
-      return TestRunningOptions.TestResultCacheMode.DISABLED;
-    }
-
-    if (isResultsCacheDisabled) {
-      return TestRunningOptions.TestResultCacheMode.DISABLED;
-    }
-    if (isOnlyFailing) {
-      return TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED;
-    }
-    return TestRunningOptions.TestResultCacheMode.ENABLED;
-  }
-
   @Override
   public boolean isDebugEnabled() {
     return isDebugEnabled;
@@ -280,7 +246,6 @@ public class TestCommand extends BuildCommand {
         .setRunAllTests(isRunAllTests())
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
         .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
-        .setTestResultCacheMode(getResultsCacheMode(params.getBuckConfig()))
         .setShufflingTests(isShufflingTests)
         .setPathToXmlTestOutput(Optional.ofNullable(pathToXmlTestOutput))
         .setPathToJavaAgent(Optional.ofNullable(pathToJavaAgent))

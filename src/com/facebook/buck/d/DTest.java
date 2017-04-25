@@ -131,11 +131,6 @@ public class DTest extends AbstractBuildRule implements
   }
 
   @Override
-  public boolean hasTestResultFiles() {
-    return getProjectFilesystem().isFile(getPathToTestOutput());
-  }
-
-  @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
       boolean isUsingTestSelectors) {
