@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

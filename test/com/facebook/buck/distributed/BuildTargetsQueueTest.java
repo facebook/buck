@@ -26,7 +26,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -89,13 +88,12 @@ public class BuildTargetsQueueTest {
   private static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ImmutableSortedSet<BuildRule> buildRules = ImmutableSortedSet.of(
-        JavaLibraryBuilder
-            .createBuilder(BuildTargetFactory.newInstance(TARGET_NAME))
-            .build(resolver),
-        JavaLibraryBuilder
-            .createBuilder(BuildTargetFactory.newInstance("//foo:two"))
-            .build(resolver));
+    ImmutableSortedSet<BuildRule> buildRules =
+        ImmutableSortedSet.of(
+            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET_NAME))
+                .build(resolver),
+            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
+                .build(resolver));
     resolver.addAllToIndex(buildRules);
     return resolver;
   }
@@ -116,12 +114,12 @@ public class BuildTargetsQueueTest {
     BuildTarget right = BuildTargetFactory.newInstance(TARGET_NAME + "_right");
     BuildTarget leaf = BuildTargetFactory.newInstance(TARGET_NAME + "_leaf");
 
-    ImmutableSortedSet<BuildRule> buildRules = ImmutableSortedSet.of(
-        JavaLibraryBuilder.createBuilder(leaf).build(resolver),
-        JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(resolver),
-        JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(resolver),
-        JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver)
-    );
+    ImmutableSortedSet<BuildRule> buildRules =
+        ImmutableSortedSet.of(
+            JavaLibraryBuilder.createBuilder(leaf).build(resolver),
+            JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(resolver),
+            JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(resolver),
+            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
     resolver.addAllToIndex(buildRules);
     return resolver;
   }

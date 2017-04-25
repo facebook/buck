@@ -59,7 +59,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.io.ByteArrayInputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -67,19 +72,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-
 public class DistBuildFileHashesTest {
-  @Rule
-  public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
-  @Rule
-  public TemporaryFolder archiveTempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder archiveTempDir = new TemporaryFolder();
 
   private static class SingleFileFixture extends Fixture {
     protected Path javaSrcPath;
@@ -91,9 +87,8 @@ public class DistBuildFileHashesTest {
     }
 
     @Override
-    protected void setUpRules(
-        BuildRuleResolver resolver,
-        SourcePathResolver sourcePathResolver) throws Exception {
+    protected void setUpRules(BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
+        throws Exception {
       javaSrcPath = getPath("src", "A.java");
 
       projectFilesystem.createParentDirs(javaSrcPath);
@@ -102,8 +97,8 @@ public class DistBuildFileHashesTest {
       writtenHashCode = Hashing.sha1().hashString(writtenContents, Charsets.UTF_8);
 
       JavaLibraryBuilder.createBuilder(
-          BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:java_lib"),
-          projectFilesystem)
+              BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:java_lib"),
+              projectFilesystem)
           .addSrc(javaSrcPath)
           .build(resolver, projectFilesystem);
     }
@@ -137,9 +132,8 @@ public class DistBuildFileHashesTest {
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
     EasyMock.replay(mockCache);
-    ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-        mockCache,
-        fileHashes.get(0));
+    ProjectFileHashCache fileHashCache =
+        DistBuildFileHashes.createFileHashCache(mockCache, fileHashes.get(0));
 
     assertThat(
         fileHashCache.willGet(readProjectFilesystem.resolve(f.javaSrcPath)),
@@ -167,9 +161,7 @@ public class DistBuildFileHashesTest {
     EasyMock.replay(mockCache);
     MaterializerProjectFileHashCache materializer =
         new MaterializerProjectFileHashCache(
-            mockCache,
-            fileHashes.get(0),
-            new InlineContentsProvider());
+            mockCache, fileHashes.get(0), new InlineContentsProvider());
 
     materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
     assertThat(
@@ -188,13 +180,11 @@ public class DistBuildFileHashesTest {
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
     EasyMock.replay(mockCache);
-    ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-        mockCache,
-        fileHashes.get(0));
+    ProjectFileHashCache fileHashCache =
+        DistBuildFileHashes.createFileHashCache(mockCache, fileHashes.get(0));
 
     assertThat(
-        fileHashCache.willGet(readProjectFilesystem.resolve("src/A.java")),
-        Matchers.equalTo(true));
+        fileHashCache.willGet(readProjectFilesystem.resolve("src/A.java")), Matchers.equalTo(true));
 
     assertThat(
         fileHashCache.get(readProjectFilesystem.resolve("src/A.java")),
@@ -208,12 +198,8 @@ public class DistBuildFileHashesTest {
     protected Path archiveMemberPath;
     protected HashCode archiveMemberHash;
 
-    private ArchiveFilesFixture(
-        Path firstFolder,
-        Path secondFolder) throws Exception {
-      super(
-          new ProjectFilesystem(firstFolder),
-          new ProjectFilesystem(secondFolder));
+    private ArchiveFilesFixture(Path firstFolder, Path secondFolder) throws Exception {
+      super(new ProjectFilesystem(firstFolder), new ProjectFilesystem(secondFolder));
       this.firstFolder = firstFolder;
       this.secondFolder = secondFolder;
     }
@@ -225,30 +211,28 @@ public class DistBuildFileHashesTest {
     }
 
     @Override
-    protected void setUpRules(
-        BuildRuleResolver resolver,
-        SourcePathResolver sourcePathResolver) throws Exception {
+    protected void setUpRules(BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
+        throws Exception {
       archivePath = getPath("src", "archive.jar");
       archiveMemberPath = getPath("Archive.class");
 
       projectFilesystem.createParentDirs(archivePath);
       try (CustomJarOutputStream jarWriter =
-               ZipOutputStreams.newJarOutputStream(
-                   projectFilesystem.newFileOutputStream(archivePath))) {
+          ZipOutputStreams.newJarOutputStream(projectFilesystem.newFileOutputStream(archivePath))) {
         jarWriter.setEntryHashingEnabled(true);
         byte[] archiveMemberData = "data".getBytes(Charsets.UTF_8);
         archiveMemberHash = Hashing.murmur3_128().hashBytes(archiveMemberData);
         jarWriter.writeEntry("Archive.class", new ByteArrayInputStream(archiveMemberData));
       }
 
-      resolver.addToIndex(new BuildRuleWithToolAndPath(
-          new FakeBuildRuleParamsBuilder("//:with_tool")
-              .setProjectFilesystem(projectFilesystem)
-              .build(),
-          null,
-          new ArchiveMemberSourcePath(
-              new PathSourcePath(projectFilesystem, archivePath),
-              archiveMemberPath)));
+      resolver.addToIndex(
+          new BuildRuleWithToolAndPath(
+              new FakeBuildRuleParamsBuilder("//:with_tool")
+                  .setProjectFilesystem(projectFilesystem)
+                  .build(),
+              null,
+              new ArchiveMemberSourcePath(
+                  new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
     }
 
     @Override
@@ -285,63 +269,57 @@ public class DistBuildFileHashesTest {
       ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
       EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
       EasyMock.replay(mockCache);
-      ProjectFileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
-          mockCache,
-          recordedHashes.get(0));
+      ProjectFileHashCache fileHashCache =
+          DistBuildFileHashes.createFileHashCache(mockCache, recordedHashes.get(0));
 
-      ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(
-          readProjectFilesystem.resolve(f.archivePath),
-          f.archiveMemberPath);
-      assertThat(
-          fileHashCache.willGet(archiveMemberPath),
-          Matchers.is(true));
+      ArchiveMemberPath archiveMemberPath =
+          ArchiveMemberPath.of(readProjectFilesystem.resolve(f.archivePath), f.archiveMemberPath);
+      assertThat(fileHashCache.willGet(archiveMemberPath), Matchers.is(true));
 
-      assertThat(
-          fileHashCache.get(archiveMemberPath),
-          Matchers.is(f.archiveMemberHash));
+      assertThat(fileHashCache.get(archiveMemberPath), Matchers.is(f.archiveMemberHash));
     }
   }
 
   @Test
   public void worksCrossCell() throws Exception {
-    final Fixture f = new Fixture(tempDir) {
+    final Fixture f =
+        new Fixture(tempDir) {
 
-      @Override
-      protected void setUpRules(
-          BuildRuleResolver resolver,
-          SourcePathResolver sourcePathResolver) throws Exception {
-        Path firstPath = javaFs.getPath("src", "A.java");
+          @Override
+          protected void setUpRules(
+              BuildRuleResolver resolver, SourcePathResolver sourcePathResolver) throws Exception {
+            Path firstPath = javaFs.getPath("src", "A.java");
 
-        projectFilesystem.createParentDirs(firstPath);
-        projectFilesystem.writeContentsToPath("public class A {}", firstPath);
+            projectFilesystem.createParentDirs(firstPath);
+            projectFilesystem.writeContentsToPath("public class A {}", firstPath);
 
-        Path secondPath = secondJavaFs.getPath("B.java");
-        secondProjectFilesystem.writeContentsToPath("public class B {}", secondPath);
+            Path secondPath = secondJavaFs.getPath("B.java");
+            secondProjectFilesystem.writeContentsToPath("public class B {}", secondPath);
 
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:java_lib_at_root"),
-            projectFilesystem)
-            .addSrc(firstPath)
-            .build(resolver, projectFilesystem);
+            JavaLibraryBuilder.createBuilder(
+                    BuildTargetFactory.newInstance(
+                        projectFilesystem.getRootPath(), "//:java_lib_at_root"),
+                    projectFilesystem)
+                .addSrc(firstPath)
+                .build(resolver, projectFilesystem);
 
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(
-                secondProjectFilesystem.getRootPath(),
-                "//:java_lib_at_secondary"),
-            secondProjectFilesystem)
-            .addSrc(secondPath)
-            .build(resolver, secondProjectFilesystem);
-      }
+            JavaLibraryBuilder.createBuilder(
+                    BuildTargetFactory.newInstance(
+                        secondProjectFilesystem.getRootPath(), "//:java_lib_at_secondary"),
+                    secondProjectFilesystem)
+                .addSrc(secondPath)
+                .build(resolver, secondProjectFilesystem);
+          }
 
-      @Override
-      protected BuckConfig createBuckConfig() {
-        return FakeBuckConfig.builder()
-            .setSections(
-                "[repositories]",
-                "second_repo = " + secondProjectFilesystem.getRootPath().toAbsolutePath())
-            .build();
-      }
-    };
+          @Override
+          protected BuckConfig createBuckConfig() {
+            return FakeBuckConfig.builder()
+                .setSections(
+                    "[repositories]",
+                    "second_repo = " + secondProjectFilesystem.getRootPath().toAbsolutePath())
+                .build();
+          }
+        };
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
     assertThat(toDebugStringForAssert(recordedHashes), recordedHashes, Matchers.hasSize(2));
@@ -376,28 +354,26 @@ public class DistBuildFileHashesTest {
       secondProjectFilesystem = second;
       secondJavaFs = secondProjectFilesystem.getRootPath().getFileSystem();
 
-      buildRuleResolver = new BuildRuleResolver(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer());
+      buildRuleResolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       sourcePathResolver = new SourcePathResolver(ruleFinder);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();
-      Cell rootCell = new TestCellBuilder()
-          .setFilesystem(projectFilesystem)
-          .setBuckConfig(buckConfig)
-          .build();
+      Cell rootCell =
+          new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
 
-      distributedBuildFileHashes = new DistBuildFileHashes(
-          actionGraph,
-          sourcePathResolver,
-          ruleFinder,
-          createFileHashCache(),
-          new DistBuildCellIndexer(rootCell),
-          MoreExecutors.newDirectExecutorService(),
-          /* keySeed */ 0,
-          rootCell);
+      distributedBuildFileHashes =
+          new DistBuildFileHashes(
+              actionGraph,
+              sourcePathResolver,
+              ruleFinder,
+              createFileHashCache(),
+              new DistBuildCellIndexer(rootCell),
+              MoreExecutors.newDirectExecutorService(),
+              /* keySeed */ 0,
+              rootCell);
     }
 
     public Fixture(TemporaryFolder tempDir) throws Exception {
@@ -411,8 +387,7 @@ public class DistBuildFileHashesTest {
     }
 
     protected abstract void setUpRules(
-        BuildRuleResolver resolver,
-        SourcePathResolver sourcePathResolver) throws Exception;
+        BuildRuleResolver resolver, SourcePathResolver sourcePathResolver) throws Exception;
 
     private StackedFileHashCache createFileHashCache() {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
@@ -434,16 +409,11 @@ public class DistBuildFileHashesTest {
 
   private static class BuildRuleWithToolAndPath extends NoopBuildRule {
 
-    @AddToRuleKey
-    Tool tool;
+    @AddToRuleKey Tool tool;
 
-    @AddToRuleKey
-    SourcePath sourcePath;
+    @AddToRuleKey SourcePath sourcePath;
 
-    public BuildRuleWithToolAndPath(
-        BuildRuleParams params,
-        Tool tool,
-        SourcePath sourcePath) {
+    public BuildRuleWithToolAndPath(BuildRuleParams params, Tool tool, SourcePath sourcePath) {
       super(params);
       this.tool = tool;
       this.sourcePath = sourcePath;
@@ -451,11 +421,11 @@ public class DistBuildFileHashesTest {
   }
 
   private static BuildJobStateFileHashes getCellHashesByIndex(
-      List<BuildJobStateFileHashes> recordedHashes,
-      int index) {
+      List<BuildJobStateFileHashes> recordedHashes, int index) {
     Preconditions.checkArgument(index >= 0);
     Preconditions.checkArgument(index < recordedHashes.size());
-    return recordedHashes.stream()
+    return recordedHashes
+        .stream()
         .filter(hashes -> hashes.getCellIndex() == index)
         .findFirst()
         .get();
@@ -467,10 +437,11 @@ public class DistBuildFileHashesTest {
   }
 
   private static String toDebugStringForAssert(List<BuildJobStateFileHashes> recordedHashes) {
-    return Joiner
-        .on("\n")
-        .join(recordedHashes.stream()
-            .map(ThriftUtil::thriftToDebugJson)
-            .collect(MoreCollectors.toImmutableList()));
+    return Joiner.on("\n")
+        .join(
+            recordedHashes
+                .stream()
+                .map(ThriftUtil::thriftToDebugJson)
+                .collect(MoreCollectors.toImmutableList()));
   }
 }

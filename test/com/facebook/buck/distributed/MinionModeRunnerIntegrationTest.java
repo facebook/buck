@@ -19,13 +19,11 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MinionModeRunnerIntegrationTest {
 
@@ -37,11 +35,8 @@ public class MinionModeRunnerIntegrationTest {
     try (ThriftCoordinatorServer server = createServer()) {
       server.start();
       LocalBuilderImpl localBuilder = new LocalBuilderImpl();
-      MinionModeRunner minion = new MinionModeRunner(
-          "localhost",
-          server.getPort(),
-          localBuilder,
-          STAMPEDE_ID);
+      MinionModeRunner minion =
+          new MinionModeRunner("localhost", server.getPort(), localBuilder, STAMPEDE_ID);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(3, localBuilder.getCallArguments().size());

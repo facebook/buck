@@ -19,11 +19,9 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
-
+import java.util.logging.Level;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.logging.Level;
 
 public class DistBuildUtilTest {
   @Test

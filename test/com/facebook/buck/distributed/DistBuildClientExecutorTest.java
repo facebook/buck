@@ -55,14 +55,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.easymock.EasyMock;
-import org.easymock.IArgumentMatcher;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +63,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
+import org.easymock.EasyMock;
+import org.easymock.IArgumentMatcher;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DistBuildClientExecutorTest {
 
@@ -94,13 +92,9 @@ public class DistBuildClientExecutorTest {
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
     buildJobState = createMinimalFakeBuildJobState();
-    distBuildClientExecutor = new DistBuildClientExecutor(
-        buildJobState,
-        mockDistBuildService,
-        mockLogStateTracker,
-        buckVersion,
-        scheduler,
-        1);
+    distBuildClientExecutor =
+        new DistBuildClientExecutor(
+            buildJobState, mockDistBuildService, mockLogStateTracker, buckVersion, scheduler, 1);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();
@@ -170,9 +164,12 @@ public class DistBuildClientExecutorTest {
   public void testFetchingSlaveStatuses()
       throws IOException, ExecutionException, InterruptedException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds = job.getSlaveInfoByRunId().values().stream()
-        .map(BuildSlaveInfo::getRunId)
-        .collect(Collectors.toList());
+    List<RunId> runIds =
+        job.getSlaveInfoByRunId()
+            .values()
+            .stream()
+            .map(BuildSlaveInfo::getRunId)
+            .collect(Collectors.toList());
 
     BuildSlaveStatus slaveStatus0 = new BuildSlaveStatus();
     slaveStatus0.setStampedeId(stampedeId);
@@ -190,11 +187,10 @@ public class DistBuildClientExecutorTest {
         .andReturn(Optional.of(slaveStatus1));
     replay(mockDistBuildService);
 
-    List<BuildSlaveStatus> slaveStatuses = distBuildClientExecutor.fetchBuildSlaveStatusesAsync(
-        job, directExecutor).get();
+    List<BuildSlaveStatus> slaveStatuses =
+        distBuildClientExecutor.fetchBuildSlaveStatusesAsync(job, directExecutor).get();
     Assert.assertEquals(
-        ImmutableSet.copyOf(slaveStatuses),
-        ImmutableSet.of(slaveStatus0, slaveStatus1));
+        ImmutableSet.copyOf(slaveStatuses), ImmutableSet.of(slaveStatus0, slaveStatus1));
 
     verify(mockDistBuildService);
   }
@@ -203,9 +199,12 @@ public class DistBuildClientExecutorTest {
   public void testFetchingSlaveEvents()
       throws IOException, ExecutionException, InterruptedException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds = job.getSlaveInfoByRunId().values().stream()
-        .map(BuildSlaveInfo::getRunId)
-        .collect(Collectors.toList());
+    List<RunId> runIds =
+        job.getSlaveInfoByRunId()
+            .values()
+            .stream()
+            .map(BuildSlaveInfo::getRunId)
+            .collect(Collectors.toList());
 
     // Create queries.
     BuildSlaveEventsQuery query0 = new BuildSlaveEventsQuery();
@@ -245,23 +244,18 @@ public class DistBuildClientExecutorTest {
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of(eventWithSeqId1, eventWithSeqId2));
 
-    mockEventBus.post(eqConsoleEvent(
-        DistBuildUtil.createConsoleEvent(consoleEvent1)));
-    mockEventBus.post(eqConsoleEvent(
-        DistBuildUtil.createConsoleEvent(consoleEvent2)));
+    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(consoleEvent1)));
+    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(consoleEvent2)));
     expectLastCall();
 
-
     // At the end, also test that sequence ids are being maintained properly.
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(
-        stampedeId,
-        runIds.get(0),
-        eventWithSeqId1.getFirst() + 1))
+    expect(
+            mockDistBuildService.createBuildSlaveEventsQuery(
+                stampedeId, runIds.get(0), eventWithSeqId1.getFirst() + 1))
         .andReturn(query0);
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(
-        stampedeId,
-        runIds.get(1),
-        eventWithSeqId2.getFirst() + 1))
+    expect(
+            mockDistBuildService.createBuildSlaveEventsQuery(
+                stampedeId, runIds.get(1), eventWithSeqId2.getFirst() + 1))
         .andReturn(query1);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of());
@@ -270,10 +264,12 @@ public class DistBuildClientExecutorTest {
     replay(mockEventBus);
 
     // Test that the events are properly fetched and posted onto the Bus.
-    distBuildClientExecutor.fetchAndPostBuildSlaveEventsAsync(job, mockEventBus, directExecutor)
+    distBuildClientExecutor
+        .fetchAndPostBuildSlaveEventsAsync(job, mockEventBus, directExecutor)
         .get();
     // Also test that sequence ids are being maintained properly.
-    distBuildClientExecutor.fetchAndPostBuildSlaveEventsAsync(job, mockEventBus, directExecutor)
+    distBuildClientExecutor
+        .fetchAndPostBuildSlaveEventsAsync(job, mockEventBus, directExecutor)
         .get();
 
     verify(mockDistBuildService);
@@ -302,9 +298,9 @@ public class DistBuildClientExecutorTest {
     StreamLogs log1 = new StreamLogs();
     log1.setErrorMessage("unique");
     logsResponse.addToMultiStreamLogs(log1);
-    expect(mockDistBuildService.fetchSlaveLogLines(
-        stampedeId,
-        ImmutableList.of(logRequest1, logRequest2)))
+    expect(
+            mockDistBuildService.fetchSlaveLogLines(
+                stampedeId, ImmutableList.of(logRequest1, logRequest2)))
         .andReturn(logsResponse);
     mockLogStateTracker.processStreamLogs(logsResponse.getMultiStreamLogs());
     expectLastCall().once();
@@ -324,9 +320,12 @@ public class DistBuildClientExecutorTest {
   @Test
   public void testMaterializingLogDirs() throws IOException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds = job.getSlaveInfoByRunId().values().stream()
-        .map(BuildSlaveInfo::getRunId)
-        .collect(Collectors.toList());
+    List<RunId> runIds =
+        job.getSlaveInfoByRunId()
+            .values()
+            .stream()
+            .map(BuildSlaveInfo::getRunId)
+            .collect(Collectors.toList());
 
     LogDir logDir0 = new LogDir();
     logDir0.setRunId(runIds.get(0));
@@ -355,15 +354,13 @@ public class DistBuildClientExecutorTest {
   }
 
   /**
-   * This test sees that executeAndPrintFailuresToEventBus(...) does the following:
-   *  1. Initiates the build by uploading missing source files, dot files and target graph.
-   *  2. Kicks off the build.
-   *  3. Fetches the status of the build, status of the slaves, console events and real-time logs
-   *     in every status loop.
-   *  4. Materializes log directories once the build finishes.
+   * This test sees that executeAndPrintFailuresToEventBus(...) does the following: 1. Initiates the
+   * build by uploading missing source files, dot files and target graph. 2. Kicks off the build. 3.
+   * Fetches the status of the build, status of the slaves, console events and real-time logs in
+   * every status loop. 4. Materializes log directories once the build finishes.
    *
-   *  Individual methods for fetching the status, logs, posting the events, etc. are
-   *  tested separately.
+   * <p>Individual methods for fetching the status, logs, posting the events, etc. are tested
+   * separately.
    */
   @Test
   public void testOrderlyExecution() throws IOException, InterruptedException {
@@ -375,11 +372,9 @@ public class DistBuildClientExecutorTest {
     expect(mockDistBuildService.createBuild()).andReturn(job);
     expect(mockDistBuildService.uploadMissingFilesAsync(buildJobState.fileHashes, directExecutor))
         .andReturn(Futures.immediateFuture(null));
-    expect(mockDistBuildService.uploadBuckDotFilesAsync(
-        stampedeId,
-        fakeProjectFilesystem,
-        fakeFileHashCache,
-        directExecutor))
+    expect(
+            mockDistBuildService.uploadBuckDotFilesAsync(
+                stampedeId, fakeProjectFilesystem, fakeFileHashCache, directExecutor))
         .andReturn(Futures.immediateFuture(null));
     mockDistBuildService.uploadTargetGraph(buildJobState, stampedeId);
     expectLastCall().once();
@@ -430,8 +425,7 @@ public class DistBuildClientExecutorTest {
 
     expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
         .andReturn(ImmutableList.of());
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0))
-        .andReturn(query);
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0)).andReturn(query);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runId))
@@ -449,8 +443,7 @@ public class DistBuildClientExecutorTest {
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runId))
         .andReturn(Optional.of(slaveStatus));
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0))
-        .andReturn(query);
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0)).andReturn(query);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
 
@@ -461,8 +454,8 @@ public class DistBuildClientExecutorTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
-    distBuildClientExecutor.executeAndPrintFailuresToEventBus(directExecutor,
-        fakeProjectFilesystem, fakeFileHashCache, mockEventBus);
+    distBuildClientExecutor.executeAndPrintFailuresToEventBus(
+        directExecutor, fakeProjectFilesystem, fakeFileHashCache, mockEventBus);
 
     verify(mockDistBuildService);
     verify(mockLogStateTracker);
@@ -480,18 +473,17 @@ public class DistBuildClientExecutorTest {
     @Override
     public boolean matches(Object other) {
       if (other instanceof ConsoleEvent) {
-        return event.getMessage().equals(((ConsoleEvent) other).getMessage()) &&
-            event.getLevel().equals(((ConsoleEvent) other).getLevel());
+        return event.getMessage().equals(((ConsoleEvent) other).getMessage())
+            && event.getLevel().equals(((ConsoleEvent) other).getLevel());
       }
       return false;
     }
 
     @Override
     public void appendTo(StringBuffer stringBuffer) {
-      stringBuffer.append(String.format(
-          "eqConsoleEvent(message=[%s], level=[%s])",
-          event.getMessage(),
-          event.getLevel()));
+      stringBuffer.append(
+          String.format(
+              "eqConsoleEvent(message=[%s], level=[%s])", event.getMessage(), event.getLevel()));
     }
   }
 

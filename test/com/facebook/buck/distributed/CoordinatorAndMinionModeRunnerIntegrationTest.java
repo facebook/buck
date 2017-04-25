@@ -18,11 +18,9 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-
+import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
@@ -33,19 +31,14 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
 
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
-    CoordinatorModeRunner coordinator = new CoordinatorModeRunner(
-        port,
-        BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID);
+    CoordinatorModeRunner coordinator =
+        new CoordinatorModeRunner(
+            port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
-    MinionModeRunner minion = new MinionModeRunner(
-        "localhost",
-        port,
-        localBuilder,
-        STAMPEDE_ID);
-    CoordinatorAndMinionModeRunner jointRunner = new CoordinatorAndMinionModeRunner(
-        coordinator,
-        minion);
+    MinionModeRunner minion = new MinionModeRunner("localhost", port, localBuilder, STAMPEDE_ID);
+    CoordinatorAndMinionModeRunner jointRunner =
+        new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode();
     Assert.assertEquals(0, exitCode);
     Assert.assertEquals(3, localBuilder.getCallArguments().size());

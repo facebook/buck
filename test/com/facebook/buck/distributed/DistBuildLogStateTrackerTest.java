@@ -31,25 +31,20 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class DistBuildLogStateTrackerTest {
-  @Rule
-  public TemporaryFolder projectDir = new TemporaryFolder();
-
+  @Rule public TemporaryFolder projectDir = new TemporaryFolder();
 
   private static final String LOG_DIR = "logs";
 
@@ -100,20 +95,18 @@ public class DistBuildLogStateTrackerTest {
   private Path logDir;
   private DistBuildLogStateTracker distBuildLogStateTracker;
 
- /*
-  **********************************
-  * Tests
-  **********************************
-  */
+  /*
+   **********************************
+   * Tests
+   **********************************
+   */
 
   @Before
   public void setUp() {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);
-    distBuildLogStateTracker = new DistBuildLogStateTracker(
-        logDir,
-        projectFilesystem);
+    distBuildLogStateTracker = new DistBuildLogStateTracker(logDir, projectFilesystem);
   }
 
   @Test
@@ -138,23 +131,29 @@ public class DistBuildLogStateTrackerTest {
 
     // runOne has stdErr, and runTwo has stdOut to download.
     List<BuildSlaveInfo> buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
-    List<LogLineBatchRequest> requestsOne = distBuildLogStateTracker.createRealtimeLogRequests(
-        buildSlaveInfos);
+    List<LogLineBatchRequest> requestsOne =
+        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
 
     assertThat(requestsOne.size(), Matchers.equalTo(2));
 
     // Request runOne/stdErr from batch 1
-    assertTrue(requestsOne.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runOneId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDERR) &&
-            r.batchNumber == 1
-    ));
+    assertTrue(
+        requestsOne
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runOneId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDERR)
+                        && r.batchNumber == 1));
     // Request runTwo/stdOut from batch 1
-    assertTrue(requestsOne.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runTwoId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDOUT) &&
-            r.batchNumber == 1
-    ));
+    assertTrue(
+        requestsOne
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runTwoId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
+                        && r.batchNumber == 1));
 
     // Process new logs
 
@@ -174,49 +173,31 @@ public class DistBuildLogStateTrackerTest {
     runOneStdErrLogs.setSlaveStream(runOneStdErrStream);
     LogLineBatch runOneStdErrLogsBatchOne = new LogLineBatch();
     runOneStdErrLogsBatchOne.setBatchNumber(1);
-    runOneStdErrLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdErrLine1\n",
-        "runOneStdErrLine2\n"
-    ));
-    runOneStdErrLogs.setLogLineBatches(ImmutableList.of(
-        runOneStdErrLogsBatchOne
-    ));
+    runOneStdErrLogsBatchOne.setLines(
+        ImmutableList.of("runOneStdErrLine1\n", "runOneStdErrLine2\n"));
+    runOneStdErrLogs.setLogLineBatches(ImmutableList.of(runOneStdErrLogsBatchOne));
 
     StreamLogs runTwoStdOutLogs = new StreamLogs();
     runTwoStdOutLogs.setSlaveStream(runTwoStdOutStream);
     LogLineBatch runTwoStdOutLogsBatchOne = new LogLineBatch();
     runTwoStdOutLogsBatchOne.setBatchNumber(1);
-    runTwoStdOutLogsBatchOne.setLines(ImmutableList.of(
-        "runTwoStdOutLine1\n"
-    ));
+    runTwoStdOutLogsBatchOne.setLines(ImmutableList.of("runTwoStdOutLine1\n"));
     LogLineBatch runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
-    runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2\n",
-        "runTwoStdOutLine3\n"
-    ));
-    runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
-        runTwoStdOutLogsBatchOne,
-        runTwoStdOutLogsBatchTwo
-    ));
+    runTwoStdOutLogsBatchTwo.setLines(
+        ImmutableList.of("runTwoStdOutLine2\n", "runTwoStdOutLine3\n"));
+    runTwoStdOutLogs.setLogLineBatches(
+        ImmutableList.of(runTwoStdOutLogsBatchOne, runTwoStdOutLogsBatchTwo));
 
-    List<StreamLogs> streamLogsOne = ImmutableList.of(
-        runOneStdErrLogs,
-        runTwoStdOutLogs
-    );
+    List<StreamLogs> streamLogsOne = ImmutableList.of(runOneStdErrLogs, runTwoStdOutLogs);
 
     distBuildLogStateTracker.processStreamLogs(streamLogsOne);
 
-    assertLogLines(RUN_ONE_STD_ERR_LOG, ImmutableList.of(
-        "runOneStdErrLine1",
-        "runOneStdErrLine2"
-    ));
+    assertLogLines(RUN_ONE_STD_ERR_LOG, ImmutableList.of("runOneStdErrLine1", "runOneStdErrLine2"));
 
-    assertLogLines(RUN_TWO_STD_OUT_LOG, ImmutableList.of(
-        "runTwoStdOutLine1",
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3"
-    ));
+    assertLogLines(
+        RUN_TWO_STD_OUT_LOG,
+        ImmutableList.of("runTwoStdOutLine1", "runTwoStdOutLine2", "runTwoStdOutLine3"));
 
     // New build status arrives.
     // runOne/stdErr has same values as last time (so fewer lines than already processed).
@@ -228,16 +209,19 @@ public class DistBuildLogStateTrackerTest {
     runTwoSlaveInfo.setStdOutCurrentBatchLineCount(3);
     buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
 
-    List<LogLineBatchRequest> requestsTwo = distBuildLogStateTracker.createRealtimeLogRequests(
-        buildSlaveInfos);
+    List<LogLineBatchRequest> requestsTwo =
+        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
 
     assertThat(requestsTwo.size(), Matchers.equalTo(1));
     // Request runTwo/stdOut from batch 2
-    assertTrue(requestsTwo.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runTwoId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDOUT) &&
-            r.batchNumber == 2
-    ));
+    assertTrue(
+        requestsTwo
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runTwoId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
+                        && r.batchNumber == 2));
 
     // Process new logs
 
@@ -246,28 +230,19 @@ public class DistBuildLogStateTrackerTest {
 
     runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
-    runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2\n",
-        "runTwoStdOutLine3\n",
-        "runTwoStdOutLine4\n"
-    ));
+    runTwoStdOutLogsBatchTwo.setLines(
+        ImmutableList.of("runTwoStdOutLine2\n", "runTwoStdOutLine3\n", "runTwoStdOutLine4\n"));
 
-    runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
-        runTwoStdOutLogsBatchTwo
-    ));
+    runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(runTwoStdOutLogsBatchTwo));
 
-    List<StreamLogs> streamLogsTwo = ImmutableList.of(
-        runTwoStdOutLogs
-    );
+    List<StreamLogs> streamLogsTwo = ImmutableList.of(runTwoStdOutLogs);
 
     distBuildLogStateTracker.processStreamLogs(streamLogsTwo);
 
-    assertLogLines(RUN_TWO_STD_OUT_LOG, ImmutableList.of(
-        "runTwoStdOutLine1",
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3",
-        "runTwoStdOutLine4"
-    ));
+    assertLogLines(
+        RUN_TWO_STD_OUT_LOG,
+        ImmutableList.of(
+            "runTwoStdOutLine1", "runTwoStdOutLine2", "runTwoStdOutLine3", "runTwoStdOutLine4"));
 
     // New build status arrives.
     // runOne/stdOut has now been populated with 2 batches
@@ -287,30 +262,38 @@ public class DistBuildLogStateTrackerTest {
     // runOne has stdErr, and runTwo has stdOut to download.
     buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
 
-    List<LogLineBatchRequest> requestsThree = distBuildLogStateTracker.createRealtimeLogRequests(
-        buildSlaveInfos);
-
+    List<LogLineBatchRequest> requestsThree =
+        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
 
     assertThat(requestsThree.size(), Matchers.equalTo(3));
 
     // Request runOne/stdErr from batch 1
-    assertTrue(requestsThree.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runOneId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDERR) &&
-            r.batchNumber == 1
-    ));
+    assertTrue(
+        requestsThree
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runOneId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDERR)
+                        && r.batchNumber == 1));
     // Request runOne/stdOut from batch 1
-    assertTrue(requestsThree.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runOneId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDOUT) &&
-            r.batchNumber == 1
-    ));
+    assertTrue(
+        requestsThree
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runOneId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
+                        && r.batchNumber == 1));
     // Request runTwo/stdOut from batch 2
-    assertTrue(requestsThree.stream().anyMatch(r ->
-        r.slaveStream.runId.equals(runTwoId) &&
-            r.slaveStream.streamType.equals(LogStreamType.STDOUT) &&
-            r.batchNumber == 2
-    ));
+    assertTrue(
+        requestsThree
+            .stream()
+            .anyMatch(
+                r ->
+                    r.slaveStream.runId.equals(runTwoId)
+                        && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
+                        && r.batchNumber == 2));
 
     // Process new logs
 
@@ -319,108 +302,85 @@ public class DistBuildLogStateTrackerTest {
     runOneStdErrLogs.setSlaveStream(runOneStdErrStream);
     runOneStdErrLogsBatchOne = new LogLineBatch();
     runOneStdErrLogsBatchOne.setBatchNumber(1);
-    runOneStdErrLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdErrLine1\n",
-        "runOneStdErrLine2\n",
-        "runOneStdErrLine3\n"
-    ));
+    runOneStdErrLogsBatchOne.setLines(
+        ImmutableList.of("runOneStdErrLine1\n", "runOneStdErrLine2\n", "runOneStdErrLine3\n"));
     LogLineBatch runOneStdErrLogsBatchTwo = new LogLineBatch();
     runOneStdErrLogsBatchTwo.setBatchNumber(2);
-    runOneStdErrLogsBatchTwo.setLines(ImmutableList.of(
-        "runOneStdErrLine4\n"
-    ));
-    runOneStdErrLogs.setLogLineBatches(ImmutableList.of(
-        runOneStdErrLogsBatchOne,
-        runOneStdErrLogsBatchTwo
-    ));
+    runOneStdErrLogsBatchTwo.setLines(ImmutableList.of("runOneStdErrLine4\n"));
+    runOneStdErrLogs.setLogLineBatches(
+        ImmutableList.of(runOneStdErrLogsBatchOne, runOneStdErrLogsBatchTwo));
 
     // runOne/stdOut
     StreamLogs runOneStdOutLogs = new StreamLogs();
     runOneStdOutLogs.setSlaveStream(runOneStdOutStream);
     LogLineBatch runOneStdOutLogsBatchOne = new LogLineBatch();
     runOneStdOutLogsBatchOne.setBatchNumber(1);
-    runOneStdOutLogsBatchOne.setLines(ImmutableList.of(
-        "runOneStdOutLine1\n",
-        "runOneStdOutLine2\n"
-    ));
+    runOneStdOutLogsBatchOne.setLines(
+        ImmutableList.of("runOneStdOutLine1\n", "runOneStdOutLine2\n"));
     LogLineBatch runOneStdOutLogsBatchTwo = new LogLineBatch();
     runOneStdOutLogsBatchTwo.setBatchNumber(2);
-    runOneStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runOneStdOutLine3\n",
-        "runOneStdOutLine4\n"
-    ));
-    runOneStdOutLogs.setLogLineBatches(ImmutableList.of(
-        runOneStdOutLogsBatchOne,
-        runOneStdOutLogsBatchTwo
-    ));
+    runOneStdOutLogsBatchTwo.setLines(
+        ImmutableList.of("runOneStdOutLine3\n", "runOneStdOutLine4\n"));
+    runOneStdOutLogs.setLogLineBatches(
+        ImmutableList.of(runOneStdOutLogsBatchOne, runOneStdOutLogsBatchTwo));
 
     // runTwo/stdOut
     runTwoStdOutLogs = new StreamLogs();
     runTwoStdOutLogs.setSlaveStream(runTwoStdOutStream);
     runTwoStdOutLogsBatchTwo = new LogLineBatch();
     runTwoStdOutLogsBatchTwo.setBatchNumber(2);
-    runTwoStdOutLogsBatchTwo.setLines(ImmutableList.of(
-        "runTwoStdOutLine2\n",
-        "runTwoStdOutLine3\n",
-        "runTwoStdOutLine4\n"
-    ));
+    runTwoStdOutLogsBatchTwo.setLines(
+        ImmutableList.of("runTwoStdOutLine2\n", "runTwoStdOutLine3\n", "runTwoStdOutLine4\n"));
     LogLineBatch runTwoStdOutLogsBatchThree = new LogLineBatch();
     runTwoStdOutLogsBatchThree.setBatchNumber(3);
-    runTwoStdOutLogsBatchThree.setLines(ImmutableList.of(
-        "runTwoStdOutLine5\n",
-        "runTwoStdOutLine6\n"
-    ));
-    runTwoStdOutLogs.setLogLineBatches(ImmutableList.of(
-        runTwoStdOutLogsBatchTwo,
-        runTwoStdOutLogsBatchThree
-    ));
+    runTwoStdOutLogsBatchThree.setLines(
+        ImmutableList.of("runTwoStdOutLine5\n", "runTwoStdOutLine6\n"));
+    runTwoStdOutLogs.setLogLineBatches(
+        ImmutableList.of(runTwoStdOutLogsBatchTwo, runTwoStdOutLogsBatchThree));
 
-    List<StreamLogs> streamLogsThree = ImmutableList.of(
-        runOneStdErrLogs,
-        runOneStdOutLogs,
-        runTwoStdOutLogs
-    );
+    List<StreamLogs> streamLogsThree =
+        ImmutableList.of(runOneStdErrLogs, runOneStdOutLogs, runTwoStdOutLogs);
 
     distBuildLogStateTracker.processStreamLogs(streamLogsThree);
 
-    assertLogLines(RUN_ONE_STD_OUT_LOG, ImmutableList.of(
-        "runOneStdOutLine1",
-        "runOneStdOutLine2",
-        "runOneStdOutLine3",
-        "runOneStdOutLine4"
-    ));
+    assertLogLines(
+        RUN_ONE_STD_OUT_LOG,
+        ImmutableList.of(
+            "runOneStdOutLine1", "runOneStdOutLine2", "runOneStdOutLine3", "runOneStdOutLine4"));
 
-    assertLogLines(RUN_ONE_STD_ERR_LOG, ImmutableList.of(
-        "runOneStdErrLine1",
-        "runOneStdErrLine2",
-        "runOneStdErrLine3",
-        "runOneStdErrLine4"
-    ));
+    assertLogLines(
+        RUN_ONE_STD_ERR_LOG,
+        ImmutableList.of(
+            "runOneStdErrLine1", "runOneStdErrLine2", "runOneStdErrLine3", "runOneStdErrLine4"));
 
-    assertLogLines(RUN_TWO_STD_OUT_LOG, ImmutableList.of(
-        "runTwoStdOutLine1",
-        "runTwoStdOutLine2",
-        "runTwoStdOutLine3",
-        "runTwoStdOutLine4",
-        "runTwoStdOutLine5",
-        "runTwoStdOutLine6"
-    ));
+    assertLogLines(
+        RUN_TWO_STD_OUT_LOG,
+        ImmutableList.of(
+            "runTwoStdOutLine1",
+            "runTwoStdOutLine2",
+            "runTwoStdOutLine3",
+            "runTwoStdOutLine4",
+            "runTwoStdOutLine5",
+            "runTwoStdOutLine6"));
   }
 
   private void assertLogLines(String filePath, final List<String> logLines) throws IOException {
-    assertTrue(
-        "Log file does not exist: " + filePath,
-        logDir.resolve(filePath).toFile().exists());
+    assertTrue("Log file does not exist: " + filePath, logDir.resolve(filePath).toFile().exists());
     try (Stream<String> stream = Files.lines(logDir.resolve(filePath).toAbsolutePath())) {
       final AtomicInteger lineIndex = new AtomicInteger(0);
-      stream.forEachOrdered(line -> {
-        assertThat("Expected number of log lines lower than actual number.",
-            lineIndex.get(), Matchers.lessThan(logLines.size()));
-        assertThat(logLines.get(lineIndex.get()), Matchers.equalTo(line));
-        lineIndex.getAndIncrement();
-      });
-      assertThat("Expected number of log lines greater than actual number.",
-          lineIndex.get(), Matchers.equalTo(logLines.size()));
+      stream.forEachOrdered(
+          line -> {
+            assertThat(
+                "Expected number of log lines lower than actual number.",
+                lineIndex.get(),
+                Matchers.lessThan(logLines.size()));
+            assertThat(logLines.get(lineIndex.get()), Matchers.equalTo(line));
+            lineIndex.getAndIncrement();
+          });
+      assertThat(
+          "Expected number of log lines greater than actual number.",
+          lineIndex.get(),
+          Matchers.equalTo(logLines.size()));
     }
   }
 
@@ -439,14 +399,10 @@ public class DistBuildLogStateTrackerTest {
     runTwoSlaveInfo.setLogDirZipWritten(true);
 
     List<BuildSlaveInfo> slaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
-    List<RunId> runIdsToMaterialize = distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(
-        slaveInfos);
-    assertThat(
-        runIdsToMaterialize.size(),
-        Matchers.equalTo(2));
-    assertThat(
-        runIdsToMaterialize,
-        Matchers.contains(runOneId, runTwoId));
+    List<RunId> runIdsToMaterialize =
+        distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(slaveInfos);
+    assertThat(runIdsToMaterialize.size(), Matchers.equalTo(2));
+    assertThat(runIdsToMaterialize, Matchers.contains(runOneId, runTwoId));
 
     LogDir logDirOne = new LogDir();
     logDirOne.setRunId(runOneId);
@@ -466,15 +422,11 @@ public class DistBuildLogStateTrackerTest {
 
     String fileOneContents =
         new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_ONE_PATH)));
-    assertThat(
-        fileOneContents,
-        Matchers.equalTo(FILE_ONE_CONTENTS));
+    assertThat(fileOneContents, Matchers.equalTo(FILE_ONE_CONTENTS));
 
     String fileTwoContents =
         new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_TWO_PATH)));
-    assertThat(
-        fileTwoContents,
-        Matchers.equalTo(FILE_TWO_CONTENTS));
+    assertThat(fileTwoContents, Matchers.equalTo(FILE_TWO_CONTENTS));
 
     Path runTwoBuckOutDir = logDir.resolve(RUN_TWO_BUCK_OUT_DIR);
     assertTrue(runTwoBuckOutDir.toFile().exists());
@@ -483,19 +435,14 @@ public class DistBuildLogStateTrackerTest {
 
     String fileThreeContents =
         new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_THREE_PATH)));
-    assertThat(
-        fileThreeContents,
-        Matchers.equalTo(FILE_THREE_CONTENTS));
+    assertThat(fileThreeContents, Matchers.equalTo(FILE_THREE_CONTENTS));
 
     String fileFourContents =
         new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_FOUR_PATH)));
-    assertThat(
-        fileFourContents,
-        Matchers.equalTo(FILE_FOUR_CONTENTS));
+    assertThat(fileFourContents, Matchers.equalTo(FILE_FOUR_CONTENTS));
   }
 
   private byte[] readTestData(String path) throws IOException {
-    return Files.readAllBytes(TestDataHelper.getTestDataDirectory(
-        getClass()).resolve(path));
+    return Files.readAllBytes(TestDataHelper.getTestDataDirectory(getClass()).resolve(path));
   }
 }

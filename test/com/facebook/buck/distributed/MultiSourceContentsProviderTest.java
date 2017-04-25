@@ -18,7 +18,10 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.google.common.base.Charsets;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -27,17 +30,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Optional;
-
 public class MultiSourceContentsProviderTest {
 
   private static final byte[] FILE_CONTENTS = "cool contents".getBytes(Charsets.UTF_8);
 
-  @Rule
-  public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   private FileContentsProvider mockProvider;
 
@@ -49,9 +46,8 @@ public class MultiSourceContentsProviderTest {
   @Test
   public void inlineContentProviderTakesPrecedence() throws IOException {
     EasyMock.replay(mockProvider);
-    MultiSourceContentsProvider provider = new MultiSourceContentsProvider(
-        mockProvider,
-        Optional.empty());
+    MultiSourceContentsProvider provider =
+        new MultiSourceContentsProvider(mockProvider, Optional.empty());
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
     entry.setHashCode("1234");
     entry.setContents(FILE_CONTENTS);
@@ -68,16 +64,14 @@ public class MultiSourceContentsProviderTest {
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
     entry.setHashCode("1234");
     Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
-    EasyMock.expect(mockProvider.materializeFileContents(
-        EasyMock.eq(entry),
-        EasyMock.eq(targetAbsPath)))
+    EasyMock.expect(
+            mockProvider.materializeFileContents(EasyMock.eq(entry), EasyMock.eq(targetAbsPath)))
         .andReturn(true)
         .once();
     EasyMock.replay(mockProvider);
 
-    MultiSourceContentsProvider provider = new MultiSourceContentsProvider(
-        mockProvider,
-        Optional.empty());
+    MultiSourceContentsProvider provider =
+        new MultiSourceContentsProvider(mockProvider, Optional.empty());
     Assert.assertFalse(Files.isRegularFile(targetAbsPath));
     provider.materializeFileContents(entry, targetAbsPath);
     EasyMock.verify(mockProvider);

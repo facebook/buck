@@ -35,11 +35,11 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -52,11 +52,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -64,6 +59,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import org.junit.Assume;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DistBuildFileHashesIntegrationTest {
 
@@ -71,148 +69,126 @@ public class DistBuildFileHashesIntegrationTest {
 
   private static final int KEY_SEED = 0;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void symlinkPathsRecordedInRootCell() throws Exception {
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "symlink",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "symlink", temporaryFolder);
     workspace.setUp();
 
-    ProjectFilesystem rootFs = new ProjectFilesystem(
-        temporaryFolder.getRoot().toAbsolutePath().resolve("root_cell"));
+    ProjectFilesystem rootFs =
+        new ProjectFilesystem(temporaryFolder.getRoot().toAbsolutePath().resolve("root_cell"));
 
     Path absSymlinkFilePath = rootFs.resolve("../" + SYMLINK_FILE_NAME);
     Path symLinkPath = rootFs.resolve(SYMLINK_FILE_NAME);
     rootFs.createSymLink(symLinkPath, absSymlinkFilePath, false);
 
-    BuckConfig rootCellConfig = FakeBuckConfig.builder()
-        .setFilesystem(rootFs)
-        .build();
-    Cell rootCell = new TestCellBuilder()
-        .setBuckConfig(rootCellConfig)
-        .setFilesystem(rootFs)
-        .build();
+    BuckConfig rootCellConfig = FakeBuckConfig.builder().setFilesystem(rootFs).build();
+    Cell rootCell =
+        new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
 
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
-    Parser parser = new Parser(
-        new BroadcastEventListener(),
-        rootCellConfig.getView(ParserConfig.class),
-        typeCoercerFactory,
-        constructorArgMarshaller);
-    TargetGraph targetGraph = parser.buildTargetGraph(
-        BuckEventBusFactory.newInstance(),
-        rootCell,
-        /* enableProfiling */ false,
-        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
-
+    Parser parser =
+        new Parser(
+            new BroadcastEventListener(),
+            rootCellConfig.getView(ParserConfig.class),
+            typeCoercerFactory,
+            constructorArgMarshaller);
+    TargetGraph targetGraph =
+        parser.buildTargetGraph(
+            BuckEventBusFactory.newInstance(),
+            rootCell,
+            /* enableProfiling */ false,
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
         DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
-    BuildJobState dump = DistBuildState.dump(
-        new DistBuildCellIndexer(rootCell),
-        createDistBuildFileHashes(targetGraph, rootCell),
-        targetGraphCodec,
-        targetGraph,
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+    BuildJobState dump =
+        DistBuildState.dump(
+            new DistBuildCellIndexer(rootCell),
+            createDistBuildFileHashes(targetGraph, rootCell),
+            targetGraphCodec,
+            targetGraph,
+            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     assertNotNull(dump);
     assertEquals(1, dump.getFileHashesSize());
     BuildJobStateFileHashes rootCellHashes = dump.getFileHashes().get(0);
     assertEquals(2, rootCellHashes.getEntriesSize());
 
-    BuildJobStateFileHashEntry symLinkEntry = rootCellHashes.getEntries()
-        .stream()
-        .filter(x -> x.isSetRootSymLink())
-        .findFirst()
-        .get();
-    String expectedPath = temporaryFolder.getRoot()
-        .resolve(SYMLINK_FILE_NAME)
-        .toAbsolutePath()
-        .toString();
+    BuildJobStateFileHashEntry symLinkEntry =
+        rootCellHashes.getEntries().stream().filter(x -> x.isSetRootSymLink()).findFirst().get();
+    String expectedPath =
+        temporaryFolder.getRoot().resolve(SYMLINK_FILE_NAME).toAbsolutePath().toString();
     assertEquals(
         MorePaths.pathWithUnixSeparators(expectedPath),
         symLinkEntry.getRootSymLinkTarget().getPath());
-    assertEquals(
-        SYMLINK_FILE_NAME,
-        symLinkEntry.getRootSymLink().getPath());
+    assertEquals(SYMLINK_FILE_NAME, symLinkEntry.getRootSymLink().getPath());
 
-    BuildJobStateFileHashEntry relPathEntry = rootCellHashes.getEntries()
-        .stream()
-        .filter(x -> !x.isPathIsAbsolute())
-        .findFirst()
-        .get();
+    BuildJobStateFileHashEntry relPathEntry =
+        rootCellHashes.getEntries().stream().filter(x -> !x.isPathIsAbsolute()).findFirst().get();
     assertEquals("A.java", relPathEntry.getPath().getPath());
   }
 
   @Test
   public void crossCellDoesNotCauseAbsolutePathSrcs() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "cross_cell",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell", temporaryFolder);
     workspace.setUp();
 
-    ProjectFilesystem rootFs = new ProjectFilesystem(
-        temporaryFolder.getRoot().toAbsolutePath().resolve("root_cell"));
-    ProjectFilesystem secondaryFs = new ProjectFilesystem(
-        temporaryFolder.getRoot().toAbsolutePath().resolve("secondary_cell"));
-    BuckConfig rootCellConfig = FakeBuckConfig.builder()
-        .setFilesystem(rootFs)
-        .setSections(
-            "[repositories]",
-            "cross_cell_secondary = " + secondaryFs.getRootPath().toAbsolutePath())
-        .build();
-    Cell rootCell = new TestCellBuilder()
-        .setBuckConfig(rootCellConfig)
-        .setFilesystem(rootFs)
-        .build();
+    ProjectFilesystem rootFs =
+        new ProjectFilesystem(temporaryFolder.getRoot().toAbsolutePath().resolve("root_cell"));
+    ProjectFilesystem secondaryFs =
+        new ProjectFilesystem(temporaryFolder.getRoot().toAbsolutePath().resolve("secondary_cell"));
+    BuckConfig rootCellConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(rootFs)
+            .setSections(
+                "[repositories]",
+                "cross_cell_secondary = " + secondaryFs.getRootPath().toAbsolutePath())
+            .build();
+    Cell rootCell =
+        new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
-    Parser parser = new Parser(
-        new BroadcastEventListener(),
-        rootCellConfig.getView(ParserConfig.class),
-        typeCoercerFactory,
-        constructorArgMarshaller);
-    TargetGraph targetGraph = parser.buildTargetGraph(
-        BuckEventBusFactory.newInstance(),
-        rootCell,
-        /* enableProfiling */ false,
-        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
-
+    Parser parser =
+        new Parser(
+            new BroadcastEventListener(),
+            rootCellConfig.getView(ParserConfig.class),
+            typeCoercerFactory,
+            constructorArgMarshaller);
+    TargetGraph targetGraph =
+        parser.buildTargetGraph(
+            BuckEventBusFactory.newInstance(),
+            rootCell,
+            /* enableProfiling */ false,
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
         DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
-    BuildJobState dump = DistBuildState.dump(
-        new DistBuildCellIndexer(rootCell),
-        createDistBuildFileHashes(targetGraph, rootCell),
-        targetGraphCodec,
-        targetGraph,
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+    BuildJobState dump =
+        DistBuildState.dump(
+            new DistBuildCellIndexer(rootCell),
+            createDistBuildFileHashes(targetGraph, rootCell),
+            targetGraphCodec,
+            targetGraph,
+            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     assertNotNull(dump);
     assertEquals(2, dump.getFileHashesSize());
-    List<BuildJobStateFileHashes> sortedHashes = dump.getFileHashes()
-        .stream()
-        .sorted(
-            Comparator.comparingInt(
-                BuildJobStateFileHashes::getCellIndex))
-        .collect(Collectors.toList());
+    List<BuildJobStateFileHashes> sortedHashes =
+        dump.getFileHashes()
+            .stream()
+            .sorted(Comparator.comparingInt(BuildJobStateFileHashes::getCellIndex))
+            .collect(Collectors.toList());
 
     BuildJobStateFileHashes rootCellHashes = sortedHashes.get(0);
     assertEquals(1, rootCellHashes.getEntriesSize());
@@ -220,21 +196,14 @@ public class DistBuildFileHashesIntegrationTest {
 
     BuildJobStateFileHashes secondaryCellHashes = sortedHashes.get(1);
     assertEquals(1, secondaryCellHashes.getEntriesSize());
-    assertEquals(
-        "B.java",
-        secondaryCellHashes.getEntries().get(0).getPath().getPath());
+    assertEquals("B.java", secondaryCellHashes.getEntries().get(0).getPath().getPath());
   }
 
-  private DistBuildFileHashes createDistBuildFileHashes(
-      TargetGraph targetGraph,
-      Cell rootCell) throws IOException {
+  private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
+      throws IOException {
     ActionGraphCache cache = new ActionGraphCache(new BroadcastEventListener());
-    ActionGraphAndResolver actionGraphAndResolver = cache.getActionGraph(
-        BuckEventBusFactory.newInstance(),
-        true,
-        false,
-        targetGraph,
-        KEY_SEED);
+    ActionGraphAndResolver actionGraphAndResolver =
+        cache.getActionGraph(BuckEventBusFactory.newInstance(), true, false, targetGraph, KEY_SEED);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
