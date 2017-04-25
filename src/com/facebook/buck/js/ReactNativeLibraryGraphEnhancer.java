@@ -88,9 +88,7 @@ public class ReactNativeLibraryGraphEnhancer {
             params,
             resolver,
             ruleFinder,
-            BuildTarget.builder(originalBuildTarget)
-                .addFlavors(REACT_NATIVE_BUNDLE_FLAVOR)
-                .build(),
+            BuildTarget.builder(originalBuildTarget).addFlavors(REACT_NATIVE_BUNDLE_FLAVOR).build(),
             args,
             ReactNativePlatform.ANDROID);
     resolver.addToIndex(bundle);
@@ -103,46 +101,37 @@ public class ReactNativeLibraryGraphEnhancer {
               .withAppendedFlavor(REACT_NATIVE_ANDROID_RES_FLAVOR)
               .copyReplacingExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(bundle)));
 
-      SourcePath resources = new ExplicitBuildTargetSourcePath(
-          bundle.getBuildTarget(),
-          bundle.getResources());
-      BuildRule resource = new AndroidResource(
-          paramsForResource,
-          ruleFinder,
-          /* deps */ ImmutableSortedSet.of(),
-          resources,
-          /* resSrcs */ ImmutableSortedMap.of(),
-          args.rDotJavaPackage.get(),
-          /* assets */ null,
-          /* assetsSrcs */ ImmutableSortedMap.of(),
-          /* manifest */ null,
-          /* hasWhitelistedStrings */ false);
+      SourcePath resources =
+          new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());
+      BuildRule resource =
+          new AndroidResource(
+              paramsForResource,
+              ruleFinder,
+              /* deps */ ImmutableSortedSet.of(),
+              resources,
+              /* resSrcs */ ImmutableSortedMap.of(),
+              args.rDotJavaPackage.get(),
+              /* assets */ null,
+              /* assetsSrcs */ ImmutableSortedMap.of(),
+              /* manifest */ null,
+              /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);
       extraDeps.add(resource);
 
-      Aapt2Compile aapt2Compile = new Aapt2Compile(
-          paramsForResource.withAppendedFlavor(
-              AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
-          resources);
+      Aapt2Compile aapt2Compile =
+          new Aapt2Compile(
+              paramsForResource.withAppendedFlavor(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
+              resources);
       resolver.addToIndex(aapt2Compile);
     }
 
-    return new AndroidReactNativeLibrary(
-        params.copyAppendingExtraDeps(extraDeps.build()),
-        bundle);
+    return new AndroidReactNativeLibrary(params.copyAppendingExtraDeps(extraDeps.build()), bundle);
   }
 
   public ReactNativeBundle enhanceForIos(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      ReactNativeLibraryArgs args) {
+      BuildRuleParams params, BuildRuleResolver resolver, ReactNativeLibraryArgs args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return createReactNativeBundle(
-        params,
-        resolver,
-        ruleFinder,
-        params.getBuildTarget(),
-        args,
-        ReactNativePlatform.IOS);
+        params, resolver, ruleFinder, params.getBuildTarget(), args, ReactNativePlatform.IOS);
   }
 }

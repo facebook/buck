@@ -31,22 +31,16 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public abstract class JsFile extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Optional<String> extraArgs;
+  @AddToRuleKey private final Optional<String> extraArgs;
 
-  @AddToRuleKey
-  private final WorkerTool worker;
+  @AddToRuleKey private final WorkerTool worker;
 
-  public JsFile(
-      BuildRuleParams params,
-      Optional<String> extraArgs,
-      WorkerTool worker) {
+  public JsFile(BuildRuleParams params, Optional<String> extraArgs, WorkerTool worker) {
     super(params);
     this.extraArgs = extraArgs;
     this.worker = worker;
@@ -59,10 +53,7 @@ public abstract class JsFile extends AbstractBuildRule {
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
   }
 
-  ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      String jobArgsFormat,
-      Path outputPath) {
+  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgsFormat, Path outputPath) {
     return ImmutableList.of(
         RmStep.of(getProjectFilesystem(), outputPath),
         JsUtil.workerShellStep(
@@ -70,19 +61,15 @@ public abstract class JsFile extends AbstractBuildRule {
             String.format(jobArgsFormat, extraArgs.orElse("")),
             getBuildTarget(),
             context.getSourcePathResolver(),
-            getProjectFilesystem())
-    );
+            getProjectFilesystem()));
   }
 
   static class JsFileDev extends JsFile {
-    @AddToRuleKey
-    private final SourcePath src;
+    @AddToRuleKey private final SourcePath src;
 
-    @AddToRuleKey
-    private final Optional<String> subPath;
+    @AddToRuleKey private final Optional<String> subPath;
 
-    @AddToRuleKey
-    private final Optional<String> virtualPath;
+    @AddToRuleKey private final Optional<String> virtualPath;
 
     JsFileDev(
         BuildRuleParams params,
@@ -99,19 +86,19 @@ public abstract class JsFile extends AbstractBuildRule {
 
     @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
-        BuildableContext buildableContext) {
+        BuildContext context, BuildableContext buildableContext) {
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
       final Path srcPath = sourcePathResolver.getAbsolutePath(src);
-      final String jobArgs = String.format(
-          "transform %%s --filename %s --out %s %s",
-          virtualPath.orElseGet(() ->
-              MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
-          outputPath,
-          subPath.map(srcPath::resolve).orElse(srcPath));
+      final String jobArgs =
+          String.format(
+              "transform %%s --filename %s --out %s %s",
+              virtualPath.orElseGet(
+                  () -> MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
+              outputPath,
+              subPath.map(srcPath::resolve).orElse(srcPath));
 
       return getBuildSteps(context, jobArgs, outputPath);
     }
@@ -124,8 +111,7 @@ public abstract class JsFile extends AbstractBuildRule {
 
   static class JsFileRelease extends JsFile {
 
-    @AddToRuleKey
-    private final SourcePath devFile;
+    @AddToRuleKey private final SourcePath devFile;
 
     JsFileRelease(
         BuildRuleParams buildRuleParams,
@@ -138,17 +124,17 @@ public abstract class JsFile extends AbstractBuildRule {
 
     @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
-        BuildableContext buildableContext) {
+        BuildContext context, BuildableContext buildableContext) {
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final String jobArgs = String.format(
-          "optimize %%s %s --out %s %s",
-          JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
-          outputPath,
-          sourcePathResolver.getAbsolutePath(devFile).toString());
+      final String jobArgs =
+          String.format(
+              "optimize %%s %s --out %s %s",
+              JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
+              outputPath,
+              sourcePathResolver.getAbsolutePath(devFile).toString());
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

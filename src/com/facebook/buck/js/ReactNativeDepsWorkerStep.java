@@ -18,11 +18,10 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.WorkerJobParams;
-import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerProcessPoolFactory;
+import com.facebook.buck.shell.WorkerShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -48,9 +47,7 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                 ImmutableMap.of(),
                 String.format(
                     "--command dependencies --platform %s --entry-file %s --output %s",
-                    platform.toString(),
-                    entryFile.toString(),
-                    outputFile.toString()),
+                    platform.toString(), entryFile.toString(), outputFile.toString()),
                 1,
                 Optional.empty(),
                 Optional.empty())),

@@ -26,41 +26,30 @@ import com.facebook.buck.rules.SourcePath;
 public interface JsBundleOutputs extends BuildRule {
   /**
    * @return the file name of the main JavaScript bundle file. This does not necessarily have to be
-   * the only JavaScript file written.
+   *     the only JavaScript file written.
    */
   String getBundleName();
 
-  /**
-   * @return the {@link SourcePath} to the built JavaScript. Can be a directory.
-   */
+  /** @return the {@link SourcePath} to the built JavaScript. Can be a directory. */
   @Override
   default SourcePath getSourcePathToOutput() {
-    return JsUtil.relativeToOutputRoot(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        "js");
+    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "js");
   }
 
   /**
    * @return a {@link SourcePath} to a source map belonging to the built JavaScript. Typically a
-   * single file.
+   *     single file.
    */
   default SourcePath getSourcePathToSourceMap() {
     return JsUtil.relativeToOutputRoot(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        String.format("map/%s.map", getBundleName()));
+        getBuildTarget(), getProjectFilesystem(), String.format("map/%s.map", getBundleName()));
   }
 
   /**
    * @return the {@link SourcePath} to a directory containing the resources (or assets) used by the
-   * bundled JavaScript source code.
+   *     bundled JavaScript source code.
    */
   default SourcePath getSourcePathToResources() {
-    return JsUtil.relativeToOutputRoot(
-        getBuildTarget(),
-        getProjectFilesystem(),
-        "res");
+    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "res");
   }
-
 }

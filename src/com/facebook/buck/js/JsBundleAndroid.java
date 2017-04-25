@@ -30,26 +30,18 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-
-/**
- * Represents a combination of a JavaScript bundle *and* Android resources.
- */
+/** Represents a combination of a JavaScript bundle *and* Android resources. */
 public class JsBundleAndroid extends AbstractBuildRule
     implements AndroidPackageable, JsBundleOutputs {
 
-  @AddToRuleKey
-  private final JsBundleOutputs delegate;
+  @AddToRuleKey private final JsBundleOutputs delegate;
 
-  @AddToRuleKey
-  private final AndroidResource androidResource;
+  @AddToRuleKey private final AndroidResource androidResource;
 
   public JsBundleAndroid(
-      BuildRuleParams buildRuleParams,
-      JsBundleOutputs delegate,
-      AndroidResource androidResource) {
+      BuildRuleParams buildRuleParams, JsBundleOutputs delegate, AndroidResource androidResource) {
     super(buildRuleParams);
     this.delegate = delegate;
     this.androidResource = androidResource;
@@ -57,8 +49,7 @@ public class JsBundleAndroid extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));

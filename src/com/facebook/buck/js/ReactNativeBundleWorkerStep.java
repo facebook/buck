@@ -18,11 +18,10 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.WorkerJobParams;
-import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerProcessPoolFactory;
+import com.facebook.buck.shell.WorkerShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -52,8 +51,8 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
                 ImmutableMap.of(),
                 String.format(
-                    "--command %s %s --entry-file %s --platform %s --dev %s --bundle-output %s " +
-                        "--assets-dest %s --sourcemap-output %s",
+                    "--command %s %s --entry-file %s --platform %s --dev %s --bundle-output %s "
+                        + "--assets-dest %s --sourcemap-output %s",
                     isUnbundle ? "unbundle" : "bundle",
                     isIndexedUnbundle ? "--indexed-unbundle" : "",
                     entryFile.toString(),

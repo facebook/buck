@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
@@ -25,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 public class ReactNativeFlavors {
 
   // Utility class, do not instantiate.
-  private ReactNativeFlavors() { }
+  private ReactNativeFlavors() {}
 
   public static final Flavor UNBUNDLE = InternalFlavor.of("unbundle");
 

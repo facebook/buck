@@ -30,19 +30,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class JsLibrary extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> libraryDependencies;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
 
-  @AddToRuleKey
-  private final WorkerTool worker;
+  @AddToRuleKey private final WorkerTool worker;
 
   protected JsLibrary(
       BuildRuleParams params,
@@ -57,27 +53,23 @@ public class JsLibrary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-    final String jobArgs = String.format(
-        "library %s %s --root %s --out %s %s",
-        JsFlavors.PLATFORM_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
-        JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--lib " + p),
-        getProjectFilesystem().getRootPath(),
-        outputPath,
-        JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString));
+    final String jobArgs =
+        String.format(
+            "library %s %s --root %s --out %s %s",
+            JsFlavors.PLATFORM_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
+            JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--lib " + p),
+            getProjectFilesystem().getRootPath(),
+            outputPath,
+            JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString));
     return ImmutableList.of(
         RmStep.of(getProjectFilesystem(), outputPath),
         JsUtil.workerShellStep(
-            worker,
-            jobArgs,
-            getBuildTarget(),
-            sourcePathResolver,
-            getProjectFilesystem()));
+            worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()));
   }
 
   @Override

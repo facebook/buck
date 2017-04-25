@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.AndroidPackageable;
@@ -32,9 +31,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
 
   private final ReactNativeBundle bundle;
 
-  protected AndroidReactNativeLibrary(
-      BuildRuleParams buildRuleParams,
-      ReactNativeBundle bundle) {
+  protected AndroidReactNativeLibrary(BuildRuleParams buildRuleParams, ReactNativeBundle bundle) {
     super(buildRuleParams);
     this.bundle = bundle;
   }
@@ -51,8 +48,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 

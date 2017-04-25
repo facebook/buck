@@ -21,12 +21,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.util.Optional;
 
-/**
- * A react-native view of {@link BuckConfig}.
- */
+/** A react-native view of {@link BuckConfig}. */
 public class ReactNativeBuckConfig {
 
   private final BuckConfig delegate;
@@ -36,7 +33,7 @@ public class ReactNativeBuckConfig {
   }
 
   /**
-   * The JavaScript packager tool to use for React Native rules.  Note that callers need to add the
+   * The JavaScript packager tool to use for React Native rules. Note that callers need to add the
    * result of {@link #getPackagerSourcePath()} to the list of deps on the build rule otherwise
    * parsing will fail.
    *
@@ -47,11 +44,11 @@ public class ReactNativeBuckConfig {
   }
 
   public SourcePath getPackagerSourcePath() {
-    Optional<SourcePath> packagerWorker =
-        delegate.getSourcePath("react-native", "packager_worker");
+    Optional<SourcePath> packagerWorker = delegate.getSourcePath("react-native", "packager_worker");
     if (!packagerWorker.isPresent()) {
-      throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
-          "specify 'packager_worker' in .buckconfig under the 'react-native' section.");
+      throw new HumanReadableException(
+          "In order to use a 'react_native_library' rule, please "
+              + "specify 'packager_worker' in .buckconfig under the 'react-native' section.");
     }
     return packagerWorker.get();
   }

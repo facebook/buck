@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,43 +46,32 @@ import java.util.function.Predicate;
  * Responsible for running the React Native JS packager in order to generate a single {@code .js}
  * bundle along with resources referenced by the javascript code.
  */
-public class ReactNativeBundle
-    extends AbstractBuildRule
+public class ReactNativeBundle extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   public static final String JS_BUNDLE_OUTPUT_DIR_FORMAT = "__%s_js__/";
   public static final String RESOURCES_OUTPUT_DIR_FORMAT = "__%s_res__/";
   public static final String SOURCE_MAP_OUTPUT_FORMAT = "__%s_source_map__/source.map";
 
-  @AddToRuleKey
-  private final SourcePath entryPath;
+  @AddToRuleKey private final SourcePath entryPath;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  @AddToRuleKey
-  private final boolean isUnbundle;
+  @AddToRuleKey private final boolean isUnbundle;
 
-  @AddToRuleKey
-  private final boolean isIndexedUnbundle;
+  @AddToRuleKey private final boolean isIndexedUnbundle;
 
-  @AddToRuleKey
-  private final boolean isDevMode;
+  @AddToRuleKey private final boolean isDevMode;
 
-  @AddToRuleKey
-  private final boolean exposeSourceMap;
+  @AddToRuleKey private final boolean exposeSourceMap;
 
-  @AddToRuleKey
-  private final Tool jsPackager;
+  @AddToRuleKey private final Tool jsPackager;
 
-  @AddToRuleKey
-  private final ReactNativePlatform platform;
+  @AddToRuleKey private final ReactNativePlatform platform;
 
-  @AddToRuleKey
-  private final String bundleName;
+  @AddToRuleKey private final String bundleName;
 
-  @AddToRuleKey
-  private final Optional<String> packagerFlags;
+  @AddToRuleKey private final Optional<String> packagerFlags;
 
   private final Path jsOutputDir;
   private final Path resource;
@@ -120,8 +108,7 @@ public class ReactNativeBundle
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Generate the normal outputs.
@@ -135,11 +122,7 @@ public class ReactNativeBundle
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), depFile.getParent()));
 
     appendWorkerSteps(
-        steps,
-        context.getSourcePathResolver(),
-        jsOutput,
-        sourceMapOutputPath,
-        depFile);
+        steps, context.getSourcePathResolver(), jsOutput, sourceMapOutputPath, depFile);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
@@ -245,9 +228,7 @@ public class ReactNativeBundle
         throw new IOException(
             String.format(
                 "%s: entry path '%s' transitively uses source file not preset in `srcs`: %s",
-                getBuildTarget(),
-                entryPath,
-                path));
+                getBuildTarget(), entryPath, path));
       }
       inputs.add(sourcePath);
     }
@@ -258,7 +239,6 @@ public class ReactNativeBundle
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
+        getBuildTarget(), exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
   }
 }

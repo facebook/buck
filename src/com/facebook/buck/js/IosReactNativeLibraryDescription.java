@@ -38,11 +38,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
 public class IosReactNativeLibraryDescription
-    implements
-    Description<ReactNativeLibraryArgs>,
-    Flavored,
-    HasAppleBundleResourcesDescription<ReactNativeLibraryArgs>,
-    ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
+    implements Description<ReactNativeLibraryArgs>,
+        Flavored,
+        HasAppleBundleResourcesDescription<ReactNativeLibraryArgs>,
+        ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
@@ -94,10 +93,8 @@ public class IosReactNativeLibraryDescription
     BuildTarget buildTarget = targetNode.getBuildTarget();
     builder.addDirsContainingResourceDirs(
         new ExplicitBuildTargetSourcePath(
-            buildTarget,
-            ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
+            buildTarget, ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
         new ExplicitBuildTargetSourcePath(
-            buildTarget,
-            ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
+            buildTarget, ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
   }
 }
