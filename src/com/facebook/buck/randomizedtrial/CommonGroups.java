@@ -32,7 +32,6 @@ public enum CommonGroups implements WithProbability {
     return probability;
   }
 
-
   @Override
   public String toString() {
     return super.toString() + ", probability: " + probability;

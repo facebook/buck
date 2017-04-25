@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.hash.Hashing;
-
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
@@ -32,13 +31,15 @@ import java.util.EnumSet;
  * belongs to. This choice is stable and currently based on hostname, test name and user name.
  */
 public class RandomizedTrial {
-  private static final Supplier<String> HOSTNAME_SUPPLIER = Suppliers.memoize(() -> {
-    try {
-      return java.net.InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-      return  "unable.to.determine.host";
-    }
-  });
+  private static final Supplier<String> HOSTNAME_SUPPLIER =
+      Suppliers.memoize(
+          () -> {
+            try {
+              return java.net.InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+              return "unable.to.determine.host";
+            }
+          });
 
   private static final Logger LOG = Logger.get(RandomizedTrial.class);
 
@@ -46,14 +47,13 @@ public class RandomizedTrial {
 
   /**
    * Returns a group for trial with given name.
+   *
    * @param name name of trial.
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
    * @param defaultValue The value that will be used in case if class can't determine the group.
    */
   public static <T extends Enum<T> & WithProbability> T getGroup(
-      String name,
-      Class<T> enumClass,
-      T defaultValue) {
+      String name, Class<T> enumClass, T defaultValue) {
     EnumSet<T> enumSet = EnumSet.allOf(enumClass);
 
     double sumOfAllProbabilities = 0;
@@ -62,9 +62,10 @@ public class RandomizedTrial {
     }
     Preconditions.checkArgument(
         sumOfAllProbabilities == 1.0,
-        "RandomizedTrial '%s' is misconfigured: sum of probabilities of all groups must be " +
-            "equal 1.0, but it is %f",
-        name, sumOfAllProbabilities);
+        "RandomizedTrial '%s' is misconfigured: sum of probabilities of all groups must be "
+            + "equal 1.0, but it is %f",
+        name,
+        sumOfAllProbabilities);
 
     double point = getPoint(name);
 
@@ -81,10 +82,7 @@ public class RandomizedTrial {
 
     LOG.error(
         "Test %s was unable to detect group. Point is: %f. Groups: %s. Will use default value: %s",
-        name,
-        point,
-        enumSet,
-        defaultValue);
+        name, point, enumSet, defaultValue);
     return defaultValue;
   }
 
@@ -96,22 +94,19 @@ public class RandomizedTrial {
 
   /**
    * This method determines which double number in range of [0.0, 1.0] represents the given key.
-   * Algorithm is:
-   * 1. Get SHA of the given key.
-   * 2. Get first digit of the SHA and convert it into number, e.g. D -> 13.
-   * 3. Get 2 digits starting at position we got from step 2, e.g. A1. This is to randomize the
-   * resulting value a bit more.
-   * 4. Convert these digits into number (A1->161) and divide it by 255 (161/255=0.631) and return
-   * this value.
+   * Algorithm is: 1. Get SHA of the given key. 2. Get first digit of the SHA and convert it into
+   * number, e.g. D -> 13. 3. Get 2 digits starting at position we got from step 2, e.g. A1. This is
+   * to randomize the resulting value a bit more. 4. Convert these digits into number (A1->161) and
+   * divide it by 255 (161/255=0.631) and return this value.
+   *
    * @param key Key which point we are looking for.
    * @return Value from 0.0 to 1.0.
    */
   private static double getPointForKey(String key) {
     String hash = Hashing.sha384().hashString(key, StandardCharsets.UTF_8).toString();
     Long position = Long.valueOf(hash.substring(0, 1), 16);
-    Long byteValue = Long.valueOf(
-        hash.substring(position.intValue() * 2, position.intValue() * 2 + 2),
-        16);
+    Long byteValue =
+        Long.valueOf(hash.substring(position.intValue() * 2, position.intValue() * 2 + 2), 16);
     double result = byteValue / 255.0;
     LOG.debug("Point for key '%s' is: %f", key, result);
     return result;
@@ -127,5 +122,4 @@ public class RandomizedTrial {
     LOG.debug("Determined key: '%s'", result);
     return result;
   }
-
 }
