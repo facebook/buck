@@ -23,32 +23,27 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class FlavoredTargetsParserIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tempFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tempFolder = new TemporaryPaths();
 
   @Test
   public void canBuildAnUnflavoredTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example");
@@ -61,10 +56,8 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canBuildAFlavoredTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example#src");
@@ -76,10 +69,8 @@ public class FlavoredTargetsParserIntegrationTest {
   @Test
   public void canBuildBothAFlavoredAndUnflavoredVersionOfTheSameTargetInTheSameBuild()
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:example", "//:example#src");
@@ -105,10 +96,11 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canReferToFlavorsInBuildFiles() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "flavored_build",   // NB: this is not the same as the other tests in this file!
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "flavored_build", // NB: this is not the same as the other tests in this file!
+            tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example");

@@ -23,7 +23,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import org.junit.Test;
 
 public class VisibilityPatternParserTest {
@@ -42,15 +41,17 @@ public class VisibilityPatternParserTest {
   }
 
   @Test
-  public void getDescriptionWorksForVariousPatternTypes()
-      throws NoSuchBuildTargetException {
+  public void getDescriptionWorksForVariousPatternTypes() throws NoSuchBuildTargetException {
 
     assertEquals("PUBLIC", parser.parse(null, "PUBLIC").getRepresentation());
-    assertEquals("//test/com/facebook/buck/parser:parser",
+    assertEquals(
+        "//test/com/facebook/buck/parser:parser",
         parseVisibilityPattern("//test/com/facebook/buck/parser:parser").getRepresentation());
-    assertEquals("//test/com/facebook/buck/parser:",
+    assertEquals(
+        "//test/com/facebook/buck/parser:",
         parseVisibilityPattern("//test/com/facebook/buck/parser:").getRepresentation());
-    assertEquals("//test/com/facebook/buck/parser/...",
+    assertEquals(
+        "//test/com/facebook/buck/parser/...",
         parseVisibilityPattern("//test/com/facebook/buck/parser/...").getRepresentation());
   }
 

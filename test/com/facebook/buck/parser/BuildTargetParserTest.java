@@ -30,34 +30,29 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class BuildTargetParserTest {
 
   private final BuildTargetParser parser = BuildTargetParser.INSTANCE;
   private BuildTargetPatternParser<BuildTargetPattern> fullyQualifiedParser;
 
-
   @Before
   public void setUpFullyQualifiedBuildTargetPatternParser() {
     fullyQualifiedParser = BuildTargetPatternParser.fullyQualified();
   }
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testParseRootRule() {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
-    BuildTarget buildTarget =
-        parser.parse("//:fb4a", fullyQualifiedParser, createCellRoots(null));
+    BuildTarget buildTarget = parser.parse("//:fb4a", fullyQualifiedParser, createCellRoots(null));
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
@@ -137,8 +132,8 @@ public class BuildTargetParserTest {
       parser.parse("//facebook/orca/assets", fullyQualifiedParser, createCellRoots(null));
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
-      assertEquals("//facebook/orca/assets must contain exactly one colon (found 0)",
-          e.getMessage());
+      assertEquals(
+          "//facebook/orca/assets must contain exactly one colon (found 0)", e.getMessage());
     }
   }
 
@@ -148,8 +143,8 @@ public class BuildTargetParserTest {
       parser.parse("//facebook:orca:assets", fullyQualifiedParser, createCellRoots(null));
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
-      assertEquals("//facebook:orca:assets must contain exactly one colon (found 2)",
-          e.getMessage());
+      assertEquals(
+          "//facebook:orca:assets must contain exactly one colon (found 2)", e.getMessage());
     }
   }
 
@@ -163,10 +158,11 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseBuildFile() {
-    BuildTarget buildTarget = parser.parse(
-        ":assets",
-        BuildTargetPatternParser.forBaseName("//facebook/orca"),
-        createCellRoots(null));
+    BuildTarget buildTarget =
+        parser.parse(
+            ":assets",
+            BuildTargetPatternParser.forBaseName("//facebook/orca"),
+            createCellRoots(null));
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
@@ -179,8 +175,8 @@ public class BuildTargetParserTest {
     BuildTarget target =
         parser.parse("//java/com/example:", buildTargetPatternParser, createCellRoots(null));
     assertEquals(
-        "A build target that ends with a colon should be treated as a wildcard build target " +
-        "when parsed in the context of a visibility argument.",
+        "A build target that ends with a colon should be treated as a wildcard build target "
+            + "when parsed in the context of a visibility argument.",
         "//java/com/example:",
         target.getFullyQualifiedName());
   }
@@ -188,9 +184,9 @@ public class BuildTargetParserTest {
   @Test
   public void testParseWithRepoName() {
     final Path localRepoRoot = Paths.get("/opt/local/repo");
-    CellPathResolver cellRoots = new DefaultCellPathResolver(
-        Paths.get("/opt/local/rootcell"),
-        ImmutableMap.of("localreponame", localRepoRoot));
+    CellPathResolver cellRoots =
+        new DefaultCellPathResolver(
+            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);
@@ -213,5 +209,4 @@ public class BuildTargetParserTest {
         parser.parse(backslashStr, fullyQualifiedParser, createCellRoots(null));
     assertEquals("//com/microsoft/windows", buildTarget.getBaseName());
   }
-
 }

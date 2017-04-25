@@ -27,20 +27,17 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.FileSystem;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.nio.file.FileSystem;
 
 public class BuildTargetPatternParserTest {
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   private final FileSystem vfs = filesystem.getRootPath().getFileSystem();
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
@@ -49,27 +46,21 @@ public class BuildTargetPatternParserTest {
 
     assertEquals(
         new ImmediateDirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("test/com/facebook/buck/parser/")),
+            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser:"));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
 
     assertEquals(
         new SingletonBuildTargetPattern(
-            filesystem.getRootPath(),
-            "//test/com/facebook/buck/parser:parser"),
+            filesystem.getRootPath(), "//test/com/facebook/buck/parser:parser"),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser:parser"));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
         new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("test/com/facebook/buck/parser/")),
+            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser/..."));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
   }
 
   @Test(expected = BuildTargetParseException.class)
@@ -86,9 +77,7 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     assertEquals(
-        new ImmediateDirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("")),
+        new ImmediateDirectoryBuildTargetPattern(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(
@@ -96,9 +85,7 @@ public class BuildTargetPatternParserTest {
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("")),
+        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
@@ -108,17 +95,17 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    CellPathResolver cellNames = new DefaultCellPathResolver(
-        filesystem.getPath("foo/root"),
-        ImmutableMap.of("other", filesystem.getPath("foo/other")));
+    CellPathResolver cellNames =
+        new DefaultCellPathResolver(
+            filesystem.getPath("foo/root"),
+            ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
     assertEquals(
         new SingletonBuildTargetPattern(filesystem.getPath("foo/other"), "//:something"),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
         new SubdirectoryBuildTargetPattern(
-            filesystem.getPath("foo/other"),
-            filesystem.getPath("sub")),
+            filesystem.getPath("foo/other"), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
 

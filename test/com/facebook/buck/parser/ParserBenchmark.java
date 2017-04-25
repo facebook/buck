@@ -23,8 +23,8 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -36,15 +36,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ParserBenchmark {
   @Param({"10", "100", "500"})
@@ -84,8 +82,8 @@ public class ParserBenchmark {
       Files.createFile(buckFile);
       Files.write(
           buckFile,
-          ("java_library(name = 'foo', srcs = ['A.java'])\n" +
-              "genrule(name = 'baz', out = '')\n").getBytes("UTF-8"));
+          ("java_library(name = 'foo', srcs = ['A.java'])\n" + "genrule(name = 'baz', out = '')\n")
+              .getBytes("UTF-8"));
       Path javaFile = targetRoot.resolve("A.java");
       Files.createFile(javaFile);
       Files.write(
@@ -99,29 +97,27 @@ public class ParserBenchmark {
       configSectionsBuilder.put(
           "project",
           ImmutableMap.of(
-              "parallel_parsing", "true",
-              "parsing_threads", Integer.toString(threadCount)));
+              "parallel_parsing", "true", "parsing_threads", Integer.toString(threadCount)));
     }
-    BuckConfig config = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setSections(configSectionsBuilder.build())
-        .build();
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections(configSectionsBuilder.build())
+            .build();
 
-    cell = new TestCellBuilder()
-        .setFilesystem(filesystem)
-        .setBuckConfig(config)
-        .build();
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     eventBus = BuckEventBusFactory.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
-    parser = new Parser(
-        new BroadcastEventListener(),
-        config.getView(ParserConfig.class),
-        typeCoercerFactory,
-        marshaller);
+    parser =
+        new Parser(
+            new BroadcastEventListener(),
+            config.getView(ParserConfig.class),
+            typeCoercerFactory,
+            marshaller);
   }
 
   @After
@@ -145,10 +141,7 @@ public class ParserBenchmark {
         executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                x -> true,
-                BuildFileSpec.fromRecursivePath(
-                    Paths.get(""),
-                    cell.getRoot()))),
+                x -> true, BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
         /* ignoreBuckAutodepsFiles */ false);
   }
 }
