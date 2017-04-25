@@ -21,20 +21,15 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 
-/**
- * Events posted before and after running buck.py.
- */
-public abstract class ProjectBuildFileParseEvents
-    extends AbstractBuckEvent
+/** Events posted before and after running buck.py. */
+public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   // This class does nothing; it exists only to group two AbstractBuckEvents.
   private ProjectBuildFileParseEvents(EventKey eventKey) {
     super(eventKey);
   }
 
-  /**
-   * Event posted immediately before launching buck.py to parse BUCK files.
-   */
+  /** Event posted immediately before launching buck.py to parse BUCK files. */
   public static class Started extends ProjectBuildFileParseEvents {
     public Started() {
       super(EventKey.unique());
@@ -56,9 +51,7 @@ public abstract class ProjectBuildFileParseEvents
     }
   }
 
-  /**
-   * Event posted immediately after buck.py exits having parsed BUCK files.
-   */
+  /** Event posted immediately after buck.py exits having parsed BUCK files. */
   public static class Finished extends ProjectBuildFileParseEvents {
 
     public Finished(Started started) {

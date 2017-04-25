@@ -18,16 +18,17 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractBuildFileParseExceptionData {
   String getType();
+
   String getValue();
+
   Optional<BuildFileSyntaxError> getSyntaxError();
+
   ImmutableList<BuildFileParseExceptionStackTraceEntry> getStackTrace();
 }

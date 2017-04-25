@@ -28,7 +28,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 /*
@@ -53,9 +52,7 @@ public class JsonConcatenate extends AbstractBuildRule {
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            this.getBuildTarget(),
-            outputDirectoryPrefix + "-%s");
+            getProjectFilesystem(), this.getBuildTarget(), outputDirectoryPrefix + "-%s");
     this.output = this.outputDirectory.resolve(outputName);
     this.stepShortName = stepShortName;
     this.stepDescription = stepDescription;
@@ -70,11 +67,7 @@ public class JsonConcatenate extends AbstractBuildRule {
         .add(MkdirStep.of(projectFilesystem, outputDirectory))
         .add(
             new JsonConcatenateStep(
-                projectFilesystem,
-                inputs,
-                output,
-                stepShortName,
-                stepDescription))
+                projectFilesystem, inputs, output, stepShortName, stepDescription))
         .build();
   }
 

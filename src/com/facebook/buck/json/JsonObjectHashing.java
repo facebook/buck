@@ -17,39 +17,34 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.hashing.StringHashing;
-
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-/**
- * Hashes parsed BUCK file objects.
- */
+/** Hashes parsed BUCK file objects. */
 public class JsonObjectHashing {
   private static enum HashedObjectType {
-      BOOLEAN,
-      DOUBLE,
-      FLOAT,
-      INTEGER,
-      LIST,
-      LONG,
-      SHORT,
-      STRING,
-      MAP,
-      NULL
+    BOOLEAN,
+    DOUBLE,
+    FLOAT,
+    INTEGER,
+    LIST,
+    LONG,
+    SHORT,
+    STRING,
+    MAP,
+    NULL
   }
 
   // Utility class; do not instantiate.
-  private JsonObjectHashing() { }
+  private JsonObjectHashing() {}
 
   /**
-   * Given a {@link Hasher} and a parsed BUCK file object, updates the Hasher
-   * with the contents of the JSON object.
+   * Given a {@link Hasher} and a parsed BUCK file object, updates the Hasher with the contents of
+   * the JSON object.
    */
   public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
     if (obj instanceof Map) {
@@ -62,8 +57,7 @@ public class JsonObjectHashing {
           throw new RuntimeException(
               String.format(
                   "Keys of JSON maps are expected to be strings. Actual type: %s, contents: %s",
-                  key.getClass().getName(),
-                  key));
+                  key.getClass().getName(), key));
         }
         Object value = entry.getValue();
         if (value != null) {

@@ -22,25 +22,32 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractProjectBuildFileParserOptions {
   abstract Path getProjectRoot();
+
   abstract ImmutableMap<String, Path> getCellRoots();
+
   abstract String getPythonInterpreter();
+
   abstract Optional<String> getPythonModuleSearchPath();
+
   abstract boolean getAllowEmptyGlobs();
+
   abstract ImmutableSet<PathOrGlobMatcher> getIgnorePaths();
+
   abstract String getBuildFileName();
+
   abstract List<String> getDefaultIncludes();
+
   abstract ImmutableSet<Description<?>> getDescriptions();
+
   abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   @Value.Default
@@ -79,5 +86,6 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   abstract Optional<Long> getWatchmanQueryTimeoutMs();
+
   abstract List<String> getBuildFileImportWhitelist();
 }

@@ -20,15 +20,12 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.base.Objects;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Base class for events about parsing build files..
- */
+/** Base class for events about parsing build files.. */
 public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final Path buckFilePath;
 
@@ -51,9 +48,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
   }
 
   public static Finished finished(
-      Started started,
-      List<Map<String, Object>> rules,
-      Optional<String> profile) {
+      Started started, List<Map<String, Object>> rules, Optional<String> profile) {
     return new Finished(started, rules, profile);
   }
 

@@ -17,13 +17,12 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Thrown if we encounter an unexpected, fatal condition while interacting with the
- * build file parser.
+ * Thrown if we encounter an unexpected, fatal condition while interacting with the build file
+ * parser.
  */
 @SuppressWarnings("serial")
 public class BuildFileParseException extends Exception
@@ -45,10 +44,8 @@ public class BuildFileParseException extends Exception
     }
   }
 
-  static BuildFileParseException createForBuildFileParseError(Path buildFile,
-      IOException cause) {
-    String message = String.format("Parse error for build file %s",
-        buildFile);
+  static BuildFileParseException createForBuildFileParseError(Path buildFile, IOException cause) {
+    String message = String.format("Parse error for build file %s", buildFile);
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }
 
