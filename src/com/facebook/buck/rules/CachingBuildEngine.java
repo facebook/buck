@@ -891,7 +891,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           // cached due to the sheer size which would be costly to hash or builtin non-determinism
           // in the rule which somewhat defeats the purpose of logging the hash.
           if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
-              shouldUploadToCache(rule, Preconditions.checkNotNull(outputSize.get()))) {
+              shouldUploadToCache(
+                  buildContext,
+                  rule,
+                  success,
+                  Preconditions.checkNotNull(outputSize.get()))) {
             ImmutableSortedMap.Builder<String, String> outputHashes =
                 ImmutableSortedMap.naturalOrder();
             for (Path path : buildInfoRecorder.getOutputPaths()) {
@@ -1136,15 +1140,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   }
 
                   // If this rule is cacheable, upload it to the cache.
-                  if (success.shouldUploadResultingArtifact() &&
-                      outputSize.isPresent() &&
-                      shouldUploadToCache(rule, outputSize.get())) {
+                  if (outputSize.isPresent() &&
+                      shouldUploadToCache(buildContext, rule, success, outputSize.get())) {
                     uploadToCache(success);
                   }
 
                   // Calculate the hash of outputs that were built locally and are cacheable.
                   if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
-                      shouldUploadToCache(rule, outputSize.get())) {
+                      shouldUploadToCache(buildContext, rule, success, outputSize.get())) {
                     try {
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
@@ -1667,7 +1670,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   /**
    * @return whether we should upload the given rules artifacts to cache.
    */
-  private boolean shouldUploadToCache(BuildRule rule, long outputSize) {
+  private boolean shouldUploadToCache(
+      BuildEngineBuildContext buildContext,
+      BuildRule rule,
+      BuildRuleSuccessType successType,
+      long outputSize) {
+
+    // The success type must allow cache uploading.
+    if (!successType.shouldUploadResultingArtifact()) {
+      return false;
+    }
+
+    // The cache must be writable.
+    if (!buildContext.getArtifactCache().getCacheReadMode().isWritable()) {
+      return false;
+    }
 
     // If the rule is explicitly marked uncacheable, don't cache it.
     if (!rule.isCacheable()) {
