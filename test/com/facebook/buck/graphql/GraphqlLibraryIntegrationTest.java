@@ -25,17 +25,14 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class GraphqlLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -45,21 +42,16 @@ public class GraphqlLibraryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "graphql_library_test",
-        tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "graphql_library_test", tmpFolder);
     workspace.setUp();
   }
 
   @Test
   public void testBuckQueryForGraphqlLibrarySrcs() throws Exception {
-    ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand(
-            "query",
-            "kind(\'graphql_library\', \'//...\')",
-            "--output-attributes",
-            "srcs");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "kind(\'graphql_library\', \'//...\')", "--output-attributes", "srcs");
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),
@@ -68,11 +60,8 @@ public class GraphqlLibraryIntegrationTest {
 
   @Test
   public void testBuckQueryForGraphqlLibraryDeps() throws Exception {
-    ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand(
-            "query",
-            "--json",
-            "deps(//:AppGraphQl)");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("query", "--json", "deps(//:AppGraphQl)");
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),
