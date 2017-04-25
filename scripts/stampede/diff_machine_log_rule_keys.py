@@ -83,7 +83,7 @@ def read_file(log_file):
             if line.startswith(BUILD_RULE_FINISHED_TOKEN):
                 row = json.loads(line[len(BUILD_RULE_FINISHED_TOKEN) + 1:])
                 rule_keys = row['ruleKeys']
-                if not rule_keys['inputRuleKey']:
+                if not rule_keys.get('inputRuleKey'):
                     rule_keys['inputRuleKey'] = {'hashCode': None}
 
                 rule = BuildRule(
