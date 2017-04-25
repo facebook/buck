@@ -230,6 +230,11 @@ public class HaskellPackageRule extends AbstractBuildRule {
                 depPackages.values().stream()
                     .map(input -> context.getSourcePathResolver().getAbsolutePath(
                         input.getPackageDb()).toString())
+                    // Different packages might have the same underlying package DB and specifying
+                    // the same package DB multiple times to `ghc-pkg` will cause additional
+                    // processing which can make `ghc-pkg` really slow.  So, dedup the package DBs
+                    // before passing them into `ghc-pkg`.
+                    .distinct()
                     .collect(Collectors.joining(":")))));
 
     return steps.build();
