@@ -24,7 +24,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,26 +31,21 @@ import java.nio.file.Path;
 public class CopyStep implements Step {
 
   /**
-   * When copying a directory, this specifies whether only
-   * the contents of the directory should be copied, or
-   * if the directory itself should be included.
+   * When copying a directory, this specifies whether only the contents of the directory should be
+   * copied, or if the directory itself should be included.
    */
   public enum DirectoryMode {
-      /**
-       * Copy only the contents of the directory (recursively). If
-       * copying a source directory 'foo' with a file 'bar.txt' to a
-       * destination directory 'dest', this will create
-       * 'dest/bar.txt'.
-       */
-      CONTENTS_ONLY,
+    /**
+     * Copy only the contents of the directory (recursively). If copying a source directory 'foo'
+     * with a file 'bar.txt' to a destination directory 'dest', this will create 'dest/bar.txt'.
+     */
+    CONTENTS_ONLY,
 
-      /**
-       * Copy the directory and its contents (recursively). If copying
-       * a source directory 'foo' with a file 'bar.txt' to a
-       * destination directory 'dest', this will create
-       * 'dest/foo/bar.txt'.
-       */
-      DIRECTORY_AND_CONTENTS
+    /**
+     * Copy the directory and its contents (recursively). If copying a source directory 'foo' with a
+     * file 'bar.txt' to a destination directory 'dest', this will create 'dest/foo/bar.txt'.
+     */
+    DIRECTORY_AND_CONTENTS
   }
 
   private final ProjectFilesystem filesystem;
@@ -60,34 +54,24 @@ public class CopyStep implements Step {
   private final CopySourceMode copySourceMode;
 
   private CopyStep(
-      ProjectFilesystem filesystem,
-      Path source,
-      Path destination,
-      CopySourceMode copySourceMode) {
+      ProjectFilesystem filesystem, Path source, Path destination, CopySourceMode copySourceMode) {
     this.filesystem = filesystem;
     this.source = source;
     this.destination = destination;
     this.copySourceMode = copySourceMode;
   }
 
-  /**
-   * Creates a CopyStep which copies a single file from 'source' to
-   * 'destination'.
-   */
+  /** Creates a CopyStep which copies a single file from 'source' to 'destination'. */
   public static CopyStep forFile(ProjectFilesystem filesystem, Path source, Path destination) {
     return new CopyStep(filesystem, source, destination, CopySourceMode.FILE);
   }
 
   /**
-   * Creates a CopyStep which recursively copies a directory from
-   * 'source' to 'destination'. See {@link DirectoryMode} for options
-   * to control the copy.
+   * Creates a CopyStep which recursively copies a directory from 'source' to 'destination'. See
+   * {@link DirectoryMode} for options to control the copy.
    */
   public static CopyStep forDirectory(
-      ProjectFilesystem filesystem,
-      Path source,
-      Path destination,
-      DirectoryMode directoryMode) {
+      ProjectFilesystem filesystem, Path source, Path destination, DirectoryMode directoryMode) {
     CopySourceMode copySourceMode;
     switch (directoryMode) {
       case CONTENTS_ONLY:

@@ -27,9 +27,7 @@ public class AdbOptions {
     this(0, false);
   }
 
-  public AdbOptions(
-      int adbThreadCount,
-      boolean multiInstallMode) {
+  public AdbOptions(int adbThreadCount, boolean multiInstallMode) {
     this.adbThreadCount = adbThreadCount;
     this.multiInstallMode = multiInstallMode;
   }
@@ -41,5 +39,4 @@ public class AdbOptions {
   public boolean isMultiInstallModeEnabled() {
     return multiInstallMode;
   }
-
 }

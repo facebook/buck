@@ -22,15 +22,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleStep;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/**
- * Command that runs equivalent command of {@code mkdir -p} on the specified directory.
- */
+/** Command that runs equivalent command of {@code mkdir -p} on the specified directory. */
 @Value.Immutable
 @BuckStyleStep
 abstract class AbstractMkdirStep implements Step {
@@ -40,10 +36,7 @@ abstract class AbstractMkdirStep implements Step {
   protected abstract ProjectFilesystem getFilesystem();
 
   @Value.Parameter
-  /**
-   * Path to make.
-   * TODO(dwh): Make this an absolute path.
-   */
+  /** Path to make. TODO(dwh): Make this an absolute path. */
   protected abstract Path getAbsoluteOrRelativePath();
 
   @Override

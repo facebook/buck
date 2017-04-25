@@ -31,9 +31,7 @@ public class TargetDeviceOptions {
   }
 
   public TargetDeviceOptions(
-      boolean useEmulatorsOnlyMode,
-      boolean useRealDevicesOnlyMode,
-      Optional<String> serialNumber) {
+      boolean useEmulatorsOnlyMode, boolean useRealDevicesOnlyMode, Optional<String> serialNumber) {
     this.useEmulatorsOnlyMode = useEmulatorsOnlyMode;
     this.useRealDevicesOnlyMode = useRealDevicesOnlyMode;
     this.serialNumber = serialNumber;

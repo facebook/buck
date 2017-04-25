@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -34,16 +33,13 @@ public class LogContentsOfFileStep implements Step {
   private final Path absolutePath;
   private final Level level;
 
-  public LogContentsOfFileStep(
-      Path absolutePath,
-      Level level) {
+  public LogContentsOfFileStep(Path absolutePath, Level level) {
     this.absolutePath = absolutePath;
     this.level = level;
   }
 
   @Override
-  public StepExecutionResult execute(
-      ExecutionContext context)
+  public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
 
     if (LOG.isLoggable(level)) {

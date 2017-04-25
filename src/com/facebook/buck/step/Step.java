@@ -15,6 +15,7 @@
  */
 
 package com.facebook.buck.step;
+
 import java.io.IOException;
 
 public interface Step {

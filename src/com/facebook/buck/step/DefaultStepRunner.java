@@ -18,7 +18,6 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,9 +28,8 @@ public final class DefaultStepRunner implements StepRunner {
 
   @Override
   public void runStepForBuildTarget(
-      ExecutionContext context,
-      Step step,
-      Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException {
+      ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
+      throws StepFailedException, InterruptedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
     }
@@ -53,10 +51,8 @@ public final class DefaultStepRunner implements StepRunner {
       context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
-      throw StepFailedException.createForFailingStepWithExitCode(step,
-          context,
-          executionResult,
-          buildTarget);
+      throw StepFailedException.createForFailingStepWithExitCode(
+          step, context, executionResult, buildTarget);
     }
   }
 }

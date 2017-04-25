@@ -23,16 +23,14 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
-import org.stringtemplate.v4.ST;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.stringtemplate.v4.ST;
 
 /**
- * A step that creates an {@link ST} by reading a template from {@code templatePath}, calls
- * {@code configure} to configure it, renders it and writes it out to {@code outputPath}.
+ * A step that creates an {@link ST} by reading a template from {@code templatePath}, calls {@code
+ * configure} to configure it, renders it and writes it out to {@code outputPath}.
  */
 public class StringTemplateStep implements Step {
 
@@ -47,8 +45,7 @@ public class StringTemplateStep implements Step {
       Path outputPath,
       Function<ST, ST> configure) {
     Preconditions.checkArgument(
-        !outputPath.isAbsolute(),
-        "Output must be specified as a relative path: %s", outputPath);
+        !outputPath.isAbsolute(), "Output must be specified as a relative path: %s", outputPath);
     this.templatePath = templatePath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
@@ -69,9 +66,11 @@ public class StringTemplateStep implements Step {
     ST st = new ST(template);
 
     return new WriteFileStep(
-        filesystem, Preconditions.checkNotNull(configure.apply(st).render()),
-        outputPath,
-        /* executable */ false).execute(context);
+            filesystem,
+            Preconditions.checkNotNull(configure.apply(st).render()),
+            outputPath,
+            /* executable */ false)
+        .execute(context);
   }
 
   @Override

@@ -24,11 +24,9 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleStep
@@ -39,6 +37,7 @@ abstract class AbstractRmStep implements Step {
   @Value.Parameter
   // TODO(dwh): Remove this ProjectFilesystem when ignored files aren't a concept.
   protected abstract ProjectFilesystem getFilesystem();
+
   @Value.Parameter
   // TODO(dwh): Make this always an absolute path.
   protected abstract Path getAbsoluteOrRelativePath();

@@ -19,24 +19,21 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 /**
- * Deletes the directory, if it exists, before creating it.
- * {@link MakeCleanDirectoryStep} is preferable to {@link MkdirStep} if the directory may
- * contain many generated files and we want to avoid the case where it could accidentally include
- * generated files from a previous run in Buck.
- * <p>
- * For example, for a directory of {@code .class} files, if the user deletes a {@code .java} file
+ * Deletes the directory, if it exists, before creating it. {@link MakeCleanDirectoryStep} is
+ * preferable to {@link MkdirStep} if the directory may contain many generated files and we want to
+ * avoid the case where it could accidentally include generated files from a previous run in Buck.
+ *
+ * <p>For example, for a directory of {@code .class} files, if the user deletes a {@code .java} file
  * that generated one of the {@code .class} files, the {@code .class} file corresponding to the
  * deleted {@code .java} file should no longer be there when {@code javac} is run again.
  */
 public final class MakeCleanDirectoryStep {
 
   public static ImmutableList<Step> of(
-      ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot) {
+      ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
     return ImmutableList.of(
         RmStep.of(filesystem, pathRelativeToProjectRoot).withRecursive(true),
         MkdirStep.of(filesystem, pathRelativeToProjectRoot));

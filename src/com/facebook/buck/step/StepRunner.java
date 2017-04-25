@@ -17,7 +17,6 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.util.Optional;
 
 public interface StepRunner {
@@ -25,10 +24,8 @@ public interface StepRunner {
   /**
    * Runs a BuildStep for a given BuildRule.
    *
-   * Note that this method blocks until the specified command terminates.
+   * <p>Note that this method blocks until the specified command terminates.
    */
-  void runStepForBuildTarget(
-      ExecutionContext context,
-      Step step,
-      Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException;
+  void runStepForBuildTarget(ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
+      throws StepFailedException, InterruptedException;
 }

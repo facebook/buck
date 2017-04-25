@@ -18,9 +18,7 @@ package com.facebook.buck.step;
 
 import java.util.Optional;
 
-/**
- * Represents information about the device we're targeting.
- */
+/** Represents information about the device we're targeting. */
 public class TargetDevice {
 
   private final Type type;

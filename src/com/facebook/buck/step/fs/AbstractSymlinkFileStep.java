@@ -22,11 +22,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -35,23 +33,21 @@ abstract class AbstractSymlinkFileStep implements Step {
   @Value.Parameter
   // TODO(dwh): Remove filesystem when ignored files are removed.
   protected abstract ProjectFilesystem getFilesystem();
+
   @Value.Parameter
   // TODO(dwh): Require this to be one of absolute or relative.
   protected abstract Path getExistingFile();
+
   @Value.Parameter
   // TODO(dwh): Require this to be absolute.
   protected abstract Path getDesiredLink();
 
-  /**
-   * Get the path to the existing file that should be linked.
-   */
+  /** Get the path to the existing file that should be linked. */
   private Path getAbsoluteExistingFilePath() {
     return getFilesystem().resolve(getExistingFile());
   }
 
-  /**
-   * Get the path to the desired link that should be created.
-   */
+  /** Get the path to the desired link that should be created. */
   private Path getAbsoluteDesiredLinkPath() {
     return getFilesystem().resolve(getDesiredLink());
   }
@@ -62,13 +58,9 @@ abstract class AbstractSymlinkFileStep implements Step {
   }
 
   @Override
-  public String getDescription (ExecutionContext context) {
-    return Joiner.on(" ").join(
-        "ln",
-        "-f",
-        "-s",
-        getAbsoluteExistingFilePath(),
-        getAbsoluteDesiredLinkPath());
+  public String getDescription(ExecutionContext context) {
+    return Joiner.on(" ")
+        .join("ln", "-f", "-s", getAbsoluteExistingFilePath(), getAbsoluteDesiredLinkPath());
   }
 
   @Override
@@ -76,10 +68,7 @@ abstract class AbstractSymlinkFileStep implements Step {
     Path existingFilePath = getAbsoluteExistingFilePath();
     Path desiredLinkPath = getAbsoluteDesiredLinkPath();
     try {
-      getFilesystem().createSymLink(
-          desiredLinkPath,
-          existingFilePath,
-          /* force */ true);
+      getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);
       return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());

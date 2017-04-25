@@ -20,13 +20,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell.
- */
+/** {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell. */
 public class TouchStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -73,5 +70,4 @@ public class TouchStep implements Step {
   public int hashCode() {
     return fileToTouch.hashCode();
   }
-
 }

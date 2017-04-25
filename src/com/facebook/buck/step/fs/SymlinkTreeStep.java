@@ -22,7 +22,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -79,5 +78,4 @@ public class SymlinkTreeStep implements Step {
   public int hashCode() {
     return Objects.hashCode(root, links);
   }
-
 }
