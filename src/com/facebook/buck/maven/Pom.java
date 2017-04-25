@@ -27,7 +27,20 @@ import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.CiManagement;
 import org.apache.maven.model.Contributor;
@@ -55,30 +68,12 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
 public class Pom {
 
   private static final MavenXpp3Writer POM_WRITER = new MavenXpp3Writer();
   private static final DefaultModelBuilderFactory MODEL_BUILDER_FACTORY =
       new DefaultModelBuilderFactory();
-  /**
-   * Consistent with the value used in the implementation of {@link MavenXpp3Writer#write}
-   */
+  /** Consistent with the value used in the implementation of {@link MavenXpp3Writer#write} */
   private static final String POM_MODEL_VERSION = "4.0.0";
 
   private final Model model;
@@ -103,34 +98,30 @@ public class Pom {
   }
 
   private static Path getPomPath(HasMavenCoordinates rule) {
-    return rule.getProjectFilesystem().resolve(
-        BuildTargets.getGenPath(
-            rule.getProjectFilesystem(),
-            rule.getBuildTarget(),
-            "%s.pom"));
+    return rule.getProjectFilesystem()
+        .resolve(
+            BuildTargets.getGenPath(rule.getProjectFilesystem(), rule.getBuildTarget(), "%s.pom"));
   }
 
   @VisibleForTesting
   static void generatePomFile(
-      SourcePathResolver pathResolver,
-      MavenPublishable rule,
-      Path optionallyExistingPom) throws IOException {
+      SourcePathResolver pathResolver, MavenPublishable rule, Path optionallyExistingPom)
+      throws IOException {
     new Pom(pathResolver, optionallyExistingPom, rule).flushToFile();
   }
 
   private void applyBuildRule() {
     if (!HasMavenCoordinates.isMavenCoordsPresent(publishable)) {
       throw new IllegalArgumentException(
-          "Cannot retrieve maven coordinates for target" +
-              publishable.getBuildTarget().getFullyQualifiedName());
+          "Cannot retrieve maven coordinates for target"
+              + publishable.getBuildTarget().getFullyQualifiedName());
     }
     DefaultArtifact artifact = new DefaultArtifact(getMavenCoords(publishable).get());
 
-    Iterable<Artifact> deps = FluentIterable
-        .from(publishable.getMavenDeps())
-        .filter(HasMavenCoordinates::isMavenCoordsPresent)
-        .transform(
-            input -> new DefaultArtifact(input.getMavenCoords().get()));
+    Iterable<Artifact> deps =
+        FluentIterable.from(publishable.getMavenDeps())
+            .filter(HasMavenCoordinates::isMavenCoordsPresent)
+            .transform(input -> new DefaultArtifact(input.getMavenCoords().get()));
 
     updateModel(artifact, deps);
   }
@@ -156,9 +147,9 @@ public class Pom {
     model.setModelVersion(POM_MODEL_VERSION);
 
     if (publishable.getPomTemplate().isPresent()) {
-      model = constructModel(
-          pathResolver.getAbsolutePath(publishable.getPomTemplate().get()).toFile(),
-          model);
+      model =
+          constructModel(
+              pathResolver.getAbsolutePath(publishable.getPomTemplate().get()).toFile(), model);
     }
 
     if (file.isFile()) {
@@ -353,8 +344,8 @@ public class Pom {
     }
 
     // Dependencies
-    ImmutableMap<DepKey, Dependency> depIndex = Maps.uniqueIndex(
-        getModel().getDependencies(), DepKey::new);
+    ImmutableMap<DepKey, Dependency> depIndex =
+        Maps.uniqueIndex(getModel().getDependencies(), DepKey::new);
     for (Artifact artifactDep : deps) {
       DepKey key = new DepKey(artifactDep);
       Dependency dependency = depIndex.get(key);
@@ -430,8 +421,8 @@ public class Pom {
 
       DepKey depKey = (DepKey) o;
 
-      return Objects.equals(groupId, depKey.groupId) &&
-          Objects.equals(artifactId, depKey.artifactId);
+      return Objects.equals(groupId, depKey.groupId)
+          && Objects.equals(artifactId, depKey.artifactId);
     }
 
     @Override
