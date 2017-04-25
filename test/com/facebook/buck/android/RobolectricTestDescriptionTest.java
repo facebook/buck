@@ -29,12 +29,10 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
 
@@ -47,24 +45,25 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> robolectricTestNode = RobolectricTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addDep(exportingNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> robolectricTestNode =
+        RobolectricTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addDep(exportingNode.getBuildTarget())
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode,
-        robolectricTestNode);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -79,30 +78,30 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     }
 
     assertThat(
-        robolectricTest.getCompiledTestsLibrary().getBuildDeps(),
-        Matchers.hasItem(exportedRule));
+        robolectricTest.getCompiledTestsLibrary().getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> robolectricTestNode = RobolectricTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addProvidedDep(exportingNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> robolectricTestNode =
+        RobolectricTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addProvidedDep(exportingNode.getBuildTarget())
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        exportedNode,
-        exportingNode,
-        robolectricTestNode);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -117,8 +116,6 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     }
 
     assertThat(
-        robolectricTest.getCompiledTestsLibrary().getBuildDeps(),
-        Matchers.hasItem(exportedRule));
+        robolectricTest.getCompiledTestsLibrary().getBuildDeps(), Matchers.hasItem(exportedRule));
   }
-
 }

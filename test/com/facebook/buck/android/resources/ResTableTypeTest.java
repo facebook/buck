@@ -24,54 +24,47 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ResTableTypeTest {
   private static final String APK_NAME = "example.apk";
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private Path apkPath;
 
   @Before
   public void setUp() throws IOException {
-    filesystem = new ProjectFilesystem(
-        TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
+    filesystem =
+        new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }
 
   @Test
   public void testGetAndSerialize() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      ByteBuffer buf = ResChunk.wrap(
-          ByteStreams.toByteArray(
-              apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
 
       List<Integer> offsets = ChunkUtils.findChunks(buf, ResChunk.CHUNK_RES_TABLE_TYPE);
-      assertEquals(
-          ImmutableList.of(1072, 1196, 1340, 1468, 1652, 1920),
-          offsets
-      );
+      assertEquals(ImmutableList.of(1072, 1196, 1340, 1468, 1652, 1920), offsets);
 
       for (int offset : offsets) {
         ByteBuffer data = ResChunk.slice(buf, offset);
         ResTableType resType = ResTableType.get(data);
 
-        byte[] expected = Arrays.copyOfRange(
-            data.array(),
-            data.arrayOffset(),
-            data.arrayOffset() + resType.getTotalSize());
+        byte[] expected =
+            Arrays.copyOfRange(
+                data.array(), data.arrayOffset(), data.arrayOffset() + resType.getTotalSize());
         byte[] actual = resType.serialize();
 
         assertArrayEquals(expected, actual);

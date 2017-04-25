@@ -19,7 +19,6 @@ import static org.junit.Assume.assumeNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Paths;
 import java.util.Optional;
 

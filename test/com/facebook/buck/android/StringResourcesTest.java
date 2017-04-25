@@ -16,21 +16,18 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.StringResources.Gender;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.StringResources.Gender;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.TreeMap;
-
+import org.junit.Test;
 
 public class StringResourcesTest {
 
@@ -59,33 +56,37 @@ public class StringResourcesTest {
 
     // populate first gender plural map
     genderPluralMap1.put(
-        Gender.unknown, ImmutableMap.of(
+        Gender.unknown,
+        ImmutableMap.of(
             "one", "P1_one",
             "few", "P1_few",
             "many", "P1_many"));
     genderPluralMap1.put(
-        Gender.female, ImmutableMap.of(
+        Gender.female,
+        ImmutableMap.of(
             "one", "P1_one_f1",
             "few", "P1_few_f1",
             "many", "P1_many_f1"));
     genderPluralMap1.put(
-        Gender.male, ImmutableMap.of(
+        Gender.male,
+        ImmutableMap.of(
             "one", "P1_one_m2",
             "few", "P1_few_m2",
             "many", "P1_many_m2"));
 
     // populate second gender plural map
     genderPluralMap2.put(
-        Gender.unknown, ImmutableMap.of(
+        Gender.unknown,
+        ImmutableMap.of(
             "zero", "P2_zero",
             "two", "P2_two",
             "other", "P2_other"));
     genderPluralMap2.put(
-        Gender.female, ImmutableMap.of(
+        Gender.female,
+        ImmutableMap.of(
             "zero", "P2_zero_f1",
             "two", "P2_two_f1",
             "other", "P2_other_f1"));
-
 
     // populate gender arrays
     genderArray1.put(Gender.unknown, ImmutableList.of("A1_one", "A1_two"));
@@ -96,16 +97,17 @@ public class StringResourcesTest {
     genderArray2.put(Gender.male, ImmutableList.of("A2_one_m2"));
   }
 
-
-  private static final ImmutableMap<Integer, EnumMap<Gender, String>> strings = ImmutableMap.of(
-      12345678, genderStrings1,
-      12345679, genderStrings2,
-      12345680, genderStrings3);
+  private static final ImmutableMap<Integer, EnumMap<Gender, String>> strings =
+      ImmutableMap.of(
+          12345678, genderStrings1,
+          12345679, genderStrings2,
+          12345680, genderStrings3);
 
   private static final ImmutableMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>>
-      plurals = ImmutableMap.of(
-          12345689, genderPluralMap1,
-          12345692, genderPluralMap2);
+      plurals =
+          ImmutableMap.of(
+              12345689, genderPluralMap1,
+              12345692, genderPluralMap2);
 
   private static final ImmutableMap<Integer, EnumMap<Gender, ImmutableList<String>>> arrays =
       ImmutableMap.of(
@@ -120,19 +122,19 @@ public class StringResourcesTest {
     pluralsMap.putAll(plurals);
     TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
     arraysMap.putAll(arrays);
-    byte[] binaryOutput = new StringResources(stringsMap, pluralsMap, arraysMap)
-        .getBinaryFileContent();
+    byte[] binaryOutput =
+        new StringResources(stringsMap, pluralsMap, arraysMap).getBinaryFileContent();
 
     verifyBinaryStream(binaryOutput);
   }
 
   @Test
   public void testUnescapesQuotesAndApostrophes() {
-    assertEquals("Test",
-        new String(StringResources.getUnescapedStringBytes("Test")));
-    assertEquals("\"testing\"",
-        new String(StringResources.getUnescapedStringBytes("\\\"testing\\\"")));
-    assertEquals("On a friend's timeline",
+    assertEquals("Test", new String(StringResources.getUnescapedStringBytes("Test")));
+    assertEquals(
+        "\"testing\"", new String(StringResources.getUnescapedStringBytes("\\\"testing\\\"")));
+    assertEquals(
+        "On a friend's timeline",
         new String(StringResources.getUnescapedStringBytes("On a friend\\'s timeline")));
   }
 
@@ -143,27 +145,27 @@ public class StringResourcesTest {
     assertEquals(2, stream.readInt());
 
     // Strings
-    assertEquals(3, stream.readInt());        // number of strings
+    assertEquals(3, stream.readInt()); // number of strings
     assertEquals(12345678, stream.readInt()); // res id of first string
 
-    assertEquals(0, stream.readShort());      // delta of id for first element
-    assertEquals(2, stream.readByte());       // number of genders
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first string
-    assertEquals(5, stream.readShort());     // length of first string of first element
-    assertEquals(1, stream.readByte());       // ordinal of the gender enum for the second string
-    assertEquals(12, stream.readShort());      // length of second string of first element
+    assertEquals(0, stream.readShort()); // delta of id for first element
+    assertEquals(2, stream.readByte()); // number of genders
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first string
+    assertEquals(5, stream.readShort()); // length of first string of first element
+    assertEquals(1, stream.readByte()); // ordinal of the gender enum for the second string
+    assertEquals(12, stream.readShort()); // length of second string of first element
 
-    assertEquals(1, stream.readShort());      // delta for second element
-    assertEquals(1, stream.readByte());       // number of genders
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first string
-    assertEquals(5, stream.readShort());      // length of first string
+    assertEquals(1, stream.readShort()); // delta for second element
+    assertEquals(1, stream.readByte()); // number of genders
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first string
+    assertEquals(5, stream.readShort()); // length of first string
 
-    assertEquals(1, stream.readShort());      // delta for third element
-    assertEquals(2, stream.readByte());       // number of genders
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first string
-    assertEquals(4, stream.readShort());      // length of first string of first element
-    assertEquals(1, stream.readByte());       // ordinal of the gender enum for the second string
-    assertEquals(9, stream.readShort());      // length of second string of first element
+    assertEquals(1, stream.readShort()); // delta for third element
+    assertEquals(2, stream.readByte()); // number of genders
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first string
+    assertEquals(4, stream.readShort()); // length of first string of first element
+    assertEquals(1, stream.readByte()); // ordinal of the gender enum for the second string
+    assertEquals(9, stream.readShort()); // length of second string of first element
 
     // string values
     assertEquals("S_one", readStringOfLength(stream, 5));
@@ -173,62 +175,59 @@ public class StringResourcesTest {
     assertEquals("\"S_three\"", readStringOfLength(stream, 9)); // string should be unescaped.
 
     // Plurals
-    assertEquals(2, stream.readInt());        // number of plurals
+    assertEquals(2, stream.readInt()); // number of plurals
     assertEquals(12345689, stream.readInt()); // res Id of the first string
 
-    assertEquals(0, stream.readShort());      // delta of id for first element
-    assertEquals(3, stream.readByte());       // number of genders
+    assertEquals(0, stream.readShort()); // delta of id for first element
+    assertEquals(3, stream.readByte()); // number of genders
 
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first string
-    assertEquals(3, stream.readByte());       // number of categories.
-    assertEquals(1, stream.readByte());       // plural key mapped value of first item
-    assertEquals(6, stream.readShort());      // length of first item
-    assertEquals(3, stream.readByte());       // plural key mapped value of second item
-    assertEquals(6, stream.readShort());      // length of second item
-    assertEquals(4, stream.readByte());       // plural key mapped value of third item
-    assertEquals(7, stream.readShort());      // length of third item
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first string
+    assertEquals(3, stream.readByte()); // number of categories.
+    assertEquals(1, stream.readByte()); // plural key mapped value of first item
+    assertEquals(6, stream.readShort()); // length of first item
+    assertEquals(3, stream.readByte()); // plural key mapped value of second item
+    assertEquals(6, stream.readShort()); // length of second item
+    assertEquals(4, stream.readByte()); // plural key mapped value of third item
+    assertEquals(7, stream.readShort()); // length of third item
 
+    assertEquals(1, stream.readByte()); // ordinal of the gender enum for first string
+    assertEquals(3, stream.readByte()); // number of categories.
+    assertEquals(1, stream.readByte()); // plural key mapped value of first item
+    assertEquals(9, stream.readShort()); // length of first item
+    assertEquals(3, stream.readByte()); // plural key mapped value of second item
+    assertEquals(9, stream.readShort()); // length of second item
+    assertEquals(4, stream.readByte()); // plural key mapped value of third item
+    assertEquals(10, stream.readShort()); // length of third item
 
-    assertEquals(1, stream.readByte());       // ordinal of the gender enum for first string
-    assertEquals(3, stream.readByte());       // number of categories.
-    assertEquals(1, stream.readByte());       // plural key mapped value of first item
-    assertEquals(9, stream.readShort());      // length of first item
-    assertEquals(3, stream.readByte());       // plural key mapped value of second item
-    assertEquals(9, stream.readShort());      // length of second item
-    assertEquals(4, stream.readByte());       // plural key mapped value of third item
-    assertEquals(10, stream.readShort());     // length of third item
+    assertEquals(2, stream.readByte()); // ordinal of the gender enum for first plural
+    assertEquals(3, stream.readByte()); // number of categories.
+    assertEquals(1, stream.readByte()); // plural key mapped value of first item
+    assertEquals(9, stream.readShort()); // length of first item
+    assertEquals(3, stream.readByte()); // plural key mapped value of second item
+    assertEquals(9, stream.readShort()); // length of second item
+    assertEquals(4, stream.readByte()); // plural key mapped value of third item
+    assertEquals(10, stream.readShort()); // length of third item
 
-    assertEquals(2, stream.readByte());       // ordinal of the gender enum for first plural
-    assertEquals(3, stream.readByte());       // number of categories.
-    assertEquals(1, stream.readByte());       // plural key mapped value of first item
-    assertEquals(9, stream.readShort());      // length of first item
-    assertEquals(3, stream.readByte());       // plural key mapped value of second item
-    assertEquals(9, stream.readShort());      // length of second item
-    assertEquals(4, stream.readByte());       // plural key mapped value of third item
-    assertEquals(10, stream.readShort());     // length of third item
+    assertEquals(3, stream.readShort()); // delta of id for the second plural
+    assertEquals(2, stream.readByte()); // number of genders
 
-    assertEquals(3, stream.readShort());      // delta of id for the second plural
-    assertEquals(2, stream.readByte());       // number of genders
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first plural
+    assertEquals(3, stream.readByte()); // number of categories.
+    assertEquals(0, stream.readByte()); // plural key mapped value of first item
+    assertEquals(7, stream.readShort()); // length of first item
+    assertEquals(2, stream.readByte()); // plural key mapped value of second item
+    assertEquals(6, stream.readShort()); // length of second item
+    assertEquals(5, stream.readByte()); // plural key mapped value of third item
+    assertEquals(8, stream.readShort()); // length of third item
 
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first plural
-    assertEquals(3, stream.readByte());       // number of categories.
-    assertEquals(0, stream.readByte());       // plural key mapped value of first item
-    assertEquals(7, stream.readShort());      // length of first item
-    assertEquals(2, stream.readByte());       // plural key mapped value of second item
-    assertEquals(6, stream.readShort());      // length of second item
-    assertEquals(5, stream.readByte());       // plural key mapped value of third item
-    assertEquals(8, stream.readShort());      // length of third item
-
-    assertEquals(1, stream.readByte());       // ordinal of the gender enum for first plural
-    assertEquals(3, stream.readByte());       // number of categories.
-    assertEquals(0, stream.readByte());       // plural key mapped value of first item
-    assertEquals(10, stream.readShort());     // length of first item
-    assertEquals(2, stream.readByte());       // plural key mapped value of second item
-    assertEquals(9, stream.readShort());      // length of second item
-    assertEquals(5, stream.readByte());       // plural key mapped value of third item
-    assertEquals(11, stream.readShort());     // length of third item
-
-
+    assertEquals(1, stream.readByte()); // ordinal of the gender enum for first plural
+    assertEquals(3, stream.readByte()); // number of categories.
+    assertEquals(0, stream.readByte()); // plural key mapped value of first item
+    assertEquals(10, stream.readShort()); // length of first item
+    assertEquals(2, stream.readByte()); // plural key mapped value of second item
+    assertEquals(9, stream.readShort()); // length of second item
+    assertEquals(5, stream.readByte()); // plural key mapped value of third item
+    assertEquals(11, stream.readShort()); // length of third item
 
     // plural strings
     assertEquals("P1_one", readStringOfLength(stream, 6));
@@ -252,37 +251,37 @@ public class StringResourcesTest {
     assertEquals("P2_other_f1", readStringOfLength(stream, 11));
 
     // Arrays
-    assertEquals(2, stream.readInt());        // number of arrays
+    assertEquals(2, stream.readInt()); // number of arrays
     assertEquals(12345694, stream.readInt()); // res Id of the first string
 
-    assertEquals(0, stream.readShort());      // delta of id for first element
-    assertEquals(3, stream.readByte());       // number of genders
+    assertEquals(0, stream.readShort()); // delta of id for first element
+    assertEquals(3, stream.readByte()); // number of genders
 
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first array
-    assertEquals(2, stream.readByte());       // number of array elements.
-    assertEquals(6, stream.readShort());      // length of first item
-    assertEquals(6, stream.readShort());      // length of second item
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first array
+    assertEquals(2, stream.readByte()); // number of array elements.
+    assertEquals(6, stream.readShort()); // length of first item
+    assertEquals(6, stream.readShort()); // length of second item
 
-    assertEquals(1, stream.readByte());       // ordinal of the gender enum for second array
-    assertEquals(2, stream.readByte());       // number of array elements.
-    assertEquals(9, stream.readShort());      // length of first item
-    assertEquals(9, stream.readShort());      // length of second item
+    assertEquals(1, stream.readByte()); // ordinal of the gender enum for second array
+    assertEquals(2, stream.readByte()); // number of array elements.
+    assertEquals(9, stream.readShort()); // length of first item
+    assertEquals(9, stream.readShort()); // length of second item
 
-    assertEquals(2, stream.readByte());       // ordinal of the gender enum for third array
-    assertEquals(2, stream.readByte());       // number of array elements.
-    assertEquals(9, stream.readShort());      // length of first item
-    assertEquals(9, stream.readShort());      // length of second item
+    assertEquals(2, stream.readByte()); // ordinal of the gender enum for third array
+    assertEquals(2, stream.readByte()); // number of array elements.
+    assertEquals(9, stream.readShort()); // length of first item
+    assertEquals(9, stream.readShort()); // length of second item
 
-    assertEquals(5, stream.readShort());      // delta of id for second element
-    assertEquals(2, stream.readByte());       // number of genders
+    assertEquals(5, stream.readShort()); // delta of id for second element
+    assertEquals(2, stream.readByte()); // number of genders
 
-    assertEquals(0, stream.readByte());       // ordinal of the gender enum for first array
-    assertEquals(1, stream.readByte());       // number of array elements.
-    assertEquals(6, stream.readShort());      // length of first item
+    assertEquals(0, stream.readByte()); // ordinal of the gender enum for first array
+    assertEquals(1, stream.readByte()); // number of array elements.
+    assertEquals(6, stream.readShort()); // length of first item
 
-    assertEquals(2, stream.readByte());       // ordinal of the gender enum for second array
-    assertEquals(1, stream.readByte());       // number of array elements.
-    assertEquals(9, stream.readShort());      // length of first item
+    assertEquals(2, stream.readByte()); // ordinal of the gender enum for second array
+    assertEquals(1, stream.readByte()); // number of array elements.
+    assertEquals(9, stream.readShort()); // length of first item
 
     // array strings
     assertEquals("A1_one", readStringOfLength(stream, 6));

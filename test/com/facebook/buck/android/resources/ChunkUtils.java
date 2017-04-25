@@ -17,13 +17,11 @@
 package com.facebook.buck.android.resources;
 
 import com.google.common.collect.ImmutableList;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
 class ChunkUtils {
-  private ChunkUtils() {
-  }
+  private ChunkUtils() {}
 
   /**
    * Finds all chunks in the buffer with the requested type. This is useful for tests to find chunks
@@ -43,9 +41,9 @@ class ChunkUtils {
       int headerSize = buf.getShort(offset + 2);
       int chunkSize = buf.getInt(offset + 4);
       // These chunks consist of lists of sub-chunks after their headers.
-      if (type == ResChunk.CHUNK_RESOURCE_TABLE ||
-          type == ResChunk.CHUNK_RES_TABLE_PACKAGE ||
-          type == ResChunk.CHUNK_XML_TREE) {
+      if (type == ResChunk.CHUNK_RESOURCE_TABLE
+          || type == ResChunk.CHUNK_RES_TABLE_PACKAGE
+          || type == ResChunk.CHUNK_XML_TREE) {
         int subchunksStart = offset + headerSize;
         int subchunksLength = chunkSize - headerSize;
         for (int subOffset :

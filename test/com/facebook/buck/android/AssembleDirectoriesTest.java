@@ -39,14 +39,12 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AssembleDirectoriesTest {
   private ExecutionContext context;
@@ -71,25 +69,20 @@ public class AssembleDirectoriesTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(filesystem)
-            .build();
-    ImmutableList<SourcePath> directories = ImmutableList.of(
-        new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        ruleResolver
-    ));
-    AssembleDirectories assembleDirectories = new AssembleDirectories(
-        buildRuleParams,
-        directories);
+        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build();
+    ImmutableList<SourcePath> directories =
+        ImmutableList.of(
+            new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    AssembleDirectories assembleDirectories = new AssembleDirectories(buildRuleParams, directories);
     ruleResolver.addToIndex(assembleDirectories);
 
-    ImmutableList<Step> steps = assembleDirectories.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver),
-        new FakeBuildableContext());
+    ImmutableList<Step> steps =
+        assembleDirectories.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());
     }

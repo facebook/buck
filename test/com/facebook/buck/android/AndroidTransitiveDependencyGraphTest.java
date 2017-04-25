@@ -18,14 +18,13 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -51,8 +50,6 @@ public class AndroidTransitiveDependencyGraphTest {
     assertThat(
         new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
         Matchers.containsInAnyOrder(
-            new FakeSourcePath("manifest1.xml"),
-            new FakeSourcePath("manifest3.xml")));
+            new FakeSourcePath("manifest1.xml"), new FakeSourcePath("manifest3.xml")));
   }
-
 }

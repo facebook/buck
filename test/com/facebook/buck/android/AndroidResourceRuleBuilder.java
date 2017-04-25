@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class AndroidResourceRuleBuilder {
@@ -113,7 +112,5 @@ public class AndroidResourceRuleBuilder {
       this.manifest = manifest;
       return this;
     }
-
   }
-
 }

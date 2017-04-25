@@ -24,26 +24,22 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
   public void testCxxLibraryDep() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_instrumentation_apk_integration_test",
-        tmpFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
@@ -51,9 +47,11 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
     String target = "//:app_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(
-            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi/libcxx.so");
     zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");
@@ -61,5 +59,4 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
     zipInspector.assertFileExists("lib/x86/libcxx.so");
     zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
-
 }

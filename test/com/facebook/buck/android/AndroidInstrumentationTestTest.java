@@ -16,31 +16,26 @@
 
 package com.facebook.buck.android;
 
-import java.util.Optional;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
-
+import java.util.Optional;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 public class AndroidInstrumentationTestTest {
   @Test
   public void testFilterBasics() throws Throwable {
     assertEquals(
         Optional.<String>empty(),
-        AndroidInstrumentationTest.getFilterString(
-            TestRunningOptions.builder()
-                .build()));
+        AndroidInstrumentationTest.getFilterString(TestRunningOptions.builder().build()));
 
     assertEquals(
         Optional.of("FooBar#method"),
         AndroidInstrumentationTest.getFilterString(
             TestRunningOptions.builder()
                 .setTestSelectorList(
-                    TestSelectorList.builder()
-                        .addRawSelectors("FooBar#method")
-                        .build())
+                    TestSelectorList.builder().addRawSelectors("FooBar#method").build())
                 .build()));
 
     assertEquals(
@@ -48,10 +43,7 @@ public class AndroidInstrumentationTestTest {
         AndroidInstrumentationTest.getFilterString(
             TestRunningOptions.builder()
                 .setTestSelectorList(
-                    TestSelectorList.builder()
-                        .addRawSelectors("com.foo.FooBar")
-                        .build())
+                    TestSelectorList.builder().addRawSelectors("com.foo.FooBar").build())
                 .build()));
-
   }
 }

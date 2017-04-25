@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -58,8 +57,7 @@ public class NdkLibraryBuilder
         new NdkLibraryDescription(Optional.empty(), NDK_PLATFORMS) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
-              ProjectFilesystem filesystem,
-              Path buildRulePath) {
+              ProjectFilesystem filesystem, Path buildRulePath) {
             return ImmutableSortedSet.of(
                 new PathSourcePath(filesystem, buildRulePath.resolve("Android.mk")));
           }
@@ -82,5 +80,4 @@ public class NdkLibraryBuilder
     arg.isAsset = Optional.of(isAsset);
     return this;
   }
-
 }

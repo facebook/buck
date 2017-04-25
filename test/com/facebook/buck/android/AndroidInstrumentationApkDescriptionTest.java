@@ -31,11 +31,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class AndroidInstrumentationApkDescriptionTest {
 
@@ -70,12 +68,9 @@ public class AndroidInstrumentationApkDescriptionTest {
             .setApk(androidBinary.getBuildTarget())
             .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        transitiveDep,
-        dep,
-        keystore,
-        androidBinary,
-        androidInstrumentationApk);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDep, dep, keystore, androidBinary, androidInstrumentationApk);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule transitiveDepRule = ruleResolver.requireRule(transitiveDep.getBuildTarget());
@@ -83,5 +78,4 @@ public class AndroidInstrumentationApkDescriptionTest {
         (AndroidInstrumentationApk) ruleResolver.requireRule(target);
     assertThat(androidInstrumentationApkRule.getBuildDeps(), Matchers.hasItem(transitiveDepRule));
   }
-
 }

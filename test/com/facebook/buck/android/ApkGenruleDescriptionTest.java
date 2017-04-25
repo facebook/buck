@@ -23,8 +23,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
@@ -34,11 +34,9 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class ApkGenruleDescriptionTest {
 
@@ -48,13 +46,11 @@ public class ApkGenruleDescriptionTest {
         new SourcePathResolver(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer())));
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
     BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
     TargetNode<?, ?> installableApkNode =
-        FakeTargetNodeBuilder
-            .build(new FakeInstallable(installableApkTarget, emptyPathResolver));
+        FakeTargetNodeBuilder.build(new FakeInstallable(installableApkTarget, emptyPathResolver));
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -85,13 +81,10 @@ public class ApkGenruleDescriptionTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    SourcePath apkPath = new ExplicitBuildTargetSourcePath(
-        getBuildTarget(),
-        Paths.get("buck-out", "app.apk"));
+    SourcePath apkPath =
+        new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("buck-out", "app.apk"));
 
-    public FakeInstallable(
-        BuildTarget buildTarget,
-        SourcePathResolver resolver) {
+    public FakeInstallable(BuildTarget buildTarget, SourcePathResolver resolver) {
       super(buildTarget, resolver);
     }
 

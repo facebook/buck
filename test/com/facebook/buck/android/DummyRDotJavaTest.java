@@ -50,15 +50,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.junit.Test;
 
 public class DummyRDotJavaTest {
   @Test
@@ -68,105 +66,107 @@ public class DummyRDotJavaTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    BuildRule resourceRule1 = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
-            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
-            .setRDotJavaPackage("com.facebook")
-            .setRes(new FakeSourcePath("android_res/com/example/res1"))
-            .build());
+    BuildRule resourceRule1 =
+        ruleResolver.addToIndex(
+            AndroidResourceRuleBuilder.newBuilder()
+                .setRuleFinder(ruleFinder)
+                .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
+                .setRDotJavaPackage("com.facebook")
+                .setRes(new FakeSourcePath("android_res/com/example/res1"))
+                .build());
     setAndroidResourceBuildOutput(resourceRule1);
-    BuildRule resourceRule2 = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
-            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
-            .setRDotJavaPackage("com.facebook")
-            .setRes(new FakeSourcePath("android_res/com/example/res2"))
-            .build());
+    BuildRule resourceRule2 =
+        ruleResolver.addToIndex(
+            AndroidResourceRuleBuilder.newBuilder()
+                .setRuleFinder(ruleFinder)
+                .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
+                .setRDotJavaPackage("com.facebook")
+                .setRes(new FakeSourcePath("android_res/com/example/res2"))
+                .build());
     setAndroidResourceBuildOutput(resourceRule2);
 
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
-            .setProjectFilesystem(filesystem)
-            .build(),
-        ruleFinder,
-        ImmutableSet.of(
-            (HasAndroidResourceDeps) resourceRule1,
-            (HasAndroidResourceDeps) resourceRule2),
-        new JavacToJarStepFactory(
-            DEFAULT_JAVAC,
-            ANDROID_JAVAC_OPTIONS,
-            JavacOptionsAmender.IDENTITY),
-        /* forceFinalResourceIds */ false,
-        Optional.empty(),
-        Optional.of("R2"),
-        false);
+    DummyRDotJava dummyRDotJava =
+        new DummyRDotJava(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            ruleFinder,
+            ImmutableSet.of(
+                (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
+            new JavacToJarStepFactory(
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+            /* forceFinalResourceIds */ false,
+            Optional.empty(),
+            Optional.of("R2"),
+            false);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
-    List<Step> steps = dummyRDotJava.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
-        buildableContext);
+    List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 15, steps.size());
 
     String rDotJavaSrcFolder =
-        BuildTargets
-            .getScratchPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__")
+        BuildTargets.getScratchPath(
+                filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__")
             .toString();
     String rDotJavaBinFolder =
-        BuildTargets
-            .getScratchPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__")
+        BuildTargets.getScratchPath(
+                filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__")
             .toString();
     String rDotJavaAbiFolder =
-        BuildTargets
-            .getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_abi__")
+        BuildTargets.getGenPath(
+                filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_abi__")
             .toString();
     String rDotJavaOutputFolder =
-        BuildTargets
-            .getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__")
+        BuildTargets.getGenPath(
+                filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__")
             .toString();
     String rDotJavaOutputJar =
-        MorePaths.pathWithPlatformSeparators(String.format(
-            "%s/%s.jar",
-            rDotJavaOutputFolder,
-            dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
+        MorePaths.pathWithPlatformSeparators(
+            String.format(
+                "%s/%s.jar",
+                rDotJavaOutputFolder,
+                dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
     String genFolder = Paths.get("buck-out/gen/java/base/").toString();
 
     List<String> sortedSymbolsFiles =
         Stream.of((AndroidResource) resourceRule1, (AndroidResource) resourceRule2)
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableList());
-    ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
-        Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
+    ImmutableSortedSet<Path> javaSourceFiles =
+        ImmutableSortedSet.of(Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
 
-    List<String> expectedStepDescriptions = new ImmutableList.Builder<String>()
-        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)))
-        .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
-        .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
-        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)))
-        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)))
-        .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)))
-        .add(String.format("mkdir -p %s", filesystem.resolve(genFolder)))
-        .add(new JavacStep(
-            Paths.get(rDotJavaBinFolder),
-            NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            javaSourceFiles,
-            BuildTargets.getGenPath(filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
-        /* declared classpath */ ImmutableSortedSet.of(),
-            DEFAULT_JAVAC,
-            JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
-                .build(),
-            null,
-            pathResolver,
-            new FakeProjectFilesystem(),
-            new ClasspathChecker(),
-        /* directToJarOutputSettings */ Optional.empty())
-            .getDescription(TestExecutionContext.newInstance()))
-        .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
-        .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
-        .add(String.format("calculate_abi_from_classes %s", rDotJavaBinFolder))
-        .build();
+    List<String> expectedStepDescriptions =
+        new ImmutableList.Builder<String>()
+            .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)))
+            .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
+            .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
+            .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)))
+            .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)))
+            .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)))
+            .add(String.format("mkdir -p %s", filesystem.resolve(genFolder)))
+            .add(
+                new JavacStep(
+                        Paths.get(rDotJavaBinFolder),
+                        NoOpClassUsageFileWriter.instance(),
+                        Optional.empty(),
+                        javaSourceFiles,
+                        BuildTargets.getGenPath(
+                            filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
+                        /* declared classpath */ ImmutableSortedSet.of(),
+                        DEFAULT_JAVAC,
+                        JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
+                            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+                            .build(),
+                        null,
+                        pathResolver,
+                        new FakeProjectFilesystem(),
+                        new ClasspathChecker(),
+                        /* directToJarOutputSettings */ Optional.empty())
+                    .getDescription(TestExecutionContext.newInstance()))
+            .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
+            .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
+            .add(String.format("calculate_abi_from_classes %s", rDotJavaBinFolder))
+            .build();
 
     MoreAsserts.assertSteps(
         "DummyRDotJava.getBuildSteps() must return these exact steps.",
@@ -174,29 +174,30 @@ public class DummyRDotJavaTest {
         steps,
         TestExecutionContext.newInstance());
 
-    assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder), Paths.get(rDotJavaOutputJar)),
+    assertEquals(
+        ImmutableSet.of(Paths.get(rDotJavaBinFolder), Paths.get(rDotJavaOutputJar)),
         buildableContext.getRecordedArtifacts());
   }
 
   @Test
   public void testRDotJavaBinFolder() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer()));
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/com/example:library"))
-            .build(),
-        ruleFinder,
-        ImmutableSet.of(),
-        new JavacToJarStepFactory(
-            DEFAULT_JAVAC,
-            ANDROID_JAVAC_OPTIONS,
-            JavacOptionsAmender.IDENTITY),
-        /* forceFinalResourceIds */ false,
-        Optional.empty(),
-        Optional.empty(),
-        false);
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    DummyRDotJava dummyRDotJava =
+        new DummyRDotJava(
+            new FakeBuildRuleParamsBuilder(
+                    BuildTargetFactory.newInstance("//java/com/example:library"))
+                .build(),
+            ruleFinder,
+            ImmutableSet.of(),
+            new JavacToJarStepFactory(
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+            /* forceFinalResourceIds */ false,
+            Optional.empty(),
+            Optional.empty(),
+            false);
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),
@@ -207,14 +208,12 @@ public class DummyRDotJavaTest {
 
   private static ImmutableList<String> makeCleanDirDescription(Path dirname) {
     return ImmutableList.of(
-        String.format("rm -f -r %s", dirname),
-        String.format("mkdir -p %s", dirname));
+        String.format("rm -f -r %s", dirname), String.format("mkdir -p %s", dirname));
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule) {
     if (resourceRule instanceof AndroidResource) {
-      ((AndroidResource) resourceRule)
-          .getBuildOutputInitializer();
+      ((AndroidResource) resourceRule).getBuildOutputInitializer();
     }
   }
 }

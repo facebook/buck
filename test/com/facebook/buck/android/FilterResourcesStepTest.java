@@ -32,15 +32,13 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.regex.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class FilterResourcesStepTest {
 
@@ -70,31 +68,28 @@ public class FilterResourcesStepTest {
       }
     }
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        inResDirToOutResDirMap,
-        /* filterByDensity */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(ResourceFilters.Density.MDPI),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        new ImageScaler() {
-          @Override
-          public boolean isAvailable(ExecutionContext context) {
-            return true;
-          }
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            inResDirToOutResDirMap,
+            /* filterByDensity */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(ResourceFilters.Density.MDPI),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            new ImageScaler() {
+              @Override
+              public boolean isAvailable(ExecutionContext context) {
+                return true;
+              }
 
-          @Override
-          public void scale(
-              double factor,
-              Path source,
-              Path destination,
-              ExecutionContext context) throws IOException, InterruptedException {
-
-          }
-        });
+              @Override
+              public void scale(
+                  double factor, Path source, Path destination, ExecutionContext context)
+                  throws IOException, InterruptedException {}
+            });
 
     // We'll use this to verify the source->destination mappings created by the command.
     ImmutableMap.Builder<Path, Path> dirMapBuilder = ImmutableMap.builder();
@@ -116,8 +111,9 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testWhitelistFilter() throws IOException, InterruptedException {
-    Predicate<Path> filePredicate = getTestPathPredicate(
-        true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of());
+    Predicate<Path> filePredicate =
+        getTestPathPredicate(
+            true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of());
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
@@ -129,8 +125,8 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testFilterLocales() throws IOException, InterruptedException {
-    Predicate<Path> filePredicate = getTestPathPredicate(
-        false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"));
+    Predicate<Path> filePredicate =
+        getTestPathPredicate(false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"));
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
@@ -145,8 +141,9 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testUsingWhitelistIgnoresLocaleFilter() throws IOException, InterruptedException {
-    Predicate<Path> filePredicate = getTestPathPredicate(
-        true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
+    Predicate<Path> filePredicate =
+        getTestPathPredicate(
+            true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
@@ -156,7 +153,6 @@ public class FilterResourcesStepTest {
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values-en/integers.xml")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values-en/strings.xml")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rES/strings.xml")));
-
   }
 
   @Test
@@ -191,17 +187,18 @@ public class FilterResourcesStepTest {
           resDir.resolve(String.format("%s-%s", folderName, excludedDensity)).resolve(file));
     }
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            ImmutableBiMap.of(resDir, resOutDir),
+            /* filterByDPI */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(targetDensity),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
     command.execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
@@ -210,14 +207,14 @@ public class FilterResourcesStepTest {
       }
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensity))
-              .resolve(file)));
+          ProjectFilesystemMatchers.pathExists(
+              resOutDir.resolve(String.format("%s-%s", folderName, targetDensity)).resolve(file)));
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, excludedDensity))
-              .resolve(file)));
+          ProjectFilesystemMatchers.pathDoesNotExist(
+              resOutDir
+                  .resolve(String.format("%s-%s", folderName, excludedDensity))
+                  .resolve(file)));
     }
   }
 
@@ -236,29 +233,28 @@ public class FilterResourcesStepTest {
     filesystem.createNewFile(
         resDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file));
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            ImmutableBiMap.of(resDir, resOutDir),
+            /* filterByDPI */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(targetDensity),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
     command.execute(null);
 
     assertThat(
         filesystem,
-        ProjectFilesystemMatchers.pathExists(resOutDir
-            .resolve(String.format("drawable-%s", targetDensity))
-            .resolve(file)));
+        ProjectFilesystemMatchers.pathExists(
+            resOutDir.resolve(String.format("drawable-%s", targetDensity)).resolve(file)));
     assertThat(
         filesystem,
-        ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-            .resolve(String.format("drawable-%s", excludedDensity))
-            .resolve(file)));
+        ProjectFilesystemMatchers.pathDoesNotExist(
+            resOutDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file)));
   }
 
   @Test
@@ -278,22 +274,22 @@ public class FilterResourcesStepTest {
       }
 
       filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(resDir
-          .resolve(String.format("%s-%s", folderName, providedDensity))
-          .resolve(file));
+      filesystem.createNewFile(
+          resDir.resolve(String.format("%s-%s", folderName, providedDensity)).resolve(file));
     }
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            ImmutableBiMap.of(resDir, resOutDir),
+            /* filterByDPI */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(targetDensity),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
     command.execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
@@ -305,19 +301,19 @@ public class FilterResourcesStepTest {
           ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensity))));
+          ProjectFilesystemMatchers.pathDoesNotExist(
+              resOutDir.resolve(String.format("%s-%s", folderName, targetDensity))));
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, providedDensity))
-              .resolve(file)));
+          ProjectFilesystemMatchers.pathDoesNotExist(
+              resOutDir
+                  .resolve(String.format("%s-%s", folderName, providedDensity))
+                  .resolve(file)));
     }
   }
 
   @Test
-  public void fallsBackToDefaultWhenOneTargetNotPresent()
-      throws IOException, InterruptedException {
+  public void fallsBackToDefaultWhenOneTargetNotPresent() throws IOException, InterruptedException {
     final ResourceFilters.Density targetDensityIncluded = ResourceFilters.Density.MDPI;
     final ResourceFilters.Density targetDensityExcluded = ResourceFilters.Density.XHDPI;
     final String file = "somefile";
@@ -332,22 +328,22 @@ public class FilterResourcesStepTest {
       }
 
       filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(resDir
-          .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
-          .resolve(file));
+      filesystem.createNewFile(
+          resDir.resolve(String.format("%s-%s", folderName, targetDensityIncluded)).resolve(file));
     }
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            ImmutableBiMap.of(resDir, resOutDir),
+            /* filterByDPI */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
     command.execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
@@ -359,19 +355,19 @@ public class FilterResourcesStepTest {
           ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
-              .resolve(file)));
+          ProjectFilesystemMatchers.pathExists(
+              resOutDir
+                  .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
+                  .resolve(file)));
       assertThat(
           filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(resOutDir
-              .resolve(String.format("%s-%s", folderName, targetDensityExcluded))));
+          ProjectFilesystemMatchers.pathDoesNotExist(
+              resOutDir.resolve(String.format("%s-%s", folderName, targetDensityExcluded))));
     }
   }
 
   @Test
-  public void valuesAlwaysIncludesFallback()
-      throws IOException, InterruptedException {
+  public void valuesAlwaysIncludesFallback() throws IOException, InterruptedException {
     final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
     final String file = "somefile.xml";
     final Path resDir = Paths.get("res/foo/bar");
@@ -380,21 +376,21 @@ public class FilterResourcesStepTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
     filesystem.createNewFile(resDir.resolve("values").resolve(file));
-    filesystem.createNewFile(resDir
-        .resolve(String.format("values-%s", targetDensity))
-        .resolve(file));
+    filesystem.createNewFile(
+        resDir.resolve(String.format("values-%s", targetDensity)).resolve(file));
 
-    FilterResourcesStep command = new FilterResourcesStep(
-        filesystem,
-        ImmutableBiMap.of(resDir, resOutDir),
-        /* filterByDPI */ true,
-        /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.of(),
-        /* locales */ ImmutableSet.of(),
-        DefaultFilteredDirectoryCopier.getInstance(),
-        ImmutableSet.of(targetDensity),
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+    FilterResourcesStep command =
+        new FilterResourcesStep(
+            filesystem,
+            ImmutableBiMap.of(resDir, resOutDir),
+            /* filterByDPI */ true,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            DefaultFilteredDirectoryCopier.getInstance(),
+            ImmutableSet.of(targetDensity),
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
     command.execute(null);
 
     assertThat(
@@ -402,9 +398,8 @@ public class FilterResourcesStepTest {
         ProjectFilesystemMatchers.pathExists(resOutDir.resolve("values").resolve(file)));
     assertThat(
         filesystem,
-        ProjectFilesystemMatchers.pathExists(resOutDir
-            .resolve(String.format("values-%s", targetDensity))
-            .resolve(file)));
+        ProjectFilesystemMatchers.pathExists(
+            resOutDir.resolve(String.format("values-%s", targetDensity)).resolve(file)));
   }
 
   private static void assertMatchesRegex(String path, String language, String country) {
@@ -421,18 +416,20 @@ public class FilterResourcesStepTest {
   private static Predicate<Path> getTestPathPredicate(
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
-      ImmutableSet<String> locales) throws IOException, InterruptedException {
-    FilterResourcesStep step = new FilterResourcesStep(
-        null,
-        /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
-        /* filterByDensity */ false,
-        /* enableStringWhitelisting */ enableStringWhitelisting,
-        /* whitelistedStringDirs */ whitelistedStringDirs,
-        /* locales */ locales,
-        DefaultFilteredDirectoryCopier.getInstance(),
-        /* targetDensities */ null,
-        FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-        /* imageScaler */ null);
+      ImmutableSet<String> locales)
+      throws IOException, InterruptedException {
+    FilterResourcesStep step =
+        new FilterResourcesStep(
+            null,
+            /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* filterByDensity */ false,
+            /* enableStringWhitelisting */ enableStringWhitelisting,
+            /* whitelistedStringDirs */ whitelistedStringDirs,
+            /* locales */ locales,
+            DefaultFilteredDirectoryCopier.getInstance(),
+            /* targetDensities */ null,
+            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());
   }

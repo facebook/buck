@@ -26,37 +26,35 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("PMD.AddEmptyString")
 public class ExopackageInstallerTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testScanSecondaryDexDir() throws Exception {
     String output =
-        "exopackage_temp-secondary-abcdefg.dex.jar-588103794.tmp\r\n" +
-        "lock\r\n" +
-        "metadata.txt\r\n" +
-        "secondary-0fa1f9cfb3c0effa8000d2d86d267985b158df9f.dex.jar\r\n" +
-        "secondary-07fc80d2de21bd1dd57be0728fdb6c14190c3386.dex.jar\r\n" +
-        "secondary-2add18058985241f7999eb026868cebb9ef63379.dex.jar\r\n" +
-        "";
-    ImmutableSet<String> requiredHashes = ImmutableSet.of(
-        "0fa1f9cfb3c0effa8000d2d86d267985b158df9f",
-        "2add18058985241f7999eb026868cebb9ef63379",
-        "97d21318d1d5dd298f6ee932916c6ee949fe760e");
+        "exopackage_temp-secondary-abcdefg.dex.jar-588103794.tmp\r\n"
+            + "lock\r\n"
+            + "metadata.txt\r\n"
+            + "secondary-0fa1f9cfb3c0effa8000d2d86d267985b158df9f.dex.jar\r\n"
+            + "secondary-07fc80d2de21bd1dd57be0728fdb6c14190c3386.dex.jar\r\n"
+            + "secondary-2add18058985241f7999eb026868cebb9ef63379.dex.jar\r\n"
+            + "";
+    ImmutableSet<String> requiredHashes =
+        ImmutableSet.of(
+            "0fa1f9cfb3c0effa8000d2d86d267985b158df9f",
+            "2add18058985241f7999eb026868cebb9ef63379",
+            "97d21318d1d5dd298f6ee932916c6ee949fe760e");
     ImmutableSet.Builder<String> foundHashesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
 
@@ -69,8 +67,7 @@ public class ExopackageInstallerTest {
 
     assertEquals(
         ImmutableSet.of(
-            "0fa1f9cfb3c0effa8000d2d86d267985b158df9f",
-            "2add18058985241f7999eb026868cebb9ef63379"),
+            "0fa1f9cfb3c0effa8000d2d86d267985b158df9f", "2add18058985241f7999eb026868cebb9ef63379"),
         foundHashesBuilder.build());
 
     assertEquals(
@@ -84,16 +81,16 @@ public class ExopackageInstallerTest {
   @Test
   public void testParsePathAndPackageInfo() {
     String lines =
-        "package:/data/app/com.facebook.katana-1.apk\r\n" +
-        "  Package [com.facebook.katana] (4229ce68):\r\n" +
-        "    userId=10145 gids=[1028, 1015, 3003]\r\n" +
-        "    pkg=Package{42690b80 com.facebook.katana}\r\n" +
-        "    codePath=/data/app/com.facebook.katana-1.apk\r\n" +
-        "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n" +
-        "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n" +
-        "    versionCode=1640376 targetSdk=14\r\n" +
-        "    versionName=8.0.0.0.23\r\n" +
-        "";
+        "package:/data/app/com.facebook.katana-1.apk\r\n"
+            + "  Package [com.facebook.katana] (4229ce68):\r\n"
+            + "    userId=10145 gids=[1028, 1015, 3003]\r\n"
+            + "    pkg=Package{42690b80 com.facebook.katana}\r\n"
+            + "    codePath=/data/app/com.facebook.katana-1.apk\r\n"
+            + "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n"
+            + "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n"
+            + "    versionCode=1640376 targetSdk=14\r\n"
+            + "    versionName=8.0.0.0.23\r\n"
+            + "";
     Optional<ExopackageInstaller.PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
 
@@ -108,18 +105,18 @@ public class ExopackageInstallerTest {
   @Test
   public void testParsePathAndPackageInfoOnLollipop() {
     String lines =
-        "package:/data/app/com.facebook.buck.android.agent-1.apk\r\n" +
-        "  Package [com.facebook.buck.android.agent] (3f784d07):\r\n" +
-        "    userId=10062 gids=[]\r\n" +
-        "    pkg=Package{81b1e34 com.facebook.buck.android.agent}\r\n" +
-        "    codePath=/data/app/com.facebook.buck.android.agent-1\r\n" +
-        "    resourcePath=/data/app/com.facebook.buck.android.agent-1\r\n" +
-        "    legacyNativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib\r\n" +
-        "    primaryCpuAbi=armeabi-v7a\r\n" +
-        "    secondaryCpuAbi=null\r\n" +
-        "    versionCode=3 targetSdk=19\r\n" +
-        "    versionName=3\r\n" +
-        "";
+        "package:/data/app/com.facebook.buck.android.agent-1.apk\r\n"
+            + "  Package [com.facebook.buck.android.agent] (3f784d07):\r\n"
+            + "    userId=10062 gids=[]\r\n"
+            + "    pkg=Package{81b1e34 com.facebook.buck.android.agent}\r\n"
+            + "    codePath=/data/app/com.facebook.buck.android.agent-1\r\n"
+            + "    resourcePath=/data/app/com.facebook.buck.android.agent-1\r\n"
+            + "    legacyNativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib\r\n"
+            + "    primaryCpuAbi=armeabi-v7a\r\n"
+            + "    secondaryCpuAbi=null\r\n"
+            + "    versionCode=3 targetSdk=19\r\n"
+            + "    versionName=3\r\n"
+            + "";
     Optional<ExopackageInstaller.PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
 
@@ -134,16 +131,16 @@ public class ExopackageInstallerTest {
   @Test
   public void testParseOnlyPackageInfo() {
     String lines =
-        "1\r\n" +
-        "  Package [com.facebook.katana] (4229ce68):\r\n" +
-            "    userId=10145 gids=[1028, 1015, 3003]\r\n" +
-            "    pkg=Package{42690b80 com.facebook.katana}\r\n" +
-            "    codePath=/data/app/com.facebook.katana-1.apk\r\n" +
-            "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n" +
-            "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n" +
-            "    versionCode=1640376 targetSdk=14\r\n" +
-            "    versionName=8.0.0.0.23\r\n" +
-            "";
+        "1\r\n"
+            + "  Package [com.facebook.katana] (4229ce68):\r\n"
+            + "    userId=10145 gids=[1028, 1015, 3003]\r\n"
+            + "    pkg=Package{42690b80 com.facebook.katana}\r\n"
+            + "    codePath=/data/app/com.facebook.katana-1.apk\r\n"
+            + "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n"
+            + "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n"
+            + "    versionCode=1640376 targetSdk=14\r\n"
+            + "    versionName=8.0.0.0.23\r\n"
+            + "";
     Optional<ExopackageInstaller.PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
 
@@ -152,47 +149,39 @@ public class ExopackageInstallerTest {
 
   @Test
   public void testChunkArgs() {
-    assertEquals(
-        ImmutableList.of(),
-        RealExopackageDevice.chunkArgs(ImmutableList.of(), 8));
+    assertEquals(ImmutableList.of(), RealExopackageDevice.chunkArgs(ImmutableList.of(), 8));
 
     assertEquals(
-        ImmutableList.of(
-            ImmutableList.of("abcd", "efg")),
+        ImmutableList.of(ImmutableList.of("abcd", "efg")),
         RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg"), 8));
 
     assertEquals(
-        ImmutableList.of(
-            ImmutableList.of("abcd", "efg"),
-            ImmutableList.of("hijkl")),
+        ImmutableList.of(ImmutableList.of("abcd", "efg"), ImmutableList.of("hijkl")),
         RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8));
   }
 
   @Test
   public void testFilterLibrariesForAbi() {
     Path libsDir = Paths.get("example");
-    ImmutableMultimap<String, Path> allLibs = ImmutableMultimap.of(
-        Strings.repeat("a", 40), libsDir.resolve("libs/armeabi-v7a/libmy1.so"),
-        Strings.repeat("b", 40), libsDir.resolve("libs/armeabi-v7a/libmy2.so"),
-        Strings.repeat("c", 40), libsDir.resolve("libs/armeabi/libmy2.so"),
-        Strings.repeat("d", 40), libsDir.resolve("libs/armeabi/libmy3.so"),
-        Strings.repeat("e", 40), libsDir.resolve("libs/x86/libmy1.so"));
+    ImmutableMultimap<String, Path> allLibs =
+        ImmutableMultimap.of(
+            Strings.repeat("a", 40), libsDir.resolve("libs/armeabi-v7a/libmy1.so"),
+            Strings.repeat("b", 40), libsDir.resolve("libs/armeabi-v7a/libmy2.so"),
+            Strings.repeat("c", 40), libsDir.resolve("libs/armeabi/libmy2.so"),
+            Strings.repeat("d", 40), libsDir.resolve("libs/armeabi/libmy3.so"),
+            Strings.repeat("e", 40), libsDir.resolve("libs/x86/libmy1.so"));
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("a", 40), Strings.repeat("b", 40)),
         ExopackageInstaller.filterLibrariesForAbi(
-            libsDir,
-            allLibs,
-            "armeabi-v7a",
-            ImmutableSet.of()).keySet());
+                libsDir, allLibs, "armeabi-v7a", ImmutableSet.of())
+            .keySet());
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("d", 40)),
         ExopackageInstaller.filterLibrariesForAbi(
-            libsDir,
-            allLibs,
-            "armeabi",
-            ImmutableSet.of("libmy1.so", "libmy2.so")).keySet());
+                libsDir, allLibs, "armeabi", ImmutableSet.of("libmy1.so", "libmy2.so"))
+            .keySet());
   }
 
   @Test
@@ -215,22 +204,14 @@ public class ExopackageInstallerTest {
             Strings.repeat("a", 40), Paths.get("basedir/filename.jar"),
             Strings.repeat("b", 40), Paths.get("basedir/dir/anotherfile.jar")),
         ExopackageInstaller.parseExopackageInfoMetadata(
-            Paths.get("metadata.txt"),
-            baseDir,
-            filesystem));
+            Paths.get("metadata.txt"), baseDir, filesystem));
 
     filesystem.writeLinesToPath(
-        ImmutableList.of(
-            "filename.jar aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            illegalLine),
+        ImmutableList.of("filename.jar aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", illegalLine),
         Paths.get("metadata.txt"));
 
-    ExopackageInstaller.parseExopackageInfoMetadata(
-        Paths.get("metadata.txt"),
-        baseDir,
-        filesystem);
+    ExopackageInstaller.parseExopackageInfoMetadata(Paths.get("metadata.txt"), baseDir, filesystem);
   }
-
 
   @Test
   public void testNativeLibFilesPattern() {

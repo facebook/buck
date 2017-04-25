@@ -36,13 +36,11 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Locale;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class AndroidBinaryDescriptionTest {
 
@@ -110,9 +108,7 @@ public class AndroidBinaryDescriptionTest {
     AndroidBinaryDescription.Arg arg = new AndroidBinaryDescription.Arg();
     arg.bannedDuplicateResourceTypes = EnumSet.of(RDotTxtEntry.RType.STRING);
 
-    assertEquals(
-        EnumSet.of(RDotTxtEntry.RType.STRING),
-        arg.getBannedDuplicateResourceTypes());
+    assertEquals(EnumSet.of(RDotTxtEntry.RType.STRING), arg.getBannedDuplicateResourceTypes());
   }
 
   @Test

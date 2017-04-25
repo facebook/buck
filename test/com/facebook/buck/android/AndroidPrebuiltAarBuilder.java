@@ -21,14 +21,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidPrebuiltAarBuilder extends AbstractNodeBuilder<
-    AndroidPrebuiltAarDescription.Arg,
-    AndroidPrebuiltAarDescription,
-    AndroidPrebuiltAar> {
+public class AndroidPrebuiltAarBuilder
+    extends AbstractNodeBuilder<
+        AndroidPrebuiltAarDescription.Arg, AndroidPrebuiltAarDescription, AndroidPrebuiltAar> {
 
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(

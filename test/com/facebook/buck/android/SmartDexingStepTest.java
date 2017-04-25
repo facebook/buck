@@ -38,12 +38,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
-import org.easymock.EasyMockSupport;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,21 +48,22 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.easymock.EasyMockSupport;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class SmartDexingStepTest extends EasyMockSupport {
-  @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
-  /**
-   * Tests whether pseudo rule cache detection is working properly.
-   */
+  /** Tests whether pseudo rule cache detection is working properly. */
   @Test
   public void testDxPseudoRuleCaching() throws IOException {
     File testIn = new File(tmpDir.getRoot(), "testIn");
-    try (ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(testIn)))) {
+    try (ZipOutputStream zipOut =
+        new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(testIn)))) {
       zipOut.putNextEntry(new ZipEntry("foobar"));
-      zipOut.write(new byte[]{0});
+      zipOut.write(new byte[] {0});
     }
 
     File outputFile = tmpDir.newFile("out.dex");
@@ -78,15 +73,16 @@ public class SmartDexingStepTest extends EasyMockSupport {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
-    DxPseudoRule rule = new DxPseudoRule(
-        filesystem,
-        ImmutableMap.of(testIn.toPath(), actualHashCode),
-        ImmutableSet.of(testIn.toPath()),
-        outputFile.toPath(),
-        outputHashFile,
-        EnumSet.of(DxStep.Option.NO_OPTIMIZE),
-        Optional.empty(),
-        Optional.empty());
+    DxPseudoRule rule =
+        new DxPseudoRule(
+            filesystem,
+            ImmutableMap.of(testIn.toPath(), actualHashCode),
+            ImmutableSet.of(testIn.toPath()),
+            outputFile.toPath(),
+            outputHashFile,
+            EnumSet.of(DxStep.Option.NO_OPTIMIZE),
+            Optional.empty(),
+            Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -102,32 +98,28 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithXzOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    ImmutableList<Path> filesToDex = ImmutableList.of(
-        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    ImmutableList<Path> filesToDex =
+        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps,
-        filesystem,
-        filesToDex,
-        outputPath,
-        dxOptions,
-        Optional.empty(),
-        Optional.empty());
+        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            Joiner.on(" ").join(
-                "(cd", filesystem.getRootPath(), "&&",
-                Paths.get("/usr/bin/dx"),
-                "--dex --output",
-                filesystem.resolve("classes.dex.tmp.jar"),
-                filesystem.resolve("foo.dex.jar"),
-                filesystem.resolve("bar.dex.jar") + ")"
-            ),
+            Joiner.on(" ")
+                .join(
+                    "(cd",
+                    filesystem.getRootPath(),
+                    "&&",
+                    Paths.get("/usr/bin/dx"),
+                    "--dex --output",
+                    filesystem.resolve("classes.dex.tmp.jar"),
+                    filesystem.resolve("foo.dex.jar"),
+                    filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -143,33 +135,27 @@ public class SmartDexingStepTest extends EasyMockSupport {
       throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    ImmutableList<Path> filesToDex = ImmutableList.of(
-        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    ImmutableList<Path> filesToDex =
+        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps,
-        filesystem,
-        filesToDex,
-        outputPath,
-        dxOptions,
-        Optional.of(9),
-        Optional.empty());
+        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.of(9), Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            Joiner.on(" ").join(
-                "(cd",
-                filesystem.getRootPath(),
-                "&&",
-                Paths.get("/usr/bin/dx"),
-                "--dex --output",
-                filesystem.resolve("classes.dex.tmp.jar"),
-                filesystem.resolve("foo.dex.jar"),
-                filesystem.resolve("bar.dex.jar") + ")"
-            ),
+            Joiner.on(" ")
+                .join(
+                    "(cd",
+                    filesystem.getRootPath(),
+                    "&&",
+                    Paths.get("/usr/bin/dx"),
+                    "--dex --output",
+                    filesystem.resolve("classes.dex.tmp.jar"),
+                    filesystem.resolve("foo.dex.jar"),
+                    filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -184,31 +170,25 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithDexOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    ImmutableList<Path> filesToDex = ImmutableList.of(
-        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    ImmutableList<Path> filesToDex =
+        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps,
-        filesystem,
-        filesToDex,
-        outputPath,
-        dxOptions,
-        Optional.empty(),
-        Optional.empty());
+        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
 
     assertEquals(
-        Joiner.on(" ").join(
-            "(cd",
-            filesystem.getRootPath(),
-            "&&",
-            Paths.get("/usr/bin/dx"),
-            "--dex --output",
-            filesystem.resolve("classes.dex"),
-            filesystem.resolve("foo.dex.jar"),
-            filesystem.resolve("bar.dex.jar") + ")"
-        ),
+        Joiner.on(" ")
+            .join(
+                "(cd",
+                filesystem.getRootPath(),
+                "&&",
+                Paths.get("/usr/bin/dx"),
+                "--dex --output",
+                filesystem.resolve("classes.dex"),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar") + ")"),
         Iterables.getOnlyElement(steps.build()).getDescription(createMockedExecutionContext()));
     verifyAll();
   }
@@ -217,32 +197,27 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    ImmutableList<Path> filesToDex = ImmutableList.of(
-        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    ImmutableList<Path> filesToDex =
+        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps,
-        filesystem,
-        filesToDex,
-        outputPath,
-        dxOptions,
-        Optional.empty(),
-        Optional.empty());
+        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
 
     MoreAsserts.assertSteps(
         "Wrong steps",
         ImmutableList.of(
-            Joiner.on(" ").join(
-                "(cd",
-                filesystem.getRootPath(),
-                "&&",
-                Paths.get("/usr/bin/dx"),
-                "--dex --output",
-                filesystem.resolve("classes.dex.jar"),
-                filesystem.resolve("foo.dex.jar"),
-                filesystem.resolve("bar.dex.jar") + ")"),
+            Joiner.on(" ")
+                .join(
+                    "(cd",
+                    filesystem.getRootPath(),
+                    "&&",
+                    Paths.get("/usr/bin/dx"),
+                    "--dex --output",
+                    filesystem.resolve("classes.dex.jar"),
+                    filesystem.resolve("foo.dex.jar"),
+                    filesystem.resolve("bar.dex.jar") + ")"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta"),
         steps.build(),
         createMockedExecutionContext());
@@ -253,8 +228,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
-    ImmutableList<Path> filesToDex = ImmutableList.of(
-        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    ImmutableList<Path> filesToDex =
+        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -267,8 +242,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Optional.empty());
   }
 
-  private ExecutionContext createMockedExecutionContext()
-      throws IOException {
+  private ExecutionContext createMockedExecutionContext() throws IOException {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
     replayAll();

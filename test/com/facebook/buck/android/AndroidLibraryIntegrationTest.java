@@ -25,24 +25,21 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
   }
@@ -74,7 +71,6 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_depending_on_main_lib");
     result.assertSuccess();
   }
-
 
   @Test(timeout = (3 * 60 * 1000))
   public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {

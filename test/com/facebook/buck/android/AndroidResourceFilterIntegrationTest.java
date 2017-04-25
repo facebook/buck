@@ -37,27 +37,24 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class AndroidResourceFilterIntegrationTest {
 
   private static boolean isBuildToolsNew;
   private static Path pathToAapt;
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -67,23 +64,23 @@ public class AndroidResourceFilterIntegrationTest {
   public static void findBuildToolsVersion() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
-    AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
-        filesystem.getRootPath().getFileSystem(),
-        ImmutableMap.copyOf(System.getenv()),
-        Optional.empty(),
-        Optional.empty());
-    pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
-        resolver,
-        Optional.empty(),
-        Optional.empty()).getAaptExecutable();
+    AndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            filesystem.getRootPath().getFileSystem(),
+            ImmutableMap.copyOf(System.getenv()),
+            Optional.empty(),
+            Optional.empty());
+    pathToAapt =
+        AndroidPlatformTarget.getDefaultPlatformTarget(resolver, Optional.empty(), Optional.empty())
+            .getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
@@ -94,8 +91,9 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -115,8 +113,9 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -136,11 +135,11 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
-    String iconPath = isBuildToolsNew
-        ? "res/drawable-mdpi-v4/app_icon.png"
-        : "res/drawable-mdpi/app_icon.png";
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    String iconPath =
+        isBuildToolsNew ? "res/drawable-mdpi-v4/app_icon.png" : "res/drawable-mdpi/app_icon.png";
     long firstImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     workspace.copyFile(
@@ -154,8 +153,9 @@ public class AndroidResourceFilterIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(target);
 
-    apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     long secondImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     assertNotEquals(firstImageCrc, secondImageCrc);
@@ -167,8 +167,9 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -188,8 +189,9 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -203,13 +205,12 @@ public class AndroidResourceFilterIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     Sha1HashCode androidBinaryRuleKey = buildLog.getRuleKey("//apps/sample:app_comp_str");
 
-    ArtifactCache cache = TestArtifactCaches.createDirCacheForTest(
-        workspace.getPath("."),
-        filesystem.getBuckPaths().getCacheDir());
-    Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
-        cache,
-        new RuleKey(androidBinaryRuleKey.getHash()),
-        Optional.empty());
+    ArtifactCache cache =
+        TestArtifactCaches.createDirCacheForTest(
+            workspace.getPath("."), filesystem.getBuckPaths().getCacheDir());
+    Path cachedFile =
+        DirArtifactCacheTestUtil.getPathForRuleKey(
+            cache, new RuleKey(androidBinaryRuleKey.getHash()), Optional.empty());
     Files.delete(workspace.resolve(cachedFile));
 
     workspace.runBuckCommand("clean").assertSuccess();
@@ -222,8 +223,9 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -245,20 +247,20 @@ public class AndroidResourceFilterIntegrationTest {
     String target = "//apps/sample:app";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     long firstCrc = zipInspector.getCrc("assets/asset_file.txt");
 
     workspace.replaceFileContents(
-        "res/com/sample/asset_only/assets/asset_file.txt",
-        "Hello",
-        "Bye");
+        "res/com/sample/asset_only/assets/asset_file.txt", "Hello", "Bye");
     workspace.runBuckBuild(target).assertSuccess();
 
-    apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     zipInspector = new ZipInspector(apkFile);
 
     long secondCrc = zipInspector.getCrc("assets/asset_file.txt");
@@ -271,16 +273,18 @@ public class AndroidResourceFilterIntegrationTest {
       throws IOException, InterruptedException {
     String target = "//apps/sample:app";
     workspace.runBuckBuild(target).assertSuccess();
-    Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
 
     int matchingLines = runAaptDumpResources(apkFile);
     assertEquals(2, matchingLines);
 
     target = "//apps/sample:app_en";
     workspace.runBuckBuild(target).assertSuccess();
-    apkFile = workspace.getPath(
-        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
 
     matchingLines = runAaptDumpResources(apkFile);
     assertEquals(1, matchingLines);
@@ -288,14 +292,15 @@ public class AndroidResourceFilterIntegrationTest {
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
     final Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
-    ProcessExecutor.Result result = workspace.runCommand(
-        pathToAapt.toAbsolutePath().toString(),
-        "dump",
-        "resources",
-        apkFile.toAbsolutePath().toString());
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            pathToAapt.toAbsolutePath().toString(),
+            "dump",
+            "resources",
+            apkFile.toAbsolutePath().toString());
     assertEquals(0, result.getExitCode());
-    return FluentIterable.from(
-        Splitter.on('\n').split(result.getStdout().orElse(""))).filter(
-        input -> pattern.matcher(input).matches()).size();
+    return FluentIterable.from(Splitter.on('\n').split(result.getStdout().orElse("")))
+        .filter(input -> pattern.matcher(input).matches())
+        .size();
   }
 }

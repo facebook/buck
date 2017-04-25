@@ -18,10 +18,10 @@ package com.facebook.buck.android.aapt;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -38,26 +38,22 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class MergeAndroidResourcesSourcesTest {
   private static final String RESOURCES_XML_HEADER =
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n";
-  private static final String RESOURCES_XML_FOOTER =
-      "</resources>";
+  private static final String RESOURCES_XML_FOOTER = "</resources>";
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   private final Function<Step, String> stepDescriptionFunction =
       new Function<Step, String>() {
@@ -86,17 +82,17 @@ public class MergeAndroidResourcesSourcesTest {
     tmp.newFile("res_in_2/drawable/two.png");
 
     filesystem.writeContentsToPath(
-        RESOURCES_XML_HEADER +
-            "<string name=\"override_me\">one</string>\n" +
-            "<string name=\"only_in_first\">first</string>\n" +
-            RESOURCES_XML_FOOTER,
+        RESOURCES_XML_HEADER
+            + "<string name=\"override_me\">one</string>\n"
+            + "<string name=\"only_in_first\">first</string>\n"
+            + RESOURCES_XML_FOOTER,
         Paths.get("res_in_1/values/strings.xml"));
 
     filesystem.writeContentsToPath(
-        RESOURCES_XML_HEADER +
-            "<string name=\"override_me\">two</string>\n" +
-            "<string name=\"only_in_second\">second</string>\n" +
-            RESOURCES_XML_FOOTER,
+        RESOURCES_XML_HEADER
+            + "<string name=\"override_me\">two</string>\n"
+            + "<string name=\"only_in_second\">second</string>\n"
+            + RESOURCES_XML_FOOTER,
         Paths.get("res_in_2/values/strings.xml"));
 
     filesystem.writeContentsToPath("png, trust me", Paths.get("res_in_1/drawable/one.png"));
@@ -106,31 +102,28 @@ public class MergeAndroidResourcesSourcesTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testRuleStepCreation() throws IOException, InterruptedException {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder")
-        .setProjectFilesystem(filesystem)
-        .build();
-    ImmutableList<SourcePath> directories = ImmutableList.of(
-        new FakeSourcePath(filesystem, "res_in_1"),
-        new FakeSourcePath(filesystem, "res_in_2"));
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer())));
+    BuildRuleParams buildRuleParams =
+        new FakeBuildRuleParamsBuilder("//:output_folder").setProjectFilesystem(filesystem).build();
+    ImmutableList<SourcePath> directories =
+        ImmutableList.of(
+            new FakeSourcePath(filesystem, "res_in_1"), new FakeSourcePath(filesystem, "res_in_2"));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
-        new MergeAndroidResourceSources(
-            buildRuleParams,
-            directories);
+        new MergeAndroidResourceSources(buildRuleParams, directories);
 
-    ImmutableList<Step> steps = mergeAndroidResourceSourcesStep.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver),
-        new FakeBuildableContext());
+    ImmutableList<Step> steps =
+        mergeAndroidResourceSourcesStep.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     assertThat(
         steps,
         Matchers.contains(
             Matchers.instanceOf(RmStep.class),
             Matchers.instanceOf(MkdirStep.class),
-            Matchers.instanceOf(MergeAndroidResourceSourcesStep.class)
-        ));
+            Matchers.instanceOf(MergeAndroidResourceSourcesStep.class)));
     String resIn1 = filesystem.getRootPath().resolve("res_in_1").toString();
     String resIn2 = filesystem.getRootPath().resolve("res_in_2").toString();
 
@@ -139,9 +132,7 @@ public class MergeAndroidResourcesSourcesTest {
         Matchers.contains(
             Matchers.containsString("rm"),
             Matchers.containsString("mkdir"),
-            Matchers.startsWith(String.format("merge-resources %s,%s -> ", resIn1, resIn2))
-        )
-    );
+            Matchers.startsWith(String.format("merge-resources %s,%s -> ", resIn1, resIn2))));
   }
 
   @Test
@@ -150,28 +141,27 @@ public class MergeAndroidResourcesSourcesTest {
     File outFolder = tmp.newFolder("out");
     File tmpFolder = tmp.newFolder("tmp");
 
-    MergeAndroidResourceSourcesStep step = MergeAndroidResourceSourcesStep.builder()
-        .setResPaths(ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")))
-        .setOutFolderPath(outFolder.toPath())
-        .setTmpFolderPath(tmpFolder.toPath())
-        .build();
+    MergeAndroidResourceSourcesStep step =
+        MergeAndroidResourceSourcesStep.builder()
+            .setResPaths(
+                ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")))
+            .setOutFolderPath(outFolder.toPath())
+            .setTmpFolderPath(tmpFolder.toPath())
+            .build();
     step.execute(context);
     assertThat(
         filesystem.getFilesUnderPath(outFolder.toPath()),
         Matchers.containsInAnyOrder(
             Paths.get("out", "drawable", "one.png"),
             Paths.get("out", "drawable", "two.png"),
-            Paths.get("out", "values", "values.xml")
-        ));
+            Paths.get("out", "values", "values.xml")));
     assertThat(
         filesystem.readFileIfItExists(outFolder.toPath().resolve("values/values.xml")).get(),
         Matchers.equalTo(
-            RESOURCES_XML_HEADER +
-                "    <string name=\"only_in_first\">first</string>\n" +
-                "    <string name=\"only_in_second\">second</string>\n" +
-                "    <string name=\"override_me\">two</string>\n" +
-            RESOURCES_XML_FOOTER
-        )
-    );
+            RESOURCES_XML_HEADER
+                + "    <string name=\"only_in_first\">first</string>\n"
+                + "    <string name=\"only_in_second\">second</string>\n"
+                + "    <string name=\"override_me\">two</string>\n"
+                + RESOURCES_XML_FOOTER));
   }
 }

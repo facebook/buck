@@ -43,12 +43,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
@@ -59,9 +57,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     SourcePathResolver sourcePathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
-    NdkLibrary ndkLibrary = new NdkLibraryBuilder(
-        BuildTargetFactory.newInstance("//:ndklib"))
-        .build(ruleResolver);
+    NdkLibrary ndkLibrary =
+        new NdkLibraryBuilder(BuildTargetFactory.newInstance("//:ndklib")).build(ruleResolver);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
@@ -69,10 +66,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.of(ndkLibrary))
             .build();
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(
-        TargetGraph.EMPTY,
-        target,
-        Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -84,34 +78,27 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
-            apkModuleGraph
-        );
+            apkModuleGraph);
 
-    AndroidPackageableCollector collector = new AndroidPackageableCollector(
-        target,
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        apkModuleGraph);
+    AndroidPackageableCollector collector =
+        new AndroidPackageableCollector(
+            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(
-            ImmutableSet.of(ndkLibrary)));
+        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(ndkLibrary)));
 
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(collector.build()).getCopyNativeLibraries();
     CopyNativeLibraries copyNativeLibraries =
-        copyNativeLibrariesOptional
-            .get()
-            .get(apkModuleGraph.getRootAPKModule());
+        copyNativeLibrariesOptional.get().get(apkModuleGraph.getRootAPKModule());
 
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
-        copyNativeLibraries.getNativeLibDirectories().stream()
+        copyNativeLibraries
+            .getNativeLibDirectories()
+            .stream()
             .map(sourcePathResolver::getRelativePath)
             .collect(MoreCollectors.toImmutableList()),
-        Matchers.contains(
-            ndkLibrary.getLibraryPath()
-        )
-    );
+        Matchers.contains(ndkLibrary.getLibraryPath()));
   }
 
   @Test
@@ -128,23 +115,22 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms =
         ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>builder()
-        .put(NdkCxxPlatforms.TargetCpuType.ARMV7, ndkCxxPlatform)
-        .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
-        .build();
+            .put(NdkCxxPlatforms.TargetCpuType.ARMV7, ndkCxxPlatform)
+            .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
+            .build();
 
-    CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(
-        BuildTargetFactory.newInstance("//:cxxlib"))
-        .setSoname("somelib.so")
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib"))
+            .setSoname("somelib.so")
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
     TargetNode<CxxLibraryDescription.Arg, ?> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(
-        ruleResolver,
-        new FakeProjectFilesystem(),
-        targetGraph);
+    CxxLibrary cxxLibrary =
+        (CxxLibrary)
+            cxxLibraryBuilder.build(ruleResolver, new FakeProjectFilesystem(), targetGraph);
     ruleResolver.addToIndex(cxxLibrary);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -153,10 +139,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.of(cxxLibrary))
             .build();
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(
-        TargetGraph.EMPTY,
-        target,
-        Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -168,56 +151,43 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
-            apkModuleGraph
-        );
+            apkModuleGraph);
 
-    AndroidPackageableCollector collector = new AndroidPackageableCollector(
-        target,
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        apkModuleGraph);
+    AndroidPackageableCollector collector =
+        new AndroidPackageableCollector(
+            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(
-            ImmutableSet.of(cxxLibrary)));
+        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary)));
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(packageableCollection).getCopyNativeLibraries();
     CopyNativeLibraries copyNativeLibraries =
-        copyNativeLibrariesOptional
-            .get()
-            .get(apkModuleGraph.getRootAPKModule());
+        copyNativeLibrariesOptional.get().get(apkModuleGraph.getRootAPKModule());
 
     assertThat(
         copyNativeLibraries.getStrippedObjectDescriptions(),
         Matchers.containsInAnyOrder(
             Matchers.allOf(
                 Matchers.hasProperty(
-                    "targetCpuType",
-                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
-                Matchers.hasProperty(
-                    "strippedObjectName",
-                    Matchers.equalTo("somelib.so"))
-            ),
+                    "targetCpuType", Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty("strippedObjectName", Matchers.equalTo("somelib.so"))),
             Matchers.allOf(
                 Matchers.hasProperty(
-                    "targetCpuType",
-                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                    "targetCpuType", Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
                 Matchers.hasProperty(
-                    "strippedObjectName",
-                    Matchers.equalTo("libgnustl_shared.so"))
-            )
-        )
-    );
+                    "strippedObjectName", Matchers.equalTo("libgnustl_shared.so")))));
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
-    ImmutableCollection<BuildRule> stripRules = ruleFinder.filterBuildRuleInputs(
-        copyNativeLibraries.getStrippedObjectDescriptions().stream()
-            .map(StrippedObjectDescription::getSourcePath)
-            .collect(MoreCollectors.toImmutableSet()));
+    ImmutableCollection<BuildRule> stripRules =
+        ruleFinder.filterBuildRuleInputs(
+            copyNativeLibraries
+                .getStrippedObjectDescriptions()
+                .stream()
+                .map(StrippedObjectDescription::getSourcePath)
+                .collect(MoreCollectors.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(
-            Matchers.instanceOf(StripLinkable.class),
-            Matchers.instanceOf(StripLinkable.class)));
+            Matchers.instanceOf(StripLinkable.class), Matchers.instanceOf(StripLinkable.class)));
   }
 }

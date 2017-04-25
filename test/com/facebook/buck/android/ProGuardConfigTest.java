@@ -27,19 +27,16 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ProGuardConfigTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void proGuardJarOverrideUsedShouldBeRelativeToTheProjectRoot() throws IOException {
@@ -47,20 +44,18 @@ public class ProGuardConfigTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(proGuardJar);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "tools",
-                ImmutableMap.of("proguard", proGuardJar.toString())))
-        .setFilesystem(filesystem)
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("tools", ImmutableMap.of("proguard", proGuardJar.toString())))
+            .setFilesystem(filesystem)
+            .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
 
     assertTrue(proGuardJarOverride.isPresent());
-    assertEquals(
-        new PathSourcePath(filesystem, proGuardJar), proGuardJarOverride.get());
+    assertEquals(new PathSourcePath(filesystem, proGuardJar), proGuardJarOverride.get());
   }
 
   @Test(expected = HumanReadableException.class)
@@ -68,13 +63,12 @@ public class ProGuardConfigTest {
     Path proGuardJar = Paths.get("proguard.jar");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "tools",
-                ImmutableMap.of("proguard", proGuardJar.toString())))
-        .setFilesystem(filesystem)
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("tools", ImmutableMap.of("proguard", proGuardJar.toString())))
+            .setFilesystem(filesystem)
+            .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
@@ -88,16 +82,15 @@ public class ProGuardConfigTest {
     String proGuardMaxHeapSize = "1234M";
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "tools",
-                ImmutableMap.of("proguard-max-heap-size", proGuardMaxHeapSize)))
-        .setFilesystem(filesystem)
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "tools", ImmutableMap.of("proguard-max-heap-size", proGuardMaxHeapSize)))
+            .setFilesystem(filesystem)
+            .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     assertEquals(proGuardMaxHeapSize, proGuardConfig.getProguardMaxHeapSize());
   }
-
 }

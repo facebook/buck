@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -39,13 +39,11 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CopyNativeLibrariesTest {
 
@@ -110,10 +108,11 @@ public class CopyNativeLibrariesTest {
   @Test
   public void testCopyNativeLibrariesCopiesLibDirsInReverseTopoOrder() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer())));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
@@ -125,22 +124,14 @@ public class CopyNativeLibrariesTest {
 
     ImmutableList<Step> steps =
         copyNativeLibraries.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver),
-            new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 
     Iterable<String> descriptions =
-        Iterables.transform(
-            steps,
-            step -> step.getDescription(TestExecutionContext.newInstance()));
+        Iterables.transform(steps, step -> step.getDescription(TestExecutionContext.newInstance()));
     assertThat(
         "lib1 contents should be copied *after* lib2",
-        Iterables.indexOf(
-            descriptions,
-            Predicates.containsPattern("lib1")),
-        Matchers.greaterThan(
-            Iterables.indexOf(
-                descriptions,
-                Predicates.containsPattern("lib2"))));
+        Iterables.indexOf(descriptions, Predicates.containsPattern("lib1")),
+        Matchers.greaterThan(Iterables.indexOf(descriptions, Predicates.containsPattern("lib2"))));
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
@@ -151,11 +142,7 @@ public class CopyNativeLibrariesTest {
     // Invoke copyNativeLibrary to populate the steps.
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     CopyNativeLibraries.copyNativeLibrary(
-        new FakeProjectFilesystem(),
-        sourceDir,
-        destinationDir,
-        cpuFilters,
-        stepsBuilder);
+        new FakeProjectFilesystem(), sourceDir, destinationDir, cpuFilters, stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());

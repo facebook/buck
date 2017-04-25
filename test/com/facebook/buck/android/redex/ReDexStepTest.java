@@ -33,15 +33,13 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.easymock.EasyMock;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.easymock.EasyMock;
+import org.junit.Test;
 
 public class ReDexStepTest {
   @Test
@@ -52,40 +50,37 @@ public class ReDexStepTest {
     Path inputApkPath = Paths.get("buck-out/gen/app.apk.zipalign");
     Path outputApkPath = Paths.get("buck-out/gen/app.apk");
     Path keystorePath = Paths.get("keystores/debug.keystore");
-    KeystoreProperties keystoreProperties = new KeystoreProperties(
-        keystorePath,
-        "storepass",
-        "keypass",
-        "alias");
-    Supplier<KeystoreProperties> keystorePropertiesSupplier = Suppliers.ofInstance(
-        keystoreProperties);
+    KeystoreProperties keystoreProperties =
+        new KeystoreProperties(keystorePath, "storepass", "keypass", "alias");
+    Supplier<KeystoreProperties> keystorePropertiesSupplier =
+        Suppliers.ofInstance(keystoreProperties);
     Path redexConfigPath = Paths.get("redex/redex-config.json");
     Optional<Path> redexConfig = Optional.of(redexConfigPath);
-    ImmutableList<Arg> redexExtraArgs = ImmutableList.of(
-        StringArg.of("foo"), StringArg.of("bar")
-    );
+    ImmutableList<Arg> redexExtraArgs = ImmutableList.of(StringArg.of("foo"), StringArg.of("bar"));
     Path proguardMap = Paths.get("buck-out/gen/app/__proguard__/mapping.txt");
     Path proguardConfig = Paths.get("app.proguard.config");
     Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
 
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    ));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
-    ReDexStep redex = new ReDexStep(
-        workingDirectory,
-        redexBinaryArgs,
-        redexEnvironmentVariables,
-        inputApkPath,
-        outputApkPath,
-        keystorePropertiesSupplier,
-        redexConfig,
-        redexExtraArgs,
-        proguardMap,
-        proguardConfig,
-        seeds,
-        pathResolver
-    );
+    ReDexStep redex =
+        new ReDexStep(
+            workingDirectory,
+            redexBinaryArgs,
+            redexEnvironmentVariables,
+            inputApkPath,
+            outputApkPath,
+            keystorePropertiesSupplier,
+            redexConfig,
+            redexExtraArgs,
+            proguardMap,
+            proguardConfig,
+            seeds,
+            pathResolver);
 
     assertEquals("redex", redex.getShortName());
 
@@ -94,13 +89,12 @@ public class ReDexStepTest {
     EasyMock.expect(androidPlatform.checkSdkDirectory()).andReturn(sdkDirectory);
     EasyMock.replay(androidPlatform);
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatform))
-        .build();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatform))
+            .build();
     assertEquals(
-        ImmutableMap.of(
-            "ANDROID_SDK", sdkDirectory.toString(),
-            "REDEX_DEBUG", "1"),
+        ImmutableMap.of("ANDROID_SDK", sdkDirectory.toString(), "REDEX_DEBUG", "1"),
         redex.getEnvironmentVariables(context));
 
     EasyMock.verify(androidPlatform);
@@ -108,20 +102,26 @@ public class ReDexStepTest {
     assertEquals(
         ImmutableList.of(
             "/usr/bin/redex",
-            "--config", redexConfigPath.toString(),
+            "--config",
+            redexConfigPath.toString(),
             "--sign",
-            "--keystore", keystorePath.toString(),
-            "--keyalias", "alias",
-            "--keypass", "keypass",
-            "--proguard-map", proguardMap.toString(),
-            "-P", proguardConfig.toString(),
-            "--keep", seeds.toString(),
-            "--out", outputApkPath.toString(),
+            "--keystore",
+            keystorePath.toString(),
+            "--keyalias",
+            "alias",
+            "--keypass",
+            "keypass",
+            "--proguard-map",
+            proguardMap.toString(),
+            "-P",
+            proguardConfig.toString(),
+            "--keep",
+            seeds.toString(),
+            "--out",
+            outputApkPath.toString(),
             "foo",
             "bar",
-            inputApkPath.toString()
-        ),
-        redex.getShellCommandInternal(context)
-    );
+            inputApkPath.toString()),
+        redex.getShellCommandInternal(context));
   }
 }

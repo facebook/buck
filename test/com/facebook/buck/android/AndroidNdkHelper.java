@@ -31,7 +31,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,34 +43,37 @@ public class AndroidNdkHelper {
   private AndroidNdkHelper() {}
 
   public static NdkCxxPlatform getNdkCxxPlatform(
-      ProjectWorkspace workspace,
-      ProjectFilesystem filesystem) throws IOException, InterruptedException {
+      ProjectWorkspace workspace, ProjectFilesystem filesystem)
+      throws IOException, InterruptedException {
     // TODO(cjhopman): is this really the simplest way to get the objdump tool?
-    AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
-        workspace.asCell().getRoot().getFileSystem(),
-        ImmutableMap.copyOf(System.getenv()),
-        Optional.empty(),
-        Optional.empty());
+    AndroidDirectoryResolver androidResolver =
+        new DefaultAndroidDirectoryResolver(
+            workspace.asCell().getRoot().getFileSystem(),
+            ImmutableMap.copyOf(System.getenv()),
+            Optional.empty(),
+            Optional.empty());
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());
     Optional<String> ndkVersion =
-      DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
+        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
-    ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        filesystem,
-        ndkPath.get(),
-        NdkCxxPlatformCompiler.builder()
-            .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-            .setVersion(gccVersion)
-            .setGccVersion(gccVersion)
-            .build(),
-        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-        NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-        NdkCxxPlatforms.DEFAULT_CPU_ABIS,
-        Platform.detect()).values();
+    ImmutableCollection<NdkCxxPlatform> platforms =
+        NdkCxxPlatforms.getPlatforms(
+                CxxPlatformUtils.DEFAULT_CONFIG,
+                filesystem,
+                ndkPath.get(),
+                NdkCxxPlatformCompiler.builder()
+                    .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
+                    .setVersion(gccVersion)
+                    .setGccVersion(gccVersion)
+                    .build(),
+                NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+                NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
+                NdkCxxPlatforms.DEFAULT_CPU_ABIS,
+                Platform.detect())
+            .values();
     assertFalse(platforms.isEmpty());
     return platforms.iterator().next();
   }
@@ -94,10 +96,7 @@ public class AndroidNdkHelper {
     private final SourcePathResolver resolver;
 
     public SymbolGetter(
-        ProcessExecutor executor,
-        Path tmpDir,
-        Tool objdump,
-        SourcePathResolver resolver) {
+        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolver resolver) {
       this.executor = executor;
       this.tmpDir = tmpDir;
       this.objdump = objdump;
@@ -110,7 +109,7 @@ public class AndroidNdkHelper {
     }
 
     public Symbols getSymbols(Path apkPath, String libName)
-          throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
       return Symbols.getSymbols(executor, objdump, resolver, lib);
     }
@@ -133,5 +132,4 @@ public class AndroidNdkHelper {
       this.dtNeeded = dtNeeded;
     }
   }
-
 }

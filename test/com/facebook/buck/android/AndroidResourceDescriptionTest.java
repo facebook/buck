@@ -39,20 +39,17 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AndroidResourceDescriptionTest {
 
-  @Rule
-  public TemporaryFolder tmpFolder = new TemporaryFolder();
+  @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
   public void testNonAssetFilesAndDirsAreIgnored() throws IOException {
@@ -117,36 +114,38 @@ public class AndroidResourceDescriptionTest {
 
   @Test
   public void testPossibleResourceFileFiltering() throws IOException {
-    ImmutableList<Path> inputPaths = ImmutableList.of(
-        Paths.get("res/image.png"),
-        Paths.get("res/layout.xml"),
-        Paths.get("res/_file"),
-        Paths.get("res/.gitkeep"),
-        Paths.get("res/.svn"),
-        Paths.get("res/.git"),
-        Paths.get("res/.ds_store"),
-        Paths.get("res/.scc"),
-        Paths.get("res/CVS"),
-        Paths.get("res/thumbs.db"),
-        Paths.get("res/picasa.ini"),
-        Paths.get("res/file.bak~"),
-        Paths.get("res/dirs/values/strings.xml"),
-        Paths.get("res/dirs/values/strings.xml.orig"),
-        Paths.get("res/dirs/.gitkeep/ignore"),
-        Paths.get("res/dirs/.svn/ignore"),
-        Paths.get("res/dirs/.ds_store/ignore"),
-        Paths.get("res/dirs/.scc/ignore"),
-        Paths.get("res/dirs/CVS/ignore"),
-        Paths.get("res/dirs/thumbs.db/ignore"),
-        Paths.get("res/dirs/picasa.ini/ignore"),
-        Paths.get("res/dirs/file.bak~/ignore"),
-        Paths.get("res/dirs/_dir/ignore"));
+    ImmutableList<Path> inputPaths =
+        ImmutableList.of(
+            Paths.get("res/image.png"),
+            Paths.get("res/layout.xml"),
+            Paths.get("res/_file"),
+            Paths.get("res/.gitkeep"),
+            Paths.get("res/.svn"),
+            Paths.get("res/.git"),
+            Paths.get("res/.ds_store"),
+            Paths.get("res/.scc"),
+            Paths.get("res/CVS"),
+            Paths.get("res/thumbs.db"),
+            Paths.get("res/picasa.ini"),
+            Paths.get("res/file.bak~"),
+            Paths.get("res/dirs/values/strings.xml"),
+            Paths.get("res/dirs/values/strings.xml.orig"),
+            Paths.get("res/dirs/.gitkeep/ignore"),
+            Paths.get("res/dirs/.svn/ignore"),
+            Paths.get("res/dirs/.ds_store/ignore"),
+            Paths.get("res/dirs/.scc/ignore"),
+            Paths.get("res/dirs/CVS/ignore"),
+            Paths.get("res/dirs/thumbs.db/ignore"),
+            Paths.get("res/dirs/picasa.ini/ignore"),
+            Paths.get("res/dirs/file.bak~/ignore"),
+            Paths.get("res/dirs/_dir/ignore"));
 
-    ImmutableList<Path> expectedPaths = ImmutableList.of(
-        Paths.get("res/image.png"),
-        Paths.get("res/layout.xml"),
-        Paths.get("res/_file"),
-        Paths.get("res/dirs/values/strings.xml"));
+    ImmutableList<Path> expectedPaths =
+        ImmutableList.of(
+            Paths.get("res/image.png"),
+            Paths.get("res/layout.xml"),
+            Paths.get("res/_file"),
+            Paths.get("res/dirs/values/strings.xml"));
 
     assertThat(
         RichStream.from(inputPaths)
@@ -169,16 +168,17 @@ public class AndroidResourceDescriptionTest {
     filesystem.createNewFile(Paths.get("assets/picasa.ini"));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:res");
-    TargetNode<?, ?> targetNode = AndroidResourceBuilder.createBuilder(target, filesystem)
-        .setRDotJavaPackage("com.example")
-        .setRes(new PathSourcePath(filesystem, Paths.get("res")))
-        .setAssets(
-            ImmutableSortedMap.of(
-                "file1.txt", new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
-                "file3.txt", new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
-                "picasa.ini", new PathSourcePath(filesystem, Paths.get("assets/ignored")),
-                "not_ignored", new PathSourcePath(filesystem, Paths.get("assets/CVS"))))
-        .build();
+    TargetNode<?, ?> targetNode =
+        AndroidResourceBuilder.createBuilder(target, filesystem)
+            .setRDotJavaPackage("com.example")
+            .setRes(new PathSourcePath(filesystem, Paths.get("res")))
+            .setAssets(
+                ImmutableSortedMap.of(
+                    "file1.txt", new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
+                    "file3.txt", new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
+                    "picasa.ini", new PathSourcePath(filesystem, Paths.get("assets/ignored")),
+                    "not_ignored", new PathSourcePath(filesystem, Paths.get("assets/CVS"))))
+            .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -189,25 +189,34 @@ public class AndroidResourceDescriptionTest {
 
     assertThat(
         deps.get(0).getBuildTarget(),
-        is(equalTo(
-            target.withAppendedFlavors(AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
+        is(
+            equalTo(
+                target.withAppendedFlavors(
+                    AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
     assertThat(
         ((SymlinkTree) deps.get(0)).getLinks(),
-        is(equalTo(ImmutableSortedMap.of(
-            Paths.get("file1.txt"),
-            new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
-            Paths.get("file3.txt"),
-            new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
-            Paths.get("not_ignored"),
-            new PathSourcePath(filesystem, Paths.get("assets/CVS"))))));
+        is(
+            equalTo(
+                ImmutableSortedMap.of(
+                    Paths.get("file1.txt"),
+                    new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
+                    Paths.get("file3.txt"),
+                    new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
+                    Paths.get("not_ignored"),
+                    new PathSourcePath(filesystem, Paths.get("assets/CVS"))))));
 
     assertThat(
         deps.get(1).getBuildTarget(),
-        is(equalTo(
-            target.withAppendedFlavors(AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
+        is(
+            equalTo(
+                target.withAppendedFlavors(
+                    AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
     assertThat(
         ((SymlinkTree) deps.get(1)).getLinks(),
-        is(equalTo(ImmutableSortedMap.of(
-            Paths.get("file1.txt"), new PathSourcePath(filesystem, Paths.get("res/file1.txt"))))));
+        is(
+            equalTo(
+                ImmutableSortedMap.of(
+                    Paths.get("file1.txt"),
+                    new PathSourcePath(filesystem, Paths.get("res/file1.txt"))))));
   }
 }

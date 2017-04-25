@@ -26,12 +26,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.Unzip;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -40,11 +34,14 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class AndroidAarIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
@@ -56,19 +53,16 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testBuildAndroidAar() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_aar_build/caseA",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseA", tmp);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(target),
-            AndroidAar.AAR_FORMAT));
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -78,33 +72,27 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("res/raw/helloworld.txt");
     zipInspector.assertFileExists("res/values/values.xml");
     zipInspector.assertFileContents(
-        "res/values/values.xml",
-        workspace.getFileContents("res/values/A.xml").trim()
-    );
+        "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
-
   }
 
   @Test
   public void testBuildConfigNotIncludedInAarByDefault() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
     String target = "//apps/aar_build_config:app_without_build_config";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(target),
-            AndroidAar.AAR_FORMAT));
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
@@ -120,16 +108,13 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testBuildConfigValuesTakenFromAarRule() throws IOException, ClassNotFoundException,
-      NoSuchFieldException, IllegalAccessException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        tmp);
+  public void testBuildConfigValuesTakenFromAarRule()
+      throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
     String target = "//apps/aar_build_config:app_with_build_config";
     Path aarLocation = workspace.buildAndReturnOutput(target);
-
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(aarLocation, contents, Unzip.ExistingFileMode.OVERWRITE);
@@ -138,31 +123,24 @@ public class AndroidAarIntegrationTest {
     try (URLClassLoader loader = new URLClassLoader(new URL[] {jarUrl})) {
       Class<?> buildConfigClass = loader.loadClass("com.sample.android.BuildConfig");
       Field overriddenField = buildConfigClass.getField("OVERRIDDEN_FIELD");
-      assertThat(
-          overriddenField.get(buildConfigClass),
-          Matchers.equalTo("android_aar"));
+      assertThat(overriddenField.get(buildConfigClass), Matchers.equalTo("android_aar"));
       Field notOverriddenField = buildConfigClass.getField("NOT_OVERRIDDEN_FIELD");
-      assertThat(
-          notOverriddenField.get(buildConfigClass),
-          Matchers.equalTo("value"));
+      assertThat(notOverriddenField.get(buildConfigClass), Matchers.equalTo("value"));
     }
   }
 
   @Test
   public void testBuildPrebuiltAndroidAar() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_aar_build/caseB",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseB", tmp);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(target),
-            AndroidAar.AAR_FORMAT));
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -173,28 +151,26 @@ public class AndroidAarIntegrationTest {
 
     zipInspector.assertFileContents(
         "res/values/values.xml",
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-        "<resources>\n" +
-        "    <string name=\"app_name\">Hello World</string>\n" +
-        "</resources>");
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<resources>\n"
+            + "    <string name=\"app_name\">Hello World</string>\n"
+            + "</resources>");
   }
 
   @Test
   public void testCxxLibraryDependent() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_aar_native_deps/cxx_deps",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_aar_native_deps/cxx_deps", tmp);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(target),
-            AndroidAar.AAR_FORMAT));
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -211,19 +187,17 @@ public class AndroidAarIntegrationTest {
   @Test
   public void testNativeLibraryDependent() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_aar_native_deps/ndk_deps",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_aar_native_deps/ndk_deps", tmp);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
 
-    Path aar = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(target),
-            AndroidAar.AAR_FORMAT));
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -240,10 +214,8 @@ public class AndroidAarIntegrationTest {
   @Test
   public void testEmptyExceptManifest() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
   }
@@ -251,18 +223,13 @@ public class AndroidAarIntegrationTest {
   @Test
   public void testResultIsRecorded() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
     workspace.runBuckCommand("clean");
     Path result = workspace.buildAndReturnOutput("//apps/sample:nearly_empty_aar");
-    assertThat(
-        workspace.asCell().getFilesystem().exists(result),
-        Matchers.is(true));
+    assertThat(workspace.asCell().getFilesystem().exists(result), Matchers.is(true));
   }
 }
-

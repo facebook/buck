@@ -24,13 +24,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-
 import java.util.Optional;
 
-public class RobolectricTestBuilder extends AbstractNodeBuilder<
-    RobolectricTestDescription.Arg,
-    RobolectricTestDescription,
-    RobolectricTest> {
+public class RobolectricTestBuilder
+    extends AbstractNodeBuilder<
+        RobolectricTestDescription.Arg, RobolectricTestDescription, RobolectricTest> {
 
   private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
@@ -60,14 +58,12 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
   }
 
   public static RobolectricTestBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig) {
     return new RobolectricTestBuilder(target, javaBuckConfig);
   }
 
   public static RobolectricTestBuilder createBuilder(
-      BuildTarget target,
-      ProjectFilesystem filesystem) {
+      BuildTarget target, ProjectFilesystem filesystem) {
     return new RobolectricTestBuilder(target, filesystem);
   }
 
@@ -80,5 +76,4 @@ public class RobolectricTestBuilder extends AbstractNodeBuilder<
     arg.providedDeps = amend(arg.providedDeps, rule);
     return this;
   }
-
 }

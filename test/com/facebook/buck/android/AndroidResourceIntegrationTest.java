@@ -19,31 +19,28 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-
+import java.io.IOException;
+import java.nio.file.Files;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
 public class AndroidResourceIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_resource", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_resource", tmpFolder);
     workspace.setUp();
   }
 
@@ -62,15 +59,17 @@ public class AndroidResourceIntegrationTest {
     // Verify we correctly build the R.txt file using a generated input resource directory.
     workspace.runBuckBuild("//generated_res:res").assertSuccess();
     String output =
-        Splitter.on(' ').trimResults().splitToList(
-            workspace.runBuckCommand("targets", "--show-output", "//generated_res:res")
-                .assertSuccess()
-                .getStdout()).get(1);
+        Splitter.on(' ')
+            .trimResults()
+            .splitToList(
+                workspace
+                    .runBuckCommand("targets", "--show-output", "//generated_res:res")
+                    .assertSuccess()
+                    .getStdout())
+            .get(1);
     assertThat(
         Files.readAllLines(workspace.getPath(output).resolve("R.txt"), Charsets.UTF_8),
-        Matchers.contains(
-            "int string another_name 0x7f010002",
-            "int string some_name 0x7f010001"));
+        Matchers.contains("int string another_name 0x7f010002", "int string some_name 0x7f010001"));
 
     // Add a new item in the input and verify that the resource rule gets re-run.
     Files.createDirectory(workspace.getPath("generated_res/input_res/raw"));
@@ -78,5 +77,4 @@ public class AndroidResourceIntegrationTest {
     workspace.runBuckBuild("//generated_res:res").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//generated_res:res");
   }
-
 }

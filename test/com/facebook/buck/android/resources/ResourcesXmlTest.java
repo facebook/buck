@@ -26,11 +26,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -39,27 +34,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.ZipFile;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ResourcesXmlTest {
   private static final String APK_NAME = "example.apk";
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private Path apkPath;
 
   @Before
   public void setUp() throws IOException {
-    filesystem = new ProjectFilesystem(
-        TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
+    filesystem =
+        new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }
 
   @Test
   public void testGetAndSerialize() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      byte[] data = ByteStreams.toByteArray(
-          apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml")));
+      byte[] data =
+          ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml")));
       ByteBuffer buf = ResChunk.wrap(data);
 
       List<Integer> xmltreeOffsets = ChunkUtils.findChunks(buf, ResChunk.CHUNK_XML_TREE);
@@ -74,9 +71,10 @@ public class ResourcesXmlTest {
   @Test
   public void testAaptDumpXmlTree() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      ByteBuffer buf = ResChunk.wrap(
-          ByteStreams.toByteArray(
-              apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(
+                  apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
       ResourcesXml xml = ResourcesXml.get(buf);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       xml.dump(new PrintStream(baos));

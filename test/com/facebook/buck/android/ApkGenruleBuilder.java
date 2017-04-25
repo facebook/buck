@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-
 import java.util.Optional;
 
 public class ApkGenruleBuilder
@@ -46,5 +45,4 @@ public class ApkGenruleBuilder
     arg.apk = apk;
     return this;
   }
-
 }

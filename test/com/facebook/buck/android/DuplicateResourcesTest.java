@@ -50,16 +50,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DuplicateResourcesTest {
   private BuildTarget mainResTarget;
@@ -107,41 +105,48 @@ public class DuplicateResourcesTest {
 
     filesystem = new FakeProjectFilesystem();
 
-    mainRes = AndroidResourceBuilder.createBuilder(mainResTarget)
-        .setRes(new FakeSourcePath(filesystem, "main_app/res"))
-        .setRDotJavaPackage("package")
-        .build();
+    mainRes =
+        AndroidResourceBuilder.createBuilder(mainResTarget)
+            .setRes(new FakeSourcePath(filesystem, "main_app/res"))
+            .setRDotJavaPackage("package")
+            .build();
 
-    directDepRes = AndroidResourceBuilder.createBuilder(directDepResTarget)
-        .setRes(new FakeSourcePath(filesystem, "direct_dep/res"))
-        .setRDotJavaPackage("package")
-        .setDeps(ImmutableSortedSet.of(transitiveDepResTarget, transitiveDepLibTarget))
-        .build();
+    directDepRes =
+        AndroidResourceBuilder.createBuilder(directDepResTarget)
+            .setRes(new FakeSourcePath(filesystem, "direct_dep/res"))
+            .setRDotJavaPackage("package")
+            .setDeps(ImmutableSortedSet.of(transitiveDepResTarget, transitiveDepLibTarget))
+            .build();
 
-    transitiveDepLib = AndroidLibraryBuilder.createBuilder(transitiveDepLibTarget)
-        .addDep(transitiveDepResTarget)
-        .build();
+    transitiveDepLib =
+        AndroidLibraryBuilder.createBuilder(transitiveDepLibTarget)
+            .addDep(transitiveDepResTarget)
+            .build();
 
-    transitiveDepRes = AndroidResourceBuilder.createBuilder(transitiveDepResTarget)
-        .setRes(new FakeSourcePath(filesystem, "transitive_dep/res"))
-        .setRDotJavaPackage("package")
-        .setDeps(ImmutableSortedSet.of(bottomDepResTarget))
-        .build();
+    transitiveDepRes =
+        AndroidResourceBuilder.createBuilder(transitiveDepResTarget)
+            .setRes(new FakeSourcePath(filesystem, "transitive_dep/res"))
+            .setRDotJavaPackage("package")
+            .setDeps(ImmutableSortedSet.of(bottomDepResTarget))
+            .build();
 
-    bottomDepRes = AndroidResourceBuilder.createBuilder(bottomDepResTarget)
-        .setRes(new FakeSourcePath(filesystem, "bottom_dep/res"))
-        .setRDotJavaPackage("package")
-        .build();
+    bottomDepRes =
+        AndroidResourceBuilder.createBuilder(bottomDepResTarget)
+            .setRes(new FakeSourcePath(filesystem, "bottom_dep/res"))
+            .setRDotJavaPackage("package")
+            .build();
 
-    library = AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
-        .addDep(directDepResTarget)
-        .addDep(transitiveDepLibTarget)
-        .build();
+    library =
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addDep(directDepResTarget)
+            .addDep(transitiveDepLibTarget)
+            .build();
 
-    keystore = KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(new FakeSourcePath(filesystem, "store"))
-        .setProperties(new FakeSourcePath(filesystem, "properties"))
-        .build();
+    keystore =
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(new FakeSourcePath(filesystem, "store"))
+            .setProperties(new FakeSourcePath(filesystem, "properties"))
+            .build();
   }
 
   @Test
@@ -161,10 +166,8 @@ public class DuplicateResourcesTest {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
     TargetNode<AndroidBinaryDescription.Arg, AndroidBinaryDescription> binary =
-        makeBinaryWithDeps(ImmutableSortedSet.of(
-            mainResTarget,
-            androidLibraryTarget,
-            transitiveDepLibTarget));
+        makeBinaryWithDeps(
+            ImmutableSortedSet.of(mainResTarget, androidLibraryTarget, transitiveDepLibTarget));
 
     ImmutableList<String> command = getAaptStepShellCommand(binary);
 
@@ -195,15 +198,12 @@ public class DuplicateResourcesTest {
     assertResourcePathOrdering(command, "direct_dep", "transitive_dep", "bottom_dep");
   }
 
-
   private void assertResourcePathOrdering(ImmutableList<String> command, String... paths) {
     String errorMessage = String.format("Full command was: %s", Joiner.on(" ").join(command));
 
     assertThat(
         errorMessage,
-        command.stream()
-            .filter(s -> "-S".equals(s))
-            .collect(MoreCollectors.toImmutableList()),
+        command.stream().filter(s -> "-S".equals(s)).collect(MoreCollectors.toImmutableList()),
         Matchers.hasSize(paths.length));
     int firstResourceFolderArgument = command.indexOf("-S");
 
@@ -216,8 +216,7 @@ public class DuplicateResourcesTest {
     assertThat(
         errorMessage,
         command.subList(
-            firstResourceFolderArgument,
-            firstResourceFolderArgument + expectedSubslice.size()),
+            firstResourceFolderArgument, firstResourceFolderArgument + expectedSubslice.size()),
         Matchers.contains(expectedSubslice));
   }
 
@@ -232,36 +231,45 @@ public class DuplicateResourcesTest {
 
   private ImmutableList<String> getAaptStepShellCommand(
       TargetNode<AndroidBinaryDescription.Arg, AndroidBinaryDescription> binary) {
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        binary,
-        mainRes,
-        directDepRes,
-        transitiveDepRes,
-        transitiveDepLib,
-        bottomDepRes,
-        library,
-        keystore);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            binary,
+            mainRes,
+            directDepRes,
+            transitiveDepRes,
+            transitiveDepLib,
+            bottomDepRes,
+            library,
+            keystore);
 
-    ActionGraphAndResolver actionGraphAndResolver = ActionGraphCache.getFreshActionGraph(
-        BuckEventBusFactory.newInstance(
-            new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
-        new DefaultTargetNodeToBuildRuleTransformer(),
-        targetGraph);
+    ActionGraphAndResolver actionGraphAndResolver =
+        ActionGraphCache.getFreshActionGraph(
+            BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            targetGraph);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new SourcePathRuleFinder(
-            actionGraphAndResolver.getResolver()));
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
         RichStream.from(actionGraphAndResolver.getActionGraph().getNodes())
             .filter(AaptPackageResources.class)
-            .filter(r -> androidBinaryTarget.getUnflavoredBuildTarget().equals(
-                r.getBuildTarget().getUnflavoredBuildTarget()))
-            .map(b -> b.getBuildSteps(
-                FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext()))
-            .map(steps -> steps.stream()
-                .filter(step -> step instanceof AaptStep)
-                .collect(MoreCollectors.toImmutableList()))
+            .filter(
+                r ->
+                    androidBinaryTarget
+                        .getUnflavoredBuildTarget()
+                        .equals(r.getBuildTarget().getUnflavoredBuildTarget()))
+            .map(
+                b ->
+                    b.getBuildSteps(
+                        FakeBuildContext.withSourcePathResolver(pathResolver),
+                        new FakeBuildableContext()))
+            .map(
+                steps ->
+                    steps
+                        .stream()
+                        .filter(step -> step instanceof AaptStep)
+                        .collect(MoreCollectors.toImmutableList()))
             .filter(steps -> !steps.isEmpty())
             .collect(MoreCollectors.toImmutableSet());
 
@@ -277,8 +285,8 @@ public class DuplicateResourcesTest {
             Optional.empty(),
             Optional.empty());
 
-    AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
-        .createFromDefaultDirectoryStructure(
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.createFromDefaultDirectoryStructure(
             "",
             androidDirectoryResolver,
             "",
@@ -286,9 +294,10 @@ public class DuplicateResourcesTest {
             Optional.empty(),
             Optional.empty());
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
+            .build();
 
     return step.getShellCommand(context);
   }

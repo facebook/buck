@@ -31,24 +31,20 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
-/**
- * Test generation of command line flags based on creation parameters
- */
+/** Test generation of command line flags based on creation parameters */
 public class AaptStepTest {
 
   private Path basePath = Paths.get("/java/com/facebook/buck/example");
   private Path proguardConfig = basePath.resolve("mock_proguard.txt");
 
   /**
-   * Build an AaptStep that can be used to generate a shell command. Should only
-   * be used for checking the generated command, since it does not refer to useful
-   * directories (so it can't be executed).
+   * Build an AaptStep that can be used to generate a shell command. Should only be used for
+   * checking the generated command, since it does not refer to useful directories (so it can't be
+   * executed).
    */
   private AaptStep buildAaptStep(
       Path pathToGeneratedProguardConfig,
@@ -65,15 +61,14 @@ public class AaptStepTest {
         pathToGeneratedProguardConfig,
         isCrunchFiles,
         includesVectorDrawables,
-        manifestEntries
-    );
+        manifestEntries);
   }
 
   /**
-   * Create an execution context with the given verbosity level. The execution context
-   * will yield fake values relative to the base path for all target queries.
-   * The mock context returned has not been replayed, so the calling code
-   * may add additional expectations, and is responsible for calling replay().
+   * Create an execution context with the given verbosity level. The execution context will yield
+   * fake values relative to the base path for all target queries. The mock context returned has not
+   * been replayed, so the calling code may add additional expectations, and is responsible for
+   * calling replay().
    */
   private ExecutionContext createTestExecutionContext(Verbosity verbosity) {
     final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
@@ -81,18 +76,18 @@ public class AaptStepTest {
     expect(androidPlatformTarget.getAndroidJar()).andReturn(basePath.resolve("mock_android.jar"));
     replay(androidPlatformTarget);
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setConsole(new TestConsole(verbosity))
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setConsole(new TestConsole(verbosity))
+            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
+            .build();
 
     return executionContext;
   }
 
   @Test
   public void shouldEmitVerbosityFlagWithVerboseContext() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -101,8 +96,7 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitVerbosityFlagWithQuietContext() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -111,23 +105,20 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitGFlagIfProguardConfigPresent() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("-G"));
-    String proguardConfigPath = MorePaths.pathWithPlatformSeparators(
-        "/java/com/facebook/buck/example/mock_proguard.txt"
-    );
+    String proguardConfigPath =
+        MorePaths.pathWithPlatformSeparators("/java/com/facebook/buck/example/mock_proguard.txt");
     assertTrue(command.contains(proguardConfigPath));
   }
 
   @Test
   public void shouldEmitNoCrunchFlagIfNotCrunch() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false,  false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -137,8 +128,7 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitNoCrunchFlagIfCrunch() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -148,8 +138,7 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitNoVersionVectorsFlagIfRequested() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false, true, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, true, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -159,8 +148,7 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitNoVersionVectorsFlagIfNotRequested() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -170,13 +158,14 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitFlagsForManifestEntries() throws Exception {
-    ManifestEntries entries = ManifestEntries.builder()
-        .setMinSdkVersion(3)
-        .setTargetSdkVersion(5)
-        .setVersionCode(7)
-        .setVersionName("eleven")
-        .setDebugMode(true)
-        .build();
+    ManifestEntries entries =
+        ManifestEntries.builder()
+            .setMinSdkVersion(3)
+            .setTargetSdkVersion(5)
+            .setVersionCode(7)
+            .setVersionName("eleven")
+            .setDebugMode(true)
+            .build();
     AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, entries);
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -200,8 +189,7 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitFailOnInsertWithoutManifestEntries() throws Exception {
-    AaptStep aaptStep =
-        buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));

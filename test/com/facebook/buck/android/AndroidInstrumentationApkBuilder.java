@@ -27,12 +27,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
-
 public class AndroidInstrumentationApkBuilder
-    extends
-    AbstractNodeBuilder<
-        AndroidInstrumentationApkDescription.Arg,
-        AndroidInstrumentationApkDescription,
+    extends AbstractNodeBuilder<
+        AndroidInstrumentationApkDescription.Arg, AndroidInstrumentationApkDescription,
         AndroidInstrumentationApk> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
@@ -61,5 +58,4 @@ public class AndroidInstrumentationApkBuilder
     arg.apk = apk;
     return this;
   }
-
 }

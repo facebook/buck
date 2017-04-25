@@ -26,14 +26,12 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class GenerateManifestStepTest {
 
@@ -42,7 +40,6 @@ public class GenerateManifestStepTest {
   private Path skeletonPath;
   private Path manifestPath;
   private ProjectFilesystem filesystem;
-
 
   @Before
   public void setUp() {
@@ -69,12 +66,9 @@ public class GenerateManifestStepTest {
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
-
-    GenerateManifestStep manifestCommand = new GenerateManifestStep(
-        filesystem,
-        skeletonPath,
-        libraryManifestFiles.build(),
-        manifestPath);
+    GenerateManifestStep manifestCommand =
+        new GenerateManifestStep(
+            filesystem, skeletonPath, libraryManifestFiles.build(), manifestPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
@@ -92,7 +86,7 @@ public class GenerateManifestStepTest {
   }
 
   private FakeProjectFilesystem testFileSystem() {
-    return new FakeProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve(
-        CREATE_MANIFEST));
+    return new FakeProjectFilesystem(
+        TestDataHelper.getTestDataDirectory(this).resolve(CREATE_MANIFEST));
   }
 }

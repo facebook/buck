@@ -45,14 +45,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AaptPackageResourcesTest {
 
@@ -78,39 +76,31 @@ public class AaptPackageResourcesTest {
     filesystem = new FakeProjectFilesystem();
 
     TargetNode<?, ?> resourceNode =
-        AndroidResourceBuilder
-            .createBuilder(
-                BuildTargetFactory.newInstance("//:resource1"),
-                filesystem)
+        AndroidResourceBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:resource1"), filesystem)
             .setRDotJavaPackage("package1")
             .setRes(Paths.get("res1"))
             .setAssets(new PathSourcePath(filesystem, Paths.get("asset1")))
             .build();
 
     TargetNode<?, ?> resourceNode2 =
-        AndroidResourceBuilder
-            .createBuilder(
-                BuildTargetFactory.newInstance("//:resource2"),
-                filesystem)
+        AndroidResourceBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:resource2"), filesystem)
             .setRDotJavaPackage("package2")
             .setRes(Paths.get("res2"))
             .setAssets(new PathSourcePath(filesystem, Paths.get("asset2")))
             .build();
 
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(resourceNode, resourceNode2);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode, resourceNode2);
     ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    resource1 =
-        (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
-    resource2 =
-        (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
+    resource1 = (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
+    resource2 = (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = new SourcePathResolver(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
     params = new FakeBuildRuleParamsBuilder(aaptTarget).build();
-
 
     hashCache = new FakeFileHashCache(new HashMap<>());
     createPathSourcePath("res1", "resources1");
@@ -177,17 +167,13 @@ public class AaptPackageResourcesTest {
     RuleKey previousRuleKey = calculateRuleKey(args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider = new IdentityResourcesProvider(
-        ImmutableList.of(
-            Paths.get("res1"),
-            Paths.get("res2")));
+    args.filteredResourcesProvider =
+        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res1"), Paths.get("res2")));
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider = new IdentityResourcesProvider(
-        ImmutableList.of(
-            Paths.get("res2"),
-            Paths.get("res1")));
+    args.filteredResourcesProvider =
+        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res2"), Paths.get("res1")));
 
     // TODO(cjhopman): AaptPackageResources' rulekey doesn't properly reflect changes in the
     // ordering of resource-only dependencies.
@@ -216,37 +202,39 @@ public class AaptPackageResourcesTest {
     RuleKey previousRuleKey = calculateRuleKey(args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider = new IdentityResourcesProvider(
-        ImmutableList.of(Paths.get("res1"), Paths.get("res2")));
+    args.filteredResourcesProvider =
+        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res1"), Paths.get("res2")));
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
-    args.filteredResourcesProvider = new ResourcesFilter(
-        params
-            .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-        ImmutableList.of(resource1.getRes(), resource2.getRes()),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        ResourcesFilter.ResourceCompressionMode.DISABLED,
-        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        Optional.empty());
+    args.filteredResourcesProvider =
+        new ResourcesFilter(
+            params
+                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableList.of(resource1.getRes(), resource2.getRes()),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            ResourcesFilter.ResourceCompressionMode.DISABLED,
+            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            Optional.empty());
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
-    args.filteredResourcesProvider = new ResourcesFilter(
-        params
-            .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-        ImmutableList.of(resource1.getRes(), resource2.getRes()),
-        ImmutableSet.of(),
-        ImmutableSet.of("some_locale"),
-        ResourcesFilter.ResourceCompressionMode.DISABLED,
-        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        Optional.empty());
+    args.filteredResourcesProvider =
+        new ResourcesFilter(
+            params
+                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableList.of(resource1.getRes(), resource2.getRes()),
+            ImmutableSet.of(),
+            ImmutableSet.of("some_locale"),
+            ResourcesFilter.ResourceCompressionMode.DISABLED,
+            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            Optional.empty());
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
   }
@@ -256,14 +244,10 @@ public class AaptPackageResourcesTest {
     // Generate a rule key for the defaults.
     AaptConstructorArgs args = new AaptConstructorArgs();
 
-    args.manifestEntries = ManifestEntries.builder()
-        .setDebugMode(false)
-        .build();
+    args.manifestEntries = ManifestEntries.builder().setDebugMode(false).build();
     RuleKey previousRuleKey = calculateRuleKey(args);
 
-    args.manifestEntries = ManifestEntries.builder()
-        .setDebugMode(true)
-        .build();
+    args.manifestEntries = ManifestEntries.builder().setDebugMode(true).build();
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
   }
 
@@ -274,20 +258,20 @@ public class AaptPackageResourcesTest {
   }
 
   private RuleKey calculateRuleKey(AaptConstructorArgs constructorArgs) {
-    return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
-        new AaptPackageResources(
-            params,
-            ruleFinder,
-            ruleResolver,
-            constructorArgs.manifest,
-            constructorArgs.filteredResourcesProvider,
-            constructorArgs.hasAndroidResourceDeps,
-            Optional.empty(),
-            false,
-            false,
-            false,
-            EnumSet.noneOf(RDotTxtEntry.RType.class),
-            constructorArgs.manifestEntries
-        ));
+    return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        .build(
+            new AaptPackageResources(
+                params,
+                ruleFinder,
+                ruleResolver,
+                constructorArgs.manifest,
+                constructorArgs.filteredResourcesProvider,
+                constructorArgs.hasAndroidResourceDeps,
+                Optional.empty(),
+                false,
+                false,
+                false,
+                EnumSet.noneOf(RDotTxtEntry.RType.class),
+                constructorArgs.manifestEntries));
   }
 }

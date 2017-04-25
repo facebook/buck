@@ -48,16 +48,14 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
@@ -70,31 +68,31 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> transitiveExportedNode = JavaLibraryBuilder
-        .createBuilder(
-            BuildTargetFactory.newInstance("//:transitive_exported_rule"),
-            javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/transitive/hi.java"))
-        .build();
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .addExportedDep(transitiveExportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> androidLibNode = AndroidLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addDep(exportingNode.getBuildTarget())
-        .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        transitiveExportedNode,
-        exportedNode,
-        exportingNode,
-        androidLibNode);
+    TargetNode<?, ?> transitiveExportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:transitive_exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/transitive/hi.java"))
+            .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .addExportedDep(transitiveExportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> androidLibNode =
+        AndroidLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addDep(exportingNode.getBuildTarget())
+            .build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -106,17 +104,14 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule =
-          resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
       transitiveExportedRule =
           resolver.getRule(((JavaLibrary) transitiveExportedRule).getAbiJar().get());
     }
 
     assertThat(
         androidLibRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.hasItem(exportedRule),
-            Matchers.hasItem(transitiveExportedRule)));
+        Matchers.allOf(Matchers.hasItem(exportedRule), Matchers.hasItem(transitiveExportedRule)));
   }
 
   @Test
@@ -124,82 +119,73 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
     // Set up target graph: rule -> lib -> sublib -> bottom
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> bottomNode =
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:bottom"), javaBuckConfig)
+                BuildTargetFactory.newInstance("//:bottom"), javaBuckConfig)
             .build();
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> sublibNode =
         JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:sublib"), javaBuckConfig)
+                BuildTargetFactory.newInstance("//:sublib"), javaBuckConfig)
             .addDep(bottomNode.getBuildTarget())
             .build();
     TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> libNode =
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
             .addDep(sublibNode.getBuildTarget())
             .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        bottomNode,
-        libNode,
-        sublibNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    FakeBuildRule bottomRule = resolver.addToIndex(
-        new FakeBuildRule(bottomNode.getBuildTarget(), pathResolver));
-    FakeBuildRule sublibRule = resolver.addToIndex(
-        new FakeBuildRule(
-            sublibNode.getBuildTarget(),
-            pathResolver,
-            ImmutableSortedSet.of(bottomRule)));
-    FakeBuildRule libRule = resolver.addToIndex(
-        new FakeBuildRule(
-            libNode.getBuildTarget(),
-            pathResolver,
-            ImmutableSortedSet.of(sublibRule)));
+    FakeBuildRule bottomRule =
+        resolver.addToIndex(new FakeBuildRule(bottomNode.getBuildTarget(), pathResolver));
+    FakeBuildRule sublibRule =
+        resolver.addToIndex(
+            new FakeBuildRule(
+                sublibNode.getBuildTarget(), pathResolver, ImmutableSortedSet.of(bottomRule)));
+    FakeBuildRule libRule =
+        resolver.addToIndex(
+            new FakeBuildRule(
+                libNode.getBuildTarget(), pathResolver, ImmutableSortedSet.of(sublibRule)));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
 
-    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
-        .addDep(libNode.getBuildTarget())
-        .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
-        .build(resolver, targetGraph);
+    BuildRule javaLibrary =
+        AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addDep(libNode.getBuildTarget())
+            .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
+            .build(resolver, targetGraph);
 
-    assertThat(
-        javaLibrary.getBuildDeps(),
-        Matchers.hasItems(libRule, sublibRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItems(libRule, sublibRule));
     // The bottom rule should be filtered since it does not match the regex
-    assertThat(
-        javaLibrary.getBuildDeps(),
-            Matchers.not(Matchers.hasItem(bottomRule)));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.not(Matchers.hasItem(bottomRule)));
   }
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
-    TargetNode<?, ?> transitiveExportedNode = JavaLibraryBuilder
-        .createBuilder(
-            BuildTargetFactory.newInstance("//:transitive_exported_rule"),
-            javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/transitive/hi.java"))
-        .build();
-    TargetNode<?, ?> exportedNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
-        .addExportedDep(transitiveExportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> exportingNode = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
-        .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
-        .addExportedDep(exportedNode.getBuildTarget())
-        .build();
-    TargetNode<?, ?> androidLibNode = AndroidLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
-        .addProvidedDep(exportingNode.getBuildTarget())
-        .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        transitiveExportedNode,
-        exportedNode,
-        exportingNode,
-        androidLibNode);
+    TargetNode<?, ?> transitiveExportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:transitive_exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/transitive/hi.java"))
+            .build();
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .addExportedDep(transitiveExportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> androidLibNode =
+        AndroidLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addProvidedDep(exportingNode.getBuildTarget())
+            .build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -211,17 +197,14 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule =
-          resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
       transitiveExportedRule =
           resolver.getRule(((JavaLibrary) transitiveExportedRule).getAbiJar().get());
     }
 
     assertThat(
         androidLibRule.getBuildDeps(),
-        Matchers.allOf(
-            Matchers.hasItem(exportedRule),
-            Matchers.hasItem(transitiveExportedRule)));
+        Matchers.allOf(Matchers.hasItem(exportedRule), Matchers.hasItem(transitiveExportedRule)));
   }
 
   @Test
@@ -235,10 +218,11 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
     builder.setEventBus(BuckEventBusFactory.newInstance());
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    List<Path> entries = ImmutableList.of(
-        Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
-        Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
-        Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
+    List<Path> entries =
+        ImmutableList.of(
+            Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
+            Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
+            Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
     expect(androidPlatformTarget.getBootclasspathEntries()).andReturn(entries);
 
     replay(androidPlatformTarget);
@@ -247,17 +231,18 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     BootClasspathAppender appender = new BootClasspathAppender();
 
-    JavacOptions options = JavacOptions.builder()
-        .setSourceLevel("1.7")
-        .setTargetLevel("1.7")
-        .build();
+    JavacOptions options =
+        JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();
     JavacOptions updated = appender.amend(options, builder.build());
 
     assertEquals(
         Optional.of(
-            ("add-ons/addon-google_apis-google-15/libs/effects.jar" + File.pathSeparatorChar +
-            "add-ons/addon-google_apis-google-15/libs/maps.jar" + File.pathSeparatorChar +
-            "add-ons/addon-google_apis-google-15/libs/usb.jar").replace("/", File.separator)),
+            ("add-ons/addon-google_apis-google-15/libs/effects.jar"
+                    + File.pathSeparatorChar
+                    + "add-ons/addon-google_apis-google-15/libs/maps.jar"
+                    + File.pathSeparatorChar
+                    + "add-ons/addon-google_apis-google-15/libs/usb.jar")
+                .replace("/", File.separator)),
         updated.getBootclasspath());
 
     verify(androidPlatformTarget);
@@ -266,9 +251,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   @Test
   public void testClasspathContainsOnlyJavaTargets() throws Exception {
     TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> resourceRule =
-        AndroidResourceBuilder.createBuilder(
-            BuildTargetFactory.newInstance("//:res"))
-            .build();
+        AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:res")).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceRule);
 
@@ -278,13 +261,11 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     resolver.addToIndex(new FakeBuildRule(resourceRule.getBuildTarget(), pathResolver));
 
-    AndroidLibrary androidLibrary = AndroidLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//:android_lib"))
-        .addDep(resourceRule.getBuildTarget())
-        .build(resolver, targetGraph);
+    AndroidLibrary androidLibrary =
+        AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:android_lib"))
+            .addDep(resourceRule.getBuildTarget())
+            .build(resolver, targetGraph);
 
-    assertThat(
-        androidLibrary.getCompileTimeClasspathSourcePaths(),
-        Matchers.empty());
+    assertThat(androidLibrary.getCompileTimeClasspathSourcePaths(), Matchers.empty());
   }
 }

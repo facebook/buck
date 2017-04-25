@@ -26,12 +26,12 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidLibraryBuilder extends
-    AbstractNodeBuilder<AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
+public class AndroidLibraryBuilder
+    extends AbstractNodeBuilder<
+        AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       language -> new JavaAndroidLibraryCompiler(DEFAULT_JAVA_CONFIG);
@@ -39,9 +39,7 @@ public class AndroidLibraryBuilder extends
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new AndroidLibraryDescription(
-            javaBuckConfig,
-            ANDROID_JAVAC_OPTIONS,
-            JAVA_ONLY_COMPILER_FACTORY),
+            javaBuckConfig, ANDROID_JAVAC_OPTIONS, JAVA_ONLY_COMPILER_FACTORY),
         target);
   }
 
@@ -50,8 +48,7 @@ public class AndroidLibraryBuilder extends
   }
 
   public static AndroidLibraryBuilder createBuilder(
-      BuildTarget target,
-      JavaBuckConfig javaBuckConfig) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig) {
     return new AndroidLibraryBuilder(target, javaBuckConfig);
   }
 
@@ -61,9 +58,7 @@ public class AndroidLibraryBuilder extends
   }
 
   public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
-    arg.annotationProcessorDeps = amend(
-        arg.annotationProcessorDeps,
-        processorRule);
+    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, processorRule);
     return this;
   }
 

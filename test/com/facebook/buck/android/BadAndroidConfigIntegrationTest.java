@@ -21,20 +21,16 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-
 public class BadAndroidConfigIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private ProjectWorkspace workspace;
 
@@ -42,14 +38,13 @@ public class BadAndroidConfigIntegrationTest {
    * In this scenario, the {@code ANDROID_SDK} environment variable points to a non-existent
    * directory. When a {@code java_library()} rule is built that has no dependency on the Android
    * SDK, the build should succeed even though the Android SDK is misconfigured.
-   * <p>
-   * However, when an {@code android_library()} rule is built that does depend on the Android SDK,
-   * the build should fail, alerting the user to the issue.
+   *
+   * <p>However, when an {@code android_library()} rule is built that does depend on the Android
+   * SDK, the build should fail, alerting the user to the issue.
    */
   @Test
   public void testBadAndroidConfigDoesNotInterfereNonAndroidBuild() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "bad_android_config", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "bad_android_config", tmp);
     workspace.setUp();
     ImmutableMap<String, String> badEnvironment =
         ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");

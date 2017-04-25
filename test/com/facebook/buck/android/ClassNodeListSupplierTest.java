@@ -22,13 +22,6 @@ import static org.junit.Assert.assertSame;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,11 +30,15 @@ import java.io.OutputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipOutputStream;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 
 public class ClassNodeListSupplierTest {
 
-  @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
   public void testOneJar() throws IOException {
@@ -51,14 +48,13 @@ public class ClassNodeListSupplierTest {
     writeClassBytes(ClassNodeListSupplierTest.class, jarOut);
     jarOut.close();
 
-    Supplier<ImmutableList<ClassNode>> supplier = ClassNodeListSupplier.createMemoized(
-        ImmutableList.of(jar.toPath()));
+    Supplier<ImmutableList<ClassNode>> supplier =
+        ClassNodeListSupplier.createMemoized(ImmutableList.of(jar.toPath()));
     ImmutableList<ClassNode> classNodes = supplier.get();
 
     assertEquals(1, classNodes.size());
     assertEquals(
-        Type.getType(ClassNodeListSupplierTest.class).getInternalName(),
-        classNodes.get(0).name);
+        Type.getType(ClassNodeListSupplierTest.class).getInternalName(), classNodes.get(0).name);
 
     // Memoized should always return the same object
     assertSame(classNodes, supplier.get());

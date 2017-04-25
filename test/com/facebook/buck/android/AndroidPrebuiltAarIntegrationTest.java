@@ -29,27 +29,21 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_prebuilt_aar",
-        tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_prebuilt_aar", tmp);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
   }
@@ -58,12 +52,13 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   public void testBuildAndroidPrebuiltAar() throws IOException {
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                new ProjectFilesystem(workspace.getDestPath()),
-                BuildTargetFactory.newInstance(target),
-                "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    new ProjectFilesystem(workspace.getDestPath()),
+                    BuildTargetFactory.newInstance(target),
+                    "%s.apk")));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("resources.arsc");
     zipInspector.assertFileExists("classes.dex");
@@ -87,28 +82,23 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
 
     String appCompatResource = "TextAppearance_AppCompat_Body2";
 
-    String rDotTxt = workspace.getFileContents(
-        BuildTargets.getScratchPath(
-            new ProjectFilesystem(workspace.getDestPath()),
-            BuildTargetFactory.newInstance(target)
-                .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
-            "__unpack_%s__/R.txt"));
+    String rDotTxt =
+        workspace.getFileContents(
+            BuildTargets.getScratchPath(
+                new ProjectFilesystem(workspace.getDestPath()),
+                BuildTargetFactory.newInstance(target)
+                    .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
+                "__unpack_%s__/R.txt"));
     assertThat(
-        "R.txt contains transitive dependencies",
-        rDotTxt,
-        containsString(appCompatResource));
+        "R.txt contains transitive dependencies", rDotTxt, containsString(appCompatResource));
   }
 
   @Test
   public void testExtraDepsDontResultInWarning() throws IOException {
-    ProcessResult result =
-        workspace.runBuckBuild("//:app-extra-res-entry").assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//:app-extra-res-entry").assertSuccess();
 
     String buildOutput = result.getStderr();
-    assertThat(
-        "No warnings are shown",
-        buildOutput,
-        not(containsString("Cannot find resource")));
+    assertThat("No warnings are shown", buildOutput, not(containsString("Cannot find resource")));
   }
 
   @Test

@@ -36,19 +36,15 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.EasyMock;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import org.easymock.EasyMock;
+import org.junit.Test;
 
-/**
- * Unit test for {@link AndroidBuildConfig}.
- */
+/** Unit test for {@link AndroidBuildConfig}. */
 public class AndroidBuildConfigTest {
 
   public static final BuildTarget BUILD_TARGET =
@@ -68,17 +64,18 @@ public class AndroidBuildConfigTest {
   @Test
   public void testBuildInternal() throws IOException {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
-    List<Step> steps = buildConfig.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    List<Step> steps =
+        buildConfig.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(2);
-    GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
-        new FakeProjectFilesystem(),
-        BuildTargetFactory.newInstance("//java/com/example:build_config")
-            .getUnflavoredBuildTarget(),
-        /* javaPackage */ "com.example",
-        /* useConstantExpressions */ false,
-        /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
-        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
+    GenerateBuildConfigStep expectedStep =
+        new GenerateBuildConfigStep(
+            new FakeProjectFilesystem(),
+            BuildTargetFactory.newInstance("//java/com/example:build_config")
+                .getUnflavoredBuildTarget(),
+            /* javaPackage */ "com.example",
+            /* useConstantExpressions */ false,
+            /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
+            BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 
@@ -94,20 +91,19 @@ public class AndroidBuildConfigTest {
     Path pathToValues = Paths.get("src/values.txt");
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(pathToValues)).andReturn(
-        ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
+    EasyMock.expect(projectFilesystem.readLines(pathToValues))
+        .andReturn(ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
     EasyMock.replay(projectFilesystem);
 
     ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .build();
+    ExecutionContext context = TestExecutionContext.newBuilder().build();
     int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(
-        BuildConfigFields.fromFields(ImmutableList.of(
-            BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
-            BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
+        BuildConfigFields.fromFields(
+            ImmutableList.of(
+                BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
+                BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
         step.get());
 
     EasyMock.verify(projectFilesystem);

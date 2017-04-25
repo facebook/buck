@@ -20,27 +20,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.ResourceFilters.Density;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.android.ResourceFilters.Density;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ResourceFiltersTest {
 
@@ -77,38 +75,40 @@ public class ResourceFiltersTest {
 
   /**
    * Create set of candidates.
-   * <p>
-   * For example, {@code paths("hx.png", HDPI, XHDPI)} will produce
-   * {@code [res/drawable-hdpi/hx.png, res/drawable-xhdpi/hx.png]}.
+   *
+   * <p>For example, {@code paths("hx.png", HDPI, XHDPI)} will produce {@code
+   * [res/drawable-hdpi/hx.png, res/drawable-xhdpi/hx.png]}.
    */
   @Before
   public void setUp() {
-    candidates = ImmutableSet.<Path>builder()
-        .addAll(paths("dmhx.png", DRAWABLE, MDPI, HDPI, XHDPI))
-        .addAll(paths("dmh.png", DRAWABLE, MDPI, HDPI))
-        .addAll(paths("dmx.png", DRAWABLE, MDPI, XHDPI))
-        .addAll(paths("dhx.png", DRAWABLE, HDPI, XHDPI))
-        .addAll(paths("hx.png", HDPI, XHDPI))
-        .addAll(paths("md.png", MDPI, DRAWABLE))
-        .addAll(paths("l.png", LDPI))
-        .addAll(paths("d.png", DRAWABLE))
-        .addAll(paths("h11.png", HDPI_11))
-        .addAll(paths("2x.png", XXHDPI))
-        .addAll(paths("x2x.png", XHDPI, XXHDPI))
-        .addAll(paths("h3x.png", HDPI, XXXHDPI))
-        .addAll(paths("dlmhx2x.png", DRAWABLE, LDPI, MDPI, HDPI, XHDPI, XXHDPI))
-        .addAll(paths("dmhx_rx.png", DRAWABLE, MDPI, HDPI, XHDPI, XHDPI_RO))
-        .addAll(paths("dmhx_fmhx.png", DRAWABLE, MDPI, HDPI, XHDPI, MDPI_FR, HDPI_FR, XHDPI_FR))
-        .addAll(paths("lh2x_flh2x.png", LDPI, HDPI, XXHDPI, LDPI_FR, HDPI_FR, XXHDPI_FR))
-        .addAll(paths("mth11_flth.png", MDPI, TVDPI, HDPI_11, LDPI_FR, TVDPI_FR, HDPI_FR))
-        .addAll(paths("fm3x.png", MDPI_FR, XXXHDPI_FR))
-        .addAll(paths("lx.png", LDPI, XHDPI))
-        .addAll(paths("nine.9.png", LDPI, XHDPI, XXHDPI))
-        .build();
+    candidates =
+        ImmutableSet.<Path>builder()
+            .addAll(paths("dmhx.png", DRAWABLE, MDPI, HDPI, XHDPI))
+            .addAll(paths("dmh.png", DRAWABLE, MDPI, HDPI))
+            .addAll(paths("dmx.png", DRAWABLE, MDPI, XHDPI))
+            .addAll(paths("dhx.png", DRAWABLE, HDPI, XHDPI))
+            .addAll(paths("hx.png", HDPI, XHDPI))
+            .addAll(paths("md.png", MDPI, DRAWABLE))
+            .addAll(paths("l.png", LDPI))
+            .addAll(paths("d.png", DRAWABLE))
+            .addAll(paths("h11.png", HDPI_11))
+            .addAll(paths("2x.png", XXHDPI))
+            .addAll(paths("x2x.png", XHDPI, XXHDPI))
+            .addAll(paths("h3x.png", HDPI, XXXHDPI))
+            .addAll(paths("dlmhx2x.png", DRAWABLE, LDPI, MDPI, HDPI, XHDPI, XXHDPI))
+            .addAll(paths("dmhx_rx.png", DRAWABLE, MDPI, HDPI, XHDPI, XHDPI_RO))
+            .addAll(paths("dmhx_fmhx.png", DRAWABLE, MDPI, HDPI, XHDPI, MDPI_FR, HDPI_FR, XHDPI_FR))
+            .addAll(paths("lh2x_flh2x.png", LDPI, HDPI, XXHDPI, LDPI_FR, HDPI_FR, XXHDPI_FR))
+            .addAll(paths("mth11_flth.png", MDPI, TVDPI, HDPI_11, LDPI_FR, TVDPI_FR, HDPI_FR))
+            .addAll(paths("fm3x.png", MDPI_FR, XXXHDPI_FR))
+            .addAll(paths("lx.png", LDPI, XHDPI))
+            .addAll(paths("nine.9.png", LDPI, XHDPI, XXHDPI))
+            .build();
   }
 
   /**
    * Append {@code name} to all strings in {@code options} and return as an {@link ImmutableList}.
+   *
    * @param name resource name
    * @param options of the form e.g. {@code "res/drawable-mdpi/"}
    * @return list of strings
@@ -121,12 +121,10 @@ public class ResourceFiltersTest {
     return builder.build();
   }
 
-  /**
-   * @return {@code allPaths} minus {@pathsToKeep}
-   */
+  /** @return {@code allPaths} minus {@pathsToKeep} */
   @SafeVarargs
-  private final Set<Path> pathsToRemove(Collection<Path> allPaths,
-      Collection<Path>... pathsToKeep) {
+  private final Set<Path> pathsToRemove(
+      Collection<Path> allPaths, Collection<Path>... pathsToKeep) {
     Set<Path> pathsToRemove = Sets.newHashSet(allPaths);
     for (Path path : Iterables.concat(pathsToKeep)) {
       pathsToRemove.remove(path);
@@ -141,186 +139,182 @@ public class ResourceFiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testMdpiFilterRemovesUnneededResources() {
-    Set<Path> mdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.MDPI),
-        false);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", MDPI),
-        paths("dmh.png", MDPI),
-        paths("dmx.png", MDPI),
-        paths("dhx.png", DRAWABLE),
-        paths("hx.png", HDPI),
-        paths("md.png", MDPI),
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XHDPI),
-        paths("h3x.png", HDPI),
-        paths("dlmhx2x.png", MDPI),
-        paths("dmhx_rx.png", MDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", MDPI, MDPI_FR),
-        paths("lh2x_flh2x.png", HDPI, HDPI_FR),
-        paths("mth11_flth.png", MDPI, HDPI_11, TVDPI_FR),
-        paths("fm3x.png", MDPI_FR),
-        paths("lx.png", XHDPI),
-        paths("nine.9.png", XHDPI));
+    Set<Path> mdpi =
+        ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", MDPI),
+            paths("dmh.png", MDPI),
+            paths("dmx.png", MDPI),
+            paths("dhx.png", DRAWABLE),
+            paths("hx.png", HDPI),
+            paths("md.png", MDPI),
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XHDPI),
+            paths("h3x.png", HDPI),
+            paths("dlmhx2x.png", MDPI),
+            paths("dmhx_rx.png", MDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", MDPI, MDPI_FR),
+            paths("lh2x_flh2x.png", HDPI, HDPI_FR),
+            paths("mth11_flth.png", MDPI, HDPI_11, TVDPI_FR),
+            paths("fm3x.png", MDPI_FR),
+            paths("lx.png", XHDPI),
+            paths("nine.9.png", XHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), mdpi);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
-    Set<Path> lmdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.LDPI, Density.MDPI),
-        false);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", MDPI),
-        paths("dmh.png", MDPI),
-        paths("dmx.png", MDPI),
-        paths("dhx.png", DRAWABLE),
-        paths("hx.png", HDPI),
-        paths("md.png", MDPI),
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XHDPI),
-        paths("h3x.png", HDPI),
-        paths("dlmhx2x.png", LDPI, MDPI),
-        paths("dmhx_rx.png", MDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", MDPI, MDPI_FR),
-        paths("lh2x_flh2x.png", LDPI, HDPI, LDPI_FR, HDPI_FR),
-        paths("mth11_flth.png", MDPI, HDPI_11, LDPI_FR, TVDPI_FR),
-        paths("fm3x.png", MDPI_FR),
-        paths("lx.png", LDPI, XHDPI),
-        paths("nine.9.png", LDPI, XHDPI));
+    Set<Path> lmdpi =
+        ResourceFilters.filterByDensity(
+            candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), false);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", MDPI),
+            paths("dmh.png", MDPI),
+            paths("dmx.png", MDPI),
+            paths("dhx.png", DRAWABLE),
+            paths("hx.png", HDPI),
+            paths("md.png", MDPI),
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XHDPI),
+            paths("h3x.png", HDPI),
+            paths("dlmhx2x.png", LDPI, MDPI),
+            paths("dmhx_rx.png", MDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", MDPI, MDPI_FR),
+            paths("lh2x_flh2x.png", LDPI, HDPI, LDPI_FR, HDPI_FR),
+            paths("mth11_flth.png", MDPI, HDPI_11, LDPI_FR, TVDPI_FR),
+            paths("fm3x.png", MDPI_FR),
+            paths("lx.png", LDPI, XHDPI),
+            paths("nine.9.png", LDPI, XHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), lmdpi);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
-    Set<Path> lmdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.LDPI, Density.MDPI),
-        true);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", MDPI),
-        paths("dmh.png", MDPI),
-        paths("dmx.png", MDPI),
-        paths("dhx.png", DRAWABLE),
-        paths("hx.png", XHDPI), // Downscale XHDPI
-        paths("md.png", MDPI),
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XXHDPI),
-        paths("h3x.png", XXXHDPI), // Downscale XXXHDPI
-        paths("dlmhx2x.png", LDPI, MDPI),
-        paths("dmhx_rx.png", MDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", MDPI, MDPI_FR),
-        paths("lh2x_flh2x.png", LDPI, XXHDPI, LDPI_FR, XXHDPI_FR), // Downscale XXHDPI
-        paths("mth11_flth.png", MDPI, HDPI_11, LDPI_FR, HDPI_FR),
-        paths("fm3x.png", MDPI_FR),
-        paths("lx.png", LDPI, XHDPI),
-        paths("nine.9.png", LDPI, XHDPI) /* No downscale */);
+    Set<Path> lmdpi =
+        ResourceFilters.filterByDensity(
+            candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), true);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", MDPI),
+            paths("dmh.png", MDPI),
+            paths("dmx.png", MDPI),
+            paths("dhx.png", DRAWABLE),
+            paths("hx.png", XHDPI), // Downscale XHDPI
+            paths("md.png", MDPI),
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XXHDPI),
+            paths("h3x.png", XXXHDPI), // Downscale XXXHDPI
+            paths("dlmhx2x.png", LDPI, MDPI),
+            paths("dmhx_rx.png", MDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", MDPI, MDPI_FR),
+            paths("lh2x_flh2x.png", LDPI, XXHDPI, LDPI_FR, XXHDPI_FR), // Downscale XXHDPI
+            paths("mth11_flth.png", MDPI, HDPI_11, LDPI_FR, HDPI_FR),
+            paths("fm3x.png", MDPI_FR),
+            paths("lx.png", LDPI, XHDPI),
+            paths("nine.9.png", LDPI, XHDPI) /* No downscale */);
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), lmdpi);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testHdpiFilterRemovesUnneededResources() {
-    Set<Path> hdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.HDPI),
-        false);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", HDPI),
-        paths("dmh.png", HDPI),
-        paths("dmx.png", XHDPI),
-        paths("dhx.png", HDPI),
-        paths("hx.png", HDPI),
-        paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XHDPI),
-        paths("h3x.png", HDPI),
-        paths("dlmhx2x.png", HDPI),
-        paths("dmhx_rx.png", HDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", HDPI, HDPI_FR),
-        paths("lh2x_flh2x.png", HDPI, HDPI_FR),
-        paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
-        paths("fm3x.png", XXXHDPI_FR),
-        paths("lx.png", XHDPI),
-        paths("nine.9.png", XHDPI));
+    Set<Path> hdpi =
+        ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.HDPI), false);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", HDPI),
+            paths("dmh.png", HDPI),
+            paths("dmx.png", XHDPI),
+            paths("dhx.png", HDPI),
+            paths("hx.png", HDPI),
+            paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XHDPI),
+            paths("h3x.png", HDPI),
+            paths("dlmhx2x.png", HDPI),
+            paths("dmhx_rx.png", HDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", HDPI, HDPI_FR),
+            paths("lh2x_flh2x.png", HDPI, HDPI_FR),
+            paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
+            paths("fm3x.png", XXXHDPI_FR),
+            paths("lx.png", XHDPI),
+            paths("nine.9.png", XHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), hdpi);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testXhdpiFilterRemovesUnneededResources() {
-    Set<Path> xhdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.XHDPI),
-        false);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", XHDPI),
-        paths("dmh.png", HDPI),
-        paths("dmx.png", XHDPI),
-        paths("dhx.png", XHDPI),
-        paths("hx.png", XHDPI),
-        paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XHDPI),
-        paths("h3x.png", XXXHDPI),
-        paths("dlmhx2x.png", XHDPI),
-        paths("dmhx_rx.png", XHDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", XHDPI, XHDPI_FR),
-        paths("lh2x_flh2x.png", XXHDPI, XXHDPI_FR),
-        paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
-        paths("fm3x.png", XXXHDPI_FR),
-        paths("lx.png", XHDPI),
-        paths("nine.9.png", XHDPI));
+    Set<Path> xhdpi =
+        ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XHDPI), false);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", XHDPI),
+            paths("dmh.png", HDPI),
+            paths("dmx.png", XHDPI),
+            paths("dhx.png", XHDPI),
+            paths("hx.png", XHDPI),
+            paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XHDPI),
+            paths("h3x.png", XXXHDPI),
+            paths("dlmhx2x.png", XHDPI),
+            paths("dmhx_rx.png", XHDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", XHDPI, XHDPI_FR),
+            paths("lh2x_flh2x.png", XXHDPI, XXHDPI_FR),
+            paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
+            paths("fm3x.png", XXXHDPI_FR),
+            paths("lx.png", XHDPI),
+            paths("nine.9.png", XHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), xhdpi);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testXxhdpiFilterRemovesUnneededResources() {
-    Set<Path> xxhdpi = ResourceFilters.filterByDensity(
-        candidates,
-        ImmutableSet.of(Density.XXHDPI),
-        false);
-    Iterable<Path> keepPaths = Iterables.concat(
-        paths("dmhx.png", XHDPI),
-        paths("dmh.png", HDPI),
-        paths("dmx.png", XHDPI),
-        paths("dhx.png", XHDPI),
-        paths("hx.png", XHDPI),
-        paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
-        paths("l.png", LDPI),
-        paths("d.png", DRAWABLE),
-        paths("h11.png", HDPI_11),
-        paths("2x.png", XXHDPI),
-        paths("x2x.png", XXHDPI),
-        paths("h3x.png", XXXHDPI),
-        paths("dlmhx2x.png", XXHDPI),
-        paths("dmhx_rx.png", XHDPI, XHDPI_RO),
-        paths("dmhx_fmhx.png", XHDPI, XHDPI_FR),
-        paths("lh2x_flh2x.png", XXHDPI, XXHDPI_FR),
-        paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
-        paths("fm3x.png", XXXHDPI_FR),
-        paths("lx.png", XHDPI),
-        paths("nine.9.png", XXHDPI));
+    Set<Path> xxhdpi =
+        ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XXHDPI), false);
+    Iterable<Path> keepPaths =
+        Iterables.concat(
+            paths("dmhx.png", XHDPI),
+            paths("dmh.png", HDPI),
+            paths("dmx.png", XHDPI),
+            paths("dhx.png", XHDPI),
+            paths("hx.png", XHDPI),
+            paths("md.png", MDPI), // drawable-mdpi preferred over drawable.
+            paths("l.png", LDPI),
+            paths("d.png", DRAWABLE),
+            paths("h11.png", HDPI_11),
+            paths("2x.png", XXHDPI),
+            paths("x2x.png", XXHDPI),
+            paths("h3x.png", XXXHDPI),
+            paths("dlmhx2x.png", XXHDPI),
+            paths("dmhx_rx.png", XHDPI, XHDPI_RO),
+            paths("dmhx_fmhx.png", XHDPI, XHDPI_FR),
+            paths("lh2x_flh2x.png", XXHDPI, XXHDPI_FR),
+            paths("mth11_flth.png", TVDPI, HDPI_11, HDPI_FR),
+            paths("fm3x.png", XXXHDPI_FR),
+            paths("lx.png", XHDPI),
+            paths("nine.9.png", XXHDPI));
     MoreAsserts.assertSetEquals(pathsToRemove(candidates, Lists.newArrayList(keepPaths)), xxhdpi);
   }
 
@@ -328,8 +322,8 @@ public class ResourceFiltersTest {
   public void testImageDensityFilter() {
     Set<Path> filesToRemove =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
-    Predicate<Path> predicate = ResourceFilters.createImageDensityFilter(
-         candidates, ImmutableSet.of(Density.MDPI), false);
+    Predicate<Path> predicate =
+        ResourceFilters.createImageDensityFilter(candidates, ImmutableSet.of(Density.MDPI), false);
     assertFalse(candidates.isEmpty());
     for (Path candidate : candidates) {
       assertEquals(!filesToRemove.contains(candidate), predicate.apply(candidate));
@@ -339,9 +333,9 @@ public class ResourceFiltersTest {
   @Test
   public void testcreateDensityFilterSkipsDrawables() {
     Path candidate = Paths.get("drawable-ldpi/somefile");
-    Predicate<Path> predicate = ResourceFilters.createDensityFilter(
-        new FakeProjectFilesystem(),
-        ImmutableSet.of(Density.MDPI));
+    Predicate<Path> predicate =
+        ResourceFilters.createDensityFilter(
+            new FakeProjectFilesystem(), ImmutableSet.of(Density.MDPI));
     assertThat(predicate.apply(candidate), Matchers.is(true));
   }
 
@@ -358,9 +352,8 @@ public class ResourceFiltersTest {
       Path exclude = Paths.get(String.format("%s-ldpi/somefile", folderName));
       filesystem.createNewFile(exclude);
 
-      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
-          filesystem,
-          ImmutableSet.of(Density.MDPI));
+      Predicate<Path> predicate =
+          ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
       assertThat(predicate.apply(exclude), Matchers.is(false));
       assertThat(predicate.apply(include), Matchers.is(true));
     }
@@ -379,9 +372,8 @@ public class ResourceFiltersTest {
       Path exclude = Paths.get(String.format("%s-ldpi/somefile", folderName));
       filesystem.createNewFile(exclude);
 
-      Predicate<Path> predicate = ResourceFilters.createDensityFilter(
-          filesystem,
-          ImmutableSet.of(Density.MDPI));
+      Predicate<Path> predicate =
+          ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
       assertThat(predicate.apply(exclude), Matchers.is(false));
       assertThat(predicate.apply(include), Matchers.is(true));
     }

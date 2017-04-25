@@ -20,16 +20,14 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import java.nio.file.Path;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-public class PrebuiltNativeLibraryBuilder extends AbstractNodeBuilder<
-    PrebuiltNativeLibraryDescription.Arg,
-    PrebuiltNativeLibraryDescription,
-    PrebuiltNativeLibrary> {
+public class PrebuiltNativeLibraryBuilder
+    extends AbstractNodeBuilder<
+        PrebuiltNativeLibraryDescription.Arg, PrebuiltNativeLibraryDescription,
+        PrebuiltNativeLibrary> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     this(target, new FakeProjectFilesystem());
@@ -44,8 +42,7 @@ public class PrebuiltNativeLibraryBuilder extends AbstractNodeBuilder<
   }
 
   public static PrebuiltNativeLibraryBuilder newBuilder(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem) {
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return new PrebuiltNativeLibraryBuilder(buildTarget, filesystem);
   }
 

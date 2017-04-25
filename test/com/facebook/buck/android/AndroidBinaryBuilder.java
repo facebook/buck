@@ -32,13 +32,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class AndroidBinaryBuilder extends
-    AbstractNodeBuilder<AndroidBinaryDescription.Arg, AndroidBinaryDescription, AndroidBinary> {
+public class AndroidBinaryBuilder
+    extends AbstractNodeBuilder<
+        AndroidBinaryDescription.Arg, AndroidBinaryDescription, AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
@@ -118,9 +118,8 @@ public class AndroidBinaryBuilder extends
     return this;
   }
 
-  public AndroidBinaryBuilder setIntraDexReorderResources(boolean enableReorder,
-      SourcePath reorderTool,
-      SourcePath reorderData) {
+  public AndroidBinaryBuilder setIntraDexReorderResources(
+      boolean enableReorder, SourcePath reorderTool, SourcePath reorderData) {
     arg.reorderClassesIntraDex = enableReorder;
     arg.dexReorderToolFile = Optional.of(reorderTool);
     arg.dexReorderDataDumpFile = Optional.of(reorderData);

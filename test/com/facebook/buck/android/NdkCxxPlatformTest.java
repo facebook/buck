@@ -53,11 +53,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,11 +60,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class NdkCxxPlatformTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   enum Operation {
     COMPILE,
@@ -95,28 +92,25 @@ public class NdkCxxPlatformTest {
             pathResolver,
             ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
-        ImmutableMap.builder();
+    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
-      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
-          .setParams(new FakeBuildRuleParamsBuilder(target).build())
-          .setResolver(resolver)
-          .setPathResolver(pathResolver)
-          .setRuleFinder(ruleFinder)
-          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-          .setCxxPlatform(entry.getValue().getCxxPlatform())
-          .setPicType(CxxSourceRuleFactory.PicType.PIC)
-          .build();
+      CxxSourceRuleFactory cxxSourceRuleFactory =
+          CxxSourceRuleFactory.builder()
+              .setParams(new FakeBuildRuleParamsBuilder(target).build())
+              .setResolver(resolver)
+              .setPathResolver(pathResolver)
+              .setRuleFinder(ruleFinder)
+              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+              .setCxxPlatform(entry.getValue().getCxxPlatform())
+              .setPicType(CxxSourceRuleFactory.PicType.PIC)
+              .build();
       CxxPreprocessAndCompile rule;
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
           rule =
               cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
                   source,
-                  CxxSource.of(
-                      CxxSource.Type.CXX,
-                      new FakeSourcePath(source),
-                      ImmutableList.of()));
+                  CxxSource.of(CxxSource.Type.CXX, new FakeSourcePath(source), ImmutableList.of()));
           break;
         case COMPILE:
           rule =
@@ -153,29 +147,29 @@ public class NdkCxxPlatformTest {
             pathResolver,
             ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
-        ImmutableMap.builder();
+    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
-      BuildRule rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-          CxxPlatformUtils.DEFAULT_CONFIG,
-          entry.getValue().getCxxPlatform(),
-          new FakeBuildRuleParamsBuilder(target).build(),
-          resolver,
-          pathResolver,
-          ruleFinder,
-          target,
-          Linker.LinkType.EXECUTABLE,
-          Optional.empty(),
-          Paths.get("output"),
-          Linker.LinkableDepType.SHARED,
-          /* thinLto */ false,
-          ImmutableList.of(),
-          Optional.empty(),
-          Optional.empty(),
-          ImmutableSet.of(),
-          NativeLinkableInput.builder()
-              .setArgs(SourcePathArg.from(new FakeSourcePath("input.o")))
-              .build());
+      BuildRule rule =
+          CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              entry.getValue().getCxxPlatform(),
+              new FakeBuildRuleParamsBuilder(target).build(),
+              resolver,
+              pathResolver,
+              ruleFinder,
+              target,
+              Linker.LinkType.EXECUTABLE,
+              Optional.empty(),
+              Paths.get("output"),
+              Linker.LinkableDepType.SHARED,
+              /* thinLto */ false,
+              ImmutableList.of(),
+              Optional.empty(),
+              Optional.empty(),
+              ImmutableSet.of(),
+              NativeLinkableInput.builder()
+                  .setArgs(SourcePathArg.from(new FakeSourcePath("input.o")))
+                  .build());
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();
@@ -208,10 +202,10 @@ public class NdkCxxPlatformTest {
     for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessAndCompileRukeKeys = new HashMap<>();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          compileRukeKeys = new HashMap<>();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          linkRukeKeys = new HashMap<>();
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>> compileRukeKeys =
+          new HashMap<>();
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>> linkRukeKeys =
+          new HashMap<>();
 
       // Iterate building up rule keys for combinations of different platforms and NDK root
       // directories.
@@ -264,7 +258,6 @@ public class NdkCxxPlatformTest {
           Sets.newHashSet(linkRukeKeys.values()),
           Matchers.hasSize(1));
     }
-
   }
 
   @Test
@@ -291,9 +284,10 @@ public class NdkCxxPlatformTest {
             /* strictToolchainPaths */ false);
     for (NdkCxxPlatform ndkCxxPlatform : platforms.values()) {
       assertTrue(
-          ndkCxxPlatform.getCxxPlatform().getHeaderVerification()
+          ndkCxxPlatform
+              .getCxxPlatform()
+              .getHeaderVerification()
               .isWhitelisted(root.resolve("test.h").toString()));
     }
   }
-
 }

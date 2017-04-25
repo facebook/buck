@@ -25,11 +25,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -39,25 +34,27 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class StringPoolTest {
   private static final String APK_NAME = "example.apk";
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private Path apkPath;
 
   @Before
   public void setUp() throws IOException {
-    filesystem = new ProjectFilesystem(
-        TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
+    filesystem =
+        new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }
 
   @Test
   public void testCreateStringPool() throws Exception {
-    String[] strings = new String[]{"string1", "string2", "string3"};
+    String[] strings = new String[] {"string1", "string2", "string3"};
     StringPool pool = StringPool.create(Arrays.asList(strings));
     assertEquals(strings.length, pool.getStringCount());
     for (int i = 0; i < strings.length; i++) {
@@ -67,7 +64,7 @@ public class StringPoolTest {
 
   @Test
   public void testCreateSerializeAndGet() {
-    String[] strings = new String[]{"string1", "string2", "string3"};
+    String[] strings = new String[] {"string1", "string2", "string3"};
     StringPool pool = StringPool.create(Arrays.asList(strings));
     byte[] serialized = pool.serialize();
     pool = StringPool.get(ResChunk.wrap(serialized));
@@ -84,9 +81,9 @@ public class StringPoolTest {
   @Test
   public void testArscPoolGetAndSerialize() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      ByteBuffer buf = ResChunk.wrap(
-          ByteStreams.toByteArray(
-              apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
 
       List<Integer> stringPoolOffsets = ChunkUtils.findChunks(buf, ResChunk.CHUNK_STRING_POOL);
       // Should be 1 main stringpool, and 2 for the package (types and keys).
@@ -96,10 +93,9 @@ public class StringPoolTest {
         ByteBuffer data = ResChunk.slice(buf, offset);
         StringPool strings = StringPool.get(data);
 
-        byte[] expected = Arrays.copyOfRange(
-            data.array(),
-            data.arrayOffset(),
-            data.arrayOffset() + strings.getTotalSize());
+        byte[] expected =
+            Arrays.copyOfRange(
+                data.array(), data.arrayOffset(), data.arrayOffset() + strings.getTotalSize());
         byte[] actual = strings.serialize();
 
         assertArrayEquals(expected, actual);
@@ -110,9 +106,10 @@ public class StringPoolTest {
   @Test
   public void testManifestPoolGetAndSerialize() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      ByteBuffer buf = ResChunk.wrap(
-          ByteStreams.toByteArray(
-              apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(
+                  apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
 
       List<Integer> stringPoolOffsets = ChunkUtils.findChunks(buf, ResChunk.CHUNK_STRING_POOL);
       assertEquals(1, stringPoolOffsets.size());
@@ -121,10 +118,9 @@ public class StringPoolTest {
         ByteBuffer data = ResChunk.slice(buf, offset);
         StringPool strings = StringPool.get(data);
 
-        byte[] expected = Arrays.copyOfRange(
-            data.array(),
-            data.arrayOffset(),
-            data.arrayOffset() + strings.getTotalSize());
+        byte[] expected =
+            Arrays.copyOfRange(
+                data.array(), data.arrayOffset(), data.arrayOffset() + strings.getTotalSize());
         byte[] actual = strings.serialize();
 
         assertArrayEquals(expected, actual);
@@ -135,9 +131,9 @@ public class StringPoolTest {
   @Test
   public void testAaptDumpStrings() throws Exception {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
-      ByteBuffer buf = ResChunk.wrap(
-          ByteStreams.toByteArray(
-              apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
       ResourceTable resourceTable = ResourceTable.get(buf);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -26,28 +25,24 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-/**
- * Tests for AndroidLibraryDescription with query_deps
- */
+/** Tests for AndroidLibraryDescription with query_deps */
 public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiCompilationModeTest {
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_library_as_ap_host", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_library_as_ap_host", tmpFolder);
     workspace.setUp();
     workspace.enableDirCache();
     workspace.addBuckConfigLocalOption("build", "depfiles", "cache");
@@ -141,8 +136,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
   }
 
   @Test
-  public void testAddingNonResourceFileDoesNotRebuildDependents()
-      throws Exception {
+  public void testAddingNonResourceFileDoesNotRebuildDependents() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
@@ -155,10 +149,8 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:top_level");
   }
 
-
   @Test
-  public void testEditingUnreadResourceFileDoesNotRebuildDependents()
-      throws Exception {
+  public void testEditingUnreadResourceFileDoesNotRebuildDependents() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
@@ -172,8 +164,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
   }
 
   @Test
-  public void testEditingUnreadResourceFileDoesNotChangeManifestKey()
-      throws Exception {
+  public void testEditingUnreadResourceFileDoesNotChangeManifestKey() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
@@ -187,12 +178,9 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetWasFetchedFromCacheByManifestMatch("//:top_level");
   }
 
-  private void expectGenruleOutputContains(
-      String genrule,
-      String expectedOutputFragment)
+  private void expectGenruleOutputContains(String genrule, String expectedOutputFragment)
       throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", genrule);
+    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
     buildResult.assertSuccess();
 
     String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
