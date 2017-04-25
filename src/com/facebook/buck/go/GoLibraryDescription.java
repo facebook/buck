@@ -27,11 +27,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.versions.Version;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -41,15 +41,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-public class GoLibraryDescription implements
-    Description<GoLibraryDescription.Arg>,
-    Flavored,
-    MetadataProvidingDescription<GoLibraryDescription.Arg> {
+public class GoLibraryDescription
+    implements Description<GoLibraryDescription.Arg>,
+        Flavored,
+        MetadataProvidingDescription<GoLibraryDescription.Arg> {
 
   private final GoBuckConfig goBuckConfig;
 
@@ -73,9 +72,9 @@ public class GoLibraryDescription implements
       final BuildRuleResolver resolver,
       A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass) throws NoSuchBuildTargetException {
-    Optional<GoPlatform> platform =
-        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -85,7 +84,8 @@ public class GoLibraryDescription implements
               GoLinkable.builder()
                   .setGoLinkInput(
                       ImmutableMap.of(
-                          args.packageName.map(Paths::get)
+                          args.packageName
+                              .map(Paths::get)
                               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
                           output))
                   .setExportedDeps(args.exportedDeps)
@@ -99,9 +99,7 @@ public class GoLibraryDescription implements
                   buildTarget,
                   resolver,
                   platform.get(),
-                  Iterables.concat(
-                      args.deps,
-                      args.exportedDeps),
+                  Iterables.concat(args.deps, args.exportedDeps),
                   /* includeSelf */ true)));
     } else {
       return Optional.empty();
@@ -114,7 +112,8 @@ public class GoLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
+      A args)
+      throws NoSuchBuildTargetException {
     Optional<GoPlatform> platform =
         goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget());
 
@@ -123,7 +122,8 @@ public class GoLibraryDescription implements
           params,
           resolver,
           goBuckConfig,
-          args.packageName.map(Paths::get)
+          args.packageName
+              .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
           args.srcs,
           args.compilerFlags,
@@ -146,7 +146,8 @@ public class GoLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
 
-    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    @Hint(isDep = false)
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

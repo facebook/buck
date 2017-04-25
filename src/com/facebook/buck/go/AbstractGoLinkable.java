@@ -23,20 +23,18 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractGoLinkable {
 
   abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
+
   abstract ImmutableSet<BuildTarget> getExportedDeps();
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ruleFinder.filterBuildRuleInputs(getGoLinkInput().values());
   }
-
 }

@@ -36,14 +36,13 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.List;
 import java.util.Optional;
 
-public class GoBinaryDescription implements
-    Description<GoBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<GoBinaryDescription.Arg>,
-    Flavored {
+public class GoBinaryDescription
+    implements Description<GoBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<GoBinaryDescription.Arg>,
+        Flavored {
 
   private final GoBuckConfig goBuckConfig;
 
@@ -67,9 +66,13 @@ public class GoBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
-        .orElse(goBuckConfig.getDefaultPlatform());
+      A args)
+      throws NoSuchBuildTargetException {
+    GoPlatform platform =
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(params.getBuildTarget())
+            .orElse(goBuckConfig.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
         params,
@@ -90,8 +93,11 @@ public class GoBinaryDescription implements
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    GoPlatform goPlatform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
-        .orElse(goBuckConfig.getDefaultPlatform());
+    GoPlatform goPlatform =
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget)
+            .orElse(goBuckConfig.getDefaultPlatform());
     Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
     if (cxxPlatform.isPresent()) {
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));

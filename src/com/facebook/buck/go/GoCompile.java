@@ -37,27 +37,21 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class GoCompile extends AbstractBuildRule {
-  @AddToRuleKey
-  private final Tool compiler;
-  @AddToRuleKey
-  private final Tool assembler;
-  @AddToRuleKey
-  private final Tool packer;
+  @AddToRuleKey private final Tool compiler;
+  @AddToRuleKey private final Tool assembler;
+  @AddToRuleKey private final Tool packer;
+
   @AddToRuleKey(stringify = true)
   private final Path packageName;
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> srcs;
-  @AddToRuleKey
-  private final ImmutableList<String> compilerFlags;
-  @AddToRuleKey
-  private final ImmutableList<String> assemblerFlags;
-  @AddToRuleKey
-  private final GoPlatform platform;
+
+  @AddToRuleKey private final ImmutableSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableList<String> compilerFlags;
+  @AddToRuleKey private final ImmutableList<String> assemblerFlags;
+  @AddToRuleKey private final GoPlatform platform;
   // TODO(mikekap): Make these part of the rule key.
   private final ImmutableList<Path> assemblerIncludeDirs;
   private final ImmutableMap<Path, Path> importPathMap;
@@ -90,16 +84,16 @@ public class GoCompile extends AbstractBuildRule {
     this.assembler = assembler;
     this.packer = packer;
     this.platform = platform;
-    this.output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/" + getBuildTarget().getShortName() + ".a");
+    this.output =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/" + getBuildTarget().getShortName() + ".a");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     buildableContext.recordArtifact(output);
 
@@ -128,11 +122,13 @@ public class GoCompile extends AbstractBuildRule {
     Optional<Path> asmHeaderPath;
 
     if (!asmSrcs.isEmpty()) {
-      asmHeaderPath = Optional.of(BuildTargets.getScratchPath(
-          getProjectFilesystem(),
-          getBuildTarget(),
-          "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
-          .resolve("go_asm.h"));
+      asmHeaderPath =
+          Optional.of(
+              BuildTargets.getScratchPath(
+                      getProjectFilesystem(),
+                      getBuildTarget(),
+                      "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
+                  .resolve("go_asm.h"));
 
       steps.add(MkdirStep.of(getProjectFilesystem(), asmHeaderPath.get().getParent()));
     } else {
@@ -144,26 +140,28 @@ public class GoCompile extends AbstractBuildRule {
     if (compileSrcs.isEmpty()) {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {
-      steps.add(new GoCompileStep(
-          getProjectFilesystem().getRootPath(),
-          compiler.getEnvironment(context.getSourcePathResolver()),
-          compiler.getCommandPrefix(context.getSourcePathResolver()),
-          compilerFlags,
-          packageName,
-          compileSrcs,
-          importPathMap,
-          ImmutableList.of(symlinkTree.getRoot()),
-          asmHeaderPath,
-          allowExternalReferences,
-          platform,
-          output));
+      steps.add(
+          new GoCompileStep(
+              getProjectFilesystem().getRootPath(),
+              compiler.getEnvironment(context.getSourcePathResolver()),
+              compiler.getCommandPrefix(context.getSourcePathResolver()),
+              compilerFlags,
+              packageName,
+              compileSrcs,
+              importPathMap,
+              ImmutableList.of(symlinkTree.getRoot()),
+              asmHeaderPath,
+              allowExternalReferences,
+              platform,
+              output));
     }
 
     if (!asmSrcs.isEmpty()) {
-      Path asmIncludeDir = BuildTargets.getScratchPath(
-          getProjectFilesystem(),
-          getBuildTarget(),
-          "%s/" + getBuildTarget().getShortName() + "__asm_includes");
+      Path asmIncludeDir =
+          BuildTargets.getScratchPath(
+              getProjectFilesystem(),
+              getBuildTarget(),
+              "%s/" + getBuildTarget().getShortName() + "__asm_includes");
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), asmIncludeDir));
 
       if (!headerSrcs.isEmpty()) {
@@ -178,16 +176,17 @@ public class GoCompile extends AbstractBuildRule {
         }
       }
 
-      Path asmOutputDir = BuildTargets.getScratchPath(
-          getProjectFilesystem(),
-          getBuildTarget(),
-          "%s/" + getBuildTarget().getShortName() + "__asm_compile");
+      Path asmOutputDir =
+          BuildTargets.getScratchPath(
+              getProjectFilesystem(),
+              getBuildTarget(),
+              "%s/" + getBuildTarget().getShortName() + "__asm_compile");
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), asmOutputDir));
 
       ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
       for (Path asmSrc : asmSrcs) {
-        Path outputPath = asmOutputDir.resolve(
-            asmSrc.getFileName().toString().replaceAll("\\.[sS]$", ".o"));
+        Path outputPath =
+            asmOutputDir.resolve(asmSrc.getFileName().toString().replaceAll("\\.[sS]$", ".o"));
         steps.add(
             new GoAssembleStep(
                 getProjectFilesystem().getRootPath(),
@@ -205,13 +204,14 @@ public class GoCompile extends AbstractBuildRule {
         asmOutputs.add(outputPath);
       }
 
-      steps.add(new GoPackStep(
-          getProjectFilesystem().getRootPath(),
-          packer.getEnvironment(context.getSourcePathResolver()),
-          packer.getCommandPrefix(context.getSourcePathResolver()),
-          GoPackStep.Operation.APPEND,
-          asmOutputs.build(),
-          output));
+      steps.add(
+          new GoPackStep(
+              getProjectFilesystem().getRootPath(),
+              packer.getEnvironment(context.getSourcePathResolver()),
+              packer.getCommandPrefix(context.getSourcePathResolver()),
+              GoPackStep.Operation.APPEND,
+              asmOutputs.build(),
+              output));
     }
 
     return steps.build();

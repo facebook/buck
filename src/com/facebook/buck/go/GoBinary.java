@@ -35,20 +35,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
-  @AddToRuleKey
-  private final Tool linker;
-  @AddToRuleKey
-  private final ImmutableList<String> linkerFlags;
-  @AddToRuleKey
-  private final Optional<Linker> cxxLinker;
-  @AddToRuleKey
-  private final GoPlatform platform;
+  @AddToRuleKey private final Tool linker;
+  @AddToRuleKey private final ImmutableList<String> linkerFlags;
+  @AddToRuleKey private final Optional<Linker> cxxLinker;
+  @AddToRuleKey private final GoPlatform platform;
 
   private final GoCompile mainObject;
   private final SymlinkTree linkTree;
@@ -69,18 +64,17 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
     this.linkTree = linkTree;
     this.mainObject = mainObject;
     this.platform = platform;
-    this.output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        params.getBuildTarget(),
-        "%s/" + params.getBuildTarget().getShortName());
+    this.output =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            params.getBuildTarget(),
+            "%s/" + params.getBuildTarget().getShortName());
     this.linkerFlags = linkerFlags;
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(getSourcePathToOutput()))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 
   @Override
@@ -90,8 +84,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     buildableContext.recordArtifact(output);
 
@@ -116,8 +109,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
             platform,
             context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.LinkMode.EXECUTABLE,
-            output)
-        );
+            output));
   }
 
   @Override

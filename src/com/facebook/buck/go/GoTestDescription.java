@@ -47,26 +47,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-public class GoTestDescription implements
-    Description<GoTestDescription.Arg>,
-    Flavored,
-    MetadataProvidingDescription<GoTestDescription.Arg>,
-    ImplicitDepsInferringDescription<GoTestDescription.Arg> {
+public class GoTestDescription
+    implements Description<GoTestDescription.Arg>,
+        Flavored,
+        MetadataProvidingDescription<GoTestDescription.Arg>,
+        ImplicitDepsInferringDescription<GoTestDescription.Arg> {
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
-  public GoTestDescription(
-      GoBuckConfig goBuckConfig,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+  public GoTestDescription(GoBuckConfig goBuckConfig, Optional<Long> defaultTestRuleTimeoutMs) {
     this.goBuckConfig = goBuckConfig;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
@@ -78,8 +75,8 @@ public class GoTestDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors) ||
-        flavors.contains(TEST_LIBRARY_FLAVOR);
+    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors)
+        || flavors.contains(TEST_LIBRARY_FLAVOR);
   }
 
   @Override
@@ -88,43 +85,41 @@ public class GoTestDescription implements
       final BuildRuleResolver resolver,
       A args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass) throws NoSuchBuildTargetException {
-    Optional<GoPlatform> platform =
-        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+      Class<U> metadataClass)
+      throws NoSuchBuildTargetException {
+    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
-    if (metadataClass.isAssignableFrom(GoLinkable.class) &&
-        buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+    if (metadataClass.isAssignableFrom(GoLinkable.class)
+        && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
       Path packageName = getGoPackageName(resolver, buildTarget, args);
 
       SourcePath output = resolver.requireRule(buildTarget).getSourcePathToOutput();
-      return Optional.of(metadataClass.cast(GoLinkable.builder()
-          .setGoLinkInput(ImmutableMap.of(packageName, output))
-          .build()));
-    } else if (
-        buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR) &&
-        buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+      return Optional.of(
+          metadataClass.cast(
+              GoLinkable.builder().setGoLinkInput(ImmutableMap.of(packageName, output)).build()));
+    } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)
+        && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
       ImmutableSet<BuildTarget> deps;
       if (args.library.isPresent()) {
-        GoLibraryDescription.Arg libraryArg = resolver.requireMetadata(
-            args.library.get(), GoLibraryDescription.Arg.class).get();
-        deps = ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .addAll(args.deps)
-            .addAll(libraryArg.deps)
-            .build();
+        GoLibraryDescription.Arg libraryArg =
+            resolver.requireMetadata(args.library.get(), GoLibraryDescription.Arg.class).get();
+        deps =
+            ImmutableSortedSet.<BuildTarget>naturalOrder()
+                .addAll(args.deps)
+                .addAll(libraryArg.deps)
+                .build();
       } else {
         deps = args.deps;
       }
 
-      return Optional.of(metadataClass.cast(GoDescriptors.requireTransitiveGoLinkables(
-          buildTarget,
-          resolver,
-          platform.get(),
-          deps,
-          /* includeSelf */ true)));
+      return Optional.of(
+          metadataClass.cast(
+              GoDescriptors.requireTransitiveGoLinkables(
+                  buildTarget, resolver, platform.get(), deps, /* includeSelf */ true)));
     } else {
       return Optional.empty();
     }
@@ -134,21 +129,22 @@ public class GoTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
-      Path packageName) throws NoSuchBuildTargetException {
+      Path packageName)
+      throws NoSuchBuildTargetException {
     Tool testMainGenerator = GoDescriptors.getTestMainGenerator(goBuckConfig, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    GoTestMain generatedTestMain = new GoTestMain(
-        params
-            .withAppendedFlavor(InternalFlavor.of("test-main-src"))
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                    testMainGenerator.getDeps(ruleFinder))),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-        testMainGenerator,
-        srcs,
-        packageName
-    );
+    GoTestMain generatedTestMain =
+        new GoTestMain(
+            params
+                .withAppendedFlavor(InternalFlavor.of("test-main-src"))
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder))),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+            testMainGenerator,
+            srcs,
+            packageName);
     resolver.addToIndex(generatedTestMain);
     return generatedTestMain;
   }
@@ -159,31 +155,26 @@ public class GoTestDescription implements
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) throws NoSuchBuildTargetException {
-    GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
-        .orElse(goBuckConfig.getDefaultPlatform());
+      A args)
+      throws NoSuchBuildTargetException {
+    GoPlatform platform =
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(params.getBuildTarget())
+            .orElse(goBuckConfig.getDefaultPlatform());
 
     if (params.getBuildTarget().getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
-      return createTestLibrary(
-          params,
-          resolver,
-          args,
-          platform);
+      return createTestLibrary(params, resolver, args, platform);
     }
 
-    GoBinary testMain = createTestMainRule(
-        params,
-        resolver,
-        args,
-        platform);
+    GoBinary testMain = createTestMainRule(params, resolver, args, platform);
     resolver.addToIndex(testMain);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())
-        ),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         ruleFinder,
         testMain,
         args.labels,
@@ -194,47 +185,43 @@ public class GoTestDescription implements
   }
 
   private GoBinary createTestMainRule(
-      BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      Arg args,
-      GoPlatform platform) throws NoSuchBuildTargetException {
+      BuildRuleParams params, final BuildRuleResolver resolver, Arg args, GoPlatform platform)
+      throws NoSuchBuildTargetException {
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
     BuildRuleParams testTargetParams = params.withAppendedFlavor(TEST_LIBRARY_FLAVOR);
-    BuildRule testLibrary = new NoopBuildRule(
-        testTargetParams);
+    BuildRule testLibrary = new NoopBuildRule(testTargetParams);
     resolver.addToIndex(testLibrary);
 
-    BuildRule generatedTestMain = requireTestMainGenRule(
-        params, resolver, args.srcs, packageName);
-    GoBinary testMain = GoDescriptors.createGoBinaryRule(
-        params
-            .withAppendedFlavor(InternalFlavor.of("test-main"))
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
-                Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
-        resolver,
-        goBuckConfig,
-        ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
-        args.compilerFlags,
-        args.assemblerFlags,
-        args.linkerFlags,
-        platform);
+    BuildRule generatedTestMain = requireTestMainGenRule(params, resolver, args.srcs, packageName);
+    GoBinary testMain =
+        GoDescriptors.createGoBinaryRule(
+            params
+                .withAppendedFlavor(InternalFlavor.of("test-main"))
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
+            resolver,
+            goBuckConfig,
+            ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
+            args.compilerFlags,
+            args.assemblerFlags,
+            args.linkerFlags,
+            platform);
     resolver.addToIndex(testMain);
     return testMain;
   }
 
   private Path getGoPackageName(BuildRuleResolver resolver, BuildTarget target, Arg args)
       throws NoSuchBuildTargetException {
-    target = target.withFlavors();  // remove flavors.
+    target = target.withFlavors(); // remove flavors.
 
     if (args.library.isPresent()) {
-      final Optional<GoLibraryDescription.Arg> libraryArg = resolver.requireMetadata(
-          args.library.get(), GoLibraryDescription.Arg.class);
+      final Optional<GoLibraryDescription.Arg> libraryArg =
+          resolver.requireMetadata(args.library.get(), GoLibraryDescription.Arg.class);
       if (!libraryArg.isPresent()) {
         throw new HumanReadableException(
-            "Library specified in %s (%s) is not a go_library rule.",
-            target, args.library.get());
+            "Library specified in %s (%s) is not a go_library rule.", target, args.library.get());
       }
 
       if (args.packageName.isPresent()) {
@@ -249,76 +236,77 @@ public class GoTestDescription implements
             target, args.library.get());
       }
 
-      return libraryArg.get().packageName.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(
-          args.library.get()));
+      return libraryArg
+          .get()
+          .packageName
+          .map(Paths::get)
+          .orElse(goBuckConfig.getDefaultPackageName(args.library.get()));
     } else if (args.packageName.isPresent()) {
       return Paths.get(args.packageName.get());
     } else {
       Path packageName = goBuckConfig.getDefaultPackageName(target);
       return packageName.resolveSibling(packageName.getFileName() + "_test");
     }
-
   }
 
   private GoCompile createTestLibrary(
-      BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      Arg args,
-      GoPlatform platform) throws NoSuchBuildTargetException {
+      BuildRuleParams params, final BuildRuleResolver resolver, Arg args, GoPlatform platform)
+      throws NoSuchBuildTargetException {
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
     GoCompile testLibrary;
     if (args.library.isPresent()) {
       // We should have already type-checked the arguments in the base rule.
-      final GoLibraryDescription.Arg libraryArg = resolver.requireMetadata(
-          args.library.get(), GoLibraryDescription.Arg.class).get();
+      final GoLibraryDescription.Arg libraryArg =
+          resolver.requireMetadata(args.library.get(), GoLibraryDescription.Arg.class).get();
 
       final BuildRuleParams originalParams = params;
-      BuildRuleParams testTargetParams = params.copyReplacingDeclaredAndExtraDeps(
-          () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-              .addAll(originalParams.getDeclaredDeps().get())
-              .addAll(resolver.getAllRules(libraryArg.deps))
-              .build(),
-          () -> {
-            SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(originalParams.getExtraDeps().get())
-                // Make sure to include dynamically generated sources as deps.
-                .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
-                .build();
-          });
+      BuildRuleParams testTargetParams =
+          params.copyReplacingDeclaredAndExtraDeps(
+              () ->
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(originalParams.getDeclaredDeps().get())
+                      .addAll(resolver.getAllRules(libraryArg.deps))
+                      .build(),
+              () -> {
+                SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+                return ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(originalParams.getExtraDeps().get())
+                    // Make sure to include dynamically generated sources as deps.
+                    .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
+                    .build();
+              });
 
-      testLibrary = GoDescriptors.createGoCompileRule(
-          testTargetParams,
-          resolver,
-          goBuckConfig,
-          packageName,
-          ImmutableSet.<SourcePath>builder()
-              .addAll(libraryArg.srcs)
-              .addAll(args.srcs)
-              .build(),
-          ImmutableList.<String>builder()
-              .addAll(libraryArg.compilerFlags)
-              .addAll(args.compilerFlags)
-              .build(),
-          ImmutableList.<String>builder()
-              .addAll(libraryArg.assemblerFlags)
-              .addAll(args.assemblerFlags)
-              .build(),
-          platform,
-          FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(BuildRule::getBuildTarget));
+      testLibrary =
+          GoDescriptors.createGoCompileRule(
+              testTargetParams,
+              resolver,
+              goBuckConfig,
+              packageName,
+              ImmutableSet.<SourcePath>builder().addAll(libraryArg.srcs).addAll(args.srcs).build(),
+              ImmutableList.<String>builder()
+                  .addAll(libraryArg.compilerFlags)
+                  .addAll(args.compilerFlags)
+                  .build(),
+              ImmutableList.<String>builder()
+                  .addAll(libraryArg.assemblerFlags)
+                  .addAll(args.assemblerFlags)
+                  .build(),
+              platform,
+              FluentIterable.from(params.getDeclaredDeps().get())
+                  .transform(BuildRule::getBuildTarget));
     } else {
-      testLibrary = GoDescriptors.createGoCompileRule(
-          params,
-          resolver,
-          goBuckConfig,
-          packageName,
-          args.srcs,
-          args.compilerFlags,
-          args.assemblerFlags,
-          platform,
-          FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(BuildRule::getBuildTarget));
+      testLibrary =
+          GoDescriptors.createGoCompileRule(
+              params,
+              resolver,
+              goBuckConfig,
+              packageName,
+              args.srcs,
+              args.compilerFlags,
+              args.assemblerFlags,
+              platform,
+              FluentIterable.from(params.getDeclaredDeps().get())
+                  .transform(BuildRule::getBuildTarget));
     }
 
     return testLibrary;
@@ -333,7 +321,9 @@ public class GoTestDescription implements
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     GoPlatform goPlatform =
-        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget)
             .orElse(goBuckConfig.getDefaultPlatform());
     Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
     if (cxxPlatform.isPresent()) {

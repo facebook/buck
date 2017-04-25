@@ -31,14 +31,12 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 
 public class GoTestMain extends AbstractBuildRule {
-  @AddToRuleKey
-  private final Tool testMainGen;
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> testSources;
+  @AddToRuleKey private final Tool testMainGen;
+  @AddToRuleKey private final ImmutableSet<SourcePath> testSources;
+
   @AddToRuleKey(stringify = true)
   private final Path testPackage;
 
@@ -53,16 +51,16 @@ public class GoTestMain extends AbstractBuildRule {
     this.testMainGen = testMainGen;
     this.testSources = testSources;
     this.testPackage = testPackage;
-    this.output = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/" + getBuildTarget().getShortName() + "_test_main.go");
+    this.output =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/" + getBuildTarget().getShortName() + "_test_main.go");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         MkdirStep.of(getProjectFilesystem(), output.getParent()),
@@ -73,12 +71,11 @@ public class GoTestMain extends AbstractBuildRule {
             /* coverageMode */ "",
             /* coverageVariables */ ImmutableMap.of(),
             testPackage,
-            testSources.stream()
+            testSources
+                .stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
-            output
-        )
-    );
+            output));
   }
 
   @Override
