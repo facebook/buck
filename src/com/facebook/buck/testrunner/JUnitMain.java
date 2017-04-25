@@ -18,16 +18,17 @@ package com.facebook.buck.testrunner;
 
 /**
  * Launcher for JUnit.
- * <p>
- * Expected arguments are:
+ *
+ * <p>Expected arguments are:
+ *
  * <ul>
  *   <li>(string) output directory
  *   <li>(long) default timeout in milliseconds (0 for no timeout)
  *   <li>(string) newline separated list of test selectors
  *   <li>(string...) fully-qualified names of test classes
  * </ul>
- * <p>
- * IMPORTANT! This class limits itself to types that are available in both the JDK and Android
+ *
+ * <p>IMPORTANT! This class limits itself to types that are available in both the JDK and Android
  * Java API. The objective is to limit the set of files added to the ClassLoader that runs the test,
  * as not to interfere with the results of the test.
  */

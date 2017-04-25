@@ -23,7 +23,6 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
-
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -168,52 +167,49 @@ public class InstrumentationTestRunner {
     }
 
     try {
-      final RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-          this.packageName,
-          this.testRunner,
-          getDevice(deviceSerial)
-      );
+      final RemoteAndroidTestRunner runner =
+          new RemoteAndroidTestRunner(this.packageName, this.testRunner, getDevice(deviceSerial));
 
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
         runner.addInstrumentationArg(entry.getKey(), entry.getValue());
       }
       BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
-      ITestRunListener trimLineListener = new ITestRunListener() {
-          /**
-           * Before the actual run starts (and after the
-           * InstrumentationResultsParser is created), we need to do
-           * some reflection magic to make RemoteAndroidTestRunner not
-           * trim indentation from lines.
-           */
-          @Override
-          public void testRunStarted(String runName, int testCount) {
-            setTrimLine(runner, false);
-          }
+      ITestRunListener trimLineListener =
+          new ITestRunListener() {
+            /**
+             * Before the actual run starts (and after the InstrumentationResultsParser is created),
+             * we need to do some reflection magic to make RemoteAndroidTestRunner not trim
+             * indentation from lines.
+             */
+            @Override
+            public void testRunStarted(String runName, int testCount) {
+              setTrimLine(runner, false);
+            }
 
-          @Override
-          public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {}
+            @Override
+            public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {}
 
-          @Override
-          public void testRunFailed(String errorMessage){}
+            @Override
+            public void testRunFailed(String errorMessage) {}
 
-          @Override
-          public void testStarted(TestIdentifier test) {}
+            @Override
+            public void testStarted(TestIdentifier test) {}
 
-          @Override
-          public void testFailed(TestIdentifier test, String trace) {}
+            @Override
+            public void testFailed(TestIdentifier test, String trace) {}
 
-          @Override
-          public void testAssumptionFailure(TestIdentifier test, String trace) {}
+            @Override
+            public void testAssumptionFailure(TestIdentifier test, String trace) {}
 
-          @Override
-          public void testIgnored(TestIdentifier test) {}
+            @Override
+            public void testIgnored(TestIdentifier test) {}
 
-          @Override
-          public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {}
+            @Override
+            public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {}
 
-          @Override
-          public void testRunStopped(long elapsedTime) {}
-        };
+            @Override
+            public void testRunStopped(long elapsedTime) {}
+          };
 
       listener.setReportDir(this.outputDirectory);
       runner.run(trimLineListener, listener);
@@ -248,15 +244,14 @@ public class InstrumentationTestRunner {
   }
 
   /**
-   * Creates connection to adb and waits for this connection to be initialized
-   * and receive initial list of devices.
+   * Creates connection to adb and waits for this connection to be initialized and receive initial
+   * list of devices.
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private AndroidDebugBridge createAdb() throws InterruptedException {
     AndroidDebugBridge.initIfNeeded(/* clientSupport */ false);
-    AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(this.adbExecutablePath, false);
+    AndroidDebugBridge adb = AndroidDebugBridge.createBridge(this.adbExecutablePath, false);
     if (adb == null) {
       System.err.println("Failed to connect to adb. Make sure adb server is running.");
       return null;
@@ -285,8 +280,6 @@ public class InstrumentationTestRunner {
     }
   }
 
-  /**
-   * We minimize external dependencies, but we'd like to have {@link javax.annotation.Nullable}.
-   */
+  /** We minimize external dependencies, but we'd like to have {@link javax.annotation.Nullable}. */
   @interface Nullable {}
 }

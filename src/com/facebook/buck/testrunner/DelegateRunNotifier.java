@@ -16,6 +16,11 @@
 
 package com.facebook.buck.testrunner;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -27,17 +32,11 @@ import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.TestClass;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
- * {@link RunNotifier} that sets a timer when a test starts. The default timeout specified in
- * {@code .buckconfig} is the length of the timer. When the timer goes off, it checks if the test
- * has finished. If it has not finished, the test is flagged as a failure, and all future updates to
- * the test status are ignored.
+ * {@link RunNotifier} that sets a timer when a test starts. The default timeout specified in {@code
+ * .buckconfig} is the length of the timer. When the timer goes off, it checks if the test has
+ * finished. If it has not finished, the test is flagged as a failure, and all future updates to the
+ * test status are ignored.
  */
 class DelegateRunNotifier extends RunNotifier {
 
@@ -124,33 +123,36 @@ class DelegateRunNotifier extends RunNotifier {
     }
 
     // Schedule a timer that verifies that the test completed within the specified timeout.
-    TimerTask task = new TimerTask() {
-      @Override
-      public void run() {
-        synchronized (finishedTests) {
-          // If the test already finished, then do nothing.
-          if (finishedTests.contains(description)) {
-            return;
+    TimerTask task =
+        new TimerTask() {
+          @Override
+          public void run() {
+            synchronized (finishedTests) {
+              // If the test already finished, then do nothing.
+              if (finishedTests.contains(description)) {
+                return;
+              }
+
+              hasTestThatExceededTimeout.set(true);
+
+              // Should report the failure. The Exception is modeled after the one created by
+              // org.junit.internal.runners.statements.FailOnTimeout#createTimeoutException(Thread).
+              Exception exception =
+                  new Exception(
+                      String.format(
+                          "test timed out after %d milliseconds", defaultTestTimeoutMillis));
+              Failure failure = new Failure(description, exception);
+              fireTestFailure(failure);
+              fireTestFinished(description);
+
+              if (!finishedTests.contains(description)) {
+                throw new IllegalStateException("fireTestFinished() should update finishedTests.");
+              }
+
+              onTestRunFinished();
+            }
           }
-
-          hasTestThatExceededTimeout.set(true);
-
-          // Should report the failure. The Exception is modeled after the one created by
-          // org.junit.internal.runners.statements.FailOnTimeout#createTimeoutException(Thread).
-          Exception exception = new Exception(String.format(
-              "test timed out after %d milliseconds", defaultTestTimeoutMillis));
-          Failure failure = new Failure(description, exception);
-          fireTestFailure(failure);
-          fireTestFinished(description);
-
-          if (!finishedTests.contains(description)) {
-            throw new IllegalStateException("fireTestFinished() should update finishedTests.");
-          }
-
-          onTestRunFinished();
-        }
-      }
-    };
+        };
     timer.schedule(task, defaultTestTimeoutMillis);
   }
 
@@ -169,7 +171,6 @@ class DelegateRunNotifier extends RunNotifier {
 
     return false;
   }
-
 
   private TestClass getTestClass(Description description) {
     if (runner instanceof ParentRunner) {

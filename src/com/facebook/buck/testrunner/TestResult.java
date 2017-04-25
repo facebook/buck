@@ -31,7 +31,8 @@ final class TestResult {
   final /* @Nullable */ String stdOut;
   final /* @Nullable */ String stdErr;
 
-  public TestResult(String testClassName,
+  public TestResult(
+      String testClassName,
       String testMethodName,
       long runTime,
       ResultType type,
@@ -48,39 +49,16 @@ final class TestResult {
   }
 
   public static TestResult forDryRun(String testClassName, String testMethodName) {
-    return new TestResult(
-        testClassName,
-        testMethodName,
-        0,
-        ResultType.DRY_RUN,
-        null,
-        null,
-        null
-    );
+    return new TestResult(testClassName, testMethodName, 0, ResultType.DRY_RUN, null, null, null);
   }
 
   public static TestResult forExcluded(String testClassName, String testMethodName, String reason) {
     return new TestResult(
-        testClassName,
-        testMethodName,
-        0,
-        ResultType.EXCLUDED,
-        null,
-        reason,
-        null
-    );
+        testClassName, testMethodName, 0, ResultType.EXCLUDED, null, reason, null);
   }
 
   public static TestResult forDisabled(String testClassName, String testMethodName) {
-    return new TestResult(
-        testClassName,
-        testMethodName,
-        0,
-        ResultType.DISABLED,
-        null,
-        null,
-        null
-    );
+    return new TestResult(testClassName, testMethodName, 0, ResultType.DISABLED, null, null, null);
   }
 
   public boolean isSuccess() {

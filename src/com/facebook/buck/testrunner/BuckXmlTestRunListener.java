@@ -16,6 +16,10 @@
 
 package com.facebook.buck.testrunner;
 
+import com.android.ddmlib.testrunner.XmlTestRunListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,12 +28,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
-import com.android.ddmlib.testrunner.XmlTestRunListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -63,10 +61,7 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
     addMainTestResult();
   }
 
-  /**
-   * Adds one more XML element to the test_result.xml tracking the
-   * result of the whole process.
-   */
+  /** Adds one more XML element to the test_result.xml tracking the result of the whole process. */
   private void addMainTestResult() {
     try {
       File resultFile = getResultFile(mReportDir);
@@ -88,17 +83,15 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
         transformer.transform(source, result);
       }
 
-    } catch (IOException | ParserConfigurationException | SAXException |
-             TransformerException e) {
+    } catch (IOException | ParserConfigurationException | SAXException | TransformerException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
   /**
-   * Creates a {@link File} where the report will be created.  Instead
-   * of creating a temp file, create a file with the devices serial
-   * number, so it's possible to refer back to it afterwards.
+   * Creates a {@link File} where the report will be created. Instead of creating a temp file,
+   * create a file with the devices serial number, so it's possible to refer back to it afterwards.
    *
    * @param reportDir the root directory of the report.
    * @return a file
@@ -108,5 +101,4 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
     File reportFile = new File(reportDir, TEST_RESULT_FILE);
     return reportFile;
   }
-
 }
