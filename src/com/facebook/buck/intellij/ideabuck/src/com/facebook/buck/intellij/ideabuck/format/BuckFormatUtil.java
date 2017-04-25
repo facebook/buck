@@ -22,8 +22,7 @@ import com.intellij.psi.tree.TokenSet;
 
 public final class BuckFormatUtil {
 
-  private BuckFormatUtil(){
-  }
+  private BuckFormatUtil() {}
 
   public static boolean hasElementType(ASTNode node, TokenSet set) {
     return set.contains(node.getElementType());

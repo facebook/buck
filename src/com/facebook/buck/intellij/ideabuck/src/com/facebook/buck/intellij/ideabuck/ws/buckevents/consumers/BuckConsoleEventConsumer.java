@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckConsoleEventConsumer {
-  Topic<BuckConsoleEventConsumer> BUCK_CONSOLE_EVENT = Topic.create(
-      "buck.console.event",
-      BuckConsoleEventConsumer.class
-  );
+  Topic<BuckConsoleEventConsumer> BUCK_CONSOLE_EVENT =
+      Topic.create("buck.console.event", BuckConsoleEventConsumer.class);
+
   void consumeConsoleEvent(String message);
 }

@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface RulesParsingEndConsumer {
-  Topic<RulesParsingEndConsumer> BUCK_PARSE_RULE_END = Topic.create(
-      "buck.parse-rule.end",
-      RulesParsingEndConsumer.class
-  );
+  Topic<RulesParsingEndConsumer> BUCK_PARSE_RULE_END =
+      Topic.create("buck.parse-rule.end", RulesParsingEndConsumer.class);
+
   void consumeParseRuleEnd(long timestamp);
 }

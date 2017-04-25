@@ -25,9 +25,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 public class BuckKillCommandHandler extends BuckCommandHandler {
 
   public BuckKillCommandHandler(
-      final Project project,
-      final VirtualFile root,
-      final BuckCommand command) {
+      final Project project, final VirtualFile root, final BuckCommand command) {
     super(project, VfsUtil.virtualToIoFile(root), command);
   }
 
@@ -50,8 +48,6 @@ public class BuckKillCommandHandler extends BuckCommandHandler {
     buildManager.setBuilding(project, false);
     buildManager.setKilling(project, false);
     BuckToolWindowFactory.outputConsoleMessage(
-        project(),
-        "Build aborted\n",
-        ConsoleViewContentType.ERROR_OUTPUT);
+        project(), "Build aborted\n", ConsoleViewContentType.ERROR_OUTPUT);
   }
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,8 +28,8 @@ public final class BuckWSServerPortUtils {
 
   private static final String SEARCH_FOR = "http.port=";
 
-  public static int getPort(String runInPath) throws
-      NumberFormatException, IOException, ExecutionException {
+  public static int getPort(String runInPath)
+      throws NumberFormatException, IOException, ExecutionException {
     BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
     if (state == null) {
       throw new RuntimeException("Cannot load ideabuck settings.");
@@ -61,13 +60,13 @@ public final class BuckWSServerPortUtils {
         if (port == CONNECTION_FAILED_PORT) {
           // if the buck server is off, and it gives us -1, throw this exception
           String error =
-              "Your buck server may be turned off, since the Buck daemon is on port " +
-                  port +
-                  ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file," +
-                  " if you don't have it already set:\n" +
-                  "[httpserver]\n" +
-                  "    port = 0\n" +
-                  "After that, restart IntelliJ or reopen your project.\n";
+              "Your buck server may be turned off, since the Buck daemon is on port "
+                  + port
+                  + ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file,"
+                  + " if you don't have it already set:\n"
+                  + "[httpserver]\n"
+                  + "    port = 0\n"
+                  + "After that, restart IntelliJ or reopen your project.\n";
           throw new RuntimeException(error);
         }
       }
@@ -75,6 +74,5 @@ public final class BuckWSServerPortUtils {
     return port;
   }
 
-  private BuckWSServerPortUtils() {
-  }
+  private BuckWSServerPortUtils() {}
 }

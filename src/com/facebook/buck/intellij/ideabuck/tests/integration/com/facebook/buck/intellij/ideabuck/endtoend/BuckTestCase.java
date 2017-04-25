@@ -21,8 +21,8 @@ import com.intellij.testFramework.TestLoggerFactory;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
 /**
- * The base class of all Buck plugin tests.
- * TODO(#8067091): Integrate plugin unit tests with Buck's own test framework
+ * The base class of all Buck plugin tests. TODO(#8067091): Integrate plugin unit tests with Buck's
+ * own test framework
  */
 public abstract class BuckTestCase extends LightPlatformCodeInsightFixtureTestCase {
   static {

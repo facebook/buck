@@ -18,7 +18,6 @@ package com.facebook.buck.intellij.ideabuck.config;
 
 import com.facebook.buck.intellij.ideabuck.util.ExecutableFinder;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,8 +26,7 @@ public final class BuckExecutableDetector {
   private static final Path ADB_EXECUTABLE = Paths.get("adb");
   private static final ExecutableFinder EXECUTABLE_FINDER = new ExecutableFinder();
 
-  private BuckExecutableDetector() {
-  }
+  private BuckExecutableDetector() {}
 
   public static String getBuckExecutable() {
     return getExecutable(BUCK_EXECUTABLE);
@@ -39,8 +37,8 @@ public final class BuckExecutableDetector {
   }
 
   public static String getExecutable(Path suggestedExecutable) {
-    return EXECUTABLE_FINDER.getExecutable(
-        suggestedExecutable,
-        ImmutableMap.copyOf(System.getenv())).toString();
+    return EXECUTABLE_FINDER
+        .getExecutable(suggestedExecutable, ImmutableMap.copyOf(System.getenv()))
+        .toString();
   }
 }

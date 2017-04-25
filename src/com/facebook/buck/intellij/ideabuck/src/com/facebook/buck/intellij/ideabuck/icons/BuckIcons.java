@@ -17,13 +17,11 @@
 package com.facebook.buck.intellij.ideabuck.icons;
 
 import com.intellij.openapi.util.IconLoader;
-
 import javax.swing.Icon;
 
 public final class BuckIcons {
 
-  private BuckIcons() {
-  }
+  private BuckIcons() {}
 
   private static Icon load(String path) {
     return IconLoader.getIcon(path, BuckIcons.class);

@@ -22,84 +22,87 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 public class ErrorExtractorTest {
-    @Test
-    public void testMultiErrors() {
+  @Test
+  public void testMultiErrors() {
 
-        String str = "/Users/petru/project/buck-out/gen/java/com/buckorg/lib__soemthing__output" +
-            "/something.jar" +
-            "(com/buckorg/something/SomethingEvent.class):-1: warning: Cannot find annotation " +
-            "method 'value()'" +
-            " in type 'com.google.gson.annotations.SerializedName': class file for " +
-            "com.google.gson.annotations.SerializedN" +
-            "ame not found\n" +
-            "\n" +
-            "/Users/petru/someproject/buck-out/gen/java/com/onavo/Something/lib__Something__" +
-            "output/Something.jar" +
-            "(com/something/Something/SomethingEvent.class):-1: warning: Cannot find annotation " +
-            "method 'value()' in type 'com.google.gson.annotations.SerializedName'\n" +
-            "\n" +
-            "/Users/petru/someproject/buck-out/gen/java/com/onavo/Something/lib__Something__" +
-            "output/Something.jar" +
-            "(com/something/Something/SomethingEvent.class):-1: warning: Cannot find annotation " +
-            "method 'value()' in" +
-            " type 'com.google.gson.annotations.SerializedName'\n" +
-            "\n" +
-            "/Users/petru/someproject/java/com/buckorg/analytics/IfooAnalyticsBatchUploader." +
-            "java:73: error: " +
-            "cannot find symbol\n" +
-            "      UploadTask task = uploadTasks.removeFirst().something();\n" +
-            "                                                 ^\n" +
-            "  symbol:   method something()\n" +
-            "  location: class com.buckorg.analytics.IfooAnalyticsBatchUploader.UploadTask\n" +
-            "/Users/petru/someproject/java/com/buckorg/analytics/IfooSomethingUploader.java:" +
-            "47: error: " +
-            "cannot find symbol\n" +
-            "        .build().missing();\n" +
-            "                ^\n" +
-            "  symbol:   method missing()\n" +
-            "  location: class okhttp3.Request\n";
+    String str =
+        "/Users/petru/project/buck-out/gen/java/com/buckorg/lib__soemthing__output"
+            + "/something.jar"
+            + "(com/buckorg/something/SomethingEvent.class):-1: warning: Cannot find annotation "
+            + "method 'value()'"
+            + " in type 'com.google.gson.annotations.SerializedName': class file for "
+            + "com.google.gson.annotations.SerializedN"
+            + "ame not found\n"
+            + "\n"
+            + "/Users/petru/someproject/buck-out/gen/java/com/onavo/Something/lib__Something__"
+            + "output/Something.jar"
+            + "(com/something/Something/SomethingEvent.class):-1: warning: Cannot find annotation "
+            + "method 'value()' in type 'com.google.gson.annotations.SerializedName'\n"
+            + "\n"
+            + "/Users/petru/someproject/buck-out/gen/java/com/onavo/Something/lib__Something__"
+            + "output/Something.jar"
+            + "(com/something/Something/SomethingEvent.class):-1: warning: Cannot find annotation "
+            + "method 'value()' in"
+            + " type 'com.google.gson.annotations.SerializedName'\n"
+            + "\n"
+            + "/Users/petru/someproject/java/com/buckorg/analytics/IfooAnalyticsBatchUploader."
+            + "java:73: error: "
+            + "cannot find symbol\n"
+            + "      UploadTask task = uploadTasks.removeFirst().something();\n"
+            + "                                                 ^\n"
+            + "  symbol:   method something()\n"
+            + "  location: class com.buckorg.analytics.IfooAnalyticsBatchUploader.UploadTask\n"
+            + "/Users/petru/someproject/java/com/buckorg/analytics/IfooSomethingUploader.java:"
+            + "47: error: "
+            + "cannot find symbol\n"
+            + "        .build().missing();\n"
+            + "                ^\n"
+            + "  symbol:   method missing()\n"
+            + "  location: class okhttp3.Request\n";
 
-        ErrorExtractor errorExtractor = new ErrorExtractor(str);
-        ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
+    ErrorExtractor errorExtractor = new ErrorExtractor(str);
+    ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
 
-        assertEquals(5, errors.size());
-        int noErrors = 0;
-        int noWarnings = 0;
-        for (CompilerErrorItem errorItem: errors) {
-            if (errorItem.getType() == CompilerErrorItem.Type.ERROR) {
-                noErrors++;
-            } else {
-                noWarnings++;
-            }
-        }
-        assertEquals(2, noErrors);
-        assertEquals(3, noWarnings);
+    assertEquals(5, errors.size());
+    int noErrors = 0;
+    int noWarnings = 0;
+    for (CompilerErrorItem errorItem : errors) {
+      if (errorItem.getType() == CompilerErrorItem.Type.ERROR) {
+        noErrors++;
+      } else {
+        noWarnings++;
+      }
     }
+    assertEquals(2, noErrors);
+    assertEquals(3, noWarnings);
+  }
 
-    @Test
-    public void testNoErrors() {
-        String str = "Lore Ipsum foo bar no errors to be find here/User/petrumarius/foo." +
-                "java:1234 error: this is not an error. Just some random text.";
+  @Test
+  public void testNoErrors() {
+    String str =
+        "Lore Ipsum foo bar no errors to be find here/User/petrumarius/foo."
+            + "java:1234 error: this is not an error. Just some random text.";
 
-        ErrorExtractor errorExtractor = new ErrorExtractor(str);
-        ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
+    ErrorExtractor errorExtractor = new ErrorExtractor(str);
+    ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
 
-        assertEquals(0, errors.size());
-    }
+    assertEquals(0, errors.size());
+  }
 
-    @Test
-    public void testColumn() {
-        String err = "/Users/petru/someproject/java/com/buckorg/analytics/IfooAnalyticsBatch" +
-                "Uploader.java:73: error: cannot find symbol\n" +
-                "      UploadTask task = uploadTasks.removeFirst().something();\n" +
-                "                                                 ^\n" +
-                "  symbol:   method something()\n" +
-                "  location: class com.buckorg.analytics.IfooAnalyticsBatchUploader.UploadTask\n";
-        int column = 50;
-        ErrorExtractor errorExtractor = new ErrorExtractor(err);
-        ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
+  @Test
+  public void testColumn() {
+    String err =
+        "/Users/petru/someproject/java/com/buckorg/analytics/IfooAnalyticsBatch"
+            + "Uploader.java:73: error: cannot find symbol\n"
+            + "      UploadTask task = uploadTasks.removeFirst().something();\n"
+            + "                                                 ^\n"
+            + "  symbol:   method something()\n"
+            + "  location: class com.buckorg.analytics.IfooAnalyticsBatchUploader.UploadTask\n";
+    int column = 50;
+    ErrorExtractor errorExtractor = new ErrorExtractor(err);
+    ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
 
-        assertEquals(1, errors.size());
-        assertEquals(column, errors.get(0).getColumn());
-    }
+    assertEquals(1, errors.size());
+    assertEquals(column, errors.get(0).getColumn());
+  }
 }

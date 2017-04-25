@@ -40,11 +40,10 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckProjectGen
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckProjectGenerationProgressHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckProjectGenerationStartedHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckResultsAvailableHandler;
-import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckTestRunCompleteHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckStepFinishedHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckStepStartedHandler;
+import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckTestRunCompleteHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckTestRunStartedHandler;
-
 import java.util.HashMap;
 
 public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
@@ -55,20 +54,25 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(BuckEventExternalInterface.BUILD_STARTED, new BuckBuildStartedHandler());
     put(CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT, new BuckCompilerErrorHandler());
     put(ConsoleEventExternalInterface.CONSOLE_EVENT, new BuckConsoleEventHandler());
-    put(IndividualTesEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
+    put(
+        IndividualTesEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
         new BuckIndividualTestAwaitingResultsHandler());
     put(InstallFinishedEventExternalInterface.INSTALL_FINISHED, new BuckInstallFinishedHandler());
     put(BuckEventExternalInterface.INSTALL_STARTED, new BuckInstallStartedHandler());
     put(BuckEventExternalInterface.PARSE_FINISHED, new BuckParseFinishedHandler());
     put(BuckEventExternalInterface.PARSE_STARTED, new BuckParseStartedHandler());
     put(ProgressEventInterface.PARSING_PROGRESS_UPDATED, new BuckParsingProgressHandler());
-    put(BuckEventExternalInterface.PROJECT_GENERATION_FINISHED,
+    put(
+        BuckEventExternalInterface.PROJECT_GENERATION_FINISHED,
         new BuckProjectGenerationFinishedHandler());
-    put(ProgressEventInterface.PROJECT_GENERATION_PROGRESS_UPDATED,
+    put(
+        ProgressEventInterface.PROJECT_GENERATION_PROGRESS_UPDATED,
         new BuckProjectGenerationProgressHandler());
-    put(BuckEventExternalInterface.PROJECT_GENERATION_STARTED,
+    put(
+        BuckEventExternalInterface.PROJECT_GENERATION_STARTED,
         new BuckProjectGenerationStartedHandler());
-    put(IndividualTesEventFinishedExternalInterface.RESULTS_AVAILABLE,
+    put(
+        IndividualTesEventFinishedExternalInterface.RESULTS_AVAILABLE,
         new BuckResultsAvailableHandler());
     put(TestRunFinishedEventInterface.RUN_COMPLETE, new BuckTestRunCompleteHandler());
     put(StepEventExternalInterface.STEP_FINISHED, new BuckStepFinishedHandler());

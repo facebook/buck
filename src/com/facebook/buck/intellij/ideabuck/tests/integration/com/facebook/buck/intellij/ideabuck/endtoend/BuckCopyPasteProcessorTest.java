@@ -24,12 +24,9 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
     String testPath = "formatter/paste/environment.BUCK";
     BuckCopyPasteProcessor processor = new BuckCopyPasteProcessor();
     myFixture.configureByFile(testPath);
-    String actual = processor.preprocessOnPaste(
-        getProject(),
-        myFixture.getFile(),
-        myFixture.getEditor(),
-        pasteText,
-        null);
+    String actual =
+        processor.preprocessOnPaste(
+            getProject(), myFixture.getFile(), myFixture.getEditor(), pasteText, null);
 
     assertEquals(actual, expected);
   }
@@ -53,9 +50,6 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
   }
 
   public void testPasteMultiWithInvalidTarget() {
-    doTest(
-        "\n  //first:one\nthisoneisinvalid   \n",
-        "\n  //first:one\nthisoneisinvalid   \n");
+    doTest("\n  //first:one\nthisoneisinvalid   \n", "\n  //first:one\nthisoneisinvalid   \n");
   }
-
 }

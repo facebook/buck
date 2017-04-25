@@ -31,15 +31,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.LineHandlerHelper;
 import com.intellij.openapi.vfs.CharsetToolkit;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
 
-/**
- * The handler for buck commands with text outputs.
- */
+/** The handler for buck commands with text outputs. */
 public abstract class BuckCommandHandler {
 
   protected static final Logger LOG = Logger.getInstance(BuckCommandHandler.class);
@@ -60,40 +57,28 @@ public abstract class BuckCommandHandler {
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private OSProcessHandler handler;
 
-  /**
-   * Character set to use for IO.
-   */
+  /** Character set to use for IO. */
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Charset charset = CharsetToolkit.UTF8_CHARSET;
 
-  /**
-   * Buck execution start timestamp.
-   */
+  /** Buck execution start timestamp. */
   private long startTime;
 
-  /**
-   * The partial line from stderr stream.
-   */
+  /** The partial line from stderr stream. */
   private final StringBuilder stderrLine = new StringBuilder();
 
-  public BuckCommandHandler(
-      Project project,
-      File directory,
-      BuckCommand command) {
+  public BuckCommandHandler(Project project, File directory, BuckCommand command) {
     this(project, directory, command, /* doStartNotify */ false);
   }
 
-    /**
-     * @param project            a project
-     * @param directory          a process directory
-     * @param command            a command to execute (if empty string, the parameter is ignored)
-     * @param doStartNotify      true if the handler should call OSHandler#startNotify
-     */
+  /**
+   * @param project a project
+   * @param directory a process directory
+   * @param command a command to execute (if empty string, the parameter is ignored)
+   * @param doStartNotify true if the handler should call OSHandler#startNotify
+   */
   public BuckCommandHandler(
-      Project project,
-      File directory,
-      BuckCommand command,
-      boolean doStartNotify) {
+      Project project, File directory, BuckCommand command, boolean doStartNotify) {
     this.doStartNotify = doStartNotify;
 
     String buckExecutable = BuckSettingsProvider.getInstance().getState().buckExecutable;
@@ -110,9 +95,7 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  /**
-   * Start process
-   */
+  /** Start process */
   public synchronized void start() {
     checkNotStarted();
 
@@ -129,16 +112,12 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  /**
-   * Stop process
-   */
+  /** Stop process */
   public synchronized void stop() {
     process.destroy();
   }
 
-  /**
-   * @return true if process is started.
-   */
+  /** @return true if process is started. */
   public final synchronized boolean isStarted() {
     return process != null;
   }
@@ -169,16 +148,12 @@ public abstract class BuckCommandHandler {
     return commandLine;
   }
 
-  /**
-   * @return a context project
-   */
+  /** @return a context project */
   public Project project() {
     return project;
   }
 
-  /**
-   * Start the buck process.
-   */
+  /** Start the buck process. */
   @Nullable
   protected Process startProcess() throws ExecutionException {
     synchronized (processStateLock) {
@@ -187,30 +162,26 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  /**
-   * Start handling process output streams for the handler.
-   */
+  /** Start handling process output streams for the handler. */
   protected void startHandlingStreams() {
     if (handler == null) {
       return;
     }
-    handler.addProcessListener(new ProcessListener() {
-      public void startNotified(final ProcessEvent event) {
-      }
+    handler.addProcessListener(
+        new ProcessListener() {
+          public void startNotified(final ProcessEvent event) {}
 
-      public void processTerminated(final ProcessEvent event) {
-        BuckCommandHandler.this.processTerminated();
-      }
+          public void processTerminated(final ProcessEvent event) {
+            BuckCommandHandler.this.processTerminated();
+          }
 
-      public void processWillTerminate(
-          final ProcessEvent event,
-          final boolean willBeDestroyed) {
-      }
+          public void processWillTerminate(
+              final ProcessEvent event, final boolean willBeDestroyed) {}
 
-      public void onTextAvailable(final ProcessEvent event, final Key outputType) {
-        BuckCommandHandler.this.onTextAvailable(event.getText(), outputType);
-      }
-    });
+          public void onTextAvailable(final ProcessEvent event, final Key outputType) {
+            BuckCommandHandler.this.onTextAvailable(event.getText(), outputType);
+          }
+        });
     if (doStartNotify) {
       handler.startNotify();
     }
@@ -220,9 +191,7 @@ public abstract class BuckCommandHandler {
     return process.exitValue() == 0;
   }
 
-  /**
-   * Wait for process termination.
-   */
+  /** Wait for process termination. */
   public void waitFor() {
     checkStarted();
     if (handler != null) {
@@ -233,8 +202,7 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  public OSProcessHandler createProcess(GeneralCommandLine commandLine)
-      throws ExecutionException {
+  public OSProcessHandler createProcess(GeneralCommandLine commandLine) throws ExecutionException {
     // TODO(t7984081): Use ProcessExecutor to start buck process.
     Process process = commandLine.createProcess();
     return new OSProcessHandler(process, commandLine.getCommandLineString(), charset);
@@ -260,10 +228,10 @@ public abstract class BuckCommandHandler {
     if (startTime > 0) {
       long time = System.currentTimeMillis() - startTime;
       if (!LOG.isDebugEnabled() && time > LONG_TIME) {
-        LOG.info(String.format("buck %s took %s ms. Command parameters: %n%s",
-            command,
-            time,
-            commandLine.getCommandLineString()));
+        LOG.info(
+            String.format(
+                "buck %s took %s ms. Command parameters: %n%s",
+                command, time, commandLine.getCommandLineString()));
       } else {
         LOG.debug(String.format("buck %s took %s ms", command, time));
       }
@@ -283,12 +251,10 @@ public abstract class BuckCommandHandler {
   }
 
   /**
-   * Notify listeners for each complete line. Note that in the case of stderr,
-   * the last line is saved.
+   * Notify listeners for each complete line. Note that in the case of stderr, the last line is
+   * saved.
    */
-  protected void notifyLines(
-      final Key outputType,
-      final Iterable<String> lines) {
+  protected void notifyLines(final Key outputType, final Iterable<String> lines) {
     BuckEventsConsumer buckEventsConsumer =
         project.getComponent(BuckModule.class).getBuckEventsConsumer();
     if (outputType == ProcessOutputTypes.STDERR) {

@@ -24,12 +24,10 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-
-import org.eclipse.jetty.websocket.client.WebSocketClient;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 public class BuckClient {
   private static final Logger LOG = Logger.getInstance(BuckClient.class);
@@ -43,25 +41,25 @@ public class BuckClient {
     mProject = project;
     mConnecting = new AtomicBoolean(false);
 
-    mBuckSocket = new BuckSocket(
-        new BuckEventsHandlerInterface() {
-          @Override
-          public void onConnect() {
-            buckEventHandler.onConnect();
-            mConnecting.set(false);
-          }
+    mBuckSocket =
+        new BuckSocket(
+            new BuckEventsHandlerInterface() {
+              @Override
+              public void onConnect() {
+                buckEventHandler.onConnect();
+                mConnecting.set(false);
+              }
 
-          @Override
-          public void onDisconnect() {
-            buckEventHandler.onDisconnect();
-          }
+              @Override
+              public void onDisconnect() {
+                buckEventHandler.onDisconnect();
+              }
 
-          @Override
-          public void onMessage(String message) {
-            buckEventHandler.onMessage(message);
-          }
-        }
-    );
+              @Override
+              public void onMessage(String message) {
+                buckEventHandler.onMessage(message);
+              }
+            });
   }
 
   public void connect() {
@@ -69,30 +67,31 @@ public class BuckClient {
       return;
     }
     mConnecting.set(true);
-    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-      @Override
-      public void run() {
-          try {
-            int port = BuckWSServerPortUtils.getPort(mProject.getBasePath());
-            // Connect to WebServer
-            connectToWebServer("localhost", port);
-          } catch (NumberFormatException e) {
-            LOG.error(e);
-          } catch (ExecutionException e) {
-            LOG.error(e);
-          } catch (IOException e) {
-            LOG.error(e);
-          } catch (RuntimeException e) {
-            if (!mProject.isDisposed()) {
-              BuckModule buckModule = mProject.getComponent(BuckModule.class);
-              buckModule.attachIfDetached();
-              buckModule.getBuckEventsConsumer().consumeConsoleEvent(e.toString());
-            }
-          }
-      }
-    });
+    ApplicationManager.getApplication()
+        .executeOnPooledThread(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  int port = BuckWSServerPortUtils.getPort(mProject.getBasePath());
+                  // Connect to WebServer
+                  connectToWebServer("localhost", port);
+                } catch (NumberFormatException e) {
+                  LOG.error(e);
+                } catch (ExecutionException e) {
+                  LOG.error(e);
+                } catch (IOException e) {
+                  LOG.error(e);
+                } catch (RuntimeException e) {
+                  if (!mProject.isDisposed()) {
+                    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+                    buckModule.attachIfDetached();
+                    buckModule.getBuckEventsConsumer().consumeConsoleEvent(e.toString());
+                  }
+                }
+              }
+            });
   }
-
 
   @VisibleForTesting
   protected void setBuckSocket(BuckSocket buckSocket) {
@@ -123,25 +122,25 @@ public class BuckClient {
   }
 
   private void disconnect(final boolean retry) {
-    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          mWSClient.stop();
-          if (retry) {
-            connect();
-          } else {
-            mWSClient.destroy();
-            BuckClientManager.removeClient(mProject);
-          }
-        } catch (InterruptedException e) {
-          LOG.error(
-              "Could not disconnect from buck. " + e);
-        } catch (Throwable t) {
-          LOG.error(
-              "Could not disconnect from buck. " + t.getMessage());
-        }
-      }
-    });
+    ApplicationManager.getApplication()
+        .executeOnPooledThread(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  mWSClient.stop();
+                  if (retry) {
+                    connect();
+                  } else {
+                    mWSClient.destroy();
+                    BuckClientManager.removeClient(mProject);
+                  }
+                } catch (InterruptedException e) {
+                  LOG.error("Could not disconnect from buck. " + e);
+                } catch (Throwable t) {
+                  LOG.error("Could not disconnect from buck. " + t.getMessage());
+                }
+              }
+            });
   }
 }

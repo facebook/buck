@@ -23,10 +23,8 @@ import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-
-import org.jetbrains.annotations.NotNull;
-
 import javax.swing.Icon;
+import org.jetbrains.annotations.NotNull;
 
 public class TestConfigurationType implements ConfigurationType {
   public static TestConfigurationType getInstance() {
@@ -38,12 +36,13 @@ public class TestConfigurationType implements ConfigurationType {
   private final ConfigurationFactoryEx myFactory;
 
   public TestConfigurationType() {
-    myFactory = new ConfigurationFactoryEx(this) {
-      @NotNull
-      public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-        return new TestConfiguration(project, this, "");
-      }
-    };
+    myFactory =
+        new ConfigurationFactoryEx(this) {
+          @NotNull
+          public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
+            return new TestConfiguration(project, this, "");
+          }
+        };
   }
 
   @Override
@@ -69,6 +68,6 @@ public class TestConfigurationType implements ConfigurationType {
 
   @Override
   public ConfigurationFactory[] getConfigurationFactories() {
-    return new ConfigurationFactory[]{myFactory};
+    return new ConfigurationFactory[] {myFactory};
   }
 }

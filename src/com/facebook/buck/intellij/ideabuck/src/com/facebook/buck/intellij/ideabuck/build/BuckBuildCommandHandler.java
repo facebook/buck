@@ -31,9 +31,7 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
           "BUCK_GRAY_OUTPUT", TextAttributesKey.createTextAttributesKey("CONSOLE_DARKGRAY_OUTPUT"));
 
   public BuckBuildCommandHandler(
-      final Project project,
-      final VirtualFile root,
-      final BuckCommand command) {
+      final Project project, final VirtualFile root, final BuckCommand command) {
     super(project, VfsUtil.virtualToIoFile(root), command, true);
   }
 
@@ -52,7 +50,8 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     if (!buildManager.isBuckProject(project)) {
       BuckToolWindowFactory.outputConsoleMessage(
           project,
-          BuckBuildManager.NOT_BUCK_PROJECT_ERROR_MESSAGE, ConsoleViewContentType.ERROR_OUTPUT);
+          BuckBuildManager.NOT_BUCK_PROJECT_ERROR_MESSAGE,
+          ConsoleViewContentType.ERROR_OUTPUT);
       return false;
     }
 
@@ -60,9 +59,7 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     BuckToolWindowFactory.cleanConsole(project());
 
     String headMessage = "Running '" + command().getCommandLineString() + "'\n";
-    BuckToolWindowFactory.outputConsoleMessage(
-        project,
-        headMessage, GRAY_OUTPUT);
+    BuckToolWindowFactory.outputConsoleMessage(project, headMessage, GRAY_OUTPUT);
     return true;
   }
 
@@ -71,7 +68,6 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     BuckBuildManager.getInstance(project()).setBuilding(project, false);
 
     BuckPluginNotifications.notifySystemCommandFinished(
-        command.name(),
-        this.processExitSuccesfull());
+        command.name(), this.processExitSuccesfull());
   }
 }

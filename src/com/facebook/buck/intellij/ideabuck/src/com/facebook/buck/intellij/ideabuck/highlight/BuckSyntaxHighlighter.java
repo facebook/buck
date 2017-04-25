@@ -16,6 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.highlight;
 
+import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
+
 import com.facebook.buck.intellij.ideabuck.lang.BuckLexerAdapter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.lexer.Lexer;
@@ -27,40 +29,37 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 
-import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
-
-/**
- * Syntax highlighter for buck PSI elements.
- */
+/** Syntax highlighter for buck PSI elements. */
 public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
 
-  public static final TextAttributesKey BUCK_KEYWORD = createTextAttributesKey(
-      "BUCK_KEY", DefaultLanguageHighlighterColors.KEYWORD);
-  public static final TextAttributesKey BUCK_NUMBER = createTextAttributesKey(
-      "BUCK_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
-  public static final TextAttributesKey BUCK_COMMENT = createTextAttributesKey(
-      "BUCK_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
-  public static final TextAttributesKey BUCK_RULE_NAME = createTextAttributesKey(
-      "BUCK_RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
-  public static final TextAttributesKey BUCK_GLOB = createTextAttributesKey(
-      "BUCK_GLOB", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
-  public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey(
-      "FUNCTION_CALL", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
-  public static final TextAttributesKey BUCK_STRING = createTextAttributesKey(
-      "BUCK_STRING", DefaultLanguageHighlighterColors.STRING);
-  public static final TextAttributesKey BUCK_MACRO = createTextAttributesKey(
-      "BUCK_MACRO", DefaultLanguageHighlighterColors.STATIC_FIELD);
+  public static final TextAttributesKey BUCK_KEYWORD =
+      createTextAttributesKey("BUCK_KEY", DefaultLanguageHighlighterColors.KEYWORD);
+  public static final TextAttributesKey BUCK_NUMBER =
+      createTextAttributesKey("BUCK_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
+  public static final TextAttributesKey BUCK_COMMENT =
+      createTextAttributesKey("BUCK_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+  public static final TextAttributesKey BUCK_RULE_NAME =
+      createTextAttributesKey(
+          "BUCK_RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
+  public static final TextAttributesKey BUCK_GLOB =
+      createTextAttributesKey("BUCK_GLOB", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
+  public static final TextAttributesKey FUNCTION_CALL =
+      createTextAttributesKey("FUNCTION_CALL", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
+  public static final TextAttributesKey BUCK_STRING =
+      createTextAttributesKey("BUCK_STRING", DefaultLanguageHighlighterColors.STRING);
+  public static final TextAttributesKey BUCK_MACRO =
+      createTextAttributesKey("BUCK_MACRO", DefaultLanguageHighlighterColors.STATIC_FIELD);
 
   private static final TextAttributesKey[] BAD_CHAR_KEYS =
-      new TextAttributesKey[]{HighlighterColors.BAD_CHARACTER};
-  private static final TextAttributesKey[] KEY_KEYS = new TextAttributesKey[]{BUCK_KEYWORD};
-  private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[]{BUCK_NUMBER};
-  private static final TextAttributesKey[] GLOB_KEYS = new TextAttributesKey[]{BUCK_GLOB};
+      new TextAttributesKey[] {HighlighterColors.BAD_CHARACTER};
+  private static final TextAttributesKey[] KEY_KEYS = new TextAttributesKey[] {BUCK_KEYWORD};
+  private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[] {BUCK_NUMBER};
+  private static final TextAttributesKey[] GLOB_KEYS = new TextAttributesKey[] {BUCK_GLOB};
   private static final TextAttributesKey[] FUNCTION_CALL_KEY =
-      new TextAttributesKey[]{FUNCTION_CALL};
-  private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{BUCK_COMMENT};
-  private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{BUCK_STRING};
-  private static final TextAttributesKey[] MACROS_KEYS = new TextAttributesKey[]{BUCK_MACRO};
+      new TextAttributesKey[] {FUNCTION_CALL};
+  private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[] {BUCK_COMMENT};
+  private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[] {BUCK_STRING};
+  private static final TextAttributesKey[] MACROS_KEYS = new TextAttributesKey[] {BUCK_MACRO};
   private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
   @Override
@@ -70,14 +69,13 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
 
   @Override
   public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-    if (tokenType.equals(BuckTypes.DOUBLE_QUOTED_STRING) ||
-        tokenType.equals(BuckTypes.SINGLE_QUOTED_STRING)) {
+    if (tokenType.equals(BuckTypes.DOUBLE_QUOTED_STRING)
+        || tokenType.equals(BuckTypes.SINGLE_QUOTED_STRING)) {
       return STRING_KEYS;
-    } else if (tokenType.equals(BuckTypes.GLOB_KEYWORD) ||
-        tokenType.equals(BuckTypes.GLOB_EXCLUDES_KEYWORD)) {
+    } else if (tokenType.equals(BuckTypes.GLOB_KEYWORD)
+        || tokenType.equals(BuckTypes.GLOB_EXCLUDES_KEYWORD)) {
       return GLOB_KEYS;
-    } else if (tokenType.equals(BuckTypes.BOOLEAN) ||
-        tokenType.equals(BuckTypes.NONE)) {
+    } else if (tokenType.equals(BuckTypes.BOOLEAN) || tokenType.equals(BuckTypes.NONE)) {
       return KEY_KEYS;
     } else if (tokenType.equals(BuckTypes.NUMBER)) {
       return NUMBER_KEYS;

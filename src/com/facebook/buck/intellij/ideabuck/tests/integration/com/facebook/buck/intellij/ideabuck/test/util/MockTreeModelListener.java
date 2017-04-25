@@ -21,9 +21,11 @@ import javax.swing.event.TreeModelListener;
 
 public class MockTreeModelListener implements TreeModelListener {
   public boolean calledOnWrongThread = false;
+
   public void checkThread() {
     calledOnWrongThread |= !SwingUtilities.isEventDispatchThread();
   }
+
   @Override
   public void treeNodesChanged(TreeModelEvent e) {
     checkThread();

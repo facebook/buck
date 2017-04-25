@@ -40,13 +40,12 @@ import com.intellij.psi.PsiPackage;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtilCore;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
 
 public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
@@ -103,29 +102,24 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     if (leftValue == null || leftValue.getNode().getElementType() != BuckTypes.IDENTIFIER) {
       return false;
     }
-    if (leftValue.getText().equals("deps") ||
-        leftValue.getText().equals("visibility")) {
+    if (leftValue.getText().equals("deps") || leftValue.getText().equals("visibility")) {
       return true;
     }
     return false;
   }
 
   /**
-   * Automatically convert to buck dependency pattern
-   * Example 1:
-   * "import com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
+   * Automatically convert to buck dependency pattern Example 1: "import
+   * com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
    *
-   * Example 2:
-   * "package com.example.activity;" -> "//java/com/example/activity:activity"
+   * <p>Example 2: "package com.example.activity;" -> "//java/com/example/activity:activity"
    *
-   * Example 3:
-   * "com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
+   * <p>Example 3: "com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
    *
-   * Example 4:
-   * "/Users/tim/tb/java/com/example/activity/BUCK" -> "//java/com/example/activity:activity"
+   * <p>Example 4: "/Users/tim/tb/java/com/example/activity/BUCK" ->
+   * "//java/com/example/activity:activity"
    *
-   * Example 5
-   * //apps/myapp:app -> "//apps/myapp:app",
+   * <p>Example 5 //apps/myapp:app -> "//apps/myapp:app",
    */
   private String formatPasteText(String text, PsiElement element, Project project) {
     Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
@@ -154,9 +148,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         stringBuilder.append("//");
       }
     }
-    return stringBuilder.append(path)
-        .append("\",")
-        .toString();
+    return stringBuilder.append(path).append("\",").toString();
   }
 
   private String resolveUnsolvedBuckDependency(PsiElement element, Project project, String path) {
@@ -194,8 +186,9 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     }
 
     // Try class firstly.
-    PsiClass classElement = JavaPsiFacade.getInstance(project).findClass(
-        reference, GlobalSearchScope.allScope(project));
+    PsiClass classElement =
+        JavaPsiFacade.getInstance(project)
+            .findClass(reference, GlobalSearchScope.allScope(project));
     if (classElement != null) {
       VirtualFile file = PsiUtilCore.getVirtualFile(classElement);
       return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());

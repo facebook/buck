@@ -31,9 +31,11 @@ public class BuckTreeNodeDetailError extends BuckTreeNodeDetail {
   public String getError() {
     return mDetail;
   }
+
   public int getLine() {
     return mLine;
   }
+
   public int getColumn() {
     return mColumn;
   }

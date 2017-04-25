@@ -23,46 +23,45 @@ import com.facebook.buck.event.external.elements.TestResultSummaryExternalInterf
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Test;
 
 public class BuckEventsHandlerTest {
   @Test
   public void testResultsSummaryKnowsResultType() throws Exception {
-    final String json = "{\n" +
-        "    \"testCaseName\": \"ok.api.ApiTest\",\n" +
-        "    \"type\": \"SUCCESS\",\n" +
-        "    \"time\": 3348,\n" +
-        "    \"message\": null,\n" +
-        "    \"stacktrace\": null,\n" +
-        "    \"stdOut\": \"sup from test stdout\",\n" +
-        "    \"stdErr\": null,\n" +
-        "    \"testName\": \"logoutAll\"\n" +
-        "}";
+    final String json =
+        "{\n"
+            + "    \"testCaseName\": \"ok.api.ApiTest\",\n"
+            + "    \"type\": \"SUCCESS\",\n"
+            + "    \"time\": 3348,\n"
+            + "    \"message\": null,\n"
+            + "    \"stacktrace\": null,\n"
+            + "    \"stdOut\": \"sup from test stdout\",\n"
+            + "    \"stdErr\": null,\n"
+            + "    \"testName\": \"logoutAll\"\n"
+            + "}";
     final ObjectMapper objectMapper = BuckEventsHandler.createObjectMapper();
-    final TestResultSummaryExternalInterface res = objectMapper.readValue(
-        json,
-        TestResultsSummary.class);
+    final TestResultSummaryExternalInterface res =
+        objectMapper.readValue(json, TestResultsSummary.class);
     assertFalse(res.isSuccess()); // because it is @JsonIgnore'd
     assertEquals(ResultType.SUCCESS, res.getType());
   }
 
   @Test
   public void testResultSummaryExternalInterfaceKnowsResultType() throws Exception {
-    final String json = "{\n" +
-        "    \"testCaseName\": \"ok.api.ApiTest\",\n" +
-        "    \"type\": \"FAILURE\",\n" +
-        "    \"time\": 3348,\n" +
-        "    \"message\": null,\n" +
-        "    \"stacktrace\": null,\n" +
-        "    \"stdOut\": \"sup from test stdout\",\n" +
-        "    \"stdErr\": null,\n" +
-        "    \"testName\": \"logoutAll\"\n" +
-        "}";
+    final String json =
+        "{\n"
+            + "    \"testCaseName\": \"ok.api.ApiTest\",\n"
+            + "    \"type\": \"FAILURE\",\n"
+            + "    \"time\": 3348,\n"
+            + "    \"message\": null,\n"
+            + "    \"stacktrace\": null,\n"
+            + "    \"stdOut\": \"sup from test stdout\",\n"
+            + "    \"stdErr\": null,\n"
+            + "    \"testName\": \"logoutAll\"\n"
+            + "}";
     final ObjectMapper objectMapper = BuckEventsHandler.createObjectMapper();
-    final TestResultSummaryExternalInterface res = objectMapper.readValue(
-        json,
-        TestResultSummaryExternalInterface.class);
+    final TestResultSummaryExternalInterface res =
+        objectMapper.readValue(json, TestResultSummaryExternalInterface.class);
     assertFalse(res.isSuccess()); // because it is @JsonIgnore'd
     assertEquals(ResultType.FAILURE, res.getType());
   }

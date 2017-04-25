@@ -19,8 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
-import javax.swing.SwingConstants;
 import java.awt.Component;
+import javax.swing.SwingConstants;
 
 public class BuildNodeRenderer implements BuildElementRenderer {
   @Override
@@ -28,7 +28,6 @@ public class BuildNodeRenderer implements BuildElementRenderer {
     return new JBLabel(
         "Building " + ((BuckTreeNodeBuild) value).getTarget(),
         AllIcons.Ide.Info_notifications,
-        SwingConstants.HORIZONTAL
-    );
+        SwingConstants.HORIZONTAL);
   }
 }

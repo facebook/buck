@@ -20,7 +20,6 @@ import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BuckInstallFinishedHandler implements BuckEventHandler {
@@ -29,11 +28,12 @@ public class BuckInstallFinishedHandler implements BuckEventHandler {
       String rawMessage,
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
-      ObjectMapper objectMapper) throws IOException {
+      ObjectMapper objectMapper)
+      throws IOException {
     InstallFinishedEventExternalInterface installFinishedEvent =
-        objectMapper.readValue(rawMessage,
-            InstallFinishedEventExternalInterface.class);
-    buckEventsConsumerFactory.getInstallFinishedConsumer()
+        objectMapper.readValue(rawMessage, InstallFinishedEventExternalInterface.class);
+    buckEventsConsumerFactory
+        .getInstallFinishedConsumer()
         .consumeInstallFinished(event.getTimestamp(), installFinishedEvent.getPackageName());
   }
 }

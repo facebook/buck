@@ -20,22 +20,23 @@ import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
-import javax.swing.SwingConstants;
 import java.awt.Color;
 import java.awt.Component;
+import javax.swing.SwingConstants;
 
 public class FileErrorNodeRenderer implements BuildElementRenderer {
   @Override
   public Component render(Object value) {
 
-    JBLabel result = new JBLabel(
-        ((BuckTreeNodeFileError ) value).getFilePath(),
-        AllIcons.Ide.Warning_notifications,
-        SwingConstants.HORIZONTAL);
+    JBLabel result =
+        new JBLabel(
+            ((BuckTreeNodeFileError) value).getFilePath(),
+            AllIcons.Ide.Warning_notifications,
+            SwingConstants.HORIZONTAL);
 
-    BuckTreeNodeFileError buckNode = (BuckTreeNodeFileError ) value;
+    BuckTreeNodeFileError buckNode = (BuckTreeNodeFileError) value;
     for (int i = 0; i < buckNode.getChildCount(); i++) {
-      BuckTreeNodeDetail childNode = (BuckTreeNodeDetail ) buckNode.getChildAt(i);
+      BuckTreeNodeDetail childNode = (BuckTreeNodeDetail) buckNode.getChildAt(i);
       if (childNode.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
         result.setIcon(AllIcons.Ide.Error);
         result.setForeground(Color.RED);

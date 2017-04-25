@@ -16,49 +16,34 @@
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
-import static org.junit.Assert.assertEquals;
-
 import static com.facebook.buck.intellij.ideabuck.test.TestUtil.buckFile;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class MaybeAddDepToTargetTest {
   @Test
   public void addsWhenDepIsAbsent() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
-    String expected = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/other:thing',",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
+    String expected =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tdeps = [",
+            "\t\t'/other:thing',",
+            "\t\t'/this',",
+            "\t]",
+            ")");
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/other:thing", "foo");
     assertEquals(expected, actual);
   }
 
   @Test
   public void unchangedWhenDepExists() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/this", "foo");
     assertEquals(expected, actual);
@@ -66,18 +51,18 @@ public class MaybeAddDepToTargetTest {
 
   @Test
   public void unchangedWhenDepExistsInExportedDeps() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\texported_deps = [",
-        "\t\t'/this',",
-        "\t]",
-        "\tdeps = [",
-        "\t\t'/that',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\texported_deps = [",
+            "\t\t'/this',",
+            "\t]",
+            "\tdeps = [",
+            "\t\t'/that',",
+            "\t]",
+            ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/this", "foo");
     assertEquals(expected, actual);
@@ -85,16 +70,16 @@ public class MaybeAddDepToTargetTest {
 
   @Test
   public void unchangedWhenAutoDeps() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tautodeps = True",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tautodeps = True",
+            "\tdeps = [",
+            "\t\t'/this',",
+            "\t]",
+            ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/that", "foo");
     assertEquals(expected, actual);
@@ -102,15 +87,8 @@ public class MaybeAddDepToTargetTest {
 
   @Test
   public void unchangedWhenCantFindRule() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'bar',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile("# Comment", "rule(", "\tname = 'bar',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/that", "foo");
     assertEquals(expected, actual);
@@ -118,15 +96,15 @@ public class MaybeAddDepToTargetTest {
 
   @Test
   public void unchangedWhenRuleIsMalformed() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        "# No closing paren"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tdeps = [",
+            "\t\t'/this',",
+            "\t]",
+            "# No closing paren");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddDepToTarget(buckInput, "/that", "foo");
     assertEquals(expected, actual);

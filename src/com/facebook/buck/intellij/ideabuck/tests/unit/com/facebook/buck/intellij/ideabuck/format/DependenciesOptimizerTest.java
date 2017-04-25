@@ -16,13 +16,12 @@
 
 package com.facebook.buck.intellij.ideabuck.format;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DependenciesOptimizerTest {
 
@@ -40,30 +39,30 @@ public class DependenciesOptimizerTest {
     (3)  For cross-cell targets, sort alphabetically by cell-name, then as per rules of (2)
      */
 
-    List<String> expected = Arrays.asList(
-        ":cmd",
-        ":lib",
-        "//:cmd",
-        "//:lib",
-        "//foo:cmd",
-        "//foo:lib",
-        "//foo/bar:cmd",
-        "//foo/bar:lib",
-        "//foo.applet:cmd",
-        "//foo.applet/resources:img",
-        "//foo2/bar:cmd",
-        "//foo2/bar:lib",
-        "//foo_fighter:cmd",
-        "//foo_fighter:lib",
-        "//food:cmd",
-        "//food:lib",
-        "baz//moar:moar",
-        "baz//moar:stuff",
-        "baz//moar/stuff:here",
-        "qux//:moar",
-        "qux//:stuff",
-        "qux//stuff:here"
-    );
+    List<String> expected =
+        Arrays.asList(
+            ":cmd",
+            ":lib",
+            "//:cmd",
+            "//:lib",
+            "//foo:cmd",
+            "//foo:lib",
+            "//foo/bar:cmd",
+            "//foo/bar:lib",
+            "//foo.applet:cmd",
+            "//foo.applet/resources:img",
+            "//foo2/bar:cmd",
+            "//foo2/bar:lib",
+            "//foo_fighter:cmd",
+            "//foo_fighter:lib",
+            "//food:cmd",
+            "//food:lib",
+            "baz//moar:moar",
+            "baz//moar:stuff",
+            "baz//moar/stuff:here",
+            "qux//:moar",
+            "qux//:stuff",
+            "qux//stuff:here");
     List<String> actual = new ArrayList<String>(expected);
     Collections.reverse(actual); // start opposite order to verify sort is stable
     Collections.sort(actual, DependenciesOptimizer.sortOrder());

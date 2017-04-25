@@ -19,15 +19,13 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.facebook.buck.intellij.ideabuck.ui.BuckSettingsUI;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
-
 import javax.swing.JComponent;
 
 public class BuckSettingsConfigurable implements SearchableConfigurable {
 
   private BuckSettingsUI panel;
 
-  public BuckSettingsConfigurable() {
-  }
+  public BuckSettingsConfigurable() {}
 
   @Override
   public String getId() {
@@ -79,4 +77,3 @@ public class BuckSettingsConfigurable implements SearchableConfigurable {
     panel = null;
   }
 }
-

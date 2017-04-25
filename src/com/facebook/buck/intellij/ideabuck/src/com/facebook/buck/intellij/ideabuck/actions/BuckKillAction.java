@@ -25,8 +25,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 
 /**
- * Run buck kill command.
- * It will force terminate all running buck commands and shut down the buck local http server.
+ * Run buck kill command. It will force terminate all running buck commands and shut down the buck
+ * local http server.
  */
 public class BuckKillAction extends BuckBaseAction {
 
@@ -55,10 +55,8 @@ public class BuckKillAction extends BuckBaseAction {
     BuckModule buckModule = project.getComponent(BuckModule.class);
 
     // run the buck kill command
-    BuckKillCommandHandler handler = new BuckKillCommandHandler(
-        project,
-        project.getBaseDir(),
-        BuckCommand.KILL);
+    BuckKillCommandHandler handler =
+        new BuckKillCommandHandler(project, project.getBaseDir(), BuckCommand.KILL);
     BuckBuildManager.getInstance(project)
         .runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

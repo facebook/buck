@@ -17,18 +17,15 @@ package com.facebook.buck.intellij.ideabuck.ws;
 
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandlerInterface;
 import com.intellij.openapi.project.Project;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuckClientManager {
 
-  private static final Map<Project, BuckClient> clientsByProject =
-      new ConcurrentHashMap<>();
+  private static final Map<Project, BuckClient> clientsByProject = new ConcurrentHashMap<>();
 
   public static BuckClient getOrCreateClient(
-      Project project,
-      BuckEventsHandlerInterface buckEventHandler) {
+      Project project, BuckEventsHandlerInterface buckEventHandler) {
     synchronized (clientsByProject) {
       BuckClient client = clientsByProject.get(project);
       if (client == null) {
@@ -43,6 +40,5 @@ public final class BuckClientManager {
     clientsByProject.remove(project);
   }
 
-  private BuckClientManager() {
-  }
+  private BuckClientManager() {}
 }

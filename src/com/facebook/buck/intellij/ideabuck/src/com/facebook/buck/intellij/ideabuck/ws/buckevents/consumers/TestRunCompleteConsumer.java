@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface TestRunCompleteConsumer {
-  Topic<TestRunCompleteConsumer> BUCK_TEST_RUN_COMPLETE = Topic.create(
-      "buck.test.complete",
-      TestRunCompleteConsumer.class
-  );
+  Topic<TestRunCompleteConsumer> BUCK_TEST_RUN_COMPLETE =
+      Topic.create("buck.test.complete", TestRunCompleteConsumer.class);
+
   void consumeTestRunComplete(long timestamp);
 }

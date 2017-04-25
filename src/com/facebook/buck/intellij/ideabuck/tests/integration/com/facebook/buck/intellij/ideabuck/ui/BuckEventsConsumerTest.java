@@ -36,13 +36,10 @@ import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.wm.ToolWindowManager;
-
+import java.lang.reflect.Field;
+import javax.swing.tree.DefaultTreeModel;
 import org.easymock.EasyMock;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
-
-import javax.swing.tree.DefaultTreeModel;
 
 public class BuckEventsConsumerTest {
   @Test
@@ -55,14 +52,11 @@ public class BuckEventsConsumerTest {
     ApplicationManager.setApplication(application, mockDisposable);
 
     BuckEventsConsumer buckEventsConsumer =
-        new BuckEventsConsumer(
-            new MockProjectEx(new MockDisposable()));
+        new BuckEventsConsumer(new MockProjectEx(new MockDisposable()));
 
     buckEventsConsumer.attach(null, new DefaultTreeModel(null));
 
-
-    Field privateStringField = BuckEventsConsumer.class.
-        getDeclaredField("mTarget");
+    Field privateStringField = BuckEventsConsumer.class.getDeclaredField("mTarget");
 
     privateStringField.setAccessible(true);
 
@@ -70,7 +64,7 @@ public class BuckEventsConsumerTest {
     assertEquals(fieldValue, "NONE");
   }
 
-  public BuckEventsConsumer initialiseEventsConsumer () {
+  public BuckEventsConsumer initialiseEventsConsumer() {
     Extensions.registerAreaClass("IDEA_PROJECT", null);
     MockDisposable mockDisposable = new MockDisposable();
     MockProject project = new MockProjectEx(new MockDisposable());
@@ -83,11 +77,9 @@ public class BuckEventsConsumerTest {
     project.registerService(BuckUIManager.class, new BuckUIManager());
     project.registerService(ToolWindowManager.class, new Mock.MyToolWindowManager());
     application.registerService(
-        FileDocumentManager.class,
-        new MockFileDocumentManagerImpl(null, null));
+        FileDocumentManager.class, new MockFileDocumentManagerImpl(null, null));
     application.registerService(
-        VirtualFileManager.class,
-        EasyMock.createMock(VirtualFileManager.class));
+        VirtualFileManager.class, EasyMock.createMock(VirtualFileManager.class));
 
     return buckEventsConsumer;
   }

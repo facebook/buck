@@ -19,10 +19,8 @@ import com.intellij.mock.MockApplicationEx;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.util.Condition;
-
-import org.jetbrains.annotations.NotNull;
-
 import javax.swing.SwingUtilities;
+import org.jetbrains.annotations.NotNull;
 
 public class MyMockApplication extends MockApplicationEx {
   public MyMockApplication(@NotNull Disposable parentDisposable) {
@@ -35,9 +33,7 @@ public class MyMockApplication extends MockApplicationEx {
   }
 
   public void invokeLater(
-      @NotNull Runnable runnable,
-      @NotNull ModalityState state,
-      @NotNull Condition expired) {
+      @NotNull Runnable runnable, @NotNull ModalityState state, @NotNull Condition expired) {
     invokeLater(runnable);
   }
 

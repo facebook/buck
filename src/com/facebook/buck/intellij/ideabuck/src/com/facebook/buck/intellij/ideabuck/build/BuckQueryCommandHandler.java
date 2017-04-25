@@ -25,13 +25,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-
 import java.util.LinkedList;
 import java.util.List;
 
 public class BuckQueryCommandHandler extends BuckCommandHandler {
 
   private Function<List<String>, Void> actionsToExecute;
+
   public BuckQueryCommandHandler(
       final Project project,
       final VirtualFile root,
@@ -68,6 +68,5 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
   }
 
   @Override
-  protected void afterCommand() {
-  }
+  protected void afterCommand() {}
 }

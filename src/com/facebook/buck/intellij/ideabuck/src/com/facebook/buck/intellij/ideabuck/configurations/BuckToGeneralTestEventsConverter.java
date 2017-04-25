@@ -43,24 +43,19 @@ import com.intellij.execution.testframework.sm.runner.events.TestSuiteStartedEve
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.text.DateFormatUtil;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Date;
-
+import org.jetbrains.annotations.NotNull;
 
 public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsConverter
     implements TestRunStartedConsumer,
-    TestRunCompleteConsumer,
-    TestResultsAvailableConsumer,
-    BuckBuildStartConsumer,
-    BuckBuildEndConsumer,
-    CompilerErrorConsumer {
+        TestRunCompleteConsumer,
+        TestResultsAvailableConsumer,
+        BuckBuildStartConsumer,
+        BuckBuildEndConsumer,
+        CompilerErrorConsumer {
 
-  @NotNull
-  private final ProcessHandler myHandler;
-  @NotNull
-  private final Project mProject;
+  @NotNull private final ProcessHandler myHandler;
+  @NotNull private final Project mProject;
   MessageBusConnection mConnection;
 
   public BuckToGeneralTestEventsConverter(
@@ -75,20 +70,20 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
 
   @Override
   public void onStartTesting() {
-    mConnection = mProject.getMessageBus()
-        .connect();
+    mConnection = mProject.getMessageBus().connect();
     mConnection.subscribe(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE, this);
     mConnection.subscribe(TestRunCompleteConsumer.BUCK_TEST_RUN_COMPLETE, this);
     mConnection.subscribe(TestRunStartedConsumer.BUCK_TEST_RUN_STARTED, this);
     mConnection.subscribe(BuckBuildStartConsumer.BUCK_BUILD_START, this);
     mConnection.subscribe(BuckBuildEndConsumer.BUCK_BUILD_END, this);
     mConnection.subscribe(CompilerErrorConsumer.COMPILER_ERROR_CONSUMER, this);
-    myHandler.addProcessListener(new ProcessAdapter() {
-      @Override
-      public void processTerminated(ProcessEvent event) {
-        mConnection.disconnect();
-      }
-    });
+    myHandler.addProcessListener(
+        new ProcessAdapter() {
+          @Override
+          public void processTerminated(ProcessEvent event) {
+            mConnection.disconnect();
+          }
+        });
   }
 
   @Override
@@ -114,8 +109,7 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
   }
 
   @Override
-  public void consumeTestResultsAvailable(
-      long timestamp, TestResults testResults) {
+  public void consumeTestResultsAvailable(long timestamp, TestResults testResults) {
     final GeneralTestEventsProcessor processor = getProcessor();
     if (processor == null) {
       return;
@@ -125,9 +119,7 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
         continue;
       }
       final String locationUrl = null;
-      processor.onSuiteStarted(new TestSuiteStartedEvent(
-          suite.getTestCaseName(),
-          locationUrl));
+      processor.onSuiteStarted(new TestSuiteStartedEvent(suite.getTestCaseName(), locationUrl));
 
       for (TestResultsSummary test : suite.getTestResults()) {
         final String testName = test.getTestName();
@@ -141,17 +133,11 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
           processor.onTestOutput(new TestOutputEvent(testName, stdErr, false));
         }
         if (test.getType() == ResultType.FAILURE) {
-          processor.onTestFailure(new TestFailedEvent(
-              testName,
-              "",
-              test.getStacktrace(),
-              true,
-              null,
-              null));
+          processor.onTestFailure(
+              new TestFailedEvent(testName, "", test.getStacktrace(), true, null, null));
         } else {
           processor.onTestFinished(new TestFinishedEvent(testName, test.getTime()));
         }
-
       }
       processor.onSuiteFinished(new TestSuiteFinishedEvent(suite.getTestCaseName()));
     }

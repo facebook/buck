@@ -23,20 +23,17 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.components.JBTextField;
-
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-/**
- * Buck Setting GUI, located in "Preference > Tools > Buck".
- */
+/** Buck Setting GUI, located in "Preference > Tools > Buck". */
 public class BuckSettingsUI extends JPanel {
 
   public static final String CUSTOMIZED_INSTALL_FLAGS_HINT =
@@ -71,8 +68,7 @@ public class BuckSettingsUI extends JPanel {
         null,
         buckFileChooserDescriptor,
         TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
-        false
-    );
+        false);
 
     adbPathField = new TextFieldWithBrowseButton();
     FileChooserDescriptor adbFileChooserDescriptor =
@@ -83,8 +79,7 @@ public class BuckSettingsUI extends JPanel {
         null,
         adbFileChooserDescriptor,
         TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
-        false
-    );
+        false);
     customizedInstallSettingField = new JBTextField();
     customizedInstallSettingField.getEmptyText().setText(CUSTOMIZED_INSTALL_FLAGS_HINT);
     customizedInstallSettingField.setEnabled(false);
@@ -101,8 +96,19 @@ public class BuckSettingsUI extends JPanel {
     buckSettings.setBorder(IdeBorderFactory.createTitledBorder("Buck Settings", true));
     container.add(container = new JPanel(new BorderLayout()), BorderLayout.NORTH);
     container.add(buckSettings, BorderLayout.NORTH);
-    final GridBagConstraints constraints = new GridBagConstraints(0, 0, 1, 1, 0, 0,
-        GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
+    final GridBagConstraints constraints =
+        new GridBagConstraints(
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            GridBagConstraints.WEST,
+            GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0),
+            0,
+            0);
 
     buckSettings.add(new JLabel("Buck Executable Path:"), constraints);
     constraints.gridx = 1;
@@ -139,8 +145,19 @@ public class BuckSettingsUI extends JPanel {
     installSettings.add(uninstallBeforeInstall, BorderLayout.NORTH);
     installSettings.add(installSettings = new JPanel(new BorderLayout()), BorderLayout.SOUTH);
 
-    final GridBagConstraints customConstraints = new GridBagConstraints(0, 0, 1, 1, 0, 0,
-        GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
+    final GridBagConstraints customConstraints =
+        new GridBagConstraints(
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            GridBagConstraints.WEST,
+            GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0),
+            0,
+            0);
     JPanel customizedInstallSetting = new JPanel(new GridBagLayout());
     customizedInstallSetting.add(this.customizedInstallSetting, customConstraints);
     customConstraints.gridx = 1;
@@ -151,19 +168,19 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public boolean isModified() {
-    return !Comparing.equal(buckPathField.getText(),
-        optionsProvider.getState().buckExecutable) ||
-        !Comparing.equal(adbPathField.getText(),
-            optionsProvider.getState().adbExecutable) ||
-        optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected() ||
-        optionsProvider.getState().showDebug != showDebug.isSelected() ||
-        optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected() ||
-        optionsProvider.getState().multiInstallMode != multiInstallMode.isSelected() ||
-        optionsProvider.getState().uninstallBeforeInstalling !=
-            uninstallBeforeInstall.isSelected() ||
-        optionsProvider.getState().customizedInstallSetting !=
-            customizedInstallSetting.isSelected() ||
-        !optionsProvider.getState().customizedInstallSettingCommand
+    return !Comparing.equal(buckPathField.getText(), optionsProvider.getState().buckExecutable)
+        || !Comparing.equal(adbPathField.getText(), optionsProvider.getState().adbExecutable)
+        || optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected()
+        || optionsProvider.getState().showDebug != showDebug.isSelected()
+        || optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected()
+        || optionsProvider.getState().multiInstallMode != multiInstallMode.isSelected()
+        || optionsProvider.getState().uninstallBeforeInstalling
+            != uninstallBeforeInstall.isSelected()
+        || optionsProvider.getState().customizedInstallSetting
+            != customizedInstallSetting.isSelected()
+        || !optionsProvider
+            .getState()
+            .customizedInstallSettingCommand
             .equals(customizedInstallSettingField.getText());
   }
 
@@ -194,21 +211,22 @@ public class BuckSettingsUI extends JPanel {
   }
 
   private void initCustomizedInstallCommandListener() {
-    customizedInstallSetting.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          customizedInstallSettingField.setEnabled(true);
-          runAfterInstall.setEnabled(false);
-          multiInstallMode.setEnabled(false);
-          uninstallBeforeInstall.setEnabled(false);
-        } else {
-          customizedInstallSettingField.setEnabled(false);
-          runAfterInstall.setEnabled(true);
-          multiInstallMode.setEnabled(true);
-          uninstallBeforeInstall.setEnabled(true);
-        }
-      }
-    });
+    customizedInstallSetting.addItemListener(
+        new ItemListener() {
+          @Override
+          public void itemStateChanged(ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+              customizedInstallSettingField.setEnabled(true);
+              runAfterInstall.setEnabled(false);
+              multiInstallMode.setEnabled(false);
+              uninstallBeforeInstall.setEnabled(false);
+            } else {
+              customizedInstallSettingField.setEnabled(false);
+              runAfterInstall.setEnabled(true);
+              multiInstallMode.setEnabled(true);
+              uninstallBeforeInstall.setEnabled(true);
+            }
+          }
+        });
   }
 }

@@ -24,19 +24,19 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
-import org.jetbrains.annotations.Nullable;
-
-import javax.swing.Icon;
 import java.util.Map;
+import javax.swing.Icon;
+import org.jetbrains.annotations.Nullable;
 
 public class BuckColorSettingsPage implements ColorSettingsPage {
 
-  private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-      new AttributesDescriptor("Key", BuckSyntaxHighlighter.BUCK_KEYWORD),
-      new AttributesDescriptor("String", BuckSyntaxHighlighter.BUCK_STRING),
-      new AttributesDescriptor("Comment", BuckSyntaxHighlighter.BUCK_COMMENT),
-      new AttributesDescriptor("Name", BuckSyntaxHighlighter.BUCK_RULE_NAME),
-  };
+  private static final AttributesDescriptor[] DESCRIPTORS =
+      new AttributesDescriptor[] {
+        new AttributesDescriptor("Key", BuckSyntaxHighlighter.BUCK_KEYWORD),
+        new AttributesDescriptor("String", BuckSyntaxHighlighter.BUCK_STRING),
+        new AttributesDescriptor("Comment", BuckSyntaxHighlighter.BUCK_COMMENT),
+        new AttributesDescriptor("Name", BuckSyntaxHighlighter.BUCK_RULE_NAME),
+      };
 
   @Override
   public Icon getIcon() {

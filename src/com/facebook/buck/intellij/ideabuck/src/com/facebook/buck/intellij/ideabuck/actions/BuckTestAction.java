@@ -24,9 +24,7 @@ import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 
-/**
- * Run buck test command.
- */
+/** Run buck test command. */
 public class BuckTestAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck test";
@@ -51,10 +49,8 @@ public class BuckTestAction extends BuckBaseAction {
     }
 
     // Initiate a buck test
-    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
-        project,
-        project.getBaseDir(),
-        BuckCommand.TEST);
+    BuckBuildCommandHandler handler =
+        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.TEST);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

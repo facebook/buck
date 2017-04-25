@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckProjectGenerationFinishedConsumer {
-  Topic<BuckProjectGenerationFinishedConsumer> PROJECT_GENERATION_FINISHED_CONSUMER = Topic.create(
-      "buck.project.generation.finished",
-      BuckProjectGenerationFinishedConsumer.class
-  );
+  Topic<BuckProjectGenerationFinishedConsumer> PROJECT_GENERATION_FINISHED_CONSUMER =
+      Topic.create("buck.project.generation.finished", BuckProjectGenerationFinishedConsumer.class);
+
   void consumeBuckProjectGenerationFinished(long timestamp);
 }

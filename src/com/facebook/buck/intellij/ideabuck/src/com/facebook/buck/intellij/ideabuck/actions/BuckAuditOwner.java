@@ -28,36 +28,32 @@ import com.intellij.openapi.project.Project;
 public class BuckAuditOwner {
   public static final String ACTION_TITLE = "Run buck audit owner";
 
-  private BuckAuditOwner() {
-  }
+  private BuckAuditOwner() {}
 
   public static void execute(
-      final Project project,
-      final FutureCallback<String> futureCallback,
-      final String...targets) {
-    ApplicationManager.getApplication().executeOnPooledThread(
-        new Runnable() {
-          public void run() {
-            BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
-            BuckModule buckModule = project.getComponent(BuckModule.class);
+      final Project project, final FutureCallback<String> futureCallback, final String... targets) {
+    ApplicationManager.getApplication()
+        .executeOnPooledThread(
+            new Runnable() {
+              public void run() {
+                BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
+                BuckModule buckModule = project.getComponent(BuckModule.class);
 
-            StringBuilder targetsString = new StringBuilder();
-            for (String target : targets) {
-              targetsString.append(target);
-              targetsString.append(", ");
-            }
-            buckModule.attach(targetsString.toString());
+                StringBuilder targetsString = new StringBuilder();
+                for (String target : targets) {
+                  targetsString.append(target);
+                  targetsString.append(", ");
+                }
+                buckModule.attach(targetsString.toString());
 
-            BuckCommandHandler handler = new ResultCallbackBuckHandler(
-                project,
-                project.getBaseDir(),
-                BuckCommand.AUDIT_OWNER,
-                futureCallback);
-            for (String target : targets) {
-              handler.command().addParameter(target);
-            }
-            buildManager.runBuckCommand(handler, ACTION_TITLE);
-          }
-        });
+                BuckCommandHandler handler =
+                    new ResultCallbackBuckHandler(
+                        project, project.getBaseDir(), BuckCommand.AUDIT_OWNER, futureCallback);
+                for (String target : targets) {
+                  handler.command().addParameter(target);
+                }
+                buildManager.runBuckCommand(handler, ACTION_TITLE);
+              }
+            });
   }
 }

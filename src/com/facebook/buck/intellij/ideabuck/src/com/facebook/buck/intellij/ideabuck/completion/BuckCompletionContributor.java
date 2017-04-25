@@ -28,86 +28,84 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.util.ProcessingContext;
 
-/**
- * Auto-completion for keywords and rule names
- */
+/** Auto-completion for keywords and rule names */
 public class BuckCompletionContributor extends CompletionContributor {
 
   // TODO(#7908512): Need to pull those information from Buck.
-  private static final ImmutableList<String> sPropertyNames = ImmutableList.of(
-    "name",
-    "res",
-    "binary_jar",
-    "srcs",
-    "deps",
-    "manifest",
-    "package_type",
-    "glob",
-    "visibility",
-    "aar",
-    "src_target",
-    "src_roots",
-    "java7_support",
-    "source_under_test",
-    "test_library_project_dir",
-    "contacts",
-    "exported_deps",
-    "excludes",
-    "main",
-    "resources",
-    "javadoc_url",
-    "store",
-    "properties",
-    "assets",
-    "package",
-    "proguard_config",
-    "source_jar",
-    "aidl",
-    "import_path",
-    "plugins",
-    "keystore"
-  );
+  private static final ImmutableList<String> sPropertyNames =
+      ImmutableList.of(
+          "name",
+          "res",
+          "binary_jar",
+          "srcs",
+          "deps",
+          "manifest",
+          "package_type",
+          "glob",
+          "visibility",
+          "aar",
+          "src_target",
+          "src_roots",
+          "java7_support",
+          "source_under_test",
+          "test_library_project_dir",
+          "contacts",
+          "exported_deps",
+          "excludes",
+          "main",
+          "resources",
+          "javadoc_url",
+          "store",
+          "properties",
+          "assets",
+          "package",
+          "proguard_config",
+          "source_jar",
+          "aidl",
+          "import_path",
+          "plugins",
+          "keystore");
 
   // TODO(#7908529): Need to pull those information from Buck.
-  private static final ImmutableList<String> sRuleNames = ImmutableList.of(
-    "genrule",
-    "remote_file",
-    "android_aar",
-    "android_binary",
-    "android_build_config",
-    "android_library",
-    "android_manifest",
-    "android_prebuilt_aar",
-    "android_resource",
-    "apk_genrule",
-    "cxx_library",
-    "gen_aidl",
-    "ndk_library",
-    "prebuilt_jar",
-    "prebuilt_native_library",
-    "project_config",
-    "cxx_binary",
-    "cxx_library",
-    "cxx_test",
-    "prebuilt_native_library",
-    "d_binary",
-    "d_library",
-    "d_test",
-    "cxx_library",
-    "java_binary",
-    "java_library",
-    "java_test",
-    "prebuilt_jar",
-    "prebuilt_native_library",
-    "prebuilt_python_library",
-    "python_binary",
-    "python_library",
-    "python_test",
-    "glob",
-    "include_defs",
-    "robolectric_test",
-    "keystore"
-  );
+  private static final ImmutableList<String> sRuleNames =
+      ImmutableList.of(
+          "genrule",
+          "remote_file",
+          "android_aar",
+          "android_binary",
+          "android_build_config",
+          "android_library",
+          "android_manifest",
+          "android_prebuilt_aar",
+          "android_resource",
+          "apk_genrule",
+          "cxx_library",
+          "gen_aidl",
+          "ndk_library",
+          "prebuilt_jar",
+          "prebuilt_native_library",
+          "project_config",
+          "cxx_binary",
+          "cxx_library",
+          "cxx_test",
+          "prebuilt_native_library",
+          "d_binary",
+          "d_library",
+          "d_test",
+          "cxx_library",
+          "java_binary",
+          "java_library",
+          "java_test",
+          "prebuilt_jar",
+          "prebuilt_native_library",
+          "prebuilt_python_library",
+          "python_binary",
+          "python_library",
+          "python_test",
+          "glob",
+          "include_defs",
+          "robolectric_test",
+          "keystore");
 
   public BuckCompletionContributor() {
     // Auto completion for basic rule names.
@@ -124,9 +122,7 @@ public class BuckCompletionContributor extends CompletionContributor {
 
     @Override
     protected void addCompletions(
-        CompletionParameters parameters,
-        ProcessingContext context,
-        CompletionResultSet result) {
+        CompletionParameters parameters, ProcessingContext context, CompletionResultSet result) {
       for (String card : sPropertyNames) {
         result.addElement(LookupElementBuilder.create(card));
       }

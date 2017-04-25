@@ -36,8 +36,7 @@ public final class BuckBuildUtil {
   public static final String PROJECT_CONFIG_RULE_NAME = "project_config";
   public static final String SRC_TARGET_PROPERTY_NAME = "src_target";
 
-  private BuckBuildUtil() {
-  }
+  private BuckBuildUtil() {}
 
   public static boolean isValidAbsoluteTarget(String target) {
     return target.matches("^//[\\s\\S]*:[\\s\\S]*$");
@@ -52,8 +51,8 @@ public final class BuckBuildUtil {
   }
 
   /**
-   * Return the virtual file of the BUCK file of the given target.
-   * TODO(#7908675): Use Buck's BuildTargetFactory and deprecate this class.
+   * Return the virtual file of the BUCK file of the given target. TODO(#7908675): Use Buck's
+   * BuildTargetFactory and deprecate this class.
    */
   public static VirtualFile getBuckFileFromAbsoluteTarget(Project project, String target) {
     if (!isValidAbsoluteTarget(target)) {
@@ -65,8 +64,7 @@ public final class BuckBuildUtil {
   }
 
   /**
-   * Get the buck target from a buck file.
-   * TODO(#7908675): We should use Buck's own classes for it.
+   * Get the buck target from a buck file. TODO(#7908675): We should use Buck's own classes for it.
    */
   public static String extractBuckTarget(Project project, VirtualFile file) {
     BuckFile buckFile = (BuckFile) PsiManager.getInstance(project).findFile(file);
@@ -79,9 +77,9 @@ public final class BuckBuildUtil {
       if (child.getNode().getElementType() == BuckTypes.RULE_BLOCK) {
         PsiElement ruleName = child.getFirstChild();
         // Find rule "project_config"
-        if (ruleName != null &&
-            BuckPsiUtils.testType(ruleName, BuckTypes.RULE_NAME) &&
-            ruleName.getText().equals(PROJECT_CONFIG_RULE_NAME)) {
+        if (ruleName != null
+            && BuckPsiUtils.testType(ruleName, BuckTypes.RULE_NAME)
+            && ruleName.getText().equals(PROJECT_CONFIG_RULE_NAME)) {
           // Find property "src_target"
           PsiElement bodyElement = BuckPsiUtils.findChildWithType(child, BuckTypes.RULE_BODY);
           return getPropertyValue((BuckRuleBody) bodyElement, SRC_TARGET_PROPERTY_NAME);
@@ -92,8 +90,8 @@ public final class BuckBuildUtil {
   }
 
   /**
-   * Get the value of a property in a specific buck rule body.
-   * TODO(#7908675): We should use Buck's own classes for it.
+   * Get the value of a property in a specific buck rule body. TODO(#7908675): We should use Buck's
+   * own classes for it.
    */
   public static String getPropertyValue(BuckRuleBody body, String name) {
     if (body == null) {
@@ -115,8 +113,7 @@ public final class BuckBuildUtil {
   }
 
   /**
-   * Find the buck file from a directory.
-   * TODO(#7908675): We should use Buck's own classes for it.
+   * Find the buck file from a directory. TODO(#7908675): We should use Buck's own classes for it.
    */
   public static VirtualFile getBuckFileFromDirectory(VirtualFile file) {
     if (file == null) {

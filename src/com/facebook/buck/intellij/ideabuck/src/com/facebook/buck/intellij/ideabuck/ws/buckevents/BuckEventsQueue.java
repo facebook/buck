@@ -21,7 +21,6 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsCon
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckEventHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.diagnostic.Logger;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,22 +47,19 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
   }
 
   private void handleEvent(final String rawMessage, final BuckEventExternalInterface event) {
-    mSingleThreadExecutor.submit(() -> {
-        try {
-          String eventName = event.getEventName();
-          BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
-          if (buckEventHandler == null) {
-            LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
-          } else {
-            buckEventHandler.handleEvent(
-                rawMessage,
-                event,
-                mFactory,
-                mObjectMapper);
+    mSingleThreadExecutor.submit(
+        () -> {
+          try {
+            String eventName = event.getEventName();
+            BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
+            if (buckEventHandler == null) {
+              LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
+            } else {
+              buckEventHandler.handleEvent(rawMessage, event, mFactory, mObjectMapper);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
           }
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-    });
+        });
   }
 }

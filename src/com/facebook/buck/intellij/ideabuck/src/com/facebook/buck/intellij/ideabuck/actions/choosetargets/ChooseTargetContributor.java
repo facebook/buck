@@ -27,14 +27,12 @@ import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 public class ChooseTargetContributor implements ChooseByNameContributor {
@@ -73,8 +71,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     names.addAll(getAllBuildTargetsUnderDirectory(project, currentInputText.buildDir));
     names.addAll(getNameSuggestionUnderPath(project, currentInputText.buildDir));
     if (!currentInputText.hasBuildRule) {
-      names.addAll(
-          getNameSuggestionUnderPath(project, getParentDir(currentInputText.buildDir)));
+      names.addAll(getNameSuggestionUnderPath(project, getParentDir(currentInputText.buildDir)));
     }
     return names;
   }
@@ -82,8 +79,10 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
   private List<String> getAllBuildTargetsUnderDirectory(Project project, String buildDir) {
     List<String> names = new ArrayList<>();
     // Try to get the relative path to the current input folder
-    VirtualFile baseDir = project.getBaseDir().findFileByRelativePath(
-        appendSuffixIfNotEmpty(buildDir, File.separator));
+    VirtualFile baseDir =
+        project
+            .getBaseDir()
+            .findFileByRelativePath(appendSuffixIfNotEmpty(buildDir, File.separator));
     if (baseDir == null) {
       return names;
     }
@@ -97,16 +96,18 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     public final boolean hasBuildRule;
 
     CurrentInputText(Project project) {
-      ChooseByNamePopup chooseByNamePopup = project.getUserData(
-          ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
+      ChooseByNamePopup chooseByNamePopup =
+          project.getUserData(ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
       if (chooseByNamePopup == null) {
         buildDir = null;
         hasBuildRule = false;
         return;
       }
-      String currentText = chooseByNamePopup.getEnteredText()
-          // Remove the begining //
-          .replaceFirst("^/*", "");
+      String currentText =
+          chooseByNamePopup
+              .getEnteredText()
+              // Remove the begining //
+              .replaceFirst("^/*", "");
 
       // check if we have as input a proper target
       int targetSeparatorIndex = currentText.lastIndexOf(TARGET_NAME_SEPARATOR);
@@ -132,8 +133,10 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
   private List<String> getNameSuggestionUnderPath(Project project, String buildDir) {
     List<String> names = new ArrayList<>();
     // Try to get the relative path to the current input folder
-    VirtualFile baseDir = project.getBaseDir().findFileByRelativePath(
-        appendSuffixIfNotEmpty(buildDir, File.separator));
+    VirtualFile baseDir =
+        project
+            .getBaseDir()
+            .findFileByRelativePath(appendSuffixIfNotEmpty(buildDir, File.separator));
     if (baseDir == null) {
       return names;
     }
@@ -153,12 +156,13 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
     return source;
   }
 
-  private List<String> getNameSuggestionForVirtualFile(Project project, VirtualFile file,
-      String buildDir) {
+  private List<String> getNameSuggestionForVirtualFile(
+      Project project, VirtualFile file, String buildDir) {
     // if the file is a directory we add it to the targets
     if (file.isDirectory()) {
-      return new ArrayList<String>(Collections.singletonList(
-          "//" + appendSuffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + file.getName()));
+      return new ArrayList<String>(
+          Collections.singletonList(
+              "//" + appendSuffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + file.getName()));
     } else if (file.getName().equals(BuckFileUtil.getBuildFileName(project.getBasePath()))) {
       //if the file is a buck file  we parse it and add its target names to the list
       return getBuildTargetFromBuildProjectFile(project, buildDir);
@@ -177,24 +181,24 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
               @Nullable
               @Override
               public Void apply(@Nullable List<String> strings) {
-                ApplicationManager.getApplication().invokeLater(
-                    new Runnable() {
-                      public void run() {
-                        ChooseByNamePopup chooseByNamePopup = project.getUserData(
-                            ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
-                        // the user might have closed the window
-                        if (chooseByNamePopup != null) {
-                          // if we don't have them, just refresh the view when we do, if the
-                          // window is still open
-                          chooseByNamePopup.rebuildList(true);
-                        }
-                      }
-                    });
+                ApplicationManager.getApplication()
+                    .invokeLater(
+                        new Runnable() {
+                          public void run() {
+                            ChooseByNamePopup chooseByNamePopup =
+                                project.getUserData(
+                                    ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
+                            // the user might have closed the window
+                            if (chooseByNamePopup != null) {
+                              // if we don't have them, just refresh the view when we do, if the
+                              // window is still open
+                              chooseByNamePopup.rebuildList(true);
+                            }
+                          }
+                        });
                 return null;
               }
-            }
-        )
-    );
+            }));
     return names;
   }
 
@@ -204,16 +208,13 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
 
   @Override
   public NavigationItem[] getItemsByName(
-      String name,
-      String pattern,
-      Project project,
-      boolean includeNonProjectItems) {
+      String name, String pattern, Project project, boolean includeNonProjectItems) {
     String alias = null;
     int index = name.lastIndexOf(ALIAS_SEPARATOR);
     if (index > 0) {
       alias = name.substring(index + ALIAS_SEPARATOR.length());
       name = name.substring(0, index);
     }
-    return new NavigationItem[] { new ChooseTargetItem(name, alias) };
+    return new NavigationItem[] {new ChooseTargetItem(name, alias)};
   }
 }

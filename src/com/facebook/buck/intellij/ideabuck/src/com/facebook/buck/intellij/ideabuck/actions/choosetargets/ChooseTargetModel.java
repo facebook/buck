@@ -24,11 +24,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
 import org.jetbrains.annotations.Nullable;
 
-public class ChooseTargetModel
-    extends FilteringGotoByModel<String> implements DumbAware {
+public class ChooseTargetModel extends FilteringGotoByModel<String> implements DumbAware {
 
   public ChooseTargetModel(Project project) {
-    super(project, new ChooseByNameContributor[] { new ChooseTargetContributor() });
+    super(project, new ChooseByNameContributor[] {new ChooseTargetContributor()});
   }
 
   @Nullable
@@ -69,8 +68,7 @@ public class ChooseTargetModel
   }
 
   @Override
-  public void saveInitialCheckBoxState(boolean state) {
-  }
+  public void saveInitialCheckBoxState(boolean state) {}
 
   @Override
   public String[] getSeparators() {

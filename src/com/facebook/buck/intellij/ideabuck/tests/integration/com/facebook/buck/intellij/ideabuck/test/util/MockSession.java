@@ -16,6 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.test.util;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import org.eclipse.jetty.websocket.api.CloseStatus;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
@@ -24,32 +26,19 @@ import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
-/**
- * Created by theodordidii on 6/1/16.
- */
+/** Created by theodordidii on 6/1/16. */
 public class MockSession implements Session {
   @Override
-  public void close() {
-
-  }
+  public void close() {}
 
   @Override
-  public void close(CloseStatus closeStatus) {
-
-  }
+  public void close(CloseStatus closeStatus) {}
 
   @Override
-  public void close(int i, String s) {
-
-  }
+  public void close(int i, String s) {}
 
   @Override
-  public void disconnect() throws IOException {
-
-  }
+  public void disconnect() throws IOException {}
 
   @Override
   public long getIdleTimeout() {
@@ -102,9 +91,7 @@ public class MockSession implements Session {
   }
 
   @Override
-  public void setIdleTimeout(long l) {
-
-  }
+  public void setIdleTimeout(long l) {}
 
   @Override
   public SuspendToken suspend() {

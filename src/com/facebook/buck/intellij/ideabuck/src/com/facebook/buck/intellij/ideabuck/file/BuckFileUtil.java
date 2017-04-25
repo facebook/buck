@@ -28,16 +28,14 @@ import com.intellij.psi.stubs.BinaryFileStubBuilder;
 import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.stubs.Stub;
 import com.intellij.util.indexing.FileContent;
-
-import org.ini4j.Wini;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.ini4j.Wini;
+import org.jetbrains.annotations.Nullable;
 
 public final class BuckFileUtil {
 
@@ -45,26 +43,25 @@ public final class BuckFileUtil {
   private static final String BUCK_CONFIG_FILE = ".buckconfig";
   private static final Map<String, String> buildFileNames = new HashMap<>();
   private static final String SAMPLE_BUCK_FILE =
-      "# Thanks for installing Buck Plugin for IDEA!\n" +
-      "android_library(\n" +
-      "  name = 'bar',\n" +
-      "  srcs = glob(['**/*.java']),\n" +
-      "  deps = [\n" +
-      "    '//android_res/com/foo/interfaces:res',\n" +
-      "    '//android_res/com/foo/common/strings:res',\n" +
-      "    '//android_res/com/foo/custom:res,'\n" +
-      "  ],\n" +
-      "  visibility = [\n" +
-      "    'PUBLIC',\n" +
-      "  ],\n" +
-      ")\n" +
-      "\n" +
-      "project_config(\n" +
-      "  src_target = ':bar',\n" +
-      ")\n";
+      "# Thanks for installing Buck Plugin for IDEA!\n"
+          + "android_library(\n"
+          + "  name = 'bar',\n"
+          + "  srcs = glob(['**/*.java']),\n"
+          + "  deps = [\n"
+          + "    '//android_res/com/foo/interfaces:res',\n"
+          + "    '//android_res/com/foo/common/strings:res',\n"
+          + "    '//android_res/com/foo/custom:res,'\n"
+          + "  ],\n"
+          + "  visibility = [\n"
+          + "    'PUBLIC',\n"
+          + "  ],\n"
+          + ")\n"
+          + "\n"
+          + "project_config(\n"
+          + "  src_target = ':bar',\n"
+          + ")\n";
 
-  private BuckFileUtil() {
-  }
+  private BuckFileUtil() {}
 
   public static String getBuildFileName() {
     // TODO(#7908500): Read from ".buckconfig".
@@ -94,50 +91,55 @@ public final class BuckFileUtil {
   }
 
   public static void setBuckFileType() {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        FileTypeManager fileTypeManager = FileTypeManagerImpl.getInstance();
-
-        FileType fileType = fileTypeManager
-            .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
-
-        // Remove all FileType associations for BUCK files that are not BuckFileType
-        while (!(fileType instanceof  BuckFileType || fileType instanceof UnknownFileType)) {
-          List<FileNameMatcher> fileNameMatchers = fileTypeManager.getAssociations(fileType);
-
-          for (FileNameMatcher fileNameMatcher : fileNameMatchers) {
-            if (fileNameMatcher.accept(BuckFileType.INSTANCE.getDefaultExtension())) {
-              fileTypeManager.removeAssociation(fileType, fileNameMatcher);
-            }
-          }
-
-          fileType = fileTypeManager
-              .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
-        }
-
-        // Use a simple BinaryFileStubBuilder, that doesn't offer stubbing
-        BinaryFileStubBuilders.INSTANCE.addExplicitExtension(
-            fileType,
-            new BinaryFileStubBuilder() {
+    ApplicationManager.getApplication()
+        .runWriteAction(
+            new Runnable() {
               @Override
-              public boolean acceptsFile(VirtualFile virtualFile) {
-                return false;
-              }
+              public void run() {
+                FileTypeManager fileTypeManager = FileTypeManagerImpl.getInstance();
 
-              @Nullable
-              @Override
-              public Stub buildStubTree(FileContent fileContent) {
-                return null;
-              }
+                FileType fileType =
+                    fileTypeManager.getFileTypeByFileName(
+                        BuckFileType.INSTANCE.getDefaultExtension());
 
-              @Override
-              public int getStubVersion() {
-                return 0;
+                // Remove all FileType associations for BUCK files that are not BuckFileType
+                while (!(fileType instanceof BuckFileType || fileType instanceof UnknownFileType)) {
+                  List<FileNameMatcher> fileNameMatchers =
+                      fileTypeManager.getAssociations(fileType);
+
+                  for (FileNameMatcher fileNameMatcher : fileNameMatchers) {
+                    if (fileNameMatcher.accept(BuckFileType.INSTANCE.getDefaultExtension())) {
+                      fileTypeManager.removeAssociation(fileType, fileNameMatcher);
+                    }
+                  }
+
+                  fileType =
+                      fileTypeManager.getFileTypeByFileName(
+                          BuckFileType.INSTANCE.getDefaultExtension());
+                }
+
+                // Use a simple BinaryFileStubBuilder, that doesn't offer stubbing
+                BinaryFileStubBuilders.INSTANCE.addExplicitExtension(
+                    fileType,
+                    new BinaryFileStubBuilder() {
+                      @Override
+                      public boolean acceptsFile(VirtualFile virtualFile) {
+                        return false;
+                      }
+
+                      @Nullable
+                      @Override
+                      public Stub buildStubTree(FileContent fileContent) {
+                        return null;
+                      }
+
+                      @Override
+                      public int getStubVersion() {
+                        return 0;
+                      }
+                    });
               }
             });
-      }
-    });
   }
 
   public static String getBuildFileName(String projectPath) {

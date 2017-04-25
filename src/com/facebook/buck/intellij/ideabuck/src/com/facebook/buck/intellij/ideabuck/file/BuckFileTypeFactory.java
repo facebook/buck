@@ -27,7 +27,8 @@ public class BuckFileTypeFactory extends FileTypeFactory {
   @Override
   public void createFileTypes(FileTypeConsumer fileTypeConsumer) {
     fileTypeConsumer.consume(
-        BuckFileType.INSTANCE, new FileNameMatcherEx() {
+        BuckFileType.INSTANCE,
+        new FileNameMatcherEx() {
           @Override
           public String getPresentableString() {
             return BuckFileUtil.getBuildFileName();
@@ -36,8 +37,8 @@ public class BuckFileTypeFactory extends FileTypeFactory {
           @Override
           public boolean acceptsCharSequence(CharSequence fileName) {
             String buildFileName = BuckFileUtil.getBuildFileName();
-            return StringUtilRt.endsWithIgnoreCase(fileName, buildFileName) ||
-                Comparing.equal(fileName, buildFileName, true);
+            return StringUtilRt.endsWithIgnoreCase(fileName, buildFileName)
+                || Comparing.equal(fileName, buildFileName, true);
           }
         });
   }

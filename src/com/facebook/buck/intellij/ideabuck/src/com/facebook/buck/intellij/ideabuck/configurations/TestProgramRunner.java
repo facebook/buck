@@ -23,7 +23,6 @@ import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.RunContentDescriptor;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,9 +33,7 @@ public class TestProgramRunner extends DefaultProgramRunner {
   @Nullable
   @Override
   protected RunContentDescriptor doExecute(
-      @NotNull RunProfileState state,
-      @NotNull ExecutionEnvironment env)
-      throws ExecutionException {
+      @NotNull RunProfileState state, @NotNull ExecutionEnvironment env) throws ExecutionException {
     checkBuckSettings();
     return super.doExecute(state, env);
   }
@@ -45,16 +42,14 @@ public class TestProgramRunner extends DefaultProgramRunner {
     final BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
     if (state == null) {
       throw new ExecutionException(
-          "Please specify the buck executable path!\n" +
-              "Preference -> Tools -> Buck -> Path to Buck executable"
-      );
+          "Please specify the buck executable path!\n"
+              + "Preference -> Tools -> Buck -> Path to Buck executable");
     }
     final String exec = state.buckExecutable;
     if (exec == null) {
       throw new ExecutionException(
-          "Please specify the buck executable path!\n" +
-              "Preference -> Tools -> Buck -> Path to Buck executable"
-      );
+          "Please specify the buck executable path!\n"
+              + "Preference -> Tools -> Buck -> Path to Buck executable");
     }
   }
 

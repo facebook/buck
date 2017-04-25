@@ -30,15 +30,11 @@ import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import java.awt.event.KeyEvent;
-
 import java.awt.event.KeyAdapter;
-
+import java.awt.event.KeyEvent;
 import javax.swing.KeyStroke;
 
-/**
- * Pop up a GUI for choose buck targets (alias).
- */
+/** Pop up a GUI for choose buck targets (alias). */
 public class ChooseTargetAction extends GotoActionBase implements DumbAware {
 
   public static final String ACTION_TITLE = "Choose build target";
@@ -55,6 +51,7 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
   public void update(AnActionEvent e) {
     e.getPresentation().setEnabled(!(e.getProject() == null || DumbService.isDumb(e.getProject())));
   }
+
   @Override
   protected void gotoActionPerformed(AnActionEvent e) {
     final Project project = e.getData(CommonDataKeys.PROJECT);
@@ -63,56 +60,66 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
     }
 
     final ChooseTargetModel model = new ChooseTargetModel(project);
-    GotoActionCallback<String> callback = new GotoActionCallback<String>() {
-      @Override
-      public void elementChosen(ChooseByNamePopup chooseByNamePopup, Object element) {
-        if (element == null) {
-          return;
-        }
+    GotoActionCallback<String> callback =
+        new GotoActionCallback<String>() {
+          @Override
+          public void elementChosen(ChooseByNamePopup chooseByNamePopup, Object element) {
+            if (element == null) {
+              return;
+            }
 
-        BuckSettingsProvider buckSettingsProvider = BuckSettingsProvider.getInstance();
-        if (buckSettingsProvider == null || buckSettingsProvider.getState() == null) {
-          return;
-        }
+            BuckSettingsProvider buckSettingsProvider = BuckSettingsProvider.getInstance();
+            if (buckSettingsProvider == null || buckSettingsProvider.getState() == null) {
+              return;
+            }
 
-        ChooseTargetItem item = (ChooseTargetItem) element;
-        // if the target selected isn't an alias, then it has to have : or end with /...
-        if (item.getName().contains("//") && !item.getName().contains(":") &&
-            !item.getName().endsWith("/...")) {
-          return;
-        }
+            ChooseTargetItem item = (ChooseTargetItem) element;
+            // if the target selected isn't an alias, then it has to have : or end with /...
+            if (item.getName().contains("//")
+                && !item.getName().contains(":")
+                && !item.getName().endsWith("/...")) {
+              return;
+            }
 
-        if (buckSettingsProvider.getState().lastAlias != null) {
-          buckSettingsProvider.getState().lastAlias.put(
-              project.getBasePath(), item.getBuildTarget());
-        }
-        BuckToolWindowFactory.updateBuckToolWindowTitle(project);
-      }
-    };
+            if (buckSettingsProvider.getState().lastAlias != null) {
+              buckSettingsProvider
+                  .getState()
+                  .lastAlias
+                  .put(project.getBasePath(), item.getBuildTarget());
+            }
+            BuckToolWindowFactory.updateBuckToolWindowTitle(project);
+          }
+        };
     showNavigationPopup(e, model, callback, "Choose Build Target", true, false);
 
     // Add navigation listener for auto complete
-    final ChooseByNamePopup chooseByNamePopup = project.getUserData(
-            ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
-    chooseByNamePopup.getTextField().addKeyListener(new KeyAdapter() {
-      @Override
-      public void keyPressed(KeyEvent e) {
-        if (KeyEvent.VK_RIGHT == e.getKeyCode()) {
-          ChooseTargetItem obj = (ChooseTargetItem) chooseByNamePopup.getChosenElement();
-          if (obj != null) {
-            chooseByNamePopup.getTextField().setText(obj.getName());
-            chooseByNamePopup.getTextField().repaint();
-          }
-        } else {
-          super.keyPressed(e);
-        }
-        String adText = chooseByNamePopup.getAdText();
-        if (adText != null) {
-          chooseByNamePopup.setAdText(adText + " and " +
-                  KeymapUtil.getKeystrokeText(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 2)) +
-                  " to use autocomplete");
-        }
-      }
-    });
+    final ChooseByNamePopup chooseByNamePopup =
+        project.getUserData(ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
+    chooseByNamePopup
+        .getTextField()
+        .addKeyListener(
+            new KeyAdapter() {
+              @Override
+              public void keyPressed(KeyEvent e) {
+                if (KeyEvent.VK_RIGHT == e.getKeyCode()) {
+                  ChooseTargetItem obj = (ChooseTargetItem) chooseByNamePopup.getChosenElement();
+                  if (obj != null) {
+                    chooseByNamePopup.getTextField().setText(obj.getName());
+                    chooseByNamePopup.getTextField().repaint();
+                  }
+                } else {
+                  super.keyPressed(e);
+                }
+                String adText = chooseByNamePopup.getAdText();
+                if (adText != null) {
+                  chooseByNamePopup.setAdText(
+                      adText
+                          + " and "
+                          + KeymapUtil.getKeystrokeText(
+                              KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 2))
+                          + " to use autocomplete");
+                }
+              }
+            });
   }
 }

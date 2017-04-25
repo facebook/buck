@@ -18,10 +18,9 @@ package com.facebook.buck.intellij.ideabuck.actions;
 
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-
 import javax.swing.Icon;
 
-public class BuckInstallDebugAction extends BuckInstallAction{
+public class BuckInstallDebugAction extends BuckInstallAction {
   public static final String ACTION_TITLE = "Run buck install and debug";
   public static final String ACTION_DESCRIPTION = "Run buck install command and debug";
   public static final Icon ICON = BuckIcons.ACTION_DEBUG;

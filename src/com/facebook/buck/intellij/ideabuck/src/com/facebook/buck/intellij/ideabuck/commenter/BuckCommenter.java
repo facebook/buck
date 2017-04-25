@@ -19,9 +19,7 @@ package com.facebook.buck.intellij.ideabuck.commenter;
 import com.intellij.lang.Commenter;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Defines the support for "Comment with Line Comment" actions in BUCK files.
- */
+/** Defines the support for "Comment with Line Comment" actions in BUCK files. */
 public class BuckCommenter implements Commenter {
 
   @Override

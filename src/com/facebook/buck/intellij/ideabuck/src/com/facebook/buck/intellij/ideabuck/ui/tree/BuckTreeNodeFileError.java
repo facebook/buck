@@ -17,23 +17,20 @@
 package com.facebook.buck.intellij.ideabuck.ui.tree;
 
 import com.facebook.buck.intellij.ideabuck.ui.utils.CompilerErrorItem;
-
-import javax.swing.tree.TreeNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
-
+import javax.swing.tree.TreeNode;
 
 public class BuckTreeNodeFileError implements TreeNode {
 
   private final List<BuckTreeNodeDetail> mErrors = new ArrayList<BuckTreeNodeDetail>();
   private final String mFilePath;
   private final BuckTreeNodeTarget mParent;
+
   public BuckTreeNodeFileError(
-      BuckTreeNodeTarget parent,
-      String filePath,
-      CompilerErrorItem error) {
+      BuckTreeNodeTarget parent, String filePath, CompilerErrorItem error) {
     mParent = parent;
     mFilePath = filePath;
     mErrors.add(buildError(error));
@@ -46,15 +43,9 @@ public class BuckTreeNodeFileError implements TreeNode {
   private BuckTreeNodeDetail buildError(CompilerErrorItem error) {
     if (error.getType() == CompilerErrorItem.Type.ERROR) {
       return new BuckTreeNodeDetailError(
-          this,
-          error.getError(),
-          error.getLine(),
-          error.getColumn());
+          this, error.getError(), error.getLine(), error.getColumn());
     } else {
-      return new BuckTreeNodeDetail(
-          this,
-          BuckTreeNodeDetail.DetailType.WARNING,
-          error.getError());
+      return new BuckTreeNodeDetail(this, BuckTreeNodeDetail.DetailType.WARNING, error.getError());
     }
   }
 

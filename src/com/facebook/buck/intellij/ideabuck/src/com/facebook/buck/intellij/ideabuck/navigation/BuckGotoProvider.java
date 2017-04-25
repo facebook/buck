@@ -16,8 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.navigation;
 
-import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
+import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
 import com.google.common.base.Optional;
@@ -46,8 +46,8 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
       }
 
       String target = source.getText();
-      if ((target.startsWith("'") && target.endsWith("'")) ||
-          (target.startsWith("\"") && target.endsWith("\""))) {
+      if ((target.startsWith("'") && target.endsWith("'"))
+          || (target.startsWith("\"") && target.endsWith("\""))) {
         target = target.substring(1, target.length() - 1);
       }
 
@@ -55,14 +55,22 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
           // Try to find the BUCK file
           Optional.fromNullable(BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target))
               // Try to find the normal file
-              .or(Optional.fromNullable(source.getContainingFile().getParent().getVirtualFile()
-                  // If none exist, then it's null
-                  .findFileByRelativePath(target))).orNull();
+              .or(
+                  Optional.fromNullable(
+                      source
+                          .getContainingFile()
+                          .getParent()
+                          .getVirtualFile()
+                          // If none exist, then it's null
+                          .findFileByRelativePath(target)))
+              .orNull();
 
       if (targetFile == null) {
         return null;
       }
-      project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+      project
+          .getMessageBus()
+          .syncPublisher(IntellijBuckAction.EVENT)
           .consume(this.getClass().toString());
       return PsiManager.getInstance(project).findFile(targetFile);
     }

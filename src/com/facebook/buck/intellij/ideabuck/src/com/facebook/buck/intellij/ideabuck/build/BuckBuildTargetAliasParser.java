@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.ideabuck.build;
 
 import com.google.common.collect.Sets;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -33,10 +32,9 @@ public final class BuckBuildTargetAliasParser {
   private static final char SEPARATOR = '=';
 
   public static Map<String, Set<String>> sTargetAlias =
-          new ConcurrentHashMap<String, Set<String>>();
+      new ConcurrentHashMap<String, Set<String>>();
 
-  private BuckBuildTargetAliasParser() {
-  }
+  private BuckBuildTargetAliasParser() {}
 
   /**
    * Get all alias declared in buck config file.

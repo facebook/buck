@@ -24,9 +24,7 @@ import com.intellij.lang.Language;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.codeStyle.LanguageCodeStyleSettingsProvider;
 
-/**
- * BUCK code style settings.
- */
+/** BUCK code style settings. */
 public class BuckLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSettingsProvider {
 
   @Override

@@ -21,7 +21,6 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsCon
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.TestResultsAvailableConsumer;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsAvailable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BuckResultsAvailableHandler implements BuckEventHandler {
@@ -30,13 +29,14 @@ public class BuckResultsAvailableHandler implements BuckEventHandler {
       String rawMessage,
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
-      ObjectMapper objectMapper) throws IOException {
+      ObjectMapper objectMapper)
+      throws IOException {
     TestResultsAvailable testResultsAvailable =
         objectMapper.readValue(rawMessage, TestResultsAvailable.class);
 
     testResultsAvailable.getResults();
-    TestResultsAvailableConsumer consumer = buckEventsConsumerFactory
-        .getTestResultsAvailableConsumer();
+    TestResultsAvailableConsumer consumer =
+        buckEventsConsumerFactory.getTestResultsAvailableConsumer();
     consumer.consumeTestResultsAvailable(event.getTimestamp(), testResultsAvailable.getResults());
   }
 }

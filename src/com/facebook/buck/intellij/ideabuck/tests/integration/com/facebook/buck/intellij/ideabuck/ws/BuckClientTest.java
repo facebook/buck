@@ -29,7 +29,6 @@ import com.intellij.mock.MockProjectEx;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
-
 import org.junit.Test;
 
 public class BuckClientTest {
@@ -37,17 +36,16 @@ public class BuckClientTest {
   public class TestBuckEventHandler implements BuckEventsHandlerInterface {
 
     private String lastMessage = "";
+
     public String getLastMessage() {
       return this.lastMessage;
     }
 
     @Override
-    public void onConnect() {
-    }
+    public void onConnect() {}
 
     @Override
-    public void onDisconnect() {
-    }
+    public void onDisconnect() {}
 
     @Override
     public void onMessage(String message) {
