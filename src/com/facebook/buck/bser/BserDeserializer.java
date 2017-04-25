@@ -33,7 +33,6 @@ import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 import com.facebook.buck.util.ImmutableMapWithNullValues;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.BufferUnderflowException;
@@ -48,25 +47,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import javax.annotation.Nullable;
 
 /**
  * Decoder for the BSER binary JSON format used by the Watchman service:
  *
- * https://facebook.github.io/watchman/docs/bser.html
+ * <p>https://facebook.github.io/watchman/docs/bser.html
  */
 public class BserDeserializer {
 
   public enum KeyOrdering {
-      UNSORTED,
-      SORTED
+    UNSORTED,
+    SORTED
   }
 
-  /**
-   * Exception thrown when BSER parser unexpectedly reaches the end of
-   * the input stream.
-   */
+  /** Exception thrown when BSER parser unexpectedly reaches the end of the input stream. */
   @SuppressWarnings("serial")
   public static class BserEofException extends IOException {
     public BserEofException(String message) {
@@ -82,16 +77,14 @@ public class BserDeserializer {
   private final CharsetDecoder utf8Decoder;
 
   /**
-   * If {@code keyOrdering} is {@code SORTED}, any {@code Map} objects
-   * in the resulting value will have their keys sorted in natural
-   * order. Otherwise, any {@code Map}s will have their keys in the
-   * same order with which they were encoded.
+   * If {@code keyOrdering} is {@code SORTED}, any {@code Map} objects in the resulting value will
+   * have their keys sorted in natural order. Otherwise, any {@code Map}s will have their keys in
+   * the same order with which they were encoded.
    */
   public BserDeserializer(KeyOrdering keyOrdering) {
     this.keyOrdering = keyOrdering;
-    this.utf8Decoder = StandardCharsets.UTF_8
-        .newDecoder()
-        .onMalformedInput(CodingErrorAction.REPORT);
+    this.utf8Decoder =
+        StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT);
   }
 
   // 2 bytes marker, 1 byte int size
@@ -103,9 +96,8 @@ public class BserDeserializer {
   /**
    * Deserializes the next BSER-encoded value from the stream.
    *
-   * @return either a {@link String}, {@link Number}, {@link List},
-   * {@link Map}, or {@code null}, depending on the type of the
-   * top-level encoded object.
+   * @return either a {@link String}, {@link Number}, {@link List}, {@link Map}, or {@code null},
+   *     depending on the type of the top-level encoded object.
    */
   @Nullable
   public Object deserializeBserValue(InputStream inputStream) throws IOException {
@@ -125,8 +117,7 @@ public class BserDeserializer {
       throw new BserEofException(
           String.format(
               "Invalid BSER header (expected %d bytes, got %d bytes)",
-              INITIAL_SNIFF_LEN,
-              sniffBytesRead));
+              INITIAL_SNIFF_LEN, sniffBytesRead));
     }
 
     if (sniffBuffer.get() != 0x00 || sniffBuffer.get() != 0x01) {
@@ -149,39 +140,29 @@ public class BserDeserializer {
         lengthBytesRemaining = 8;
         break;
       default:
-        throw new IOException(
-            String.format("Unrecognized BSER header length type %d", lengthType));
+        throw new IOException(String.format("Unrecognized BSER header length type %d", lengthType));
     }
-    int lengthBytesRead = ByteStreams.read(
-        inputStream,
-        sniffBuffer.array(),
-        sniffBuffer.position(),
-        lengthBytesRemaining);
+    int lengthBytesRead =
+        ByteStreams.read(
+            inputStream, sniffBuffer.array(), sniffBuffer.position(), lengthBytesRemaining);
     if (lengthBytesRead < lengthBytesRemaining) {
       throw new BserEofException(
           String.format(
               "Invalid BSER header length (expected %d bytes, got %d bytes)",
-              lengthBytesRemaining,
-              lengthBytesRead));
+              lengthBytesRemaining, lengthBytesRead));
     }
     int bytesRemaining = deserializeIntLen(sniffBuffer, lengthType);
 
-    ByteBuffer bserBuffer = ByteBuffer.allocate(bytesRemaining)
-        .order(ByteOrder.nativeOrder());
+    ByteBuffer bserBuffer = ByteBuffer.allocate(bytesRemaining).order(ByteOrder.nativeOrder());
     Preconditions.checkState(bserBuffer.hasArray());
 
-    int remainingBytesRead = ByteStreams.read(
-        inputStream,
-        bserBuffer.array(),
-        0,
-        bytesRemaining);
+    int remainingBytesRead = ByteStreams.read(inputStream, bserBuffer.array(), 0, bytesRemaining);
 
     if (remainingBytesRead < bytesRemaining) {
       throw new IOException(
           String.format(
               "Invalid BSER header (expected %d bytes, got %d bytes)",
-              bytesRemaining,
-              remainingBytesRead));
+              bytesRemaining, remainingBytesRead));
     }
 
     return bserBuffer;
@@ -191,15 +172,9 @@ public class BserDeserializer {
     long value = deserializeNumber(buffer, type).longValue();
     if (value > Integer.MAX_VALUE) {
       throw new IOException(
-          String.format(
-              "BSER length out of range (%d > %d)",
-              value,
-              Integer.MAX_VALUE));
+          String.format("BSER length out of range (%d > %d)", value, Integer.MAX_VALUE));
     } else if (value < 0) {
-      throw new IOException(
-          String.format(
-              "BSER length out of range (%d < 0)",
-              value));
+      throw new IOException(String.format("BSER length out of range (%d < 0)", value));
     }
     return (int) value;
   }
@@ -268,9 +243,7 @@ public class BserDeserializer {
       byte stringType = buffer.get();
       if (stringType != BSER_STRING) {
         throw new IOException(
-            String.format(
-                "Unrecognized BSER object key type %d, expected string",
-                stringType));
+            String.format("Unrecognized BSER object key type %d, expected string", stringType));
       }
       String key = deserializeString(buffer);
       Object value = deserializeRecursive(buffer);

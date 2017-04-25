@@ -18,7 +18,7 @@ package com.facebook.buck.bser;
 
 public class BserConstants {
   // Utility class, do not instantiate.
-  private BserConstants() { }
+  private BserConstants() {}
 
   public static final byte BSER_ARRAY = 0x00;
   public static final byte BSER_OBJECT = 0x01;
