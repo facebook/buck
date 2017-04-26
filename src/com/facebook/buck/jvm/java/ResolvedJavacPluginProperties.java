@@ -65,6 +65,14 @@ public class ResolvedJavacPluginProperties implements RuleKeyAppendable {
     return inner.getCanReuseClassLoader();
   }
 
+  public boolean getDoesNotAffectAbi() {
+    return inner.getDoesNotAffectAbi();
+  }
+
+  public boolean getSupportAbiGenerationFromSource() {
+    return inner.getSupportsAbiGenerationFromSource();
+  }
+
   public ImmutableSortedSet<String> getProcessorNames() {
     return inner.getProcessorNames();
   }

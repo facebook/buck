@@ -43,7 +43,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   private final Javac javac;
-  private final JavacOptions javacOptions;
+  private JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
 
   public JavacToJarStepFactory(
@@ -51,6 +51,10 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.amender = amender;
+  }
+
+  public void setCompileAbi() {
+    javacOptions = javacOptions.withCompilationMode(Javac.CompilationMode.ABI);
   }
 
   @Override

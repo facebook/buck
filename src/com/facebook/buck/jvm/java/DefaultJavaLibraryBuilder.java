@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -238,6 +239,13 @@ public class DefaultJavaLibraryBuilder {
           classesToRemoveFromJar);
     }
 
+    protected BuildRule buildAbi() throws NoSuchBuildTargetException {
+      if (HasJavaAbi.isSourceAbiTarget(params.getBuildTarget())) {
+        return buildAbiFromSource();
+      }
+      return buildAbiFromClasses();
+    }
+
     protected BuildTarget getAbiJar() {
       if (abiJar == null) {
         abiJar =
@@ -250,10 +258,59 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean shouldBuildAbiFromSource() {
-      return false;
+      return isCompilingJava()
+          && sourceAbisEnabled()
+          && argsAllowSourceAbis()
+          && pluginsSupportSourceAbis();
     }
 
-    protected BuildRule buildAbi() throws NoSuchBuildTargetException {
+    private boolean isCompilingJava() {
+      return getCompileStepFactory() instanceof JavacToJarStepFactory;
+    }
+
+    private boolean sourceAbisEnabled() {
+      return EnumSet.of(
+              JavaBuckConfig.AbiGenerationMode.SOURCE,
+              JavaBuckConfig.AbiGenerationMode.SOURCE_WITH_DEPS)
+          .contains(Preconditions.checkNotNull(javaBuckConfig).getAbiGenerationMode());
+    }
+
+    private boolean argsAllowSourceAbis() {
+      return Preconditions.checkNotNull(args).generateAbiFromSource.orElse(true);
+    }
+
+    private boolean pluginsSupportSourceAbis() {
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
+          Preconditions.checkNotNull(javacOptions)
+              .getAnnotationProcessingParams()
+              .getAnnotationProcessors(params.getProjectFilesystem(), sourcePathResolver);
+
+      for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
+        if (!annotationProcessor.getDoesNotAffectAbi()
+            && !annotationProcessor.getSupportAbiGenerationFromSource()) {
+          // Processor is ABI-affecting but cannot run during ABI generation from source; disallow
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
+      JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
+      return new CalculateAbiFromSource(
+          getFinalParams(),
+          ruleFinder,
+          srcs,
+          resources,
+          getFinalCompileTimeClasspathSourcePaths(),
+          compileStepFactory,
+          resourcesRoot,
+          manifestFile,
+          classesToRemoveFromJar);
+    }
+
+    private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
       BuildTarget abiTarget = params.getBuildTarget();
       BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(abiTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);

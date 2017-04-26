@@ -18,7 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
+import com.facebook.buck.jvm.java.abi.StubGenerator;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -60,6 +62,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
+import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -171,6 +174,9 @@ public abstract class Jsr199Javac implements Javac {
             ZipOutputStreams.newJarOutputStream(
                 Preconditions.checkNotNull(directToJarPath),
                 ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
+        if (compilationMode == CompilationMode.ABI) {
+          jarOutputStream.setEntryHashingEnabled(true);
+        }
         return new JarBuilder(
                 context.getProjectFilesystem(), context.getEventSink(), context.getStdErr())
             .setEntriesToJar(context.getDirectToJarOutputSettings().get().getEntriesToJar())
@@ -255,16 +261,38 @@ public abstract class Jsr199Javac implements Javac {
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
     PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
-    BuckJavacTaskProxy javacTask =
-        BuckJavacTaskProxy.getTask(
-            loaderFactory,
-            compiler,
-            compilerOutputWriter,
-            context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-            diagnostics,
-            options,
-            classNamesForAnnotationProcessing,
-            compilationUnits);
+    BuckJavacTaskProxy javacTask;
+
+    if (compilationMode != CompilationMode.ABI) {
+      javacTask =
+          BuckJavacTaskProxy.getTask(
+              loaderFactory,
+              compiler,
+              compilerOutputWriter,
+              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              diagnostics,
+              options,
+              classNamesForAnnotationProcessing,
+              compilationUnits);
+    } else {
+      javacTask =
+          FrontendOnlyJavacTaskProxy.getTask(
+              loaderFactory,
+              compiler,
+              compilerOutputWriter,
+              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              diagnostics,
+              options,
+              classNamesForAnnotationProcessing,
+              compilationUnits);
+
+      javacTask.addPostEnterCallback(
+          topLevelTypes -> {
+            StubGenerator stubGenerator =
+                new StubGenerator(SourceVersion.RELEASE_8, javacTask.getElements(), fileManager);
+            stubGenerator.generate(topLevelTypes);
+          });
+    }
 
     PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 

@@ -317,6 +317,7 @@ java_library(
         "BuiltInJavac.java",
         "CalculateAbi.java",
         "CalculateAbiFromClasses.java",
+        "CalculateAbiFromSource.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryBuilder.java",
         "ForkMode.java",
