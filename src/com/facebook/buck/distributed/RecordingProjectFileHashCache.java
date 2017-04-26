@@ -78,7 +78,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     this.remoteFileHashes = remoteFileHashes;
 
     if (distBuildConfig.isPresent()) {
-      extractBuckConfigFileHashes(distBuildConfig.get());
+      recordWhitelistedPaths(distBuildConfig.get());
     }
   }
 
@@ -265,16 +265,13 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     return hashCode;
   }
 
-  private synchronized void extractBuckConfigFileHashes(DistBuildConfig distBuildConfig) {
-    // We want to materialize files during pre-loading for .buckconfig entries
-    materializeCurrentFileDuringPreloading = true;
-
+  private synchronized void recordWhitelistedPaths(DistBuildConfig distBuildConfig) {
     // TODO(alisdair,shivanker): KnownBuildRuleTypes always loads java compilers if they are
     // defined in a .buckconfig, regardless of what type of build is taking place. Unless peforming
     // a Java build, they are not added to the build graph, and as such Stampede needs to be told
     // about them directly via the whitelist.
 
-    // TODO(alisdair,ruibm): capture all .buckconfig dependencies automatically.
+    // TODO(alisdair,ruibm): Capture all .buckconfig dependencies automatically.
 
     Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
     if (!whitelist.isPresent()) {
@@ -287,6 +284,9 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
         delegate.getFilesystem().getRootPath().toString());
 
     try {
+      // We want to materialize files during pre-loading for .buckconfig entries
+      materializeCurrentFileDuringPreloading = true;
+
       for (Path absPath : whitelist.get()) {
         Optional<Path> relPathOpt = projectFilesystem.getPathRelativeToProjectRoot(absPath);
         if (!relPathOpt.isPresent()

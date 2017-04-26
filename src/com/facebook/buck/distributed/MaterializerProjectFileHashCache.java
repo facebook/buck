@@ -60,6 +60,12 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     this.projectFilesystem = delegate.getFilesystem();
   }
 
+  /**
+   * This method creates all symlinks and touches all regular files so that any file existence
+   * checks during action graph transformation go through (for instance,
+   * PrebuiltCxxLibraryDescription::requireSharedLibrary). Note: THIS IS A HACK. And this needs to
+   * be here until the misbehaving rules are fixed.
+   */
   public void preloadAllFiles() throws IOException {
     for (Path absPath : remoteFileHashesByAbsPath.keySet()) {
       LOG.info("Preloading: [%s]", absPath.toString());
