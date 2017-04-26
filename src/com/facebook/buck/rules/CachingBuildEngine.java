@@ -1089,15 +1089,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                                 e, "Error getting output size for %s.", rule));
                   }
 
-                  // If this rule is cacheable, upload it to the cache.
+                  // If this rule is cacheable...
                   if (outputSize.isPresent()
                       && shouldUploadToCache(buildContext, rule, success, outputSize.get())) {
-                    uploadToCache(success);
-                  }
 
-                  // Calculate the hash of outputs that were built locally and are cacheable.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY
-                      && shouldUploadToCache(buildContext, rule, success, outputSize.get())) {
+                    // Upload it to the cache.
+                    uploadToCache(success);
+
+                    // Compute it's output hash for logging/tracing purposes, as this artifact will
+                    // be consumed by other builds.
                     try {
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
