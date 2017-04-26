@@ -25,7 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Provides all files and directories recursively contained in a given directory as entries to be
@@ -38,6 +40,20 @@ class DirectoryJarEntryContainer implements JarEntryContainer {
   public DirectoryJarEntryContainer(Path directory) {
     this.directory = directory;
     this.owner = directory.toString();
+  }
+
+  @Nullable
+  @Override
+  public Manifest getManifest() throws IOException {
+    Path manifestPath = directory.resolve("META-INF").resolve("MANIFEST.MF");
+
+    if (!Files.isRegularFile(manifestPath)) {
+      return null;
+    }
+
+    try (InputStream manifestStream = Files.newInputStream(manifestPath)) {
+      return new Manifest(manifestStream);
+    }
   }
 
   @Override

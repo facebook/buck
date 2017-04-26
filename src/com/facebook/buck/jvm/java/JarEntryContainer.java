@@ -20,7 +20,9 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Represents a container for entries to be added to a jar file by @{link JarBuilder}. Examples
@@ -39,6 +41,9 @@ public interface JarEntryContainer extends AutoCloseable {
       throw new IllegalStateException("Must be a file or directory: " + source);
     }
   }
+
+  @Nullable
+  Manifest getManifest() throws IOException;
 
   Stream<JarEntrySupplier> stream() throws IOException;
 

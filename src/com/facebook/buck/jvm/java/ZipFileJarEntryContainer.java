@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
@@ -34,6 +35,12 @@ class ZipFileJarEntryContainer implements JarEntryContainer {
   public ZipFileJarEntryContainer(Path jarFilePath) {
     this.jarFilePath = jarFilePath;
     this.owner = jarFilePath.toString();
+  }
+
+  @Nullable
+  @Override
+  public Manifest getManifest() throws IOException {
+    return getJarFile().getManifest();
   }
 
   @Override
@@ -53,8 +60,12 @@ class ZipFileJarEntryContainer implements JarEntryContainer {
 
   private JarFile getJarFile() throws IOException {
     if (jar == null) {
-      File jarFile = jarFilePath.toFile();
-      jar = new JarFile(jarFile);
+      try {
+        File jarFile = jarFilePath.toFile();
+        jar = new JarFile(jarFile);
+      } catch (IOException e) {
+        throw new IOException("Failed to process ZipFile " + owner, e);
+      }
     }
 
     return jar;

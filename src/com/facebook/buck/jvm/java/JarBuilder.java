@@ -23,7 +23,6 @@ import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteStreams;
@@ -34,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -42,7 +42,6 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 public class JarBuilder {
@@ -56,7 +55,7 @@ public class JarBuilder {
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
   private Iterable<Pattern> blacklist = new ArrayList<>();
-  private ImmutableSortedSet<Path> entriesToJar = ImmutableSortedSet.of();
+  private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
 
   public JarBuilder(ProjectFilesystem filesystem, JavacEventSink eventSink, PrintStream stdErr) {
@@ -66,7 +65,19 @@ public class JarBuilder {
   }
 
   public JarBuilder setEntriesToJar(ImmutableSortedSet<Path> entriesToJar) {
-    this.entriesToJar = entriesToJar;
+    sourceContainers.clear();
+
+    entriesToJar
+        .stream()
+        .map(filesystem::getPathForRelativePath)
+        .map(JarEntryContainer::of)
+        .forEach(sourceContainers::add);
+
+    return this;
+  }
+
+  public JarBuilder addEntryContainer(JarEntryContainer container) {
+    sourceContainers.add(container);
     return this;
   }
 
@@ -111,11 +122,8 @@ public class JarBuilder {
     // Write the manifest first.
     writeManifest();
 
-    for (Path entry : entriesToJar) {
-      Path file = filesystem.getPathForRelativePath(entry);
-      Preconditions.checkArgument(
-          !file.equals(outputFile), "Trying to put file %s into itself", file);
-      addEntriesToJar(JarEntryContainer.of(file));
+    for (JarEntryContainer sourceContainer : sourceContainers) {
+      addEntriesToJar(sourceContainer);
     }
 
     if (mainClass != null && !mainClassPresent()) {
@@ -131,37 +139,11 @@ public class JarBuilder {
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     if (shouldMergeManifests) {
-      for (Path entry : entriesToJar) {
-        entry = filesystem.getPathForRelativePath(entry);
-        Manifest readManifest;
-        if (Files.isDirectory(entry)) {
-          Path manifestPath = entry.resolve(JarFile.MANIFEST_NAME);
-          if (!Files.exists(manifestPath)) {
-            continue;
-          }
-          try (InputStream inputStream = Files.newInputStream(manifestPath)) {
-            readManifest = new Manifest(inputStream);
-          }
-        } else {
-          // Assume a zip or jar file.
-          try {
-            try (ZipFile zipFile = new ZipFile(entry.toFile())) {
-              ZipEntry manifestEntry = zipFile.getEntry(JarFile.MANIFEST_NAME);
-              if (manifestEntry == null) {
-                continue;
-              }
-              try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
-                readManifest = new Manifest(inputStream);
-              }
-            }
-          } catch (IOException e) {
-            if (e.getMessage().contains(entry.toString())) {
-              throw e;
-            }
-            throw new IOException("Failed to process ZipFile " + entry, e);
-          }
+      for (JarEntryContainer sourceContainer : sourceContainers) {
+        Manifest readManifest = sourceContainer.getManifest();
+        if (readManifest != null) {
+          merge(manifest, readManifest);
         }
-        merge(manifest, readManifest);
       }
     }
 
