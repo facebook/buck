@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -28,7 +28,8 @@ public class CoercedTypeCache {
 
   public static final CoercedTypeCache INSTANCE = new CoercedTypeCache();
 
-  private final LoadingCache<TypeCoercerFactory, LoadingCache<Class<?>, ImmutableSet<ParamInfo>>>
+  private final LoadingCache<
+          TypeCoercerFactory, LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>>>
       coercedTypeCache;
 
   private CoercedTypeCache() {
@@ -36,24 +37,26 @@ public class CoercedTypeCache {
         CacheBuilder.newBuilder()
             .build(
                 new CacheLoader<
-                    TypeCoercerFactory, LoadingCache<Class<?>, ImmutableSet<ParamInfo>>>() {
+                    TypeCoercerFactory, LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>>>() {
                   @Override
-                  public LoadingCache<Class<?>, ImmutableSet<ParamInfo>> load(
+                  public LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>> load(
                       TypeCoercerFactory typeCoercerFactory) throws Exception {
                     return CacheBuilder.newBuilder()
                         .build(
-                            new CacheLoader<Class<?>, ImmutableSet<ParamInfo>>() {
+                            new CacheLoader<Class<?>, ImmutableMap<String, ParamInfo>>() {
                               @Override
-                              public ImmutableSet<ParamInfo> load(Class<?> coercableType)
+                              public ImmutableMap<String, ParamInfo> load(Class<?> coercableType)
                                   throws Exception {
-                                ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
+                                ImmutableMap.Builder<String, ParamInfo> allInfo =
+                                    new ImmutableMap.Builder<>();
 
                                 for (Field field : coercableType.getFields()) {
                                   if (Modifier.isFinal(field.getModifiers())) {
                                     continue;
                                   }
-                                  allInfo.add(
-                                      new ParamInfo(typeCoercerFactory, coercableType, field));
+                                  ParamInfo paramInfo =
+                                      new ParamInfo(typeCoercerFactory, coercableType, field);
+                                  allInfo.put(paramInfo.getName(), paramInfo);
                                 }
 
                                 return allInfo.build();
@@ -64,7 +67,7 @@ public class CoercedTypeCache {
   }
 
   /** @return All {@link ParamInfo}s for coercableType. */
-  public ImmutableSet<ParamInfo> getAllParamInfo(
+  public ImmutableMap<String, ParamInfo> getAllParamInfo(
       TypeCoercerFactory typeCoercerFactory, Class<?> coercableType) {
     return coercedTypeCache.getUnchecked(typeCoercerFactory).getUnchecked(coercableType);
   }

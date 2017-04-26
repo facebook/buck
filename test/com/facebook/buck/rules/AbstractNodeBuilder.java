@@ -201,7 +201,9 @@ public abstract class AbstractNodeBuilder<
   private void populateWithDefaultValues(TArg arg) {
     try {
       for (ParamInfo info :
-          CoercedTypeCache.INSTANCE.getAllParamInfo(TYPE_COERCER_FACTORY, arg.getClass())) {
+          CoercedTypeCache.INSTANCE
+              .getAllParamInfo(TYPE_COERCER_FACTORY, arg.getClass())
+              .values()) {
         if (info.isOptional()) {
           info.set(cellRoots, filesystem, target.getBasePath(), arg, null);
         }

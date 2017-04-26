@@ -84,7 +84,7 @@ public class ConstructorArgMarshaller {
       Map<String, ?> instance)
       throws ParamInfoException {
     for (ParamInfo info :
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass())) {
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()).values()) {
       info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);

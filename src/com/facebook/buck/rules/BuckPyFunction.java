@@ -76,7 +76,9 @@ public class BuckPyFunction {
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
         ImmutableSortedSet.copyOf(
-            CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()))) {
+            CoercedTypeCache.INSTANCE
+                .getAllParamInfo(typeCoercerFactory, dto.getClass())
+                .values())) {
       if (isSkippable(param)) {
         continue;
       }
