@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.testutil.compiler;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
@@ -41,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -189,9 +191,14 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   }
 
   public void compile() {
-    boolean result = getJavacTask().call();
+    boolean success = getJavacTask().call();
     if (!allowCompilationErrors) {
-      assertTrue("Compilation encountered errors", result);
+      if (!success) {
+        fail(
+            "Compilation failed! Diagnostics:\n"
+                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+      }
+      assertTrue("Compilation encountered errors", success);
     }
   }
 
