@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestCustomZipOutputStream;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Paths;
@@ -43,17 +44,14 @@ import org.junit.Test;
 public class JavaInMemoryFileManagerTest {
 
   private JavaInMemoryFileManager inMemoryFileManager;
-  private TestCustomZipOutputStream outputStream;
 
   @Before
   public void setUp() {
-    outputStream = new TestCustomZipOutputStream();
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     inMemoryFileManager =
         new JavaInMemoryFileManager(
             ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
             Paths.get(URI.create("file:///tmp/test.jar!/")),
-            outputStream,
             /*classesToBeRemovedFromJar */ ImmutableSet.of());
   }
 
@@ -80,9 +78,38 @@ public class JavaInMemoryFileManagerTest {
     stream.write("Hello World!".getBytes());
     stream.close();
 
+    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> entries = outputStream.getEntriesContent();
     assertEquals(1, entries.size());
     assertEquals("Hello World!", entries.get(0));
+  }
+
+  @Test
+  public void testFilesWrittenInSortedOrder() throws Exception {
+    JavaFileObject fileObject =
+        inMemoryFileManager.getJavaFileForOutput(
+            StandardLocation.CLASS_OUTPUT, "B.C", JavaFileObject.Kind.CLASS, null);
+    fileObject.openOutputStream().close();
+
+    fileObject =
+        inMemoryFileManager.getJavaFileForOutput(
+            StandardLocation.CLASS_OUTPUT, "A", JavaFileObject.Kind.CLASS, null);
+    fileObject.openOutputStream().close();
+
+    fileObject =
+        inMemoryFileManager.getJavaFileForOutput(
+            StandardLocation.CLASS_OUTPUT, "B", JavaFileObject.Kind.CLASS, null);
+    fileObject.openOutputStream().close();
+
+    fileObject =
+        inMemoryFileManager.getJavaFileForOutput(
+            StandardLocation.CLASS_OUTPUT, "B$D", JavaFileObject.Kind.CLASS, null);
+    fileObject.openOutputStream().close();
+
+    TestCustomZipOutputStream outputStream = writeToJar();
+    assertThat(
+        outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
+        Matchers.contains("A.class", "B$D.class", "B.class", "B/C.class"));
   }
 
   @Test
@@ -96,6 +123,7 @@ public class JavaInMemoryFileManagerTest {
 
     fileObject.openOutputStream().close();
 
+    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> zipEntries =
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList());
     assertThat(zipEntries, Matchers.contains("jvm/java/JavaFileParser.class"));
@@ -120,6 +148,7 @@ public class JavaInMemoryFileManagerTest {
     fileObject1.openOutputStream().close();
     fileObject2.openOutputStream().close();
 
+    TestCustomZipOutputStream outputStream = writeToJar();
     List<String> zipEntries =
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList());
     assertThat(
@@ -227,5 +256,50 @@ public class JavaInMemoryFileManagerTest {
 
     assertEquals(fileObject1, recursiveIterable.next());
     assertFalse(recursiveIterable.hasNext());
+  }
+
+  @Test
+  public void testGetFileForOutputWithoutOpeningWritesNothing() throws IOException {
+    inMemoryFileManager.getFileForOutput(
+        StandardLocation.CLASS_OUTPUT, "jvm.java", "JavaFileParser", null);
+
+    TestCustomZipOutputStream outputStream = writeToJar();
+    assertThat(
+        outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
+        Matchers.empty());
+  }
+
+  @Test
+  public void testGetJavaFileForOutputWithoutOpeningWritesNothing() throws IOException {
+    inMemoryFileManager.getJavaFileForOutput(
+        StandardLocation.CLASS_OUTPUT, "jvm.java.JavaFileParser", JavaFileObject.Kind.OTHER, null);
+
+    TestCustomZipOutputStream outputStream = writeToJar();
+    assertThat(
+        outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
+        Matchers.empty());
+  }
+
+  @Test
+  public void testWriteToStreamWithoutClosingWritesNothing() throws IOException {
+    JavaFileObject fileObject =
+        inMemoryFileManager.getJavaFileForOutput(
+            StandardLocation.CLASS_OUTPUT,
+            "jvm.java.JavaFileParser",
+            JavaFileObject.Kind.OTHER,
+            null);
+
+    fileObject.openOutputStream().write("Hello".getBytes());
+
+    TestCustomZipOutputStream outputStream = writeToJar();
+    assertThat(
+        outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
+        Matchers.empty());
+  }
+
+  private TestCustomZipOutputStream writeToJar() throws IOException {
+    TestCustomZipOutputStream os = new TestCustomZipOutputStream();
+    inMemoryFileManager.writeToJar(os);
+    return os;
   }
 }

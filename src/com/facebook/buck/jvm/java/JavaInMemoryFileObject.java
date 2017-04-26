@@ -45,18 +45,11 @@ public class JavaInMemoryFileObject extends JarFileObject {
 
   private boolean isOpened = false;
   private boolean isWritten = false;
-  private final CustomZipOutputStream jarOutputStream;
   private final Semaphore jarFileSemaphore;
   private final ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
 
-  public JavaInMemoryFileObject(
-      URI uri,
-      String pathInJar,
-      Kind kind,
-      CustomZipOutputStream jarOutputStream,
-      Semaphore jarFileSemaphore) {
+  public JavaInMemoryFileObject(URI uri, String pathInJar, Kind kind, Semaphore jarFileSemaphore) {
     super(uri, pathInJar, kind);
-    this.jarOutputStream = jarOutputStream;
     this.jarFileSemaphore = jarFileSemaphore;
   }
 
@@ -74,7 +67,6 @@ public class JavaInMemoryFileObject extends JarFileObject {
       throw new IOException(ALREADY_OPENED);
     }
     isOpened = true;
-    final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
     return new OutputStream() {
       @Override
       public void write(int b) throws IOException {
@@ -84,15 +76,7 @@ public class JavaInMemoryFileObject extends JarFileObject {
       @Override
       public void close() throws IOException {
         bos.close();
-        jarFileSemaphore.acquireUninterruptibly();
-        try {
-          jarOutputStream.putNextEntry(entry);
-          jarOutputStream.write(bos.toByteArray());
-          jarOutputStream.closeEntry();
-          isWritten = true;
-        } finally {
-          jarFileSemaphore.release();
-        }
+        isWritten = true;
       }
     };
   }
@@ -104,11 +88,31 @@ public class JavaInMemoryFileObject extends JarFileObject {
 
   @Override
   public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+    if (!isWritten) {
+      throw new FileNotFoundException(uri.toString());
+    }
     return new String(bos.toByteArray());
   }
 
   @Override
   public Writer openWriter() throws IOException {
     return new OutputStreamWriter(this.openOutputStream());
+  }
+
+  @Override
+  public void writeToJar(CustomZipOutputStream jarOutputStream) throws IOException {
+    if (!isWritten) {
+      // Nothing was written to this file, so it doesn't really exist.
+      return;
+    }
+    jarFileSemaphore.acquireUninterruptibly();
+    try {
+      final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
+      jarOutputStream.putNextEntry(entry);
+      jarOutputStream.write(bos.toByteArray());
+      jarOutputStream.closeEntry();
+    } finally {
+      jarFileSemaphore.release();
+    }
   }
 }

@@ -37,8 +37,6 @@ import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -125,26 +123,20 @@ public abstract class Jsr199Javac implements Javac {
     CustomJarOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
     JavaInMemoryFileManager inMemoryFileManager = null;
+    Path directToJarPath = null;
     try {
       fileManager = compiler.getStandardFileManager(null, null, null);
-      Supplier<ImmutableSet<String>> alreadyAddedFilesAvailableAfterCompilation =
-          Suppliers.ofInstance(ImmutableSet.of());
       if (context.getDirectToJarOutputSettings().isPresent()) {
-        Path path =
+        directToJarPath =
             context
                 .getProjectFilesystem()
                 .getPathForRelativePath(
                     context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-        jarOutputStream =
-            ZipOutputStreams.newJarOutputStream(
-                path, ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
         inMemoryFileManager =
             new JavaInMemoryFileManager(
                 fileManager,
-                path,
-                jarOutputStream,
+                directToJarPath,
                 context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-        alreadyAddedFilesAvailableAfterCompilation = inMemoryFileManager::getEntries;
         fileManager = inMemoryFileManager;
       }
 
@@ -175,10 +167,15 @@ public abstract class Jsr199Javac implements Javac {
           return result;
         }
 
+        jarOutputStream =
+            ZipOutputStreams.newJarOutputStream(
+                Preconditions.checkNotNull(directToJarPath),
+                ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
         return new JarBuilder(
                 context.getProjectFilesystem(), context.getEventSink(), context.getStdErr())
             .setEntriesToJar(context.getDirectToJarOutputSettings().get().getEntriesToJar())
-            .setAlreadyAddedEntries(alreadyAddedFilesAvailableAfterCompilation.get())
+            .setAlreadyAddedEntries(
+                Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarOutputStream))
             .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
             .setManifestFile(
                 context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
@@ -187,6 +184,7 @@ public abstract class Jsr199Javac implements Javac {
             .appendToJarFile(
                 context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
                 Preconditions.checkNotNull(jarOutputStream));
+
       } finally {
         close(compilationUnits);
       }

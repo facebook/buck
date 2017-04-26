@@ -33,12 +33,10 @@ import org.junit.Test;
 /** Tests {@link JavaInMemoryFileObject} */
 public class JavaInMemoryFileObjectTest {
 
-  private TestCustomZipOutputStream outputStream;
   private Semaphore semaphore;
 
   @Before
   public void setUp() {
-    outputStream = new TestCustomZipOutputStream();
     semaphore = new Semaphore(1);
   }
 
@@ -50,7 +48,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("file://tmp/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     final String expectedName = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
@@ -65,13 +62,13 @@ public class JavaInMemoryFileObjectTest {
             URI.create("file://tmp/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     OutputStream out = inMemoryFileObject.openOutputStream();
     out.write("content".getBytes());
     out.close();
 
+    TestCustomZipOutputStream outputStream = writeToJar(inMemoryFileObject);
     assertEquals(1, outputStream.getZipEntries().size());
     assertEquals(1, outputStream.getEntriesContent().size());
     assertEquals("content", outputStream.getEntriesContent().get(0));
@@ -85,7 +82,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("file://tmp/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     String relativePath2 = "com/facebook/buck/java/JavaLibrary.class";
@@ -94,7 +90,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("file://tmp/" + relativePath2),
             relativePath2,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     OutputStream file1Out = file1.openOutputStream();
@@ -105,6 +100,7 @@ public class JavaInMemoryFileObjectTest {
     file2Out.write("file2Content".getBytes());
     file2Out.close();
 
+    TestCustomZipOutputStream outputStream = writeToJar(file1, file2);
     assertEquals(2, outputStream.getZipEntries().size());
     assertEquals(2, outputStream.getEntriesContent().size());
     assertEquals("file1Content", outputStream.getEntriesContent().get(0));
@@ -120,7 +116,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     final String expectedName =
@@ -139,7 +134,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     try (InputStream stream = inMemoryFileObject.openInputStream()) {
@@ -156,7 +150,6 @@ public class JavaInMemoryFileObjectTest {
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
             JavaFileObject.Kind.CLASS,
-            outputStream,
             semaphore);
 
     try (OutputStream stream = inMemoryFileObject.openOutputStream()) {
@@ -169,5 +162,14 @@ public class JavaInMemoryFileObjectTest {
     } catch (IOException e) {
       throw e;
     }
+  }
+
+  public TestCustomZipOutputStream writeToJar(JavaInMemoryFileObject... entries)
+      throws IOException {
+    TestCustomZipOutputStream os = new TestCustomZipOutputStream();
+    for (JavaInMemoryFileObject entry : entries) {
+      entry.writeToJar(os);
+    }
+    return os;
   }
 }

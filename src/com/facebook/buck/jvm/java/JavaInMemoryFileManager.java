@@ -31,12 +31,15 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -52,22 +55,19 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private static final Logger LOG = Logger.get(JavaInMemoryFileManager.class);
 
   private Path jarPath;
-  private CustomZipOutputStream jarOutputStream;
   private StandardJavaFileManager delegate;
   private Semaphore jarFileSemaphore = new Semaphore(1);
   private Set<String> directoryPaths;
-  private Map<String, JavaFileObject> fileForOutputPaths;
+  private Map<String, JarFileObject> fileForOutputPaths;
   private PatternsMatcher classesToRemoveFromJar;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
       Path jarPath,
-      CustomZipOutputStream jarOutputStream,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(standardManager);
     this.delegate = standardManager;
     this.jarPath = jarPath;
-    this.jarOutputStream = jarOutputStream;
     this.directoryPaths = new HashSet<>();
     this.fileForOutputPaths = new HashMap<>();
     this.classesToRemoveFromJar = new PatternsMatcher(classesToRemoveFromJar);
@@ -205,7 +205,18 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return results;
   }
 
-  public ImmutableSet<String> getEntries() {
+  public ImmutableSet<String> writeToJar(CustomZipOutputStream jarOutputStream) throws IOException {
+    List<Map.Entry<String, JarFileObject>> sortedEntries =
+        fileForOutputPaths
+            .entrySet()
+            .stream()
+            .sorted(Comparator.comparing(entry -> entry.getKey()))
+            .collect(Collectors.toList());
+
+    for (Map.Entry<String, JarFileObject> sortedEntry : sortedEntries) {
+      sortedEntry.getValue().writeToJar(jarOutputStream);
+    }
+
     return ImmutableSet.copyOf(Sets.union(directoryPaths, fileForOutputPaths.keySet()));
   }
 
@@ -216,8 +227,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path)
       throws IOException {
     return fileForOutputPaths.computeIfAbsent(
-        path,
-        p -> new JavaInMemoryFileObject(getUriPath(p), p, kind, jarOutputStream, jarFileSemaphore));
+        path, p -> new JavaInMemoryFileObject(getUriPath(p), p, kind, jarFileSemaphore));
   }
 
   private JavaFileObject getJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
