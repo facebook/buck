@@ -21,14 +21,14 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.ThrowingSupplier;
 import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
-import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +48,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -70,7 +69,7 @@ public class JarBuilder {
   private boolean shouldMergeManifests;
   private Iterable<Pattern> blacklist = new ArrayList<>();
   private ImmutableSortedSet<Path> entriesToJar = ImmutableSortedSet.of();
-  private Set<String> alreadyAddedEntries = ImmutableSet.of();
+  private Set<String> alreadyAddedEntries = new HashSet<>();
 
   public JarBuilder(ProjectFilesystem filesystem, JavacEventSink eventSink, PrintStream stdErr) {
     this.filesystem = filesystem;
@@ -84,7 +83,7 @@ public class JarBuilder {
   }
 
   public JarBuilder setAlreadyAddedEntries(ImmutableSet<String> alreadyAddedEntries) {
-    this.alreadyAddedEntries = new HashSet<>(alreadyAddedEntries);
+    alreadyAddedEntries.forEach(this.alreadyAddedEntries::add);
     return this;
   }
 
@@ -120,8 +119,6 @@ public class JarBuilder {
       throws IOException {
     this.outputFile = filesystem.getPathForRelativePath(relativeOutputFile);
     this.jar = jar;
-    this.entriesToJar = entriesToJar;
-    this.alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntries);
 
     // Write the manifest first.
     writeManifest();
@@ -219,37 +216,7 @@ public class JarBuilder {
   private void copyZipEntriesToJar(Path inputFile) throws IOException {
     try (ZipFile zip = new ZipFile(inputFile.toFile())) {
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
-        ZipEntry entry = entries.nextElement();
-        String entryName = entry.getName();
-
-        // We already read the manifest. No need to read it again
-        if (JarFile.MANIFEST_NAME.equals(entryName)) {
-          continue;
-        }
-
-        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-        if (shouldEntryBeRemovedFromJar(entryName)) {
-          continue;
-        }
-
-        // We're in the process of merging a bunch of different jar files. These typically contain
-        // just ".class" files and the manifest, but they can also include things like license files
-        // from third party libraries and config files. We should include those license files within
-        // the jar we're creating. Extracting them is left as an exercise for the consumer of the
-        // jar.  Because we don't know which files are important, the only ones we skip are
-        // duplicate class files.
-        if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-          // Duplicate entries. Skip.
-          eventSink.reportEvent(
-              determineSeverity(entry),
-              "Duplicate found when adding '%s' to '%s' from '%s'",
-              entryName,
-              outputFile.toAbsolutePath(),
-              inputFile.toAbsolutePath());
-          continue;
-        }
-
-        ZipEntry newEntry = new ZipEntry(entry);
+        CustomZipEntry entry = new CustomZipEntry(entries.nextElement());
 
         // For deflated entries, the act of re-"putting" this entry means we're re-compressing
         // the data that we've just uncompressed.  Due to various environmental issues (e.g. a
@@ -262,14 +229,10 @@ public class JarBuilder {
         // ZipEntry(String) would).
         // See https://github.com/spearce/buck/commit/8338c1c3d4a546f577eed0c9941d9f1c2ba0a1b7.
         if (entry.getMethod() == ZipEntry.DEFLATED) {
-          newEntry.setCompressedSize(-1);
+          entry.setCompressedSize(-1);
         }
 
-        jar.putNextEntry(newEntry);
-        try (InputStream inputStream = zip.getInputStream(entry)) {
-          ByteStreams.copy(inputStream, jar);
-        }
-        jar.closeEntry();
+        addEntryToJar(inputFile, entry, () -> zip.getInputStream(entry));
       }
     } catch (ZipException e) {
       throw new IOException("Failed to process zip file " + inputFile + ": " + e.getMessage(), e);
@@ -285,7 +248,7 @@ public class JarBuilder {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
-    final Map<String, Pair<JarEntry, Optional<Path>>> entries = new TreeMap<>();
+    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
     filesystem.walkFileTree(
         directory,
@@ -297,32 +260,7 @@ public class JarBuilder {
             String relativePath =
                 MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
 
-            // Skip re-reading the manifest
-            if (JarFile.MANIFEST_NAME.equals(relativePath)) {
-              return FileVisitResult.CONTINUE;
-            }
-
-            // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-            if (shouldEntryBeRemovedFromJar(relativePath)) {
-              return FileVisitResult.CONTINUE;
-            }
-
-            JarEntry entry = new JarEntry(relativePath);
-            String entryName = entry.getName();
-            // We want deterministic JARs, so avoid mtimes.
-            entry.setTime(ZipConstants.getFakeTime());
-
-            // We expect there to be many duplicate entries for things like directories. Creating
-            // those repeatedly would be lame, so don't do that.
-            if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-              if (!entryName.endsWith("/")) {
-                eventSink.reportEvent(
-                    determineSeverity(entry),
-                    "Duplicate found when adding directory to jar: %s",
-                    relativePath);
-              }
-              return FileVisitResult.CONTINUE;
-            }
+            CustomZipEntry entry = new CustomZipEntry(relativePath);
 
             entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
             return FileVisitResult.CONTINUE;
@@ -341,22 +279,71 @@ public class JarBuilder {
             if (alreadyAddedEntries.contains(entryName)) {
               return FileVisitResult.CONTINUE;
             }
-            JarEntry entry = new JarEntry(entryName);
-            // We want deterministic JARs, so avoid mtimes.
-            entry.setTime(ZipConstants.getFakeTime());
+            CustomZipEntry entry = new CustomZipEntry(entryName);
             entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
             return FileVisitResult.CONTINUE;
           }
         });
 
     // Write the entries out using the iteration order of the tree map above.
-    for (Pair<JarEntry, Optional<Path>> entry : entries.values()) {
-      jar.putNextEntry(entry.getFirst());
-      if (entry.getSecond().isPresent()) {
-        Files.copy(entry.getSecond().get(), jar);
-      }
-      jar.closeEntry();
+    for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
+      addEntryToJar(
+          directory,
+          entry.getFirst(),
+          () -> {
+            Optional<Path> filePath = entry.getSecond();
+            if (filePath.isPresent()) {
+              return Files.newInputStream(filePath.get());
+            }
+            return null;
+          });
     }
+  }
+
+  private void addEntryToJar(
+      Path entryOwner,
+      CustomZipEntry entry,
+      ThrowingSupplier<InputStream, IOException> inputStreamSupplier)
+      throws IOException {
+    String entryName = entry.getName();
+
+    // We already read the manifest. No need to read it again
+    if (JarFile.MANIFEST_NAME.equals(entryName)) {
+      return;
+    }
+
+    // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
+    if (shouldEntryBeRemovedFromJar(entryName)) {
+      return;
+    }
+
+    // We're in the process of merging a bunch of different jar files. These typically contain
+    // just ".class" files and the manifest, but they can also include things like license files
+    // from third party libraries and config files. We should include those license files within
+    // the jar we're creating. Extracting them is left as an exercise for the consumer of the
+    // jar.  Because we don't know which files are important, the only ones we skip are
+    // duplicate class files.
+    if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
+      if (!entryName.endsWith("/")) {
+        // Duplicate entries. Skip.
+        eventSink.reportEvent(
+            determineSeverity(entry),
+            "Duplicate found when adding '%s' to '%s' from '%s'",
+            entryName,
+            outputFile,
+            entryOwner);
+      }
+      return;
+    }
+
+    jar.putNextEntry(entry);
+    try (InputStream entryInputStream = inputStreamSupplier.get()) {
+      if (entryInputStream != null) {
+        // Null stream means a directory
+        ByteStreams.copy(entryInputStream, jar);
+      }
+    }
+    jar.closeEntry();
   }
 
   private boolean shouldEntryBeRemovedFromJar(String relativePath) {
