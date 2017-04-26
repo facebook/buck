@@ -2,6 +2,12 @@ CONFIG_SRCS = [
     "VersionControlBuckConfig.java",
 ]
 
+VALUE_TYPES_SRCS = [
+    "AbstractVersionControlStats.java",
+    "AbstractPregeneratedVersionControlStats.java",
+    "CommonVersionControlStats.java",
+]
+
 GENERATOR_SRCS = [
     "VersionControlStatsEvent.java",
     "VersionControlStatsGenerator.java",
@@ -16,7 +22,12 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
-    deps = ["//src/com/facebook/buck/cli:config"],
+    deps = [
+        ":value_types",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_library(
@@ -29,6 +40,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        ":value_types",
         ":versioncontrol",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -39,6 +51,7 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jsr:jsr305",
     ],
 )
 
@@ -51,10 +64,22 @@ export_file(
 )
 
 java_immutables_library(
+    name = "value_types",
+    srcs = VALUE_TYPES_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log/views:views",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)
+
+java_library(
     name = "versioncontrol",
     srcs = glob(
         ["*.java"],
-        excludes = CONFIG_SRCS + GENERATOR_SRCS,
+        excludes = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
     ),
     resources = [
         "rawmanifest.py",
@@ -66,6 +91,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        ":value_types",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:simple_types",

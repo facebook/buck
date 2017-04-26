@@ -21,15 +21,16 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -49,6 +50,7 @@ import java.util.Optional;
 public class Cell {
 
   private final ImmutableSet<Path> knownRoots;
+  private final Optional<String> canonicalName;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -67,14 +69,16 @@ public class Cell {
    * Should only be constructed by {@link CellProvider}.
    */
   Cell(
-      final ImmutableSet<Path> knownRoots,
-      final ProjectFilesystem filesystem,
-      final Watchman watchman,
-      final BuckConfig config,
-      final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final CellProvider cellProvider) {
+      ImmutableSet<Path> knownRoots,
+      Optional<String> canonicalName,
+      ProjectFilesystem filesystem,
+      Watchman watchman,
+      BuckConfig config,
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      CellProvider cellProvider) {
 
     this.knownRoots = knownRoots;
+    this.canonicalName = canonicalName;
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
@@ -118,6 +122,10 @@ public class Cell {
 
   public String getBuildFileName() {
     return config.getView(ParserConfig.class).getBuildFileName();
+  }
+
+  public Optional<String> getCanonicalName() {
+    return canonicalName;
   }
 
   /**
@@ -164,6 +172,19 @@ public class Cell {
       return Optional.of(getCell(target));
     }
     return Optional.empty();
+  }
+
+  /**
+   * Returns a list of all cells, including this cell.  If this cell is the root, getAllCells will
+   * necessarily return all possible cells that this build may interact with, since the root cell is
+   * required to declare a mapping for all cell names.
+   */
+  public ImmutableList<Cell> getAllCells() {
+    return RichStream.from(knownRoots)
+        .concat(RichStream.of(getRoot()))
+        .distinct()
+        .map(cellProvider::getCellByPath)
+        .toImmutableList();
   }
 
   /**
@@ -222,20 +243,11 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
       boolean ignoreBuckAutodepsFiles) {
-    ProjectBuildFileParserFactory factory = createBuildFileParserFactory();
-    return factory.createParser(
-        marshaller,
-        console,
-        config.getEnvironment(),
-        eventBus,
-        ignoreBuckAutodepsFiles);
-  }
 
-  private ProjectBuildFileParserFactory createBuildFileParserFactory() {
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
     boolean useWatchmanGlob =
@@ -250,10 +262,11 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new DefaultProjectBuildFileParserFactory(
+    return new ProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
+            .setCellName(getCanonicalName().orElse(""))
             .setPythonInterpreter(pythonInterpreter)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
@@ -270,7 +283,12 @@ public class Cell {
             .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build());
+            .build(),
+        typeCoercerFactory,
+        config.getEnvironment(),
+        eventBus,
+        new DefaultProcessExecutor(console),
+        ignoreBuckAutodepsFiles);
   }
 
   @Override

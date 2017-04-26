@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -62,11 +64,10 @@ public class BuckPyFunction {
           '<',
           '>')
   );
+  private final TypeCoercerFactory typeCoercerFactory;
 
-  private final ConstructorArgMarshaller argMarshaller;
-
-  public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
-    this.argMarshaller = argMarshaller;
+  public BuckPyFunction(TypeCoercerFactory typeCoercerFactory) {
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   public String toPythonFunction(BuildRuleType type, Object dto) {
@@ -74,7 +75,8 @@ public class BuckPyFunction {
 
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
-    for (ParamInfo param : ImmutableSortedSet.copyOf(argMarshaller.getAllParamInfo(dto))) {
+    for (ParamInfo param : ImmutableSortedSet.copyOf(
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()))) {
       if (isSkippable(param)) {
         continue;
       }

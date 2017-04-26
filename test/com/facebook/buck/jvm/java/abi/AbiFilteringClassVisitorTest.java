@@ -47,6 +47,11 @@ public class AbiFilteringClassVisitorTest {
   }
 
   @Test
+  public void testExcludesSyntheticFields() {
+    testExcludesFieldWithAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC);
+  }
+
+  @Test
   public void testIncludesPackageFields() {
     testIncludesFieldWithAccess(0);
   }
@@ -94,6 +99,11 @@ public class AbiFilteringClassVisitorTest {
   @Test
   public void testIncludesPublicMethods() {
     testIncludesMethodWithAccess(Opcodes.ACC_PUBLIC);
+  }
+
+  @Test
+  public void testExcludesSyntheticMethods() {
+    testExcludesMethodWithAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC);
   }
 
   @Test
@@ -161,6 +171,20 @@ public class AbiFilteringClassVisitorTest {
 
     visitClass(filteringVisitor, "Foo");
     filteringVisitor.visitInnerClass("Foo$Inner", "Foo", "Inner", Opcodes.ACC_PRIVATE);
+    verify(mockVisitor);
+  }
+
+  @Test
+  public void testExcludesSyntheticInnerClasses() {
+    visitClass(mockVisitor, "Foo");
+    replay(mockVisitor);
+
+    visitClass(filteringVisitor, "Foo");
+    filteringVisitor.visitInnerClass(
+        "Foo$Inner",
+        "Foo",
+        "Inner",
+        Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC);
     verify(mockVisitor);
   }
 

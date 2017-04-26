@@ -33,7 +33,6 @@ import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -418,23 +417,6 @@ public class TypeCoercerTest {
   }
 
   @Test
-  public void coerceToLabels() throws NoSuchFieldException, CoerceFailedException {
-    Type type = TestFields.class.getField("labels").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-
-    ImmutableList<String> input = ImmutableList.of("cheese", "cake", "tastes", "good");
-
-    Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
-    ImmutableSortedSet<Label> expected = ImmutableSortedSet.of(
-        Label.of("cake"),
-        Label.of("cheese"),
-        Label.of("good"),
-        Label.of("tastes"));
-
-    assertEquals(expected, result);
-  }
-
-  @Test
   public void coerceToNeededCoverageSpec()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfNeededCoverageSpecs").getGenericType();
@@ -674,7 +656,6 @@ public class TypeCoercerTest {
     public Either<Set<String>, Map<String, String>> eitherStringSetOrStringToStringMap;
     public Pair<Path, String> pairOfPathsAndStrings;
     public ImmutableList<SourceWithFlags> listOfSourcesWithFlags;
-    public ImmutableSortedSet<Label> labels;
     public ImmutableList<TestEnum> listOfTestEnums;
     public ImmutableMap<String, Path> stringMapOfPaths;
     public ImmutableList<Path> listOfPaths;

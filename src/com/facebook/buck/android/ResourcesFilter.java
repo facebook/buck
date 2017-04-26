@@ -36,12 +36,18 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.apache.commons.compress.utils.IOUtils;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -156,10 +162,12 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths = whitelistedStringDirs.stream()
-        .map(context.getSourcePathResolver()::getRelativePath)
+        .map(sourcePath -> getProjectFilesystem().relativize(
+            context.getSourcePathResolver().getAbsolutePath(sourcePath)))
         .collect(MoreCollectors.toImmutableSet());
     ImmutableList<Path> resPaths = resDirectories.stream()
-        .map(context.getSourcePathResolver()::getRelativePath)
+        .map(sourcePath -> getProjectFilesystem().relativize(
+            context.getSourcePathResolver().getAbsolutePath(sourcePath)))
         .collect(MoreCollectors.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap = createInResDirToOutResDirMap(
         resPaths,
@@ -185,7 +193,26 @@ public class ResourcesFilter extends AbstractBuildRule
       buildableContext.recordArtifact(outputResourceDir);
     }
 
-    addPostFilterCommandSteps(context.getSourcePathResolver(), steps, inResDirToOutResDirMap);
+    postFilterResourcesCmd.ifPresent(cmd -> {
+      OutputStream filterResourcesDataOutputStream = null;
+      try {
+        Path filterResourcesDataPath = getFilterResourcesDataPath();
+        getProjectFilesystem().createParentDirs(filterResourcesDataPath);
+        filterResourcesDataOutputStream =
+            getProjectFilesystem().newFileOutputStream(filterResourcesDataPath);
+        writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
+        buildableContext.recordArtifact(filterResourcesDataPath);
+        addPostFilterCommandSteps(
+            cmd,
+            context.getSourcePathResolver(),
+            steps,
+            filterResourcesDataPath);
+      } catch (IOException e) {
+        throw new RuntimeException("Could not generate/save filter resources data json", e);
+      } finally {
+        IOUtils.closeQuietly(filterResourcesDataOutputStream);
+      }
+    });
 
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
@@ -209,25 +236,33 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @VisibleForTesting
   void addPostFilterCommandSteps(
+      Arg command,
       SourcePathResolver sourcePathResolver,
       ImmutableList.Builder<Step> steps,
-      ImmutableBiMap<Path, Path> inResDirToOutResDirMap) {
-    if (!postFilterResourcesCmd.isPresent()) {
-      return;
-    }
-
+      Path dataPath) {
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
-    postFilterResourcesCmd.get().appendToCommandLine(
+    command.appendToCommandLine(
         commandLineBuilder,
         sourcePathResolver);
-    commandLineBuilder.addAll(inResDirToOutResDirMap.values().stream()
-        .map(Path::toString)
-        .map(Escaper.SHELL_ESCAPER::apply)
-        .collect(MoreCollectors.toImmutableList()));
+    commandLineBuilder.add(Escaper.escapeAsBashString(dataPath));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
-    steps.add(new BashStep(
-        getProjectFilesystem().getRootPath(),
-        commandLine));
+    steps.add(new BashStep(getProjectFilesystem().getRootPath(), commandLine));
+  }
+
+  private Path getFilterResourcesDataPath() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/post_filter_resources_data.json");
+  }
+
+  @VisibleForTesting
+  void writeFilterResourcesData(
+      OutputStream outputStream,
+      ImmutableBiMap<Path, Path> inResDirToOutResDirMap) throws IOException {
+    ObjectMappers.WRITER.writeValue(
+        outputStream,
+        ImmutableMap.of("res_dir_map", inResDirToOutResDirMap));
   }
 
   /**

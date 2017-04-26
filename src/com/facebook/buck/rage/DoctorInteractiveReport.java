@@ -17,10 +17,9 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
-import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -32,9 +31,6 @@ import java.util.Optional;
  */
 public class DoctorInteractiveReport extends AbstractReport {
 
-  private static final Logger LOG = Logger.get(DoctorInteractiveReport.class);
-
-  private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final ImmutableSet<BuildLogEntry> buildLogEntries;
   private final UserInput input;
 
@@ -44,39 +40,27 @@ public class DoctorInteractiveReport extends AbstractReport {
       Console console,
       UserInput input,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      Optional<VcsInfoCollector> vcsInfoCollector,
+      VersionControlStatsGenerator versionControlStatsGenerator,
       RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector,
       ImmutableSet<BuildLogEntry> buildLogEntries,
       Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
-    super(filesystem,
+    super(
+        filesystem,
         defectReporter,
         buildEnvironmentDescription,
+        versionControlStatsGenerator,
         console,
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);
     this.input = input;
-    this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogEntries = buildLogEntries;
   }
 
   @Override
   public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
     return buildLogEntries;
-  }
-
-  @Override
-  protected Optional<SourceControlInfo> getSourceControlInfo()
-      throws IOException, InterruptedException {
-    try {
-      if (vcsInfoCollector.isPresent()) {
-        return Optional.of(vcsInfoCollector.get().gatherScmInformation());
-      }
-    } catch (VersionControlCommandFailedException e) {
-      LOG.warn("Failed to get source control information: %s, proceeding regardless.\n", e);
-    }
-    return Optional.empty();
   }
 
   @Override

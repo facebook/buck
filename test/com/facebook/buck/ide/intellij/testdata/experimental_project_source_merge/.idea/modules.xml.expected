@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/java/code/modules/java_code_modules.iml" filepath="$PROJECT_DIR$/java/code/modules/java_code_modules.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
-    </modules>
-  </component>
-</project>

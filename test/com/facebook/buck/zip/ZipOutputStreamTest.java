@@ -229,7 +229,7 @@ public class ZipOutputStreamTest {
     @Test
     public void compressionCanBeSetOnAPerFileBasisAndIsHonoured() throws IOException {
       // Create some input that can be compressed.
-      String packageName = getClass().getPackage().getName().replace(".", "/");
+      String packageName = getClass().getPackage().getName().replace('.', '/');
       URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
       byte[] input = Resources.toByteArray(sample);
 
@@ -276,7 +276,7 @@ public class ZipOutputStreamTest {
     public void packingALargeFileShouldGenerateTheSameOutputAsReferenceImpl()
         throws IOException {
       File reference = File.createTempFile("reference", ".zip");
-      String packageName = getClass().getPackage().getName().replace(".", "/");
+      String packageName = getClass().getPackage().getName().replace('.', '/');
       URL sample = Resources.getResource(packageName + "/macbeth.properties");
       byte[] input = Resources.toByteArray(sample);
 

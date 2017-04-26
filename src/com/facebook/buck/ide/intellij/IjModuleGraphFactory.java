@@ -15,10 +15,17 @@
  */
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.ide.intellij.aggregation.AggregationModule;
+import com.facebook.buck.ide.intellij.aggregation.AggregationModuleFactory;
+import com.facebook.buck.ide.intellij.aggregation.AggregationTree;
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleFactory;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -29,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,12 +56,10 @@ public final class IjModuleGraphFactory {
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig,
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
+      AggregationModuleFactory aggregationModuleFactory,
       final int minimumPathDepth) {
-
-    final BlockedPathNode blockedPathTree = createAggregationHaltPoints(projectConfig, targetGraph);
 
     ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap = targetGraph.getNodes()
         .stream()
@@ -66,86 +72,64 @@ public final class IjModuleGraphFactory {
         .filter(targetNode -> isInRootCell(projectFilesystem, targetNode))
         .collect(
             MoreCollectors.toImmutableListMultimap(
-                targetNode -> {
-                  Path path;
-                  Path basePath = targetNode.getBuildTarget().getBasePath();
-                  if (targetNode.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
-                    path = basePath;
-                  } else {
-                    path = simplifyPath(basePath, minimumPathDepth, blockedPathTree);
-                  }
-                  return path;
-                },
+                targetNode -> targetNode.getBuildTarget().getBasePath(),
                 targetNode -> targetNode));
 
-    ImmutableMap.Builder<BuildTarget, IjModule> moduleMapBuilder = new ImmutableMap.Builder<>();
+    AggregationTree aggregationTree = createAggregationTree(
+        aggregationModuleFactory,
+        baseTargetPathMultimap);
 
-    for (Path baseTargetPath : baseTargetPathMultimap.keySet()) {
-      ImmutableSet<TargetNode<?, ?>> targets =
-          ImmutableSet.copyOf(baseTargetPathMultimap.get(baseTargetPath));
+    aggregationTree.aggregateModules(minimumPathDepth);
 
-      IjModule module = moduleFactory.createModule(baseTargetPath, targets);
+    ImmutableMap.Builder<BuildTarget, IjModule> moduleByBuildTarget = new ImmutableMap.Builder<>();
 
-      for (TargetNode<?, ?> target : targets) {
-        moduleMapBuilder.put(target.getBuildTarget(), module);
-      }
-    }
+    aggregationTree
+        .getModules()
+        .stream()
+        .filter(aggregationModule -> !aggregationModule.getTargets().isEmpty())
+        .forEach(aggregationModule -> {
+          IjModule module = moduleFactory.createModule(
+              aggregationModule.getModuleBasePath(),
+              aggregationModule.getTargets(),
+              aggregationModule.getExcludes());
+          module.getTargets().forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+        });
 
-    return moduleMapBuilder.build();
+    return moduleByBuildTarget.build();
   }
 
-  static Path simplifyPath(
-      Path basePath,
-      int minimumPathDepth,
-      BlockedPathNode blockedPathTree) {
-    int depthForPath = calculatePathDepth(basePath, minimumPathDepth, blockedPathTree);
-    return basePath.subpath(0, depthForPath);
-  }
+  private static AggregationTree createAggregationTree(
+      AggregationModuleFactory aggregationModuleFactory,
+      ImmutableListMultimap<Path, TargetNode<?, ?>> targetNodesByBasePath) {
+    Map<Path, AggregationModule> pathToAggregationModuleMap = targetNodesByBasePath
+        .asMap()
+        .entrySet()
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableMap(
+                Map.Entry::getKey,
+                pathWithTargetNode -> aggregationModuleFactory.createAggregationModule(
+                    pathWithTargetNode.getKey(),
+                    ImmutableSet.copyOf(pathWithTargetNode.getValue()))));
 
-  static int calculatePathDepth(
-      Path basePath,
-      int minimumPathDepth,
-      BlockedPathNode blockedPathTree) {
-    int maxDepth = basePath.getNameCount();
-    if (minimumPathDepth >= maxDepth) {
-      return maxDepth;
+    Path rootPath = Paths.get("");
+
+    AggregationModule rootAggregationModule = pathToAggregationModuleMap.get(rootPath);
+    if (rootAggregationModule == null) {
+      rootAggregationModule = aggregationModuleFactory.createAggregationModule(
+          rootPath,
+          ImmutableSet.of());
     }
 
-    int depthForPath =
-        blockedPathTree.findLowestPotentialBlockedOnPath(basePath, 0, maxDepth);
+    AggregationTree aggregationTree = new AggregationTree(rootAggregationModule);
 
-    return depthForPath < minimumPathDepth ? minimumPathDepth : depthForPath;
-  }
+    pathToAggregationModuleMap
+        .entrySet()
+        .stream()
+        .filter(e -> !rootPath.equals(e.getKey()))
+        .forEach(e -> aggregationTree.addModule(e.getKey(), e.getValue()));
 
-  /**
-   * Create the set of paths which should terminate aggregation.
-   */
-  private static BlockedPathNode createAggregationHaltPoints(
-      IjProjectConfig projectConfig,
-      TargetGraph targetGraph) {
-    BlockedPathNode blockRoot = new BlockedPathNode();
-
-    for (TargetNode<?, ?> node : targetGraph.getNodes()) {
-      if (node.getConstructorArg() instanceof AndroidResourceDescription.Arg ||
-          isNonDefaultJava(node, projectConfig.getJavaBuckConfig().getDefaultJavacOptions())) {
-        Path blockedPath = node.getBuildTarget().getBasePath();
-        blockRoot.markAsBlocked(blockedPath, 0, blockedPath.getNameCount());
-      }
-    }
-
-    return blockRoot;
-  }
-
-  private static boolean isNonDefaultJava(TargetNode<?, ?> node, JavacOptions defaultJavacOptions) {
-    if (!(node.getDescription() instanceof JavaLibraryDescription)) {
-      return false;
-    }
-
-    String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
-    String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
-    JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-    return !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
-        !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
+    return aggregationTree;
   }
 
   /**
@@ -163,13 +147,14 @@ public final class IjModuleGraphFactory {
       final IjProjectConfig projectConfig,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
-      final IjModuleFactory moduleFactory) {
+      final IjModuleFactory moduleFactory,
+      final AggregationModuleFactory aggregationModuleFactory) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
             projectFilesystem,
-            projectConfig,
             targetGraph,
             moduleFactory,
+            aggregationModuleFactory,
             projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()));
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
@@ -210,8 +195,7 @@ public final class IjModuleGraphFactory {
                   input -> {
                     // The exported deps closure can contain references back to targets contained
                     // in the module, so filter those out.
-                    TargetNode<?, ?> targetNode = targetGraph.get(input);
-                    return !module.getTargets().contains(targetNode);
+                    return !module.getTargets().contains(input);
                   })
               .map(
                   depTarget-> {

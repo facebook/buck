@@ -106,11 +106,13 @@ class NewNativeTargetProjectMutator {
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
+  private boolean frameworkHeadersEnabled = false;
   private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
+  private ImmutableSet<SourcePath> extraXcodeFiles = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private Optional<SourcePath> prefixHeader = Optional.empty();
@@ -156,6 +158,11 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setFrameworkHeadersEnabled(boolean enabled) {
+    this.frameworkHeadersEnabled = enabled;
+    return this;
+  }
+
   public NewNativeTargetProjectMutator setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     this.langPreprocessorFlags = langPreprocessorFlags;
@@ -176,6 +183,12 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setExtraXcodeSources(
       Set<SourcePath> extraXcodeSources) {
     this.extraXcodeSources = ImmutableSet.copyOf(extraXcodeSources);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setExtraXcodeFiles(
+      Set<SourcePath> extraXcodeFiles) {
+    this.extraXcodeFiles = ImmutableSet.copyOf(extraXcodeFiles);
     return this;
   }
 
@@ -325,10 +338,12 @@ class NewNativeTargetProjectMutator {
     traverseGroupsTreeAndHandleSources(
         sourcesGroup,
         sourcesBuildPhase,
+        headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
             pathRelativizer::outputPathToSourcePath,
             sourcesWithFlags,
             extraXcodeSources,
+            extraXcodeFiles,
             publicHeaders,
             privateHeaders));
 
@@ -367,6 +382,7 @@ class NewNativeTargetProjectMutator {
   private void traverseGroupsTreeAndHandleSources(
       final PBXGroup sourcesGroup,
       final PBXSourcesBuildPhase sourcesBuildPhase,
+      final PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor = new GroupedSource.Visitor() {
       @Override
@@ -378,10 +394,18 @@ class NewNativeTargetProjectMutator {
       }
 
       @Override
+      public void visitIgnoredSource(SourcePath source) {
+        addSourcePathToSourceTree(
+            source,
+            sourcesGroup);
+      }
+
+      @Override
       public void visitPublicHeader(SourcePath publicHeader) {
         addSourcePathToHeadersBuildPhase(
             publicHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PUBLIC);
       }
 
@@ -390,6 +414,7 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             privateHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PRIVATE);
       }
 
@@ -406,6 +431,7 @@ class NewNativeTargetProjectMutator {
         traverseGroupsTreeAndHandleSources(
             newSourceGroup,
             sourcesBuildPhase,
+            headersBuildPhase,
             sourceGroup);
       }
     };
@@ -452,9 +478,20 @@ class NewNativeTargetProjectMutator {
         fileReference);
   }
 
+  private void addSourcePathToSourceTree(
+      SourcePath sourcePath,
+      PBXGroup sourcesGroup) {
+    sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(sourcePath),
+            Optional.empty()));
+  }
+
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -463,6 +500,13 @@ class NewNativeTargetProjectMutator {
             Optional.empty()));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
+
+      if (this.frameworkHeadersEnabled &&
+          (this.productType == ProductType.FRAMEWORK ||
+              this.productType == ProductType.STATIC_FRAMEWORK)) {
+        headersBuildPhase.getFiles().add(buildFile);
+      }
+
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",

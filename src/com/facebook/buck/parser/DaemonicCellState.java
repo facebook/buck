@@ -69,11 +69,11 @@ class DaemonicCellState {
       try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         Preconditions.checkState(
-            allRawNodeTargets.contains(target.withoutCell().getUnflavoredBuildTarget()),
+            allRawNodeTargets.contains(target.getUnflavoredBuildTarget()),
             "Added %s to computed nodes, which isn't present in raw nodes",
             target);
         if (updatedNode.equals(targetNode)) {
-          targetsCornucopia.put(target.withoutCell().getUnflavoredBuildTarget(), target);
+          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
         }
         return updatedNode;
       }
@@ -81,6 +81,7 @@ class DaemonicCellState {
   }
 
   private final Path cellRoot;
+  private final Optional<String> cellCanonicalName;
   private AtomicReference<Cell> cell;
 
   @GuardedBy("rawAndComputedNodesLock")
@@ -108,6 +109,7 @@ class DaemonicCellState {
     this.cell = new AtomicReference<>(cell);
     this.parsingThreads = parsingThreads;
     this.cellRoot = cell.getRoot();
+    this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
     this.targetsCornucopia = HashMultimap.create();
     this.buildFileConfigs = new HashMap<>();
@@ -165,7 +167,11 @@ class DaemonicCellState {
           allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
       for (Map<String, Object> node : updated) {
         allRawNodeTargets.add(
-            RawNodeParsePipeline.parseBuildTargetFromRawRule(cellRoot, node, buildFile));
+            RawNodeParsePipeline.parseBuildTargetFromRawRule(
+                cellRoot,
+                cellCanonicalName,
+                node,
+                buildFile));
       }
       buildFileConfigs.put(buildFile, configs);
       buildFileEnv.put(buildFile, env);
@@ -189,7 +195,11 @@ class DaemonicCellState {
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes) {
           UnflavoredBuildTarget target =
-              RawNodeParsePipeline.parseBuildTargetFromRawRule(cellRoot, rawNode, path);
+              RawNodeParsePipeline.parseBuildTargetFromRawRule(
+                  cellRoot,
+                  cellCanonicalName,
+                  rawNode,
+                  path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (CacheImpl<?> cache : typedNodeCaches.values()) {
             cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));

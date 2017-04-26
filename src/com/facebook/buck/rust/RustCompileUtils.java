@@ -434,7 +434,6 @@ public class RustCompileUtils {
   public static Optional<SourcePath> getCrateRoot(
       SourcePathResolver resolver,
       String crate,
-      Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaults,
       Stream<SourcePath> sources) {
     String crateName = String.format("%s.rs", crate);
@@ -442,10 +441,7 @@ public class RustCompileUtils {
         .filter(
             src -> {
               String name = resolver.getRelativePath(src).getFileName().toString();
-              return
-                  crateRoot.map(src::equals).orElse(false) ||
-                      defaults.contains(name) ||
-                      name.equals(crateName);
+              return defaults.contains(name) || name.equals(crateName);
             })
         .collect(MoreCollectors.toImmutableList());
 
@@ -530,19 +526,20 @@ public class RustCompileUtils {
             srcs);
 
     Optional<SourcePath> rootModule =
-        getCrateRoot(
-            pathResolver,
-            crate,
-            crateRoot,
-            defaultRoots,
-            fixedSrcs.stream());
+        crateRoot.map(Optional::of)
+            .orElse(
+                getCrateRoot(
+                  pathResolver,
+                  crate,
+                  defaultRoots,
+                  fixedSrcs.stream()));
 
     return new Pair<>(
         rootModule.orElseThrow(
             () ->
                 new HumanReadableException(
-                    "Can't find suitable top-level source file for %s",
-                    target.getShortName())),
+                    "Can't find suitable top-level source file for %s: %s",
+                    target.getFullyQualifiedName(), fixedSrcs)),
         fixedSrcs);
   }
 }

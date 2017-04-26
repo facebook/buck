@@ -16,6 +16,9 @@
 
 package com.facebook.buck.event.listener;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
+
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
@@ -79,7 +82,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     this.outputStream = new BufferedOutputStream(
         new FileOutputStream(getLogFilePath().toFile(), /* append */ true));
 
-    writeToLog("InvocationInfo", info);
+    writeToLog(PREFIX_INVOCATION_INFO, info);
   }
 
   @Subscribe
@@ -188,7 +191,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     @SuppressWarnings("unused") Future<?> unused = executor.submit(() -> {
       try {
         outputStream.write(
-            String.format("ExitCode {\"exitCode\":%d}", exitCode.orElse(-1))
+            String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
                 .getBytes(Charsets.UTF_8));
 
         outputStream.close();

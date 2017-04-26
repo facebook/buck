@@ -142,7 +142,15 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   }
 
   private boolean shouldInclude(int access) {
-    return (access & Opcodes.ACC_PRIVATE) == 0;
+    if ((access & Opcodes.ACC_PRIVATE) == Opcodes.ACC_PRIVATE) {
+      return false;
+    }
+
+    if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
+      return false;
+    }
+
+    return true;
   }
 
   private boolean isInterface(int access) {

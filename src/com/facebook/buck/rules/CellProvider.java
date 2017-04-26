@@ -173,6 +173,7 @@ public final class CellProvider {
 
             return new Cell(
                 getKnownRoots(cellPathResolver),
+                cellPathResolver.getCanonicalCellName(normalizedCellPath),
                 cellFilesystem,
                 watchman,
                 buckConfig,
@@ -180,13 +181,20 @@ public final class CellProvider {
                 cellProvider);
           }
         },
-        cellProvider -> new Cell(
-            getKnownRoots(rootCellCellPathResolver),
-            rootFilesystem,
-            watchman,
-            rootConfig,
-            knownBuildRuleTypesFactory,
-            cellProvider));
+        cellProvider -> {
+          Preconditions.checkState(
+              !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath())
+                  .isPresent(),
+              "Root cell should be nameless");
+          return new Cell(
+              getKnownRoots(rootCellCellPathResolver),
+              Optional.empty(),
+              rootFilesystem,
+              watchman,
+              rootConfig,
+              knownBuildRuleTypesFactory,
+              cellProvider);
+        });
   }
 
   public static CellProvider createForDistributedBuild(
@@ -197,6 +205,9 @@ public final class CellProvider {
             DistBuildCellParams cellParam = Preconditions.checkNotNull(cellParams.get(cellPath));
             return new Cell(
                 cellParams.keySet(),
+                // Distributed builds don't care about cell names, use a sentinel value that will
+                // show up if it actually does care about them.
+                cellParam.getCanonicalName(),
                 cellParam.getFilesystem(),
                 Watchman.NULL_WATCHMAN,
                 cellParam.getConfig(),
@@ -211,6 +222,7 @@ public final class CellProvider {
   interface AbstractDistBuildCellParams {
     BuckConfig getConfig();
     ProjectFilesystem getFilesystem();
+    Optional<String> getCanonicalName();
   }
 
   private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {

@@ -47,7 +47,13 @@ public interface VersionControlCmdLineInterface {
    * {@link #revisionId(String)}
    * @throws InterruptedException
    */
-  Optional<String> revisionIdOrAbsent(String name) throws InterruptedException;
+  default Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
+    try {
+      return Optional.of(revisionId(name));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
 
   /**
    * @return Revision ID for current tip
@@ -85,8 +91,14 @@ public interface VersionControlCmdLineInterface {
    * want to handle the error use {@link #commonAncestor(String, String)}
    * @throws InterruptedException
    */
-  Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
-      throws InterruptedException;
+  default Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
+      throws InterruptedException {
+    try {
+      return Optional.of(commonAncestor(revisionIdOne, revisionIdTwo));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
 
   /**
    * @param revisionIdOne
@@ -97,10 +109,16 @@ public interface VersionControlCmdLineInterface {
    * {@link #commonAncestorAndTS(String, String)}.
    * @throws InterruptedException
    */
-  Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
+  default Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
       String revisionIdOne,
       String revisionIdTwo)
-      throws InterruptedException;
+      throws InterruptedException {
+    try {
+      return Optional.of(commonAncestorAndTS(revisionIdOne, revisionIdTwo));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
 
   /**
    * @param baseRevision
@@ -118,8 +136,14 @@ public interface VersionControlCmdLineInterface {
    * @return the produced diff between two revisions or {@link Optional#empty}
    * @throws InterruptedException
    */
-  Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
-      throws InterruptedException;
+  default Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
+      throws InterruptedException {
+    try {
+      return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
 
   /**
    * @param fromRevisionId

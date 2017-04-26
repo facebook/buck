@@ -168,6 +168,7 @@ public class AppleBundle
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
+  private final Path sdkPath;
 
   private final String minOSVersion;
   private final String binaryName;
@@ -227,6 +228,7 @@ public class AppleBundle
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platform = sdk.getApplePlatform();
     this.sdkName = sdk.getName();
+    this.sdkPath = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
     this.sdkVersion = sdk.getVersion();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
@@ -486,10 +488,26 @@ public class AppleBundle
                         "SOURCE_ROOT", srcRoot.toString(),
                         "SRCROOT", srcRoot.toString()
                     )));
-        if (entitlementsPlistString.isPresent()) {
-          entitlementsPlist = Optional.of(
-              srcRoot.resolve(Paths.get(entitlementsPlistString.get())));
-        }
+        entitlementsPlist = entitlementsPlistString
+            .map(entitlementsPlistName -> {
+              ProjectFilesystem filesystem = getProjectFilesystem();
+              Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+              Path entitlementsPlistWithSubstitutions =
+                  BuildTargets.getScratchPath(
+                      filesystem,
+                      getBuildTarget(),
+                      "%s-Entitlements.plist");
+
+              stepsBuilder.add(
+                  new FindAndReplaceStep(
+                      filesystem,
+                      originalEntitlementsPlist,
+                      entitlementsPlistWithSubstitutions,
+                      InfoPlistSubstitution.createVariableExpansionFunction(
+                          infoPlistSubstitutions)));
+
+              return filesystem.resolve(entitlementsPlistWithSubstitutions);
+            });
 
         signingEntitlementsTempPath = Optional.of(
             BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
@@ -801,6 +819,7 @@ public class AppleBundle
                   getProjectFilesystem(),
                   getBuildTarget(),
                   tempDirPattern),
+              this.sdkPath,
               destinationPath,
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)

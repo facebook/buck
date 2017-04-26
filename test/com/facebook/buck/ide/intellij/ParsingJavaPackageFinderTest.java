@@ -18,6 +18,7 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.ide.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.JavaFileParser;

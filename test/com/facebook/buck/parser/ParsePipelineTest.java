@@ -30,7 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -373,7 +373,7 @@ public class ParsePipelineTest {
           4, // max parsers
           input -> {
             ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
-                constructorArgMarshaller,
+                coercerFactory,
                 console,
                 eventBus,
                 /* ignoreBuckAutodepsFiles */ false);

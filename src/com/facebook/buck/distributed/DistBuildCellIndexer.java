@@ -66,14 +66,15 @@ public class DistBuildCellIndexer {
     return i;
   }
 
-  private static BuildJobStateCell dumpCell(Cell cell) {
+  private BuildJobStateCell dumpCell(Cell cell) {
     BuildJobStateCell cellState = new BuildJobStateCell();
     cellState.setConfig(dumpConfig(cell.getBuckConfig()));
     cellState.setNameHint(cell.getRoot().getFileName().toString());
+    cellState.setCanonicalName(cell.getCanonicalName().orElse(""));
     return cellState;
   }
 
-  private static BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
+  private BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
     BuildJobStateBuckConfig jobState = new BuildJobStateBuckConfig();
 
     jobState.setUserEnvironment(buckConfig.getEnvironment());
@@ -89,6 +90,8 @@ public class DistBuildCellIndexer {
     jobState.setRawBuckConfig(rawConfig);
     jobState.setArchitecture(buckConfig.getArchitecture().name());
     jobState.setPlatform(buckConfig.getPlatform().name());
+    jobState.setCellAliasToIndex(
+      Maps.transformValues(buckConfig.getCellPathResolver().getCellPaths(), this::getCellIndex));
 
     return jobState;
   }

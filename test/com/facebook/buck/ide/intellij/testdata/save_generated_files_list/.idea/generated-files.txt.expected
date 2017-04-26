@@ -1,0 +1,6 @@
+project_root.iml
+.idea/modules.xml
+modules/dep1/modules_dep1.iml
+buck-out/android/modules/dep1/gen/com/test/Manifest.java
+buck-out/android/modules/dep1/gen/com/test/R.java
+buck-out/android/modules/dep1/gen/com/test/BuildConfig.java

@@ -24,6 +24,7 @@ import com.google.common.base.Objects;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Base class for events about parsing build files..
@@ -52,7 +53,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
   public static Finished finished(
       Started started,
       List<Map<String, Object>> rules,
-      String profile) {
+      Optional<String> profile) {
     return new Finished(started, rules, profile);
   }
 
@@ -69,9 +70,9 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
 
   public static class Finished extends ParseBuckFileEvent {
     private final List<Map<String, Object>> rules;
-    private final String profile;
+    private final Optional<String> profile;
 
-    protected Finished(Started started, List<Map<String, Object>> rules, String profile) {
+    protected Finished(Started started, List<Map<String, Object>> rules, Optional<String> profile) {
       super(started.getEventKey(), started.getBuckFilePath());
       this.rules = rules;
       this.profile = profile;
@@ -90,7 +91,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
       return rules;
     }
 
-    public String getProfile() {
+    public Optional<String> getProfile() {
       return profile;
     }
 

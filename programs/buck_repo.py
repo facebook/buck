@@ -32,6 +32,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/concurrent-locks/concurrent-locks-1.0.0.jar",
     "third-party/java/dd-plist/dd-plist.jar",
     "third-party/java/ddmlib/ddmlib-25.2.0.jar",
+    "third-party/java/diffutils/diffutils-1.3.0.jar",
     "third-party/java/eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar",
     "third-party/java/eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar",
     "third-party/java/eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar",

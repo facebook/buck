@@ -430,7 +430,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             "num_rules",
             Integer.toString(finished.getNumRules()),
             "python_profile",
-            finished.getProfile()),
+            finished.getProfile().orElse("")),
         finished);
   }
 

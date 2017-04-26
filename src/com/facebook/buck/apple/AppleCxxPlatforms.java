@@ -230,6 +230,7 @@ public class AppleCxxPlatforms {
       }
 
       xcodeBuildVersion = xcodeBuildVersionCache.lookup(developerPath.get());
+      platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
       LOG.debug("Xcode build version is: " + xcodeBuildVersion.orElse("<absent>"));
     }
 

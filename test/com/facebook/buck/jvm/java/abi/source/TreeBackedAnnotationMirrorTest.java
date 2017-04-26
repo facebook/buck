@@ -17,15 +17,19 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -103,26 +107,23 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
   @Test
   public void testMultiElementAnnotationMirrorValue() throws IOException {
     compile(Joiner.on('\n').join(
-        "@FooHelper(number=42, string=\"42\")",
+        "@FooHelper(number=42, string=\"42\", doubleNumber=42.0)",
         "public class Foo {",
         "}",
         "@interface FooHelper {",
+        "  double doubleNumber();",
         "  int number();",
         "  String string();",
         "}"));
 
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
-    ExecutableElement numberKeyElement =
-        findMethod("number", elements.getTypeElement("FooHelper"));
-    ExecutableElement stringKeyElement =
-        findMethod("string", elements.getTypeElement("FooHelper"));
 
-    assertEquals(2, a.getElementValues().size());
-    assertEquals(
-        42,
-        a.getElementValues().get(numberKeyElement).getValue());
-    assertEquals(
-        "42",
-        a.getElementValues().get(stringKeyElement).getValue());
+    assertThat(
+      a.getElementValues().entrySet().stream()
+          .flatMap(entry -> Stream.of(
+              entry.getKey().getSimpleName().toString(),
+              entry.getValue().getValue()))
+          .collect(Collectors.toList()),
+        Matchers.contains("number", 42, "string", "42", "doubleNumber", 42.0));
   }
 }

@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +43,7 @@ public class KotlinTest extends JavaTest {
       SourcePathResolver pathResolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
-      Set<Label> labels,
+      Set<String> labels,
       Set<String> contacts,
       TestType testType,
       JavaRuntimeLauncher javaRuntimeLauncher,

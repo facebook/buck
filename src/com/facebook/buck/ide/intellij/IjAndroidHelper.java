@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class IjAndroidHelper {
 
@@ -43,6 +44,15 @@ public final class IjAndroidHelper {
 
   public static String getAndroidApkDir(ProjectFilesystem filesystem) {
     return filesystem.getBuckPaths().getGenDir().toString();
+  }
+
+  public static Path createAndroidGenPath(
+      ProjectFilesystem projectFilesystem,
+      Path moduleBasePath) {
+    return Paths
+        .get(getAndroidGenDir(projectFilesystem))
+        .resolve(moduleBasePath)
+        .resolve("gen");
   }
 
   private IjAndroidHelper() {

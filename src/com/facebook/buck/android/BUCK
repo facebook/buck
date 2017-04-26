@@ -7,9 +7,6 @@ PACKAGEABLE_SRCS = [
 java_immutables_library(
     name = "packageable",
     srcs = PACKAGEABLE_SRCS,
-    immutable_types = [
-        "AndroidPackageableCollection",
-    ],
     tests = [
         "//test/com/facebook/buck/android:aar-integration",
         "//test/com/facebook/buck/android:binary-integration",
@@ -23,9 +20,11 @@ java_immutables_library(
     deps = [
         ":apkmodule",
         "//src/com/facebook/buck/cxx:platform",
+        "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
@@ -115,11 +114,6 @@ RULES_SRCS = [
 java_immutables_library(
     name = "rules",
     srcs = RULES_SRCS,
-    immutable_types = [
-        "AndroidGraphEnhancementResult",
-        "AndroidInstrumentationTestJVMArgs",
-        "StrippedObjectDescription",
-    ],
     resources = [
         ":android-tools-common.jar",
         ":ddmlib.jar",
@@ -177,6 +171,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
@@ -205,6 +200,7 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:steps",
         "//src/com/facebook/buck/zip:stream",
         "//third-party/java/aosp:aosp",
+        "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/ddmlib:ddmlib",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
@@ -253,6 +249,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/dalvik:dalvik",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
 )
@@ -265,9 +262,6 @@ APKMODULE_SRCS = [
 java_immutables_library(
     name = "apkmodule",
     srcs = APKMODULE_SRCS,
-    immutable_types = [
-        "APKModule",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -294,9 +288,6 @@ HELPERS_SRCS = [
 java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
-    immutable_types = [
-        "ApkInfo",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -315,6 +306,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
@@ -358,9 +350,6 @@ java_immutables_library(
         excludes = PACKAGEABLE_SRCS + RULES_SRCS + SPLIT_DEX_SRCS +
                    UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
     ),
-    immutable_types = [
-        "NdkCxxPlatform",
-    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -392,6 +381,7 @@ java_immutables_library(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/keys:keys",

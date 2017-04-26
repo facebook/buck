@@ -43,8 +43,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -110,12 +108,12 @@ public class WatchmanWatcherIntegrationTest {
     watcher.postEvents(
         new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    ImmutableList<WatchEvent<?>> events = watchmanEventCollector.getEvents();
+    ImmutableList<WatchmanEvent> events = watchmanEventCollector.getEvents();
     assertThat(events.size(), Matchers.equalTo(1));
-    WatchEvent<?> event = events.get(0);
-    Path eventPath = (Path) event.context();
+    WatchmanPathEvent event = (WatchmanPathEvent) events.get(0);
+    Path eventPath = event.getPath();
     assertThat(eventPath, Matchers.equalTo(path));
-    assertSame(event.kind(), StandardWatchEventKinds.ENTRY_CREATE);
+    assertSame(event.getKind(), WatchmanPathEvent.Kind.CREATE);
   }
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before
@@ -149,10 +147,10 @@ public class WatchmanWatcherIntegrationTest {
 
   private static final class WatchmanEventCollector {
 
-    private final List<WatchEvent<?>> events = new ArrayList<>();
+    private final List<WatchmanEvent> events = new ArrayList<>();
 
     @Subscribe
-    protected void handle(WatchEvent<?> event) {
+    protected void handle(WatchmanEvent event) {
       events.add(event);
     }
 
@@ -160,7 +158,7 @@ public class WatchmanWatcherIntegrationTest {
       events.clear();
     }
 
-    public ImmutableList<WatchEvent<?>> getEvents() {
+    public ImmutableList<WatchmanEvent> getEvents() {
       return ImmutableList.copyOf(events);
     }
 

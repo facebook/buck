@@ -347,7 +347,7 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        ImmutableMap.of(Paths.get(root), "c:0:0:1"),
+        ImmutableMap.of(root, "c:0:0:1"),
         watchman.getClockIds());
   }
 
@@ -411,7 +411,7 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        ImmutableMap.of(Paths.get(root), "c:0:0:1"),
+        ImmutableMap.of(root, "c:0:0:1"),
         watchman.getClockIds());
   }
 

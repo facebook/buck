@@ -1,0 +1,55 @@
+cxx_library(
+  name = 'used-only-in-impl',
+  exported_headers = ['used-only-in-impl.h'],
+  header_namespace = 'used-only-in-impl',
+)
+
+# Test re-export via exported_deps
+
+cxx_library(
+  name = 'lib-explicit-reexport',
+  srcs = ['lib.c'],
+  exported_headers = ['lib.h'],
+  exported_deps = [':used-only-in-impl'],
+  reexport_all_header_dependencies = False,
+  header_namespace = 'lib',
+)
+
+cxx_binary(
+  name = 'bin-explicit-reexport',
+  srcs = ['bin.c'],
+  deps = [':lib-explicit-reexport'],
+)
+
+# Test explicit export but no exported_deps (should fail)
+
+cxx_library(
+  name = 'lib-explicit-noexport',
+  srcs = ['lib.c'],
+  exported_headers = ['lib.h'],
+  deps = [':used-only-in-impl'],
+  reexport_all_header_dependencies = False,
+  header_namespace = 'lib',
+)
+
+cxx_binary(
+  name = 'bin-explicit-noexport',
+  srcs = ['bin.c'],
+  deps = [':lib-explicit-noexport'],
+)
+
+# Test implicit export through deps.
+
+cxx_library(
+  name = 'lib-auto-reexport',
+  srcs = ['lib.c'],
+  exported_headers = ['lib.h'],
+  deps = [':used-only-in-impl'],
+  header_namespace = 'lib',
+)
+
+cxx_binary(
+  name = 'bin-auto-reexport',
+  srcs = ['bin.c'],
+  deps = [':lib-auto-reexport'],
+)

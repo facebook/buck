@@ -21,18 +21,14 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -42,8 +38,9 @@ import java.util.OptionalInt;
  */
 public class InteractiveReport extends AbstractReport {
 
+  private static final int ARGS_MAX_CHARS = 60;
+
   private final BuildLogHelper buildLogHelper;
-  private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final Console console;
   private final UserInput input;
 
@@ -53,19 +50,20 @@ public class InteractiveReport extends AbstractReport {
       Console console,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      Optional<VcsInfoCollector> vcsInfoCollector,
+      VersionControlStatsGenerator versionControlStatsGenerator,
       RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector,
       Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
-    super(filesystem,
+    super(
+        filesystem,
         defectReporter,
         buildEnvironmentDescription,
+        versionControlStatsGenerator,
         console,
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem);
-    this.vcsInfoCollector = vcsInfoCollector;
     this.console = console;
     this.input = new UserInput(
         console.getStdOut(),
@@ -75,37 +73,25 @@ public class InteractiveReport extends AbstractReport {
   @Override
   public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
-
-    // Commands with unknown args and buck rage should be excluded.
-    List<BuildLogEntry> interestingBuildLogs = new ArrayList<>();
-    buildLogs.forEach(entry -> {
-      if (entry.getCommandArgs().isPresent() &&
-          !entry.getCommandArgs().get().matches("rage|doctor|server")) {
-        interestingBuildLogs.add(entry);
-      }
-    });
-
-    if (interestingBuildLogs.isEmpty()) {
+    if (buildLogs.isEmpty()) {
       return ImmutableSet.of();
     }
 
-    // Sort the interesting builds based on time, reverse order so the most recent is first.
-    Collections.sort(
-        interestingBuildLogs,
-        Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
-
     return input.selectRange(
         "Which buck invocations would you like to report?",
-        interestingBuildLogs,
-        input1 -> {
+        buildLogs,
+        entry -> {
           Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
-              input1.getSize(),
+              entry.getSize(),
               SizeUnit.BYTES);
+          String cmdArgs = entry.getCommandArgs().orElse("unknown command");
+          cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
+
           return String.format(
               "\t%s\tbuck [%s] %s (%.2f %s)",
-              input1.getLastModifiedTime(),
-              input1.getCommandArgs().orElse("unknown command"),
-              prettyPrintExitCode(input1.getExitCode()),
+              entry.getLastModifiedTime(),
+              cmdArgs,
+              prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
@@ -120,19 +106,11 @@ public class InteractiveReport extends AbstractReport {
   @Override
   protected Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException {
-    if (!vcsInfoCollector.isPresent() ||
-        !input.confirm("Would you like to attach source control information (this includes " +
-            "information about commits and changed files)?")) {
+    if (!input.confirm("Would you like to attach source control information (this includes " +
+        "information about commits and changed files)?")) {
       return Optional.empty();
     }
-
-    try {
-      return Optional.of(vcsInfoCollector.get().gatherScmInformation());
-    } catch (VersionControlCommandFailedException e) {
-      console.printErrorText(
-          "Failed to get source control information: %s, proceeding regardless.", e);
-    }
-    return Optional.empty();
+    return super.getSourceControlInfo();
   }
 
   private String prettyPrintExitCode(OptionalInt exitCode) {

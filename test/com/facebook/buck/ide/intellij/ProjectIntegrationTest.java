@@ -40,25 +40,25 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProject() throws IOException {
-    runBuckProjectAndVerify("experimental_project1");
+    runBuckProjectAndVerify("project1");
   }
 
   @Test
   public void testVersion2BuckProjectWithoutAutogeneratingSources() throws IOException {
-    runBuckProjectAndVerify("experimental_project_without_autogeneration");
+    runBuckProjectAndVerify("project_without_autogeneration");
   }
 
   @Test
   public void testVersion2BuckProjectSlice() throws IOException {
     runBuckProjectAndVerify(
-        "experimental_project_slice",
+        "project_slice",
         "--without-tests",
         "modules/dep1:dep1");
   }
 
   @Test
   public void testVersion2BuckProjectSourceMerging() throws IOException {
-    runBuckProjectAndVerify("experimental_project_source_merge", "//java/code/modules/tip");
+    runBuckProjectAndVerify("aggregation");
   }
 
   @Test
@@ -78,18 +78,18 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectWithProjectSettings() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_project_settings");
+    runBuckProjectAndVerify("project_with_project_settings");
   }
 
   @Test
   public void testVersion2BuckProjectWithScripts() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_scripts", "//modules/dep1:dep1");
+    runBuckProjectAndVerify("project_with_scripts", "//modules/dep1:dep1");
   }
 
   @Test
   public void testVersion2BuckProjectWithUnusedLibraries() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "experimental_project_with_unused_libraries", temporaryFolder);
+        this, "project_with_unused_libraries", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
@@ -100,22 +100,22 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testVersion2BuckProjectWithExcludedResources() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_excluded_resources");
+    runBuckProjectAndVerify("project_with_excluded_resources");
   }
 
   @Test
   public void testVersion2BuckProjectWithAssets() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_assets");
+    runBuckProjectAndVerify("project_with_assets");
   }
 
   @Test
   public void testVersion2BuckProjectWithLanguageLevel() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_language_level");
+    runBuckProjectAndVerify("project_with_language_level");
   }
 
   @Test
   public void testVersion2BuckProjectWithGeneratedSources() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_generated_sources");
+    runBuckProjectAndVerify("project_with_generated_sources");
   }
 
   @Test
@@ -130,7 +130,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testAndroidResourcesInDependencies() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_android_resources");
+    runBuckProjectAndVerify("project_with_android_resources");
   }
 
   @Test
@@ -140,12 +140,30 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testAndroidResourcesAndLibraryInTheSameFolder() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_android_resources_in_the_same_folder");
+    runBuckProjectAndVerify("android_resources_in_the_same_folder");
   }
 
   @Test
   public void testAndroidResourcesWithPackagesAtTheSameLocation() throws IOException {
     runBuckProjectAndVerify("project_with_multiple_resources_with_package_names");
+  }
+
+  @Test
+  public void testCxxLibrary() throws IOException {
+    runBuckProjectAndVerify("project_with_cxx_library");
+  }
+
+  @Test
+  public void testAggregatingCxxLibrary() throws IOException {
+    runBuckProjectAndVerify("aggregation_with_cxx_library");
+  }
+
+  @Test
+  public void testSavingGeneratedFilesList() throws IOException {
+    runBuckProjectAndVerify(
+        "save_generated_files_list",
+        "--file-with-list-of-generated-files",
+        ".idea/generated-files.txt");
   }
 
   private ProcessResult runBuckProjectAndVerify(

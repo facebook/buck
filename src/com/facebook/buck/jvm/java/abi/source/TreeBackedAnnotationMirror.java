@@ -27,6 +27,7 @@ import com.sun.source.util.TreePath;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +70,7 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
   @Override
   public Map<ExecutableElement, TreeBackedAnnotationValue> getElementValues() {
     if (elementValues == null) {
-      Map<ExecutableElement, TreeBackedAnnotationValue> result = new HashMap<>();
+      Map<ExecutableElement, TreeBackedAnnotationValue> result = new LinkedHashMap<>();
       Map<String, TreePath> treePaths = new HashMap<>();
 
       List<? extends ExpressionTree> arguments = tree.getArguments();

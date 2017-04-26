@@ -2,3 +2,6 @@
 # write its own .buckconfig.local file that disables directory caching.
 [cache]
   mode = dir
+[test]
+  use_results_cache = true
+  

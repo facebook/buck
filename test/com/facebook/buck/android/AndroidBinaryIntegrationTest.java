@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -85,7 +86,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class AndroidBinaryIntegrationTest {
+public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
@@ -107,6 +108,7 @@ public class AndroidBinaryIntegrationTest {
         "android_project",
         tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 

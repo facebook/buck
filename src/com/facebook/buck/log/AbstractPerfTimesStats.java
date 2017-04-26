@@ -45,20 +45,20 @@ abstract class AbstractPerfTimesStats {
   }
 
   /**
-   * @return time spent parsing and processing BUCK files, in milliseconds.
-   */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  @Value.Default
-  public Long getParseTimeMs() {
-    return 0L;
-  }
-
-  /**
    * @return time spent between initialization and start of parsing, in milliseconds.
    */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getProcessingTimeMs() {
+    return 0L;
+  }
+
+  /**
+   * @return time spent parsing and processing BUCK files, in milliseconds.
+   */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Value.Default
+  public Long getParseTimeMs() {
     return 0L;
   }
 

@@ -42,6 +42,10 @@ abstract class AbstractGroupedSource {
        */
       SOURCE_WITH_FLAGS,
       /**
+       * A single {@link SourcePath} that shouldn't be included in the build phase.
+       */
+      IGNORED_SOURCE,
+      /**
        * A single {@link SourcePath} representing a public header file.
        */
       PUBLIC_HEADER,
@@ -52,7 +56,7 @@ abstract class AbstractGroupedSource {
       /**
        * A source group (group name and one or more GroupedSource objects).
        */
-      SOURCE_GROUP
+      SOURCE_GROUP,
   }
 
   @Value.Parameter
@@ -83,6 +87,7 @@ abstract class AbstractGroupedSource {
         Preconditions.checkArgument(!getSourceGroupPathRelativeToTarget().isPresent());
         Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
+      case IGNORED_SOURCE:
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         Preconditions.checkArgument(!getSourceWithFlags().isPresent());
@@ -109,6 +114,9 @@ abstract class AbstractGroupedSource {
       case SOURCE_WITH_FLAGS:
         sourcePath = getSourceWithFlags().get().getSourcePath();
         return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+      case IGNORED_SOURCE:
+        sourcePath = getSourcePath().get();
+        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         sourcePath = getSourcePath().get();
@@ -128,6 +136,20 @@ abstract class AbstractGroupedSource {
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
         Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  /**
+   * Creates a {@link GroupedSource} given a {@link SourcePath} representing a file that should not
+   * be included in sources.
+   */
+  public static GroupedSource ofIgnoredSource(SourcePath sourcePath) {
+    return GroupedSource.of(
+        Type.IGNORED_SOURCE,
+        Optional.empty(),
+        Optional.of(sourcePath),
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
@@ -178,6 +200,7 @@ abstract class AbstractGroupedSource {
 
   public interface Visitor {
     void visitSourceWithFlags(SourceWithFlags sourceWithFlags);
+    void visitIgnoredSource(SourcePath source);
     void visitPublicHeader(SourcePath publicHeader);
     void visitPrivateHeader(SourcePath privateHeader);
     void visitSourceGroup(
@@ -190,6 +213,9 @@ abstract class AbstractGroupedSource {
     switch (getType()) {
       case SOURCE_WITH_FLAGS:
         visitor.visitSourceWithFlags(getSourceWithFlags().get());
+        break;
+      case IGNORED_SOURCE:
+        visitor.visitIgnoredSource(getSourcePath().get());
         break;
       case PUBLIC_HEADER:
         visitor.visitPublicHeader(getSourcePath().get());

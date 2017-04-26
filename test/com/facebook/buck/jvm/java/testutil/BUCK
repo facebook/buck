@@ -1,21 +1,17 @@
 java_library(
     name = "testutil",
     srcs = glob(["*.java"]),
-    provided_deps = [
-        # Tools.jar is the compiler itself, and will already be present at runtime;
-        # we compile against a stub.
-        "//third-party/java/jdk:compiler-tree-api",
-    ],
     visibility = [
+        "//test/com/facebook/buck/android/...",
         "//test/com/facebook/buck/jvm/java/...",
     ],
     deps = [
-        "//src/com/facebook/buck/io:MorePaths.java",
-        "//src/com/facebook/buck/jvm/java/abi/source:source",
-        "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
-        "//third-party/java/asm:asm",
-        "//third-party/java/guava:guava",
-        "//third-party/java/hamcrest:java-hamcrest",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/zip:stream",
+        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/junit:junit",
     ],
 )

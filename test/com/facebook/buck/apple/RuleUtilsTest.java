@@ -54,6 +54,7 @@ public class RuleUtilsTest {
         resolver::getRelativePath,
         input,
         /* extraXcodeSources */ ImmutableSortedSet.of(),
+        /* extraXcodeFiles */ ImmutableSortedSet.of(),
         /* publicHeaders */ ImmutableSortedSet.of(),
         /* privateHeaders */ ImmutableSortedSet.of());
     assertEquals(
@@ -141,6 +142,7 @@ public class RuleUtilsTest {
             resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableList.of(),
             input);
 
@@ -178,6 +180,7 @@ public class RuleUtilsTest {
             resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableList.of(),
             input);
 
@@ -202,6 +205,7 @@ public class RuleUtilsTest {
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
+            ImmutableList.of(),
             input);
 
     assertEquals(expected, actual);
@@ -217,6 +221,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
+            ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -187,7 +188,7 @@ public class SplitZipStepTest {
         Optional.empty(),
         Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-        new APKModuleGraph(null, null, null),
+        new APKModuleGraph(null, (BuildTarget) null, null),
         /* pathToReportDir */ Paths.get(""));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
@@ -278,7 +279,7 @@ public class SplitZipStepTest {
         Optional.empty(),
         Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-        new APKModuleGraph(null, null, null),
+        new APKModuleGraph(null, (BuildTarget) null, null),
         /* pathToReportDir */ Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
@@ -352,7 +353,7 @@ public class SplitZipStepTest {
         Optional.empty(),
         Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-        new APKModuleGraph(null, null, null),
+        new APKModuleGraph(null, (BuildTarget) null, null),
         /* pathToReportDir */ Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(

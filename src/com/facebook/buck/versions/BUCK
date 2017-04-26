@@ -7,10 +7,6 @@ TYPES_SRCS = [
 java_immutables_library(
     name = "types",
     srcs = TYPES_SRCS,
-    immutable_types = [
-        "ExactConstraint",
-        "Version",
-    ],
     visibility = ["PUBLIC"],
 )
 
@@ -32,6 +28,7 @@ java_library(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
 )
@@ -42,13 +39,6 @@ java_immutables_library(
         ["*.java"],
         excludes = TYPES_SRCS + TRANSLATOR_SRCS,
     ),
-    immutable_types = [
-        "Constraints",
-        "Implication",
-        "VersionedAlias",
-        "VersionInfo",
-        "VersionUniverse",
-    ],
     tests = [
         "//test/com/facebook/buck/versions:versions",
     ],

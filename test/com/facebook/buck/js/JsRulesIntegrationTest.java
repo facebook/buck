@@ -195,6 +195,14 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void bundleWithAndroidLibraryDependency() throws IOException {
+    workspace
+        .runBuckBuild("//js:bundle-with-android-lib#android,release")
+        .assertSuccess();
+    workspace.verify(Paths.get("android_library_bundle.expected"), genPath);
+  }
+
+  @Test
   public void iOSApplicationContainsJsAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 

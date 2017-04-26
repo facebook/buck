@@ -30,7 +30,6 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -97,7 +96,7 @@ public class AppleTest
   private final Optional<AppleBundle> testHostApp;
 
   private final ImmutableSet<String> contacts;
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
 
   @AddToRuleKey
   private final boolean runTestSeparately;
@@ -189,7 +188,7 @@ public class AppleTest
       AppleBundle testBundle,
       Optional<AppleBundle> testHostApp,
       ImmutableSet<String> contacts,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       boolean runTestSeparately,
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
       String testLogDirectoryEnvironmentVariable,
@@ -227,7 +226,7 @@ public class AppleTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

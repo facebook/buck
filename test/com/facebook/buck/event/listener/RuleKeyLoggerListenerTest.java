@@ -64,6 +64,8 @@ public class RuleKeyLoggerListenerTest {
         false,
         false,
         "topspin",
+        new String[0],
+        new String[0],
         tempDirectory.getRoot().toPath());
     durationTracker = new BuildRuleDurationTracker();
   }
@@ -113,7 +115,16 @@ public class RuleKeyLoggerListenerTest {
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
     BuildRuleEvent.Started started = TestEventConfigurator.configureTestEvent(
         BuildRuleEvent.started(rule, durationTracker));
-    return BuildRuleEvent.finished(started, keys, null, null, null, null, null, Optional.empty());
+    return BuildRuleEvent.finished(
+        started,
+        keys,
+        null,
+        null,
+        Optional.empty(),
+        null,
+        null,
+        null,
+        Optional.empty());
   }
 
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {

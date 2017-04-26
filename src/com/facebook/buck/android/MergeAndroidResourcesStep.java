@@ -539,7 +539,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private Path getPathToRDotJava(String rDotJavaPackage) {
-    return outputDir.resolve(rDotJavaPackage.replace(".", "/")).resolve(
+    return outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve(
         String.format("%s.java", rName));
   }
 

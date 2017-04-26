@@ -45,7 +45,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -462,7 +461,7 @@ public class TestRunningTest {
     assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -500,7 +499,7 @@ public class TestRunningTest {
     assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -537,7 +536,7 @@ public class TestRunningTest {
     assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -584,7 +583,7 @@ public class TestRunningTest {
         .build();
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -641,7 +640,7 @@ public class TestRunningTest {
         .build();
 
     FakeTestRule testRule = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
+        ImmutableSet.of("windows"),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(

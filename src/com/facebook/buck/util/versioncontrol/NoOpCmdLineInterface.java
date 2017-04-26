@@ -20,8 +20,6 @@ import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Optional;
-
 /***
  * This is used if the project being built doesn't use a supported VCS.
  */
@@ -34,18 +32,13 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public String revisionId(String name)
       throws VersionControlCommandFailedException, InterruptedException {
-    return "";
-  }
-
-  @Override
-  public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
-    return Optional.empty();
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public String currentRevisionId()
       throws VersionControlCommandFailedException, InterruptedException {
-    return "";
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
@@ -53,58 +46,37 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
       String revisionIdOne,
       String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
-    return "";
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
-    return new Pair<>("", 0L);
-  }
-
-  @Override
-  public Optional<String> commonAncestorOrAbsent(
-      String revisionOne,
-      String revisionTwo) throws InterruptedException {
-    return Optional.empty();
-  }
-
-  @Override
-  public Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
-      String revisionIdOne,
-      String revisionIdTwo)
-      throws InterruptedException {
-    return Optional.empty();
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
-    return "";
-  }
-
-  @Override
-  public Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
-      throws InterruptedException {
-    return Optional.empty();
-  }
-
-  @Override
-  public long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return 0;
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException {
-    return ImmutableSet.of();
+    throw new VersionControlCommandFailedException("");
+  }
+
+  @Override
+  public long timestampSeconds(String revisionId)
+      throws VersionControlCommandFailedException, InterruptedException {
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
     throws InterruptedException, VersionControlCommandFailedException {
-    return ImmutableMap.of();
+    throw new VersionControlCommandFailedException("");
   }
 
 }

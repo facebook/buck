@@ -17,7 +17,6 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -102,8 +101,9 @@ public abstract class JsFile extends AbstractBuildRule {
     public ImmutableList<Step> getBuildSteps(
         BuildContext context,
         BuildableContext buildableContext) {
-
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
+
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
       final Path srcPath = sourcePathResolver.getAbsolutePath(src);
       final String jobArgs = String.format(
@@ -140,13 +140,13 @@ public abstract class JsFile extends AbstractBuildRule {
     public ImmutableList<Step> getBuildSteps(
         BuildContext context,
         BuildableContext buildableContext) {
-
-      final BuildTarget buildTarget = getBuildTarget();
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
+
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
       final String jobArgs = String.format(
           "optimize %%s %s --out %s %s",
-          JsFlavors.platformArgForRelease(buildTarget.getFlavors()),
+          JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
           outputPath,
           sourcePathResolver.getAbsolutePath(devFile).toString());
 

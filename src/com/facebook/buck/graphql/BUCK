@@ -9,6 +9,7 @@ standard_java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/keys:keys",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",

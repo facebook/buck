@@ -29,7 +29,6 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -77,7 +76,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
 
   private final ImmutableSet<String> contacts;
 
@@ -88,7 +87,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   protected AndroidInstrumentationTest(
       BuildRuleParams params,
       HasInstallableApk apk,
-      Set<Label> labels,
+      Set<String> labels,
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
@@ -101,7 +100,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

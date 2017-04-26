@@ -10,10 +10,12 @@ prebuilt_jar(
     visibility = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+        "//test/com/facebook/buck/jvm/java/abi:abi",
+        "//test/com/facebook/buck/jvm/java/abi:testutil",
         "//test/com/facebook/buck/jvm/java/abi/source:source",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
         "//test/com/facebook/buck/jvm/java/plugin/adapter:",
-        "//test/com/facebook/buck/jvm/java/testutil:testutil",
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],
 )

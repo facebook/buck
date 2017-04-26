@@ -24,7 +24,9 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
@@ -45,7 +47,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -60,8 +62,12 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -79,9 +85,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
+/**
+ * Cross-cell related integration tests that don't fit anywhere else.
+ */
 public class InterCellIntegrationTest {
 
   @Rule
@@ -366,7 +377,6 @@ public class InterCellIntegrationTest {
   @Test
   @Ignore
   public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {
-
   }
 
   @Test
@@ -647,6 +657,162 @@ public class InterCellIntegrationTest {
     assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+  }
+
+  @Test
+  public void targetsReferencingSameTargetsWithDifferentCellNamesAreConsideredTheSame()
+      throws Exception {
+    // This test case builds a cxx binary rule with libraries that all depend on the same targets.
+    // If these targets were treated as distinct targets, the rule will have duplicate symbols.
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/canonicalization/primary",
+        "inter-cell/canonicalization/secondary");
+
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+
+    Path output = primary.buildAndReturnOutput(":a.out");
+    assertEquals(
+        "The produced binary should give the expected exit code",
+        111,
+        primary.runCommand(output.toString()).getExitCode());
+  }
+
+  @Test
+  public void targetsInOtherCellsArePrintedAsRelativeToRootCell() throws Exception {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/canonicalization/primary",
+        "inter-cell/canonicalization/secondary");
+
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+
+    String queryResult = primary.runBuckCommand("query", "deps(//:a.out)")
+        .assertSuccess()
+        .getStdout();
+    assertEquals(
+        "Should refer to root cell targets without prefix and secondary cell targets with prefix",
+        Joiner.on("\n").join(
+            "//:a.out",
+            "//:rootlib",
+            "secondary//:lib",
+            "secondary//:lib2"),
+        sortLines(queryResult));
+
+    queryResult = primary.runBuckCommand("query", "deps(secondary//:lib)")
+        .assertSuccess()
+        .getStdout();
+    assertEquals(
+        "... even if query starts in a non-root cell.",
+        Joiner.on("\n").join(
+            "//:rootlib",
+            "secondary//:lib",
+            "secondary//:lib2"),
+        sortLines(queryResult));
+  }
+
+  @Test
+  public void testCrossCellCleanCommand() throws IOException, InterruptedException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+
+    List<Path> primaryDirs = ImmutableList.of(
+        primary.getPath(primary.getBuckPaths().getScratchDir()),
+        primary.getPath(primary.getBuckPaths().getGenDir()),
+        primary.getPath(primary.getBuckPaths().getTrashDir()));
+    List<Path> secondaryDirs = ImmutableList.of(
+        secondary.getPath(secondary.getBuckPaths().getScratchDir()),
+        secondary.getPath(secondary.getBuckPaths().getGenDir()),
+        secondary.getPath(secondary.getBuckPaths().getTrashDir()));
+
+    // Set up the directories to be cleaned
+    for (Path dir : primaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+
+    primary.runBuckCommand("clean", "--root-cell-only").assertSuccess();
+
+    // We should only clean up the directories for the primary cell
+    for (Path dir : primaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      assertTrue(Files.exists(dir));
+    }
+
+    // Reset the directories
+    for (Path dir : primaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      Files.createDirectories(dir);
+      assertTrue(Files.exists(dir));
+    }
+
+    primary.runBuckCommand("clean").assertSuccess();
+
+    for (Path dir : primaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
+    for (Path dir : secondaryDirs) {
+      assertFalse(Files.exists(dir));
+    }
+  }
+
+  @Test
+  public void testParserFunctionsWithCells() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/parser-functions/primary",
+        "inter-cell/parser-functions/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    // Set up the remaining cells
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+    registerCell(secondary, "secondary", secondary);
+
+    String expected = primary.getFileContents("one/.txt");
+    Path path = primary.buildAndReturnOutput("//one:one");
+    String actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = secondary.getFileContents("two/secondary.txt");
+    path = primary.buildAndReturnOutput("//one:two");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = primary.getFileContents("one/primary.txt");
+    path = secondary.buildAndReturnOutput("//two:one");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+
+    expected = secondary.getFileContents("two/.txt");
+    path = secondary.buildAndReturnOutput("//two:two");
+    actual = new String(Files.readAllBytes(path), UTF_8);
+    assertEquals(expected, actual);
+}
+
+  private static String sortLines(String input) {
+    return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
+        .sorted()
+        .collect(Collectors.joining("\n"));
   }
 
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(

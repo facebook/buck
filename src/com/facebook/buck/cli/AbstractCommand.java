@@ -293,29 +293,6 @@ public abstract class AbstractCommand implements Command {
         buckConfig.getMaximumResourceAmounts());
   }
 
-  protected ImmutableList<String> getOptions() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    if (verbosityLevel != -1) {
-      builder.add(VerbosityParser.VERBOSE_LONG_ARG);
-      builder.add(String.valueOf(verbosityLevel));
-    }
-    if (numThreads != null) {
-      builder.add(NUM_THREADS_LONG_ARG);
-      builder.add(numThreads.toString());
-    }
-    if (noCache) {
-      builder.add(NO_CACHE_LONG_ARG);
-    }
-    if (eventsOutputPath != null) {
-      builder.add(OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG);
-      builder.add(eventsOutputPath);
-    }
-    if (enableParserProfiling) {
-      builder.add(PROFILE_PARSER_LONG_ARG);
-    }
-    return builder.build();
-  }
-
   @Override
   public boolean isSourceControlStatsGatheringEnabled() {
     return false;

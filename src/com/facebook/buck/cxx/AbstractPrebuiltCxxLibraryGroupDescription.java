@@ -24,6 +24,7 @@ import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -368,7 +369,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Args {
+  public static class Args extends AbstractDescriptionArg {
 
     public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
     public ImmutableList<SourcePath> includeDirs = ImmutableList.of();

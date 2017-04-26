@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAar;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;

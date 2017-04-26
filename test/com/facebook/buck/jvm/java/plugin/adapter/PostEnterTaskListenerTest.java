@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
-import com.facebook.buck.jvm.java.testutil.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 

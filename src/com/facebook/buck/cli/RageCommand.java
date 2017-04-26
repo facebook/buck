@@ -27,14 +27,9 @@ import com.facebook.buck.rage.DefectSubmitResult;
 import com.facebook.buck.rage.ExtraInfoCollector;
 import com.facebook.buck.rage.InteractiveReport;
 import com.facebook.buck.rage.RageConfig;
-import com.facebook.buck.rage.VcsInfoCollector;
 import com.facebook.buck.rage.WatchmanDiagReportCollector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
-import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
-import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 
 import org.kohsuke.args4j.Option;
 
@@ -60,16 +55,6 @@ public class RageCommand extends AbstractCommand {
     RageConfig rageConfig = RageConfig.of(buckConfig);
     ProcessExecutor processExecutor = new DefaultProcessExecutor(params.getConsole());
 
-    VersionControlCmdLineInterface versionControlCmdLineInterface =
-        new DelegatingVersionControlCmdLineInterface(
-            params.getCell().getFilesystem().getRootPath(),
-            new PrintStreamProcessExecutorFactory(),
-            new VersionControlBuckConfig(buckConfig).getHgCmd(),
-            buckConfig.getEnvironment());
-
-    Optional<VcsInfoCollector> vcsInfoCollector =
-        VcsInfoCollector.create(versionControlCmdLineInterface);
-
     ExtraInfoCollector extraInfoCollector =
         new DefaultExtraInfoCollector(rageConfig, filesystem, processExecutor);
 
@@ -94,7 +79,7 @@ public class RageCommand extends AbstractCommand {
           params.getConsole(),
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
-          vcsInfoCollector,
+          params.getVersionControlStatsGenerator(),
           rageConfig,
           extraInfoCollector,
           watchmanDiagReportCollector);
@@ -104,7 +89,8 @@ public class RageCommand extends AbstractCommand {
           filesystem,
           params.getConsole(),
           params.getBuildEnvironmentDescription(),
-          gatherVcsInfo ? vcsInfoCollector : Optional.empty(),
+          params.getVersionControlStatsGenerator(),
+          gatherVcsInfo,
           rageConfig,
           extraInfoCollector);
     }

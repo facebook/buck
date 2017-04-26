@@ -1,8 +1,6 @@
 standard_java_library(
     name = "cache",
-    immutable_types = [
-        "HashCodeAndFileType",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/util/cache:cache",
     ],
@@ -13,6 +11,7 @@ standard_java_library(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util:watchman",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/zip:stream",
     ],

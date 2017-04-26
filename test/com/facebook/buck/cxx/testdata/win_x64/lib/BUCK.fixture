@@ -13,3 +13,15 @@ cxx_library(
     preferred_linkage = 'static',
     visibility = ['PUBLIC'],
 )
+
+genrule(
+  name = 'lib-out',
+  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,static)" %OUT%',
+  out = 'lib.lib',
+)
+
+genrule(
+  name = 'dll-out',
+  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,shared)" %OUT%',
+  out = 'lib.dll',
+)

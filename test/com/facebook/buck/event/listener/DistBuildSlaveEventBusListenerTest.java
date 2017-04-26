@@ -229,6 +229,7 @@ public class DistBuildSlaveEventBusListenerTest {
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.hit("buckcache"),
+            Optional.empty(),
             Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
             Optional.empty(),
             Optional.empty(),
@@ -240,6 +241,7 @@ public class DistBuildSlaveEventBusListenerTest {
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
+            Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
             Optional.empty(),
@@ -255,6 +257,7 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
     eventBus.post(
         BuildRuleEvent.finished(
@@ -262,6 +265,7 @@ public class DistBuildSlaveEventBusListenerTest {
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.CANCELED,
             CacheResult.ignored(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -274,6 +278,7 @@ public class DistBuildSlaveEventBusListenerTest {
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.ignored(),
+            Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
             Optional.empty(),

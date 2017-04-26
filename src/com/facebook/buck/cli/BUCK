@@ -33,6 +33,7 @@ java_library(
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/shell:worker_process",
         "//src/com/facebook/buck/step:step",
@@ -68,12 +69,6 @@ java_immutables_library(
         ["*.java"],
         excludes = CONFIG_SRCS,
     ),
-    immutable_types = [
-        "CommandRunnerParams",
-        "InstallResult",
-        "ProjectPredicates",
-        "TestRun",
-    ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
         "//src/com/facebook/buck/event/api:api",
@@ -190,6 +185,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules:target_graph_hashing",
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/shell:rules",
@@ -224,6 +220,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/shutdown:shutdown",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",

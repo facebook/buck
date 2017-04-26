@@ -8,10 +8,7 @@ standard_java_library(
         "util/*.java",
         "xcodeproj/*.java",
     ]),
-    immutable_types = [
-        "xcodeproj.CopyFilePhaseDestinationSpec",
-        "xcodeproj.ProductType",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/apple/xcode:xcode",
     ],

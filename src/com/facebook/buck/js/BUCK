@@ -6,6 +6,7 @@ standard_java_library(
     deps = [
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:MorePaths.java",
@@ -16,6 +17,7 @@ standard_java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/shell:worker",

@@ -87,3 +87,18 @@ js_bundle(
     entry = 'arbitrary',
     worker = ':packager_worker',
 )
+
+android_library(
+    name = 'the-android-lib',
+    deps = [':fruit-salad'],
+)
+
+js_bundle(
+    name = 'bundle-with-android-lib',
+    deps = [':the-android-lib'],
+    entry = 'fruit-salad',
+    android_package = 'com.sample',
+    worker = ':packager_worker',
+    visibility = ['PUBLIC'],
+)
+

@@ -18,3 +18,24 @@ rust_library(
     'PUBLIC',
   ],
 )
+
+# Should fail - ambiguous root source
+rust_library(
+  name = 'messenger_ambig',
+  crate = 'messenger',
+  srcs = [
+    'lib.rs',
+    'messenger.rs',
+  ],
+)
+
+# Should work - explicit override
+rust_library(
+  name = 'messenger_ambig_ovr',
+  crate = 'messenger',
+  crate_root = 'messenger.rs',
+  srcs = [
+    'lib.rs',
+    'messenger.rs',
+  ],
+)

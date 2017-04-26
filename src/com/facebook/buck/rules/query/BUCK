@@ -5,9 +5,6 @@ TYPES_SRCS = [
 java_immutables_library(
     name = "types",
     srcs = TYPES_SRCS,
-    immutable_types = [
-        "Query",
-    ],
     visibility = [
         "PUBLIC",
     ],

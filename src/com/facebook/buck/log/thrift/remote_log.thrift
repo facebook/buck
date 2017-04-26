@@ -56,6 +56,14 @@ struct TimeStatsRemoteLogEntry {
   9: i64 installTimeMs;
 }
 
+struct ExperimentStatsRemoteLogEntry {
+  1: string tag;
+  2: string variant;
+  3: string propertyName;
+  4: optional i64 value;
+  5: optional string content;
+}
+
 struct RemoteLogEntry {
   1: optional string buildUuid;
 
@@ -63,4 +71,5 @@ struct RemoteLogEntry {
   3: optional MemoryStatsRemoteLogEntry memoryStats;
   4: optional ProcessStatsRemoteLogEntry processStats;
   5: optional TimeStatsRemoteLogEntry timeStats;
+  6: optional ExperimentStatsRemoteLogEntry experimentStats;
 }

@@ -18,27 +18,23 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+import java.util.Optional;
+
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractVersionControlStats {
+interface AbstractVersionControlStats extends CommonVersionControlStats {
 
   @JsonView(JsonViews.MachineReadableLog.class)
   ImmutableSet<String> getPathsChangedInWorkingDirectory();
 
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getCurrentRevisionId();
+  /* The diff between base and current revision if it exists */
+  @JsonIgnore
+  Optional<String> getDiff();
 
-  @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getBaseBookmarks();
-
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getBranchedFromMasterRevisionId();
-
-  @JsonView(JsonViews.MachineReadableLog.class)
-  Long getBranchedFromMasterTS();
 }

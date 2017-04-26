@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -98,7 +98,7 @@ public class IntraCellIntegrationTest {
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
           ImmutableSet.of(BuildTargetFactory.newInstance(
               childCell.getFilesystem().getRootPath(),
-              "//:child-target")));
+              "child//:child-target")));
       fail("Didn't expect parsing to work because of visibility");
     } catch (HumanReadableException e) {
       // This is expected

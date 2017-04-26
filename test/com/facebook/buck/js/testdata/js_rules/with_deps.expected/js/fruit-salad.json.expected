@@ -1,10 +1,10 @@
-library --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json
-library
+library --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json --root @
+library --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library
+library --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js

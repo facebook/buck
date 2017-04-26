@@ -8,7 +8,8 @@ import __future__
 
 import contextlib
 from pathlib import Path, PurePath
-from pywatchman import bser, WatchmanError
+from pywatchman import WatchmanError
+from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
@@ -51,6 +52,8 @@ except ImportError:
 # "dirname" - The directory containing the build file.
 #
 # "base_path" - The base path of the build file.
+#
+# "cell_name" - The cell name the build file is in.
 
 BUILD_FUNCTIONS = []
 
@@ -108,8 +111,8 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
-                 watchman_client, watchman_watch_root, watchman_project_prefix,
+    def __init__(self, project_root, base_path, dirname, cell_name, autodeps, allow_empty_globs,
+                 ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob):
         self.globals = {}
@@ -121,6 +124,7 @@ class BuildFileContext(AbstractContext):
 
         self.project_root = project_root
         self.base_path = base_path
+        self.cell_name = cell_name
         self.dirname = dirname
         self.autodeps = autodeps
         self.allow_empty_globs = allow_empty_globs
@@ -468,6 +472,25 @@ def get_base_path(build_env=None):
     return build_env.base_path
 
 
+@provide_for_build
+def get_cell_name(build_env=None):
+    """Get the cell name of the build file that was initially evaluated.
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "cell". The return value will be "" if
+             the build file does not have a cell
+             :rtype: str
+
+    """
+    assert isinstance(build_env, BuildFileContext), (
+        "Cannot use `get_cell_name()` at the top-level of an included file.")
+    return build_env.cell_name
+
+
 def flatten_list_of_dicts(list_of_dicts):
     """Flatten the given list of dictionaries by merging l[1:] onto
     l[0], one at a time. Key/Value pairs which appear in later list entries
@@ -511,7 +534,7 @@ class BuildFileProcessor(object):
         'pipes': ['quote'],
     }
 
-    def __init__(self, project_root, cell_roots, build_file_name,
+    def __init__(self, project_root, cell_roots, cell_name, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
                  watchman_client, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob,
@@ -536,6 +559,7 @@ class BuildFileProcessor(object):
 
         self._project_root = project_root
         self._cell_roots = cell_roots
+        self._cell_name = cell_name
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
@@ -988,6 +1012,7 @@ class BuildFileProcessor(object):
             self._project_root,
             base_path,
             dirname,
+            self._cell_name,
             autodeps or {},
             self._allow_empty_globs,
             self._ignore_paths,
@@ -1134,6 +1159,7 @@ def format_exception_info(exception_info):
 
 def encode_result(values, diagnostics, profile):
     result = {'values': values}
+    json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
         for d in diagnostics:
@@ -1149,7 +1175,7 @@ def encode_result(values, diagnostics, profile):
     if profile is not None:
         result['profile'] = profile
     try:
-        return bser.dumps(result)
+        return json_encoder.encode(result)
     except Exception as e:
         # Try again without the values
         result['values'] = []
@@ -1161,7 +1187,7 @@ def encode_result(values, diagnostics, profile):
             'source': 'parse',
             'exception': format_exception_info(sys.exc_info()),
         })
-        return bser.dumps(result)
+        return json_encoder.encode(result)
 
 
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
@@ -1257,12 +1283,12 @@ def _optparse_store_kv(option, opt_str, value, parser):
 # directories of generated files produced by Buck.
 #
 # All of the build rules that are parsed from the BUCK files will be printed
-# to stdout encoded in BSER. That means that printing out other information
-# for debugging purposes will break the BSER encoding, so be careful!
+# to stdout encoded in JSON. That means that printing out other information
+# for debugging purposes will break the JSON encoding, so be careful!
 
 
 def main():
-    # Our parent expects to read BSER from our stdout, so if anyone
+    # Our parent expects to read JSON from our stdout, so if anyone
     # uses print, buck will complain with a helpful "but I wanted an
     # array!" message and quit.  Redirect stdout to stderr so that
     # doesn't happen.  Actually dup2 the file handle so that writing
@@ -1287,6 +1313,11 @@ def main():
         callback=_optparse_store_kv,
         default={},
     )
+    parser.add_option(
+        '--cell_name',
+        action='store',
+        type='string',
+        dest="cell_name")
     parser.add_option(
         '--build_file_name',
         action='store',
@@ -1378,7 +1409,7 @@ def main():
     watchman_client = None
     use_mercurial_glob = False
     if options.use_watchman_glob:
-        client_args = {}
+        client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
         if options.watchman_query_timeout_ms is not None:
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
@@ -1408,18 +1439,19 @@ def main():
     configs = {}
     if options.config is not None:
         with open(options.config, 'rb') as f:
-            for section, contents in bser.loads(f.read()).iteritems():
+            for section, contents in json.load(f).iteritems():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
 
     ignore_paths = []
     if options.ignore_paths is not None:
         with open(options.ignore_paths, 'rb') as f:
-            ignore_paths = [make_glob(i) for i in bser.loads(f.read())]
+            ignore_paths = [make_glob(i) for i in json.load(f)]
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
         cell_roots,
+        options.cell_name,
         options.build_file_name,
         options.allow_empty_globs,
         options.ignore_buck_autodeps_files,
@@ -1455,13 +1487,21 @@ def main():
                 process_with_diagnostics(query, buildFileProcessor, to_parent,
                                          should_profile=options.profile)
 
-            for build_file_query in iter(lambda: bser.load(sys.stdin), None):
+            # From https://docs.python.org/2/using/cmdline.html :
+            #
+            # Note that there is internal buffering in file.readlines()
+            # and File Objects (for line in sys.stdin) which is not
+            # influenced by this option. To work around this, you will
+            # want to use file.readline() inside a while 1: loop.
+            for line in iter(sys.stdin.readline, ''):
+                if line == '':
+                    break
+                build_file_query = json.loads(line)
                 process_with_diagnostics(
                     build_file_query,
                     buildFileProcessor,
                     to_parent,
-                    should_profile=options.profile
-                )
+                    should_profile=options.profile)
 
     if options.quiet:
         sys.excepthook = orig_excepthook

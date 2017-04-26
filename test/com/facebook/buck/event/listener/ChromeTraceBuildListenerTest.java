@@ -112,6 +112,8 @@ public class ChromeTraceBuildListenerTest {
         .setSubCommand("no_sub_command")
         .setIsDaemon(false)
         .setSuperConsoleEnabled(false)
+        .setCommandArgs("no sub command")
+        .setUnexpandedCommandArgs("no sub command")
         .build();
     durationTracker = new BuildRuleDurationTracker();
   }
@@ -292,6 +294,7 @@ public class ChromeTraceBuildListenerTest {
             BuildRuleKeys.of(ruleKey),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
+            Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.empty(),
             Optional.empty(), Optional.empty()));

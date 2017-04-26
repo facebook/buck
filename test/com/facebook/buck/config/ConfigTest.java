@@ -16,6 +16,8 @@
 
 package com.facebook.buck.config;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -95,6 +97,33 @@ public class ConfigTest {
         ConfigBuilder.createFromText(config[0], config[1])
             .getOptionalListWithoutComments("a", "b", ';')
     );
+  }
+
+  @Test
+  public void testGetEmptyList() throws IOException {
+    String[] config = {"[a]", "b ="};
+    assertThat(
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b"),
+        is(equalTo(Optional.of(ImmutableList.of()))));
+  }
+
+  @Test
+  public void testGetEmptyListWithComment() throws IOException {
+    String[] config = {"[a]", "b = ; comment"};
+    assertThat(
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b"),
+        is(equalTo(Optional.of(ImmutableList.of()))));
+  }
+
+  @Test
+  public void testGetUnspecifiedList() throws IOException {
+    String[] config = {"[a]", "c ="};
+    assertThat(
+        ConfigBuilder.createFromText(config[0], config[1])
+            .getOptionalListWithoutComments("a", "b"),
+        is(equalTo(Optional.empty())));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -299,7 +328,7 @@ public class ConfigTest {
                     .build()),
             ImmutableMap.of("section", ImmutableSet.of("field"))
         ),
-        Matchers.is(true)
+        is(true)
     );
 
     assertThat(
@@ -316,7 +345,7 @@ public class ConfigTest {
                         .build()),
                 ImmutableMap.of("section", ImmutableSet.of("field"))
             ),
-        Matchers.is(true)
+        is(true)
     );
   }
 
@@ -331,7 +360,7 @@ public class ConfigTest {
                 new Config(RawConfig.builder().build()),
                 ImmutableMap.of("section", ImmutableSet.of("field"))
             ),
-        Matchers.is(true)
+        is(true)
     );
 
     assertThat(
@@ -346,7 +375,7 @@ public class ConfigTest {
                     .build()),
                 ImmutableMap.of("section", ImmutableSet.of("field"))
             ),
-        Matchers.is(true)
+        is(true)
     );
 
     assertThat(
@@ -361,7 +390,7 @@ public class ConfigTest {
                     .build()),
                 ImmutableMap.of("section", ImmutableSet.of("field"))
             ),
-        Matchers.is(true)
+        is(true)
     );
   }
 

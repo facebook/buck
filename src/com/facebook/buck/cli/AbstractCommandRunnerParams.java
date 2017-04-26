@@ -36,6 +36,7 @@ import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -74,6 +75,8 @@ public interface AbstractCommandRunnerParams {
   JavaPackageFinder getJavaPackageFinder();
 
   Clock getClock();
+
+  VersionControlStatsGenerator getVersionControlStatsGenerator();
 
   Optional<ProcessManager> getProcessManager();
 

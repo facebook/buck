@@ -16,6 +16,13 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
@@ -32,7 +39,7 @@ import java.util.Optional;
 /**
  * Holds all of the mutable state required during {@link IjModule} creation.
  */
-class ModuleBuildContext {
+public class ModuleBuildContext {
 
   private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 
@@ -43,8 +50,9 @@ class ModuleBuildContext {
   // See comment in getDependencies for these two member variables.
   private Map<BuildTarget, DependencyType> dependencyTypeMap;
   private Multimap<Path, BuildTarget> dependencyOriginMap;
-  private Optional<IjModuleType> moduleType;
+  private IjModuleType moduleType;
   private Optional<Path> metaInfDirectory;
+  private Optional<String> javaLanguageLevel;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
@@ -54,8 +62,9 @@ class ModuleBuildContext {
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
-    this.moduleType = Optional.empty();
+    this.moduleType = IjModuleType.UNKNOWN_MODULE;
     this.metaInfDirectory = Optional.empty();
+    this.javaLanguageLevel = Optional.empty();
   }
 
   public void ensureAndroidFacetBuilder() {
@@ -97,12 +106,14 @@ class ModuleBuildContext {
     return generatedSourceCodeFoldersBuilder.build();
   }
 
-  public Optional<IjModuleType> getModuleType() {
+  public IjModuleType getModuleType() {
     return moduleType;
   }
 
   public void setModuleType(IjModuleType moduleType) {
-    this.moduleType = Optional.of(moduleType);
+    if (moduleType.hasHigherPriorityThan(this.moduleType)) {
+      this.moduleType = moduleType;
+    }
   }
 
   public Optional<Path> getMetaInfDirectory() {
@@ -113,14 +124,14 @@ class ModuleBuildContext {
     this.metaInfDirectory = Optional.of(metaInfDirectory);
   }
 
-  /**
-   * Mark this module as one that can be run as an IntelliJ plugin.
-   *
-   * @param metaInfDirectory directory where the plugin's plugin.xml descriptor lives
-   */
-  public void setIsIntellijPlugin(Path metaInfDirectory) {
-    setModuleType(IjModuleType.PLUGIN_MODULE);
-    setMetaInfDirectory(metaInfDirectory);
+  public Optional<String> getJavaLanguageLevel() {
+    return javaLanguageLevel;
+  }
+
+  public void setJavaLanguageLevel(Optional<String> javaLanguageLevel) {
+    if (!this.javaLanguageLevel.isPresent()) {
+      this.javaLanguageLevel = javaLanguageLevel;
+    }
   }
 
   /**

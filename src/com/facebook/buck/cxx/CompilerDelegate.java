@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -65,10 +66,10 @@ class CompilerDelegate implements RuleKeyAppendable {
   /**
    * Returns the argument list for executing the compiler.
    */
-  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags) {
+  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags, Path cellPath) {
     return ImmutableList.<String>builder()
         .addAll(getCommandPrefix())
-        .addAll(getArguments(prependedFlags))
+        .addAll(getArguments(prependedFlags, cellPath))
         .build();
   }
 
@@ -76,12 +77,13 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compiler.getCommandPrefix(resolver);
   }
 
-  public ImmutableList<String> getArguments(CxxToolFlags prependedFlags) {
+  public ImmutableList<String> getArguments(
+      CxxToolFlags prependedFlags,
+      Path cellPath) {
     return ImmutableList.<String>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
-            compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory()).orElse(
-                ImmutableList.of()))
+            compiler.getFlagsForReproducibleBuild(sanitizer.getCompilationDirectory(), cellPath))
         .build();
   }
 

@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.sun.source.util.TaskListener;
 
 import javax.tools.Diagnostic;

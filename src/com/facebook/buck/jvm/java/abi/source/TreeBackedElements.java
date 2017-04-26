@@ -36,6 +36,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 
 /**
@@ -257,7 +258,21 @@ class TreeBackedElements implements Elements {
   @Override
   public Map<? extends ExecutableElement, ? extends AnnotationValue> getElementValuesWithDefaults(
       AnnotationMirror a) {
-    throw new UnsupportedOperationException();
+
+    Map<ExecutableElement, AnnotationValue> result = new HashMap<>();
+
+    result.putAll(a.getElementValues());
+
+    TypeElement annotationType = (TypeElement) a.getAnnotationType().asElement();
+    List<ExecutableElement> parameters =
+        ElementFilter.methodsIn(annotationType.getEnclosedElements());
+    for (ExecutableElement parameter : parameters) {
+      if (!result.containsKey(parameter) && parameter.getDefaultValue() != null) {
+        result.put(parameter, parameter.getDefaultValue());
+      }
+    }
+
+    return result;
   }
 
   @Override

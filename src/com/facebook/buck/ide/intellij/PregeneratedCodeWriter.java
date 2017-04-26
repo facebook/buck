@@ -16,6 +16,9 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 
 import org.stringtemplate.v4.ST;
@@ -99,7 +102,7 @@ public class PregeneratedCodeWriter {
 
     Path fileToWrite = androidFacet
         .getGeneratedSourcePath()
-        .resolve(packageName.replace(".", "/"))
+        .resolve(packageName.replace('.', '/'))
         .resolve(className + ".java");
 
     cleaner.doNotDelete(fileToWrite);

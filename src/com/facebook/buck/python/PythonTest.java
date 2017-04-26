@@ -30,7 +30,6 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -70,7 +69,7 @@ public class PythonTest
   private final Supplier<ImmutableMap<String, String>> env;
   @AddToRuleKey
   private final PythonBinary binary;
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
@@ -81,7 +80,7 @@ public class PythonTest
       Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps,
       Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
@@ -101,7 +100,7 @@ public class PythonTest
       SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
@@ -180,7 +179,7 @@ public class PythonTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

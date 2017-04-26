@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -70,7 +69,7 @@ public abstract class CxxTest
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableSortedSet<? extends SourcePath> resources;
   private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
   private final Optional<Long> testRuleTimeoutMs;
@@ -82,7 +81,7 @@ public abstract class CxxTest
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
@@ -196,7 +195,7 @@ public abstract class CxxTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

@@ -24,7 +24,7 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
@@ -108,15 +108,16 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    CellPathResolver cellNames = new FakeCellPathResolver(
-        ImmutableMap.of("other", filesystem.getRootPath()));
+    CellPathResolver cellNames = new DefaultCellPathResolver(
+        filesystem.getPath("foo/root"),
+        ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
     assertEquals(
-        new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:something"),
+        new SingletonBuildTargetPattern(filesystem.getPath("foo/other"), "//:something"),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
         new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
+            filesystem.getPath("foo/other"),
             filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }

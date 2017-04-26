@@ -53,6 +53,10 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_OSX_C_FRONTEND = Paths.get("/usr/bin/clang");
   private static final Path DEFAULT_OSX_CXX_FRONTEND = Paths.get("/usr/bin/clang++");
 
+  private static final String DEFAULT_WINDOWS_CXX_FRONTEND = "cl";
+  private static final String DEFAULT_WINDOWS_LINK = "link";
+  private static final String DEFAULT_WINDOWS_LIB = "lib";
+
   public static CxxPlatform build(
       Platform platform,
       ProjectFilesystem filesystem,
@@ -63,11 +67,13 @@ public class DefaultCxxPlatforms {
     String objectFileExtension;
     Path defaultCFrontend;
     Path defaultCxxFrontend;
+    Path defaultLinker;
     LinkerProvider.Type linkerType;
     Archiver archiver;
     DebugPathSanitizer compilerSanitizer;
     Optional<String> binaryExtension;
     ImmutableMap<String, String> env = config.getEnvironment();
+    Optional<CxxToolProvider.Type> defaultToolType = Optional.empty();
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -76,6 +82,7 @@ public class DefaultCxxPlatforms {
         objectFileExtension = "o";
         defaultCFrontend = getExecutablePath("gcc", DEFAULT_C_FRONTEND, env);
         defaultCxxFrontend = getExecutablePath("g++", DEFAULT_CXX_FRONTEND, env);
+        defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(
@@ -95,6 +102,7 @@ public class DefaultCxxPlatforms {
         objectFileExtension = "o";
         defaultCFrontend = getExecutablePath("clang", DEFAULT_OSX_C_FRONTEND, env);
         defaultCxxFrontend = getExecutablePath("clang++", DEFAULT_OSX_CXX_FRONTEND, env);
+        defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.DARWIN;
         archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(
@@ -112,11 +120,21 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat = "dll";
         staticLibraryExtension = "lib";
         objectFileExtension = "obj";
-        defaultCFrontend = getExecutablePath("gcc", DEFAULT_C_FRONTEND, env);
-        defaultCxxFrontend = getExecutablePath("g++", DEFAULT_CXX_FRONTEND, env);
+        defaultCFrontend = getExecutablePath(
+            DEFAULT_WINDOWS_CXX_FRONTEND,
+            Paths.get(DEFAULT_WINDOWS_CXX_FRONTEND),
+            env);
+        defaultCxxFrontend = getExecutablePath(
+            DEFAULT_WINDOWS_CXX_FRONTEND,
+            Paths.get(DEFAULT_WINDOWS_CXX_FRONTEND),
+            env);
+        defaultLinker = getExecutablePath(
+            DEFAULT_WINDOWS_LINK,
+            Paths.get(DEFAULT_WINDOWS_LINK),
+            env);
         linkerType = LinkerProvider.Type.WINDOWS;
         archiver = new WindowsArchiver(new HashedFileTool(
-            getExecutablePath("ar", DEFAULT_AR, env)));
+            getExecutablePath(DEFAULT_WINDOWS_LIB, Paths.get(DEFAULT_WINDOWS_LIB), env)));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),
             File.separatorChar,
@@ -126,6 +144,7 @@ public class DefaultCxxPlatforms {
             CxxToolProvider.Type.GCC,
             filesystem);
         binaryExtension = Optional.of("exe");
+        defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -134,6 +153,7 @@ public class DefaultCxxPlatforms {
         objectFileExtension = "o";
         defaultCFrontend = getExecutablePath("gcc", DEFAULT_C_FRONTEND, env);
         defaultCxxFrontend = getExecutablePath("g++", DEFAULT_CXX_FRONTEND, env);
+        defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(
@@ -154,28 +174,28 @@ public class DefaultCxxPlatforms {
     PreprocessorProvider aspp =
         new PreprocessorProvider(
             defaultCFrontend,
-            Optional.empty());
+            defaultToolType);
     CompilerProvider as =
         new CompilerProvider(
             defaultCFrontend,
-            Optional.empty());
+            defaultToolType);
 
     PreprocessorProvider cpp =
         new PreprocessorProvider(
             defaultCFrontend,
-            Optional.empty());
+            defaultToolType);
     CompilerProvider cc =
         new CompilerProvider(
             defaultCFrontend,
-            Optional.empty());
+            defaultToolType);
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(
             defaultCxxFrontend,
-            Optional.empty());
+            defaultToolType);
     CompilerProvider cxx =
         new CompilerProvider(
             defaultCxxFrontend,
-            Optional.empty());
+            defaultToolType);
 
     return CxxPlatforms.build(
         FLAVOR,
@@ -189,7 +209,7 @@ public class DefaultCxxPlatforms {
         cxxpp,
         new DefaultLinkerProvider(
             linkerType,
-            new ConstantToolProvider(new HashedFileTool(defaultCxxFrontend))),
+            new ConstantToolProvider(new HashedFileTool(defaultLinker))),
         ImmutableList.of(),
         new HashedFileTool(getExecutablePath("strip", DEFAULT_STRIP, env)),
         archiver,

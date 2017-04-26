@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/java/code/java/default/tip/src/module/java_code_java_default_tip_src_module.iml" filepath="$PROJECT_DIR$/java/code/java/default/tip/src/module/java_code_java_default_tip_src_module.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java/java_code_java.iml" filepath="$PROJECT_DIR$/java/code/java/java_code_java.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java/modules_with_java_7/java_code_java_modules_with_java_7.iml" filepath="$PROJECT_DIR$/java/code/java/modules_with_java_7/java_code_java_modules_with_java_7.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/java/modules_with_java_8/java_code_java_modules_with_java_8.iml" filepath="$PROJECT_DIR$/java/code/java/modules_with_java_8/java_code_java_modules_with_java_8.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/code/modules/java_code_modules.iml" filepath="$PROJECT_DIR$/java/code/modules/java_code_modules.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
+    </modules>
+  </component>
+</project>

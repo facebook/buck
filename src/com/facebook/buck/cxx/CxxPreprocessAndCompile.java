@@ -220,9 +220,12 @@ public class CxxPreprocessAndCompile
       if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
         arguments =
             compilerDelegate.getArguments(
-                preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule));
+                preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule),
+                getBuildTarget().getCellPath());
       } else {
-        arguments = compilerDelegate.getArguments(CxxToolFlags.of());
+        arguments = compilerDelegate.getArguments(
+            CxxToolFlags.of(),
+            getBuildTarget().getCellPath());
       }
       compilerCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
@@ -297,7 +300,8 @@ public class CxxPreprocessAndCompile
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
     cmd.addAll(
         compilerDelegate.getCommand(
-            effectivePreprocessorDelegate.getFlagsWithSearchPaths(/*pch*/ Optional.empty())));
+            effectivePreprocessorDelegate.getFlagsWithSearchPaths(/*pch*/ Optional.empty()),
+            getBuildTarget().getCellPath()));
     // use the input of the preprocessor, since the fact that this is going through preprocessor is
     // hidden to compdb.
     cmd.add("-x", inputType.getLanguage());

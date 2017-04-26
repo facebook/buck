@@ -157,7 +157,6 @@ function _buck_completion_try_install() {
 
 function _buck_completion_try_project() {
   _buck_completion_try_long_arg "
-      --build-with-buck
       --combined-project
       --deprecated-ij-generation
       --help

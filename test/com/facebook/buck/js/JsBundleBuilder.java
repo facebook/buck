@@ -32,12 +32,10 @@ public class JsBundleBuilder extends
   JsBundleBuilder(
       BuildTarget target,
       BuildTarget worker,
-      ImmutableSortedSet<BuildTarget> libs,
       Either<ImmutableSet<String>, String> entry,
       ProjectFilesystem filesystem) {
     super(bundleDescription, target, filesystem);
     arg.entry = entry;
-    arg.libs = libs;
     arg.bundleName = Optional.empty();
     arg.worker = worker;
     arg.rDotJavaPackage = Optional.of("com.example");
@@ -45,6 +43,16 @@ public class JsBundleBuilder extends
 
   JsBundleBuilder setBundleName(String bundleName) {
     arg.bundleName = Optional.of(bundleName);
+    return this;
+  }
+
+  JsBundleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
+    return this;
+  }
+
+  JsBundleBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
+    arg.libs = libs;
     return this;
   }
 }

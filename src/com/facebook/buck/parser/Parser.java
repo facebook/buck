@@ -25,7 +25,6 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -33,7 +32,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -42,8 +41,9 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +60,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -85,12 +84,14 @@ public class Parser {
 
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   public Parser(
       BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.permState = new DaemonicParserState(
         broadcastEventListener,
         typeCoercerFactory,
@@ -100,6 +101,10 @@ public class Parser {
 
   protected DaemonicParserState getPermState() {
     return permState;
+  }
+
+  protected TypeCoercerFactory getTypeCoercerFactory() {
+    return typeCoercerFactory;
   }
 
   protected ConstructorArgMarshaller getMarshaller() {
@@ -499,7 +504,7 @@ public class Parser {
     }
 
     // Kick off parse futures for each build file.
-    ArrayList<ListenableFuture<ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>>
+    ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>
         targetFutures = new ArrayList<>();
     for (Path buildFile : perBuildFileSpecs.keySet()) {
       final Collection<Integer> buildFileSpecs = perBuildFileSpecs.get(buildFile);
@@ -513,44 +518,49 @@ public class Parser {
             cell.getFilesystem().getRootPath().relativize(buildFile));
       }
 
-      // Build up a list of all target nodes from the build file.
-      targetFutures.add(
-          Futures.transform(
-              state.getAllTargetNodesJob(cell, buildFile),
-              new Function<ImmutableSet<TargetNode<?, ?>>,
-                           ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>() {
-                @Override
-                public ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>> apply(
-                    ImmutableSet<TargetNode<?, ?>> nodes) {
-                  ImmutableList.Builder<Map.Entry<Integer, ImmutableSet<BuildTarget>>> targets =
-                      ImmutableList.builder();
-                  for (int index : buildFileSpecs) {
-                    // Call back into the target node spec to filter the relevant build targets.
-                    // We return a pair of spec index and build target set, so that we can build a
-                    // final result list that maintains the input spec ordering.
-                    targets.add(
-                        new AbstractMap.SimpleEntry<>(
-                            index,
-                            applySpecFilter(
-                                orderedSpecs.get(index),
-                                nodes,
-                                applyDefaultFlavorsMode)));
-                  }
-                  return targets.build();
-                }
-              }));
+      for (int index : buildFileSpecs) {
+        final TargetNodeSpec spec = orderedSpecs.get(index);
+        if (spec instanceof BuildTargetSpec) {
+          BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
+          targetFutures.add(
+              Futures.transform(
+                  state.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
+                  node -> {
+                    ImmutableSet<BuildTarget> buildTargets = applySpecFilter(
+                        spec,
+                        ImmutableSet.of(node),
+                        applyDefaultFlavorsMode);
+                    Preconditions.checkState(
+                        buildTargets.size() == 1,
+                        "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
+                        spec,
+                        node.getBuildTarget());
+                    return new AbstractMap.SimpleEntry<>(index, buildTargets);
+                  }));
+        } else {
+          // Build up a list of all target nodes from the build file.
+          targetFutures.add(
+              Futures.transform(
+                  state.getAllTargetNodesJob(cell, buildFile),
+                  nodes -> new AbstractMap.SimpleEntry<>(
+                      index,
+                      applySpecFilter(
+                          spec,
+                          nodes,
+                          applyDefaultFlavorsMode))));
+
+        }
+      }
     }
 
     // Now walk through and resolve all the futures, and place their results in a multimap that
     // is indexed by the integer representing the input target spec order.
     LinkedHashMultimap<Integer, BuildTarget> targetsMap = LinkedHashMultimap.create();
     try {
-      for (ListenableFuture<ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>
+      for (ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>
                targetFuture : targetFutures) {
-        ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>> results = targetFuture.get();
-        for (Map.Entry<Integer, ImmutableSet<BuildTarget>> ent : results) {
-          targetsMap.putAll(ent.getKey(), ent.getValue());
-        }
+        Map.Entry<Integer, ImmutableSet<BuildTarget>> result = targetFuture.get();
+        targetsMap.putAll(result.getKey(), result.getValue());
       }
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
@@ -622,11 +632,17 @@ public class Parser {
   }
 
   @Subscribe
-  public void onFileSystemChange(WatchEvent<?> event) {
+  public void onFileSystemChange(WatchmanOverflowEvent event) {
+    LOG.verbose("Parser watched event OVERFLOW %s", event.getReason());
+    permState.invalidateBasedOn(event);
+  }
+
+  @Subscribe
+  public void onFileSystemChange(WatchmanPathEvent event) {
     LOG.verbose(
         "Parser watched event %s %s",
-        event.kind(),
-        WatchEvents.createContextString(event));
+        event.getKind(),
+        event.getPath());
 
     permState.invalidateBasedOn(event);
   }

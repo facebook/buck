@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.rules.BuckPyFunction;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -98,7 +97,7 @@ public class AuditRulesCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser = params.getCell().createBuildFileParser(
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
+        new DefaultTypeCoercerFactory(),
         params.getConsole(),
         params.getBuckEventBus(),
         /* ignoreBuckAutodepsFiles */ false)) {

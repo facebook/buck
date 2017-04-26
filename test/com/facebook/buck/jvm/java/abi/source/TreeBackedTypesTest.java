@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,6 +39,7 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.ElementFilter;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
@@ -365,5 +366,83 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     // the exact same instance.
     assertNotSameType(wildcardType, wildcardType);
     assertNotSameType(wildcardType, wildcardType2);
+  }
+
+  @Test
+  public void testErasureOfPrimitiveIsItself() throws IOException {
+    initCompiler();
+
+    TypeMirror intType = types.getPrimitiveType(TypeKind.INT);
+
+    assertSameType(intType, types.erasure(intType));
+  }
+
+  @Test
+  public void testErasureOfNonGenericIsItself() throws IOException {
+    compile("class Foo { }");
+
+    TypeMirror fooType = elements.getTypeElement("Foo").asType();
+
+    assertSameType(fooType, types.erasure(fooType));
+  }
+
+  @Test
+  public void testErasureOfArrayIsArrayOfErasedComponent() throws IOException {
+    compile("class Foo<T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+    TypeMirror fooOfString = types.getDeclaredType(fooElement, stringType);
+    TypeMirror fooErasure = types.erasure(fooOfString);
+    TypeMirror multiArrayOfFooOfString = types.getArrayType(types.getArrayType(fooOfString));
+    TypeMirror multiArrayOfFoo = types.getArrayType(types.getArrayType(fooErasure));
+
+    assertSameType(multiArrayOfFoo, types.erasure(multiArrayOfFooOfString));
+  }
+
+  @Test
+  public void testErasureOfInnerType() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T> {",
+        "  static Foo<String>.Inner<Integer> field;",
+        "  class Inner<U> {",
+        "  }",
+        "}"));
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeElement innerElement = elements.getTypeElement("Foo.Inner");
+    TypeMirror genericInnerType =
+        ElementFilter.fieldsIn(fooElement.getEnclosedElements()).get(0).asType();
+
+    DeclaredType fooType = types.getDeclaredType(fooElement);
+    TypeMirror erasedInnerType = types.getDeclaredType(fooType, innerElement);
+
+    assertSameType(erasedInnerType, types.erasure(genericInnerType));
+  }
+
+  @Test
+  public void testErasureOfSetOfStringIsSet() throws IOException {
+    initCompiler();
+
+    TypeElement setElement = elements.getTypeElement("java.util.Set");
+    TypeMirror stringType = elements.getTypeElement("java.lang.String").asType();
+
+    TypeMirror setType = types.getDeclaredType(setElement);
+    TypeMirror setOfStringType = types.getDeclaredType(setElement, stringType);
+
+    assertSameType(setType, types.erasure(setOfStringType));
+  }
+
+  @Test
+  public void testErasureOfSetOfUserDefinedTypeIsSet() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement setElement = elements.getTypeElement("java.util.Set");
+    TypeMirror fooType = elements.getTypeElement("Foo").asType();
+
+    TypeMirror setType = types.getDeclaredType(setElement);
+    TypeMirror setOfFooType = types.getDeclaredType(setElement, fooType);
+
+    assertSameType(setType, types.erasure(setOfFooType));
   }
 }

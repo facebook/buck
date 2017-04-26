@@ -21,8 +21,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
@@ -45,8 +48,7 @@ public abstract class AbstractNodeBuilder<
     TArg,
     TDescription extends Description<TArg>,
     TBuildRule extends BuildRule> {
-  private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
-      new DefaultTypeCoercerFactory();
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
 
@@ -207,15 +209,17 @@ public abstract class AbstractNodeBuilder<
 
   /**
    * Populate optional fields of this constructor arg with their default values.
+   *
+   * TODO(dwh): Remove this when all constructor args are immutables.
    */
   private void populateWithDefaultValues(TArg arg) {
     try {
-      new ConstructorArgMarshaller(TYPE_COERCER_FACTORY)
-          .populateDefaults(
-              cellRoots,
-              filesystem,
-              target,
-              arg);
+      for (ParamInfo info :
+          CoercedTypeCache.INSTANCE.getAllParamInfo(TYPE_COERCER_FACTORY, arg.getClass())) {
+        if (info.isOptional()) {
+          info.set(cellRoots, filesystem, target.getBasePath(), arg, null);
+        }
+      }
     } catch (ParamInfoException error) {
       throw new RuntimeException(error);
     }

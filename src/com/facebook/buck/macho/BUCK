@@ -1,15 +1,6 @@
 standard_java_library(
     name = "macho",
-    immutable_types = [
-        "FatArch",
-        "FatHeader",
-        "LoadCommand",
-        "MachoHeader",
-        "Nlist",
-        "Section",
-        "SegmentCommand",
-        "UUIDCommand",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/macho:macho",
     ],

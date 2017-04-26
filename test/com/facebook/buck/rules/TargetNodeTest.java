@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.rules.coercer.ParamInfoException;
@@ -192,8 +193,6 @@ public class TargetNodeTest {
           projectFilesystem,
           buildTarget,
           constructorArg,
-          ImmutableSet.builder(),
-          ImmutableSet.builder(),
           ImmutableSet.builder(),
           instance);
     } catch (ParamInfoException e) {
