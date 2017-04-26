@@ -84,11 +84,11 @@ public class CsharpLibraryCompile extends ShellStep {
 
   private String resolveReference(DotnetFramework netFramework, Either<Path, String> ref) {
     if (ref.isLeft()) {
-      return Escaper.escapeAsShellString(ref.getLeft().toString());
+      return ref.getLeft().toString();
     }
 
     Path pathToAssembly = netFramework.findReferenceAssembly(ref.getRight());
-    return Escaper.escapeAsShellString(pathToAssembly.toString());
+    return pathToAssembly.toString();
   }
 
   @Override

@@ -140,6 +140,7 @@ standard_java_test(
         "//src/com/facebook/buck/zip:constants",
         "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/dotnet:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:tools-sdk-common",

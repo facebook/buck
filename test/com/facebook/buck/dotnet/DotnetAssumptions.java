@@ -30,10 +30,8 @@ public class DotnetAssumptions {
     // Utility class
   }
 
-  public static void assumeCscIsAvailable() {
-    Optional<Path> csc =
-        new ExecutableFinder()
-            .getOptionalExecutable(Paths.get("csc"), ImmutableMap.copyOf(System.getenv()));
+  public static void assumeCscIsAvailable(ImmutableMap<String, String> env) {
+    Optional<Path> csc = new ExecutableFinder().getOptionalExecutable(Paths.get("csc"), env);
 
     assumeTrue("Unable to find csc", csc.isPresent());
   }
