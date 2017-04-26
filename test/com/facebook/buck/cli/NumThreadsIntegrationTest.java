@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -24,7 +23,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Joiner;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,40 +66,6 @@ public class NumThreadsIntegrationTest {
         "Once .buckconfig is deleted, the number of threads should be " +
         "equal to the number of processors.",
         buildResult3.getStderr(),
-        containsString("Creating a build with " + numThreads + " threads.\n"));
-  }
-
-  @Test
-  public void testBuckProjectUsesNumThreadsInBuckConfigFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "num_threads", tmp);
-    workspace.setUp();
-    workspace.disableThreadLimitOverride();
-
-    ProcessResult buildResult1 = workspace.runBuckCommand(
-        "project",
-        "--deprecated-ij-generation",
-        "--verbose",
-        "10");
-    assertThat("Number of threads to use should be read from .buckconfig.",
-        buildResult1.getStderr(),
-        containsString("Creating a build with 7 threads.\n"));
-
-    String newBuckProject = Joiner.on('\n').join(
-        "[project]",
-        "  initial_targets = //:noop",
-        "  ide = intellij");
-    Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
-    int numThreads = Runtime.getRuntime().availableProcessors();
-    ProcessResult buildResult2 = workspace.runBuckCommand(
-        "project",
-        "--deprecated-ij-generation",
-        "--verbose",
-        "10");
-    assertThat(
-        "Once num_threads is removed from .buckconfig, the number of threads should be " +
-        "equal to the number of processors.",
-        buildResult2.getStderr(),
         containsString("Creating a build with " + numThreads + " threads.\n"));
   }
 }

@@ -71,11 +71,6 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testProjectAndroidPrebuiltAar() throws IOException {
-    workspace.runBuckCommand("project", "--deprecated-ij-generation", "//:app").assertSuccess();
-  }
-
-  @Test
   public void testPrebuiltJarInDepsIsExported() throws IOException {
     workspace.runBuckBuild("//prebuilt_jar-dep:lib").assertSuccess();
   }

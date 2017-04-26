@@ -63,7 +63,6 @@ BUCK_CORE_RESOURCES = {
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
     "path_to_asm_jar": "//third-party/java/asm:asm",
     "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
-    "path_to_intellij_py": "//src/com/facebook/buck/ide/intellij/deprecated:intellij.py",
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pex": "//src/com/facebook/buck/python:pex",
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",

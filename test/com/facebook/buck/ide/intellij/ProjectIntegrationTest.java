@@ -18,10 +18,12 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.Lists;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -169,11 +171,18 @@ public class ProjectIntegrationTest {
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
-    return ProjectIntegrationTestUtils.runBuckProject(
-        this,
-        temporaryFolder,
-        folderWithTestData,
-        true,
-        commandArgs);
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, folderWithTestData, temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    return result;
   }
 }
