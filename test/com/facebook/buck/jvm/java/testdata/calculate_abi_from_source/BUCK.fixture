@@ -1,0 +1,35 @@
+java_library(
+    name = "main",
+    srcs = [
+        "Main.java",
+    ],
+    deps = [
+        ":lib",
+    ],
+)
+
+java_library(
+    name = "lib",
+    srcs = [
+        "Lib.java",
+    ],
+    plugins = [
+        ":ap",
+    ],
+)
+
+java_annotation_processor(
+    name = "ap",
+    deps = [
+        ":ap-lib",
+    ],
+    processor_class = "com.example.buck.AnnotationProcessor",
+    supports_abi_generation_from_source = True,
+)
+
+java_library(
+    name = "ap-lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+)

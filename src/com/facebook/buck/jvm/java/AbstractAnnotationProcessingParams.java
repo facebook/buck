@@ -76,7 +76,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     JavacPluginProperties.Builder legacySafeProcessorsBuilder =
         JavacPluginProperties.builder()
             .setCanReuseClassLoader(true)
-            .setDoesNotAffectAbi(true)
+            .setDoesNotAffectAbi(false)
             .setSupportsAbiGenerationFromSource(false)
             .setProcessorNames(
                 Sets.intersection(
@@ -85,7 +85,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     JavacPluginProperties.Builder legacyUnsafeProcessorsBuilder =
         JavacPluginProperties.builder()
             .setCanReuseClassLoader(false)
-            .setDoesNotAffectAbi(true)
+            .setDoesNotAffectAbi(false)
             .setSupportsAbiGenerationFromSource(false)
             .setProcessorNames(
                 Sets.difference(
