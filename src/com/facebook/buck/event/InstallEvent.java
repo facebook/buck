@@ -42,7 +42,7 @@ public abstract class InstallEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return buildTarget.getFullyQualifiedName();
   }
 

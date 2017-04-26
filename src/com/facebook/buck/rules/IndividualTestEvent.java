@@ -48,7 +48,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent implements W
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "waiting for test results";
     }
   }
@@ -75,7 +75,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent implements W
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return String.format("%s (%d failed in %d test cases)",
           results.isSuccess() ? "PASS" : "FAIL",
           results.getFailureCount(),

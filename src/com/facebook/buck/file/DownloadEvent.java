@@ -32,7 +32,7 @@ public abstract class DownloadEvent extends AbstractBuckEvent implements WorkAdv
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return uri.toString();
   }
 

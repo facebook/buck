@@ -31,7 +31,7 @@ public abstract class NetworkEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return "";
     }
 

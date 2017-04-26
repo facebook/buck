@@ -69,7 +69,7 @@ public abstract class TestStatusMessageEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return String.format(
           "%s: %s",
           getTestStatusMessage().getLevel(),
@@ -96,7 +96,7 @@ public abstract class TestStatusMessageEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return String.format(
           "%s: %s (%d ms)",
           getTestStatusMessage().getLevel(),
