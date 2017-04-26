@@ -63,6 +63,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
         tracing.beginGenerate(getFileName(e), getTypeName(e));
         break;
       case ANNOTATION_PROCESSING:
+      case COMPILATION:
       default:
         // The tracing doesn't care about these events
         break;
@@ -89,6 +90,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
         tracing.endGenerate();
         break;
       case ANNOTATION_PROCESSING:
+      case COMPILATION:
       default:
         // The tracing doesn't care about these events
         break;
