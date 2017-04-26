@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
 public class RuleKeyLoggerListener implements BuckEventListener {
@@ -87,11 +88,12 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       return;
     }
 
-    List<String> newLogLines = new ArrayList<>();
-    for (RuleKey key : event.getRuleKeys()) {
-      newLogLines.add(toTsv(key, cacheResultType));
-    }
-
+    List<String> newLogLines =
+        event
+            .getRuleKeys()
+            .stream()
+            .map(key -> String.format("http\t%s\t%s", key.toString(), cacheResultType.toString()))
+            .collect(Collectors.toList());
     synchronized (lock) {
       logLines.addAll(newLogLines);
     }
@@ -117,10 +119,6 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     }
 
     flushLogLinesIfNeeded();
-  }
-
-  private static String toTsv(RuleKey key, CacheResultType cacheResultType) {
-    return String.format("http\t%s\t%s", key.toString(), cacheResultType.toString());
   }
 
   private static String toTsv(BuildTarget target, RuleKey ruleKey) {
