@@ -26,14 +26,17 @@ import java.util.Optional;
 public interface HasJavaAbi {
   Flavor CLASS_ABI_FLAVOR = InternalFlavor.of("class-abi");
   Flavor SOURCE_ABI_FLAVOR = InternalFlavor.of("source-abi");
+  Flavor VERIFIED_SOURCE_ABI_FLAVOR = InternalFlavor.of("verified-source-abi");
 
   static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(!isSourceAbiTarget(libraryTarget));
+    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
     return libraryTarget.withAppendedFlavors(CLASS_ABI_FLAVOR);
   }
 
   static boolean isAbiTarget(BuildTarget target) {
-    return isClassAbiTarget(target) || isSourceAbiTarget(target);
+    return isClassAbiTarget(target)
+        || isSourceAbiTarget(target)
+        || isVerifiedSourceAbiTarget(target);
   }
 
   static boolean isClassAbiTarget(BuildTarget target) {
@@ -41,7 +44,7 @@ public interface HasJavaAbi {
   }
 
   static BuildTarget getSourceAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(!isClassAbiTarget(libraryTarget));
+    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
     return libraryTarget.withAppendedFlavors(SOURCE_ABI_FLAVOR);
   }
 
@@ -49,10 +52,24 @@ public interface HasJavaAbi {
     return target.getFlavors().contains(SOURCE_ABI_FLAVOR);
   }
 
+  static BuildTarget getVerifiedSourceAbiJar(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
+    return libraryTarget.withAppendedFlavors(VERIFIED_SOURCE_ABI_FLAVOR);
+  }
+
+  static boolean isVerifiedSourceAbiTarget(BuildTarget target) {
+    return target.getFlavors().contains(VERIFIED_SOURCE_ABI_FLAVOR);
+  }
+
+  static boolean isLibraryTarget(BuildTarget target) {
+    return !isAbiTarget(target);
+  }
+
   static BuildTarget getLibraryTarget(BuildTarget abiTarget) {
     Preconditions.checkArgument(isAbiTarget(abiTarget));
 
-    return abiTarget.withoutFlavors(CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR);
+    return abiTarget.withoutFlavors(
+        CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
   }
 
   BuildTarget getBuildTarget();

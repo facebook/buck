@@ -240,18 +240,43 @@ public class DefaultJavaLibraryBuilder {
     }
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
-      if (HasJavaAbi.isSourceAbiTarget(params.getBuildTarget())) {
+
+      BuildTarget buildTarget = params.getBuildTarget();
+      if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+        return buildAbiFromClasses();
+      } else if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
         return buildAbiFromSource();
+      } else if (HasJavaAbi.isVerifiedSourceAbiTarget(buildTarget)) {
+        BuildRule classAbi = buildAbiFromClasses();
+        BuildRule sourceAbi = buildAbiFromSource();
+        buildRuleResolver.addToIndex(classAbi);
+        buildRuleResolver.addToIndex(sourceAbi);
+
+        return new CompareAbis(
+            params.copyReplacingDeclaredAndExtraDeps(
+                () -> ImmutableSortedSet.of(classAbi, sourceAbi), ImmutableSortedSet::of),
+            classAbi.getSourcePathToOutput(),
+            sourceAbi.getSourcePathToOutput(),
+            javaBuckConfig.getSourceAbiVerificationMode());
       }
-      return buildAbiFromClasses();
+
+      throw new AssertionError(
+          String.format("%s is not an ABI target but went down the ABI codepath", buildTarget));
     }
 
     protected BuildTarget getAbiJar() {
       if (abiJar == null) {
-        abiJar =
-            shouldBuildAbiFromSource()
-                ? HasJavaAbi.getSourceAbiJar(params.getBuildTarget())
-                : HasJavaAbi.getClassAbiJar(params.getBuildTarget());
+        BuildTarget libraryTarget = params.getBuildTarget();
+        if (shouldBuildAbiFromSource()) {
+          JavaBuckConfig.SourceAbiVerificationMode sourceAbiVerificationMode =
+              javaBuckConfig.getSourceAbiVerificationMode();
+          abiJar =
+              sourceAbiVerificationMode == JavaBuckConfig.SourceAbiVerificationMode.OFF
+                  ? HasJavaAbi.getSourceAbiJar(libraryTarget)
+                  : HasJavaAbi.getVerifiedSourceAbiJar(libraryTarget);
+        } else {
+          abiJar = HasJavaAbi.getClassAbiJar(libraryTarget);
+        }
       }
 
       return abiJar;
@@ -297,9 +322,11 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
       return new CalculateAbiFromSource(
-          getFinalParams(),
+          getFinalParams().withBuildTarget(abiTarget),
           ruleFinder,
           srcs,
           resources,
@@ -311,8 +338,8 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
-      BuildTarget abiTarget = params.getBuildTarget();
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(abiTarget);
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(libraryTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 
       return CalculateAbiFromClasses.of(

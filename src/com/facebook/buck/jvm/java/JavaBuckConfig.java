@@ -186,11 +186,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Enables a special validation mode that generates ABIs both from source and from class files and
-   * diffs them. This is a test hook for use during development of the source ABI feature.
+   * Controls a special verification mode that generates ABIs both from source and from class files
+   * and diffs them. This is a test hook for use during development of the source ABI feature. This
+   * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
-  public boolean shouldValidateAbisGeneratedFromSource() {
-    return delegate.getBooleanValue(SECTION, "validate_abis_from_source", false);
+  public SourceAbiVerificationMode getSourceAbiVerificationMode() {
+    return delegate
+        .getEnum(SECTION, "source_abi_verification_mode", SourceAbiVerificationMode.class)
+        // TODO(jkeljo): Flip the default to OFF when the feature is considered debugged
+        .orElse(SourceAbiVerificationMode.LOG);
   }
 
   public boolean shouldCompileAgainstAbis() {
@@ -211,5 +215,14 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
      * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
      */
     SOURCE,
+  }
+
+  public enum SourceAbiVerificationMode {
+    /** Don't verify ABI jars. */
+    OFF,
+    /** Generate ABI jars from classes and from source. Log any differences. */
+    LOG,
+    /** Generate ABI jars from classes and from source. Fail on differences. */
+    FAIL,
   }
 }

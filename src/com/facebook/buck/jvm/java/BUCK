@@ -318,6 +318,7 @@ java_library(
         "CalculateAbi.java",
         "CalculateAbiFromClasses.java",
         "CalculateAbiFromSource.java",
+        "CompareAbis.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryBuilder.java",
         "ForkMode.java",
@@ -467,6 +468,7 @@ java_library(
 java_immutables_library(
     name = "steps",
     srcs = [
+        "AbstractDiffAbisStep.java",
         "AbstractJUnitJvmArgs.java",
         "AccumulateClassNamesStep.java",
         "BaseCompileToJarStepFactory.java",
@@ -504,6 +506,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/jvm/core:packagefinder",
+        "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi:abi",
@@ -544,6 +547,7 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:stream",
         "//src/com/facebook/buck/zip:unzip",
         "//third-party/java/asm:asm",
+        "//third-party/java/diffutils:diffutils",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
