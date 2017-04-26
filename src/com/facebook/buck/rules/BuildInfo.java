@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -90,6 +91,15 @@ public class BuildInfo {
     static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
 
   }
+
+  /**
+   * All keys corresponding to rule keys.
+   */
+  static final ImmutableSet<String> RULE_KEY_NAMES =
+      ImmutableSet.of(
+          MetadataKey.RULE_KEY,
+          MetadataKey.INPUT_BASED_RULE_KEY,
+          MetadataKey.DEP_FILE_RULE_KEY);
 
   /**
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based

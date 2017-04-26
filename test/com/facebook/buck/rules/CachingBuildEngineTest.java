@@ -433,6 +433,8 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       ImmutableMap<String, String> metadata =
           ImmutableMap.of(
+              BuildInfo.MetadataKey.RULE_KEY,
+              defaultRuleKeyFactory.build(buildRule).toString(),
               BuildInfo.MetadataKey.BUILD_ID,
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
@@ -516,6 +518,8 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       ImmutableMap<String, String> metadata =
           ImmutableMap.of(
+              BuildInfo.MetadataKey.RULE_KEY,
+              defaultRuleKeyFactory.build(buildRule).toString(),
               BuildInfo.MetadataKey.BUILD_ID,
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.RECORDED_PATHS,

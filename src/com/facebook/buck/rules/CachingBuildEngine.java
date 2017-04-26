@@ -51,6 +51,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -1471,6 +1472,23 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     CacheResult cacheResult = fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
+
+    // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
+    // it's metadata.
+    if (cacheResult.getType().isSuccess()) {
+      ImmutableSet<RuleKey> ruleKeys =
+          RichStream.from(cacheResult.getMetadata().entrySet())
+              .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
+              .map(Map.Entry::getValue)
+              .map(RuleKey::new)
+              .toImmutableSet();
+      Preconditions.checkState(
+          ruleKeys.contains(ruleKey),
+          "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
+          rule.getBuildTarget(),
+          ruleKey,
+          ruleKeys);
+    }
 
     return unzipArtifactFromCacheResult(
         rule,
