@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JarDirectoryStepHelper;
+import com.facebook.buck.jvm.java.JarBuilder;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -124,8 +124,8 @@ public class UnzipAar extends AbstractBuildRule
                 new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
             if (!getProjectFilesystem().exists(classesJar)) {
               try {
-                JarDirectoryStepHelper.createEmptyJarFile(
-                    getProjectFilesystem(), classesJar, eventSink, context.getStdErr());
+                new JarBuilder(getProjectFilesystem(), eventSink, context.getStdErr())
+                    .createJarFile(classesJar);
               } catch (IOException e) {
                 context.logError(e, "Failed to create empty jar %s", classesJar);
                 return StepExecutionResult.ERROR;
@@ -155,16 +155,14 @@ public class UnzipAar extends AbstractBuildRule
 
               ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
               try {
-                JarDirectoryStepHelper.createJarFile(
-                    getProjectFilesystem(),
-                    uberClassesJar,
-                    entriesToJar,
-                    /* mainClass */ Optional.empty(),
-                    /* manifestFile */ Optional.empty(),
-                    /* mergeManifests */ true,
-                    /* blacklist */ ImmutableSet.of(),
-                    eventSink,
-                    context.getStdErr());
+
+                new JarBuilder(getProjectFilesystem(), eventSink, context.getStdErr())
+                    .setEntriesToJar(entriesToJar)
+                    .setMainClass(Optional.<String>empty().orElse(null))
+                    .setManifestFile(Optional.<Path>empty().orElse(null))
+                    .setShouldMergeManifests(true)
+                    .setEntryPatternBlacklist(ImmutableSet.of())
+                    .createJarFile(uberClassesJar);
               } catch (IOException e) {
                 context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
                 return StepExecutionResult.ERROR;

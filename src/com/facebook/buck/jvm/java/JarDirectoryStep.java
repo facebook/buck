@@ -125,16 +125,17 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
+
     return StepExecutionResult.of(
-        JarDirectoryStepHelper.createJarFile(
-            filesystem,
-            pathToOutputFile,
-            entriesToJar,
-            Optional.ofNullable(mainClass),
-            Optional.ofNullable(manifestFile),
-            mergeManifests,
-            blacklist,
-            new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
-            context.getStdErr()));
+        new JarBuilder(
+                filesystem,
+                new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
+                context.getStdErr())
+            .setEntriesToJar(entriesToJar)
+            .setMainClass(Optional.ofNullable(mainClass).orElse(null))
+            .setManifestFile(Optional.ofNullable(manifestFile).orElse(null))
+            .setShouldMergeManifests(mergeManifests)
+            .setEntryPatternBlacklist(blacklist)
+            .createJarFile(pathToOutputFile));
   }
 }

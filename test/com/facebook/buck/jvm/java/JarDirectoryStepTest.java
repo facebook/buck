@@ -112,9 +112,10 @@ public class JarDirectoryStepTest {
     Path second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
     final Path outputPath = Paths.get("output.jar");
+    ProjectFilesystem filesystem = new ProjectFilesystem(jarDirectory);
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(jarDirectory),
+            filesystem,
             outputPath,
             ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
             "com.example.Main",
@@ -129,7 +130,7 @@ public class JarDirectoryStepTest {
     final String expectedMessage =
         String.format(
             "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
-            outputPath.toAbsolutePath(), second.toAbsolutePath());
+            filesystem.getPathForRelativePath(outputPath), second.toAbsolutePath());
     assertThat(listener.getLogMessages(), hasItem(expectedMessage));
   }
 

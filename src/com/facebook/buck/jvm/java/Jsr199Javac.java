@@ -175,18 +175,18 @@ public abstract class Jsr199Javac implements Javac {
           return result;
         }
 
-        return JarDirectoryStepHelper.createJarFile(
-            context.getProjectFilesystem(),
-            context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
-            Preconditions.checkNotNull(jarOutputStream),
-            context.getDirectToJarOutputSettings().get().getEntriesToJar(),
-            alreadyAddedFilesAvailableAfterCompilation.get(),
-            context.getDirectToJarOutputSettings().get().getMainClass(),
-            context.getDirectToJarOutputSettings().get().getManifestFile(),
-            /* mergeManifests */ true,
-            /* blacklist */ ImmutableSet.of(),
-            context.getEventSink(),
-            context.getStdErr());
+        return new JarBuilder(
+                context.getProjectFilesystem(), context.getEventSink(), context.getStdErr())
+            .setEntriesToJar(context.getDirectToJarOutputSettings().get().getEntriesToJar())
+            .setAlreadyAddedEntries(alreadyAddedFilesAvailableAfterCompilation.get())
+            .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
+            .setManifestFile(
+                context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+            .setShouldMergeManifests(true)
+            .setEntryPatternBlacklist(ImmutableSet.of())
+            .appendToJarFile(
+                context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
+                Preconditions.checkNotNull(jarOutputStream));
       } finally {
         close(compilationUnits);
       }

@@ -26,7 +26,6 @@ import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -40,8 +39,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -55,116 +56,103 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import javax.annotation.Nullable;
 
-public class JarDirectoryStepHelper {
+public class JarBuilder {
+  private final ProjectFilesystem filesystem;
+  private final JavacEventSink eventSink;
+  private final PrintStream stdErr;
 
-  private JarDirectoryStepHelper() {}
+  @Nullable private Path outputFile;
+  @Nullable private CustomJarOutputStream jar;
+  @Nullable private String mainClass;
+  @Nullable private Path manifestFile;
+  private boolean shouldMergeManifests;
+  private Iterable<Pattern> blacklist = new ArrayList<>();
+  private ImmutableSortedSet<Path> entriesToJar = ImmutableSortedSet.of();
+  private Set<String> alreadyAddedEntries = ImmutableSet.of();
 
-  public static int createJarFile(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      CustomJarOutputStream outputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      ImmutableSet<String> alreadyAddedEntriesToOutputFile,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      boolean mergeManifests,
-      Iterable<Pattern> blacklist,
-      JavacEventSink eventSink,
-      PrintStream stdErr)
+  public JarBuilder(ProjectFilesystem filesystem, JavacEventSink eventSink, PrintStream stdErr) {
+    this.filesystem = filesystem;
+    this.eventSink = eventSink;
+    this.stdErr = stdErr;
+  }
+
+  public JarBuilder setEntriesToJar(ImmutableSortedSet<Path> entriesToJar) {
+    this.entriesToJar = entriesToJar;
+    return this;
+  }
+
+  public JarBuilder setAlreadyAddedEntries(ImmutableSet<String> alreadyAddedEntries) {
+    this.alreadyAddedEntries = new HashSet<>(alreadyAddedEntries);
+    return this;
+  }
+
+  public JarBuilder setMainClass(String mainClass) {
+    this.mainClass = mainClass;
+    return this;
+  }
+
+  public JarBuilder setManifestFile(Path manifestFile) {
+    this.manifestFile = manifestFile;
+    return this;
+  }
+
+  public JarBuilder setShouldMergeManifests(boolean shouldMergeManifests) {
+    this.shouldMergeManifests = shouldMergeManifests;
+    return this;
+  }
+
+  public JarBuilder setEntryPatternBlacklist(Iterable<Pattern> blacklist) {
+    this.blacklist = blacklist;
+    return this;
+  }
+
+  public int createJarFile(Path outputFile) throws IOException {
+    Path absoluteOutputPath = filesystem.getPathForRelativePath(outputFile);
+    try (CustomJarOutputStream jar =
+        ZipOutputStreams.newJarOutputStream(absoluteOutputPath, APPEND_TO_ZIP)) {
+      return appendToJarFile(outputFile, jar);
+    }
+  }
+
+  public int appendToJarFile(Path relativeOutputFile, CustomJarOutputStream jar)
       throws IOException {
-
-    Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
+    this.outputFile = filesystem.getPathForRelativePath(relativeOutputFile);
+    this.jar = jar;
+    this.entriesToJar = entriesToJar;
+    this.alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntries);
 
     // Write the manifest first.
-    writeManifest(outputFile, filesystem, entriesToJar, mainClass, manifestFile, mergeManifests);
-
-    Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
+    writeManifest();
 
     for (Path entry : entriesToJar) {
       Path file = filesystem.getPathForRelativePath(entry);
       if (Files.isRegularFile(file)) {
         Preconditions.checkArgument(
-            !file.equals(absoluteOutputPath), "Trying to put file %s into itself", file);
+            !file.equals(outputFile), "Trying to put file %s into itself", file);
         // Assume the file is a ZIP/JAR file.
-        copyZipEntriesToJar(
-            file, pathToOutputFile, outputFile, alreadyAddedEntries, eventSink, blacklist);
+        copyZipEntriesToJar(file);
       } else if (Files.isDirectory(file)) {
-        addFilesInDirectoryToJar(
-            filesystem, file, outputFile, alreadyAddedEntries, blacklist, eventSink);
+        addFilesInDirectoryToJar(file);
       } else {
         throw new IllegalStateException("Must be a file or directory: " + file);
       }
     }
 
-    if (mainClass.isPresent() && !mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
-      stdErr.print(String.format("ERROR: Main class %s does not exist.\n", mainClass.get()));
+    if (mainClass != null && !mainClassPresent()) {
+      stdErr.print(String.format("ERROR: Main class %s does not exist.\n", mainClass));
       return 1;
     }
 
     return 0;
   }
 
-  public static int createJarFile(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      boolean mergeManifests,
-      Iterable<Pattern> blacklist,
-      JavacEventSink eventSink,
-      PrintStream stdErr)
-      throws IOException {
-
-    Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
-    try (CustomJarOutputStream outputFile =
-        ZipOutputStreams.newJarOutputStream(absoluteOutputPath, APPEND_TO_ZIP)) {
-      return createJarFile(
-          filesystem,
-          pathToOutputFile,
-          outputFile,
-          entriesToJar,
-          /* alreadyAddedEntriesToOutputFile */ ImmutableSet.of(),
-          mainClass,
-          manifestFile,
-          mergeManifests,
-          blacklist,
-          eventSink,
-          stdErr);
-    }
-  }
-
-  public static int createEmptyJarFile(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      JavacEventSink eventSink,
-      PrintStream stdErr)
-      throws IOException {
-    return JarDirectoryStepHelper.createJarFile(
-        filesystem,
-        pathToOutputFile,
-        ImmutableSortedSet.of(),
-        Optional.empty(),
-        Optional.empty(),
-        true,
-        ImmutableList.of(),
-        eventSink,
-        stdErr);
-  }
-
-  private static void writeManifest(
-      CustomJarOutputStream jar,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> entriesToJar,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      boolean mergeManifests)
-      throws IOException {
+  private void writeManifest() throws IOException {
     DeterministicManifest manifest = jar.getManifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
-    if (mergeManifests) {
+    if (shouldMergeManifests) {
       for (Path entry : entriesToJar) {
         entry = filesystem.getPathForRelativePath(entry);
         Manifest readManifest;
@@ -201,8 +189,8 @@ public class JarDirectoryStepHelper {
 
     // Even if not merging manifests, we should include the one the user gave us. We do this last
     // so that values from the user overwrite values from merged manifests.
-    if (manifestFile.isPresent()) {
-      Path path = filesystem.getPathForRelativePath(manifestFile.get());
+    if (manifestFile != null) {
+      Path path = filesystem.getPathForRelativePath(manifestFile);
       try (InputStream stream = Files.newInputStream(path)) {
         Manifest readManifest = new Manifest(stream);
         merge(manifest, readManifest);
@@ -210,37 +198,25 @@ public class JarDirectoryStepHelper {
     }
 
     // We may have merged manifests and over-written the user-supplied main class. Add it back.
-    if (mainClass.isPresent()) {
-      manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
+    if (mainClass != null) {
+      manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass);
     }
 
     jar.writeManifest();
   }
 
-  private static boolean mainClassPresent(String mainClass, Set<String> alreadyAddedEntries) {
+  private boolean mainClassPresent() {
     String mainClassPath = classNameToPath(mainClass);
 
     return alreadyAddedEntries.contains(mainClassPath);
   }
 
-  private static String classNameToPath(String className) {
+  private String classNameToPath(String className) {
     return className.replace('.', '/') + ".class";
   }
 
-  /**
-   * @param inputFile is assumed to be a zip
-   * @param outputFile the path where output is being written to
-   * @param jar is the stream to write to
-   * @param alreadyAddedEntries is used to avoid duplicate entries.
-   */
-  private static void copyZipEntriesToJar(
-      Path inputFile,
-      Path outputFile,
-      final CustomJarOutputStream jar,
-      Set<String> alreadyAddedEntries,
-      JavacEventSink eventSink,
-      Iterable<Pattern> blacklist)
-      throws IOException {
+  /** @param inputFile is assumed to be a zip */
+  private void copyZipEntriesToJar(Path inputFile) throws IOException {
     try (ZipFile zip = new ZipFile(inputFile.toFile())) {
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
@@ -252,7 +228,7 @@ public class JarDirectoryStepHelper {
         }
 
         // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-        if (shouldEntryBeRemovedFromJar(eventSink, entryName, blacklist)) {
+        if (shouldEntryBeRemovedFromJar(entryName)) {
           continue;
         }
 
@@ -300,22 +276,12 @@ public class JarDirectoryStepHelper {
     }
   }
 
-  private static Level determineSeverity(ZipEntry entry) {
+  private Level determineSeverity(ZipEntry entry) {
     return entry.isDirectory() ? Level.FINE : Level.INFO;
   }
 
-  /**
-   * @param directory that must not contain symlinks with loops.
-   * @param jar is the file being written.
-   */
-  private static void addFilesInDirectoryToJar(
-      final ProjectFilesystem filesystem,
-      final Path directory,
-      CustomJarOutputStream jar,
-      final Set<String> alreadyAddedEntries,
-      final Iterable<Pattern> blacklist,
-      final JavacEventSink eventSink)
-      throws IOException {
+  /** @param directory that must not contain symlinks with loops. */
+  private void addFilesInDirectoryToJar(final Path directory) throws IOException {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
@@ -337,7 +303,7 @@ public class JarDirectoryStepHelper {
             }
 
             // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-            if (shouldEntryBeRemovedFromJar(eventSink, relativePath, blacklist)) {
+            if (shouldEntryBeRemovedFromJar(relativePath)) {
               return FileVisitResult.CONTINUE;
             }
 
@@ -393,8 +359,7 @@ public class JarDirectoryStepHelper {
     }
   }
 
-  private static boolean shouldEntryBeRemovedFromJar(
-      JavacEventSink eventSink, String relativePath, Iterable<Pattern> blacklist) {
+  private boolean shouldEntryBeRemovedFromJar(String relativePath) {
     String entry = relativePath;
     if (relativePath.contains(".class")) {
       entry = relativePath.replace('/', '.').replace(".class", "");
@@ -414,7 +379,7 @@ public class JarDirectoryStepHelper {
    * @param into The Manifest to modify.
    * @param from The Manifest to copy from.
    */
-  private static void merge(Manifest into, Manifest from) {
+  private void merge(Manifest into, Manifest from) {
 
     Attributes attributes = from.getMainAttributes();
     if (attributes != null) {
@@ -436,7 +401,7 @@ public class JarDirectoryStepHelper {
     }
   }
 
-  private static boolean isDuplicateAllowed(String name) {
+  private boolean isDuplicateAllowed(String name) {
     return !name.endsWith(".class") && !name.endsWith("/");
   }
 }
