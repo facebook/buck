@@ -18,10 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.ThrowingSupplier;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
@@ -33,27 +30,18 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
@@ -125,16 +113,9 @@ public class JarBuilder {
 
     for (Path entry : entriesToJar) {
       Path file = filesystem.getPathForRelativePath(entry);
-      if (Files.isRegularFile(file)) {
-        Preconditions.checkArgument(
-            !file.equals(outputFile), "Trying to put file %s into itself", file);
-        // Assume the file is a ZIP/JAR file.
-        copyZipEntriesToJar(file);
-      } else if (Files.isDirectory(file)) {
-        addFilesInDirectoryToJar(file);
-      } else {
-        throw new IllegalStateException("Must be a file or directory: " + file);
-      }
+      Preconditions.checkArgument(
+          !file.equals(outputFile), "Trying to put file %s into itself", file);
+      addEntriesToJar(JarEntryContainer.of(file));
     }
 
     if (mainClass != null && !mainClassPresent()) {
@@ -212,99 +193,19 @@ public class JarBuilder {
     return className.replace('.', '/') + ".class";
   }
 
-  /** @param inputFile is assumed to be a zip */
-  private void copyZipEntriesToJar(Path inputFile) throws IOException {
-    try (ZipFile zip = new ZipFile(inputFile.toFile())) {
-      for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
-        CustomZipEntry entry = new CustomZipEntry(entries.nextElement());
-
-        // For deflated entries, the act of re-"putting" this entry means we're re-compressing
-        // the data that we've just uncompressed.  Due to various environmental issues (e.g. a
-        // newer version of zlib, changed compression settings), we may end up with a different
-        // compressed size.  This causes an issue in java's `java.util.zip.ZipOutputStream`
-        // implementation, as it only updates the compressed size field if one of `crc`,
-        // `compressedSize`, or `size` is -1.  When we copy the entry as-is, none of these are
-        // -1, and we may end up with an incorrect compressed size, in which case, we'll get an
-        // exception.  So, for deflated entries, reset the compressed size to -1 (as the
-        // ZipEntry(String) would).
-        // See https://github.com/spearce/buck/commit/8338c1c3d4a546f577eed0c9941d9f1c2ba0a1b7.
-        if (entry.getMethod() == ZipEntry.DEFLATED) {
-          entry.setCompressedSize(-1);
-        }
-
-        addEntryToJar(inputFile, entry, () -> zip.getInputStream(entry));
-      }
-    } catch (ZipException e) {
-      throw new IOException("Failed to process zip file " + inputFile + ": " + e.getMessage(), e);
-    }
-  }
-
   private Level determineSeverity(ZipEntry entry) {
     return entry.isDirectory() ? Level.FINE : Level.INFO;
   }
 
-  /** @param directory that must not contain symlinks with loops. */
-  private void addFilesInDirectoryToJar(final Path directory) throws IOException {
-
-    // Since filesystem traversals can be non-deterministic, sort the entries we find into
-    // a tree map before writing them out.
-    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
-
-    filesystem.walkFileTree(
-        directory,
-        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-        new SimpleFileVisitor<Path>() {
-          @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
-            String relativePath =
-                MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
-
-            CustomZipEntry entry = new CustomZipEntry(relativePath);
-
-            entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
-            String relativePath =
-                MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, dir));
-            if (relativePath.isEmpty()) {
-              // root of the tree. Skip.
-              return FileVisitResult.CONTINUE;
-            }
-            String entryName = relativePath.replace('\\', '/') + "/";
-            if (alreadyAddedEntries.contains(entryName)) {
-              return FileVisitResult.CONTINUE;
-            }
-            CustomZipEntry entry = new CustomZipEntry(entryName);
-            entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
-            return FileVisitResult.CONTINUE;
-          }
-        });
-
-    // Write the entries out using the iteration order of the tree map above.
-    for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
-      addEntryToJar(
-          directory,
-          entry.getFirst(),
-          () -> {
-            Optional<Path> filePath = entry.getSecond();
-            if (filePath.isPresent()) {
-              return Files.newInputStream(filePath.get());
-            }
-            return null;
-          });
+  private void addEntriesToJar(JarEntryContainer container) throws IOException {
+    Iterable<JarEntrySupplier> entries = container.stream()::iterator;
+    for (JarEntrySupplier entrySupplier : entries) {
+      addEntryToJar(entrySupplier);
     }
   }
 
-  private void addEntryToJar(
-      Path entryOwner,
-      CustomZipEntry entry,
-      ThrowingSupplier<InputStream, IOException> inputStreamSupplier)
-      throws IOException {
+  private void addEntryToJar(JarEntrySupplier entrySupplier) throws IOException {
+    CustomZipEntry entry = entrySupplier.getEntry();
     String entryName = entry.getName();
 
     // We already read the manifest. No need to read it again
@@ -331,13 +232,13 @@ public class JarBuilder {
             "Duplicate found when adding '%s' to '%s' from '%s'",
             entryName,
             outputFile,
-            entryOwner);
+            entrySupplier.getEntryOwner());
       }
       return;
     }
 
     jar.putNextEntry(entry);
-    try (InputStream entryInputStream = inputStreamSupplier.get()) {
+    try (InputStream entryInputStream = entrySupplier.getInputStreamSupplier().get()) {
       if (entryInputStream != null) {
         // Null stream means a directory
         ByteStreams.copy(entryInputStream, jar);
