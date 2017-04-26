@@ -1,0 +1,64 @@
+{namespace robolectric_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'robolectric_test()' /}
+    {param navid: 'rule_robolectric_test' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to define a set of Java files that contain
+      <a href="http://robolectric.org/">Robolectric</a> tests.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'FROZEN' /}
+{param overview}
+A <code>robolectric_test()</code> rule is used to define a set of
+{sp}<code>.java</code> files that contain tests to run via JUnit
+with Robolectric test runner. It extends from <code>java_test()</code> rule.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'robolectric_runtime_dependency' /}
+  {param default : 'None' /}
+  {param desc}
+  Robolectric only runs in offline mode with buck. Specify the relative
+  directory containing all the jars Robolectric uses at runtime.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'robolectric_manifest' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional <a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android Manifest</a> for the rule to declare any permissions or intents it may need or want to handle.  May either be a file or a {call buck.android_manifest /} target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'force_final_resource_ids' /}
+  {param default : 'True' /}
+  {param desc}
+  Set it to false if using Robolectric version greater than 3.2 or higher
+  as Robolectric requires resources id's to be non final.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
