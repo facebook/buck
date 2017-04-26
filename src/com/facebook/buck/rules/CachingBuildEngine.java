@@ -1468,6 +1468,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           buildInfoStores.get(rule.getProjectFilesystem().getRootPath());
       buildInfoStore.deleteMetadata(rule.getBuildTarget());
 
+      // Always remove the on-disk metadata dir, as some pieces of metadata are still stored here
+      // (e.g. `DEP_FILE`, manifest).
+      Path metadataDir =
+          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), rule.getProjectFilesystem());
+      rule.getProjectFilesystem().deleteRecursivelyIfExists(metadataDir);
+
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
           filesystem,
