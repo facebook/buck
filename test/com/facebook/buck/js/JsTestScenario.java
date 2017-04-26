@@ -40,6 +40,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 public class JsTestScenario {
   final TargetGraph targetGraph;
   final BuildRuleResolver resolver;
@@ -131,6 +133,14 @@ public class JsTestScenario {
       return this;
     }
 
+    Builder library(BuildTarget target, SourcePath first, SourcePath... sources) {
+      addLibrary(
+          target,
+          null,
+          Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
+      return this;
+    }
+
     Builder library(BuildTarget target, String basePath, SourcePath... sources) {
       addLibrary(
           target,
@@ -149,7 +159,7 @@ public class JsTestScenario {
 
     private void addLibrary(
         BuildTarget target,
-        String basePath,
+        @Nullable String basePath,
         Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       nodes.add(
           new JsLibraryBuilder(target, workerTarget, filesystem)

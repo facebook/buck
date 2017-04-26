@@ -92,13 +92,13 @@ public class JsBundleDescriptionTest {
   }
 
   @Test
-  public void testFlavoredBundleWithoutReleaseFlavorDependOonUnflavoredLibs()
+  public void testFlavoredBundleWithoutReleaseFlavorDependOnFlavoredLibs()
       throws NoSuchBuildTargetException {
     Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED};
     BuildRule jsBundle = scenario.resolver.requireRule((
         bundleTarget.withFlavors(flavors)));
-    assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
-    assertThat(allLibaryTargets(flavors) , everyItem(not(in(dependencyTargets(jsBundle)))));
+    assertThat(allLibaryTargets(JsFlavors.IOS), everyItem(in(dependencyTargets(jsBundle))));
+    assertThat(allLibaryTargets(flavors), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
 
   @Test

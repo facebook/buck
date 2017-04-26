@@ -149,7 +149,7 @@ public class JsRulesIntegrationTest {
   @Test
   public void testBundleBuild() throws IOException {
     workspace
-        .runBuckBuild("//js:fruit-salad-in-a-bundle")
+        .runBuckBuild("//js:fruit-salad-in-a-bundle#ios")
         .assertSuccess();
 
     workspace.verify(Paths.get("simple_bundle.expected"), genPath);

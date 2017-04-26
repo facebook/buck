@@ -16,17 +16,24 @@
 
 package com.facebook.buck.js;
 
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.in;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +112,51 @@ public class JsLibraryDescriptionTest {
     assertEquals(
         "arbitrary/path/node_modules/left-pad/index.js",
         findFileRule(scenario.resolver).getVirtualPath().get());
+  }
+
+  @Test
+  public void propagatesReleaseAndPlatformFlavors() throws NoSuchBuildTargetException {
+    ImmutableSortedSet<UserFlavor> flavors =
+        ImmutableSortedSet.of(JsFlavors.IOS, JsFlavors.RELEASE);
+    BuildTarget withFlavors = this.target.withFlavors(flavors);
+    JsTestScenario scenario = scenarioBuilder.library(
+        withFlavors,
+        new FakeSourcePath("apples"),
+        new FakeSourcePath("pears")).build();
+
+    RichStream.from(scenario.resolver.getRule(withFlavors).getBuildDeps())
+        .filter(JsFile.class)
+        .map(JsFile::getBuildTarget)
+        .forEach(target -> assertThat(
+            String.format(
+                "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
+                target,
+                withFlavors,
+                flavors),
+            flavors,
+            everyItem(in(target.getFlavors()))));
+  }
+
+  @Test
+  public void doesNotpropagatePlatformFlavorsWithoutRelease() throws NoSuchBuildTargetException {
+    UserFlavor platformFlavor = JsFlavors.ANDROID;
+    BuildTarget withPlatformFlavor = this.target.withFlavors(platformFlavor);
+    JsTestScenario scenario = scenarioBuilder.library(
+        withPlatformFlavor,
+        new FakeSourcePath("apples"),
+        new FakeSourcePath("pears")).build();
+
+    RichStream.from(scenario.resolver.getRule(withPlatformFlavor).getBuildDeps())
+        .filter(JsFile.class)
+        .map(JsFile::getBuildTarget)
+        .forEach(target -> assertThat(
+            String.format(
+                "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
+                target,
+                withPlatformFlavor,
+                platformFlavor),
+            target.getFlavors(),
+            not(contains(platformFlavor))));
   }
 
   private JsTestScenario buildScenario(

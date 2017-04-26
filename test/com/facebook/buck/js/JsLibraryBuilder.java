@@ -22,6 +22,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.test.selectors.Nullable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -57,8 +58,8 @@ public class JsLibraryBuilder extends
     return this;
   }
 
-  JsLibraryBuilder setBasePath(String basePath) {
-    arg.basePath = Optional.of(basePath);
+  JsLibraryBuilder setBasePath(@Nullable String basePath) {
+    arg.basePath = Optional.ofNullable(basePath);
     return this;
   }
 }
