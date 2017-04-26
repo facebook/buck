@@ -56,14 +56,7 @@ public class Cell {
   private final CellProvider cellProvider;
   private final Supplier<KnownBuildRuleTypes> knownBuildRuleTypesSupplier;
 
-  private final Supplier<Integer> hashCodeSupplier =
-      Suppliers.memoize(
-          new Supplier<Integer>() {
-            @Override
-            public Integer get() {
-              return Objects.hash(filesystem, config);
-            }
-          });
+  private final int hashCode;
 
   /** Should only be constructed by {@link CellProvider}. */
   Cell(
@@ -80,6 +73,7 @@ public class Cell {
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
+    this.cellProvider = cellProvider;
 
     // Stampede needs the Cell before it can materialize all the files required by
     // knownBuildRuleTypesFactory (specifically java/javac), and as such we need to load this
@@ -105,7 +99,7 @@ public class Cell {
               }
             });
 
-    this.cellProvider = cellProvider;
+    hashCode = Objects.hash(filesystem, config);
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -307,7 +301,7 @@ public class Cell {
 
   @Override
   public int hashCode() {
-    return hashCodeSupplier.get();
+    return hashCode;
   }
 
   public CellPathResolver getCellPathResolver() {
