@@ -31,7 +31,6 @@ import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
-import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
@@ -57,7 +56,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -66,6 +65,9 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.PathTypeCoercer;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -552,7 +554,8 @@ public class BuildCommand extends AbstractCommand {
     // and then deserialize and version remotely.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
 
-    DistBuildTypeCoercerFactory typeCoercerFactory = new DistBuildTypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory =
+        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -921,27 +924,6 @@ public class BuildCommand extends AbstractCommand {
   @Override
   public String getShortDescription() {
     return "builds the specified target";
-  }
-
-  @Override
-  protected ImmutableList<String> getOptions() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(super.getOptions());
-    if (keepGoing) {
-      builder.add(KEEP_GOING_LONG_ARG);
-    }
-    if (buildReport != null) {
-      builder.add(BUILD_REPORT_LONG_ARG);
-      builder.add(buildReport.toString());
-    }
-    if (justBuildTarget != null) {
-      builder.add(JUST_BUILD_LONG_ARG);
-      builder.add(justBuildTarget);
-    }
-    if (shouldReportAbsolutePaths) {
-      builder.add(REPORT_ABSOLUTE_PATHS);
-    }
-    return builder.build();
   }
 
   protected static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(

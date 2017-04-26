@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -77,7 +76,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   private final SourcePathRuleFinder ruleFinder;
   private final GoBinary testMain;
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   @AddToRuleKey
@@ -89,7 +88,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       GoBinary testMain,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
@@ -235,7 +234,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

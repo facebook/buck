@@ -18,7 +18,7 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -31,5 +31,5 @@ abstract class AbstractGenerationResult {
   public abstract Path getProjectPath();
   public abstract boolean isProjectGenerated();
   public abstract ImmutableSet<BuildTarget> getRequiredBuildTargets();
-  public abstract ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
+  public abstract ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
 }

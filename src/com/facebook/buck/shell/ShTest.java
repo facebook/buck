@@ -26,7 +26,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -78,7 +77,7 @@ public class ShTest
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
 
   protected ShTest(
       BuildRuleParams params,
@@ -89,7 +88,7 @@ public class ShTest
       ImmutableSortedSet<? extends SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately,
-      Set<Label> labels,
+      Set<String> labels,
       ImmutableSet<String> contacts) {
     super(params);
     this.ruleFinder = ruleFinder;
@@ -104,7 +103,7 @@ public class ShTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

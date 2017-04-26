@@ -1,8 +1,6 @@
 standard_java_library(
     name = "offline",
-    immutable_types = [
-        "ScribeData",
-    ],
+    has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/event:interfaces",

@@ -31,6 +31,7 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
@@ -549,6 +550,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   fillMissingBuildMetadataFromCache(
                       cacheResult,
                       buildInfoRecorder,
+                      BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
                       BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
                       BuildInfo.MetadataKey.DEP_FILE);
@@ -677,6 +679,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Optional<String> metadataType = filesystem.readFileIfItExists(metadataTypePath);
     if (metadataType.isPresent()) {
       MetadataStorage old = MetadataStorage.valueOf(metadataType.get());
+      if (old == metadataStorage) {
+        // Our state is consistent, no need to write anything.
+        return;
+      }
       if (old == MetadataStorage.ROCKSDB && metadataStorage == MetadataStorage.FILESYSTEM) {
         LOG.error(
             "Can't downgrade build.metadata_storage from rocksdb to filesystem without cleaning. " +
@@ -692,6 +698,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // unrecoverable state, since we don't know how the existing metadata is stored.  Prevent this
     // from happening by writing to a temp file and then moving it into place.
     Path tempMetadataTypePath = filesystem.createTempFile("metadata", ".type");
+    filesystem.getPathForRelativePath(tempMetadataTypePath).toFile().setReadable(true, false);
     filesystem.writeContentsToPath(metadataStorage.toString(), tempMetadataTypePath);
     // Using {@link StandardCopyOption#ATOMIC_MOVE} would be ideal, but it's implementation-defined
     // whether overwrites can be done atomically.  Since overwriting is what we need, let's hope
@@ -912,6 +919,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             }
           }
 
+          // Make sure the origin field is fileld in.
+          BuildId buildId = buildContext.getBuildId();
+          if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+            buildInfoRecorder.addBuildMetadata(
+                BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+                buildId.toString());
+          } else if (success.outputsHaveChanged()) {
+            Preconditions.checkState(
+                buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+                    .isPresent(),
+                "Cache hits must populate the %s field (%s)",
+                BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+                success);
+          }
+
           // Make sure that all of the local files have the same values they would as if the
           // rule had been built locally.
           buildInfoRecorder.addBuildMetadata(
@@ -1090,7 +1112,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
                   // Try get the output size.
                   try {
-                    outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    if (success.shouldUploadResultingArtifact()) {
+                      outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    }
                   } catch (IOException e) {
                     buildContext.getEventBus().post(
                         ThrowableConsoleEvent.create(
@@ -1130,6 +1154,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     getBuildRuleKeys(rule, onDiskBuildInfo),
                     input.getStatus(),
                     input.getCacheResult(),
+                    onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+                        .map(BuildId::new),
                     successType,
                     outputHash,
                     outputSize,
@@ -1342,44 +1368,45 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private synchronized ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
       final BuildEngineBuildContext context) {
-    ListenableFuture<RuleKey> ruleKey = ruleKeys.get(rule.getBuildTarget());
-    if (ruleKey == null) {
-
-      // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
-      // one, we need to wait for them to complete.
-      ListenableFuture<List<RuleKey>> depKeys =
-          Futures.transformAsync(
-              ruleDeps.get(rule),
-              deps -> {
-                List<ListenableFuture<RuleKey>> depKeys1 =
-                    Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
-                for (BuildRule dep : deps) {
-                  depKeys1.add(calculateRuleKey(dep, context));
-                }
-                return Futures.allAsList(depKeys1);
-              },
-              serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-      // Setup a future to calculate this rule key once the dependencies have been calculated.
-      ruleKey = Futures.transform(
-          depKeys,
-          (List<RuleKey> input) -> {
-            try (BuildRuleEvent.Scope scope =
-                     BuildRuleEvent.ruleKeyCalculationScope(
-                         context.getEventBus(),
-                         rule,
-                         buildRuleDurationTracker,
-                         ruleKeyFactories.getDefaultRuleKeyFactory())) {
-              return ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-            }
-          },
-          serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-      // Record the rule key future.
-      ruleKeys.put(rule.getBuildTarget(), ruleKey);
+    ListenableFuture<RuleKey> fromOurCache = ruleKeys.get(rule.getBuildTarget());
+    if (fromOurCache != null) {
+      return fromOurCache;
     }
 
-    return ruleKey;
+    // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
+    // one, we need to wait for them to complete.
+    ListenableFuture<List<RuleKey>> depKeys =
+        Futures.transformAsync(
+            ruleDeps.get(rule),
+            deps -> {
+              List<ListenableFuture<RuleKey>> depKeys1 =
+                  Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
+              for (BuildRule dep : deps) {
+                depKeys1.add(calculateRuleKey(dep, context));
+              }
+              return Futures.allAsList(depKeys1);
+            },
+            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
+
+    // Setup a future to calculate this rule key once the dependencies have been calculated.
+    ListenableFuture<RuleKey> calculated = Futures.transform(
+        depKeys,
+        (List<RuleKey> input) -> {
+          try (BuildRuleEvent.Scope scope =
+                   BuildRuleEvent.ruleKeyCalculationScope(
+                       context.getEventBus(),
+                       rule,
+                       buildRuleDurationTracker,
+                       ruleKeyFactories.getDefaultRuleKeyFactory())) {
+            return ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+          }
+        },
+        serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
+
+    // Record the rule key future.
+    ruleKeys.put(rule.getBuildTarget(), calculated);
+
+    return calculated;
   }
 
   @Override
@@ -1720,13 +1747,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Preconditions.checkState(useManifestCaching(rule));
 
     final Path manifestPath = getManifestPath(rule);
-    Manifest manifest = new Manifest();
+    Manifest manifest = new Manifest(manifestKey.getRuleKey());
 
     // If we already have a manifest downloaded, use that.
     if (rule.getProjectFilesystem().exists(manifestPath)) {
       try (InputStream inputStream =
                rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-        manifest = new Manifest(inputStream);
+        Manifest existingManifest = new Manifest(inputStream);
+        if (existingManifest.getKey().equals(manifestKey.getRuleKey())) {
+          manifest = existingManifest;
+        }
       }
     } else {
       // Ensure the path to manifest exist
@@ -1737,7 +1767,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // some sort of LRU management here to avoid evicting everything, but it'll take some care to do
     // this efficiently and it's not clear how much benefit this will give us.
     if (manifest.size() >= maxDepFileCacheEntries) {
-      manifest = new Manifest();
+      manifest = new Manifest(manifestKey.getRuleKey());
     }
 
     // Update the manifest with the new output rule key.
@@ -1842,6 +1872,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       manifest = new Manifest(input);
     }
 
+    // Verify the manifest.
+    Preconditions.checkState(
+        manifest.getKey().equals(manifestKey.getRuleKey()),
+        "%s: found incorrectly keyed manifest: %s != %s",
+        rule.getBuildTarget(),
+        manifestKey.getRuleKey(),
+        manifest.getKey());
+
     // Lookup the rule for the current state of our inputs.
     Optional<RuleKey> ruleKey =
         manifest.lookup(
@@ -1865,6 +1903,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
+          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(
@@ -1927,6 +1966,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       fillMissingBuildMetadataFromCache(
           cacheResult,
           buildInfoRecorder,
+          BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
           BuildInfo.MetadataKey.DEP_FILE);
       return Optional.of(

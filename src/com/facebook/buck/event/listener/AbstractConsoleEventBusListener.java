@@ -46,8 +46,10 @@ import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -631,6 +633,40 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       progressEstimator.get().setNumberOfRules(ruleCount.get());
     }
     cacheRateStatsKeeper.ruleCountUpdated(updated);
+  }
+
+  protected Optional<String> getOptionalBuildLineSuffix() {
+    // Log build time, excluding time spent in parsing.
+    String jobSummary = null;
+    if (ruleCount.isPresent()) {
+      List<String> columns = new ArrayList<>();
+      columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
+      CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
+          cacheRateStatsKeeper.getStats();
+      columns.add(String.format(
+          locale,
+          "%d UPDATED",
+          cacheRateStats.getUpdatedRulesCount()));
+      if (ruleCount.orElse(0) > 0) {
+        columns.add(
+            String.format(
+                locale,
+                "%d [%.1f%%] CACHE MISS",
+                cacheRateStats.getCacheMissCount(),
+                cacheRateStats.getCacheMissRate()));
+        if (cacheRateStats.getCacheErrorCount() > 0) {
+          columns.add(
+              String.format(
+                  locale,
+                  "%d [%.1f%%] CACHE ERRORS",
+                  cacheRateStats.getCacheErrorCount(),
+                  cacheRateStats.getCacheErrorRate()));
+        }
+      }
+      jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
+    }
+
+    return Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
   }
 
   @Subscribe

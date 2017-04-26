@@ -1,8 +1,6 @@
 standard_java_library(
     name = "counters",
-    immutable_types = [
-        "CounterSnapshot",
-    ],
+    has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

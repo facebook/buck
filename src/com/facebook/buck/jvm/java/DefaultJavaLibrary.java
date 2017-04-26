@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -46,8 +45,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
@@ -351,107 +348,24 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    JavaLibraryRules.addCompileToJarSteps(
+        context,
+        buildableContext,
+        this,
+        outputJar,
+        ruleFinder,
+        srcs,
+        resources,
+        postprocessClassesCommands,
+        compileTimeClasspathSourcePaths,
+        trackClassUsage,
+        depFileRelativePath,
+        compileStepFactory,
+        resourcesRoot,
+        manifestFile,
+        classesToRemoveFromJar,
+        steps);
 
-    // Always create the output directory, even if there are no .java files to compile because there
-    // might be resources that need to be copied there.
-    BuildTarget target = getBuildTarget();
-    Path outputDirectory = getClassesDir(target, getProjectFilesystem());
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory));
-
-    // We don't want to add provided to the declared or transitive deps, since they're only used at
-    // compile time.
-    ImmutableSortedSet<Path> compileTimeClasspathPaths = compileTimeClasspathSourcePaths
-        .stream()
-        .map(context.getSourcePathResolver()::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableSortedSet());
-
-    // If there are resources, then link them to the appropriate place in the classes directory.
-    JavaPackageFinder finder = context.getJavaPackageFinder();
-    if (resourcesRoot.isPresent()) {
-      finder = new ResourcesRootPackageFinder(resourcesRoot.get(), finder);
-    }
-
-    steps.add(
-        new CopyResourcesStep(
-            getProjectFilesystem(),
-            context.getSourcePathResolver(),
-            ruleFinder,
-            target,
-            resources,
-            outputDirectory,
-            finder));
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            getProjectFilesystem(),
-            getOutputJarDirPath(target, getProjectFilesystem())));
-
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
-    // into the built jar.
-    if (!getJavaSrcs().isEmpty()) {
-      ClassUsageFileWriter usedClassesFileWriter;
-      if (trackClassUsage) {
-        usedClassesFileWriter = new DefaultClassUsageFileWriter(depFileRelativePath);
-
-        buildableContext.recordArtifact(depFileRelativePath);
-      } else {
-        usedClassesFileWriter = NoOpClassUsageFileWriter.instance();
-      }
-
-      // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList =
-          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-      steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
-
-      Path scratchDir =
-          BuildTargets.getGenPath(getProjectFilesystem(), target, "lib__%s____working_directory");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
-      Optional<Path> workingDirectory = Optional.of(scratchDir);
-
-      ImmutableSortedSet<Path> javaSrcs = getJavaSrcs().stream()
-          .map(context.getSourcePathResolver()::getRelativePath)
-          .collect(MoreCollectors.toImmutableSortedSet());
-
-      compileStepFactory.createCompileToJarStep(
-          context,
-          javaSrcs,
-          target,
-          context.getSourcePathResolver(),
-          ruleFinder,
-          getProjectFilesystem(),
-          compileTimeClasspathPaths,
-          outputDirectory,
-          workingDirectory,
-          pathToSrcsList,
-          postprocessClassesCommands,
-          ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ Optional.empty(),
-          manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-          outputJar.get(),
-          usedClassesFileWriter,
-          /* output params */
-          steps,
-          buildableContext,
-          classesToRemoveFromJar);
-    }
-
-    if (outputJar.isPresent()) {
-      Path output = outputJar.get();
-
-      // No source files, only resources
-      if (getJavaSrcs().isEmpty()) {
-        steps.add(
-            new JarDirectoryStep(
-                getProjectFilesystem(),
-                output,
-                ImmutableSortedSet.of(outputDirectory),
-                /* mainClass */ null,
-                manifestFile.map(context.getSourcePathResolver()::getAbsolutePath).orElse(null),
-                true,
-                classesToRemoveFromJar));
-      }
-      buildableContext.recordArtifact(output);
-    }
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         this,

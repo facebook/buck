@@ -33,7 +33,6 @@ import java.util.Map;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
@@ -145,10 +144,6 @@ class ClassVisitorDriverFromElement {
 
       super.visitType(e, visitor);
 
-      if (MoreElements.isInnerClass(e)) {
-        visitOuterThisField(e, visitor);
-      }
-
       // We visit all inner members in reverse to match the order in original, full jars
       for (TypeElement element : Lists.reverse(innerMembers)) {
         visitMemberClass(element, visitor);
@@ -164,29 +159,6 @@ class ClassVisitorDriverFromElement {
           e.getSimpleName().toString(),
           AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_SUPER);
       // We remove ACC_SUPER above because javac does as well for InnerClasses entries.
-    }
-
-    private void visitOuterThisField(TypeElement e, ClassVisitor visitor) {
-      TypeElement enclosingClass = (TypeElement) e.getEnclosingElement();
-      int depth = computeEnclosingClassDepth(enclosingClass);
-
-      visitor.visitField(
-          Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC,
-          String.format("this$%d", depth),
-          descriptorFactory.getDescriptor(enclosingClass.asType()),
-          null,  // TODO(jkeljo): What if generics are involved?
-          null)
-          .visitEnd();
-    }
-
-    private int computeEnclosingClassDepth(TypeElement enclosingClass) {
-      int depth = 0;
-      TypeElement walker = enclosingClass;
-      while (walker.getEnclosingElement().getKind() != ElementKind.PACKAGE) {
-        depth += 1;
-        walker = (TypeElement) enclosingClass.getEnclosingElement();
-      }
-      return depth;
     }
 
     @Override

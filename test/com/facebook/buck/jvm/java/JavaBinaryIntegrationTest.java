@@ -16,11 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -36,12 +39,15 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class JavaBinaryIntegrationTest {
+public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+
+  private ProjectWorkspace workspace;
 
   @Before
   public void checkPlatform() {
@@ -50,17 +56,13 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void fatJarLoadingNativeLibraries() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
     workspace.runBuckCommand("run", "//:bin-fat").assertSuccess();
   }
 
   @Test
   public void fatJarOutputIsRecorded() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//:bin-fat").assertSuccess();
     workspace.runBuckCommand("clean");
@@ -71,9 +73,7 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void fatJarWithOutput() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
     Path jar = workspace.buildAndReturnOutput("//:bin-output");
     ProcessExecutor.Result result = workspace.runJar(jar);
     assertEquals("output", result.getStdout().get().trim());
@@ -82,9 +82,7 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void disableCachingForBinaries() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "java_binary_with_blacklist", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("java_binary_with_blacklist");
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
@@ -96,17 +94,14 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void fatJarWithExitCode() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
+
     workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
   }
 
   @Test
   public void fatJarWithVmArguments() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
     ImmutableList<String> args = ImmutableList.of(
         "-ea",
         "-Dfoo.bar.baz=1234",
@@ -119,9 +114,7 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void fatJarWithAlternateJavaBin() throws IOException, InterruptedException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("fat_jar");
     Path jar = workspace.buildAndReturnOutput("//:bin-alternate-java");
     String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot().toString();
     ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
@@ -130,9 +123,7 @@ public class JavaBinaryIntegrationTest {
 
   @Test
   public void fatJarWithBlacklist() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "java_binary_with_blacklist", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("java_binary_with_blacklist");
     Path binaryJarWithBlacklist = workspace.buildAndReturnOutput("//:bin-blacklist");
     Path binaryJarWithoutBlacklist = workspace.buildAndReturnOutput("//:bin-no-blacklist");
 
@@ -154,5 +145,37 @@ public class JavaBinaryIntegrationTest {
     assertEquals(
         ImmutableSet.builder().addAll(commonEntries).addAll(blacklistedEntries).build(),
         new ZipInspector(binaryJarWithoutBlacklist).getZipFileEntries());
+  }
+
+  @Test
+  public void testJarWithCorruptInput() throws IOException {
+    setUpProjectWorkspaceForScenario("corruption");
+    workspace.runBuckBuild("//:simple-lib").assertSuccess();
+    String libJar = workspace.runBuckCommand("targets", "--show_output", "//:simple-lib")
+        .assertSuccess()
+        .getStdout().split(" ")[1].trim();
+
+    // Now corrupt the output jar.
+    Path jarPath = workspace.getPath(libJar);
+    byte[] bytes = Files.readAllBytes(jarPath);
+    for (int backOffset = 7; backOffset <= 10; backOffset++) {
+      bytes[bytes.length - backOffset] = 0x77;
+    }
+    Files.write(jarPath, bytes);
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
+    // Should show the rule that failed.
+    assertThat(result.getStderr(), containsString("//:broken_01"));
+    // Should show the jar we were operating on.
+    assertThat(result.getStderr(), containsString(libJar));
+    // Should show the original exception.
+    assertThat(result.getStderr(), containsString("ZipException"));
+  }
+
+  private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
+    return workspace;
   }
 }

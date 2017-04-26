@@ -169,12 +169,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException  {
-    return validateRevisionId(executeCommand(CURRENT_REVISION_ID_COMMAND));
-  }
-
-  @Override
   public String revisionId(String name)
       throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(
@@ -186,12 +180,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
-    try {
-      return Optional.of(revisionId(name));
-    } catch (VersionControlCommandFailedException e) {
-      return Optional.empty();
-    }
+  public String currentRevisionId()
+      throws VersionControlCommandFailedException, InterruptedException  {
+    return validateRevisionId(executeCommand(CURRENT_REVISION_ID_COMMAND));
   }
 
   @Override
@@ -215,28 +206,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
             REVISION_IDS_TEMPLATE,
             (revisionIdOne + "," + revisionIdTwo))).split(" ");
     return new Pair<>(validateRevisionId(results[0]), Long.parseLong(results[1]));
-  }
-
-  @Override
-  public Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
-      throws InterruptedException {
-    try {
-      return Optional.of(commonAncestor(revisionIdOne, revisionIdTwo));
-    } catch (VersionControlCommandFailedException e) {
-      return Optional.empty();
-    }
-  }
-
-  @Override
-  public Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
-      String revisionIdOne,
-      String revisionIdTwo)
-      throws InterruptedException {
-    try {
-      return Optional.of(commonAncestorAndTS(revisionIdOne, revisionIdTwo));
-    } catch (VersionControlCommandFailedException e) {
-      return Optional.empty();
-    }
   }
 
   @Override
@@ -268,13 +237,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
-      throws InterruptedException {
-    try {
-      return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
-    } catch (VersionControlCommandFailedException e) {
-      return Optional.empty();
-    }
+  public ImmutableSet<String> changedFiles(String fromRevisionId)
+      throws VersionControlCommandFailedException, InterruptedException {
+    String hgChangedFilesString = executeCommand(replaceTemplateValue(
+        CHANGED_FILES_COMMAND,
+        REVISION_ID_TEMPLATE,
+        fromRevisionId));
+    return Arrays.stream(hgChangedFilesString.split("\0"))
+        .filter(s -> !s.isEmpty())
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
@@ -289,18 +260,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     // e.g. 1440601290 -7200 (for France, which is UTC + 2H)
     // We only care about the UTC bit.
     return extractUnixTimestamp(hgTimeString);
-  }
-
-  @Override
-  public ImmutableSet<String> changedFiles(String fromRevisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    String hgChangedFilesString = executeCommand(replaceTemplateValue(
-        CHANGED_FILES_COMMAND,
-        REVISION_ID_TEMPLATE,
-        fromRevisionId));
-    return Arrays.stream(hgChangedFilesString.split("\0"))
-        .filter(s -> !s.isEmpty())
-        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override

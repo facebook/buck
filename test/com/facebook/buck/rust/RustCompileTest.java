@@ -56,8 +56,8 @@ public class RustCompileTest {
   public void noCrateRootInSrcs() {
     RustCompileRule linkable = FakeRustCompileRule.from(
         "//:donotcare",
-        ImmutableSortedSet.of(),
-        Optional.empty());
+        ImmutableSortedSet.of()
+    );
     linkable.getCrateRoot();
   }
 
@@ -65,8 +65,8 @@ public class RustCompileTest {
   public void crateRootMainInSrcs() {
     RustCompileRule linkable = FakeRustCompileRule.from(
         "//:donotcare",
-        ImmutableSortedSet.of(new FakeSourcePath("main.rs")),
-        Optional.empty());
+        ImmutableSortedSet.of(new FakeSourcePath("main.rs"))
+    );
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
@@ -74,8 +74,8 @@ public class RustCompileTest {
   public void crateRootTargetNameInSrcs() {
     RustCompileRule linkable = FakeRustCompileRule.from(
         "//:myname",
-        ImmutableSortedSet.of(new FakeSourcePath("myname.rs")),
-        Optional.empty());
+        ImmutableSortedSet.of(new FakeSourcePath("myname.rs"))
+    );
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
@@ -86,8 +86,8 @@ public class RustCompileTest {
         "//:myname",
         ImmutableSortedSet.of(
             new FakeSourcePath("main.rs"),
-            new FakeSourcePath("myname.rs")),
-        Optional.empty());
+            new FakeSourcePath("myname.rs"))
+    );
     linkable.getCrateRoot();
   }
 
@@ -247,8 +247,7 @@ public class RustCompileTest {
 
     static FakeRustCompileRule from(
         String target,
-        ImmutableSortedSet<SourcePath> srcs,
-        Optional<SourcePath> rootModule) {
+        ImmutableSortedSet<SourcePath> srcs) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
@@ -261,7 +260,6 @@ public class RustCompileTest {
       Optional<SourcePath> root = RustCompileUtils.getCrateRoot(
           pathResolver,
           buildTarget.getShortName(),
-          rootModule,
           ImmutableSet.of("main.rs", "lib.rs"),
           srcs.stream());
 

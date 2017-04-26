@@ -14,15 +14,6 @@ TYPES_SRCS = [
 java_immutables_library(
     name = "types",
     srcs = TYPES_SRCS,
-    immutable_types = [
-        "ClasspathMacro",
-        "ExecutableMacro",
-        "LocationMacro",
-        "MavenCoordinatesMacro",
-        "QueryTargetsMacros",
-        "QueryOutputsMacros",
-        "StringWithMacros",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:model",
@@ -41,9 +32,7 @@ standard_java_library(
         ["*.java"],
         excludes = TYPES_SRCS,
     ),
-    immutable_types = [
-        "MacroMatchResult",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/rules/macros:macros",
     ],
@@ -61,6 +50,7 @@ standard_java_library(
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:worker_tool",

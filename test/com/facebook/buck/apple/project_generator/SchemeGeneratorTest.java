@@ -128,7 +128,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -222,7 +221,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -315,7 +313,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testBundleTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -395,7 +392,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -455,7 +451,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -542,7 +537,6 @@ public class SchemeGeneratorTest {
           ImmutableSet.of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
           false /* parallelizeBuild */,
           Optional.empty() /* runnablePath */,
           Optional.empty() /* remoteRunnablePath */,
@@ -578,7 +572,6 @@ public class SchemeGeneratorTest {
           ImmutableSet.of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
           false /* parallelizeBuild */,
           Optional.empty() /* runnablePath */,
           Optional.empty() /* remoteRunnablePath */,
@@ -617,7 +610,6 @@ public class SchemeGeneratorTest {
           ImmutableSet.of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
           false /* parallelizeBuild */,
           Optional.empty() /* runnablePath */,
           Optional.empty() /* remoteRunnablePath */,
@@ -653,7 +645,6 @@ public class SchemeGeneratorTest {
           ImmutableSet.of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
           false /* parallelizeBuild */,
           Optional.empty() /* runnablePath */,
           Optional.empty() /* remoteRunnablePath */,
@@ -714,7 +705,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testBundleTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -821,7 +811,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,
@@ -871,7 +860,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
         false /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.of("/RemoteApp") /* remoteRunnablePath */,
@@ -918,131 +906,6 @@ public class SchemeGeneratorTest {
   }
 
   @Test
-  public void whenProvidedAPrimaryTargetThatIsBuiltWithBuckLaunchesIt() throws Exception {
-    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
-
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
-    rootTarget.setGlobalID("rootGID");
-    rootTarget.setProductName("Foo");
-    String runnablePath = "buck-out/gen/Foo/Foo.app";
-
-    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
-    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
-
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.of(runnablePath) /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
-
-    Path schemePath = schemeGenerator.writeScheme();
-
-    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
-
-    XPathFactory xpathFactory = XPathFactory.newInstance();
-
-    XPath runnableLaunchActionXPath = xpathFactory.newXPath();
-    XPathExpression runnableLaunchActionExpr =
-        runnableLaunchActionXPath.compile("//LaunchAction/PathRunnable");
-    NodeList runnables = (NodeList) runnableLaunchActionExpr.evaluate(
-        scheme, XPathConstants.NODESET);
-
-    assertThat(runnables.getLength(), equalTo(1));
-
-    Node runnable = runnables.item(0);
-    assertThat(
-        runnable.getAttributes().getNamedItem("FilePath").getNodeValue(),
-        equalTo(runnablePath));
-  }
-
-  @Test
-  public void whenProvidedAPrimaryTargetThatIsBuiltWithBuckDoesntBuildDependencies()
-      throws Exception {
-    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
-
-    PBXTarget libraryTarget = new PBXNativeTarget("library");
-    libraryTarget.setGlobalID("libraryGID");
-    libraryTarget.setProductReference(
-        new PBXFileReference(
-            "lib.a",
-            "lib.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
-    libraryTarget.setProductType(ProductType.STATIC_LIBRARY);
-
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
-    rootTarget.setGlobalID("rootGID");
-    rootTarget.setProductName("Foo");
-    String runnablePath = "buck-out/gen/Foo/Foo.app";
-
-    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
-    targetToProjectPathMapBuilder.put(libraryTarget, pbxprojectPath);
-    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
-
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(libraryTarget, rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.of(runnablePath) /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
-
-    Path schemePath = schemeGenerator.writeScheme();
-
-    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
-
-    XPathFactory xpathFactory = XPathFactory.newInstance();
-
-    XPath buildActionXpath = xpathFactory.newXPath();
-    XPathExpression buildActionExpr =
-        buildActionXpath.compile("//BuildAction//BuildActionEntry");
-    NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
-
-    Node libraryNode = null;
-    for (int i = 0; i < buildActionNodes.getLength(); i++) {
-      Node node = buildActionNodes.item(i);
-      if (node.getChildNodes().getLength() != 1) {
-        continue;
-      }
-      Node buildableReference = node.getChildNodes().item(0);
-      if (buildableReference
-          .getAttributes()
-          .getNamedItem("BlueprintIdentifier")
-          .getNodeValue()
-          .equals("libraryGID")) {
-        libraryNode = node;
-        break;
-      }
-    }
-    assertThat(libraryNode, is(notNullValue()));
-    assertThat(
-        libraryNode.getAttributes().getNamedItem("buildForRunning").getNodeValue(),
-        equalTo("NO"));
-  }
-
-  @Test
   public void enablingParallelizeBuild() throws Exception {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
@@ -1067,7 +930,6 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
         true /* parallelizeBuild */,
         Optional.empty() /* runnablePath */,
         Optional.empty() /* remoteRunnablePath */,

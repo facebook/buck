@@ -38,7 +38,6 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -117,7 +116,7 @@ public class JavaTest
   @Nullable
   private CompiledClassFileFinder compiledClassFileFinder;
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
 
   private final ImmutableSet<String> contacts;
 
@@ -156,7 +155,7 @@ public class JavaTest
       SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
-      Set<Label> labels,
+      Set<String> labels,
       Set<String> contacts,
       TestType testType,
       JavaRuntimeLauncher javaRuntimeLauncher,
@@ -199,7 +198,7 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

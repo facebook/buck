@@ -22,12 +22,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
-import com.facebook.buck.jvm.java.testutil.TestCompiler;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
@@ -52,6 +53,10 @@ import org.objectweb.asm.tree.TypeAnnotationNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,10 +66,14 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
 
 @RunWith(CompilerTreeApiParameterized.class)
 public class StubJarTest {
@@ -101,7 +110,7 @@ public class StubJarTest {
   private List<String> diagnostics;
   private Set<String> allowedInnerClassNames = new HashSet<>();
 
-  @Parameterized.Parameters
+  @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
     return new Object[]{MODE_JAR_BASED, MODE_SOURCE_BASED, MODE_SOURCE_BASED_MISSING_DEPS};
   }
@@ -377,8 +386,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -802,8 +809,6 @@ public class StubJarTest {
 
   @Test
   public void stubsAbstractEnums() throws IOException {
-    notYetImplementedForSource();
-
     JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
@@ -1565,6 +1570,62 @@ public class StubJarTest {
   }
 
   @Test
+  public void shouldNotIncludeSyntheticFields() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public class A {",
+            "  public void method() {",
+            "    assert false;",  // Using assert adds a synthetic field $assertionsDisabled
+            "  }",
+            "}"));
+
+    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void shouldNotIncludeSyntheticClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public class A {",
+            "  enum E { Value };",
+            "  public void method(E e) {",
+            "    switch (e) {",  // Switching on an enum introduces a synthetic helper class
+            "      case Value: break;",
+            "    }",
+            "  }",
+            "}"));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class",
+        "com/example/buck/A$E.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+  }
+
+  @Test
+  public void shouldNotIncludeSyntheticMethods() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(
+            "package com.example.buck;",
+            "public enum A {",
+            "  Value1 { }",  // Creating an enum subclass creates a synthetic constructor
+            "}"));
+
+    assertClassesStubbedCorrectly(
+        paths,
+        "com/example/buck/A.class");
+    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+  }
+
+  @Test
   public void shouldIncludeBridgeMethods() throws IOException {
     notYetImplementedForSource();
 
@@ -1580,6 +1641,27 @@ public class StubJarTest {
             "}")));
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+  }
+
+  @Test
+  public void stubJarShouldHaveManifestWithEntriesForClasses() throws IOException {
+    JarPaths paths = createFullAndStubJars(
+        EMPTY_CLASSPATH,
+        "A.java",
+        "public class A { }");
+
+    FileSystem fileSystem = FileSystems.newFileSystem(paths.stubJar, null);
+    Path manifestPath = fileSystem.getPath("META-INF", "MANIFEST.MF");
+
+    assertTrue(Files.exists(manifestPath));
+
+    try (InputStream manifestStream = Files.newInputStream(manifestPath)) {
+      Manifest jarManifest = new Manifest(manifestStream);
+
+      assertThat(
+          jarManifest.getEntries().get("A.class").getValue("Murmur3-128-Digest"),
+          Matchers.equalTo("525ca9a11a7442a820dfbd94da7b4166"));
+    }
   }
 
   private JarPaths createFullAndStubJars(
@@ -1615,20 +1697,35 @@ public class StubJarTest {
       Path outputDir) throws IOException {
     Path stubJar = outputDir.resolve("stub.jar");
 
-    List<Processor> processors = Collections.singletonList(new StubJarGeneratingProcessor(
-        filesystem,
-        stubJar,
-        SourceVersion.RELEASE_8));
-
     try (TestCompiler testCompiler = new TestCompiler()) {
       testCompiler.init();
       testCompiler.useFrontendOnlyJavacTask();
       testCompiler.addSourceFileContents(fileName, source);
       testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(processors);
-      testCompiler.enter();
-    }
+      testCompiler.setProcessors(ImmutableList.of(
+          new AbstractProcessor() {
+            @Override
+            public Set<String> getSupportedAnnotationTypes() {
+              return Collections.singleton("*");
+            }
 
+            @Override
+            public boolean process(
+                Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+              return false;
+            }
+          }
+      ));
+      StubGenerator generator = new StubGenerator(
+          SourceVersion.RELEASE_8,
+          testCompiler.getElements(),
+          testCompiler.getFileManager());
+
+      testCompiler.addPostEnterCallback(generator::generate);
+
+      testCompiler.compile();
+      testCompiler.getClasses().createJar(stubJar, true);
+    }
     return stubJar;
   }
 
@@ -1655,7 +1752,7 @@ public class StubJarTest {
       diagnostics = compiler.getDiagnosticMessages();
 
       Path jarPath = outputDir.toPath().resolve("output.jar");
-      compiler.getClasses().createJar(jarPath);
+      compiler.getClasses().createJar(jarPath, false);
       return jarPath;
     }
   }
@@ -1829,8 +1926,17 @@ public class StubJarTest {
           if (m instanceof InnerClassNode) {
             return true;
           }
-          // Never stub things that are private
-          return (getAccess.apply(m) & Opcodes.ACC_PRIVATE) == 0;
+          int access = getAccess.apply(m);
+          if ((access & Opcodes.ACC_PRIVATE) != 0) {
+            // Never stub privates
+            return false;
+          }
+          if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
+            // Never stub things that are synthetic but not bridges
+            return false;
+          }
+
+          return true;
         })
         .collect(Collectors.toList());
 

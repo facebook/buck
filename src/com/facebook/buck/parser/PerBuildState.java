@@ -178,7 +178,7 @@ public class PerBuildState implements AutoCloseable {
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
     ProjectBuildFileParser parser = cell.createBuildFileParser(
-        this.parser.getMarshaller(),
+        this.parser.getTypeCoercerFactory(),
         console,
         eventBus,
         ignoreBuckAutodepsFiles);

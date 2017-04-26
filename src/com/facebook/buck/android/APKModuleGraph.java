@@ -31,6 +31,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -40,6 +41,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,6 +58,7 @@ public class APKModuleGraph {
 
   private final TargetGraph targetGraph;
   private final BuildTarget target;
+  private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
   private final Optional<Set<BuildTarget>> seedTargets;
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
@@ -96,6 +99,27 @@ public class APKModuleGraph {
         return moduleBuilder.build();
       });
 
+  private final Supplier<Optional<Map<String, List<BuildTarget>>>> configMapSupplier =
+      Suppliers.memoize(this::generateSeedConfigMap);
+
+  /**
+   * Constructor for the {@code APKModule} graph generator object
+   *
+   * @param seedConfigMap   A map of names to seed targets to use for creating
+   *     {@code APKModule}.
+   * @param targetGraph     The full target graph of the build
+   * @param target          The root target to use to traverse the graph
+   */
+  public APKModuleGraph(
+      final Optional<Map<String, List<BuildTarget>>> seedConfigMap,
+      final TargetGraph targetGraph,
+      final BuildTarget target) {
+    this.targetGraph = targetGraph;
+    this.target = target;
+    this.seedTargets = Optional.empty();
+    this.suppliedSeedConfigMap = seedConfigMap;
+  }
+
   /**
    * Constructor for the {@code APKModule} graph generator object
    *
@@ -110,6 +134,24 @@ public class APKModuleGraph {
     this.targetGraph = targetGraph;
     this.target = target;
     this.seedTargets = seedTargets;
+    this.suppliedSeedConfigMap = Optional.empty();
+  }
+
+  private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
+    if (suppliedSeedConfigMap.isPresent()) {
+       return suppliedSeedConfigMap;
+    }
+    if (!seedTargets.isPresent()) {
+      return Optional.empty();
+    }
+    HashMap<String, List<BuildTarget>> seedConfigMapMutable = new HashMap<>();
+    for (BuildTarget seedTarget : seedTargets.get()) {
+      final String moduleName = generateNameFromTarget(seedTarget);
+      seedConfigMapMutable.put(moduleName, ImmutableList.of(seedTarget));
+    }
+    ImmutableMap<String, List<BuildTarget>> seedConfigMapImmutable =
+        ImmutableMap.copyOf(seedConfigMapMutable);
+    return Optional.of(seedConfigMapImmutable);
   }
 
   /**
@@ -132,6 +174,10 @@ public class APKModuleGraph {
 
   public ImmutableSet<APKModule> getAPKModules() {
     return modulesSupplier.get();
+  }
+
+  public Optional<Map<String, List<BuildTarget>>> getSeedConfigMap() {
+    return configMapSupplier.get();
   }
 
   /**
@@ -197,7 +243,7 @@ public class APKModuleGraph {
 
     apkModuleGraph.addNode(rootAPKModuleSupplier.get());
 
-    if (seedTargets.isPresent()) {
+    if (getSeedConfigMap().isPresent()) {
       HashMultimap<BuildTarget, String> targetToContainingApkModulesMap =
           mapTargetsToContainingModules();
       generateSharedModules(apkModuleGraph, targetToContainingApkModulesMap);
@@ -245,24 +291,26 @@ public class APKModuleGraph {
   private HashMultimap<BuildTarget, String> mapTargetsToContainingModules() {
     final HashMultimap<BuildTarget, String> targetToContainingApkModuleNameMap =
         HashMultimap.create();
-    for (BuildTarget seedTarget : seedTargets.get()) {
-      final String seedModuleName = generateNameFromTarget(seedTarget);
-      targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
-      new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(seedTarget)) {
-        @Override
-        public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+    for (Map.Entry<String, List<BuildTarget>> seedConfig : getSeedConfigMap().get().entrySet()) {
+      final String seedModuleName = seedConfig.getKey();
+      for (BuildTarget seedTarget : seedConfig.getValue()) {
+        targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
+        new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(seedTarget)) {
+          @Override
+          public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
 
-          ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
-          for (BuildTarget depTarget : node.getBuildDeps()) {
-            if (!isInRootModule(depTarget) &&
-                !isSeedTarget(depTarget)) {
-              depsBuilder.add(targetGraph.get(depTarget));
-              targetToContainingApkModuleNameMap.put(depTarget, seedModuleName);
+            ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
+            for (BuildTarget depTarget : node.getBuildDeps()) {
+              if (!isInRootModule(depTarget) &&
+                  !isSeedTarget(depTarget)) {
+                depsBuilder.add(targetGraph.get(depTarget));
+                targetToContainingApkModuleNameMap.put(depTarget, seedModuleName);
+              }
             }
+            return depsBuilder.build();
           }
-          return depsBuilder.build();
-        }
-      }.start();
+        }.start();
+      }
     }
     return targetToContainingApkModuleNameMap;
   }
@@ -346,7 +394,15 @@ public class APKModuleGraph {
   }
 
   private boolean isSeedTarget(BuildTarget depTarget) {
-    return seedTargets.isPresent() && seedTargets.get().contains(depTarget);
+    if (!getSeedConfigMap().isPresent()) {
+      return false;
+    }
+    for (List<BuildTarget> targetsPerConfig : getSeedConfigMap().get().values()) {
+      if (targetsPerConfig.contains(depTarget)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static String generateNameFromTarget(BuildTarget androidModuleTarget) {

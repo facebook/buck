@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTest;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
 
 import org.junit.Test;

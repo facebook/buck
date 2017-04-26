@@ -21,8 +21,8 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -68,7 +68,7 @@ class BuckPythonProgram implements AutoCloseable {
    * Create a new instance by layout the files in a temporary directory.
    */
   public static BuckPythonProgram newInstance(
-      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory,
       ImmutableSet<Description<?>> descriptions) throws IOException {
 
     Path pythonPath;
@@ -113,7 +113,7 @@ class BuckPythonProgram implements AutoCloseable {
                 generatedRoot.resolve("generated_rules.py"),
                 UTF_8)) {
       out.write("from buck_parser.buck import *\n\n");
-      BuckPyFunction function = new BuckPyFunction(marshaller);
+      BuckPyFunction function = new BuckPyFunction(typeCoercerFactory);
       for (Description<?> description : descriptions) {
         out.write(
             function.toPythonFunction(

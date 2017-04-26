@@ -36,6 +36,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 
 /**
@@ -138,6 +139,35 @@ public final class AppleBuildRules {
         targetNode,
         mode,
         descriptionClasses);
+    Predicate<TargetNode<?, ?>> isDependencyNode = descriptionClasses
+        .map(classes ->
+            (Predicate<TargetNode<?, ?>>) node ->
+                classes.contains(node.getDescription().getClass()))
+        .orElse(x -> true);
+
+    ImmutableSet<TargetNode<?, ?>> result = getRecursiveTargetNodeDependenciesOfTypes(
+        targetGraph,
+        cache,
+        mode,
+        targetNode,
+        isDependencyNode);
+
+    LOG.verbose(
+        "Got recursive dependencies of node %s mode %s types %s: %s\n",
+        targetNode,
+        mode,
+        descriptionClasses,
+        result);
+
+    return result;
+  }
+
+  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      RecursiveDependenciesMode mode,
+      TargetNode<?, ?> targetNode,
+      Predicate<TargetNode<?, ?>> isDependencyNode) {
 
     @SuppressWarnings("unchecked")
     GraphTraversable<TargetNode<?, ?>> graphTraversable = node -> {
@@ -242,9 +272,7 @@ public final class AppleBuildRules {
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {
       for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
-        if (node != targetNode &&
-            (!descriptionClasses.isPresent() ||
-             descriptionClasses.get().contains(node.getDescription().getClass()))) {
+        if (node != targetNode && isDependencyNode.test(node)) {
           filteredRules.add(node);
         }
       }
@@ -252,15 +280,8 @@ public final class AppleBuildRules {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }
-    ImmutableSet<TargetNode<?, ?>> result = filteredRules.build();
-    LOG.verbose(
-        "Got recursive dependencies of node %s mode %s types %s: %s\n",
-        targetNode,
-        mode,
-        descriptionClasses,
-        result);
 
-    return result;
+    return filteredRules.build();
   }
 
   public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(

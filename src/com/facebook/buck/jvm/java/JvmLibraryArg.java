@@ -81,16 +81,16 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
       return AnnotationProcessingParams.EMPTY;
     }
 
-    AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
+    AnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
     builder.setOwnerTarget(owner);
-    builder.setSafeAnnotationProcessors(safeAnnotationProcessors);
+    builder.setLegacySafeAnnotationProcessors(safeAnnotationProcessors);
     builder.setProjectFilesystem(filesystem);
 
     addLegacyProcessors(builder, resolver);
     addProcessors(builder, resolver, owner);
 
     for (String processorParam : annotationProcessorParams) {
-      builder.addParameter(processorParam);
+      builder.addParameters(processorParam);
     }
     builder.setProcessOnly(annotationProcessorOnly.orElse(Boolean.FALSE));
 
@@ -111,17 +111,17 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
             pluginTarget));
       }
       JavaAnnotationProcessor plugin = (JavaAnnotationProcessor) pluginRule;
-      builder.addProcessor(plugin.getProcessorProperties());
+      builder.addModernProcessors(plugin.getProcessorProperties());
     }
   }
 
   void addLegacyProcessors(
       AnnotationProcessingParams.Builder builder,
       BuildRuleResolver resolver) {
-    builder.addAllProcessors(annotationProcessors);
+    builder.setLegacyAnnotationProcessorNames(annotationProcessors);
     ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);
     for (BuildRule processorDep : processorDeps) {
-      builder.addProcessorBuildTarget(processorDep);
+      builder.addLegacyAnnotationProcessorDeps(processorDep);
     }
   }
 }

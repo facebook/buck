@@ -321,13 +321,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
   }
 
-  public boolean forceDsymModeInBuildWithBuck() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION,
-        "force_dsym_mode_in_build_with_buck",
-        true);
-  }
-
   public ImmutableList<String> getProvisioningProfileReadCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "provisioning_profile_read_command");
     if (!value.isPresent()) {

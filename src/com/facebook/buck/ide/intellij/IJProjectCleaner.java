@@ -28,6 +28,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Cleans out any unwanted IntelliJ IDEA project files.
@@ -67,6 +69,17 @@ import java.util.concurrent.TimeUnit;
     filesToKeep.add(convertPathToFile(path));
   }
 
+  public void writeFilesToKeepToFile(String filename) throws IOException {
+    Files.write(
+        projectFilesystem.resolve(filename),
+        filesToKeep
+            .stream()
+            .map(File::getAbsolutePath)
+            .map(Paths::get)
+            .map(projectFilesystem::relativize)
+            .map(Path::toString)
+            .collect(Collectors.toSet()));
+  }
 
   private File convertPathToFile(Path path) {
     if (!path.isAbsolute()) {

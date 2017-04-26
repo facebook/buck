@@ -3,9 +3,6 @@ java_immutables_library(
     srcs = [
         "AbstractFakeExecutionEnvironment.java",
     ],
-    immutable_types = [
-        "FakeExecutionEnvironment",
-    ],
     visibility = [
         "//test/...",
     ],

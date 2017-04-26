@@ -123,7 +123,13 @@ public class DistBuildState {
       Config config = createConfig(remoteCell.getConfig(), localBuckConfig);
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
-      cellParams.put(cellRoot, DistBuildCellParams.of(buckConfig, projectFilesystem));
+      Optional<String> cellName =
+          remoteCell.getCanonicalName().isEmpty()
+              ? Optional.empty()
+              : Optional.of(remoteCell.getCanonicalName());
+      cellParams.put(
+          cellRoot,
+          DistBuildCellParams.of(buckConfig, projectFilesystem, cellName));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 

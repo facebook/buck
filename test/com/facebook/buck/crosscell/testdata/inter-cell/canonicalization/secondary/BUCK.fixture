@@ -1,0 +1,15 @@
+cxx_library(
+  name = 'lib',
+  srcs = ['lib.c'],
+  deps = [
+    ':lib2',
+    'primary//:rootlib',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'lib2',
+  srcs = ['lib2.c'],
+  visibility = ['PUBLIC'],
+)

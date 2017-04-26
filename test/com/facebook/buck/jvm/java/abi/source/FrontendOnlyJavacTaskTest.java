@@ -26,7 +26,7 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListener;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListenerAdapter;
-import com.facebook.buck.jvm.java.testutil.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

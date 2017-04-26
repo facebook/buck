@@ -1,11 +1,19 @@
 standard_java_testutil(
     name = "testutil",
+    deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 standard_java_test(
     name = "versioncontrol",
     run_test_separately = True,
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
@@ -121,6 +129,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",

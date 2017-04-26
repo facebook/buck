@@ -16,7 +16,8 @@
 
 package com.facebook.buck.json;
 
-import com.google.common.base.Charsets;
+import com.facebook.buck.hashing.StringHashing;
+
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 
@@ -89,9 +90,8 @@ public class JsonObjectHashing {
       }
     } else if (obj instanceof String) {
       hasher.putInt(HashedObjectType.STRING.ordinal());
-      byte[] stringBytes = ((String) obj).getBytes(Charsets.UTF_8);
-      hasher.putInt(stringBytes.length);
-      hasher.putBytes(stringBytes);
+      String s = (String) obj;
+      StringHashing.hashStringAndLength(hasher, s);
     } else if (obj instanceof Boolean) {
       hasher.putInt(HashedObjectType.BOOLEAN.ordinal());
       hasher.putBoolean((boolean) obj);

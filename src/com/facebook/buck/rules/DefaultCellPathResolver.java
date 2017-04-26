@@ -29,10 +29,13 @@ import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 
 public class DefaultCellPathResolver implements CellPathResolver {
@@ -42,10 +45,18 @@ public class DefaultCellPathResolver implements CellPathResolver {
 
   private final Path root;
   private final ImmutableMap<String, Path> cellPaths;
+  private final ImmutableMap<Path, String> canonicalNames;
 
   public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
     this.root = root;
     this.cellPaths = cellPaths;
+    this.canonicalNames = cellPaths.entrySet().stream().collect(
+        Collectors.collectingAndThen(
+            Collectors.toMap(
+                Map.Entry::getValue,
+                Map.Entry::getKey,
+                BinaryOperator.minBy(Comparator.<String>naturalOrder())),
+            ImmutableMap::copyOf));
   }
 
   public DefaultCellPathResolver(Path root, Config config) {
@@ -163,5 +174,18 @@ public class DefaultCellPathResolver implements CellPathResolver {
   @Override
   public ImmutableMap<String, Path> getCellPaths() {
     return cellPaths;
+  }
+
+  @Override
+  public Optional<String> getCanonicalCellName(Path cellPath) {
+    if (cellPath.equals(root)) {
+      return Optional.empty();
+    } else {
+      String name = canonicalNames.get(cellPath);
+      if (name == null) {
+        throw new IllegalArgumentException("Unknown cell path: " + cellPath);
+      }
+      return Optional.of(name);
+    }
   }
 }

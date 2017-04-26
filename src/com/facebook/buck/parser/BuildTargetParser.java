@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -98,7 +99,7 @@ public class BuildTargetParser {
         parts.get(0).isEmpty() ? buildTargetPatternParser.getBaseName() : parts.get(0);
     String shortName = parts.get(1);
     Iterable<String> flavorNames = new HashSet<>();
-    int hashIndex = shortName.indexOf("#");
+    int hashIndex = shortName.indexOf('#');
     if (hashIndex != -1 && hashIndex < shortName.length()) {
       flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
       shortName = shortName.substring(0, hashIndex);
@@ -106,8 +107,10 @@ public class BuildTargetParser {
 
     Preconditions.checkNotNull(baseName);
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-    baseName = baseName.replace("\\", "/");
+    baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);
+
+    Path cellPath = cellNames.getCellPath(givenCellName);
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder()
@@ -116,9 +119,9 @@ public class BuildTargetParser {
             // Set the cell path correctly. Because the cellNames comes from the owning cell we can
             // be sure that if this doesn't throw an exception the target cell is visible to the
             // owning cell.
-            .setCellPath(cellNames.getCellPath(givenCellName))
+            .setCellPath(cellPath)
             // We are setting the cell name so we can print it later
-            .setCell(givenCellName);
+            .setCell(cellNames.getCanonicalCellName(cellPath));
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
 

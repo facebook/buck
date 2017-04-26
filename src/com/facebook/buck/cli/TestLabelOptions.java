@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.Label;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -103,7 +102,7 @@ class TestLabelOptions {
     return alwaysExclude;
   }
 
-  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> rawLabels) {
+  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<String> rawLabels) {
     ImmutableList<LabelSelector> labelSelectors = supplier.get();
     for (LabelSelector labelSelector : labelSelectors) {
       if (labelSelector.matches(rawLabels)) {

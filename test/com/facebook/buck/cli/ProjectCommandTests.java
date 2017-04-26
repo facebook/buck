@@ -31,7 +31,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -95,10 +94,7 @@ public class ProjectCommandTests {
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean isWithTests,
-      boolean isWithDependenciesTests,
-      boolean isReadonly,
-      boolean isBuildWithBuck,
-      boolean isCombinedProjects)
+      boolean isWithDependenciesTests)
       throws IOException, InterruptedException {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
@@ -113,18 +109,16 @@ public class ProjectCommandTests {
         targetGraphAndTargets,
         passedInTargetsSet,
         ProjectCommand.buildWorkspaceGeneratorOptions(
-            isReadonly,
+            false,
             isWithTests,
             isWithDependenciesTests,
-            isCombinedProjects,
+            false,
             true /* shouldUseHeaderMaps */,
             false /* shouldMergeHeaderMaps */,
             false /* shouldGenerateHeaderSymlinkTreeOnly */),
-        ImmutableList.of(),
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
-        isBuildWithBuck,
-        isCombinedProjects);
+        false);
     return projectGenerators;
   }
 

@@ -32,14 +32,14 @@ import javax.annotation.Nullable;
 
 public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final Optional<Path> pathToTestOutputDirectory;
   private final boolean runTestSeparately;
   private final ImmutableList<Step> testSteps;
   private final Callable<TestResults> interpretedTestResults;
 
   public FakeTestRule(
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
@@ -55,7 +55,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   public FakeTestRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      ImmutableSet<Label> labels) {
+      ImmutableSet<String> labels) {
     this(
         buildRuleParams,
         resolver,
@@ -71,7 +71,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   public FakeTestRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       Optional<Path> pathToTestOutputDirectory,
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
@@ -118,7 +118,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

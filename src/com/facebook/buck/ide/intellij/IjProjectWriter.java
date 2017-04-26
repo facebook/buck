@@ -16,6 +16,9 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
@@ -80,17 +83,17 @@ public class IjProjectWriter {
         projectDataPreparer.getAndroidProperties(module));
     moduleContents.add(
         "sdk",
-        module.getSdkName().orElse(null));
+        module.getModuleType().getSdkName(projectConfig).orElse(null));
     moduleContents.add(
         "sdkType",
-        module.getSdkType().orElse(null));
+        module.getModuleType().getSdkType(projectConfig));
     moduleContents.add(
         "languageLevel",
         JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(
             module.getLanguageLevel().orElse(null)));
     moduleContents.add(
         "moduleType",
-        module.getModuleType().orElse(IjModuleType.DEFAULT));
+        module.getModuleType().getImlModuleType());
     moduleContents.add(
         "metaInfDirectory",
         module.getMetaInfDirectory()

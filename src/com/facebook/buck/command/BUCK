@@ -1,8 +1,6 @@
 standard_java_library(
     name = "command",
-    immutable_types = [
-        "BuildExecutionResult",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/cli:cli",
     ],
@@ -30,6 +28,7 @@ standard_java_library(
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/shell:worker_process",
         "//src/com/facebook/buck/step:step",

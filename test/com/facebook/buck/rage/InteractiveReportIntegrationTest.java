@@ -32,6 +32,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -73,7 +74,7 @@ public class InteractiveReportIntegrationTest {
     tracePath2 = DEPS_PATH + "file.trace";
     traceWorkspace  = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "interactive_report",
+        "report",
         temporaryFolder);
     traceWorkspace.setUp();
     traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
@@ -92,7 +93,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testReport() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     DefectSubmitResult report = createDefectReport(
@@ -152,7 +153,7 @@ public class InteractiveReportIntegrationTest {
   public void testWatchmanDiagReport() throws Exception {
     DefectSubmitResult report = createDefectReport(
         traceWorkspace,
-        new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
+        new ByteArrayInputStream("0,1\nreport text\n\n\n".getBytes("UTF-8")));
     Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
         report.getReportSubmitLocation().get());
 
@@ -198,7 +199,7 @@ public class InteractiveReportIntegrationTest {
             console,
             inputStream,
             TestBuildEnvironmentDescription.INSTANCE,
-            VcsInfoCollector.create(new NoOpCmdLineInterface()),
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
             rageConfig,
             extraInfoCollector,
             Optional.of(watchmanDiagReportCollector));

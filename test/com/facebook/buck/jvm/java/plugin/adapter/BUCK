@@ -8,7 +8,7 @@ standard_java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
-        "//test/com/facebook/buck/jvm/java/testutil:testutil",
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
         "//third-party/java/asm:asm",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",

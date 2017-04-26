@@ -161,31 +161,13 @@ public class Build implements Closeable {
     return executionContext;
   }
 
-  private void collectAllCells(Cell cell, Map<Path, Cell> collector)  {
-    if (!collector.containsKey(cell.getRoot())) {
-      collector.put(cell.getRoot(), cell);
-      for (Cell child : cell.getLoadedCells().values()) {
-        collectAllCells(child, collector);
-      }
-    }
-  }
-
-  /**
-   * @return all {@link Cell}s reachable from the root {@link Cell}.
-   */
-  private ImmutableList<Cell> getAllCells() {
-    Map<Path, Cell> cells = new LinkedHashMap<>();
-    collectAllCells(rootCell, cells);
-    return ImmutableList.copyOf(cells.values());
-  }
-
   /**
    * When the user overrides the configured buck-out directory via the `.buckconfig` and also sets
    * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path
    * (`buck-out/`) to this newly configured location for backwards compatibility.
    */
   private void createConfiguredBuckOutSymlinks() throws IOException {
-    for (Cell cell : getAllCells()) {
+    for (Cell cell : rootCell.getAllCells()) {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();

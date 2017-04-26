@@ -19,6 +19,9 @@ package com.facebook.buck.ide.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -109,7 +112,7 @@ public class DefaultIjLibraryFactoryTest {
   public void testPrebuiltJar() {
     assertEquals("library_third_party_java_guava_guava", guavaLibrary.getName());
     assertEquals(Optional.of(guavaJarPath), guavaLibrary.getBinaryJar());
-    assertEquals(ImmutableSet.of(guava), guavaLibrary.getTargets());
+    assertEquals(ImmutableSet.of(guava.getBuildTarget()), guavaLibrary.getTargets());
   }
 
   @Test
@@ -118,13 +121,15 @@ public class DefaultIjLibraryFactoryTest {
     assertEquals(
         Optional.of(androidSupportBinaryJarPath.getRelativePath()),
         androidSupportLibrary.getBinaryJar());
-    assertEquals(ImmutableSet.of(androidSupport), androidSupportLibrary.getTargets());
+    assertEquals(
+        ImmutableSet.of(androidSupport.getBuildTarget()),
+        androidSupportLibrary.getTargets());
   }
 
   @Test
   public void testLibraryFromOtherTargets() {
     assertEquals("library_java_com_example_base_base", baseLibrary.getName());
     assertEquals(Optional.of(baseOutputPath.getRelativePath()), baseLibrary.getBinaryJar());
-    assertEquals(ImmutableSet.of(base), baseLibrary.getTargets());
+    assertEquals(ImmutableSet.of(base.getBuildTarget()), baseLibrary.getTargets());
   }
 }

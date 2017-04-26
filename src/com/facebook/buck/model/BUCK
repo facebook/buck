@@ -25,9 +25,6 @@ SIMPLE_TYPES_SRCS = [
 java_immutables_library(
     name = "macros",
     srcs = MACRO_SRCS,
-    immutable_types = [
-        "MacroMatchResult",
-    ],
     visibility = ["PUBLIC"],
 )
 
@@ -47,10 +44,6 @@ java_immutables_library(
         ["*.java"],
         excludes = BUILD_ID_SRCS + MACRO_SRCS + SIMPLE_TYPES_SRCS,
     ),
-    immutable_types = [
-        "BuildTarget",
-        "UnflavoredBuildTarget",
-    ],
     tests = [
         "//test/com/facebook/buck/model:model",
     ],

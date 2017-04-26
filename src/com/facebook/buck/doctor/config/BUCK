@@ -1,12 +1,6 @@
 java_immutables_library(
     name = "config",
     srcs = glob(["*.java"]),
-    immutable_types = [
-        "DoctorConfig",
-        "DoctorSuggestion",
-        "DoctorEndpointRequest",
-        "DoctorEndpointResponse",
-    ],
     tests = [
         "//test/com/facebook/buck/doctor:doctor",
     ],

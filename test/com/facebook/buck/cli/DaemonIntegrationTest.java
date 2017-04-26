@@ -22,15 +22,12 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -562,41 +559,6 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenBuckConfigChangesParserInvalidated()
-      throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
-
-    Object daemon = Main.getDaemon(
-        new TestCellBuilder().setBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
-            .setFilesystem(filesystem)
-            .build());
-
-    assertEquals(
-        "Daemon should not be replaced when config equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
-                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
-                    .build())
-                .setFilesystem(filesystem)
-                .build()));
-
-    assertNotEquals(
-        "Daemon should be replaced when config not equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder().setBuckConfig(
-                FakeBuckConfig.builder().setSections(
-                    ImmutableMap.of(
-                        "somesection",
-                        ImmutableMap.of("somename", "someothervalue"))).build())
-                .setFilesystem(filesystem)
-                .build()));
-  }
-
-  @Test
   public void whenBuckBuiltTwiceLogIsPresent()
       throws IOException, InterruptedException {
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -650,34 +612,23 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenAndroidNdkVersionChangesParserInvalidated()
-      throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+  public void crossCellIncludeDefChangesInvalidateBuckTargets() throws Exception {
+    final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_include_defs/primary", tmp.newFolder("primary"));
+    primary.setUp();
 
-    BuckConfig buckConfig1 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "something")))
-        .build();
+    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_include_defs/secondary", tmp.newFolder("secondary"));
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories", ImmutableMap.of(
+                "secondary",
+                secondary.getPath(".").normalize().toString())));
 
-    BuckConfig buckConfig2 = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            "ndk",
-            ImmutableMap.of("ndk_version", "different")))
-        .build();
-
-    Object daemon = Main.getDaemon(
-        new TestCellBuilder()
-            .setBuckConfig(buckConfig1)
-            .setFilesystem(filesystem)
-            .build());
-
-    assertNotEquals(
-        "Daemon should be replaced when not equal.", daemon,
-        Main.getDaemon(
-            new TestCellBuilder()
-                .setBuckConfig(buckConfig2)
-                .setFilesystem(filesystem)
-                .build()));
+    primary.runBuckdCommand("build", ":rule").assertSuccess();
+    Files.write(secondary.getPath("included_by_primary.py"), new byte[]{});
+    primary.runBuckdCommand("build", ":rule").assertFailure();
   }
 }

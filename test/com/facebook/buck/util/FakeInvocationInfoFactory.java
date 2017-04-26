@@ -27,6 +27,13 @@ public class FakeInvocationInfoFactory {
   }
 
   public static InvocationInfo create() {
-    return InvocationInfo.of(new BuildId(), false, false, "test", Paths.get(""));
+    return InvocationInfo.of(
+        new BuildId(),
+        false,
+        false,
+        "test",
+        new String[0],
+        new String[0],
+        Paths.get(""));
   }
 }

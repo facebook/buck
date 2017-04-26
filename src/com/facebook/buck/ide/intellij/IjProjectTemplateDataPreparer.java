@@ -16,6 +16,19 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
+import com.facebook.buck.ide.intellij.model.ContentRoot;
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjProjectElement;
+import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -76,12 +89,7 @@ public class IjProjectTemplateDataPreparer {
     this.projectFilesystem = projectFilesystem;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
-    this.librariesToBeWritten = moduleGraph
-        .getNodes()
-        .stream()
-        .filter(node -> node instanceof IjLibrary)
-        .map(IjLibrary.class::cast)
-        .collect(MoreCollectors.toImmutableSet());
+    this.librariesToBeWritten = moduleGraph.getLibraries();
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -117,7 +125,7 @@ public class IjProjectTemplateDataPreparer {
   public static ImmutableSet<Path> createPackageLookupPathSet(IjModuleGraph moduleGraph) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    for (IjModule module : moduleGraph.getModuleNodes()) {
+    for (IjModule module : moduleGraph.getModules()) {
       for (IjFolder folder : module.getFolders()) {
         if (!folder.getWantsPackagePrefix()) {
           continue;
@@ -137,7 +145,7 @@ public class IjProjectTemplateDataPreparer {
   private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get("");
     boolean hasRootModule = graph
-        .getModuleNodes()
+        .getModules()
         .stream()
         .anyMatch(module -> rootModuleBasePath.equals(module.getModuleBasePath()));
 
@@ -147,11 +155,12 @@ public class IjProjectTemplateDataPreparer {
           IjModule.builder()
               .setModuleBasePath(rootModuleBasePath)
               .setTargets(ImmutableSet.of())
+              .setModuleType(IjModuleType.UNKNOWN_MODULE)
               .build());
     }
 
     return Stream
-        .concat(graph.getModuleNodes().stream(), supplementalModules.stream())
+        .concat(graph.getModules().stream(), supplementalModules.stream())
         .collect(MoreCollectors.toImmutableSet());
   }
 
@@ -252,14 +261,14 @@ public class IjProjectTemplateDataPreparer {
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
     ImmutableSet<IjFolder> sourcesAndExcludes = Stream
             .concat(module.getFolders().stream(), createExcludes(module).stream())
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(MoreCollectors.toImmutableSortedSet());
     return createContentRoot(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
   public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(final IjModule module) {
     return module.getGeneratedSourceCodeFolders().stream()
         .map(new IjFolderToIjSourceFolderTransform(module)::apply)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {

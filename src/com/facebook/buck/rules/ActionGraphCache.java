@@ -29,6 +29,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,8 +41,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -272,23 +272,37 @@ public class ActionGraphCache {
   }
 
   @Subscribe
-  public void invalidateBasedOn(WatchEvent<?> event) {
+  public void invalidateBasedOn(WatchmanPathEvent event) {
     // We invalidate in every case except a modify event.
-    if (event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
-      if (!isCacheEmpty()) {
-        LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
-      }
-      invalidateCache();
-      if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
-        broadcastEventListener.broadcast(WatchmanStatusEvent.overflow((String) event.context()));
-      } else if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileCreation(event.context().toString()));
-      } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileDeletion(event.context().toString()));
-      }
+    if (event.getKind() == WatchmanPathEvent.Kind.MODIFY) {
+      return;
     }
+    if (!isCacheEmpty()) {
+      LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
+    }
+    invalidateCache();
+    switch (event.getKind()) {
+      case CREATE:
+        broadcastEventListener.broadcast(
+            WatchmanStatusEvent.fileCreation(event.getPath().toString()));
+        return;
+      case DELETE:
+        broadcastEventListener.broadcast(
+            WatchmanStatusEvent.fileDeletion(event.getPath().toString()));
+        return;
+      case MODIFY:
+        throw new IllegalStateException("Should have handled MODIFY event earlier.");
+    }
+    throw new IllegalStateException("Unhandled case: " + event.getKind());
+  }
+
+  @Subscribe
+  public void invalidateBasedOn(WatchmanOverflowEvent event) {
+    if (!isCacheEmpty()) {
+      LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
+    }
+    invalidateCache();
+    broadcastEventListener.broadcast(WatchmanStatusEvent.overflow(event.getReason()));
   }
 
   private void invalidateCache() {

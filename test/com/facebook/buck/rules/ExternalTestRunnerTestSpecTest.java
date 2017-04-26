@@ -36,7 +36,7 @@ public class ExternalTestRunnerTestSpecTest {
             ExternalTestRunnerTestSpec.builder()
                 .setTarget(BuildTargetFactory.newInstance("//:target"))
                 .setType("custom")
-                .setLabels(ImmutableList.of(Label.of("label")))
+                .setLabels(ImmutableList.of("label"))
                 .build());
     assertThat(
         result,

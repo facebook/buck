@@ -31,11 +31,6 @@ java_immutables_library(
         ["*.java"],
         excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES,
     ),
-    immutable_types = [
-        "InvocationInfo",
-        "LogConfigSetup",
-        "PerfTimeStats",
-    ],
     tests = [
         "//test/com/facebook/buck/log:log",
     ],
@@ -92,4 +87,13 @@ java_immutables_library(
         "//third-party/java/jsr:jsr305",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
+)
+
+java_library(
+    name = "config",
+    srcs = [
+        "MachineReadableLogConfig.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
 )

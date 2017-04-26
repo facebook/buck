@@ -26,15 +26,14 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
-
-import java.nio.file.StandardWatchEventKinds;
 
 public class RuleKeyCacheRecyclerTest {
 
@@ -63,9 +62,10 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<Void> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        WatchEventsForTests.createPathEvent(
-            input2.getPath(),
-            StandardWatchEventKinds.ENTRY_MODIFY));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(),
+            WatchmanPathEvent.Kind.MODIFY,
+            input2.getPath()));
     assertTrue(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
@@ -81,9 +81,10 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<Void> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        WatchEventsForTests.createPathEvent(
-            input.getPath().resolve("subpath"),
-            StandardWatchEventKinds.ENTRY_MODIFY));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(),
+            WatchmanPathEvent.Kind.MODIFY,
+            input.getPath().resolve("subpath")));
     assertFalse(cache.isCached(appendable));
   }
 
@@ -113,7 +114,7 @@ public class RuleKeyCacheRecyclerTest {
     assertTrue(cache.isCached(appendable2));
 
     // Send an overflow event and verify everything was invalidated.
-    recycler.onFilesystemChange(WatchEventsForTests.createOverflowEvent());
+    recycler.onFilesystemChange(WatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
     assertFalse(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }

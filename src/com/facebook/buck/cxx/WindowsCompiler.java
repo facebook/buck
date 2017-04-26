@@ -27,6 +27,7 @@ public class WindowsCompiler extends DefaultCompiler {
     super(tool);
   }
 
+
   @Override
   public boolean isDependencyFileSupported() {
     return false;

@@ -36,6 +36,7 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.HasJsonField;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -86,7 +87,7 @@ import java.util.zip.ZipInputStream;
  * Integration test that verifies that a {@link DefaultJavaLibrary} writes its ABI key as part
  * of compilation.
  */
-public class DefaultJavaLibraryIntegrationTest {
+public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
@@ -103,9 +104,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "abi", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("abi");
     workspace.enableDirCache();
 
     // Run `buck build`.
@@ -190,9 +189,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testBucksClasspathNotOnBuildClasspath() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "guava_no_deps", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("guava_no_deps");
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:foo");
@@ -205,9 +202,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testNoDepsCompilesCleanly() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "guava_no_deps", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("guava_no_deps");
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:bar");
@@ -218,9 +213,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testBuildJavaLibraryWithFirstOrder() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "warn_on_transitive", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("warn_on_transitive");
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build",
@@ -234,9 +227,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testBuildJavaLibraryExportsDirectoryEntries() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "export_directory_entries", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("export_directory_entries");
 
     // Run `buck build`.
     BuildTarget target = BuildTargetFactory.newInstance("//:empty_directory_entries");
@@ -270,9 +261,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testFileChangeThatDoesNotModifyAbiAvoidsRebuild() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "rulekey_changed_while_abi_stable", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("rulekey_changed_while_abi_stable");
 
     // Run `buck build`.
     BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
@@ -347,9 +336,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Test
   public void testAnnotationProcessorDepChangeThatDoesNotModifyAbiCausesRebuild()
       throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "annotation_processors", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("annotation_processors");
 
     // Run `buck build` to create the dep file
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
@@ -380,9 +367,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Test
   public void testAnnotationProcessorFileChangeThatDoesNotModifyAbiCausesRebuild()
       throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "annotation_processors", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("annotation_processors");
 
     // Run `buck build` to create the dep file
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
@@ -412,9 +397,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Test
   public void testAnnotationProcessorFileChangeThatDoesNotModifyCodeDoesNotCauseRebuild()
       throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "annotation_processors", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("annotation_processors");
 
     // Run `buck build` to create the dep file
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
@@ -444,9 +427,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testFileChangeThatDoesNotModifyAbiOfAUsedClassAvoidsRebuild() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "dep_file_rule_key", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("dep_file_rule_key");
 
     // Run `buck build` to create the dep file
     BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
@@ -473,9 +454,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testResourceFileChangeCanTakeAdvantageOfDepBasedKeys() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "resource_in_dep_file", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("resource_in_dep_file");
 
     // Warm the used classes file
     ProcessResult buildResult =
@@ -509,9 +488,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Test
   public void testFileChangeThatDoesNotModifyAbiOfAUsedClassAvoidsRebuildEvenWithBuckClean()
       throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "dep_file_rule_key", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("dep_file_rule_key");
     workspace.enableDirCache();
 
     // Run `buck build` to warm the cache.
@@ -544,9 +521,7 @@ public class DefaultJavaLibraryIntegrationTest {
   // Yes, we actually had the bug against which this test is guarding.
   @Test
   public void testAddedSourceFileInvalidatesManifest() throws IOException {
-
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "manifest_key", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("manifest_key");
     workspace.enableDirCache();
 
     // Run `buck build` to warm the cache.
@@ -579,10 +554,8 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
-  public void testClassUsageFileOutputWhenCompilingAgainstFullJars() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
-    workspace.setUp();
-    workspace.addBuckConfigLocalOption(JavaBuckConfig.SECTION, "compile_against_abis", "false");
+  public void testClassUsageFileOutput() throws IOException {
+    setUpProjectWorkspaceForScenario("class_usage_file");
 
     // Run `buck build`.
     BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
@@ -600,43 +573,13 @@ public class DefaultJavaLibraryIntegrationTest {
 
     assertEquals("Expected just one line of JSON", 1, lines.size());
 
-    final String utilJarPath =
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
-    final String utilClassPath =
-        MorePaths.pathWithPlatformSeparators("com/example/Util.class");
-
-    JsonNode jsonNode = ObjectMappers.READER.readTree(lines.get(0));
-    assertThat(jsonNode,
-        new HasJsonField(
-            utilJarPath,
-            Matchers.equalTo(
-                ObjectMappers.legacyCreate().valueToTree(new String[]{utilClassPath}))));
-  }
-
-  @Test
-  public void testClassUsageFileOutputWhenCompilingAgainstAbiJars() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
-    workspace.setUp();
-    workspace.addBuckConfigLocalOption(JavaBuckConfig.SECTION, "compile_against_abis", "true");
-
-    // Run `buck build`.
-    BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
-    ProcessResult buildResult =
-        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
-    buildResult.assertSuccess("Successful build should exit with 0.");
-
-    Path bizClassUsageFilePath = BuildTargets.getGenPath(
-        filesystem,
-        bizTarget,
-        "lib__%s__output/used-classes.json");
-
-    final List<String> lines = Files.readAllLines(
-        workspace.getPath(bizClassUsageFilePath), UTF_8);
-
-    assertEquals("Expected just one line of JSON", 1, lines.size());
-
-    final String utilJarPath =
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
+    final String utilJarPath;
+    if (compileAgainstAbis.equals(TRUE)) {
+      utilJarPath =
+          MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
+    } else {
+      utilJarPath = MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
+    }
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
@@ -650,9 +593,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Test
   public void updatingAResourceWhichIsJavaLibraryCausesAJavaLibraryToBeRepacked()
       throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "resource_change_causes_repack", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("resource_change_causes_repack");
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib");
@@ -672,9 +613,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void ensureProvidedDepsAreIncludedWhenCompilingButNotWhenPackaging() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "provided_deps", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("provided_deps");
 
     // Run `buck build`.
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
@@ -706,9 +645,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void ensureChangingDepFromProvidedToTransitiveTriggersRebuild() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "provided_deps", tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("provided_deps");
 
     workspace.runBuckBuild("//:binary").assertSuccess("Successful build should exit with 0.");
 
@@ -722,11 +659,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void ensureThatSourcePathIsSetSensibly() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sourcepath",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("sourcepath");
 
     ProcessResult result = workspace.runBuckBuild("//:b");
 
@@ -739,11 +672,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testSaveClassFilesToDisk() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "spool_class_files_to_disk",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("spool_class_files_to_disk");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
@@ -767,11 +696,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testSpoolClassFilesDirectlyToJar() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "spool_class_files_directly_to_jar",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
@@ -797,11 +722,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testSpoolClassFilesDirectlyToJarWithRemoveClasses() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "spool_class_files_directly_to_jar_with_remove_classes",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar_with_remove_classes");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
@@ -832,11 +753,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testSaveClassFilesToDiskWithRemoveClasses() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "spool_class_files_to_disk_remove_classes",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("spool_class_files_to_disk_remove_classes");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
@@ -861,11 +778,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "spool_class_files_directly_to_jar_with_annotation_processor",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar_with_annotation_processor");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
@@ -897,11 +810,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
   @Test
   public void shouldIncludeUserSuppliedManifestIfProvided() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "manifest",
-        tmp);
-    workspace.setUp();
+    setUpProjectWorkspaceForScenario("manifest");
 
     Manifest m = new Manifest();
     Attributes attrs = new Attributes();
@@ -945,5 +854,12 @@ public class DefaultJavaLibraryIntegrationTest {
           }
         });
     return ImmutableList.copyOf(allFiles);
+  }
+
+  private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
+    return workspace;
   }
 }

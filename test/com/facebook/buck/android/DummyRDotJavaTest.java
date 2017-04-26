@@ -106,7 +106,7 @@ public class DummyRDotJavaTest {
     List<Step> steps = dummyRDotJava.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 15, steps.size());
 
     String rDotJavaSrcFolder =
         BuildTargets
@@ -164,6 +164,7 @@ public class DummyRDotJavaTest {
         /* directToJarOutputSettings */ Optional.empty())
             .getDescription(TestExecutionContext.newInstance()))
         .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
+        .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
         .add(String.format("calculate_abi_from_classes %s", rDotJavaBinFolder))
         .build();
 

@@ -18,8 +18,6 @@
 package com.facebook.buck.rules.query;
 
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -33,6 +31,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -40,6 +39,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -64,7 +64,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   @Before
   public void setUp() throws Exception {
-    cellRoots = createMock(CellPathResolver.class);
+    cellRoots = new DefaultCellPathResolver(ROOT, ImmutableMap.of());
     executor = MoreExecutors.newDirectExecutorService();
   }
 
@@ -77,10 +77,6 @@ public class GraphEnhancementQueryEnvironmentTest {
         cellRoots,
         BuildTargetPatternParser.forBaseName(target.getBaseName()),
         ImmutableSet.of());
-    expect(cellRoots.getCellPath(Optional.empty()))
-        .andReturn(ROOT)
-        .anyTimes();
-    replay(cellRoots);
 
     // No deps in == no deps out
     assertTrue(envWithoutDeps.getTargetsMatchingPattern("$declared_deps", executor).isEmpty());
@@ -110,10 +106,6 @@ public class GraphEnhancementQueryEnvironmentTest {
         cellRoots,
         BuildTargetPatternParser.forBaseName(target.getBaseName()),
         ImmutableSet.of(dep1, dep2));
-    expect(cellRoots.getCellPath(Optional.empty()))
-        .andReturn(ROOT)
-        .anyTimes();
-    replay(cellRoots);
 
     // Check that the macro resolves
     assertThat(

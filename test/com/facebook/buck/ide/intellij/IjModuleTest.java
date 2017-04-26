@@ -18,6 +18,8 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetNode;
@@ -50,8 +52,9 @@ public class IjModuleTest {
   private static <T> IjModule createModule(TargetNode<?, ?> targetNode) {
     Path moduleBasePath = targetNode.getBuildTarget().getBasePath();
     return IjModule.builder()
-        .setTargets(ImmutableSet.of(targetNode))
+        .setTargets(ImmutableSet.of(targetNode.getBuildTarget()))
         .setModuleBasePath(moduleBasePath)
+        .setModuleType(IjModuleType.JAVA_MODULE)
         .build();
   }
 }

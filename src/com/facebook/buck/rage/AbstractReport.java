@@ -22,12 +22,13 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.versioncontrol.VersionControlStats;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,7 @@ public abstract class AbstractReport {
   private final ProjectFilesystem filesystem;
   private final DefectReporter defectReporter;
   private final BuildEnvironmentDescription buildEnvironmentDescription;
+  private final VersionControlStatsGenerator versionControlStatsGenerator;
   private final Console output;
   private final RageConfig rageConfig;
   private final ExtraInfoCollector extraInfoCollector;
@@ -63,6 +65,7 @@ public abstract class AbstractReport {
       ProjectFilesystem filesystem,
       DefectReporter defectReporter,
       BuildEnvironmentDescription buildEnvironmentDescription,
+      VersionControlStatsGenerator versionControlStatsGenerator,
       Console output,
       RageConfig rageBuckConfig,
       ExtraInfoCollector extraInfoCollector,
@@ -70,6 +73,7 @@ public abstract class AbstractReport {
     this.filesystem = filesystem;
     this.defectReporter = defectReporter;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
+    this.versionControlStatsGenerator = versionControlStatsGenerator;
     this.output = output;
     this.rageConfig = rageBuckConfig;
     this.extraInfoCollector = extraInfoCollector;
@@ -78,8 +82,23 @@ public abstract class AbstractReport {
 
   protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException;
 
-  protected abstract Optional<SourceControlInfo> getSourceControlInfo()
-      throws IOException, InterruptedException;
+  protected Optional<SourceControlInfo> getSourceControlInfo()
+      throws IOException, InterruptedException {
+    Optional<VersionControlStats> versionControlStatsOptional =
+        versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
+    if (!versionControlStatsOptional.isPresent()) {
+      return Optional.empty();
+    }
+    VersionControlStats versionControlStats = versionControlStatsOptional.get();
+    return Optional.of(
+        SourceControlInfo.of(
+            versionControlStats.getCurrentRevisionId(),
+            versionControlStats.getBaseBookmarks(),
+            Optional.of(versionControlStats.getBranchedFromMasterRevisionId()),
+            Optional.of(versionControlStats.getBranchedFromMasterTS()),
+            versionControlStats.getDiff(),
+            versionControlStats.getPathsChangedInWorkingDirectory()));
+  }
 
   protected abstract Optional<UserReport> getUserReport() throws IOException;
 
@@ -141,13 +160,7 @@ public abstract class AbstractReport {
         .setUserReport(userReport)
         .setHighlightedBuildIds(
             FluentIterable.from(selectedBuilds)
-                .transformAndConcat(
-                    new Function<BuildLogEntry, Iterable<BuildId>>() {
-                      @Override
-                      public Iterable<BuildId> apply(BuildLogEntry input) {
-                        return OptionalCompat.asSet(input.getBuildId());
-                      }
-                    }))
+                .transformAndConcat((x) -> OptionalCompat.asSet(x.getBuildId())))
         .setBuildEnvironmentDescription(buildEnvironmentDescription)
         .setSourceControlInfo(sourceControlInfo)
         .setIncludedPaths(includedPaths)

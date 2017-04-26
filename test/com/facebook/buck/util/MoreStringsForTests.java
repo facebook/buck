@@ -47,6 +47,6 @@ public class MoreStringsForTests {
 
   public static String normalizeNewlines(String s) {
     // Windows uses "\r\n", some mac apps use "\r", so standardize on "\n".
-    return s.replace("\r\n", "\n").replace("\r", "\n");
+    return s.replace("\r\n", "\n").replace('\r', '\n');
   }
 }

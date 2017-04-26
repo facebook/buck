@@ -26,11 +26,14 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,6 +45,7 @@ class SwiftStdlibStep implements Step {
 
   private final Path workingDirectory;
   private final Path temp;
+  private final Path sdkPath;
   private final Path destinationDirectory;
   private final Iterable<String> command;
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
@@ -49,10 +53,12 @@ class SwiftStdlibStep implements Step {
   public SwiftStdlibStep(
       Path workingDirectory,
       Path temp,
+      Path sdkPath,
       Path destinationDirectory,
       Iterable<String> command,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
     this.workingDirectory = workingDirectory;
+    this.sdkPath = sdkPath;
     this.destinationDirectory = workingDirectory.resolve(destinationDirectory);
     this.temp = workingDirectory.resolve(temp);
     this.command = command;
@@ -64,7 +70,7 @@ class SwiftStdlibStep implements Step {
     return "copy swift standard libs";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams() {
+  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(workingDirectory.toAbsolutePath());
     builder.setCommand(command);
@@ -74,13 +80,18 @@ class SwiftStdlibStep implements Step {
           "--sign",
           CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
     }
+
+    Map<String, String> environment = new HashMap<>();
+    environment.putAll(context.getEnvironment());
+    environment.put("SDKROOT", sdkPath.toString());
+    builder.setEnvironment(ImmutableMap.copyOf(environment));
     return builder.build();
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
-    ProcessExecutorParams params = makeProcessExecutorParams();
+    ProcessExecutorParams params = makeProcessExecutorParams(context);
     SimpleProcessListener listener = new SimpleProcessListener();
 
     // TODO(markwang): parse output as needed

@@ -124,6 +124,7 @@ public interface ProcessExecutor {
    * Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}.
    */
   public interface LaunchedProcess {
+    boolean isAlive();
     OutputStream getOutputStream();
     InputStream getInputStream();
     InputStream getErrorStream();
@@ -139,6 +140,11 @@ public interface ProcessExecutor {
 
     public LaunchedProcessImpl(Process process) {
       this.process = process;
+    }
+
+    @Override
+    public boolean isAlive() {
+      return process.isAlive();
     }
 
     @Override

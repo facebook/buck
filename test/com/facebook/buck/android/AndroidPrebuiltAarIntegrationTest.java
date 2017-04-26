@@ -21,11 +21,12 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 
@@ -35,7 +36,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class AndroidPrebuiltAarIntegrationTest {
+public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
 
@@ -50,6 +51,7 @@ public class AndroidPrebuiltAarIntegrationTest {
         "android_prebuilt_aar",
         tmp);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test

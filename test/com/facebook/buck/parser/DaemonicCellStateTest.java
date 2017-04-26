@@ -29,26 +29,25 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class DaemonicCellStateTest {
 
-  @Rule
-  public TemporaryPaths tempDir = new TemporaryPaths();
-
   private ProjectFilesystem filesystem;
-  private Cell cell;
+  private Cell rootCell;
+  private Cell childCell;
   private DaemonicCellState state;
+  private DaemonicCellState childState;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
     state.putRawNodesIfNotPresentAndStripMetaEntries(
@@ -64,16 +63,20 @@ public class DaemonicCellStateTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
-    Path root = tempDir.getRoot().toRealPath();
-    filesystem = new ProjectFilesystem(root);
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Files.createDirectories(filesystem.resolve("../xplat"));
+    Files.createFile(filesystem.resolve("../xplat/.buckconfig"));
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
+        .setSections(ImmutableMap.of("repositories", ImmutableMap.of("xplat", "../xplat")))
         .build();
-    cell = new TestCellBuilder()
+    rootCell = new TestCellBuilder()
         .setFilesystem(filesystem)
         .setBuckConfig(config)
         .build();
-    state = new DaemonicCellState(cell, 1);
+    childCell = rootCell.getCell(filesystem.resolve("../xplat").toAbsolutePath());
+    state = new DaemonicCellState(rootCell, 1);
+    childState = new DaemonicCellState(childCell, 1);
   }
 
   @Test
@@ -87,36 +90,36 @@ public class DaemonicCellStateTest {
     // Make sure the cache has a raw node for this target.
     populateDummyRawNode(state, target);
 
-    cache.putComputedNodeIfNotPresent(cell, target, false);
+    cache.putComputedNodeIfNotPresent(rootCell, target, false);
     assertEquals(
         "Cached node was not found",
         Optional.of(false),
-        cache.lookupComputedNode(cell, target));
+        cache.lookupComputedNode(rootCell, target));
 
-    assertFalse(cache.putComputedNodeIfNotPresent(cell, target, true));
+    assertFalse(cache.putComputedNodeIfNotPresent(rootCell, target, true));
     assertEquals(
         "Previously cached node should not be updated",
         Optional.of(false),
-        cache.lookupComputedNode(cell, target));
+        cache.lookupComputedNode(rootCell, target));
   }
 
   @Test
   public void testCellNameDoesNotAffectInvalidation()
       throws BuildTargetException, IOException, InterruptedException {
-    Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
+    Cache<BuildTarget, Boolean> cache = childState.getOrCreateCache(Boolean.class);
 
-    Path targetPath = cell.getRoot().resolve("path/to/BUCK");
+    Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
     BuildTarget target = BuildTargetFactory.newInstance(
-        filesystem.getRootPath(),
+        childCell.getFilesystem().getRootPath(),
         "xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
-    populateDummyRawNode(state, target);
+    populateDummyRawNode(childState, target);
 
-    cache.putComputedNodeIfNotPresent(cell, target, true);
-    assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
+    cache.putComputedNodeIfNotPresent(childCell, target, true);
+    assertEquals(Optional.of(true), cache.lookupComputedNode(childCell, target));
 
-    state.putRawNodesIfNotPresentAndStripMetaEntries(
+    childState.putRawNodesIfNotPresentAndStripMetaEntries(
         targetPath,
         ImmutableSet.of(
             // Forms the target "//path/to:target"
@@ -126,11 +129,11 @@ public class DaemonicCellStateTest {
         ImmutableSet.of(),
         ImmutableMap.of(),
         ImmutableMap.of());
-    assertEquals("Still only one invalidated node", 1, state.invalidatePath(targetPath));
+    assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath));
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
-        cache.lookupComputedNode(cell, target));
+        cache.lookupComputedNode(childCell, target));
   }
 
 }

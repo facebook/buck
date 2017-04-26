@@ -19,18 +19,18 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -82,32 +82,34 @@ public class RuleKeyCacheRecycler<V> {
   }
 
   @Subscribe
-  public void onFilesystemChange(WatchEvent<?> event) {
-
+  public void onFilesystemChange(WatchmanPathEvent event) {
     // Currently, `WatchEvent`s only contain cell-relative paths, so we have no way of associating
     // them with a specific filesystem.  So, we assume the event can refer to any of the watched
     // filesystems and forward invalidations to all of them.
     for (ProjectFilesystem filesystem : watchedFilesystems) {
-      if (WatchEvents.isPathChangeEvent(event)) {
-        Path path = ((Path) event.context()).normalize();
-        LOG.verbose(
-            "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
-            path,
-            filesystem.getRootPath(),
-            event);
-        cache.invalidateInputs(
-            // As inputs to rule keys can be directories, make sure we also invalidate any
-            // directories containing this path.
-            IntStream.range(1, path.getNameCount() + 1)
-                .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
-                .collect(MoreCollectors.toImmutableList()));
-      } else {
-        LOG.verbose(
-            "invalidating filesystem at \"%s\" due to event (%s)",
-            filesystem.getRootPath(),
-            event);
-        cache.invalidateFilesystem(filesystem);
-      }
+      Path path = event.getPath().normalize();
+      LOG.verbose(
+          "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
+          path,
+          filesystem.getRootPath(),
+          event);
+      cache.invalidateInputs(
+          // As inputs to rule keys can be directories, make sure we also invalidate any
+          // directories containing this path.
+          IntStream.range(1, path.getNameCount() + 1)
+              .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
+              .collect(MoreCollectors.toImmutableList()));
+    }
+  }
+
+  @Subscribe
+  public void onFilesystemChange(WatchmanOverflowEvent event) {
+    for (ProjectFilesystem filesystem : watchedFilesystems) {
+      LOG.verbose(
+          "invalidating filesystem at \"%s\" due to event (%s)",
+          filesystem.getRootPath(),
+          event);
+      cache.invalidateFilesystem(filesystem);
     }
   }
 

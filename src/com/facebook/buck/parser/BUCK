@@ -3,9 +3,6 @@ java_immutables_library(
     srcs = [
         "AbstractParserConfig.java",
     ],
-    immutable_types = [
-        "ParserConfig",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -45,11 +42,6 @@ java_immutables_library(
         "TargetNodeSpec.java",
         "UnexpectedFlavorException.java",
     ],
-    immutable_types = [
-        "BuildFileSpec",
-        "BuildTargetSpec",
-        "TargetNodePredicateSpec",
-    ],
     tests = [
         "//test/com/facebook/buck/parser:integration",
         "//test/com/facebook/buck/parser:parser",
@@ -82,6 +74,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util:watchman",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//third-party/java/concurrent-locks:concurrent-locks",
         "//third-party/java/jackson:jackson-annotations",

@@ -1,11 +1,6 @@
 standard_java_library(
     name = "slb",
-    immutable_types = [
-        "ClientSideSlbConfig",
-        "PerServerData",
-        "ServerHealthManagerEventData",
-        "ThriftOverHttpServiceConfig",
-    ],
+    has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/counters:counters",

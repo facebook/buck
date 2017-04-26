@@ -4,9 +4,6 @@ java_immutables_library(
         ["*.java"],
         excludes = ["*Test.java"],
     ),
-    immutable_types = [
-        "FakeListeningProcessState",
-    ],
     visibility = [
         "//test/...",
     ],

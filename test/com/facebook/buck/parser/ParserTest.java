@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
-import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -52,18 +51,20 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.WatchmanOverflowEvent;
+import com.facebook.buck.util.WatchmanPathEvent;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -94,8 +95,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -226,7 +225,7 @@ public class ParserTest {
         .setBuckConfig(config)
         .build();
 
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
     broadcastEventListener.addEventBus(eventBus);
     parser = new Parser(
@@ -556,8 +555,7 @@ public class ParserTest {
         executorService);
 
     // Process event.
-    WatchEvent<Object> event = WatchEventsForTests.createOverflowEvent();
-    parser.onFileSystemChange(event);
+    parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(
@@ -582,7 +580,7 @@ public class ParserTest {
         executorService);
 
     // Send overflow event.
-    parser.onFileSystemChange(WatchEventsForTests.createOverflowEvent());
+    parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(
@@ -597,9 +595,10 @@ public class ParserTest {
 
     // Send a "file added" event.
     parser.onFileSystemChange(
-        createPathEvent(
-            Paths.get("java/com/facebook/Something.java"),
-            StandardWatchEventKinds.ENTRY_CREATE));
+        WatchmanPathEvent.of(
+            filesystem.getRootPath(),
+            WatchmanPathEvent.Kind.CREATE,
+            Paths.get("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(
@@ -656,10 +655,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile),
-        StandardWatchEventKinds.ENTRY_CREATE);
-    parser.onFileSystemChange(event);
+    parser.onFileSystemChange(WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -687,9 +686,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -718,9 +718,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -749,9 +750,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -782,9 +784,10 @@ public class ParserTest {
     assertEquals("Should have parsed at all.", 1, counter.calls);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -813,9 +816,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -844,9 +848,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -875,9 +880,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -906,9 +912,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -937,9 +944,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -968,9 +976,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -999,9 +1008,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1031,9 +1041,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        Paths.get("java/com/facebook/SomeClass.java"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("java/com/facebook/SomeClass.java"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1080,8 +1091,10 @@ public class ParserTest {
 
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/SomeClass.java"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("java/com/facebook/SomeClass.java"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1110,8 +1123,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/SomeClass.java"),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        Paths.get("java/com/facebook/SomeClass.java"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1141,8 +1156,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/SomeClass.java"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("java/com/facebook/SomeClass.java"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1171,8 +1188,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/MumbleSwp.Java.swp"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1201,8 +1220,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/MumbleSwp.Java.swp"),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1231,8 +1252,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/MumbleSwp.Java.swp"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1261,8 +1284,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("SomeClass.java__backup"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("SomeClass.java__backup"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1291,8 +1316,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(Paths.get("SomeClass.java__backup"),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        Paths.get("SomeClass.java__backup"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1321,9 +1348,10 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(
-        Paths.get("SomeClass.java__backup"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent event = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("SomeClass.java__backup"));
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1483,13 +1511,15 @@ public class ParserTest {
     // the cache entry for //bar:bar#src.
     Files.delete(testFooBuckFile);
     Files.write(testBarBuckFile, "java_library(name = 'bar')\n".getBytes(UTF_8));
-    WatchEvent<Path> deleteEvent = createPathEvent(
-        Paths.get("foo").resolve("BUCK"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent deleteEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("foo").resolve("BUCK"));
     parser.onFileSystemChange(deleteEvent);
-    WatchEvent<Path> modifyEvent = createPathEvent(
-        Paths.get("bar").resolve("BUCK"),
-        StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchmanPathEvent modifyEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.MODIFY,
+        Paths.get("bar").resolve("BUCK"));
     parser.onFileSystemChange(modifyEvent);
 
     parser.buildTargetGraph(
@@ -1546,9 +1576,10 @@ public class ParserTest {
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     Files.delete(testBarJavaFile);
-    WatchEvent<Path> deleteEvent = createPathEvent(
-        Paths.get("foo/Bar.java"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent deleteEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("foo/Bar.java"));
     parser.onFileSystemChange(deleteEvent);
 
     HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1574,12 +1605,14 @@ public class ParserTest {
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     Files.move(testFooJavaFile, testFooJavaFile.resolveSibling("Bar.java"));
-    WatchEvent<Path> deleteEvent = createPathEvent(
-        Paths.get("foo/Foo.java"),
-        StandardWatchEventKinds.ENTRY_DELETE);
-    WatchEvent<Path> createEvent = createPathEvent(
-        Paths.get("foo/Bar.java"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent deleteEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("foo/Foo.java"));
+    WatchmanPathEvent createEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("foo/Bar.java"));
     parser.onFileSystemChange(deleteEvent);
     parser.onFileSystemChange(createEvent);
 
@@ -1757,9 +1790,10 @@ public class ParserTest {
     }
 
     tempDir.newFile("bar/Baz.java");
-    WatchEvent<Path> createEvent = createPathEvent(
-        Paths.get("bar/Baz.java"),
-        StandardWatchEventKinds.ENTRY_CREATE);
+    WatchmanPathEvent createEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.CREATE,
+        Paths.get("bar/Baz.java"));
     parser.onFileSystemChange(createEvent);
 
     {
@@ -1821,9 +1855,10 @@ public class ParserTest {
     }
 
     Files.delete(bazSourceFile);
-    WatchEvent<Path> deleteEvent = createPathEvent(
-        Paths.get("bar/Baz.java"),
-        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchmanPathEvent deleteEvent = WatchmanPathEvent.of(
+        filesystem.getRootPath(),
+        WatchmanPathEvent.Kind.DELETE,
+        Paths.get("bar/Baz.java"));
     parser.onFileSystemChange(deleteEvent);
 
     {

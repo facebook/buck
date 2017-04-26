@@ -17,32 +17,21 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.IosReactNativeLibraryDescription;
-import com.facebook.buck.js.JsBundleDescription;
-import com.facebook.buck.js.JsBundleOutputs;
-import com.facebook.buck.js.ReactNativeBundle;
-import com.facebook.buck.js.ReactNativeLibraryArgs;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class AppleResources {
 
   @VisibleForTesting
-  public static final ImmutableSet<Class<? extends Description<?>>>
-      APPLE_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
-          AppleResourceDescription.class,
-          IosReactNativeLibraryDescription.class,
-          JsBundleDescription.class);
+  public static final Predicate<TargetNode<?, ?>> IS_APPLE_BUNDLE_RESOURCE_NODE =
+      node -> node.getDescription() instanceof HasAppleBundleResourcesDescription;
 
   // Utility class, do not instantiate.
   private AppleResources() { }
@@ -85,35 +74,18 @@ public class AppleResources {
             cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
-
+            IS_APPLE_BUNDLE_RESOURCE_NODE);
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?, ?> resourceNode : resourceNodes) {
-      Object constructorArg = resourceNode.getConstructorArg();
-      if (constructorArg instanceof AppleResourceDescription.Arg) {
-        AppleResourceDescription.Arg appleResource = (AppleResourceDescription.Arg) constructorArg;
-        builder.addAllResourceDirs(appleResource.dirs);
-        builder.addAllResourceFiles(appleResource.files);
-        builder.addAllResourceVariantFiles(appleResource.variants);
-      } else if (constructorArg instanceof JsBundleDescription.Arg) {
-        final JsBundleOutputs bundle = resolver.getRuleWithType(
-            resourceNode.getBuildTarget(),
-            JsBundleOutputs.class);
-        builder.addDirsContainingResourceDirs(
-            bundle.getSourcePathToOutput(),
-            bundle.getSourcePathToResources());
-      } else {
-        Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
-        BuildTarget buildTarget = resourceNode.getBuildTarget();
-        builder.addDirsContainingResourceDirs(
-            new ExplicitBuildTargetSourcePath(
-                buildTarget,
-                ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
-            new ExplicitBuildTargetSourcePath(
-                buildTarget,
-                ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
-      }
+      @SuppressWarnings("unchecked")
+      TargetNode<Object, ?> node = (TargetNode<Object, ?>) resourceNode;
+
+      @SuppressWarnings("unchecked")
+      HasAppleBundleResourcesDescription<Object> description =
+          (HasAppleBundleResourcesDescription<Object>) node.getDescription();
+
+      description.addAppleBundleResources(builder, node, filesystem, resolver);
     }
     return builder.build();
   }

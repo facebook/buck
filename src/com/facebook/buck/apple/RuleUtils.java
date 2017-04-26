@@ -43,6 +43,7 @@ public class RuleUtils {
       Function<SourcePath, Path> resolver,
       Iterable<SourceWithFlags> sources,
       Iterable<SourcePath> extraXcodeSources,
+      Iterable<SourcePath> extraXcodeFiles,
       Iterable<SourcePath> publicHeaders,
       Iterable<SourcePath> privateHeaders) {
     Path rootPath = Paths.get("root");
@@ -56,6 +57,11 @@ public class RuleUtils {
     for (SourcePath sourcePath : extraXcodeSources) {
       Path path = rootPath.resolve(resolver.apply(sourcePath));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(SourceWithFlags.of(sourcePath));
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+    }
+    for (SourcePath sourcePath : extraXcodeFiles) {
+      Path path = rootPath.resolve(resolver.apply(sourcePath));
+      GroupedSource groupedSource = GroupedSource.ofIgnoredSource(sourcePath);
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {

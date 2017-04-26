@@ -17,6 +17,9 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
@@ -110,7 +113,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       IjLibrary.Builder libraryBuilder = IjLibrary.builder();
       rule.applyRule(targetNode, libraryBuilder);
       libraryBuilder.setName(libraryName);
-      libraryBuilder.setTargets(ImmutableSet.of(targetNode));
+      libraryBuilder.setTargets(ImmutableSet.of(targetNode.getBuildTarget()));
       return libraryBuilder.build();
     });
   }

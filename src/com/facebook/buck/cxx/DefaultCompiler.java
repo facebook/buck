@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public abstract class DefaultCompiler implements Compiler {
@@ -39,8 +40,10 @@ public abstract class DefaultCompiler implements Compiler {
   }
 
   @Override
-  public Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir) {
-    return Optional.empty();
+  public ImmutableList<String> getFlagsForReproducibleBuild(
+      String altCompilationDir,
+      Path currentCellPath) {
+    return ImmutableList.of();
   }
 
   @Override

@@ -383,9 +383,6 @@ public class ProjectIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--config",
-        "project.xcode_focus_disable_build_with_buck=true",
-        "--build-with-buck",
         "--focus",
         "//Libraries/Dep1:Dep1_1#iphonesimulator-x86_64 //Libraries/Dep2:Dep2",
         "//Apps:TestApp#iphonesimulator-x86_64");
@@ -405,9 +402,6 @@ public class ProjectIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--config",
-        "project.xcode_focus_disable_build_with_buck=true",
-        "--build-with-buck",
         "--focus",
         "//Libraries/Dep1:",
         "//Apps:workspace");
@@ -427,9 +421,6 @@ public class ProjectIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--config",
-        "project.xcode_focus_disable_build_with_buck=true",
-        "--build-with-buck",
         "--focus",
         "bar//Dep2:",
         "//Apps:workspace");

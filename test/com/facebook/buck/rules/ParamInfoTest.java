@@ -36,8 +36,7 @@ import java.util.Optional;
 public class ParamInfoTest {
 
   private Path testPath = Paths.get("path");
-  private TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-  );
+  private TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
   public static class WithUpperBound<X extends SourcePath> {
     public X path;

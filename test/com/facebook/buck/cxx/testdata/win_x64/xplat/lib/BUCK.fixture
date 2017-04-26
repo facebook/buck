@@ -1,0 +1,21 @@
+cxx_library(
+    name='lib',
+    srcs = [
+        'src/lib.c'
+    ],
+    exported_headers = {
+        'lib.h': 'include/lib.h',
+    },
+    include_dirs = ['include'],
+    link_style = 'static',
+    compiler_flags = WINDOWS_COMPILE_FLAGS,
+    linker_flags = WINDOWS_LINK_FLAGS,
+    preferred_linkage = 'static',
+    visibility = ['PUBLIC'],
+)
+
+genrule(
+  name = 'out',
+  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,static)" %OUT%',
+  out = 'lib.lib',
+)

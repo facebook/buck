@@ -33,6 +33,7 @@ java_library(
         "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",
@@ -96,9 +97,6 @@ java_immutables_library(
     srcs = [
         "AbstractWorkerJobParams.java",
     ],
-    immutable_types = [
-        "WorkerJobParams",
-    ],
     visibility = ["PUBLIC"],
 )
 
@@ -132,6 +130,7 @@ java_library(
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
@@ -191,10 +190,6 @@ java_immutables_library(
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",
     ],
-    immutable_types = [
-        "WorkerProcessCommand",
-        "WorkerJobResult",
-    ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
@@ -205,6 +200,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//third-party/java/gson:gson",
     ],
 )

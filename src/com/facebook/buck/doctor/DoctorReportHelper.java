@@ -36,11 +36,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +55,8 @@ import okhttp3.Response;
 public class DoctorReportHelper {
 
   private static final Logger LOG = Logger.get(DoctorReportHelper.class);
+
+  private static final int ARGS_MAX_CHARS = 60;
   private static final String WARNING_FILE_TEMPLATE = "Command %s does not contain a %s. Some " +
       "information will not be available";
   private static final String DECODE_FAIL_TEMPLATE = "Decoding remote response failed. Reason: %s";
@@ -84,32 +84,19 @@ public class DoctorReportHelper {
       return Optional.empty();
     }
 
-    // Remove commands with unknown args or invocations of buck rage.
-    buildLogs.removeIf(
-        entry -> !(entry.getCommandArgs().isPresent() &&
-            !entry.getCommandArgs().get().matches("rage|doctor|server"))
-    );
-
-    if (buildLogs.isEmpty()) {
-      return Optional.empty();
-    }
-
-    // Sort the remaining logs based on time, reverse order.
-    Collections.sort(
-        buildLogs,
-        Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
-
     return input.selectOne(
         "Which buck invocation would you like to report?",
         buildLogs,
         entry -> {
           Pair<Double, SizeUnit> humanReadableSize =
               SizeUnit.getHumanReadableSize(entry.getSize(), SizeUnit.BYTES);
+          String cmdArgs = entry.getCommandArgs().orElse("unknown command");
+          cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
 
           return String.format(
               "\t%s\tbuck [%s] %s (%.2f %s)",
               entry.getLastModifiedTime(),
-              entry.getCommandArgs().orElse("unknown command"),
+              cmdArgs,
               prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
@@ -194,8 +181,6 @@ public class DoctorReportHelper {
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
       return createErrorDoctorEndpointResponse("Request was not successful.");
-    } catch (JsonProcessingException e) {
-      return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     }
@@ -269,9 +254,7 @@ public class DoctorReportHelper {
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {
     console.printErrorText(errorMessage);
     LOG.error(errorMessage);
-    return DoctorEndpointResponse.of(
-        Optional.of(errorMessage),
-        ImmutableList.of());
+    return DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
   }
 
   @VisibleForTesting

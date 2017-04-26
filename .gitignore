@@ -42,7 +42,6 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 /.idea/uiDesigner.xml
 /.idea/workspace.xml
 /.idea/misc.xml
-/.idea/runConfigurations
 /.idea/copyright/profiles_settings.xml
 src/com/facebook/buck/intellij/ideabuck/.idea/ant.xml
 src/com/facebook/buck/intellij/ideabuck/.idea/dictionaries

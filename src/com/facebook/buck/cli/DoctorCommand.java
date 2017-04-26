@@ -31,13 +31,8 @@ import com.facebook.buck.rage.DefectSubmitResult;
 import com.facebook.buck.rage.DoctorInteractiveReport;
 import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.UserInput;
-import com.facebook.buck.rage.VcsInfoCollector;
 import com.facebook.buck.rage.WatchmanDiagReportCollector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
-import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
-import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
-import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedReader;
@@ -89,12 +84,6 @@ public class DoctorCommand extends AbstractCommand {
       UserInput userInput,
       BuildLogEntry entry) throws IOException, InterruptedException {
     RageConfig rageConfig = RageConfig.of(params.getBuckConfig());
-    VersionControlCmdLineInterface versionControlCmdLineInterface =
-        new DelegatingVersionControlCmdLineInterface(
-            params.getCell().getFilesystem().getRootPath(),
-            new PrintStreamProcessExecutorFactory(),
-            new VersionControlBuckConfig(params.getBuckConfig()).getHgCmd(),
-            params.getBuckConfig().getEnvironment());
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
@@ -114,7 +103,7 @@ public class DoctorCommand extends AbstractCommand {
         params.getConsole(),
         userInput,
         params.getBuildEnvironmentDescription(),
-        VcsInfoCollector.create(versionControlCmdLineInterface),
+        params.getVersionControlStatsGenerator(),
         rageConfig,
         new DefaultExtraInfoCollector(
             rageConfig,

@@ -76,7 +76,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
   /**
    * @return test labels.
    */
-  public abstract ImmutableList<Label> getLabels();
+  public abstract ImmutableList<String> getLabels();
 
   /**
    * @return test contacts.

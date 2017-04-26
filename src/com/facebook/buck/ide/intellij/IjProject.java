@@ -16,6 +16,11 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.aggregation.DefaultAggregationModuleFactory;
+import com.facebook.buck.ide.intellij.lang.java.ParsingJavaPackageFinder;
+import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
+import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -82,6 +87,10 @@ public class IjProject {
         projectFilesystem,
         projectConfig,
         requiredBuildTargets);
+    SupportedTargetTypeRegistry typeRegistry = new SupportedTargetTypeRegistry(
+        projectFilesystem,
+        moduleFactoryResolver,
+        projectConfig);
     IjModuleGraph moduleGraph = IjModuleGraphFactory.from(
         projectFilesystem,
         projectConfig,
@@ -89,8 +98,8 @@ public class IjProject {
         libraryFactory,
         new DefaultIjModuleFactory(
             projectFilesystem,
-            moduleFactoryResolver,
-            projectConfig));
+            typeRegistry),
+        new DefaultAggregationModuleFactory(typeRegistry));
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,
         projectFilesystem,
@@ -120,6 +129,10 @@ public class IjProject {
         IjProjectPaths.LIBRARIES_DIR,
         projectConfig.isCleanerEnabled(),
         projectConfig.isRemovingUnusedLibrariesEnabled());
+
+    if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
+      cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
+    }
 
     return requiredBuildTargets.build();
   }

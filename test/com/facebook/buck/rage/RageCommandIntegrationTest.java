@@ -38,6 +38,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -78,7 +79,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testRageNonInteractiveReport() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     workspace.runBuckCommand("rage", "--non-interactive").assertSuccess();
@@ -87,7 +88,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testUpload() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     final AtomicReference<String> requestMethod = new AtomicReference<>();
@@ -135,7 +136,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+          false,
           rageConfig,
           Optional::empty);
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult().get();
@@ -168,7 +170,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testExtraInfo() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
     RageConfig rageConfig = createRageConfig(
         0,
@@ -182,7 +184,8 @@ public class RageCommandIntegrationTest {
         filesystem,
         new TestConsole(),
         TestBuildEnvironmentDescription.INSTANCE,
-        VcsInfoCollector.create(new NoOpCmdLineInterface()),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        false,
         rageConfig,
         new DefaultExtraInfoCollector(rageConfig, filesystem, new DefaultProcessExecutor(console)));
     automatedReport.collectAndSubmitResult();
@@ -197,7 +200,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testUploadFailure() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
@@ -231,7 +234,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+          false,
           rageConfig,
           Optional::empty);
 
@@ -247,7 +251,7 @@ public class RageCommandIntegrationTest {
   @Test
   public void testJsonUpload() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "interactive_report", temporaryFolder);
+        this, "report", temporaryFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
@@ -295,7 +299,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new TestConsole(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+          false,
           rageConfig,
           Optional::empty);
 

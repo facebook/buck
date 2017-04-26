@@ -44,6 +44,11 @@ abstract class AbstractProjectBuildFileParserOptions {
   abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   @Value.Default
+  public String getCellName() {
+    return "";
+  }
+
+  @Value.Default
   public boolean getUseWatchmanGlob() {
     return false;
   }

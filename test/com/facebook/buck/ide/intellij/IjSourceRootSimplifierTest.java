@@ -18,6 +18,11 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;

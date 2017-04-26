@@ -33,7 +33,9 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -43,10 +45,17 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Buildable that takes in a list of {@link HasAndroidResourceDeps} and for each of these rules,
@@ -229,6 +238,8 @@ public class DummyRDotJava extends AbstractBuildRule
             /* manifestFile */ null));
     buildableContext.recordArtifact(outputJar);
 
+    steps.add(new CheckDummyRJarNotEmptyStep());
+
     steps.add(
         new CalculateAbiFromClassesStep(
             buildableContext,
@@ -237,6 +248,55 @@ public class DummyRDotJava extends AbstractBuildRule
             pathToAbiOutputFile));
 
     return steps.build();
+  }
+
+  private class CheckDummyRJarNotEmptyStep implements Step {
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      try (ZipFile jar = new ZipFile(getProjectFilesystem().resolve(outputJar).toFile())) {
+        for (ZipEntry zipEntry : Collections.list(jar.entries())) {
+          if (zipEntry.getName().endsWith(".class")) {
+            // We found a class, so the jar is probably fine.
+            return StepExecutionResult.SUCCESS;
+          }
+        }
+      }
+
+      // Gross copy-paste from above.  Expect this to be deleted shortly
+      // once we start compiling directly from RAM to JAR.
+      Path pathToSrcsList =
+          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+
+      StringBuilder sb = new StringBuilder();
+      getProjectFilesystem().walkRelativeFileTree(pathToSrcsList, new SimpleFileVisitor<Path>() {
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+          sb.append(file);
+          sb.append(' ');
+          sb.append(attrs.size());
+          sb.append('\n');
+          return super.visitFile(file, attrs);
+        }
+      });
+
+      throw new RuntimeException(
+          String.format(
+              "Dummy R.java JAR %s has no classes.  Possible corrupt output.  Is disk full?  " +
+              "Source files:\n%s",
+              outputJar,
+              sb));
+    }
+
+    @Override
+    public String getShortName() {
+      return "check_dummy_r_jar_not_empty";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "check_dummy_r_jar_not_empty " + outputJar;
+    }
   }
 
   public static Path getRDotJavaSrcFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {

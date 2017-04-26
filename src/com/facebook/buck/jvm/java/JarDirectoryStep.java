@@ -130,21 +130,16 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
-          filesystem,
-          pathToOutputFile,
-          entriesToJar,
-          Optional.ofNullable(mainClass),
-          Optional.ofNullable(manifestFile),
-          mergeManifests,
-          blacklist,
-          new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
-          context.getStdErr()));
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
+        filesystem,
+        pathToOutputFile,
+        entriesToJar,
+        Optional.ofNullable(mainClass),
+        Optional.ofNullable(manifestFile),
+        mergeManifests,
+        blacklist,
+        new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
+        context.getStdErr()));
   }
 }

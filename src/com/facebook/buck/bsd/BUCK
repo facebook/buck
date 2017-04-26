@@ -1,8 +1,6 @@
 standard_java_library(
     name = "bsd",
-    immutable_types = [
-        "UnixArchiveEntry",
-    ],
+    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/bsd:bsd",
     ],

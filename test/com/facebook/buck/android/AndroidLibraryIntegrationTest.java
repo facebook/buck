@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.kotlin.KotlinTestAssumptions;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -31,7 +32,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class AndroidLibraryIntegrationTest {
+public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
@@ -43,6 +44,7 @@ public class AndroidLibraryIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test

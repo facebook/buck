@@ -16,6 +16,10 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjLibrary;
+import com.facebook.buck.ide.intellij.model.IjModule;
+import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -42,12 +46,21 @@ public class IjModuleGraph {
     return deps.keySet();
   }
 
-  public ImmutableSet<IjModule> getModuleNodes() {
+  public ImmutableSet<IjModule> getModules() {
     return deps
         .keySet()
         .stream()
         .filter(dep -> dep instanceof IjModule)
-        .map(module -> (IjModule) module)
+        .map(IjModule.class::cast)
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
+  public ImmutableSet<IjLibrary> getLibraries() {
+    return deps
+        .keySet()
+        .stream()
+        .filter(node -> node instanceof IjLibrary)
+        .map(IjLibrary.class::cast)
         .collect(MoreCollectors.toImmutableSet());
   }
 

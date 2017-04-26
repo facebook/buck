@@ -44,5 +44,4 @@ public interface TargetNodeSpec {
    *     explicit {@link TargetNode}.
    */
   BuildFileSpec getBuildFileSpec();
-
 }
