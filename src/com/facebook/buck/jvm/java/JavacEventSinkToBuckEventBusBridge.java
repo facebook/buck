@@ -160,6 +160,11 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
     eventBus.post(finished);
   }
 
+  @Override
+  public BuckEventBus getEventBus() {
+    return eventBus;
+  }
+
   private String getKeyForAnnotationProcessingEvent(
       BuildTarget buildTarget,
       String annotationProcessorName,

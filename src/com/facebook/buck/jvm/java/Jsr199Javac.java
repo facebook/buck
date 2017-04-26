@@ -289,7 +289,11 @@ public abstract class Jsr199Javac implements Javac {
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             StubGenerator stubGenerator =
-                new StubGenerator(SourceVersion.RELEASE_8, javacTask.getElements(), fileManager);
+                new StubGenerator(
+                    SourceVersion.RELEASE_8,
+                    javacTask.getElements(),
+                    fileManager,
+                    context.getEventSink().getEventBus());
             stubGenerator.generate(topLevelTypes);
           });
     }

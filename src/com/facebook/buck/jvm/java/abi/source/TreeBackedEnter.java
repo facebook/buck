@@ -47,7 +47,7 @@ class TreeBackedEnter {
   }
 
   public void enter(CompilationUnitTree compilationUnit) {
-    try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("enter")) {
+    try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.enter")) {
       treeScanner.scan(compilationUnit, null);
     }
   }

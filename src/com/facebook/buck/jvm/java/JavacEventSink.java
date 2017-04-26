@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.logging.Level;
@@ -52,4 +53,6 @@ public interface JavacEventSink {
       String operation,
       int round,
       boolean isLastRound);
+
+  BuckEventBus getEventBus();
 }
