@@ -104,6 +104,12 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void shouldDisableAnnotationProcessingIfNoProcessorsSpecified() {
+    JavacOptions options = createStandardBuilder().build();
+    assertOptionFlags(options, hasItem("proc:none"));
+  }
+
+  @Test
   public void sourceAndTarget7ByDefault() {
     JavacOptions options = createStandardBuilder().build();
 

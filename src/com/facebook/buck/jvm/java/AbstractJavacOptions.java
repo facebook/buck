@@ -208,6 +208,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       if (annotationProcessingParams.getProcessOnly()) {
         optionsConsumer.addFlag("proc:only");
       }
+    } else {
+      // Disable automatic annotation processor lookup
+      optionsConsumer.addFlag("proc:none");
     }
 
     // Add extra arguments.
