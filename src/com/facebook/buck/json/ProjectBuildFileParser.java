@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.CountingInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +79,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
+  @Nullable private CountingInputStream buckPyProcessInput;
   @Nullable private JsonGenerator buckPyProcessJsonGenerator;
   @Nullable private JsonParser buckPyProcessJsonParser;
 
@@ -216,6 +218,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
           params.getCommand(), params.getEnvironment());
       buckPyProcess = processExecutor.launchProcess(params);
       LOG.debug("Started process %s successfully", buckPyProcess);
+      buckPyProcessInput = new CountingInputStream(buckPyProcess.getInputStream());
       buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
       // We have to wait to create the JsonParser until after we write our
       // first request, because Jackson "helpfully" synchronously reads
@@ -371,6 +374,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     // Check isInitialized implications (to avoid Eradicate warnings).
     Preconditions.checkNotNull(buckPyProcess);
+    Preconditions.checkNotNull(buckPyProcessInput);
+    long alreadyReadBytes = buckPyProcessInput.getCount();
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
     buckEventBus.post(parseBuckFileStarted);
@@ -422,7 +427,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
         // Since buck.py doesn't write any data until after it receives
         // a query, creating the JsonParser any earlier than this would
         // hang indefinitely.
-        buckPyProcessJsonParser = ObjectMappers.createParser(buckPyProcess.getInputStream());
+        buckPyProcessJsonParser = ObjectMappers.createParser(buckPyProcessInput);
       }
       LOG.verbose("Parsing output of process %s...", buckPyProcess);
       BuildFilePythonResult resultObject;
@@ -445,7 +450,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
       }
       return values;
     } finally {
-      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, values, profile));
+      buckEventBus.post(
+          ParseBuckFileEvent.finished(
+              parseBuckFileStarted,
+              values,
+              buckPyProcessInput.getCount() - alreadyReadBytes,
+              profile));
     }
   }
 
