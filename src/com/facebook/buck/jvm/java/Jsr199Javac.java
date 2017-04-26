@@ -290,7 +290,7 @@ public abstract class Jsr199Javac implements Javac {
           topLevelTypes -> {
             StubGenerator stubGenerator =
                 new StubGenerator(
-                    SourceVersion.RELEASE_8,
+                    getTargetVersion(options),
                     javacTask.getElements(),
                     fileManager,
                     context.getEventSink().getEventBus());
@@ -382,6 +382,38 @@ public abstract class Jsr199Javac implements Javac {
       }
       return 1;
     }
+  }
+
+  private static SourceVersion getTargetVersion(Iterable<String> options) {
+    boolean foundTarget = false;
+    for (String option : options) {
+      if (option.equals("-target")) {
+        foundTarget = true;
+      } else if (foundTarget) {
+        switch (option) {
+          case "1.3":
+            return SourceVersion.RELEASE_3;
+          case "1.4":
+            return SourceVersion.RELEASE_4;
+          case "1.5":
+          case "5":
+            return SourceVersion.RELEASE_5;
+          case "1.6":
+          case "6":
+            return SourceVersion.RELEASE_6;
+          case "1.7":
+          case "7":
+            return SourceVersion.RELEASE_7;
+          case "1.8":
+          case "8":
+            return SourceVersion.RELEASE_8;
+          default:
+            throw new HumanReadableException("target %s not supported", option);
+        }
+      }
+    }
+
+    throw new AssertionError("Unreachable code");
   }
 
   private void close(Iterable<? extends JavaFileObject> compilationUnits) {
