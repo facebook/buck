@@ -16,6 +16,8 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
+import com.facebook.buck.ide.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
@@ -58,10 +60,27 @@ public class AndroidLibraryModuleRule
       context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
     }
 
+    context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
+
     IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
     Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);
     if (manifestPath.isPresent()) {
       builder.setManifestPath(manifestPath.get());
+    }
+  }
+
+  @Override
+  public void applyDuringAggregation(
+      AggregationContext context, TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
+    super.applyDuringAggregation(context, targetNode);
+
+    Optional<String> languageLevel = JavaLibraryRuleHelper.getLanguageLevel(
+        projectConfig,
+        targetNode);
+    if (languageLevel.isPresent()) {
+      context.addAggregationKey(
+          AggregationKeys.JAVA_LANGUAGE_LEVEL,
+          languageLevel);
     }
   }
 
