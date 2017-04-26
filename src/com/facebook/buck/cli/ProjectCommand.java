@@ -26,8 +26,10 @@ import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.ide.intellij.IjProject;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
@@ -44,14 +46,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
@@ -97,6 +100,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -762,6 +766,9 @@ public class ProjectCommand extends BuildCommand {
       targets = passedInTargetsSet;
     }
 
+    LazyActionGraph lazyActionGraph =
+        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), params.getBuckEventBus());
+
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (final BuildTarget inputTarget : targets) {
@@ -799,13 +806,7 @@ public class ProjectCommand extends BuildCommand {
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
               params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-              input ->
-                  ActionGraphCache.getFreshActionGraph(
-                          params.getBuckEventBus(),
-                          targetGraphAndTargets
-                              .getTargetGraph()
-                              .getSubgraph(ImmutableSet.of(input)))
-                      .getResolver(),
+              lazyActionGraph::getBuildRuleResolverWhileRequiringSubgraph,
               params.getBuckEventBus(),
               halideBuckConfig,
               cxxBuckConfig,
@@ -1199,6 +1200,45 @@ public class ProjectCommand extends BuildCommand {
     @Nullable
     public String getDefaultMetaVariable() {
       return null;
+    }
+  }
+
+  /**
+   * An action graph where subtrees are populated as needed.
+   *
+   * <p>This is useful when only select sub-graphs of the action graph needs to be generated, but
+   * the subgraph is not known at this point in time. The synchronization and bottom-up traversal is
+   * necessary as this will be accessed from multiple threads during project generation, and
+   * BuildRuleResolver is not 100% thread safe when it comes to mutations.
+   */
+  @ThreadSafe
+  private static class LazyActionGraph {
+    private final TargetGraph targetGraph;
+    private final BuildRuleResolver resolver;
+
+    public LazyActionGraph(TargetGraph targetGraph, BuckEventBus buckEventBus) {
+      this.targetGraph = targetGraph;
+      this.resolver =
+          new BuildRuleResolver(
+              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
+    }
+
+    public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {
+      TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
+
+      try {
+        synchronized (this) {
+          new AbstractBottomUpTraversal<TargetNode<?, ?>, NoSuchBuildTargetException>(subgraph) {
+            @Override
+            public void visit(TargetNode<?, ?> node) throws NoSuchBuildTargetException {
+              resolver.requireRule(node.getBuildTarget());
+            }
+          }.traverse();
+        }
+      } catch (NoSuchBuildTargetException e) {
+        throw new HumanReadableException(e);
+      }
+      return resolver;
     }
   }
 }
