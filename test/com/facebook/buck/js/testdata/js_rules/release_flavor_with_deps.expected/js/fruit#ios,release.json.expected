@@ -1,4 +1,4 @@
-library --root @
+library --platform ios --root @
 optimize --platform ios
 transform --filename js/apple.js
 var apple;

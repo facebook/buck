@@ -64,7 +64,8 @@ public class JsLibrary extends AbstractBuildRule {
 
     final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
     final String jobArgs = String.format(
-        "library %s --root %s --out %s %s",
+        "library %s %s --root %s --out %s %s",
+        JsFlavors.PLATFORM_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
         JsUtil.resolveMapJoin(libraryDependencies, sourcePathResolver, p -> "--lib " + p),
         getProjectFilesystem().getRootPath(),
         outputPath,
