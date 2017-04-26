@@ -959,7 +959,7 @@ public class StubJarTest {
   }
 
   @Test
-  public void doesNotStubReferencesToInnerClassesOfOtherTypes() throws IOException {
+  public void stubsReferencesToInnerClassesOfOtherTypes() throws IOException {
     notYetImplementedForSource();
     JarPaths paths =
         createFullAndStubJars(
