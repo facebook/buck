@@ -112,7 +112,7 @@ public class Aapt2Link extends AbstractBuildRule {
             compileRules
                 .stream()
                 .map(Aapt2Compile::getSourcePathToOutput)
-                .map(context.getSourcePathResolver()::getRelativePath)));
+                .map(context.getSourcePathResolver()::getAbsolutePath)));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     steps.add(
