@@ -192,7 +192,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -569,7 +569,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -750,7 +750,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1028,7 +1028,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1278,7 +1278,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1542,7 +1542,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1789,7 +1789,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(parseStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2207,7 +2207,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(parseStarted, 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             200L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

@@ -20,6 +20,7 @@ import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -84,9 +85,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -1979,6 +1982,57 @@ public class ParserTest {
             BuildTarget.builder(cellRoot, "//lib", "lib")
                 .addFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"))
                 .build()));
+  }
+
+  @Test
+  public void countsParsedBytes() throws Exception {
+    Path buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    byte[] bytes =
+        ("genrule(" + "name='gen'," + "out='generated', " + "cmd='touch ${OUT}')").getBytes(UTF_8);
+    Files.write(buckFile, bytes);
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).build();
+
+    final List<ParseEvent.Finished> events = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onParseFinished(ParseEvent.Finished event) {
+        events.add(event);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    eventBus.register(eventListener);
+
+    parser.buildTargetGraphForTargetNodeSpecs(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableList.of(
+            AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
+        /* ignoreBuckAutodepsFiles */ false,
+        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
+
+    // The read bytes are dependent on the serialization format of the parser, and the absolute path
+    // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
+    // minimum.
+    assertThat(
+        Iterables.getOnlyElement(events).getProcessedBytes(),
+        greaterThanOrEqualTo((long) bytes.length));
+
+    // The value should be cached, so no bytes are read when re-computing.
+    events.clear();
+    parser.buildTargetGraphForTargetNodeSpecs(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableList.of(
+            AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
+        /* ignoreBuckAutodepsFiles */ false,
+        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
+    assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
 
   @Test

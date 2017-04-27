@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -68,12 +69,16 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
-      final Cell cell, final Path buildFile, final ListeningExecutorService executorService) {
+      final Cell cell,
+      final Path buildFile,
+      AtomicLong processedBytes,
+      final ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     return getResourcePoolForCell(cell)
         .scheduleOperationWithResource(
-            parser -> ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile)),
+            parser ->
+                ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile, processedBytes)),
             executorService);
   }
 

@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 /**
@@ -341,9 +342,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public List<Map<String, Object>> getAll(Path buildFile)
+  public List<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException {
-    ImmutableList<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
+    ImmutableList<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile, processedBytes);
 
     // Strip out the __includes, __configs, and __env meta rules, which are the last rules.
     return Collections.unmodifiableList(result.subList(0, result.size() - 3));
@@ -355,10 +356,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(Path buildFile)
+  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
+      Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException {
     try {
-      return getAllRulesInternal(buildFile);
+      return getAllRulesInternal(buildFile, processedBytes);
     } catch (IOException e) {
       LOG.warn(e, "Error getting all rules for %s", buildFile);
       MoreThrowables.propagateIfInterrupt(e);
@@ -367,8 +369,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
-  protected ImmutableList<Map<String, Object>> getAllRulesInternal(Path buildFile)
-      throws IOException, BuildFileParseException {
+  protected ImmutableList<Map<String, Object>> getAllRulesInternal(
+      Path buildFile, AtomicLong processedBytes) throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
 
@@ -450,12 +452,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
       }
       return values;
     } finally {
+      long parsedBytes = buckPyProcessInput.getCount() - alreadyReadBytes;
+      processedBytes.addAndGet(parsedBytes);
       buckEventBus.post(
-          ParseBuckFileEvent.finished(
-              parseBuckFileStarted,
-              values,
-              buckPyProcessInput.getCount() - alreadyReadBytes,
-              profile));
+          ParseBuckFileEvent.finished(parseBuckFileStarted, values, parsedBytes, profile));
     }
   }
 

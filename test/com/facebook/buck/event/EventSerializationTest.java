@@ -120,14 +120,14 @@ public class EventSerializationTest {
   public void testParseEventFinished() throws IOException {
     ParseEvent.Started started =
         ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//base:short#flv")));
-    ParseEvent.Finished event = ParseEvent.finished(started, Optional.empty());
+    ParseEvent.Finished event = ParseEvent.finished(started, 10, Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
             + "\"buildTargets\":[{\"baseName\":\"//base\","
             + "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\","
-            + "\"eventKey\":{\"value\":4242}}",
+            + "\"eventKey\":{\"value\":4242}, \"processedBytes\": 10}",
         message);
   }
 

@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
@@ -127,7 +128,9 @@ public class ProjectBuildFileParserPoolTest {
               final ProjectBuildFileParser parser =
                   EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(parser.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+                EasyMock.expect(
+                        parser.getAllRulesAndMetaRules(
+                            EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -332,7 +335,8 @@ public class ProjectBuildFileParserPoolTest {
       int count) {
     ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
     for (int i = 0; i < count; i++) {
-      futures.add(pool.getAllRulesAndMetaRules(cell, Paths.get("BUCK"), executorService));
+      futures.add(
+          pool.getAllRulesAndMetaRules(cell, Paths.get("BUCK"), new AtomicLong(), executorService));
     }
     return futures.build();
   }
@@ -341,7 +345,9 @@ public class ProjectBuildFileParserPoolTest {
       IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+      EasyMock.expect(
+              mock.getAllRulesAndMetaRules(
+                  EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();

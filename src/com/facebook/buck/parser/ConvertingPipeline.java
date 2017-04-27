@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Base class for a parse pipeline that converts data one item at a time.
@@ -46,12 +47,13 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   @Override
-  public ListenableFuture<ImmutableSet<T>> getAllNodesJob(final Cell cell, final Path buildFile)
+  public ListenableFuture<ImmutableSet<T>> getAllNodesJob(
+      final Cell cell, final Path buildFile, AtomicLong processedBytes)
       throws BuildTargetException {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob =
         Futures.transformAsync(
-            getItemsToConvert(cell, buildFile),
+            getItemsToConvert(cell, buildFile, processedBytes),
             allToConvert -> {
               if (shuttingDown()) {
                 return Futures.immediateCancelledFuture();
@@ -71,7 +73,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                             if (shuttingDown()) {
                               return Futures.immediateCancelledFuture();
                             }
-                            return dispatchComputeNode(cell, target, from);
+                            return dispatchComputeNode(cell, target, processedBytes, from);
                           }));
                 }
               }
@@ -86,15 +88,16 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   @Override
-  public ListenableFuture<T> getNodeJob(final Cell cell, final BuildTarget buildTarget)
+  public ListenableFuture<T> getNodeJob(
+      final Cell cell, final BuildTarget buildTarget, AtomicLong processedBytes)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
         () ->
             Futures.transformAsync(
-                getItemToConvert(cell, buildTarget),
-                from -> dispatchComputeNode(cell, buildTarget, from)));
+                getItemToConvert(cell, buildTarget, processedBytes),
+                from -> dispatchComputeNode(cell, buildTarget, processedBytes, from)));
   }
 
   protected boolean isValid(F from) {
@@ -104,16 +107,18 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   protected abstract BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, F from);
 
-  protected abstract T computeNode(Cell cell, BuildTarget buildTarget, F rawNode)
+  protected abstract T computeNode(
+      Cell cell, BuildTarget buildTarget, F rawNode, AtomicLong processedBytes)
       throws BuildTargetException;
 
-  protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(Cell cell, Path buildFile)
-      throws BuildTargetException;
+  protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException;
 
-  protected abstract ListenableFuture<F> getItemToConvert(Cell cell, BuildTarget buildTarget)
-      throws BuildTargetException;
+  protected abstract ListenableFuture<F> getItemToConvert(
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException;
 
-  private ListenableFuture<T> dispatchComputeNode(Cell cell, BuildTarget buildTarget, F from)
+  private ListenableFuture<T> dispatchComputeNode(
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes, F from)
       throws BuildTargetException {
     // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
@@ -131,6 +136,6 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
           pathToCheck);
     }
 
-    return Futures.immediateFuture(computeNode(cell, buildTarget, from));
+    return Futures.immediateFuture(computeNode(cell, buildTarget, from, processedBytes));
   }
 }

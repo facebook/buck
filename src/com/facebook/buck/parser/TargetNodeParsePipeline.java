@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -95,7 +96,10 @@ public class TargetNodeParsePipeline
 
   @Override
   protected TargetNode<?, ?> computeNode(
-      final Cell cell, final BuildTarget buildTarget, final Map<String, Object> rawNode)
+      final Cell cell,
+      final BuildTarget buildTarget,
+      final Map<String, Object> rawNode,
+      AtomicLong processedBytes)
       throws BuildTargetException {
     try (final SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
@@ -125,9 +129,12 @@ public class TargetNodeParsePipeline
                 Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
                 try {
                   if (depTarget.isFlavored()) {
-                    getNodeJob(depCell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+                    getNodeJob(
+                        depCell,
+                        BuildTarget.of(depTarget.getUnflavoredBuildTarget()),
+                        processedBytes);
                   }
-                  getNodeJob(depCell, depTarget);
+                  getNodeJob(depCell, depTarget, processedBytes);
                 } catch (BuildTargetException e) {
                   // No biggie, we'll hit the error again in the non-speculative path.
                   LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -142,14 +149,14 @@ public class TargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<Map<String, Object>>> getItemsToConvert(
-      Cell cell, Path buildFile) throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
+    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile, processedBytes);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell, BuildTarget buildTarget) throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, buildTarget);
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
+    return rawNodeParsePipeline.getNodeJob(cell, buildTarget, processedBytes);
   }
 
   @Override

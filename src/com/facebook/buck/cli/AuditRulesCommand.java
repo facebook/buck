@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -119,7 +120,7 @@ public class AuditRulesCommand extends AbstractCommand {
         // Parse the rules from the build file.
         List<Map<String, Object>> rawRules;
         try {
-          rawRules = parser.getAll(path);
+          rawRules = parser.getAll(path, new AtomicLong());
         } catch (BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -227,7 +228,7 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   /**
-   * @param value in a Map returned by {@link ProjectBuildFileParser#getAll(Path)}.
+   * @param value in a Map returned by {@link ProjectBuildFileParser#getAll(Path, AtomicLong)}.
    * @return a string that represents the Python equivalent of the value.
    */
   @VisibleForTesting

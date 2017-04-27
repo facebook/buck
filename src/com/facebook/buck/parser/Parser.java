@@ -336,7 +336,9 @@ public class Parser {
     } catch (RuntimeException e) {
       throw propagateRuntimeCause(e);
     } finally {
-      eventBus.post(ParseEvent.finished(parseStart, Optional.ofNullable(targetGraph)));
+      eventBus.post(
+          ParseEvent.finished(
+              parseStart, state.getParseProcessedBytes(), Optional.ofNullable(targetGraph)));
     }
   }
 

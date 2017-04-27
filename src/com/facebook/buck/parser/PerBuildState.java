@@ -26,7 +26,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.util.Ansi;
@@ -37,7 +36,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -53,12 +51,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.immutables.value.Value;
 
 public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
 
   private final Parser parser;
+  private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
   private final boolean ignoreBuckAutodepsFiles;
@@ -141,28 +141,28 @@ public class PerBuildState implements AutoCloseable {
       throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
 
-    return targetNodeParsePipeline.getNode(owningCell, target);
+    return targetNodeParsePipeline.getNode(owningCell, target, parseProcessedBytes);
   }
 
   public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
       throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
 
-    return targetNodeParsePipeline.getNodeJob(owningCell, target);
+    return targetNodeParsePipeline.getNodeJob(owningCell, target, parseProcessedBytes);
   }
 
   public ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodes(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
   }
 
   public ListenableFuture<ImmutableSet<TargetNode<?, ?>>> getAllTargetNodesJob(
       Cell cell, Path buildFile) throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile, parseProcessedBytes);
   }
 
   public ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
@@ -170,7 +170,7 @@ public class PerBuildState implements AutoCloseable {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return rawNodeParsePipeline.getAllNodes(cell, buildFile);
+    return rawNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
   }
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
@@ -300,18 +300,14 @@ public class PerBuildState implements AutoCloseable {
     return newSymlinksEncountered;
   }
 
-  public TargetGraph buildTargetGraph(Iterable<BuildTarget> toExplore)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    if (Iterables.isEmpty(toExplore)) {
-      return TargetGraph.EMPTY;
-    }
-    return parser.buildTargetGraph(this, eventBus, toExplore, ignoreBuckAutodepsFiles);
-  }
-
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     for (Cell eachCell : cells.values()) {
       eachCell.ensureConcreteFilesExist(eventBus);
     }
+  }
+
+  public long getParseProcessedBytes() {
+    return parseProcessedBytes.get();
   }
 
   @Override

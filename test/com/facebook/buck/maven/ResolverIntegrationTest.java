@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -190,7 +191,8 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    List<Map<String, Object>> rules = buildFileParser.getAll(groupDir.resolve("BUCK"));
+    List<Map<String, Object>> rules =
+        buildFileParser.getAll(groupDir.resolve("BUCK"), new AtomicLong());
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = rules.get(0);
@@ -216,7 +218,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    List<Map<String, Object>> rules = buildFileParser.getAll(groupDir.resolve("BUCK"));
+    List<Map<String, Object>> rules =
+        buildFileParser.getAll(groupDir.resolve("BUCK"), new AtomicLong());
 
     Map<String, Object> rule = rules.get(0);
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -228,10 +231,14 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
-        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).get(0);
+        buildFileParser
+            .getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .get(0);
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
-        buildFileParser.getAll(buckRepoRoot.resolve(otherDir).resolve("BUCK")).get(0);
+        buildFileParser
+            .getAll(buckRepoRoot.resolve(otherDir).resolve("BUCK"), new AtomicLong())
+            .get(0);
 
     @SuppressWarnings("unchecked")
     List<String> visibility = (List<String>) noDeps.get("visibility");
@@ -257,7 +264,7 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     List<Map<String, Object>> allTargets =
-        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"));
+        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong());
 
     assertEquals(2, allTargets.size());
 

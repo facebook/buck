@@ -70,7 +70,7 @@ public class CacheCommand extends AbstractCommand {
   public void fakeOutParseEvents(BuckEventBus eventBus) {
     ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
     eventBus.post(parseStart);
-    eventBus.post(ParseEvent.finished(parseStart, Optional.empty()));
+    eventBus.post(ParseEvent.finished(parseStart, 0, Optional.empty()));
   }
 
   @Override

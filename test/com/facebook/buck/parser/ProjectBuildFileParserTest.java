@@ -53,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -139,7 +140,7 @@ public class ProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
             buckEventBus)) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"), new AtomicLong());
     }
     assertThat(
         consoleEvents,
@@ -175,7 +176,7 @@ public class ProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a warning", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"), new AtomicLong());
     }
     assertThat(
         consoleEvents,
@@ -209,7 +210,7 @@ public class ProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a watchman warning", "watchman")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"), new AtomicLong());
     }
     assertThat(
         watchmanDiagnosticEvents,
@@ -239,7 +240,7 @@ public class ProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
             buckEventBus, "This is an error", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"), new AtomicLong());
     }
     assertThat(
         consoleEvents,
@@ -284,7 +285,7 @@ public class ProjectBuildFileParserTest {
                             "text", "java_test(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"), new AtomicLong());
     }
   }
 
@@ -323,7 +324,7 @@ public class ProjectBuildFileParserTest {
                             "text", "java_test(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"), new AtomicLong());
     }
   }
 
@@ -380,7 +381,7 @@ public class ProjectBuildFileParserTest {
                             "text", "some_helper_method(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"), new AtomicLong());
     }
   }
 
@@ -432,7 +433,7 @@ public class ProjectBuildFileParserTest {
                             "text", "lets_divide_by_zero()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"), new AtomicLong());
     }
   }
 

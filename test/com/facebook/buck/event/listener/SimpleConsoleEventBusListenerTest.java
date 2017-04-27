@@ -124,7 +124,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -251,7 +251,7 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(parseStarted, 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.empty()),
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

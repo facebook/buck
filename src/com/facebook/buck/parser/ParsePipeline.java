@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Abstract node parsing pipeline. Allows implementors to define their own logic for creating nodes
@@ -59,12 +60,13 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  public final ImmutableSet<T> getAllNodes(final Cell cell, final Path buildFile)
+  public final ImmutableSet<T> getAllNodes(
+      final Cell cell, final Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getAllNodesJob(cell, buildFile).get();
+      return getAllNodesJob(cell, buildFile, processedBytes).get();
     } catch (Exception e) {
       throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
@@ -82,12 +84,12 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public final T getNode(final Cell cell, final BuildTarget buildTarget)
+  public final T getNode(final Cell cell, final BuildTarget buildTarget, AtomicLong processedBytes)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getNodeJob(cell, buildTarget).get();
+      return getNodeJob(cell, buildTarget, processedBytes).get();
     } catch (Exception e) {
       if (e.getCause() != null) {
         throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
@@ -109,21 +111,24 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildFile absolute path to the file to process.
+   * @param processedBytes
    * @return future.
    */
-  public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(Cell cell, Path buildFile)
-      throws BuildTargetException;
+  public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException;
 
   /**
    * Asynchronously get the {@link TargetNode}. This leverages the cache.
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildTarget name of the node we're looking for. The build file path is derived from it.
+   * @param processedBytes An accumulator for the number of bytes which were read by the Parser in
+   *     order to get this node.
    * @return future.
    * @throws BuildTargetException when the buildTarget is malformed.
    */
-  public abstract ListenableFuture<T> getNodeJob(Cell cell, BuildTarget buildTarget)
-      throws BuildTargetException;
+  public abstract ListenableFuture<T> getNodeJob(
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException;
 
   @Override
   public void close() {

@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -103,7 +104,9 @@ public class ParsePipelineTest {
         fixture
             .getTargetNodeParsePipeline()
             .getNode(
-                cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"));
+                cell,
+                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:lib"),
+                new AtomicLong());
 
     waitForAll(
         libTargetNode.getBuildDeps(),
@@ -118,7 +121,7 @@ public class ParsePipelineTest {
     ImmutableSet<TargetNode<?, ?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
-            .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"));
+            .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"), new AtomicLong());
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes)
             .transformAndConcat(
@@ -144,7 +147,8 @@ public class ParsePipelineTest {
           .getTargetNodeParsePipeline()
           .getNode(
               cell,
-              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"));
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:notthere"),
+              new AtomicLong());
     }
   }
 
@@ -157,7 +161,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Parse error for build file", "No such file or directory"));
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
+          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());
     }
   }
 
@@ -170,7 +174,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Parse error for build file", "No such file or directory"));
       fixture
           .getRawNodeParsePipeline()
-          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
+          .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());
     }
   }
 
@@ -181,7 +185,9 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"));
+              cell,
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:base"),
+              new AtomicLong());
     }
   }
 
@@ -196,7 +202,7 @@ public class ParsePipelineTest {
               cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", (Object) "bar")));
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
     }
   }
 
@@ -206,7 +212,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
           fixture.getRawNodeParsePipelineCache().lookupComputedNode(cell, rootBuildFilePath);
       fixture
@@ -215,7 +221,7 @@ public class ParsePipelineTest {
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, aBuildFilePath);
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, aBuildFilePath, new AtomicLong());
     }
   }
 
@@ -228,7 +234,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       Path rootBuildFilePath = cell.getFilesystem().resolve("BUCK");
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
-      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath);
+      fixture.getTargetNodeParsePipeline().getAllNodes(cell, rootBuildFilePath, new AtomicLong());
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
           fixture.getRawNodeParsePipelineCache().lookupComputedNode(cell, rootBuildFilePath);
       fixture
@@ -240,7 +246,9 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
-              cell, BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"));
+              cell,
+              BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//a:lib"),
+              new AtomicLong());
     }
   }
 
@@ -253,8 +261,8 @@ public class ParsePipelineTest {
             .getTargetNodeParsePipeline()
             .getNode(
                 cell,
-                BuildTargetFactory.newInstance(
-                    cell.getFilesystem().getRootPath(), "//error:error"));
+                BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//error:error"),
+                new AtomicLong());
         Assert.fail("Expected BuildFileParseException");
       } catch (BuildFileParseException e) {
         assertThat(e.getMessage(), containsString("crash!"));
@@ -265,7 +273,8 @@ public class ParsePipelineTest {
           .getNode(
               cell,
               BuildTargetFactory.newInstance(
-                  cell.getFilesystem().getRootPath(), "//correct:correct"));
+                  cell.getFilesystem().getRootPath(), "//correct:correct"),
+              new AtomicLong());
     }
   }
 
