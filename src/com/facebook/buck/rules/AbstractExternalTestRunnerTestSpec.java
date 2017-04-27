@@ -60,6 +60,12 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
    */
   public abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
 
+  /**
+   * @return a list of source path to be passed the test command for calculating additional test
+   *     coverage.
+   */
+  public abstract ImmutableSet<Path> getAdditionalCoverageTargets();
+
   /** @return environment variables the external test runner should provide for the test command. */
   public abstract ImmutableMap<String, String> getEnv();
 
@@ -82,6 +88,9 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
           "needed_coverage",
           Iterables.transform(
               getNeededCoverage(), input -> ImmutableList.of(input.getFirst(), input.getSecond())));
+    }
+    if (!getAdditionalCoverageTargets().isEmpty()) {
+      jsonGenerator.writeObjectField("additional_coverage_targets", getAdditionalCoverageTargets());
     }
     jsonGenerator.writeObjectField(
         "labels",

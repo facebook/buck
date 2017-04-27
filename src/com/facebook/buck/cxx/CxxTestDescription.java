@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -271,6 +272,7 @@ public class CxxTestDescription
                   FluentIterable.from(args.resources)
                       .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                       .toSortedSet(Ordering.natural()),
+                  args.additionalCoverageTargets,
                   additionalDeps,
                   args.labels,
                   args.contacts,
@@ -292,6 +294,7 @@ public class CxxTestDescription
                   FluentIterable.from(args.resources)
                       .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                       .toSortedSet(Ordering.natural()),
+                  args.additionalCoverageTargets,
                   additionalDeps,
                   args.labels,
                   args.contacts,
@@ -413,5 +416,6 @@ public class CxxTestDescription
     public Optional<Boolean> useDefaultTestMain;
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
+    public ImmutableSet<SourcePath> additionalCoverageTargets = ImmutableSet.of();
   }
 }

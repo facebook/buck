@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -67,6 +68,18 @@ public class ExternalTestRunnerIntegrationTest {
                 "[[0.0, [u'dir/simple.py']], "
                     + "[0.75, [u'dir/also_simple.py', u'dir/simple.py']], "
                     + "[1.0, [u'dir/also_simple.py']]]\n")));
+  }
+
+  @Test
+  public void runAdditionalCoverage() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_additional_coverage.py"),
+            "//dir:cpp_test");
+    result.assertSuccess();
+    assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
   }
 
   @Test

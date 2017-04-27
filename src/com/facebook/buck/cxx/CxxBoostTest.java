@@ -80,6 +80,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ImmutableMap<String, String> env,
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
@@ -91,6 +92,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         env,
         args,
         resources,
+        additionalCoverageTargets,
         additionalDeps,
         labels,
         contacts,
@@ -244,6 +246,8 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .putAllEnv(getEnv(pathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .addAllAdditionalCoverageTargets(
+            pathResolver.getAllAbsolutePaths(getAdditionalCoverageTargets()))
         .build();
   }
 }

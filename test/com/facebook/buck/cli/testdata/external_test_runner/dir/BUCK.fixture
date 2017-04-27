@@ -20,3 +20,20 @@ python_test(
     (1, ':python_lib', 'also_simple.py'),
   ],
 )
+
+cxx_binary(
+  name = 'cpp_binary',
+  srcs = [
+    'foo.cpp',
+  ],
+)
+
+cxx_test(
+  name = 'cpp_test',
+  srcs = [
+    'test.cpp',
+  ],
+  additional_coverage_targets = [
+    ':cpp_binary',
+  ],
+)

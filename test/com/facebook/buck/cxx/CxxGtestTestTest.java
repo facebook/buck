@@ -92,6 +92,7 @@ public class CxxGtestTestTest {
             ImmutableMap.of(),
             Suppliers.ofInstance(ImmutableList.of()),
             ImmutableSortedSet.of(),
+            ImmutableSet.of(),
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             ImmutableSet.of(),
             ImmutableSet.of(),

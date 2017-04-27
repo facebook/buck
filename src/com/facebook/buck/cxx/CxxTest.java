@@ -63,6 +63,7 @@ public abstract class CxxTest extends AbstractBuildRule
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableSortedSet<? extends SourcePath> resources;
 
+  private final ImmutableSet<SourcePath> additionalCoverageTargets;
   private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
   private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
@@ -75,6 +76,7 @@ public abstract class CxxTest extends AbstractBuildRule
       ImmutableMap<String, String> env,
       Supplier<ImmutableList<String>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
@@ -85,6 +87,7 @@ public abstract class CxxTest extends AbstractBuildRule
     this.env = env;
     this.args = Suppliers.memoize(args);
     this.resources = resources;
+    this.additionalCoverageTargets = additionalCoverageTargets;
     this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;
     this.contacts = contacts;
@@ -175,6 +178,10 @@ public abstract class CxxTest extends AbstractBuildRule
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  protected ImmutableSet<SourcePath> getAdditionalCoverageTargets() {
+    return additionalCoverageTargets;
   }
 
   @Override
