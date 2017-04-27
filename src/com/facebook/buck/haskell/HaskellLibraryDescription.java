@@ -248,7 +248,7 @@ public class HaskellLibraryDescription
 
     ImmutableSortedMap.Builder<String, HaskellPackage> depPackagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    for (BuildRule rule : baseParams.getDeclaredDeps().get()) {
+    for (BuildRule rule : deps) {
       if (rule instanceof HaskellCompileDep) {
         ImmutableList<HaskellPackage> packages =
             ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType).getPackages();
