@@ -210,7 +210,7 @@ public class PythonUtil {
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
           for (BuildRule dep : extension.getPythonPackageDeps(pythonPlatform, cxxPlatform)) {
-            if (dep instanceof CxxPythonExtension) {
+            if (dep instanceof PythonPackagable) {
               cxxpydeps.add(dep);
             }
           }
