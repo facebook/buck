@@ -113,11 +113,16 @@ class ClassVisitorDriverFromElement {
       }
       // Static never makes it into the file for classes
       int accessFlags = AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC;
-      if (e.getNestingKind() != NestingKind.TOP_LEVEL
-          && e.getModifiers().contains(Modifier.PROTECTED)) {
-        // It looks like inner classes with protected visibility get marked as public, and then
-        // their InnerClasses attributes override that more specifically
-        accessFlags = (accessFlags & ~Opcodes.ACC_PROTECTED) | Opcodes.ACC_PUBLIC;
+      if (e.getNestingKind() != NestingKind.TOP_LEVEL) {
+        if (e.getModifiers().contains(Modifier.PROTECTED)) {
+          // It looks like inner classes with protected visibility get marked as public, and then
+          // their InnerClasses attributes override that more specifically
+          accessFlags = (accessFlags & ~Opcodes.ACC_PROTECTED) | Opcodes.ACC_PUBLIC;
+        } else if (e.getModifiers().contains(Modifier.PRIVATE)) {
+          // It looks like inner classes with private visibility get marked as package, and then
+          // their InnerClasses attributes override that more specifically
+          accessFlags = (accessFlags & ~Opcodes.ACC_PRIVATE);
+        }
       }
 
       visitor.visit(

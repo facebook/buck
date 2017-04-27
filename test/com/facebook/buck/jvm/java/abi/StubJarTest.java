@@ -1380,6 +1380,52 @@ public class StubJarTest {
         .createAndCheckStubJar();
   }
 
+  // TODO(jkeljo): We should only be stubbing private inner classes when they are referenced in
+  // the ABI. That's a more involved change which I'll make soon, but for now I want to document
+  // the existing behavior and ensure it is consistent across class and source-based ABIs.
+  @Test
+  public void stubsPrivateInnerClasses() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  private class B {",
+            "    public int count;",
+            "    public void foo() {}",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$B",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/A$B {",
+            "",
+            "  // access flags 0x2",
+            "  private INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public I count",
+            "",
+            "  // access flags 0x1",
+            "  public foo()V",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Lcom/example/buck/A;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "", // TODO(jkeljo): If the private inner is stubbed, there should be an entry here too
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
   @Test
   public void stubsInnerEnums() throws IOException {
     tester
