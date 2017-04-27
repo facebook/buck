@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -248,12 +249,40 @@ final class Daemon implements Closeable {
       parser.recordParseStartTime(eventBus);
       fileEventBus.post(commandEvent);
       // Track the file hash cache invalidation run time.
-      FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
-      eventBus.post(started);
+      // TODO(rvitale): uncomment the lines below and make the file hash cache event logging
+      //   happen once at the end of the watchman event posting.
+      // FileHashCacheEvent.InvalidationStarted started =
+      //    FileHashCacheEvent.invalidationStarted();
+      // eventBus.post(started);
       try {
         watchmanWatcher.postEvents(eventBus, watchmanFreshInstanceAction);
       } finally {
-        eventBus.post(FileHashCacheEvent.invalidationFinished(started));
+        //        eventBus.post(FileHashCacheEvent.invalidationFinished(started));
+        hashCaches.forEach(
+            hashCache -> {
+              if (hashCache instanceof WatchedFileHashCache) {
+                WatchedFileHashCache cache = (WatchedFileHashCache) hashCache;
+                eventBus.post(
+                    new FileHashCacheEvent(
+                        "file_hash_cache_invalidation.new",
+                        cache.getNewCacheAggregatedNanoTime(),
+                        cache.getNewCacheAggregatedNanoTime(),
+                        cache.getNumberOfInvalidations()));
+                eventBus.post(
+                    new FileHashCacheEvent(
+                        "file_hash_cache_invalidation.old",
+                        cache.getOldCacheAggregatedNanoTime(),
+                        cache.getOldCacheAggregatedNanoTime(),
+                        cache.getNumberOfInvalidations()));
+                eventBus.post(
+                    new ExperimentEvent(
+                        "file_hash_cache_invalidation",
+                        "sha1",
+                        "mismatches",
+                        cache.getSha1Mismatches(),
+                        null));
+              }
+            });
       }
     }
   }

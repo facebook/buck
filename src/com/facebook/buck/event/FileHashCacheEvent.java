@@ -16,15 +16,52 @@
 
 package com.facebook.buck.event;
 
-public abstract class FileHashCacheEvent extends AbstractBuckEvent implements LeafEvent {
+public class FileHashCacheEvent extends AbstractBuckEvent implements LeafEvent {
 
+  private String category = "file_hash_cache_invalidation";
+  private long amortizedNanoTime;
+  private long totalTimeNs;
+  private long dataPointsCount;
+
+  public FileHashCacheEvent(
+      String subCategory, long amortizedNanoTime, long totalTime, long dataPointsCount) {
+    super(EventKey.unique());
+    this.category += "." + subCategory;
+    this.amortizedNanoTime = amortizedNanoTime;
+    this.totalTimeNs = totalTime;
+    this.dataPointsCount = dataPointsCount;
+  }
+
+  // TODO(rvitale): Make this class abstract and remove all the field used for temporary logging for
+  //   the file hash cache experiment.
   public FileHashCacheEvent(EventKey eventKey) {
     super(eventKey);
   }
 
   @Override
   public String getCategory() {
-    return "file_hash_cache_invalidation";
+    return category;
+  }
+
+  public void setCategory(String category) {
+    this.category = category;
+  }
+
+  public long getAmortizedNanoTime() {
+    return amortizedNanoTime;
+  }
+
+  public long getTotalNanoTime() {
+    return totalTimeNs;
+  }
+
+  public long getDataPointsCount() {
+    return dataPointsCount;
+  }
+
+  @Override
+  public String getEventName() {
+    return "FileHashCacheInvalidation";
   }
 
   @Override

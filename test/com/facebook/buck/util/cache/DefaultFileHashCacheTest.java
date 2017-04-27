@@ -99,7 +99,7 @@ public class DefaultFileHashCacheTest {
   public void getMissingPathThrows() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    expectedException.expect(RuntimeException.class);
+    expectedException.expect(IOException.class);
     cache.get(filesystem.getPath("hello.java"));
   }
 
@@ -119,10 +119,10 @@ public class DefaultFileHashCacheTest {
     assertTrue(cache.willGet(path2));
 
     // Verify that `invalidateAll` clears everything from the cache.
-    assertFalse(cache.loadingCache.convertToMap().isEmpty());
+    assertFalse(cache.loadingCache.asMap().isEmpty());
     cache.invalidateAll();
 
-    assertTrue(cache.loadingCache.convertToMap().isEmpty());
+    assertTrue(cache.loadingCache.asMap().isEmpty());
   }
 
   @Test
