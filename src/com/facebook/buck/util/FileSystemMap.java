@@ -1,0 +1,244 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.util;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Stack;
+import javax.annotation.Nullable;
+
+/**
+ * This class implements a map for a filesystem structure relying on a prefix tree. The trie only
+ * supports relative paths for now, but an effort can be made in order to let it support absolute
+ * paths if needed. Every intermediate or leaf node of the trie is a folder/file which may be
+ * associated with a value. It's worth noting that adding a value for path foo/bar/file.txt will add
+ * intermediate nodes for foo and foo/bar but not values. The value is associated with the specified
+ * path and not with its ancestors. Invalidating one of the leaves or intermediate nodes will cause
+ * its parent and its ancestors to be invalidated as well: this operation consists in removing the
+ * leaf from its parent children and setting the value of all its ancestors to null. If the removal
+ * of the target leaf leaves an empty branch (a stump), that is removed as well in order to keep the
+ * prefix tree as slim as possible.
+ *
+ * @param <T> The type to associate with a specific path.
+ */
+public class FileSystemMap<T> {
+
+  /**
+   * Wrapper class that implements a method for loading a value in the leaves of the trie.
+   *
+   * @param <T>
+   */
+  public interface ValueLoader<T> {
+    T load(Path path);
+  }
+
+  /**
+   * Entry is the class representing a file/folder in the prefix tree. Its main responsibilities are
+   * to fetch a child of the current folder or the current value, if the entry is a leaf or "inner
+   * leaf" - that is an internal node associated with a value.
+   *
+   * @param <T> The type of the contained value.
+   */
+  @VisibleForTesting
+  static class Entry<T> {
+    Map<Path, Entry<T>> subLevels = new HashMap<>();
+
+    // The value of the Entry is the actual value the node is associated with:
+    //   - If this is a leaf node, value is never null.
+    //   - If this is an intermediate node, value is not `null` *only* if we already received a
+    //       get() or put() on its path: in this case, its value will be computed and stored.
+    //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
+    //       a `null` value.
+    @Nullable T value;
+
+    Entry() {
+      // We're creating an empty node here, so it is associated with no value.
+      this.value = null;
+    }
+
+    Entry(@Nullable T value) {
+      this.value = value;
+    }
+
+    int size() {
+      return subLevels.size();
+    }
+  }
+
+  @VisibleForTesting final Entry<T> root = new Entry<>();
+
+  private final ValueLoader<T> loader;
+
+  public FileSystemMap(ValueLoader<T> loader) {
+    this.loader = loader;
+  }
+
+  /**
+   * Puts a path and a value into the map.
+   *
+   * @param path The path to store.
+   * @param value The value to associate to the given path.
+   * @return The entry just created.
+   */
+  public T put(Path path, T value) {
+    Entry<T> entry = putEntry(path);
+    entry.value = value;
+    return entry.value;
+  }
+
+  // Creates the intermediate (and/or the leaf node) if needed and returns the leaf associated
+  // with the given path.
+  private Entry<T> putEntry(Path path) {
+    Entry<T> parent = root;
+    for (Path p : path) {
+      // Create the intermediate node only if it's missing.
+      parent = parent.subLevels.computeIfAbsent(p, path1 -> new Entry<>());
+    }
+
+    return parent;
+  }
+
+  /**
+   * Removes the given path.
+   *
+   * <p>Removing a path involves the following: - all the child nodes of the given path are
+   * discarded as well. - all the paths upstream lose their value. - each path upstream will be
+   * removed if after the removal of the leaf the node is left with no children (that is, it has
+   * become a stump).
+   *
+   * @param path The path specifying the branch to remove.
+   */
+  public void remove(Path path) {
+    Stack<Entry<T>> stack = new Stack<>();
+    stack.push(root);
+    Entry<T> entry = root;
+    // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
+    for (Path p : path) {
+      entry = entry.subLevels.get(p);
+      // We're trying to remove a path that doesn't exist, no point in going deeper.
+      // Break and proceed to remove whatever path we found so far.
+      if (entry == null) {
+        break;
+      }
+      stack.push(entry);
+    }
+    // The following approach supports these cases:
+    //   1. Remove a path that has been found as a leaf in the trie (easy case).
+    //   2. If the path does't exist at the root level, then don't even bother removing anything.
+    //   3. We still want to remove paths that "exist partially", that is we haven't found the
+    //       requested leaf, but we have found an intermediate node on the branch.
+    //   4. Similarly, we want to support prefix removal as well (i.e.: if we want to remove an
+    //       intermediate node).
+    if (stack.size() > 1) { // check the size in order to address for case #2.
+      // Let's take the actual (sub)path we're removing, by using the size of the stack (ignoring
+      // the root).
+      path = path.subpath(0, stack.size() - 1);
+      // If we reached the leaf, then remove the leaf and everything below it (if any).
+      stack.pop();
+      stack.peek().subLevels.remove(path.getFileName());
+      // Plus, check everything above in order to remove unused stumps.
+      while (!stack.empty()) {
+        // This will never throw NPE because if it does, then the stack was empty at the beginning
+        // of the iteration (we went upper than the root node, which doesn't make sense).
+        path = path.getParent();
+        Entry<T> current = stack.pop();
+        if (current.size() == 0 && path != null && !stack.empty()) {
+          stack.peek().subLevels.remove(path.getFileName());
+        } else {
+          current.value = null;
+        }
+      }
+    }
+  }
+
+  /** Empties the trie leaving only the root node available. */
+  public void removeAll() {
+    root.subLevels = new HashMap<>();
+  }
+
+  /**
+   * Gets the value associated with the given path.
+   *
+   * @param path The path to fetch.
+   * @return The value associated with the path.
+   */
+  public T get(Path path) throws IOException {
+    Entry<T> entry = putEntry(path);
+    // Maybe here we receive a request for getting an intermediate node (a folder) whose
+    // value was never computed before (or has been removed).
+    if (entry.value == null) {
+      entry.value = loader.load(path);
+    }
+    return entry.value;
+  }
+
+  /**
+   * Gets the value associated with the given path, if found, or `null` otherwise.
+   *
+   * @param path The path to fetch.
+   * @return The value associated with the path.
+   */
+  @Nullable
+  public T getIfPresent(Path path) {
+    Optional<Entry<T>> entry = getEntry(path);
+    if (!entry.isPresent()) {
+      return null;
+    }
+    return entry.get().value;
+  }
+
+  private Optional<Entry<T>> getEntry(Path path) {
+    Entry<T> parent = root;
+    for (Path p : path) {
+      parent = parent.subLevels.get(p);
+      if (parent == null) {
+        return Optional.empty();
+      }
+    }
+    return Optional.of(parent);
+  }
+
+  /**
+   * Returns a copy of the leaves stored in the trie as a map. Modifications made to the entries
+   * directly affect the trie. N.B.: this is quite an expensive call to make, so use it wisely.
+   */
+  public ImmutableMap<Path, T> convertToMap() {
+    ImmutableMap.Builder<Path, T> builder = new ImmutableMap.Builder<>();
+    addToMap(root, Paths.get(""), builder);
+    return builder.build();
+  }
+
+  private void addToMap(Entry<T> entry, Path currentPath, ImmutableMap.Builder<Path, T> builder) {
+    entry
+        .subLevels
+        .entrySet()
+        .forEach(
+            e -> {
+              Entry<T> current = e.getValue();
+              Path path = currentPath.resolve(e.getKey());
+              if (current.value != null) {
+                builder.put(path, current.value);
+              }
+              addToMap(e.getValue(), path, builder);
+            });
+  }
+}

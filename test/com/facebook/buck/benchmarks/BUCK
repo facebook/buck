@@ -133,6 +133,7 @@ java_binary(
         "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/parser:benchmarks",
         "//test/com/facebook/buck/timing:testutil",
+        "//test/com/facebook/buck/util/cache:benchmarks",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:tools-sdk-common",
         "//third-party/java/aosp:aosp",

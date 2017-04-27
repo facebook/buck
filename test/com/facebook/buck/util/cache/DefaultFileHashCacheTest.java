@@ -96,10 +96,10 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void missingEntryThrowsNoSuchFileException() throws IOException {
+  public void getMissingPathThrows() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    expectedException.expect(NoSuchFileException.class);
+    expectedException.expect(RuntimeException.class);
     cache.get(filesystem.getPath("hello.java"));
   }
 
@@ -109,20 +109,20 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
 
     Path path1 = Paths.get("path1");
-    filesystem.writeContentsToPath("contenst1", path1);
+    filesystem.writeContentsToPath("contents1", path1);
     cache.get(path1);
     assertTrue(cache.willGet(path1));
 
     Path path2 = Paths.get("path2");
-    filesystem.writeContentsToPath("contenst2", path2);
+    filesystem.writeContentsToPath("contents2", path2);
     cache.get(path2);
     assertTrue(cache.willGet(path2));
 
     // Verify that `invalidateAll` clears everything from the cache.
-    assertFalse(cache.loadingCache.asMap().isEmpty());
+    assertFalse(cache.loadingCache.convertToMap().isEmpty());
     cache.invalidateAll();
 
-    assertTrue(cache.loadingCache.asMap().isEmpty());
+    assertTrue(cache.loadingCache.convertToMap().isEmpty());
   }
 
   @Test
@@ -236,7 +236,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path input = filesystem.getPath("input");
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    expectedException.expect(IOException.class);
+    expectedException.expect(RuntimeException.class);
     cache.getSize(input);
   }
 
