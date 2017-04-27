@@ -57,6 +57,7 @@
     ; cache every time it encounters one.
     allow_symlinks = forbid
     watchman_cursor = clock_id
+    glob_handler = watchman
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 90000
