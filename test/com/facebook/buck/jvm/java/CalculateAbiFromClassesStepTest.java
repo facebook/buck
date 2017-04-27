@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -25,10 +26,13 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.zip.CustomJarOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -65,5 +69,13 @@ public class CalculateAbiFromClassesStepTest {
     // Assert that the abiJar contains non-class resources (like txt files).
     ZipInspector inspector = new ZipInspector(abiJar);
     inspector.assertFileExists("LICENSE.txt");
+
+    try (JarFile jarFile = new JarFile(abiJar.toFile())) {
+      Manifest manifest = jarFile.getManifest();
+      assertNotNull(
+          manifest
+              .getAttributes("junit/runner/BaseTestRunner.class")
+              .getValue(CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME));
+    }
   }
 }

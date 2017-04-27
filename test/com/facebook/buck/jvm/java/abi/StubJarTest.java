@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
@@ -40,10 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +53,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
@@ -2495,24 +2489,6 @@ public class StubJarTest {
             "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
             "}")
         .createAndCheckStubJar();
-  }
-
-  @Test
-  public void stubJarShouldHaveManifestWithEntriesForClasses() throws IOException {
-    JarPaths paths = createFullAndStubJars(EMPTY_CLASSPATH, "A.java", "public class A { }");
-
-    FileSystem fileSystem = FileSystems.newFileSystem(paths.stubJar, null);
-    Path manifestPath = fileSystem.getPath("META-INF", "MANIFEST.MF");
-
-    assertTrue(Files.exists(manifestPath));
-
-    try (InputStream manifestStream = Files.newInputStream(manifestPath)) {
-      Manifest jarManifest = new Manifest(manifestStream);
-
-      assertThat(
-          jarManifest.getEntries().get("A.class").getValue("Murmur3-128-Digest"),
-          Matchers.equalTo("525ca9a11a7442a820dfbd94da7b4166"));
-    }
   }
 
   private JarPaths createFullAndStubJars(
