@@ -210,7 +210,9 @@ class BuckTool(object):
 
             command = ["buck"]
             extra_default_options = [
-                "-Djava.io.tmpdir={0}".format(self._tmp_dir)
+                "-Djava.io.tmpdir={0}".format(self._tmp_dir),
+                "-XX:SoftRefLRUPolicyMSPerMB=0",
+                "-XX:+UseG1GC",
             ]
             command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
