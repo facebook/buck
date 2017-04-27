@@ -90,8 +90,6 @@ public class StubJarTest {
   private static final String MODE_SOURCE_BASED_MISSING_DEPS = "SOURCE_BASED_MISSING_DEPS";
 
   @Parameterized.Parameter public String testingMode;
-  private boolean allowCompilationErrors = false;
-  private List<String> diagnostics;
   private Set<String> allowedInnerClassNames = new HashSet<>();
 
   @Parameterized.Parameters(name = "{0}")
@@ -2092,43 +2090,31 @@ public class StubJarTest {
 
   @Test
   public void privateConstructorResultsInCorrectCompileError() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "PrivateTest.java",
-            Joiner.on("\n")
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class PrivateTest {",
-                        "  private PrivateTest() { }",
-                        "}")));
-
-    allowCompilationErrors = true;
-    compileToJar(
-        ImmutableSortedSet.of(paths.stubJar),
-        Collections.emptyList(),
-        "A.java",
-        Joiner.on("\n")
-            .join(
-                ImmutableList.of(
-                    "package com.example.buck2;",
-                    "import com.example.buck.PrivateTest;",
-                    "public class A {",
-                    "  public void foo() {",
-                    "   PrivateTest test = new PrivateTest();",
-                    "  }",
-                    "}")),
-        temp.newFolder());
-
-    ImmutableList<String> expectedErrors =
-        ImmutableList.of(
+            "package com.example.buck;",
+            "public class PrivateTest {",
+            "  private PrivateTest() { }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck2;",
+            "import com.example.buck.PrivateTest;",
+            "public class A {",
+            "  public void foo() {",
+            "   PrivateTest test = new PrivateTest();",
+            "  }",
+            "}")
+        .addExpectedCompileError(
             Joiner.on('\n')
                 .join(
                     "A.java:5: error: PrivateTest() has private access in com.example.buck.PrivateTest",
                     "   PrivateTest test = new PrivateTest();",
-                    "                      ^"));
-    assertCompilationErrors(expectedErrors);
+                    "                      ^"))
+        .testCanCompile();
   }
 
   @Test
@@ -2491,26 +2477,6 @@ public class StubJarTest {
         .createAndCheckStubJar();
   }
 
-  private JarPaths createFullAndStubJars(
-      ImmutableSortedSet<Path> classPath, String fileName, String source) throws IOException {
-    File outputDir = temp.newFolder();
-    Path fullJar = compileToJar(classPath, Collections.emptyList(), fileName, source, outputDir);
-
-    Path stubJar;
-    if (testingMode != MODE_JAR_BASED) {
-      stubJar =
-          createStubJar(
-              testingMode == MODE_SOURCE_BASED ? classPath : Collections.emptySortedSet(),
-              fileName,
-              source,
-              outputDir.toPath());
-    } else {
-      stubJar = createStubJar(fullJar);
-    }
-
-    return new JarPaths(fullJar, stubJar);
-  }
-
   private Path createStubJar(
       SortedSet<Path> classpath, String fileName, String source, Path outputDir)
       throws IOException {
@@ -2568,10 +2534,8 @@ public class StubJarTest {
       compiler.addSourceFileContents(fileName, source);
       compiler.addClasspath(classpath);
       compiler.setProcessors(processors);
-      compiler.setAllowCompilationErrors(allowCompilationErrors);
 
       compiler.compile();
-      diagnostics = compiler.getDiagnosticMessages();
 
       Path jarPath = outputDir.toPath().resolve("output.jar");
       compiler.getClasses().createJar(jarPath, false);
@@ -2850,15 +2814,6 @@ public class StubJarTest {
         seen.stream().map(toString).collect(Collectors.toList()));
   }
 
-  private void assertCompilationErrors(List<String> expectedErrors) {
-    List<String> actual =
-        diagnostics
-            .stream()
-            .map(diagnostic -> diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
-            .collect(Collectors.toList());
-    assertThat(actual, Matchers.containsInAnyOrder(expectedErrors.toArray()));
-  }
-
   private static String typeAnnotationToString(TypeAnnotationNode typeAnnotationNode) {
     return String.format(
         "%d %s %s(%s)",
@@ -2932,6 +2887,7 @@ public class StubJarTest {
     private final Map<String, List<String>> actualFullAbis = new HashMap<>();
     private final Map<String, List<String>> expectedStubs = new HashMap<>();
     private final Map<String, List<String>> actualStubs = new HashMap<>();
+    private final List<String> expectedCompileErrors = new ArrayList<>();
     private String sourceFileName = "";
     private String sourceFileContents = "";
     private ImmutableSortedSet<Path> classpath = EMPTY_CLASSPATH;
@@ -2954,6 +2910,11 @@ public class StubJarTest {
       String filePath = classBinaryName + ".class";
       expectedDirectory.add(filePath);
       expectedStubs.put(filePath, Arrays.asList(stubLines));
+      return this;
+    }
+
+    public Tester addExpectedCompileError(String compileError) {
+      expectedCompileErrors.add(compileError);
       return this;
     }
 
@@ -3028,7 +2989,31 @@ public class StubJarTest {
     }
 
     public void testCanCompile() throws IOException {
-      compileFullJar();
+      File outputDir = temp.newFolder();
+      try (TestCompiler compiler = new TestCompiler()) {
+        compiler.init();
+        compiler.addSourceFileContents(sourceFileName, sourceFileContents);
+        compiler.addClasspath(classpath);
+        compiler.setProcessors(Collections.emptyList());
+        compiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
+
+        compiler.compile();
+        if (!expectedCompileErrors.isEmpty()) {
+          List<String> actualCompileErrors =
+              compiler
+                  .getDiagnosticMessages()
+                  .stream()
+                  .map(
+                      diagnostic ->
+                          diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+                  .collect(Collectors.toList());
+
+          assertEquals(expectedCompileErrors, actualCompileErrors);
+        }
+
+        fullJarPath = outputDir.toPath().resolve("output.jar");
+        compiler.getClasses().createJar(fullJarPath, false);
+      }
     }
 
     public void assertStubJarIsIdentical() throws IOException {
