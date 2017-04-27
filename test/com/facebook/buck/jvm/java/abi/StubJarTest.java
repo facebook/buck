@@ -2239,9 +2239,10 @@ public class StubJarTest {
   @Test
   public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles()
       throws InterruptedException, IOException {
-    JarPaths paths =
-        createFullAndStubJars(
+    Path fullJarPath =
+        compileToJar(
             EMPTY_CLASSPATH,
+            Collections.emptyList(),
             "A.java",
             Joiner.on("\n")
                 .join(
@@ -2250,10 +2251,14 @@ public class StubJarTest {
                         "public class A {",
                         "  public String toString() { return null; }",
                         "  public void eatCake() {}",
-                        "}")));
+                        "}")),
+            temp.newFolder());
 
     Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(paths.fullJar, classDir, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(fullJarPath, classDir, Unzip.ExistingFileMode.OVERWRITE);
+
+    Path stubJarPath = createStubJar(classDir);
+    JarPaths paths = new JarPaths(fullJarPath, stubJarPath);
 
     assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
   }
