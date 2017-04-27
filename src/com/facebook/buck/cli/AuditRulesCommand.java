@@ -74,9 +74,6 @@ public class AuditRulesCommand extends AbstractCommand {
   @Option(name = "--json", usage = "Print JSON representation of each rule")
   private boolean json;
 
-  @Option(name = "--include_empty_values", usage = "Whether to include missing or empty values")
-  private boolean includeEmpties;
-
   @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
@@ -219,9 +216,6 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   private boolean shouldInclude(@Nullable Object rawValue) {
-    if (includeEmpties) {
-      return true;
-    }
     return rawValue != null
         && rawValue != Optional.empty()
         && !(rawValue instanceof Collection && ((Collection<?>) rawValue).isEmpty());
