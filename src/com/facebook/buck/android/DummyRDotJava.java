@@ -45,9 +45,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Comparator;
@@ -235,7 +233,7 @@ public class DummyRDotJava extends AbstractBuildRule
             /* manifestFile */ null));
     buildableContext.recordArtifact(outputJar);
 
-    steps.add(new CheckDummyRJarNotEmptyStep());
+    steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));
 
     steps.add(
         new CalculateAbiFromClassesStep(
@@ -245,6 +243,12 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   private class CheckDummyRJarNotEmptyStep implements Step {
+    private final ImmutableSortedSet<Path> javaSourceFilePaths;
+
+    CheckDummyRJarNotEmptyStep(ImmutableSortedSet<Path> javaSourceFilePaths) {
+      this.javaSourceFilePaths = javaSourceFilePaths;
+    }
+
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
@@ -257,26 +261,15 @@ public class DummyRDotJava extends AbstractBuildRule
         }
       }
 
-      // Gross copy-paste from above.  Expect this to be deleted shortly
-      // once we start compiling directly from RAM to JAR.
-      Path pathToSrcsList =
-          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-
       StringBuilder sb = new StringBuilder();
-      getProjectFilesystem()
-          .walkRelativeFileTree(
-              pathToSrcsList,
-              new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException {
-                  sb.append(file);
-                  sb.append(' ');
-                  sb.append(attrs.size());
-                  sb.append('\n');
-                  return super.visitFile(file, attrs);
-                }
-              });
+      for (Path file : javaSourceFilePaths) {
+        BasicFileAttributes attrs =
+            getProjectFilesystem().readAttributes(file, BasicFileAttributes.class);
+        sb.append(file);
+        sb.append(' ');
+        sb.append(attrs.size());
+        sb.append('\n');
+      }
 
       throw new RuntimeException(
           String.format(
