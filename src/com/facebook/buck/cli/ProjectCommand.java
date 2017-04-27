@@ -52,7 +52,6 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
@@ -75,7 +74,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -380,12 +378,15 @@ public class ProjectCommand extends BuildCommand {
         checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
       }
 
-      ProjectPredicates projectPredicates = ProjectPredicates.forIde(projectIde);
-
+      final Ide finalIde = projectIde;
       ImmutableSet<BuildTarget> graphRoots;
       if (passedInTargetsSet.isEmpty()) {
         graphRoots =
-            getRootsFromPredicate(projectGraph, projectPredicates.getProjectRootsPredicate());
+            getRootsFromPredicate(
+                projectGraph,
+                node ->
+                    finalIde == ProjectCommand.Ide.XCODE
+                        && node.getDescription() instanceof XcodeWorkspaceConfigDescription);
       } else {
         graphRoots = passedInTargetsSet;
       }
@@ -397,7 +398,6 @@ public class ProjectCommand extends BuildCommand {
                 params,
                 projectGraph,
                 graphRoots,
-                projectPredicates.getAssociatedProjectPredicate(),
                 isWithTests(params.getBuckConfig()),
                 isWithDependenciesTests(params.getBuckConfig()),
                 passedInTargetsSet.isEmpty(),
@@ -490,18 +490,6 @@ public class ProjectCommand extends BuildCommand {
   @Override
   public boolean isReadOnly() {
     return false;
-  }
-
-  public static ImmutableSet<BuildTarget> getRootBuildTargetsForIntelliJ(
-      ProjectCommand.Ide ide, TargetGraph projectGraph, ProjectPredicates projectPredicates) {
-    if (ide != ProjectCommand.Ide.INTELLIJ) {
-      return ImmutableSet.of();
-    }
-    return getRootsFromPredicate(
-        projectGraph,
-        Predicates.and(
-            input -> input.getBuildTarget() != null && input.getBuildTarget().isInCellRoot(),
-            projectPredicates.getProjectRootsPredicate()));
   }
 
   /** Run intellij specific project generation actions. */
@@ -1043,7 +1031,6 @@ public class ProjectCommand extends BuildCommand {
       CommandRunnerParams params,
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> graphRoots,
-      AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
@@ -1089,8 +1076,7 @@ public class ProjectCommand extends BuildCommand {
       }
     }
 
-    return TargetGraphAndTargets.create(
-        graphRoots, projectGraph, associatedProjectPredicate, isWithTests, explicitTestTargets);
+    return TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
   }
 
   public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(

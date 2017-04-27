@@ -18,27 +18,41 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.project_generator.FocusedModuleTargetMatcher;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
@@ -177,9 +191,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(),
             /* withTests = */ false,
             /* withDependenciesTests = */ false);
@@ -200,9 +213,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphWithTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
@@ -226,9 +238,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphForSliceWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
@@ -247,9 +258,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphForSliceWithTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
@@ -271,9 +281,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
@@ -286,9 +295,8 @@ public class ProjectCommandXcodeTest {
   @Test
   public void testCreateTargetGraphForSmallSliceWithTests() {
     TargetGraphAndTargets targetGraphAndTargets =
-        ProjectCommandTests.createTargetGraph(
+        createTargetGraph(
             targetGraph,
-            ProjectCommand.Ide.XCODE,
             ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
@@ -317,7 +325,7 @@ public class ProjectCommandXcodeTest {
       boolean isWithTests,
       boolean isWithDependenciesTests)
       throws IOException, InterruptedException {
-    return ProjectCommandTests.generateWorkspacesForTargets(
+    return generateWorkspacesForTargets(
         targetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
   }
 
@@ -376,5 +384,85 @@ public class ProjectCommandXcodeTest {
 
     ProjectGeneratorTestUtils.assertTargetExists(projectGenerators.get(Paths.get("baz")), "lib");
     ProjectGeneratorTestUtils.assertTargetExists(projectGenerators.get(Paths.get("baz")), "xctest");
+  }
+
+  private static TargetGraphAndTargets createTargetGraph(
+      TargetGraph projectGraph,
+      ImmutableSet<BuildTarget> passedInTargetsSet,
+      boolean withTests,
+      boolean withDependenciesTests) {
+    ImmutableSet<BuildTarget> graphRoots;
+    if (!passedInTargetsSet.isEmpty()) {
+      graphRoots = passedInTargetsSet;
+    } else {
+      graphRoots =
+          ProjectCommand.getRootsFromPredicate(
+              projectGraph,
+              node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
+    }
+
+    ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
+        ProjectCommand.replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
+
+    ImmutableSet<BuildTarget> explicitTests;
+    if (withTests) {
+      explicitTests =
+          ProjectCommand.getExplicitTestTargets(
+              graphRootsOrSourceTargets,
+              projectGraph,
+              withDependenciesTests,
+              FocusedModuleTargetMatcher.noFocus());
+    } else {
+      explicitTests = ImmutableSet.of();
+    }
+
+    return TargetGraphAndTargets.create(graphRoots, projectGraph, withTests, explicitTests);
+  }
+
+  private static Map<Path, ProjectGenerator> generateWorkspacesForTargets(
+      TargetGraph targetGraph,
+      ImmutableSet<BuildTarget> passedInTargetsSet,
+      boolean isWithTests,
+      boolean isWithDependenciesTests)
+      throws IOException, InterruptedException {
+    TargetGraphAndTargets targetGraphAndTargets =
+        createTargetGraph(targetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
+
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    ProjectCommand.generateWorkspacesForTargets(
+        createCommandRunnerParamsForTests(),
+        targetGraphAndTargets,
+        passedInTargetsSet,
+        ProjectCommand.buildWorkspaceGeneratorOptions(
+            false,
+            isWithTests,
+            isWithDependenciesTests,
+            false,
+            true /* shouldUseHeaderMaps */,
+            false /* shouldMergeHeaderMaps */,
+            false /* shouldGenerateHeaderSymlinkTreeOnly */),
+        FocusedModuleTargetMatcher.noFocus(),
+        projectGenerators,
+        false);
+    return projectGenerators;
+  }
+
+  private static CommandRunnerParams createCommandRunnerParamsForTests()
+      throws IOException, InterruptedException {
+    Cell cell =
+        new TestCellBuilder()
+            .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
+            .build();
+    return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+        new TestConsole(),
+        cell,
+        new FakeAndroidDirectoryResolver(),
+        new NoopArtifactCache(),
+        BuckEventBusFactory.newInstance(),
+        FakeBuckConfig.builder().build(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        Optional.empty());
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.RichStream;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Iterator;
@@ -53,7 +52,6 @@ public class TargetGraphAndTargets {
   public static TargetGraphAndTargets create(
       final ImmutableSet<BuildTarget> graphRoots,
       TargetGraph projectGraph,
-      AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
@@ -68,34 +66,9 @@ public class TargetGraphAndTargets {
           ImmutableSet.copyOf(ImmutableSet.copyOf(projectGraph.getAll(explicitTests)));
     }
 
-    ImmutableSet<TargetNode<?, ?>> associatedProjects =
-        getAssociatedTargetNodes(
-            projectGraph,
-            Iterables.concat(projectRoots, associatedTests),
-            associatedProjectPredicate);
-
     TargetGraph targetGraph =
-        projectGraph.getSubgraph(
-            Iterables.concat(projectRoots, associatedTests, associatedProjects));
+        projectGraph.getSubgraph(Iterables.concat(projectRoots, associatedTests));
 
     return new TargetGraphAndTargets(targetGraph, projectRoots);
-  }
-
-  /**
-   * @param projectGraph A TargetGraph containing all nodes that could be related.
-   * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
-   *     are related.
-   * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
-   * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
-   */
-  private static ImmutableSet<TargetNode<?, ?>> getAssociatedTargetNodes(
-      TargetGraph projectGraph,
-      Iterable<TargetNode<?, ?>> subgraphRoots,
-      final AssociatedTargetNodePredicate associatedTargetNodePredicate) {
-    final TargetGraph subgraph = projectGraph.getSubgraph(subgraphRoots);
-
-    return FluentIterable.from(projectGraph.getNodes())
-        .filter(node -> associatedTargetNodePredicate.apply(node, subgraph))
-        .toSet();
   }
 }
