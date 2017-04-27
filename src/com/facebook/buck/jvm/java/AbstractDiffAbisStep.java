@@ -22,31 +22,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Joiner;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
-import difflib.DiffUtils;
-import difflib.Patch;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 @Value.Immutable
 @BuckStyleStep
@@ -65,27 +44,15 @@ abstract class AbstractDiffAbisStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    File classAbiJarFile = getClassAbiPath().toFile();
-    File sourceAbiJarFile = getSourceAbiPath().toFile();
-    boolean filesEqual = Files.equal(classAbiJarFile, sourceAbiJarFile);
+    Path classAbiPath = getClassAbiPath();
+    Path sourceAbiPath = getSourceAbiPath();
 
-    if (filesEqual) {
+    List<String> diff = JarDiffer.diffJars(classAbiPath, sourceAbiPath);
+    if (diff.isEmpty()) {
       return StepExecutionResult.SUCCESS;
     }
 
-    List<String> classAbiDump = dumpAbiJar(classAbiJarFile);
-    List<String> sourceAbiDump = dumpAbiJar(sourceAbiJarFile);
-
-    Patch<String> diff = DiffUtils.diff(classAbiDump, sourceAbiDump);
-    List<String> unifiedDiff =
-        DiffUtils.generateUnifiedDiff(
-            classAbiJarFile.getAbsolutePath(),
-            sourceAbiJarFile.getAbsolutePath(),
-            classAbiDump,
-            diff,
-            4);
-
-    String message = String.format("Files differ:\n%s", Joiner.on('\n').join(unifiedDiff));
+    String message = String.format("Files differ:\n%s", Joiner.on('\n').join(diff));
     JavaBuckConfig.SourceAbiVerificationMode verificationMode = getVerificationMode();
     switch (verificationMode) {
       case OFF:
@@ -97,81 +64,6 @@ abstract class AbstractDiffAbisStep implements Step {
         return StepExecutionResult.ERROR.withStderr(message);
       default:
         throw new AssertionError(String.format("Unknown verification mode: %s", verificationMode));
-    }
-  }
-
-  private List<String> dumpAbiJar(File abiJarFile) {
-    List<String> result = new ArrayList<>();
-    result.add("File order:");
-    try (JarFile abiJar = new JarFile(abiJarFile)) {
-      abiJar.stream().map(JarEntry::toString).forEach(result::add);
-
-      result.add("");
-      abiJar
-          .stream()
-          .flatMap(
-              entry ->
-                  Stream.concat(
-                      Stream.of(String.format("%s:", entry.getName())),
-                      Stream.concat(dumpFile(abiJar, entry), Stream.of(""))))
-          .forEach(result::add);
-    } catch (IOException e) {
-      try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-          PrintWriter pw = new PrintWriter(bos)) {
-        e.printStackTrace(pw);
-        result.add(new String(bos.toByteArray(), StandardCharsets.UTF_8));
-      } catch (IOException e2) {
-        throw new RuntimeException(e2);
-      }
-    }
-
-    return result;
-  }
-
-  private static Stream<String> dumpFile(JarFile file, JarEntry entry) {
-    try {
-      String fileName = entry.getName();
-      if (fileName.endsWith(".class")) {
-        return dumpClassFile(file, entry);
-      } else if (fileName.equals(JarFile.MANIFEST_NAME)) {
-        return dumpTextFile(file, entry);
-      } else {
-        return dumpBinaryFile(file, entry);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Stream<String> dumpClassFile(JarFile file, JarEntry entry) throws IOException {
-
-    byte[] textifiedClass;
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        PrintWriter pw = new PrintWriter(bos);
-        InputStream inputStream = file.getInputStream(entry)) {
-      ClassReader reader = new ClassReader(inputStream);
-      TraceClassVisitor traceVisitor = new TraceClassVisitor(null, new Textifier(), pw);
-      reader.accept(traceVisitor, 0);
-      textifiedClass = bos.toByteArray();
-    }
-
-    try (InputStreamReader streamReader =
-        new InputStreamReader(new ByteArrayInputStream(textifiedClass))) {
-      return CharStreams.readLines(streamReader).stream();
-    }
-  }
-
-  private static Stream<String> dumpTextFile(JarFile file, JarEntry entry) throws IOException {
-    try (InputStreamReader streamReader = new InputStreamReader(file.getInputStream(entry))) {
-      return CharStreams.readLines(streamReader).stream();
-    }
-  }
-
-  private static Stream<String> dumpBinaryFile(JarFile file, JarEntry entry) throws IOException {
-    try (HashingInputStream is =
-        new HashingInputStream(Hashing.murmur3_128(), file.getInputStream(entry))) {
-      ByteStreams.exhaust(is);
-      return Stream.of(String.format("Murmur3-128: %s", entry.getName(), is.hash().toString()));
     }
   }
 

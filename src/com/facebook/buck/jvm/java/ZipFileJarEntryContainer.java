@@ -50,7 +50,7 @@ class ZipFileJarEntryContainer implements JarEntryContainer {
         .map(
             entry ->
                 new JarEntrySupplier(
-                    makeCustomEntry(entry), owner, () -> jar.getInputStream(entry)));
+                    makeCustomEntry(entry), owner, () -> getJarFile().getInputStream(entry)));
   }
 
   @Override
