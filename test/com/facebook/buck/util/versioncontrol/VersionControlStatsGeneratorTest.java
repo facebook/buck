@@ -133,8 +133,7 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void pregeneratedStatsHavePrecedence() throws Exception {
     FastVersionControlStats pregenerated =
-        FastVersionControlStats.of(
-            "cafe", ImmutableSet.of("remote/master", "remote/another"), "babe", 1L);
+        FastVersionControlStats.of("cafe", ImmutableSet.of("remote/master"), "babe", 1L);
     Optional<FullVersionControlStats> actual =
         new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
@@ -152,7 +151,6 @@ public class VersionControlStatsGeneratorTest {
     assertThat(
         actual.get().getBranchedFromMasterTS(),
         is(not(equalTo(expected.getBranchedFromMasterTS()))));
-    assertThat(actual.get().getBaseBookmarks(), is(not(equalTo(expected.getBaseBookmarks()))));
     assertThat(actual.get().getBaseBookmarks(), is(equalTo(pregenerated.getBaseBookmarks())));
   }
 }

@@ -19,11 +19,8 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
+import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
@@ -58,19 +55,7 @@ public class VersionControlStatsGenerator {
 
   @GuardedBy("this")
   @Nullable
-  private String currentRevisionId;
-
-  @GuardedBy("this")
-  @Nullable
-  private ImmutableSet<String> baseBookmarks;
-
-  @GuardedBy("this")
-  @Nullable
-  private String baseRevisionId;
-
-  @GuardedBy("this")
-  @Nullable
-  private Long baseRevisionTimestamp;
+  private FastVersionControlStats fastStats;
 
   @GuardedBy("this")
   @Nullable
@@ -85,12 +70,14 @@ public class VersionControlStatsGenerator {
       Optional<FastVersionControlStats> pregeneratedVersionControlStats) {
     this.versionControlCmdLineInterface = versionControlCmdLineInterface;
     this.pregeneratedVersionControlStats = pregeneratedVersionControlStats;
-    if (pregeneratedVersionControlStats.isPresent()) {
-      this.currentRevisionId = pregeneratedVersionControlStats.get().getCurrentRevisionId();
-      this.baseBookmarks = pregeneratedVersionControlStats.get().getBaseBookmarks();
-      this.baseRevisionId = pregeneratedVersionControlStats.get().getBranchedFromMasterRevisionId();
-      this.baseRevisionTimestamp = pregeneratedVersionControlStats.get().getBranchedFromMasterTS();
-    }
+    pregeneratedVersionControlStats.ifPresent(
+        x ->
+            this.fastStats =
+                FastVersionControlStats.of(
+                    x.getCurrentRevisionId(),
+                    x.getBaseBookmarks(),
+                    x.getBranchedFromMasterRevisionId(),
+                    x.getBranchedFromMasterTS()));
   }
 
   public void generateStatsAsync(
@@ -125,79 +112,36 @@ public class VersionControlStatsGenerator {
     } else {
       FullVersionControlStats.Builder versionControlStatsBuilder =
           FullVersionControlStats.builder();
-      // Prepopulate as much as possible before trying to query the VCS: this way if it fails we
-      // still have this information.
-      if (currentRevisionId != null) {
-        versionControlStatsBuilder.setCurrentRevisionId(currentRevisionId);
-      }
-      if (baseBookmarks != null) {
-        versionControlStatsBuilder.setBaseBookmarks(baseBookmarks);
-      }
-      if (baseRevisionId != null) {
-        versionControlStatsBuilder.setBranchedFromMasterRevisionId(baseRevisionId);
-      }
-      if (baseRevisionTimestamp != null) {
-        versionControlStatsBuilder.setBranchedFromMasterTS(baseRevisionTimestamp);
-      }
-
       try {
-        // Get the current revision id.
-        if (currentRevisionId == null) {
-          currentRevisionId = versionControlCmdLineInterface.currentRevisionId();
-          versionControlStatsBuilder.setCurrentRevisionId(currentRevisionId);
+        if (fastStats == null) {
+          fastStats = versionControlCmdLineInterface.fastVersionControlStats();
         }
-        versionControlStatsBuilder.setCurrentRevisionId(currentRevisionId);
-        if (baseBookmarks == null || baseRevisionId == null || baseRevisionTimestamp == null) {
-          // Get a list of the revision ids of all the tracked bookmarks.
-          ImmutableMap<String, String> bookmarksRevisionIds =
-              versionControlCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
-          String masterRevisionId = bookmarksRevisionIds.get(REMOTE_MASTER);
-          if (masterRevisionId != null) {
-            // Get the common ancestor of current and master revision
-            Pair<String, Long> baseRevisionInfo =
-                versionControlCmdLineInterface.commonAncestorAndTS(
-                    currentRevisionId, masterRevisionId);
-            if (baseBookmarks == null) {
-              baseBookmarks =
-                  bookmarksRevisionIds
-                      .entrySet()
-                      .stream()
-                      .filter(e -> e.getValue().startsWith(baseRevisionInfo.getFirst()))
-                      .map(Map.Entry::getKey)
-                      .collect(MoreCollectors.toImmutableSet());
-              versionControlStatsBuilder.setBaseBookmarks(baseBookmarks);
-            }
-            if (baseRevisionId == null) {
-              baseRevisionId = baseRevisionInfo.getFirst();
-              versionControlStatsBuilder.setBranchedFromMasterRevisionId(
-                  baseRevisionInfo.getFirst());
-            }
-            if (baseRevisionTimestamp == null) {
-              baseRevisionTimestamp = baseRevisionInfo.getSecond();
-              versionControlStatsBuilder.setBranchedFromMasterTS(baseRevisionInfo.getSecond());
-            }
-          }
-        }
+        versionControlStatsBuilder.setCurrentRevisionId(fastStats.getCurrentRevisionId());
+        versionControlStatsBuilder.setBaseBookmarks(
+            Sets.intersection(fastStats.getBaseBookmarks(), TRACKED_BOOKMARKS));
+        versionControlStatsBuilder.setBranchedFromMasterRevisionId(
+            fastStats.getBranchedFromMasterRevisionId());
+        versionControlStatsBuilder.setBranchedFromMasterTS(fastStats.getBranchedFromMasterTS());
         if (mode == Mode.FULL) {
-          // Same as above: prepopulate as much as possible.
+          // Prepopulate as much as possible before trying to query the VCS: this way if it fails
+          // we still have this information.
           if (changedFiles != null) {
             versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
           }
           if (diff != null) {
             versionControlStatsBuilder.setDiff(diff);
           }
-          // We can only query these if we have a base revision id.
-          if (baseRevisionId != null) {
-            if (changedFiles == null) {
-              changedFiles = versionControlCmdLineInterface.changedFiles(baseRevisionId);
-              versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
-            }
-            if (diff == null) {
-              diff =
-                  versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
-                      baseRevisionId, currentRevisionId);
-              versionControlStatsBuilder.setDiff(diff);
-            }
+          if (changedFiles == null) {
+            changedFiles =
+                versionControlCmdLineInterface.changedFiles(
+                    fastStats.getBranchedFromMasterRevisionId());
+            versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
+          }
+          if (diff == null) {
+            diff =
+                versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+                    fastStats.getBranchedFromMasterRevisionId(), fastStats.getCurrentRevisionId());
+            versionControlStatsBuilder.setDiff(diff);
           }
         }
       } catch (VersionControlCommandFailedException e) {

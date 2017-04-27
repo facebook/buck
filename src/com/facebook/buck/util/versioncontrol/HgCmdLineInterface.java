@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
@@ -124,6 +125,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> REVISION_AGE_COMMAND =
       ImmutableList.of(
           HG_CMD_TEMPLATE, "log", "-r", REVISION_ID_TEMPLATE, "--template", "'{date|hgdate}'");
+
+  private static final ImmutableList<String> FAST_STATS_COMMAND =
+      ImmutableList.of(
+          HG_CMD_TEMPLATE,
+          "log",
+          "--rev",
+          ". + ancestor(.,remote/master)",
+          "--template",
+          "{node|short} {date|hgdate} {remotebookmarks}\\n");
 
   private ProcessExecutorFactory processExecutorFactory;
   private final Path projectRoot;
@@ -263,6 +273,49 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return bookmarksRevisions.build();
   }
 
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException {
+    String output = executeCommand(FAST_STATS_COMMAND, false);
+    String[] lines = output.split("\n");
+    switch (lines.length) {
+      case 1:
+        return parseFastStats(lines[0], lines[0]);
+      case 2:
+        return parseFastStats(lines[0], lines[1]);
+    }
+    throw new VersionControlCommandFailedException(
+        String.format(
+            "Unexpected number of lines output from '%s':\n%s",
+            FAST_STATS_COMMAND.stream().collect(Collectors.joining(" ")), output));
+  }
+
+  private FastVersionControlStats parseFastStats(
+      String currentRevisionLine, String baseRevisionLine)
+      throws VersionControlCommandFailedException {
+    String numberOfWordsMismatchFormat =
+        String.format(
+            "Unexpected number of words output from '%s', expected 3 or more:\n%%s",
+            FAST_STATS_COMMAND.stream().collect(Collectors.joining(" ")));
+    String[] currentRevisionWords = currentRevisionLine.split(" ", 4);
+    if (currentRevisionWords.length < 3) {
+      throw new VersionControlCommandFailedException(
+          String.format(numberOfWordsMismatchFormat, currentRevisionLine));
+    }
+    String[] baseRevisionWords = baseRevisionLine.split(" ", 4);
+    if (baseRevisionWords.length < 3) {
+      throw new VersionControlCommandFailedException(
+          String.format(numberOfWordsMismatchFormat, baseRevisionLine));
+    }
+    return FastVersionControlStats.of(
+        currentRevisionWords[0],
+        baseRevisionWords.length == 4
+            ? ImmutableSet.copyOf(baseRevisionWords[3].split(" "))
+            : ImmutableSet.of(),
+        baseRevisionWords[0],
+        Long.valueOf(baseRevisionWords[1]));
+  }
+
   public String extractRawManifest()
       throws VersionControlCommandFailedException, InterruptedException {
     try {
@@ -296,6 +349,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   private String executeCommand(Iterable<String> command)
+      throws VersionControlCommandFailedException, InterruptedException {
+    return executeCommand(command, true);
+  }
+
+  private String executeCommand(Iterable<String> command, boolean cleanOutput)
       throws VersionControlCommandFailedException, InterruptedException {
     command = replaceTemplateValue(command, HG_CMD_TEMPLATE, hgCmd);
     String commandString = commandAsString(command);
@@ -332,7 +390,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           result.getMessageForUnexpectedResult(commandString));
     }
 
-    return cleanResultString(resultString.get());
+    if (cleanOutput) {
+      return cleanResultString(resultString.get());
+    } else {
+      return resultString.get();
+    }
   }
 
   private static String validateRevisionId(String revisionId)

@@ -164,4 +164,7 @@ public interface VersionControlCmdLineInterface {
    */
   ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
       throws InterruptedException, VersionControlCommandFailedException;
+
+  FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException;
 }

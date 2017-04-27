@@ -74,4 +74,10 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
       throws InterruptedException, VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }
+
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException {
+    throw new VersionControlCommandFailedException("");
+  }
 }

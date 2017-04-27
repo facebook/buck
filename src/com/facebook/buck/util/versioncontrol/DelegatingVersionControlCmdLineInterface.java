@@ -145,4 +145,10 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
       throws InterruptedException, VersionControlCommandFailedException {
     return getDelegate().bookmarksRevisionsId(bookmarks);
   }
+
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException {
+    return getDelegate().fastVersionControlStats();
+  }
 }

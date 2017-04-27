@@ -85,4 +85,14 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
             MoreCollectors.toImmutableMap(
                 x -> x, x -> versionControlStats.getBranchedFromMasterRevisionId()));
   }
+
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException {
+    return FastVersionControlStats.of(
+        versionControlStats.getCurrentRevisionId(),
+        versionControlStats.getBaseBookmarks(),
+        versionControlStats.getBranchedFromMasterRevisionId(),
+        versionControlStats.getBranchedFromMasterTS());
+  }
 }
