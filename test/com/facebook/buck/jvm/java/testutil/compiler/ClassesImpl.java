@@ -57,6 +57,7 @@ class ClassesImpl implements Classes {
       List<Path> files =
           Files.walk(root.getRoot().toPath())
               .filter(path -> path.toFile().isFile())
+              .sorted()
               .collect(Collectors.toList());
 
       for (Path file : files) {
