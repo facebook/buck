@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.JarFile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,6 +117,15 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot().toString();
     ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
     assertEquals("Running java wrapper\nRunning inner jar", result.getStdout().get().trim());
+  }
+
+  @Test
+  public void jarWithMetaInfo() throws IOException, InterruptedException {
+    setUpProjectWorkspaceForScenario("java_binary_with_meta_inf");
+    Path jar = workspace.buildAndReturnOutput("//:bin-meta-inf");
+    try (JarFile jarFile = new JarFile(jar.toFile())) {
+      assertNotNull(jarFile.getEntry("META-INF/test.txt"));
+    }
   }
 
   @Test

@@ -21,6 +21,7 @@ import com.facebook.buck.util.ThrowingSupplier;
 import com.facebook.buck.zip.CustomZipEntry;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -58,7 +59,7 @@ class DirectoryJarEntryContainer implements JarEntryContainer {
 
   @Override
   public Stream<JarEntrySupplier> stream() throws IOException {
-    return Files.walk(directory)
+    return Files.walk(directory, FileVisitOption.FOLLOW_LINKS)
         .map(
             path -> {
               String relativePath =
