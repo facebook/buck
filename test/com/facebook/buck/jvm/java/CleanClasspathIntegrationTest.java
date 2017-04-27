@@ -37,7 +37,6 @@ import org.junit.Test;
 /**
  * Integration test to verify that when a {@code java_library} rule is built, the classpath that is
  * used to build it does not contain any leftover artifacts from the previous build.
- *
  */
 public class CleanClasspathIntegrationTest {
 

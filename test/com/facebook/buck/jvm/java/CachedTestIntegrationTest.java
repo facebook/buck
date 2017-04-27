@@ -51,7 +51,6 @@ public class CachedTestIntegrationTest {
    * Note that this behavior was not observed when the build cache was disabled, so this was
    * evidence of a bad interaction between the test runner and the build cache. This integration
    * test reproduces that situation to ensure it does not happen again.
-   *
    */
   @Test
   public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws IOException {
