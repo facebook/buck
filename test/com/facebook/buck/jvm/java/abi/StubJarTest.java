@@ -72,6 +72,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -2199,12 +2200,26 @@ public class StubJarTest {
     tester
         .setSourceFile(
             "A.java",
-            Joiner.on('\n')
-                .join(
-                    "package com.example.buck;",
-                    "public class A {",
-                    "  public static int i = 3;",
-                    "}"))
+            "package com.example.buck;",
+            "public class A {",
+            "  public static int i = 3;",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x9",
+            "  public static I i",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V", // Should not stub this, even though it's default access
+            "}")
         .addExpectedStub(
             "com/example/buck/A",
             "// class version 52.0 (52)",
@@ -2245,80 +2260,236 @@ public class StubJarTest {
 
   @Test
   public void shouldNotIncludeSyntheticFields() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "A.java",
-            Joiner.on('\n')
-                .join(
-                    "package com.example.buck;",
-                    "public class A {",
-                    "  public void method() {",
-                    "    assert false;", // Using assert adds a synthetic field $assertionsDisabled
-                    "  }",
-                    "}"));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+            "package com.example.buck;",
+            "public class A {",
+            "  public void method() {",
+            "    assert false;",
+            "  }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1018",
+            "  final static synthetic Z $assertionsDisabled", // Should remove this field
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public method()V",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public method()V",
+            "}")
+        .createAndCheckStubJar();
   }
 
   @Test
   public void shouldNotIncludeSyntheticClasses() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "A.java",
-            Joiner.on('\n')
-                .join(
-                    "package com.example.buck;",
-                    "public class A {",
-                    "  enum E { Value };",
-                    "  public void method(E e) {",
-                    "    switch (e) {", // Switching on an enum introduces a synthetic helper class
-                    "      case Value: break;",
-                    "    }",
-                    "  }",
-                    "}"));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class", "com/example/buck/A$E.class");
-    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+            "package com.example.buck;",
+            "public class A {",
+            "  enum E { Value };",
+            "  public void method(E e) {",
+            "    switch (e) {",
+            "      case Value: break;",
+            "    }",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$E",
+            "// class version 52.0 (52)",
+            "// access flags 0x4030",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A$E;>;",
+            "// declaration: com/example/buck/A$E extends java.lang.Enum<com.example.buck.A$E>",
+            "final enum com/example/buck/A$E extends java/lang/Enum  {",
+            "",
+            "  // access flags 0x4018",
+            "  final static enum INNERCLASS com/example/buck/A$E com/example/buck/A E",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A$E; Value",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A$E;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A$E;",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Ljava/lang/String;I)V",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1008",
+            "  static synthetic INNERCLASS com/example/buck/A$1 null null",
+            // Should not include this class
+            "  // access flags 0x4018",
+            "  final static enum INNERCLASS com/example/buck/A$E com/example/buck/A E",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public method(Lcom/example/buck/A$E;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x4018",
+            "  final static enum INNERCLASS com/example/buck/A$E com/example/buck/A E",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public method(Lcom/example/buck/A$E;)V",
+            "}")
+        .createAndCheckStubJar();
   }
 
   @Test
   public void shouldNotIncludeSyntheticMethods() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
-            "A.java",
-            Joiner.on('\n')
-                .join(
-                    "package com.example.buck;",
-                    "public enum A {",
-                    "  Value1 { }", // Creating an enum subclass creates a synthetic constructor
-                    "}"));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
-    assertClassesNotStubbed(paths, "com/example/buck/A$1.class");
+    tester
+        .setSourceFile(
+            "A.java", "package com.example.buck;", "public enum A {", "  Value1 { }", "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4021",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "public enum com/example/buck/A extends java/lang/Enum  {",
+            "",
+            "  // access flags 0x4008",
+            "  static enum INNERCLASS com/example/buck/A$1 null null",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x101A",
+            "  private final static synthetic [Lcom/example/buck/A; $VALUES",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x2",
+            "  // signature ()V",
+            "  // declaration: void <init>()",
+            "  private <init>(Ljava/lang/String;I)V",
+            "",
+            "  // access flags 0x1000",
+            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V", // Should not include this method
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4021",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "public enum com/example/buck/A extends java/lang/Enum  {",
+            "",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Ljava/lang/String;I)V",
+            "}")
+        .createAndCheckStubJar();
   }
 
   @Test
   public void shouldIncludeBridgeMethods() throws IOException {
     notYetImplementedForSource();
 
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "A.java",
-            Joiner.on('\n')
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class A implements Comparable<A> {",
-                        "  public int compareTo(A other) {",
-                        "    return 0;",
-                        "  }",
-                        "}")));
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+            "package com.example.buck;",
+            "public class A implements Comparable<A> {",
+            "  public int compareTo(A other) {",
+            "    return 0;",
+            "  }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature Ljava/lang/Object;Ljava/lang/Comparable<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A implements java.lang.Comparable<com.example.buck.A>",
+            "public class com/example/buck/A implements java/lang/Comparable  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public compareTo(Lcom/example/buck/A;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I", // Should include this method
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature Ljava/lang/Object;Ljava/lang/Comparable<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A implements java.lang.Comparable<com.example.buck.A>",
+            "public class com/example/buck/A implements java/lang/Comparable  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public compareTo(Lcom/example/buck/A;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            "}")
+        .createAndCheckStubJar();
   }
 
   @Test
@@ -2453,16 +2624,6 @@ public class StubJarTest {
         .compileFullJar();
   }
 
-  private void assertClassesNotStubbed(JarPaths paths, String... classFilePaths)
-      throws IOException {
-    for (String classFilePath : classFilePaths) {
-      AbiClass stubbed = readClass(paths.stubJar, classFilePath);
-      if (stubbed != null) {
-        fail(String.format("Should not have stubbed %s", stubbed.getClassNode().name));
-      }
-    }
-  }
-
   private void assertClassesStubbedCorrectly(JarPaths paths, String... classFilePaths)
       throws IOException {
     for (String classFilePath : classFilePaths) {
@@ -2484,6 +2645,8 @@ public class StubJarTest {
   /**
    * A class is stubbed correctly if the stub is exactly the same as its full counterpart, with the
    * following exceptions:
+   *
+   * <p>
    *
    * <ul>
    *   <li>No private members, &lt;clinit&gt;, synthetic members, bridge methods, or method bodies
@@ -2784,6 +2947,8 @@ public class StubJarTest {
   private final class Tester {
     private final List<String> expectedDirectory = new ArrayList<>();
     private final List<String> actualDirectory = new ArrayList<>();
+    private final Map<String, List<String>> expectedFullAbis = new HashMap<>();
+    private final Map<String, List<String>> actualFullAbis = new HashMap<>();
     private final Map<String, List<String>> expectedStubs = new HashMap<>();
     private final Map<String, List<String>> actualStubs = new HashMap<>();
     private String sourceFileName = "";
@@ -2798,6 +2963,12 @@ public class StubJarTest {
       return this;
     }
 
+    public Tester addExpectedFullAbi(String classBinaryName, String... abiLines) {
+      String filePath = classBinaryName + ".class";
+      expectedFullAbis.put(filePath, Arrays.asList(abiLines));
+      return this;
+    }
+
     public Tester addExpectedStub(String classBinaryName, String... stubLines) {
       String filePath = classBinaryName + ".class";
       expectedDirectory.add(filePath);
@@ -2806,6 +2977,23 @@ public class StubJarTest {
     }
 
     public Tester createAndCheckStubJar() throws IOException {
+      if (!expectedFullAbis.isEmpty()) {
+        compileFullJar();
+        dumpFullJarAbi();
+
+        for (String entryName : expectedDirectory) {
+          if (!expectedFullAbis.containsKey(entryName)) {
+            // You don't have to put expectations for all full ABIs, only those that you feel really
+            // need to be a certain way for the test to be valid.
+            continue;
+          }
+          assertEquals(
+              "Full ABI for " + entryName + " is not what was expected.",
+              Joiner.on('\n').join(expectedFullAbis.get(entryName)),
+              Joiner.on('\n').join(actualFullAbis.get(entryName)));
+        }
+      }
+
       createStubJar();
       dumpStubJar();
 
@@ -2879,7 +3067,11 @@ public class StubJarTest {
     }
 
     @SuppressWarnings("unused")
-    public Tester dumpTestCode() throws IOException {
+    public Tester dumpTestCode(boolean includeFullAbi) throws IOException {
+      if (includeFullAbi) {
+        compileFullJar();
+        dumpFullJarAbi();
+      }
       createStubJar();
       dumpStubJar();
 
@@ -2899,6 +3091,21 @@ public class StubJarTest {
       }
       result.append("\")\n");
       for (String fileName : actualDirectory) {
+        if (includeFullAbi) {
+          result.append("        .addExpectedFullAbi(\n");
+          result.append(indent);
+          result.append('"');
+          result.append(fileName.substring(0, fileName.length() - ".class".length()));
+
+          for (String abiLine : actualFullAbis.get(fileName)) {
+            result.append("\",\n");
+            result.append(indent);
+            result.append('"');
+            result.append(abiLine.replace("\"", "\\\""));
+          }
+          result.append("\")\n");
+        }
+
         result.append("        .addExpectedStub(\n");
         result.append(indent);
         result.append('"');
@@ -2929,6 +3136,25 @@ public class StubJarTest {
           actualDirectory.add(name);
           actualStubs.put(
               name, new JarDumper().dumpEntry(file, entry).collect(Collectors.toList()));
+        }
+      }
+    }
+
+    protected void dumpFullJarAbi() throws IOException {
+      try (JarFile file = new JarFile(fullJarPath.toFile())) {
+        Iterable<JarEntry> entries = file.stream()::iterator;
+        for (JarEntry entry : entries) {
+          String name = entry.getName();
+          if (JarFile.MANIFEST_NAME.equals(name)) {
+            continue;
+          }
+          actualFullAbis.put(
+              name,
+              new JarDumper()
+                  .setAsmFlags(
+                      ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+                  .dumpEntry(file, entry)
+                  .collect(Collectors.toList()));
         }
       }
     }
