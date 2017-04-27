@@ -237,6 +237,12 @@ public class ProjectWorkspace {
       addBuckConfigLocalOption("build", "threads", "2");
     }
 
+    // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
+    // from buck-out while watchman indexes/touches files.
+    if (!Files.exists(getPath(".watchmanconfig"))) {
+      writeContentsToPath("{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}", ".watchmanconfig");
+    }
+
     isSetUp = true;
     return this;
   }

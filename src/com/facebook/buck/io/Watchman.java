@@ -26,6 +26,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -464,8 +465,12 @@ public class Watchman implements AutoCloseable {
       }
 
       private Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
-        // TODO(beng): Support Windows named pipes here.
-        return UnixDomainSocket.createSocketWithPath(transportPath);
+        if (Platform.detect() == Platform.WINDOWS) {
+          // TODO(beng): Support Windows named pipes here.
+          throw new IOException("WatchmanTransport is not supported on windows yet");
+        } else {
+          return UnixDomainSocket.createSocketWithPath(transportPath);
+        }
       }
     };
   }
