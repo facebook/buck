@@ -58,10 +58,9 @@ public class Watchman implements AutoCloseable {
   public static final String NULL_CLOCK = "c:0:0";
 
   private static final int WATCHMAN_CLOCK_SYNC_TIMEOUT = 100;
-  private static final ImmutableSet<String> REQUIRED_CAPABILITIES =
-      ImmutableSet.of("cmd-watch-project");
+  static final ImmutableSet<String> REQUIRED_CAPABILITIES = ImmutableSet.of("cmd-watch-project");
 
-  private static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
+  static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
       ImmutableMap.<String, Capability>builder()
           .put("term-dirname", Capability.DIRNAME)
           .put("cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH)
@@ -77,7 +76,7 @@ public class Watchman implements AutoCloseable {
   // Crawling a large repo in `watch-project` might take a long time on a slow disk.
   private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(45);
 
-  private static final Path WATCHMAN = Paths.get("watchman");
+  static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN =
       new Watchman(
           ImmutableMap.of(),
@@ -432,7 +431,7 @@ public class Watchman implements AutoCloseable {
       return Optional.empty();
     }
     if (exitCode != 0) {
-      LOG.debug("Watchman's stderr: %s", new String(stderr.toByteArray(), Charsets.UTF_8));
+      LOG.error("Watchman's stderr: %s", new String(stderr.toByteArray(), Charsets.UTF_8));
       LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
       return Optional.empty();
     }
@@ -448,7 +447,8 @@ public class Watchman implements AutoCloseable {
     return Optional.of((Map<String, Object>) response);
   }
 
-  private static Function<Path, Optional<WatchmanClient>> localWatchmanConnector(
+  @VisibleForTesting
+  static Function<Path, Optional<WatchmanClient>> localWatchmanConnector(
       final Console console, final Clock clock) {
     return new Function<Path, Optional<WatchmanClient>>() {
       @Override
