@@ -1712,39 +1712,27 @@ public class StubJarTest {
 
   @Test
   public void abiSafeChangesResultInTheSameOutputJar() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "A.java",
-            Joiner.on("\n")
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class A {",
-                        "  protected final static int count = 42;",
-                        "  public String getGreeting() { return \"hello\"; }",
-                        "  Class<?> clazz;",
-                        "  public int other;",
-                        "}")));
-    Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
-
-    paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+            "package com.example.buck;",
+            "public class A {",
+            "  protected final static int count = 42;",
+            "  public String getGreeting() { return \"hello\"; }",
+            "  Class<?> clazz;",
+            "  public int other;",
+            "}")
+        .createStubJar()
+        .setSourceFile(
             "A.java",
-            Joiner.on("\n")
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class A {",
-                        "  protected final static int count = 42;",
-                        "  public String getGreeting() { return \"merhaba\"; }",
-                        "  Class<?> clazz = String.class;",
-                        "  public int other = 32;",
-                        "}")));
-    Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
-
-    assertEquals(originalHash, secondHash);
+            "package com.example.buck;",
+            "public class A {",
+            "  protected final static int count = 42;",
+            "  public String getGreeting() { return \"merhaba\"; }",
+            "  Class<?> clazz = String.class;",
+            "  public int other = 32;",
+            "}")
+        .assertStubJarIsIdentical();
   }
 
   @Test
@@ -1787,39 +1775,27 @@ public class StubJarTest {
 
   @Test
   public void ordersChangesResultInADifferentOutputJar() throws IOException {
-    JarPaths paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+    tester
+        .setSourceFile(
             "A.java",
-            Joiner.on("\n")
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class A {",
-                        "  protected final static int count = 42;",
-                        "  public String getGreeting() { return \"hello\"; }",
-                        "  Class<?> clazz;",
-                        "  public int other;",
-                        "}")));
-    Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
-
-    paths =
-        createFullAndStubJars(
-            EMPTY_CLASSPATH,
+            "package com.example.buck;",
+            "public class A {",
+            "  protected final static int count = 42;",
+            "  public String getGreeting() { return \"hello\"; }",
+            "  Class<?> clazz;",
+            "  public int other;",
+            "}")
+        .createStubJar()
+        .setSourceFile(
             "A.java",
-            Joiner.on("\n")
-                .join(
-                    ImmutableList.of(
-                        "package com.example.buck;",
-                        "public class A {",
-                        "  Class<?> clazz;",
-                        "  public String getGreeting() { return \"hello\"; }",
-                        "  protected final static int count = 42;",
-                        "  public int other;",
-                        "}")));
-    Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
-
-    assertNotEquals(originalHash, secondHash);
+            "package com.example.buck;",
+            "public class A {",
+            "  Class<?> clazz;",
+            "  public String getGreeting() { return \"hello\"; }",
+            "  protected final static int count = 42;",
+            "  public int other;",
+            "}")
+        .assertStubJarIsDifferent();
   }
 
   @Test
@@ -2884,6 +2860,22 @@ public class StubJarTest {
 
     public void testCanCompile() throws IOException {
       compileFullJar();
+    }
+
+    public void assertStubJarIsIdentical() throws IOException {
+      Sha1HashCode originalHash = filesystem.computeSha1(stubJarPath);
+
+      createStubJar();
+
+      assertEquals(originalHash, filesystem.computeSha1(stubJarPath));
+    }
+
+    public void assertStubJarIsDifferent() throws IOException {
+      Sha1HashCode originalHash = filesystem.computeSha1(stubJarPath);
+
+      createStubJar();
+
+      assertNotEquals(originalHash, filesystem.computeSha1(stubJarPath));
     }
 
     @SuppressWarnings("unused")
