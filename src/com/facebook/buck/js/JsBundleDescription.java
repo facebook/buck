@@ -43,12 +43,13 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class JsBundleDescription
     implements Description<JsBundleDescription.Arg>,
@@ -99,9 +100,8 @@ public class JsBundleDescription
 
     final Either<ImmutableSet<String>, String> entryPoint = args.entry;
     ImmutableSortedSet<JsLibrary> libraryDeps =
-        new TransitiveLibraryDependencies(
-                params.getBuildTarget(), targetGraph, resolver, args.libs, args.deps)
-            .collect();
+        new TransitiveLibraryDependencies(params.getBuildTarget(), targetGraph, resolver)
+            .collect(args.deps);
 
     return new JsBundle(
         params.copyAppendingExtraDeps(libraryDeps),
@@ -186,7 +186,6 @@ public class JsBundleDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> libs = ImmutableSortedSet.of();
     public Either<ImmutableSet<String>, String> entry;
     public Optional<String> bundleName;
     public BuildTarget worker;
@@ -195,26 +194,14 @@ public class JsBundleDescription
     public Optional<String> rDotJavaPackage;
   }
 
-  private static class TransitiveLibraryDependencies
-      extends AbstractBreadthFirstTraversal<TransitiveLibraryDependencies.Node> {
+  private static class TransitiveLibraryDependencies {
     private final ImmutableSortedSet<Flavor> extraFlavors;
     private final BuildRuleResolver resolver;
     private final SourcePathRuleFinder ruleFinder;
     private final TargetGraph targetGraph;
-    private final ImmutableSortedSet.Builder<JsLibrary> jsLibraries =
-        ImmutableSortedSet.naturalOrder();
 
     private TransitiveLibraryDependencies(
-        BuildTarget bundleTarget,
-        TargetGraph targetGraph,
-        BuildRuleResolver resolver,
-        Collection<BuildTarget> firstLevelLibraryDeps,
-        Collection<BuildTarget> firstLevelDeps) {
-      super(
-          Stream.concat(firstLevelLibraryDeps.stream(), firstLevelDeps.stream())
-              .map(t -> new Node(t, bundleTarget))
-              .collect(MoreCollectors.toImmutableList()));
-
+        BuildTarget bundleTarget, TargetGraph targetGraph, BuildRuleResolver resolver) {
       this.targetGraph = targetGraph;
       this.resolver = resolver;
 
@@ -229,50 +216,44 @@ public class JsBundleDescription
                           .anyMatch(domain -> domain.contains(flavor)))
               .collect(MoreCollectors.toImmutableSortedSet());
       ruleFinder = new SourcePathRuleFinder(resolver);
-
-      // ensure that `libs` are actually `JsLibrary` rules. This will go away.
-      firstLevelLibraryDeps.stream().forEach(t -> requireLibrary(new Node(t, bundleTarget)));
     }
 
-    @Override
-    public Iterable<Node> visit(Node node) throws RuntimeException {
-      final TargetNode<?, ?> targetNode = targetGraph.get(node.target);
-      final Description<?> description = targetNode.getDescription();
+    ImmutableSortedSet<JsLibrary> collect(Collection<BuildTarget> deps) {
+      ImmutableSortedSet.Builder<JsLibrary> jsLibraries = ImmutableSortedSet.naturalOrder();
 
-      Stream<BuildTarget> additionalTargets;
-      if (description instanceof JsLibraryDescription) {
-        final JsLibrary library = requireLibrary(node);
-        jsLibraries.add(library);
-        additionalTargets = getLibraryDependencies(library);
-      } else if (description instanceof AndroidLibraryDescription
-          || description instanceof AppleLibraryDescription) {
-        additionalTargets = targetNode.getDeclaredDeps().stream();
-      } else {
-        additionalTargets = Stream.empty();
-      }
+      new AbstractBreadthFirstTraversal<BuildTarget>(deps) {
+        @Override
+        public Iterable<BuildTarget> visit(BuildTarget target) throws RuntimeException {
+          final TargetNode<?, ?> targetNode = targetGraph.get(target);
+          final Description<?> description = targetNode.getDescription();
 
-      return additionalTargets
-          .map(t -> new Node(t, node.target))
-          .collect(MoreCollectors.toImmutableList());
-    }
+          if (description instanceof JsLibraryDescription) {
+            final JsLibrary library = requireLibrary(target);
+            jsLibraries.add(library);
+            return getLibraryDependencies(library);
+          } else if (description instanceof AndroidLibraryDescription
+              || description instanceof AppleLibraryDescription) {
+            return targetNode.getDeclaredDeps();
+          }
 
-    ImmutableSortedSet<JsLibrary> collect() {
-      start();
+          return ImmutableList.of();
+        }
+      }.start();
+
       return jsLibraries.build();
     }
 
-    private JsLibrary requireLibrary(Node node) {
+    private JsLibrary requireLibrary(BuildTarget target) {
       try {
-        return JsUtil.verifyIsJsLibrary(
-            resolver.requireRule(node.target.withAppendedFlavors(extraFlavors)),
-            node.parent,
-            targetGraph);
+        BuildRule rule = resolver.requireRule(target.withAppendedFlavors(extraFlavors));
+        Preconditions.checkState(rule instanceof JsLibrary);
+        return (JsLibrary) rule;
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(e);
       }
     }
 
-    private Stream<BuildTarget> getLibraryDependencies(JsLibrary library) {
+    private Iterable<BuildTarget> getLibraryDependencies(JsLibrary library) {
       return library
           .getLibraryDependencies()
           .stream()
@@ -280,23 +261,14 @@ public class JsBundleDescription
               sourcePath ->
                   ruleFinder
                       .getRule(sourcePath)
-                      .orElseThrow(
+                      .<HumanReadableException>orElseThrow(
                           () ->
                               new HumanReadableException(
                                   "js_library %s has '%s' as a lib, but js_library can only have other "
                                       + "js_library targets as lib",
-                                  library.getBuildTarget(), sourcePath))
-                      .getBuildTarget());
-    }
-
-    public static class Node {
-      final BuildTarget target;
-      final BuildTarget parent;
-
-      public Node(BuildTarget target, BuildTarget parent) {
-        this.target = target;
-        this.parent = parent;
-      }
+                                  library.getBuildTarget(), sourcePath)))
+          .map(BuildRule::getBuildTarget)
+          .collect(MoreCollectors.toImmutableList());
     }
   }
 }

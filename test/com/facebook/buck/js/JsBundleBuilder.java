@@ -49,9 +49,4 @@ public class JsBundleBuilder
     arg.deps = deps;
     return this;
   }
-
-  JsBundleBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
-    arg.libs = libs;
-    return this;
-  }
 }

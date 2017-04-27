@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -142,15 +141,6 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild("//js:fruit-with-extras").assertSuccess();
 
     workspace.verify(Paths.get("named_flavored_bundle.expected"), genPath);
-  }
-
-  @Test
-  public void testBundleWithNonLibraryDeps() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "js_bundle target '//js:bundle-with-genrule-dep' can only depend on "
-            + "js_library targets, but one of its dependencies, '//js:a-genrule', is of type genrule.");
-    workspace.runBuckBuild("//js:bundle-with-genrule-dep");
   }
 
   @Test

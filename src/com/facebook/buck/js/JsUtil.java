@@ -19,7 +19,6 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
@@ -85,28 +84,16 @@ public class JsUtil {
       BuildTarget target, BuildTarget parent, TargetGraph targetGraph) {
     Description<?> targetDescription = targetGraph.get(target).getDescription();
     if (targetDescription.getClass() != JsLibraryDescription.class) {
-      throw humanReadableException(target, parent, targetGraph);
+      throw new HumanReadableException(
+          "%s target '%s' can only depend on js_library targets, but one of its dependencies, "
+              + "'%s', is of type %s.",
+          buildRuleTypeForTarget(parent, targetGraph),
+          parent,
+          target,
+          buildRuleTypeForTarget(target, targetGraph));
     }
 
     return target;
-  }
-
-  static JsLibrary verifyIsJsLibrary(BuildRule rule, BuildTarget parent, TargetGraph targetGraph) {
-    if (!(rule instanceof JsLibrary)) {
-      throw humanReadableException(rule.getBuildTarget(), parent, targetGraph);
-    }
-    return (JsLibrary) rule;
-  }
-
-  private static HumanReadableException humanReadableException(
-      BuildTarget target, BuildTarget parent, TargetGraph targetGraph) {
-    return new HumanReadableException(
-        "%s target '%s' can only depend on js_library targets, but one of its dependencies, "
-            + "'%s', is of type %s.",
-        buildRuleTypeForTarget(parent, targetGraph),
-        parent,
-        target,
-        buildRuleTypeForTarget(target, targetGraph));
   }
 
   private static String buildRuleTypeForTarget(BuildTarget target, TargetGraph targetGraph) {

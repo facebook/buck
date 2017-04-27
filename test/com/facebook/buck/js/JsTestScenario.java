@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
 
 public class JsTestScenario {
@@ -66,19 +65,19 @@ public class JsTestScenario {
     this.filesystem = filesystem;
   }
 
-  JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> libs)
+  JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps)
       throws NoSuchBuildTargetException {
-    return createBundle(target, libs, Either.ofLeft(ImmutableSet.of()));
+    return createBundle(target, deps, Either.ofLeft(ImmutableSet.of()));
   }
 
   private JsBundle createBundle(
       String target,
-      ImmutableSortedSet<BuildTarget> libs,
+      ImmutableSortedSet<BuildTarget> deps,
       Either<ImmutableSet<String>, String> entry)
       throws NoSuchBuildTargetException {
     return new JsBundleBuilder(
             BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem)
-        .setLibs(libs)
+        .setDeps(deps)
         .build(resolver, targetGraph);
   }
 
@@ -100,23 +99,12 @@ public class JsTestScenario {
     }
 
     Builder bundleWithDeps(BuildTarget target, BuildTarget... dependencies) {
-      return bundle(target, ImmutableSortedSet.of(), ImmutableSortedSet.copyOf(dependencies));
+      return bundle(target, ImmutableSortedSet.copyOf(dependencies));
     }
 
-    Builder bundleWithLibs(BuildTarget target, BuildTarget... libraryDeps) {
-      return bundle(target, ImmutableSortedSet.copyOf(libraryDeps), ImmutableSortedSet.of());
-    }
-
-    Builder bundle(
-        BuildTarget target,
-        ImmutableSortedSet<BuildTarget> libs,
-        ImmutableSortedSet<BuildTarget> deps) {
+    Builder bundle(BuildTarget target, ImmutableSortedSet<BuildTarget> deps) {
       final Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
-      nodes.add(
-          new JsBundleBuilder(target, workerTarget, entry, filesystem)
-              .setLibs(libs)
-              .setDeps(deps)
-              .build());
+      nodes.add(new JsBundleBuilder(target, workerTarget, entry, filesystem).setDeps(deps).build());
 
       return this;
     }
@@ -131,9 +119,7 @@ public class JsTestScenario {
 
     Builder library(BuildTarget target, SourcePath first, SourcePath... sources) {
       addLibrary(
-          target,
-          null,
-          Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
+          target, null, Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
       return this;
     }
 

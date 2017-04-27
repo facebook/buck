@@ -60,7 +60,7 @@ public class JsBundleDescriptionTest {
         .library(level1_1, level2)
         .library(level1_2, level2)
         .library(directDependencyTarget, level1_1, level1_2)
-        .bundleWithLibs(bundleTarget, directDependencyTarget);
+        .bundleWithDeps(bundleTarget, directDependencyTarget);
     scenario = scenarioBuilder.build();
   }
 
