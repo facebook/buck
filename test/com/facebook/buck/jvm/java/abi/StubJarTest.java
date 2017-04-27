@@ -18,10 +18,6 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
@@ -44,13 +40,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -67,14 +60,6 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InnerClassNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.ParameterNode;
-import org.objectweb.asm.tree.TypeAnnotationNode;
 
 // The stub source is easier to read as long lines, so...
 // CHECKSTYLE.OFF: LineLengthCheck
@@ -90,7 +75,6 @@ public class StubJarTest {
   private static final String MODE_SOURCE_BASED_MISSING_DEPS = "SOURCE_BASED_MISSING_DEPS";
 
   @Parameterized.Parameter public String testingMode;
-  private Set<String> allowedInnerClassNames = new HashSet<>();
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
@@ -2238,9 +2222,25 @@ public class StubJarTest {
     Unzip.extractZipFile(fullJarPath, classDir, Unzip.ExistingFileMode.OVERWRITE);
 
     Path stubJarPath = createStubJar(classDir);
-    JarPaths paths = new JarPaths(fullJarPath, stubJarPath);
-
-    assertClassesStubbedCorrectly(paths, "com/example/buck/A.class");
+    tester
+        .setStubJar(stubJarPath)
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public toString()Ljava/lang/String;",
+            "",
+            "  // access flags 0x1",
+            "  public eatCake()V",
+            "}")
+        .checkStubJar();
   }
 
   @Test
@@ -2396,7 +2396,8 @@ public class StubJarTest {
             "  private <init>(Ljava/lang/String;I)V",
             "",
             "  // access flags 0x1000",
-            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V", // Should not include this method
+            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V",
+            // Should not include this method
             "",
             "  // access flags 0x8",
             "  static <clinit>()V",
@@ -2454,7 +2455,8 @@ public class StubJarTest {
             "  public compareTo(Lcom/example/buck/A;)I",
             "",
             "  // access flags 0x1041",
-            "  public synthetic bridge compareTo(Ljava/lang/Object;)I", // Should include this method
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            // Should include this method
             "}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -2543,10 +2545,6 @@ public class StubJarTest {
     }
   }
 
-  private AbiClass readClass(Path pathToJar, String className) throws IOException {
-    return AbiClass.extract(filesystem.getPathForRelativePath(pathToJar), className);
-  }
-
   private Tester createAnnotationFullJar() throws IOException {
     return tester
         .setSourceFile(
@@ -2569,315 +2567,12 @@ public class StubJarTest {
         .compileFullJar();
   }
 
-  private void assertClassesStubbedCorrectly(JarPaths paths, String... classFilePaths)
-      throws IOException {
-    for (String classFilePath : classFilePaths) {
-      String classFileName =
-          classFilePath.substring(classFilePath.lastIndexOf(File.separatorChar) + 1);
-      if (classFileName.contains("$")) {
-        addAllowedInnerClassNames(classFilePath.substring(0, classFilePath.lastIndexOf('.')));
-      }
-    }
-
-    for (String classFilePath : classFilePaths) {
-      AbiClass original = readClass(paths.fullJar, classFilePath);
-      AbiClass stubbed = readClass(paths.stubJar, classFilePath);
-
-      assertClassStubbedCorrectly(original, stubbed);
-    }
-  }
-
-  /**
-   * A class is stubbed correctly if the stub is exactly the same as its full counterpart, with the
-   * following exceptions:
-   *
-   * <p>
-   *
-   * <ul>
-   *   <li>No private members, &lt;clinit&gt;, synthetic members, bridge methods, or method bodies
-   *       are present
-   * </ul>
-   */
-  private void assertClassStubbedCorrectly(AbiClass original, AbiClass stubbed) {
-    if (original == null) {
-      if (stubbed != null) {
-        fail(String.format("Should not have stubbed %s", stubbed.getClassNode().name));
-      }
-      return;
-    }
-    assertNotNull(String.format("Should have stubbed %s", original.getClassNode().name), stubbed);
-
-    ClassNode originalNode = original.getClassNode();
-    ClassNode stubbedNode = stubbed.getClassNode();
-
-    assertEquals(originalNode.version, stubbedNode.version);
-    assertEquals(originalNode.access, stubbedNode.access);
-    assertEquals(originalNode.name, stubbedNode.name);
-    assertEquals(originalNode.signature, stubbedNode.signature);
-    assertEquals(originalNode.superName, stubbedNode.superName);
-    assertThat(stubbedNode.interfaces, Matchers.equalTo(originalNode.interfaces));
-    assertNull(stubbedNode.sourceFile);
-    assertNull(stubbedNode.sourceDebug);
-    assertEquals(originalNode.outerClass, stubbedNode.outerClass);
-    assertNull(stubbedNode.outerMethod);
-    assertNull(stubbedNode.outerMethodDesc);
-    assertAnnotationsEqual(originalNode.visibleAnnotations, stubbedNode.visibleAnnotations);
-    assertAnnotationsEqual(originalNode.invisibleAnnotations, stubbedNode.invisibleAnnotations);
-    assertTypeAnnotationsEqual(
-        originalNode.visibleTypeAnnotations, stubbedNode.visibleTypeAnnotations);
-    assertTypeAnnotationsEqual(
-        originalNode.invisibleTypeAnnotations, stubbedNode.invisibleTypeAnnotations);
-    assertEquals(originalNode.attrs, stubbedNode.attrs);
-    assertInnerClassesStubbedCorrectly(originalNode.innerClasses, stubbedNode.innerClasses);
-    assertFieldsStubbedCorrectly(originalNode.fields, stubbedNode.fields);
-    assertMethodsStubbedCorrectly(originalNode.methods, stubbedNode.methods);
-  }
-
-  private void assertInnerClassesStubbedCorrectly(
-      List<InnerClassNode> original, List<InnerClassNode> stubbed) {
-    List<InnerClassNode> filteredOriginal =
-        original
-            .stream()
-            .filter(node -> allowedInnerClassNames.contains(node.name))
-            .collect(Collectors.toList());
-    assertMembersStubbedCorrectly(
-        filteredOriginal,
-        stubbed,
-        node -> node.access,
-        StubJarTest::assertInnerClassStubbedCorrectly);
-  }
-
-  private static void assertMethodsStubbedCorrectly(
-      List<MethodNode> original, List<MethodNode> stubbed) {
-    boolean hasConstructor = false;
-    List<MethodNode> filteredOriginal = new ArrayList<>();
-    for (MethodNode m : original) {
-      if (m.name.equals("<clinit>") && m.desc.equals("()V")) {
-        continue;
-      }
-      if (m.name.equals("<init>")) {
-        hasConstructor = true;
-      }
-      filteredOriginal.add(m);
-    }
-
-    // Check that our stubbed class has a constructor if it should
-    if (hasConstructor) {
-      List<MethodNode> stubbedConstructors =
-          stubbed
-              .stream()
-              .filter(m -> m.name.equals("<init>") && (m.access & Opcodes.ACC_SYNTHETIC) == 0)
-              .collect(Collectors.toList());
-      if (stubbedConstructors.size() == 1
-          && (stubbedConstructors.get(0).access & Opcodes.ACC_PRIVATE) > 0) {
-        // A single private default constructor will exist if the stubbed class only has private
-        // constructors. We remove it before comparing since we'll filter all private methods from
-        // the original class anyway. See AbiFilteringClassVisitor.visitMethod() for more info
-        stubbed.remove(stubbedConstructors.get(0));
-      } else if (stubbedConstructors.size() == 0) {
-        fail(
-            "No constructor found.\n"
-                + "This stubbed class should at least have a default private constructor!");
-      }
-    }
-
-    assertMembersStubbedCorrectly(
-        filteredOriginal, stubbed, node -> node.access, StubJarTest::assertMethodStubbedCorrectly);
-  }
-
-  private static void assertFieldsStubbedCorrectly(
-      List<FieldNode> original, List<FieldNode> stubbed) {
-    assertMembersStubbedCorrectly(
-        original, stubbed, node -> node.access, StubJarTest::assertFieldStubbedCorrectly);
-  }
-
-  private static <M> void assertMembersStubbedCorrectly(
-      List<M> original,
-      List<M> stubbed,
-      Function<M, Integer> getAccess,
-      BiFunction<M, M, Void> assertMemberStubbedCorrectly) {
-    List<M> filtered =
-        original
-            .stream()
-            .filter(
-                m -> {
-                  if (m instanceof InnerClassNode) {
-                    return true;
-                  }
-                  int access = getAccess.apply(m);
-                  if ((access & Opcodes.ACC_PRIVATE) != 0) {
-                    // Never stub privates
-                    return false;
-                  }
-                  if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE))
-                      == Opcodes.ACC_SYNTHETIC) {
-                    // Never stub things that are synthetic but not bridges
-                    return false;
-                  }
-
-                  return true;
-                })
-            .collect(Collectors.toList());
-
-    // We just iterate through since order of each list should match
-    // An IndexOutOfBoundsException may be thrown if extra or missing stubs are found
-    int max = Math.max(stubbed.size(), filtered.size());
-    for (int i = 0; i < max; i++) {
-      assertMemberStubbedCorrectly.apply(filtered.get(i), stubbed.remove(0));
-    }
-  }
-
-  private static Void assertInnerClassStubbedCorrectly(
-      InnerClassNode original, InnerClassNode stubbed) {
-    assertEquals(original.name, stubbed.name);
-    assertEquals(original.outerName, stubbed.outerName);
-    assertEquals(original.innerName, stubbed.innerName);
-    assertEquals(original.access, stubbed.access);
-    return null;
-  }
-
-  private static Void assertMethodStubbedCorrectly(MethodNode original, MethodNode stubbed) {
-    assertEquals(original.access, stubbed.access);
-    assertEquals(original.name, stubbed.name);
-    assertEquals(original.desc, stubbed.desc);
-    assertEquals(original.signature, stubbed.signature);
-    assertEquals(original.exceptions, stubbed.exceptions);
-    assertParametersEqual(original.parameters, stubbed.parameters);
-    assertAnnotationsEqual(original.visibleAnnotations, stubbed.visibleAnnotations);
-    assertAnnotationsEqual(original.invisibleAnnotations, stubbed.invisibleAnnotations);
-    assertTypeAnnotationsEqual(original.visibleTypeAnnotations, stubbed.visibleTypeAnnotations);
-    assertTypeAnnotationsEqual(original.invisibleTypeAnnotations, stubbed.invisibleTypeAnnotations);
-    assertAnnotationValueEquals(original.annotationDefault, stubbed.annotationDefault);
-    assertParameterAnnotationsEqual(
-        original.visibleParameterAnnotations, stubbed.visibleParameterAnnotations);
-    assertParameterAnnotationsEqual(
-        original.invisibleParameterAnnotations, stubbed.invisibleParameterAnnotations);
-
-    return null;
-  }
-
-  private static Void assertFieldStubbedCorrectly(FieldNode original, FieldNode stubbed) {
-    assertEquals(original.access, stubbed.access);
-    assertEquals(original.name, stubbed.name);
-    assertEquals(original.desc, stubbed.desc);
-    assertEquals(original.signature, stubbed.signature);
-    assertEquals(original.value, stubbed.value);
-    assertAnnotationsEqual(original.visibleAnnotations, stubbed.visibleAnnotations);
-    assertAnnotationsEqual(original.invisibleAnnotations, stubbed.invisibleAnnotations);
-    assertTypeAnnotationsEqual(original.visibleTypeAnnotations, stubbed.visibleTypeAnnotations);
-    assertTypeAnnotationsEqual(original.invisibleTypeAnnotations, stubbed.invisibleTypeAnnotations);
-    assertEquals(original.attrs, stubbed.attrs);
-
-    return null;
-  }
-
-  private static void assertParameterAnnotationsEqual(
-      List<AnnotationNode>[] expected, List<AnnotationNode>[] seen) {
-    if (expected == null) {
-      assertNull(seen);
-      return;
-    }
-
-    assertSame(expected.length, seen.length);
-
-    for (int i = 0; i < expected.length; i++) {
-      assertAnnotationsEqual(expected[i], seen[i]);
-    }
-  }
-
-  private static void assertAnnotationsEqual(
-      List<AnnotationNode> expected, List<AnnotationNode> seen) {
-    assertListsEqual(expected, seen, StubJarTest::annotationToString);
-  }
-
-  private static void assertParametersEqual(
-      List<ParameterNode> expected, List<ParameterNode> seen) {
-    assertListsEqual(expected, seen, StubJarTest::parameterToString);
-  }
-
-  private static void assertTypeAnnotationsEqual(
-      List<TypeAnnotationNode> expected, List<TypeAnnotationNode> seen) {
-    assertListsEqual(expected, seen, StubJarTest::typeAnnotationToString);
-  }
-
-  private static <T> void assertListsEqual(
-      List<T> expected, List<T> seen, Function<T, String> toString) {
-    if (expected == null) {
-      assertNull(seen);
-      return;
-    }
-    assertNotNull(
-        String.format("Stubbed no %s's", expected.get(0).getClass().getSimpleName()), seen);
-
-    assertEquals(
-        expected.stream().map(toString).collect(Collectors.toList()),
-        seen.stream().map(toString).collect(Collectors.toList()));
-  }
-
-  private static String typeAnnotationToString(TypeAnnotationNode typeAnnotationNode) {
-    return String.format(
-        "%d %s %s(%s)",
-        typeAnnotationNode.typeRef,
-        typeAnnotationNode.typePath,
-        typeAnnotationNode.desc,
-        annotationValuesToString(typeAnnotationNode.values));
-  }
-
-  private static String parameterToString(ParameterNode parameter) {
-    return String.format("0x%x %s", parameter.access, parameter.name);
-  }
-
-  private static String annotationToString(AnnotationNode annotationNode) {
-    return String.format(
-        "%s(%s)", annotationNode.desc, annotationValuesToString(annotationNode.values));
-  }
-
-  private static void assertAnnotationValueEquals(Object expected, Object actual) {
-    assertEquals(annotationValueToString(expected), annotationValueToString(actual));
-  }
-
-  private static String annotationValueToString(Object value) {
-    if (value instanceof AnnotationNode) {
-      return annotationToString((AnnotationNode) value);
-    } else if (value instanceof List) {
-      return annotationValuesToString((List<?>) value);
-    } else if (value instanceof String[]) {
-      String[] valueArray = (String[]) value;
-      return String.format("%s.%s", valueArray[0], valueArray[1]);
-    }
-
-    return String.valueOf(value);
-  }
-
-  private static String annotationValuesToString(List<?> values) {
-    if (values == null) {
-      return "null";
-    }
-
-    StringBuilder resultBuilder = new StringBuilder();
-
-    resultBuilder.append('[');
-    for (int i = 0; i < values.size(); i++) {
-      resultBuilder.append(annotationValueToString(values.get(i)));
-
-      if (i > 0) {
-        resultBuilder.append(", ");
-      }
-    }
-    resultBuilder.append(']');
-    return resultBuilder.toString();
-  }
-
   private void notYetImplementedForMissingClasspath() {
     assumeThat(testingMode, Matchers.not(Matchers.equalTo(MODE_SOURCE_BASED_MISSING_DEPS)));
   }
 
   private void notYetImplementedForSource() {
     assumeThat(testingMode, Matchers.equalTo(MODE_JAR_BASED));
-  }
-
-  private void addAllowedInnerClassNames(String... allowedInnerClassNames) {
-    Collections.addAll(this.allowedInnerClassNames, allowedInnerClassNames);
   }
 
   private final class Tester {
@@ -2918,6 +2613,11 @@ public class StubJarTest {
       return this;
     }
 
+    public Tester setStubJar(Path stubJarPath) {
+      this.stubJarPath = stubJarPath;
+      return this;
+    }
+
     public Tester createAndCheckStubJar() throws IOException {
       if (!expectedFullAbis.isEmpty()) {
         compileFullJar();
@@ -2937,6 +2637,10 @@ public class StubJarTest {
       }
 
       createStubJar();
+      return checkStubJar();
+    }
+
+    public Tester checkStubJar() throws IOException {
       dumpStubJar();
 
       assertEquals("File list is not correct.", expectedDirectory, actualDirectory);
@@ -3123,16 +2827,6 @@ public class StubJarTest {
                   .collect(Collectors.toList()));
         }
       }
-    }
-  }
-
-  private static class JarPaths {
-    public final Path fullJar;
-    public final Path stubJar;
-
-    public JarPaths(Path fullJar, Path stubJar) {
-      this.fullJar = fullJar;
-      this.stubJar = stubJar;
     }
   }
 }
