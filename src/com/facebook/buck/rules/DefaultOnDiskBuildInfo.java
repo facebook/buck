@@ -165,6 +165,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public void deleteExistingMetadata() throws IOException {
+    buildInfoStore.deleteMetadata(buildTarget);
     projectFilesystem.deleteRecursivelyIfExists(metadataDirectory);
   }
 }
