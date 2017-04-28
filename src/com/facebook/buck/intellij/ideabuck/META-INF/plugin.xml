@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.7.7</version>
+  <version>2.7.8</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -22,6 +22,10 @@
   <change-notes><![CDATA[
 
   <ul>
+      <li>
+        <b>2.7.8</b>
+	      Fixed issues with Buck files showing syntax errors when using the glob function.
+      </li>
       <li>
         <b>2.7.7</b>
 	      Fix a bug with buck command never finishes. This solves the problem with not showing
