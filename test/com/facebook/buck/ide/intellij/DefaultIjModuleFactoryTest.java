@@ -633,10 +633,10 @@ public class DefaultIjModuleFactoryTest {
         new DefaultIjLibraryFactory(ijLibraryFactoryResolver).getLibrary(androidPrebuiltAar);
     assertTrue(library.isPresent());
     assertEquals(
-        library.get().getBinaryJar(),
-        Optional.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
-    assertEquals(library.get().getSourceJar(), Optional.of(androidSupportSourcesPath));
-    assertEquals(library.get().getJavadocUrl(), Optional.of(androidSupportJavadocUrl));
+        library.get().getBinaryJars(),
+        ImmutableSet.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
+    assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
+    assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }
 
   private IjModuleFactory createIjModuleFactory() {

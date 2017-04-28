@@ -136,7 +136,12 @@ public class IjProjectWriter {
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
     contents.add("name", library.getName());
     contents.add(
-        "binaryJar", library.getBinaryJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
+        "binaryJars",
+        library
+            .getBinaryJars()
+            .stream()
+            .map(MorePaths::pathWithUnixSeparators)
+            .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
         "classPaths",
         library
@@ -145,8 +150,13 @@ public class IjProjectWriter {
             .map(MorePaths::pathWithUnixSeparators)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
-        "sourceJar", library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
-    contents.add("javadocUrl", library.getJavadocUrl().orElse(null));
+        "sourceJars",
+        library
+            .getSourceJars()
+            .stream()
+            .map(MorePaths::pathWithUnixSeparators)
+            .collect(MoreCollectors.toImmutableSortedSet()));
+    contents.add("javadocUrls", library.getJavadocUrls());
     //TODO(mkosiba): support res and assets for aar.
 
     StringTemplateFile.writeToFile(projectFilesystem, contents, path);

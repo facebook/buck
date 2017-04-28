@@ -22,6 +22,7 @@ import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -129,7 +130,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
-      library.setBinaryJar(binaryJarPath);
+      library.addBinaryJars(binaryJarPath);
     }
   }
 
@@ -144,14 +145,13 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     @Override
     public void apply(
         TargetNode<AndroidPrebuiltAarDescription.Arg, ?> targetNode, IjLibrary.Builder library) {
-      library.setBinaryJar(
-          libraryFactoryResolver
-              .getPathIfJavaLibrary(targetNode)
-              .map(libraryFactoryResolver::getPath));
+      Optional<SourcePath> libraryPath = libraryFactoryResolver.getPathIfJavaLibrary(targetNode);
+      libraryPath.ifPresent(path -> library.addBinaryJars(libraryFactoryResolver.getPath(path)));
 
       AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
-      library.setSourceJar(arg.sourceJar.map(input -> libraryFactoryResolver.getPath(input)));
-      library.setJavadocUrl(arg.javadocUrl);
+      arg.sourceJar.ifPresent(
+          sourcePath -> library.addSourceJars(libraryFactoryResolver.getPath(sourcePath)));
+      arg.javadocUrl.ifPresent(library::addJavadocUrls);
     }
   }
 
@@ -166,9 +166,10 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     public void apply(
         TargetNode<PrebuiltJarDescription.Arg, ?> targetNode, IjLibrary.Builder library) {
       PrebuiltJarDescription.Arg arg = targetNode.getConstructorArg();
-      library.setBinaryJar(libraryFactoryResolver.getPath(arg.binaryJar));
-      library.setSourceJar(arg.sourceJar.map(input -> libraryFactoryResolver.getPath(input)));
-      library.setJavadocUrl(arg.javadocUrl);
+      library.addBinaryJars(libraryFactoryResolver.getPath(arg.binaryJar));
+      arg.sourceJar.ifPresent(
+          sourceJar -> library.addSourceJars(libraryFactoryResolver.getPath(sourceJar)));
+      arg.javadocUrl.ifPresent(library::addJavadocUrls);
     }
   }
 }

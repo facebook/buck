@@ -1,26 +1,28 @@
 <component name="libraryTable">
   <library name="%name%">
     <CLASSES>
-%if(binaryJar)%
+%if(binaryJars)%
+%binaryJars:{binaryJar |
       <root url="jar://$PROJECT_DIR$/%binaryJar%!/" />
-%endif%
+}%%endif%
 %if(classPaths)%
-  %classPaths:{classPath |
+%classPaths:{classPath |
       <root url="file://$PROJECT_DIR$/%classPath%" />
-  }%
-%endif%
+}%%endif%
     </CLASSES>
-%if(javadocUrl)%
+%if(javadocUrls)%
     <JAVADOC>
+%javadocUrls:{javadocUrl |
       <root url="%javadocUrl%" />
-    </JAVADOC>
+}%    </JAVADOC>
 %else%
     <JAVADOC />
 %endif%
-%if(sourceJar)%
+%if(sourceJars)%
     <SOURCES>
+%sourceJars:{sourceJar |
       <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
-    </SOURCES>
+}%    </SOURCES>
 %else%
     <SOURCES />
 %endif%
