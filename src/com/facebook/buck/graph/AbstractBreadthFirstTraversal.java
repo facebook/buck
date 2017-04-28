@@ -27,4 +27,25 @@ public abstract class AbstractBreadthFirstTraversal<Node>
   public AbstractBreadthFirstTraversal(Iterable<? extends Node> initialNodes) {
     super(initialNodes);
   }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(Node initialNode, Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNode, visitor).start();
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(
+      Iterable<? extends Node> initialNodes, final Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNodes, visitor).start();
+  }
 }

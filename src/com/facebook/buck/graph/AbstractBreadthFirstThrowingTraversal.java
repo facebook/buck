@@ -70,4 +70,56 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
    * @return The set of direct dependencies to visit after visiting this node.
    */
   public abstract Iterable<Node> visit(Node node) throws E;
+
+  /**
+   * This will typically be implemented as a lambda passed to {@link #traverse(Object, Visitor)} or
+   * {@link #traverse(Iterable, Visitor)}
+   */
+  public interface Visitor<Node, E extends Throwable> {
+    Iterable<Node> visit(Node node) throws E;
+  }
+
+  protected static class StaticBreadthFirstTraversal<Node>
+      extends AbstractBreadthFirstThrowingTraversal<Node, RuntimeException> {
+
+    private final Visitor<Node, RuntimeException> visitor;
+
+    protected StaticBreadthFirstTraversal(
+        Node initialNode, Visitor<Node, RuntimeException> visitor) {
+      super(initialNode);
+      this.visitor = visitor;
+    }
+
+    protected StaticBreadthFirstTraversal(
+        Iterable<? extends Node> initialNodes, Visitor<Node, RuntimeException> visitor) {
+      super(initialNodes);
+      this.visitor = visitor;
+    }
+
+    @Override
+    public Iterable<Node> visit(Node node) throws RuntimeException {
+      return visitor.visit(node);
+    }
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(Node initialNode, Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNode, visitor).start();
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(
+      Iterable<? extends Node> initialNodes, final Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNodes, visitor).start();
+  }
 }

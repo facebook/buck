@@ -2,7 +2,10 @@ standard_java_library(
     name = "intellij",
     srcs = glob(
         ["**/*.java"],
-        excludes = ["deprecated/*.java"],
+        excludes = [
+            "deprecated/*.java",
+            "projectview/*.*",
+        ],
     ),
     has_immutable_types = True,
     resources = [

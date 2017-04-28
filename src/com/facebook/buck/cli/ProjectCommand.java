@@ -35,6 +35,7 @@ import com.facebook.buck.ide.intellij.IjProject;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -258,6 +259,18 @@ public class ProjectCommand extends BuildCommand {
   @Nullable
   private String generatedFilesListFilename = null;
 
+  @Option(
+    name = "--view",
+    usage =
+        "Experimental command to build a 'project view', which is a directory outside the "
+            + "repo, containing symlinks in to the repo. This directory looks a lot like a standard "
+            + "IntelliJ project with all resources under /res, but what's really important is that it "
+            + "generates a single IntelliJ module, so that editing is much faster than when you use "
+            + "`buck project`."
+  )
+  @Nullable
+  private String projectView = null;
+
   public boolean getCombinedProject() {
     return combinedProject;
   }
@@ -330,6 +343,15 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    if (projectView != null && getArguments().isEmpty()) {
+      params
+          .getConsole()
+          .getStdErr()
+          .println("\nParams are view_path target(s), but you didn't supply any targets");
+
+      return 1;
+    }
+
     int rc = runPreprocessScriptIfNeeded(params);
     if (rc != 0) {
       return rc;
@@ -369,6 +391,15 @@ public class ProjectCommand extends BuildCommand {
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
+      }
+
+      if (projectView != null) {
+        return ProjectView.run(
+            params.getConsole().getStdErr(),
+            getDryRun(),
+            projectView,
+            projectGraph,
+            passedInTargetsSet);
       }
 
       projectIde =

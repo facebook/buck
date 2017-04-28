@@ -121,6 +121,7 @@
     <include name="jacoco/org.jacoco.core-0.7.7.201606060606.jar" />
     <include name="jacoco/org.jacoco.report-0.7.7.201606060606.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
+    <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="okhttp/okhttp-3.6.0.jar" />

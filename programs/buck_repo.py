@@ -58,6 +58,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jackson/jackson-databind-2.7.8.jar",
     "third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar",
     "third-party/java/jackson/jackson-datatype-guava-2.7.8.jar",
+    "third-party/java/jdom/jdom-2.0.6.jar",
     "third-party/java/jetty/jetty-all-9.2.10.v20150310.jar",
     "third-party/java/jna/jna-4.2.0.jar",
     "third-party/java/jna/jna-platform-4.2.0.jar",
