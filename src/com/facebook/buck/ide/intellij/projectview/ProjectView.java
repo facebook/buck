@@ -28,11 +28,15 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,6 +102,8 @@ public class ProjectView {
   private int run() {
     List<String> inputs = getPrunedInputs();
 
+    scanExistingView();
+
     List<String> sourceFiles = new ArrayList<>();
     for (String input : inputs) {
       if (input.startsWith("android_res/")) {
@@ -110,6 +116,8 @@ public class ProjectView {
     buildRootLinks(roots);
 
     writeRootDotIml(sourceFiles, roots, buildDotIdeaFolder(inputs));
+
+    buildAllDirectoriesAndSymlinks();
 
     return 0;
   }
@@ -131,7 +139,10 @@ public class ProjectView {
           return targetGraph.getAll(node.getBuildDeps());
         });
 
-    return inputs;
+    return inputs
+        .stream()
+        .filter(input -> !input.contains("/res/values-"))
+        .collect(Collectors.toList());
   }
 
   private List<String> pruneInputs(Collection<String> allInputs) {
@@ -413,6 +424,11 @@ public class ProjectView {
       filename = fileJoin(path, filename);
     }
 
+    if (dryRun) {
+      stderr("Writing %s\n", filename);
+      return;
+    }
+
     Format prettyFormat = Format.getPrettyFormat();
     prettyFormat.setOmitDeclaration(mode == XML.NO_DECLARATION);
     XMLOutputter outputter = new XMLOutputter(prettyFormat);
@@ -465,7 +481,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaFolder(List<String> inputs) {
     String dotIdea = fileJoin(viewPath, DOT_IDEA);
-    mkdir(dotIdea);
+    immediateMkdir(dotIdea);
 
     writeModulesXml(dotIdea);
     writeMiscXml(dotIdea);
@@ -518,7 +534,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaDotLibrariesFolder(String dotIdea, List<String> inputs) {
     String libraries = fileJoin(dotIdea, "libraries");
-    mkdir(libraries);
+    immediateMkdir(libraries);
 
     Map<String, List<String>> directories = new HashMap<>();
     List<String> jars =
@@ -565,7 +581,7 @@ public class ProjectView {
   private void writeRootDotIml(
       List<String> sourceFiles, Set<String> roots, List<String> libraries) {
     String buckOut = fileJoin(viewPath, BUCK_OUT);
-    symlink(fileJoin(repository, BUCK_OUT), buckOut);
+    immediateSymlink(fileJoin(repository, BUCK_OUT), buckOut);
 
     String app = null, target = null;
     Pattern targetPath = Pattern.compile("//([^:]*):.*");
@@ -581,17 +597,19 @@ public class ProjectView {
         }
       }
     }
-    if (app == null) {
-      throw new RuntimeException("Didn't find any target in buck-out/android");
+    if (app != null) {
+      app = /**/ File.separator + /**/ getRelativePath(viewPath, app);
     }
-    app = /**/ File.separator + /**/ getRelativePath(viewPath, app);
 
     String manifestPath = fileJoin(File.separator, RES, ANDROID_MANIFEST);
     symlink(fileJoin(repository, ANDROID_RES, ANDROID_MANIFEST), fileJoin(viewPath, manifestPath));
 
-    String apkPath = target.substring(1).replace(':', '/'); // strip leading /, turn : into /
-    apkPath = fileJoin(buckOut, "gen", apkPath);
-    apkPath = /**/ File.separator + /**/ getRelativePath(viewPath, apkPath + ".apk");
+    String apkPath = null;
+    if (target != null) {
+      apkPath = target.substring(1).replace(':', '/'); // strip leading /, turn : into /
+      apkPath = fileJoin(buckOut, "gen", apkPath);
+      apkPath = /**/ File.separator + /**/ getRelativePath(viewPath, apkPath + ".apk");
+    }
 
     Element module = newElement("module", attribute(TYPE, "JAVA_MODULE"), attribute(VERSION, 4));
 
@@ -601,16 +619,18 @@ public class ProjectView {
 
     Element configuration = addElement(facet, "configuration");
 
-    addElement(
-        configuration,
-        OPTION,
-        attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_APT"),
-        attribute(VALUE, app));
-    addElement(
-        configuration,
-        OPTION,
-        attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_AIDL"),
-        attribute(VALUE, app));
+    if (app != null) {
+      addElement(
+          configuration,
+          OPTION,
+          attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_APT"),
+          attribute(VALUE, app));
+      addElement(
+          configuration,
+          OPTION,
+          attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_AIDL"),
+          attribute(VALUE, app));
+    }
     addElement(
         configuration,
         OPTION,
@@ -621,7 +641,9 @@ public class ProjectView {
         OPTION,
         attribute(NAME, "RES_FOLDERS_RELATIVE_PATH"),
         attribute(VALUE, "/res"));
-    addElement(configuration, OPTION, attribute(NAME, "APK_PATH"), attribute(VALUE, apkPath));
+    if (apkPath != null) {
+      addElement(configuration, OPTION, attribute(NAME, "APK_PATH"), attribute(VALUE, apkPath));
+    }
     addElement(
         configuration,
         OPTION,
@@ -637,9 +659,11 @@ public class ProjectView {
             attribute("inherit-compiler-output", true));
     addElement(rootManager, "exclude-output");
 
-    app = fileJoin(FILE_MODULE_DIR, app);
-    Element content = addElement(rootManager, CONTENT, attribute(URL, app));
-    addElement(content, SOURCE_FOLDER, attribute(URL, app), attribute(IS_TEST_SOURCE, false));
+    if (app != null) {
+      app = fileJoin(FILE_MODULE_DIR, app);
+      Element content = addElement(rootManager, CONTENT, attribute(URL, app));
+      addElement(content, SOURCE_FOLDER, attribute(URL, app), attribute(IS_TEST_SOURCE, false));
+    }
 
     Element folders = addElement(rootManager, CONTENT, attribute(URL, FILE_MODULE_DIR));
 
@@ -744,6 +768,115 @@ public class ProjectView {
 
   // region symlinks, mkdir, and other file utilities
 
+  /**
+   * This is <em>not</em> all directories in the view; this is all 'terminals' that have symlinks.
+   * That is, if we have {@code foo/bar/baz/link}, we will record {@code foo/bar/baz} but not {@code
+   * foo/bar} or {@code foo}.
+   */
+  private final Set<Path> existingDirectories = new HashSet<>();
+  /** basefile -> link */
+  private final Map<Path, Path> existingSymlinks = new HashMap<>();
+
+  private final Set<Path> directoriesToMake = new HashSet<>();
+  /** basefile -> link */
+  private final Map<Path, Path> symlinksToCreate = new HashMap<>();
+
+  private void scanExistingView() {
+    Path root = Paths.get(viewPath); // new File(viewPath).toPath();
+    if (!Files.exists(root)) {
+      return;
+    }
+    try {
+      Files.find(
+              root,
+              Integer.MAX_VALUE,
+              (Path ignored, BasicFileAttributes attributes) ->
+                  attributes.isDirectory() || attributes.isSymbolicLink())
+          .forEach(
+              path -> {
+                if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+                  if (hasSymbolicLink(path)) {
+                    existingDirectories.add(path.toAbsolutePath());
+                  }
+                } else if (Files.isSymbolicLink(path)) {
+                  try {
+                    existingSymlinks.put(Files.readSymbolicLink(path), path);
+                  } catch (IOException e) {
+                    stderr("'%s' reading %s", e.getMessage(), path);
+                  }
+                }
+              });
+    } catch (IOException e) {
+      stderr("'%s' scanning the existing links and directories\n", e.getMessage());
+    }
+  }
+
+  private boolean hasSymbolicLink(Path path) {
+    try {
+      return Files.list(path).anyMatch(p -> Files.isSymbolicLink(p));
+    } catch (IOException e) {
+      stderr("'%s' enumerating %s", e.getMessage(), path);
+      return true;
+    }
+  }
+
+  private void buildAllDirectoriesAndSymlinks() {
+    // Delete any directories that should no longer exist
+    for (Path path : existingDirectories) {
+      if (!directoriesToMake.contains(path)) {
+        if (dryRun) {
+          stderr("rm -rf %s\n", path);
+        } else {
+          deleteAll(path);
+        }
+      }
+    }
+
+    // Make any directories that don't already exist
+    for (Path path : directoriesToMake) {
+      if (!existingDirectories.contains(path)) {
+        if (dryRun) {
+          stderr("mkdir(%s)\n", path);
+        } else {
+          try {
+            Files.createDirectories(path);
+          } catch (IOException e) {
+            stderr("'%s' creating directory %s\n", e.getMessage(), path);
+          }
+        }
+      }
+    }
+
+    // Delete any symlinks that should no longer exist; remove existing links from Map
+    existingSymlinks.forEach(
+        (filePath, linkPath) -> {
+          if (linkPath.equals(symlinksToCreate.get(filePath))) {
+            symlinksToCreate.remove(filePath);
+          } else {
+            if (dryRun) {
+              stderr("rm %s\n", linkPath);
+            } else {
+              try {
+                Files.delete(linkPath);
+              } catch (IOException e) {
+                e.printStackTrace();
+                stderr("'%s' deleting symlink %s\n", e.getMessage(), linkPath);
+              }
+            }
+          }
+        });
+
+    // Create any symlinks that don't already exist
+    symlinksToCreate.forEach(
+        (filePath, linkPath) -> {
+          if (dryRun) {
+            stderr("symlink(%s, %s)\n", filePath, linkPath);
+          } else {
+            createSymbolicLink(filePath, linkPath);
+          }
+        });
+  }
+
   private static String basename(File file) {
     return file.getName();
   }
@@ -798,6 +931,10 @@ public class ProjectView {
   }
 
   private void mkdir(String name) {
+    directoriesToMake.add(Paths.get(name));
+  }
+
+  private void immediateMkdir(String name) {
     File file = new File(name);
     if (file.isDirectory()) {
       return;
@@ -810,17 +947,30 @@ public class ProjectView {
   }
 
   private void symlink(String filename, String linkname) {
+    File link = new File(linkname);
+    Path linkPath = link.toPath();
+    mkdir(dirname(link));
+
+    Path filePath = Paths.get(filename);
+
+    symlinksToCreate.put(filePath, linkPath);
+  }
+
+  private void immediateSymlink(String filename, String linkname) {
+    File link = new File(linkname);
+    Path linkPath = link.toPath();
+
+    if (Files.isSymbolicLink(linkPath)) {
+      return; // already exists
+    }
+
+    Path filePath = Paths.get(filename);
+
     if (dryRun) {
       stderr("symlink(%s, %s)\n", filename, linkname);
     } else {
-      File link = new File(linkname);
-      Path linkPath = link.toPath();
-      if (Files.isSymbolicLink(linkPath)) {
-        return; // already exists
-      }
-      File file = new File(filename);
-      mkdir(dirname(link));
-      createSymbolicLink(file.toPath(), linkPath);
+      immediateMkdir(dirname(link));
+      createSymbolicLink(filePath, linkPath);
     }
   }
 
@@ -832,6 +982,23 @@ public class ProjectView {
       stderr(
           "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
           oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+    }
+  }
+
+  private void deleteAll(Path root) {
+    try {
+      Files.walk(root)
+          .sorted(Comparator.reverseOrder()) // foo/bar before foo
+          .forEach(
+              p -> {
+                try {
+                  Files.delete(p);
+                } catch (IOException e) {
+                  stderr("'%s' deleting %s\n", e.getMessage(), p);
+                }
+              });
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
