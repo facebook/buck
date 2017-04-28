@@ -226,7 +226,7 @@ public class ProjectView {
   private void simpleResourceLink(Matcher match, String input) {
     String name = basename(input);
 
-    String directory = fileJoin(viewPath, RES, match.group(1));
+    String directory = fileJoin(viewPath, RES, flattenResourceDirectoryName(match.group(1)));
     mkdir(directory);
 
     symlink(fileJoin(repository, input), fileJoin(directory, name));
@@ -237,10 +237,15 @@ public class ProjectView {
 
     String path = match.group(1).replace('/', '_');
 
-    String directory = fileJoin(viewPath, RES, match.group(2));
+    String directory = fileJoin(viewPath, RES, flattenResourceDirectoryName(match.group(2)));
     mkdir(directory);
 
     symlink(fileJoin(repository, input), fileJoin(directory, path + name));
+  }
+
+  private static String flattenResourceDirectoryName(String name) {
+    int dash = name.indexOf('-');
+    return dash < 0 ? name : name.substring(0, dash);
   }
 
   private void assetsLink(String input) {
