@@ -78,8 +78,9 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {call buck.param}
   {param name: 'debug' /}
   {param desc}
-  If specified, the tests will start suspended with a JDWP debug port of 5005.
-  This means that they will not run until a debugger is attached.
+  If specified, tests will start suspended and will not run until a debugger is attached.
+  Tests compatible with JDWP will be listening on the default port (5005), lldb tests print out
+  a process ID to attach to.
  {/param}
 {/call}
 
