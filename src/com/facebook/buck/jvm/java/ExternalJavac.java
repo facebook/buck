@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -177,7 +178,7 @@ public class ExternalJavac implements Javac {
       ImmutableList<String> options,
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
+      Path pathToArgsList,
       Optional<Path> workingDirectory,
       CompilationMode compilationMode)
       throws InterruptedException {
@@ -189,7 +190,6 @@ public class ExternalJavac implements Javac {
         pathToJavac.isLeft()
             ? pathToJavac.getLeft().toString()
             : context.getAbsolutePathsForInputs().get(0).toString());
-    command.addAll(options);
 
     ImmutableList<Path> expandedSources;
     try {
@@ -200,22 +200,25 @@ public class ExternalJavac implements Javac {
       throw new HumanReadableException(
           "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
     }
+
     try {
+      FluentIterable<String> escapedPaths =
+          FluentIterable.from(expandedSources)
+              .transform(Object::toString)
+              .transform(ARGFILES_ESCAPER);
+      FluentIterable<String> escapedArgs = FluentIterable.from(options).transform(ARGFILES_ESCAPER);
+
       context
           .getProjectFilesystem()
-          .writeLinesToPath(
-              FluentIterable.from(expandedSources)
-                  .transform(Object::toString)
-                  .transform(ARGFILES_ESCAPER),
-              pathToSrcsList);
-      command.add("@" + pathToSrcsList);
+          .writeLinesToPath(Iterables.concat(escapedArgs, escapedPaths), pathToArgsList);
+      command.add("@" + pathToArgsList);
     } catch (IOException e) {
       context
           .getEventSink()
           .reportThrowable(
               e,
-              "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-              pathToSrcsList);
+              "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
+              pathToArgsList);
       return 1;
     }
 
