@@ -201,9 +201,10 @@ public class AppleSdkDiscovery {
       String name = sdkSettings.objectForKey("CanonicalName").toString();
       String version = sdkSettings.objectForKey("Version").toString();
       NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
+      NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
 
       Optional<ImmutableList<String>> toolchains =
-          appleConfig.getToolchainsOverrideForSDKName(name);
+          appleConfig.getToolchainsOverrideForSDKName(platformName.toString());
       boolean foundToolchain = false;
       if (!toolchains.isPresent()) {
         NSArray settingsToolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
@@ -235,7 +236,6 @@ public class AppleSdkDiscovery {
         LOG.warn("No toolchains found and no default toolchain. Skipping SDK path %s.", sdkDir);
         return false;
       } else {
-        NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
         ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
         ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
