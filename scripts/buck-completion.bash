@@ -197,7 +197,6 @@ function _buck_completion_try_test() {
       --ignore-when-dependencies-fail
       --jacoco
       --no-cache
-      --no-results-cache
       --num-threads
       --verbose
       --xml
