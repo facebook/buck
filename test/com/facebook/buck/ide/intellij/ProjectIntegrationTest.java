@@ -169,6 +169,11 @@ public class ProjectIntegrationTest {
         ".idea/generated-files.txt");
   }
 
+  @Test
+  public void testMultipleLibraries() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_multiple_libraries");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
