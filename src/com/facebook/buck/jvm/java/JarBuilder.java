@@ -54,6 +54,7 @@ public class JarBuilder {
   @Nullable private String mainClass;
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
+  private boolean shouldHashEntries;
   private Iterable<Pattern> blacklist = new ArrayList<>();
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
@@ -101,6 +102,11 @@ public class JarBuilder {
     return this;
   }
 
+  public JarBuilder setShouldHashEntries(boolean shouldHashEntries) {
+    this.shouldHashEntries = shouldHashEntries;
+    return this;
+  }
+
   public JarBuilder setEntryPatternBlacklist(Iterable<Pattern> blacklist) {
     this.blacklist = blacklist;
     return this;
@@ -110,6 +116,7 @@ public class JarBuilder {
     Path absoluteOutputPath = filesystem.getPathForRelativePath(outputFile);
     try (CustomJarOutputStream jar =
         ZipOutputStreams.newJarOutputStream(absoluteOutputPath, APPEND_TO_ZIP)) {
+      jar.setEntryHashingEnabled(shouldHashEntries);
       return appendToJarFile(outputFile, jar);
     }
   }

@@ -103,6 +103,19 @@ public class AndroidLibraryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
+    boolean hasDummyRDotJavaFlavor =
+        params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+      Preconditions.checkArgument(!hasDummyRDotJavaFlavor);
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildRule libraryRule = resolver.requireRule(libraryTarget);
+      return CalculateAbiFromClasses.of(
+          params.getBuildTarget(),
+          ruleFinder,
+          params,
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
+    }
+
     JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
     final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier =
@@ -140,21 +153,6 @@ public class AndroidLibraryDescription
             args.resourceUnionPackage,
             args.finalRName,
             false);
-
-    boolean hasDummyRDotJavaFlavor =
-        params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      if (hasDummyRDotJavaFlavor) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
-      }
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule libraryRule = resolver.requireRule(libraryTarget);
-      return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
-    }
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             resolver, /* createBuildableIfEmpty */ hasDummyRDotJavaFlavor);

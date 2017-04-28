@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiFromClassesStep;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
@@ -43,6 +42,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -196,10 +196,6 @@ public class DummyRDotJava extends AbstractBuildRule
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaClassesFolder));
 
-    Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget(), getProjectFilesystem());
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToAbiOutputDir));
-    Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
-
     Path pathToJarOutputDir = outputJar.getParent();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToJarOutputDir));
 
@@ -230,14 +226,13 @@ public class DummyRDotJava extends AbstractBuildRule
             outputJar,
             ImmutableSortedSet.of(rDotJavaClassesFolder),
             /* mainClass */ null,
-            /* manifestFile */ null));
+            /* manifestFile */ null,
+            /* mergeManifests */ true,
+            /* hashEntries */ true,
+            /* blacklist */ ImmutableSet.of()));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));
-
-    steps.add(
-        new CalculateAbiFromClassesStep(
-            buildableContext, getProjectFilesystem(), rDotJavaClassesFolder, pathToAbiOutputFile));
 
     return steps.build();
   }
@@ -297,10 +292,6 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_bin__");
   }
 
-  private static Path getPathToAbiOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_abi__");
-  }
-
   private static Path getPathToOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargets.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
@@ -313,6 +304,11 @@ public class DummyRDotJava extends AbstractBuildRule
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar);
+  }
+
+  @Override
+  public Optional<BuildTarget> getAbiJar() {
+    return Optional.of(getBuildTarget());
   }
 
   public Path getRDotJavaBinFolder() {

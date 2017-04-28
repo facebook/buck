@@ -102,7 +102,7 @@ public class DummyRDotJavaTest {
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 15, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 12, steps.size());
 
     String rDotJavaSrcFolder =
         BuildTargets.getScratchPath(
@@ -111,10 +111,6 @@ public class DummyRDotJavaTest {
     String rDotJavaBinFolder =
         BuildTargets.getScratchPath(
                 filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__")
-            .toString();
-    String rDotJavaAbiFolder =
-        BuildTargets.getGenPath(
-                filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_abi__")
             .toString();
     String rDotJavaOutputFolder =
         BuildTargets.getGenPath(
@@ -141,7 +137,6 @@ public class DummyRDotJavaTest {
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)))
-            .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)))
             .addAll(makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)))
             .add(String.format("mkdir -p %s", filesystem.resolve(genFolder)))
             .add(
@@ -165,7 +160,6 @@ public class DummyRDotJavaTest {
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
             .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
-            .add(String.format("calculate_abi_from_classes %s", rDotJavaBinFolder))
             .build();
 
     MoreAsserts.assertSteps(

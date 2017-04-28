@@ -49,6 +49,9 @@ public class JarDirectoryStep implements Step {
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
 
+  /** Indicates that the manifest should contain hashes of the entries. Defaults to false. */
+  private final boolean hashEntries;
+
   /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
   private final ImmutableSet<Pattern> blacklist;
 
@@ -68,6 +71,24 @@ public class JarDirectoryStep implements Step {
         ImmutableSet.of());
   }
 
+  public JarDirectoryStep(
+      ProjectFilesystem filesystem,
+      Path pathToOutputFile,
+      ImmutableSortedSet<Path> entriesToJar,
+      @Nullable String mainClass,
+      @Nullable Path manifestFile,
+      boolean mergeManifests,
+      ImmutableSet<Pattern> blacklist) {
+    this(
+        filesystem,
+        pathToOutputFile,
+        entriesToJar,
+        mainClass,
+        manifestFile,
+        mergeManifests,
+        false,
+        blacklist);
+  }
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
    *
@@ -90,6 +111,7 @@ public class JarDirectoryStep implements Step {
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
+      boolean hashEntries,
       ImmutableSet<Pattern> blacklist) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
@@ -97,6 +119,7 @@ public class JarDirectoryStep implements Step {
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
+    this.hashEntries = hashEntries;
     this.blacklist = blacklist;
   }
 
@@ -135,6 +158,7 @@ public class JarDirectoryStep implements Step {
             .setMainClass(Optional.ofNullable(mainClass).orElse(null))
             .setManifestFile(Optional.ofNullable(manifestFile).orElse(null))
             .setShouldMergeManifests(mergeManifests)
+            .setShouldHashEntries(hashEntries)
             .setEntryPatternBlacklist(blacklist)
             .createJarFile(pathToOutputFile));
   }

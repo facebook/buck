@@ -84,6 +84,21 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
+    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+      Preconditions.checkArgument(
+          !params
+              .getBuildTarget()
+              .getFlavors()
+              .contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
+      BuildTarget testTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildRule testRule = resolver.requireRule(testTarget);
+      return CalculateAbiFromClasses.of(
+          params.getBuildTarget(),
+          ruleFinder,
+          params,
+          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
+    }
+
     JavacOptions javacOptions = JavacOptionsFactory.create(templateOptions, params, resolver, args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -98,22 +113,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             /* resourceUnionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             args.useOldStyleableFormat);
-
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      if (params
-          .getBuildTarget()
-          .getFlavors()
-          .contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, ruleFinder);
-      }
-      BuildTarget testTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
-    }
 
     ImmutableList<String> vmArgs = args.vmArgs;
 
