@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
@@ -59,6 +60,8 @@ public interface AbstractCommandRunnerParams {
   VersionedTargetGraphCache getVersionedTargetGraphCache();
 
   ArtifactCacheFactory getArtifactCacheFactory();
+
+  TypeCoercerFactory getTypeCoercerFactory();
 
   Parser getParser();
 

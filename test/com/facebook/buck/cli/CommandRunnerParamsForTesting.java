@@ -97,6 +97,7 @@ public class CommandRunnerParamsForTesting {
                 eventBus))
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
         .setBuckEventBus(eventBus)
+        .setTypeCoercerFactory(typeCoercerFactory)
         .setParser(
             new Parser(
                 new BroadcastEventListener(),

@@ -24,12 +24,14 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,10 +43,13 @@ import java.util.Optional;
  */
 public abstract class TargetNodeTranslator {
 
+  private final TypeCoercerFactory typeCoercerFactory;
   // Translators registered for various types.
   private final ImmutableList<TargetTranslator<?>> translators;
 
-  public TargetNodeTranslator(ImmutableList<TargetTranslator<?>> translators) {
+  public TargetNodeTranslator(
+      TypeCoercerFactory typeCoercerFactory, ImmutableList<TargetTranslator<?>> translators) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.translators = translators;
   }
 
@@ -254,16 +259,14 @@ public abstract class TargetNodeTranslator {
       A newConstructorArg) {
     boolean modified = false;
 
-    // Generate the new constructor arg from the original
-    for (Field field : constructorArg.getClass().getFields()) {
-      try {
-        Object val = field.get(constructorArg);
-        Optional<Object> mVal = translate(cellPathResolver, pattern, val);
-        modified = modified || mVal.isPresent();
-        field.set(newConstructorArg, mVal.orElse(val));
-      } catch (IllegalAccessException e) {
-        throw new IllegalStateException(e);
-      }
+    for (ParamInfo param :
+        CoercedTypeCache.INSTANCE
+            .getAllParamInfo(typeCoercerFactory, constructorArg.getClass())
+            .values()) {
+      Object value = param.get(constructorArg);
+      Optional<Object> newValue = translate(cellPathResolver, pattern, value);
+      modified |= newValue.isPresent();
+      param.setCoercedValue(newConstructorArg, newValue.orElse(value));
     }
 
     return modified;

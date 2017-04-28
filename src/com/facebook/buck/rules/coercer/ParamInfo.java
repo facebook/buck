@@ -128,15 +128,18 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   @SuppressWarnings("unchecked")
   private <U> void traverseHelper(TypeCoercer<U> typeCoercer, Traversal traversal, Object dto) {
-    U object;
-    try {
-      object = (U) field.get(dto);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-
+    U object = (U) get(dto);
     if (object != null) {
       typeCoercer.traverse(object, traversal);
+    }
+  }
+
+  /** Get the value of this param as set on dto. */
+  public Object get(Object dto) {
+    try {
+      return field.get(dto);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -187,9 +190,17 @@ public class ParamInfo implements Comparable<ParamInfo> {
         throw new ParamInfoException(name, e.getMessage(), e);
       }
     }
+    setCoercedValue(dto, result);
+  }
 
+  /**
+   * Set the param on dto to value, assuming value has already been coerced.
+   *
+   * <p>This is useful for things like making copies of dtos.
+   */
+  public void setCoercedValue(Object dto, Object value) {
     try {
-      field.set(dto, result);
+      field.set(dto, value);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }

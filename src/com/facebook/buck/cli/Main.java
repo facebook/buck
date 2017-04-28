@@ -70,6 +70,7 @@ import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -793,6 +794,7 @@ public final class Main {
           buildEventBus.post(startedEvent);
 
           // Create or get Parser and invalidate cached command parameters.
+          TypeCoercerFactory typeCoercerFactory = null;
           Parser parser = null;
           VersionedTargetGraphCache versionedTargetGraphCache = null;
           ActionGraphCache actionGraphCache = null;
@@ -811,7 +813,7 @@ public final class Main {
                           .build(),
                       watchman,
                       daemon.get().getWatchmanCursor());
-              parser =
+              Pair<TypeCoercerFactory, Parser> pair =
                   getParserFromDaemon(
                       daemon.get(),
                       context.get(),
@@ -819,6 +821,8 @@ public final class Main {
                       buildEventBus,
                       watchmanWatcher,
                       watchmanFreshInstanceAction);
+              typeCoercerFactory = pair.getFirst();
+              parser = pair.getSecond();
               versionedTargetGraphCache = daemon.get().getVersionedTargetGraphCache();
               actionGraphCache = daemon.get().getActionGraphCache();
               if (buckConfig.getRuleKeyCaching()) {
@@ -842,8 +846,8 @@ public final class Main {
             actionGraphCache = new ActionGraphCache(broadcastEventListener);
           }
 
-          if (parser == null) {
-            TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+          if (typeCoercerFactory == null || parser == null) {
+            typeCoercerFactory = new DefaultTypeCoercerFactory();
             parser =
                 new Parser(
                     broadcastEventListener,
@@ -898,6 +902,7 @@ public final class Main {
                         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
                         .setArtifactCacheFactory(artifactCacheFactory)
                         .setBuckEventBus(buildEventBus)
+                        .setTypeCoercerFactory(typeCoercerFactory)
                         .setParser(parser)
                         .setPlatform(platform)
                         .setEnvironment(clientEnvironment)
@@ -1202,7 +1207,7 @@ public final class Main {
   }
 
   /** Wire up daemon to new client and get cached Parser. */
-  private Parser getParserFromDaemon(
+  private Pair<TypeCoercerFactory, Parser> getParserFromDaemon(
       Daemon daemonForParser,
       NGContext context,
       CommandEvent commandEvent,
@@ -1223,7 +1228,7 @@ public final class Main {
 
     daemonForParser.watchFileSystem(
         commandEvent, eventBus, watchmanWatcher, watchmanFreshInstanceAction);
-    return daemonForParser.getParser();
+    return new Pair<>(daemonForParser.getTypeCoercerFactory(), daemonForParser.getParser());
   }
 
   private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon)

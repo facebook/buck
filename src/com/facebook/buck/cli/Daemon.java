@@ -70,6 +70,7 @@ final class Daemon implements Closeable {
       System.getProperty("buck.path_to_static_content", "webserver/static");
 
   private final Cell rootCell;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final Parser parser;
   private final ImmutableList<ProjectFileHashCache> hashCaches;
   private final EventBus fileEventBus;
@@ -105,7 +106,7 @@ final class Daemon implements Closeable {
     this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    typeCoercerFactory = new DefaultTypeCoercerFactory();
     this.parser =
         new Parser(
             this.broadcastEventListener,
@@ -189,6 +190,10 @@ final class Daemon implements Closeable {
 
   Optional<WebServer> getWebServer() {
     return webServer;
+  }
+
+  TypeCoercerFactory getTypeCoercerFactory() {
+    return typeCoercerFactory;
   }
 
   Parser getParser() {

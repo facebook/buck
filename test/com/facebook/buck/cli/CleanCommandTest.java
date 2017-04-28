@@ -35,6 +35,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
@@ -154,6 +155,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
         .setBuckEventBus(BuckEventBusFactory.newInstance())
+        .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
         .setParser(createMock(Parser.class))
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))

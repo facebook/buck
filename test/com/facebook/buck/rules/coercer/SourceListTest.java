@@ -47,7 +47,8 @@ public class SourceListTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
@@ -63,7 +64,8 @@ public class SourceListTest {
   @Test
   public void untranslatedNamedSourcesTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     SourceList list =
         SourceList.ofNamedSources(
             ImmutableSortedMap.of("name", new DefaultBuildTargetSourcePath(target)));
@@ -77,7 +79,8 @@ public class SourceListTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER,
@@ -93,7 +96,8 @@ public class SourceListTest {
   @Test
   public void untranslatedUnnamedSourcesTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     SourceList list =
         SourceList.ofUnnamedSources(
             ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(target)));

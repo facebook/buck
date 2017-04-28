@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -44,7 +45,8 @@ public class StringWithMacrosTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, StringWithMacrosUtils.format("--flag")),
         Matchers.equalTo(Optional.empty()));

@@ -23,6 +23,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -66,6 +67,7 @@ public class VersionedTargetGraphBuilder {
   private final ForkJoinPool pool;
   private final VersionSelector versionSelector;
   private final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   /** The resolved version graph being built. */
   private final VersionedTargetGraph.Builder targetGraphBuilder = VersionedTargetGraph.builder();
@@ -85,11 +87,13 @@ public class VersionedTargetGraphBuilder {
   VersionedTargetGraphBuilder(
       ForkJoinPool pool,
       VersionSelector versionSelector,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets) {
+      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TypeCoercerFactory typeCoercerFactory) {
 
     this.pool = pool;
     this.versionSelector = versionSelector;
     this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
+    this.typeCoercerFactory = typeCoercerFactory;
 
     this.index =
         new ConcurrentHashMap<>(
@@ -264,11 +268,12 @@ public class VersionedTargetGraphBuilder {
   public static TargetGraphAndBuildTargets transform(
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
-      ForkJoinPool pool)
+      ForkJoinPool pool,
+      TypeCoercerFactory typeCoercerFactory)
       throws VersionException, InterruptedException {
     return unversionedTargetGraphAndBuildTargets.withTargetGraph(
         new VersionedTargetGraphBuilder(
-                pool, versionSelector, unversionedTargetGraphAndBuildTargets)
+                pool, versionSelector, unversionedTargetGraphAndBuildTargets, typeCoercerFactory)
             .build());
   }
 
@@ -454,7 +459,7 @@ public class VersionedTargetGraphBuilder {
       ImmutableList<TargetTranslator<?>> translators =
           ImmutableList.of(new QueryTargetTranslator());
       TargetNodeTranslator targetTranslator =
-          new TargetNodeTranslator(translators) {
+          new TargetNodeTranslator(typeCoercerFactory, translators) {
 
             private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
                 CacheBuilder.newBuilder()

@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ForkJoinPool;
@@ -37,19 +38,22 @@ public class VersionedTargetGraphCache {
   private TargetGraphAndBuildTargets createdVersionedTargetGraph(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
-      ForkJoinPool pool)
+      ForkJoinPool pool,
+      TypeCoercerFactory typeCoercerFactory)
       throws VersionException, InterruptedException {
     return VersionedTargetGraphBuilder.transform(
         new VersionUniverseVersionSelector(
             targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
         targetGraphAndBuildTargets,
-        pool);
+        pool,
+        typeCoercerFactory);
   }
 
   private VersionedTargetGraphCacheResult getVersionedTargetGraph(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
-      ForkJoinPool pool)
+      ForkJoinPool pool,
+      TypeCoercerFactory typeCoercerFactory)
       throws VersionException, InterruptedException {
 
     // If new inputs match old ones, we can used the cached graph, if present.
@@ -65,7 +69,8 @@ public class VersionedTargetGraphCache {
     ResultType resultType =
         cachedVersionedTargetGraph == null ? ResultType.EMPTY : ResultType.MISMATCH;
     TargetGraphAndBuildTargets newVersionedTargetGraph =
-        createdVersionedTargetGraph(targetGraphAndBuildTargets, versionUniverses, pool);
+        createdVersionedTargetGraph(
+            targetGraphAndBuildTargets, versionUniverses, pool, typeCoercerFactory);
     cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
     return VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
   }
@@ -76,6 +81,7 @@ public class VersionedTargetGraphCache {
    */
   public VersionedTargetGraphCacheResult getVersionedTargetGraph(
       BuckEventBus eventBus,
+      TypeCoercerFactory typeCoercerFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool)
@@ -85,7 +91,8 @@ public class VersionedTargetGraphCache {
     eventBus.post(started);
     try {
       VersionedTargetGraphCacheResult result =
-          getVersionedTargetGraph(targetGraphAndBuildTargets, versionUniverses, pool);
+          getVersionedTargetGraph(
+              targetGraphAndBuildTargets, versionUniverses, pool, typeCoercerFactory);
       LOG.info("versioned target graph " + result.getType().getDescription());
       eventBus.post(result.getType().getEvent());
       return result;
@@ -97,10 +104,12 @@ public class VersionedTargetGraphCache {
   public TargetGraphAndBuildTargets toVersionedTargetGraph(
       BuckEventBus eventBus,
       BuckConfig buckConfig,
+      TypeCoercerFactory typeCoercerFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets)
       throws VersionException, InterruptedException {
     return getVersionedTargetGraph(
             eventBus,
+            typeCoercerFactory,
             targetGraphAndBuildTargets,
             new VersionBuckConfig(buckConfig).getVersionUniverses(),
             new ForkJoinPool(buckConfig.getNumThreads()))

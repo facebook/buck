@@ -46,7 +46,8 @@ public class PatternMatchedCollectionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     PatternMatchedCollection<BuildTarget> collection =
         PatternMatchedCollection.<BuildTarget>builder()
             .add(Pattern.compile("something"), target)
@@ -61,7 +62,8 @@ public class PatternMatchedCollectionTest {
   @Test
   public void untranslatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     PatternMatchedCollection<BuildTarget> collection =
         PatternMatchedCollection.<BuildTarget>builder()
             .add(Pattern.compile("something"), target)

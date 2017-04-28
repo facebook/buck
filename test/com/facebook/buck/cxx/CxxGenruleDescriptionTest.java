@@ -29,6 +29,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.OptionalMatchers;
@@ -165,7 +166,8 @@ public class CxxGenruleDescriptionTest {
         new CxxGenruleBuilder(target).setCmd(String.format("$(cppflags %s)", original));
     TargetNode<CxxGenruleDescription.Arg, CxxGenruleDescription> node = builder.build();
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(original, translated));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(original, translated));
     Optional<CxxGenruleDescription.Arg> translatedArg =
         node.getDescription()
             .translateConstructorArg(
@@ -187,7 +189,8 @@ public class CxxGenruleDescriptionTest {
         VersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL);
+            POOL,
+            new DefaultTypeCoercerFactory());
     CxxGenruleDescription.Arg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -211,7 +214,8 @@ public class CxxGenruleDescriptionTest {
         VersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL);
+            POOL,
+            new DefaultTypeCoercerFactory());
     CxxGenruleDescription.Arg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),

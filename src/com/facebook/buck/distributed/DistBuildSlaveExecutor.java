@@ -149,6 +149,8 @@ public class DistBuildSlaveExecutor {
                 .toVersionedTargetGraph(
                     args.getBuckEventBus(),
                     args.getRemoteRootCellConfig(),
+                    new DefaultTypeCoercerFactory(
+                        PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
                     targetGraphAndBuildTargets)
                 .getTargetGraph();
       } else {

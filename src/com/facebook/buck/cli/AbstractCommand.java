@@ -296,7 +296,10 @@ public abstract class AbstractCommand implements Command {
     return params
         .getVersionedTargetGraphCache()
         .toVersionedTargetGraph(
-            params.getBuckEventBus(), params.getBuckConfig(), targetGraphAndBuildTargets);
+            params.getBuckEventBus(),
+            params.getBuckConfig(),
+            params.getTypeCoercerFactory(),
+            targetGraphAndBuildTargets);
   }
 
   @Override

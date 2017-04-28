@@ -31,6 +31,7 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +60,7 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
@@ -93,7 +94,7 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -115,7 +116,7 @@ public class TargetNodeTranslatorTest {
     final ImmutableMap<BuildTarget, Version> selectedVersions =
         ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -139,7 +140,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -161,7 +162,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -184,7 +185,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(ImmutableList.of()) {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -226,7 +227,10 @@ public class TargetNodeTranslatorTest {
           }
         };
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableList.of(integerTranslator), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(),
+            ImmutableList.of(integerTranslator),
+            ImmutableMap.of());
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, 12), Matchers.equalTo(Optional.of(0)));
   }

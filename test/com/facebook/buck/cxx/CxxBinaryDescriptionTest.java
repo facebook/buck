@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -485,7 +486,8 @@ public class CxxBinaryDescriptionTest {
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool())
+                new ForkJoinPool(),
+                new DefaultTypeCoercerFactory())
             .getTargetGraph();
 
     assertThat(

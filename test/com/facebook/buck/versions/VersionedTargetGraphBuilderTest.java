@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -98,7 +99,8 @@ public class VersionedTargetGraphBuilderTest {
         new VersionedTargetGraphBuilder(
             POOL,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(root.getBuildTarget())));
+            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(root.getBuildTarget())),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     assertEquals(graph, versionedGraph);
   }
@@ -117,7 +119,8 @@ public class VersionedTargetGraphBuilderTest {
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
-                    BuildTargetFactory.newInstance("//:root2"))));
+                    BuildTargetFactory.newInstance("//:root2"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     assertEquals(graph, versionedGraph);
   }
@@ -134,7 +137,8 @@ public class VersionedTargetGraphBuilderTest {
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -156,7 +160,8 @@ public class VersionedTargetGraphBuilderTest {
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -181,7 +186,8 @@ public class VersionedTargetGraphBuilderTest {
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -205,7 +211,8 @@ public class VersionedTargetGraphBuilderTest {
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -249,7 +256,8 @@ public class VersionedTargetGraphBuilderTest {
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:a"),
-                    BuildTargetFactory.newInstance("//:b"))));
+                    BuildTargetFactory.newInstance("//:b"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -284,7 +292,8 @@ public class VersionedTargetGraphBuilderTest {
             POOL,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
-                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+                graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     TargetGraph expectedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -309,7 +318,8 @@ public class VersionedTargetGraphBuilderTest {
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
-                    BuildTargetFactory.newInstance("//:root2"))));
+                    BuildTargetFactory.newInstance("//:root2"))),
+            new DefaultTypeCoercerFactory());
     TargetGraph versionedGraph = builder.build();
     assertEquals(graph, versionedGraph);
   }

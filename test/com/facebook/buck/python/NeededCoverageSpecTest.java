@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -44,7 +45,8 @@ public class NeededCoverageSpecTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(ImmutableMap.of(target, newTarget));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
@@ -54,7 +56,8 @@ public class NeededCoverageSpecTest {
   @Test
   public void untranslatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNodeTranslator translator = new FixedTargetNodeTranslator(ImmutableMap.of());
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
