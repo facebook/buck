@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.ThrowingSupplier;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.zip.CustomZipEntry;
 import java.io.IOException;
 import java.io.InputStream;
