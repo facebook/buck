@@ -17,7 +17,6 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -76,47 +75,6 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
   }
 
   @Override
-  public String revisionId(String name)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return getDelegate().revisionId(name);
-  }
-
-  @Override
-  public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
-    return getDelegate().revisionIdOrAbsent(name);
-  }
-
-  @Override
-  public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return getDelegate().currentRevisionId();
-  }
-
-  @Override
-  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return getDelegate().commonAncestor(revisionIdOne, revisionIdTwo);
-  }
-
-  @Override
-  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return getDelegate().commonAncestorAndTS(revisionIdOne, revisionIdTwo);
-  }
-
-  @Override
-  public Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
-      throws InterruptedException {
-    return getDelegate().commonAncestorOrAbsent(revisionIdOne, revisionIdTwo);
-  }
-
-  @Override
-  public Optional<Pair<String, Long>> commonAncestorAndTSOrAbsent(
-      String revisionIdOne, String revisionIdTwo) throws InterruptedException {
-    return getDelegate().commonAncestorAndTSOrAbsent(revisionIdOne, revisionIdTwo);
-  }
-
-  @Override
   public String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
     return getDelegate().diffBetweenRevisions(baseRevision, tipRevision);
@@ -132,18 +90,6 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
   public ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     return getDelegate().changedFiles(fromRevisionId);
-  }
-
-  @Override
-  public long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return getDelegate().timestampSeconds(revisionId);
-  }
-
-  @Override
-  public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
-      throws InterruptedException, VersionControlCommandFailedException {
-    return getDelegate().bookmarksRevisionsId(bookmarks);
   }
 
   @Override

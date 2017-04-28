@@ -17,7 +17,6 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
@@ -35,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -47,9 +45,6 @@ import javax.annotation.Nullable;
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final Logger LOG = Logger.get(VersionControlCmdLineInterface.class);
-
-  private static final String HG_ROOT_PATH = ".hg";
-  private static final String REMOTE_NAMES_FILENAME = "remotenames";
 
   private static final Map<String, String> HG_ENVIRONMENT_VARIABLES =
       ImmutableMap.of(
@@ -68,13 +63,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           new File("src/com/facebook/buck/util/versioncontrol/rawmanifest.py").getAbsolutePath());
 
   private static final Pattern HG_REVISION_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
-  private static final Pattern HG_DATE_PATTERN = Pattern.compile("(\\d+)\\s([\\-\\+]?\\d+)");
-  private static final int HG_UNIX_TS_GROUP_INDEX = 1;
 
   private static final String HG_CMD_TEMPLATE = "{hg}";
-  private static final String NAME_TEMPLATE = "{name}";
   private static final String REVISION_ID_TEMPLATE = "{revision}";
-  private static final String REVISION_IDS_TEMPLATE = "{revisions}";
   private static final String PATH_TEMPLATE = "{path}";
 
   private static final ImmutableList<String> ROOT_COMMAND =
@@ -83,9 +74,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
-
-  private static final ImmutableList<String> REVISION_ID_FOR_NAME_COMMAND_TEMPLATE =
-      ImmutableList.of(HG_CMD_TEMPLATE, "log", "-r", NAME_TEMPLATE, "--template", "{node|short}");
 
   // -mardu: Track modified, added, deleted, unknown
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
@@ -103,28 +91,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "-d",
           "-o",
           PATH_TEMPLATE);
-
-  private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "log",
-          "--rev",
-          "ancestor(" + REVISION_IDS_TEMPLATE + ")",
-          "--template",
-          "'{node|short}'");
-
-  private static final ImmutableList<String> COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "log",
-          "--rev",
-          "ancestor(" + REVISION_IDS_TEMPLATE + ")",
-          "--template",
-          "'{node|short}' '{date|hgdate}'");
-
-  private static final ImmutableList<String> REVISION_AGE_COMMAND =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE, "log", "-r", REVISION_ID_TEMPLATE, "--template", "'{date|hgdate}'");
 
   private static final ImmutableList<String> FAST_STATS_COMMAND =
       ImmutableList.of(
@@ -158,43 +124,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return true;
   }
 
-  @Override
-  public String revisionId(String name)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return validateRevisionId(
-        executeCommand(
-            replaceTemplateValue(REVISION_ID_FOR_NAME_COMMAND_TEMPLATE, NAME_TEMPLATE, name)));
-  }
-
-  @Override
   public String currentRevisionId()
       throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(executeCommand(CURRENT_REVISION_ID_COMMAND));
-  }
-
-  @Override
-  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return validateRevisionId(
-        executeCommand(
-            replaceTemplateValue(
-                COMMON_ANCESTOR_COMMAND_TEMPLATE,
-                REVISION_IDS_TEMPLATE,
-                (revisionIdOne + "," + revisionIdTwo))));
-  }
-
-  @Override
-  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    // The return format is {hash} {timestamp.ns_timestamp}. We only use the 1st part of the TS.
-    String[] results =
-        executeCommand(
-                replaceTemplateValue(
-                    COMMON_ANCESTOR_HASH_TS_COMMAND_TEMPLATE,
-                    REVISION_IDS_TEMPLATE,
-                    (revisionIdOne + "," + revisionIdTwo)))
-            .split(" ");
-    return new Pair<>(validateRevisionId(results[0]), Long.parseLong(results[1]));
   }
 
   @Override
@@ -235,42 +167,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return Arrays.stream(hgChangedFilesString.split("\0"))
         .filter(s -> !s.isEmpty())
         .collect(MoreCollectors.toImmutableSet());
-  }
-
-  @Override
-  public long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    String hgTimeString =
-        executeCommand(
-            replaceTemplateValue(REVISION_AGE_COMMAND, REVISION_ID_TEMPLATE, revisionId));
-
-    // hgdate is UTC timestamp + local offset,
-    // e.g. 1440601290 -7200 (for France, which is UTC + 2H)
-    // We only care about the UTC bit.
-    return extractUnixTimestamp(hgTimeString);
-  }
-
-  @Override
-  public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
-      throws InterruptedException, VersionControlCommandFailedException {
-    Path remoteNames = Paths.get(executeCommand(ROOT_COMMAND), HG_ROOT_PATH, REMOTE_NAMES_FILENAME);
-
-    ImmutableMap.Builder<String, String> bookmarksRevisions = ImmutableMap.builder();
-    try {
-      List<String> lines = Files.readAllLines(remoteNames);
-      lines.forEach(
-          line -> {
-            for (String bookmark : bookmarks) {
-              if (line.endsWith(bookmark)) {
-                String[] parts = line.split(" ");
-                bookmarksRevisions.put(parts[2], parts[0]);
-              }
-            }
-          });
-    } catch (IOException e) {
-      return ImmutableMap.of();
-    }
-    return bookmarksRevisions.build();
   }
 
   @Override
@@ -404,18 +300,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       throw new VersionControlCommandFailedException(revisionId + " is not a valid revision ID.");
     }
     return revisionId;
-  }
-
-  private static long extractUnixTimestamp(String hgTimestampString)
-      throws VersionControlCommandFailedException {
-    Matcher tsMatcher = HG_DATE_PATTERN.matcher(hgTimestampString);
-
-    if (!tsMatcher.matches()) {
-      throw new VersionControlCommandFailedException(
-          hgTimestampString + " is not a valid Mercurial timestamp.");
-    }
-
-    return Long.valueOf(tsMatcher.group(HG_UNIX_TS_GROUP_INDEX));
   }
 
   private static Iterable<String> replaceTemplateValue(

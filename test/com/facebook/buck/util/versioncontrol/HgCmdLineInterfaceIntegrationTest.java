@@ -17,17 +17,13 @@
 package com.facebook.buck.util.versioncontrol;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
@@ -40,7 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -53,16 +48,6 @@ import org.junit.rules.TemporaryFolder;
 public class HgCmdLineInterfaceIntegrationTest {
 
   @Rule public ExpectedException exception = ExpectedException.none();
-
-  /** Test constants */
-  private static final long MASTER_THREE_TS = 1440589283L; // Wed Aug 26 11:41:23 2015 UTC
-
-  private static final String MASTER_THREE_BOOKMARK = "master3";
-  private static final String BRANCH_FROM_MASTER_THREE_BOOKMARK = "branch_from_master3";
-  private static final String BRANCH_FROM_MASTER_TWO_ID = "2911b3";
-  private static final String BRANCH_FROM_MASTER_THREE_ID = "dee670";
-  private static final String MASTER_TWO_ID = "b1fd7e";
-  private static final String MASTER_THREE_ID = "adf7a0";
 
   private static final String HG_REPOS_ZIP = "hg_repos.zip";
   private static final String REPOS_DIR = "hg_repos";
@@ -126,27 +111,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testCurrentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String currentRevisionId = repoThreeCmdLine.currentRevisionId();
-    assertThat(currentRevisionId.startsWith(BRANCH_FROM_MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void testRevisionId() throws VersionControlCommandFailedException, InterruptedException {
-    String currentRevisionId = repoThreeCmdLine.revisionId(MASTER_THREE_BOOKMARK);
-    assertThat(currentRevisionId.startsWith(MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void testRevisionIdOrAbsent() throws InterruptedException {
-    Optional<String> masterRevision = repoThreeCmdLine.revisionIdOrAbsent(MASTER_THREE_BOOKMARK);
-    Optional<String> absentRevision = repoThreeCmdLine.revisionIdOrAbsent("absent_bookmark");
-    assertTrue(masterRevision.get().startsWith(MASTER_THREE_ID));
-    assertEquals(absentRevision, Optional.empty());
-  }
-
-  @Test
   public void whenWorkingDirectoryUnchangedThenHasWorkingDirectoryChangesReturnsFalse()
       throws VersionControlCommandFailedException, InterruptedException {
     assertThat(repoTwoCmdLine.changedFiles("."), hasSize(0));
@@ -157,42 +121,6 @@ public class HgCmdLineInterfaceIntegrationTest {
       throws VersionControlCommandFailedException, InterruptedException {
     assertEquals(
         ImmutableSet.of("A tracked_change", "? local_change"), repoThreeCmdLine.changedFiles("."));
-  }
-
-  @Test
-  public void testCommonAncestorWithBookmarks()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor =
-        repoThreeCmdLine.commonAncestor(BRANCH_FROM_MASTER_THREE_BOOKMARK, MASTER_THREE_BOOKMARK);
-
-    assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void testExistingCommonAncestorOrAbsentWithBookmarks() throws InterruptedException {
-    assertTrue(
-        repoThreeCmdLine
-            .commonAncestorOrAbsent(BRANCH_FROM_MASTER_THREE_BOOKMARK, MASTER_THREE_BOOKMARK)
-            .get()
-            .startsWith(MASTER_THREE_ID));
-  }
-
-  @Test
-  public void testExistingCommonAncestorAndTSOrAbsentWithBookmarks() throws InterruptedException {
-    Pair<String, Long> res =
-        repoThreeCmdLine
-            .commonAncestorAndTSOrAbsent(BRANCH_FROM_MASTER_THREE_BOOKMARK, MASTER_THREE_BOOKMARK)
-            .get();
-    assertTrue(res.getFirst().startsWith(MASTER_THREE_ID));
-    assertTrue(res.getSecond().equals(1440589283L));
-  }
-
-  @Test
-  public void testAbsentCommonAncestorOrAbsentWithBookmarks() throws InterruptedException {
-    assertEquals(
-        repoThreeCmdLine.commonAncestorOrAbsent(
-            BRANCH_FROM_MASTER_THREE_BOOKMARK, "absent_bookmark"),
-        Optional.empty());
   }
 
   @Test
@@ -210,24 +138,6 @@ public class HgCmdLineInterfaceIntegrationTest {
         changedFiles,
         Matchers.containsInAnyOrder(
             "A tracked_change", "A change3", "A change3-2", "? local_change"));
-  }
-
-  @Test
-  public void whenBranchedFromLatestMasterThenCommonAncestorWithLatestMasterReturnsLatestMaster()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor =
-        repoThreeCmdLine.commonAncestor(BRANCH_FROM_MASTER_THREE_ID, MASTER_THREE_ID);
-
-    assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void whenBranchedFromOldMasterThenCommonAncestorWithLatestMasterReturnsOldMaster()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor =
-        repoTwoCmdLine.commonAncestor(BRANCH_FROM_MASTER_TWO_ID, MASTER_THREE_ID);
-
-    assertThat(commonAncestor.startsWith(MASTER_TWO_ID), is(true));
   }
 
   @Test
@@ -256,21 +166,6 @@ public class HgCmdLineInterfaceIntegrationTest {
     assertEquals(
         String.join("\n", expectedValue),
         repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3"));
-  }
-
-  @Test
-  public void testTimestamp() throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(MASTER_THREE_TS, is(equalTo(repoThreeCmdLine.timestampSeconds(MASTER_THREE_ID))));
-  }
-
-  @Test
-  public void testTrackedBookmarksOffRevisionId()
-      throws InterruptedException, VersionControlCommandFailedException {
-    ImmutableMap<String, String> bookmarks =
-        ImmutableMap.of("branch_from_master2", "2911b3cab6b24374a3649ebb96b0e53324e9c02e");
-    assertEquals(bookmarks, repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
-    bookmarks = ImmutableMap.of("branch_from_master3", "dee6702e3d5e38a86b27b159a8a0a34205e2065d");
-    assertEquals(bookmarks, repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
   }
 
   @Test

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
@@ -35,29 +32,9 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
   }
 
   @Override
-  public String revisionId(String name)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return versionControlStats.getCurrentRevisionId();
-  }
-
-  @Override
   public String currentRevisionId()
       throws VersionControlCommandFailedException, InterruptedException {
     return versionControlStats.getCurrentRevisionId();
-  }
-
-  @Override
-  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return versionControlStats.getBranchedFromMasterRevisionId();
-  }
-
-  @Override
-  public Pair<String, Long> commonAncestorAndTS(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return new Pair<>(
-        versionControlStats.getBranchedFromMasterRevisionId(),
-        versionControlStats.getBranchedFromMasterTS());
   }
 
   @Override
@@ -73,17 +50,6 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
   public ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     return versionControlStats.getPathsChangedInWorkingDirectory();
-  }
-
-  @Override
-  public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
-      throws InterruptedException, VersionControlCommandFailedException {
-    return versionControlStats
-        .getBaseBookmarks()
-        .stream()
-        .collect(
-            MoreCollectors.toImmutableMap(
-                x -> x, x -> versionControlStats.getBranchedFromMasterRevisionId()));
   }
 
   @Override
