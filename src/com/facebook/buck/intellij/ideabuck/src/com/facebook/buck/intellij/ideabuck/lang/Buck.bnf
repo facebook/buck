@@ -41,6 +41,8 @@
     LINE_COMMENT = 'regexp:#.*'
 
     GLOB_KEYWORD = 'regexp:(glob|subdir_glob)'
+    GLOB_INCLUDES_KEYWORD = 'includes'
+    GLOB_INCLUDE_DOTFILES_KEYWORD = 'include_dotfiles'
     GLOB_EXCLUDES_KEYWORD = 'excludes'
 
     MACROS = "regexp:[A-Z_]([A-Z0-9_])+"
@@ -90,7 +92,9 @@ rule_block ::= rule_name '(' rule_body ')'
 rule_body ::= (property ',')* [property [',']]
 
 glob_block ::= GLOB_KEYWORD '(' glob_elements ')'
-glob_elements ::= value_array [',' GLOB_EXCLUDES_KEYWORD '=' expression]
+glob_elements ::= (glob_arguments ',')* [glob_arguments [',']]
+glob_arguments ::= value | glob_keyword_argument
+glob_keyword_argument ::= (GLOB_INCLUDES_KEYWORD | GLOB_EXCLUDES_KEYWORD | GLOB_INCLUDE_DOTFILES_KEYWORD) '=' expression
 
 rule_call ::= rule_name '(' list_elements ')'
 
