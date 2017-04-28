@@ -25,10 +25,8 @@ import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
-import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
-import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableList;
@@ -86,21 +84,21 @@ public class AutoSparseIntegrationTest {
   @ClassRule
   public static TemporaryFolder tempFolder = new TemporaryFolder();
 
-  private static VersionControlCmdLineInterface repoCmdline;
+  private static HgCmdLineInterface repoCmdline;
 
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
     repoPath = explodeRepoZip();
     repoCmdline =
-        new DelegatingVersionControlCmdLineInterface(
-            repoPath,
+        new HgCmdLineInterface(
             new TestProcessExecutorFactory(),
+            repoPath,
             new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
             ImmutableMap.of());
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeHgInstalled();
     assumeHgSparseInstalled();
   }
@@ -224,9 +222,13 @@ public class AutoSparseIntegrationTest {
     Assert.assertEquals(expected, lines);
   }
 
-  private static void assumeHgInstalled() {
+  private static void assumeHgInstalled() throws InterruptedException {
     // If Mercurial is not installed on the build box, then skip tests.
-    Assume.assumeTrue(repoCmdline instanceof HgCmdLineInterface);
+    try {
+      repoCmdline.currentRevisionId();
+    } catch (VersionControlCommandFailedException ex) {
+      Assume.assumeNoException(ex);
+    }
   }
 
   private static void assumeHgSparseInstalled() {
@@ -237,7 +239,7 @@ public class AutoSparseIntegrationTest {
       try (Writer writer = new BufferedWriter(new FileWriter(exportFile.toFile()))) {
         writer.write("[include]\n"); // deliberately mostly empty
       }
-      ((HgCmdLineInterface) repoCmdline).exportHgSparseRules(exportFile);
+      repoCmdline.exportHgSparseRules(exportFile);
     } catch (VersionControlCommandFailedException | InterruptedException | IOException e) {
       exception = e;
     }
