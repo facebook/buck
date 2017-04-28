@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
+import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -466,8 +467,7 @@ public class Watchman implements AutoCloseable {
 
       private Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
         if (Platform.detect() == Platform.WINDOWS) {
-          // TODO(beng): Support Windows named pipes here.
-          throw new IOException("WatchmanTransport is not supported on windows yet");
+          return WindowsNamedPipe.createPipeWithPath(transportPath.toString());
         } else {
           return UnixDomainSocket.createSocketWithPath(transportPath);
         }

@@ -197,6 +197,7 @@ public class WatchmanClientIntegrationTest {
     switch (Platform.detect()) {
       case LINUX:
       case MACOS:
+      case WINDOWS:
         return true;
         //$CASES-OMITTED$
       default:

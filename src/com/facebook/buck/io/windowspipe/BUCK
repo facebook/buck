@@ -1,0 +1,9 @@
+standard_java_library(
+    name = "windowspipe",
+    deps = [
+        "//src/com/facebook/buck/io:transport",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jna:jna-platform",
+    ],
+)
