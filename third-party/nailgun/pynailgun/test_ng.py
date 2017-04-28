@@ -5,6 +5,7 @@ import StringIO
 import unittest
 import tempfile
 import shutil
+import uuid
 
 import pkg_resources
 
@@ -23,7 +24,24 @@ if os.name == 'posix':
         return os.path.exists(transport_file)
 
 
-@unittest.skipUnless(os.name == 'posix', 'Only works on posix')
+if os.name == 'nt':
+    import ctypes
+    from ctypes.wintypes import WIN32_FIND_DATAW as WIN32_FIND_DATA
+    INVALID_HANDLE_VALUE = -1
+    FindFirstFile = ctypes.windll.kernel32.FindFirstFileW
+    FindClose = ctypes.windll.kernel32.FindClose
+
+    # on windows os.path.exists doen't allow to check reliably that a pipe exists
+    # (os.path.exists tries to open connection to a pipe)
+    def transport_exists(transport_path):
+        wfd = WIN32_FIND_DATA()
+        handle = FindFirstFile(transport_path, ctypes.byref(wfd))
+        result = handle != INVALID_HANDLE_VALUE
+        FindClose(handle)
+        return result
+
+
+@unittest.skipUnless(os.name == 'posix' or os.name == 'nt', 'Works on posix and windows only')
 class TestNailgunConnection(unittest.TestCase):
     def setUp(self):
         self.setUpTransport()
@@ -35,7 +53,9 @@ class TestNailgunConnection(unittest.TestCase):
             self.transport_file = os.path.join(self.tmpdir, 'sock')
             self.transport_address = 'local:{0}'.format(self.transport_file)
         else:
-            raise NotImplementedError()
+            pipe_name = u'nailgun-test-{0}'.format(uuid.uuid4().hex)
+            self.transport_address = u'local:{0}'.format(pipe_name)
+            self.transport_file = ur'\\.\pipe\{0}'.format(pipe_name)
 
     def getNailgunUberJar(self):
         stream = pkg_resources.resource_stream(__name__, 'nailgun-uber.jar')
@@ -57,7 +77,10 @@ class TestNailgunConnection(unittest.TestCase):
                 os.close(dev_null_fd)
             creationflags = 0
         else:
-            raise NotImplementedError()
+            preexec_fn = None
+            # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx#DETACHED_PROCESS
+            DETACHED_PROCESS = 0x00000008
+            creationflags = DETACHED_PROCESS
 
         self.ng_server_process = subprocess.Popen(
             ['java', '-jar', self.getNailgunUberJar(), self.transport_address],

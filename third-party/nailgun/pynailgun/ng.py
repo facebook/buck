@@ -125,6 +125,254 @@ class UnixTransport(Transport):
         return (self.__socket in readable), (self.__socket in exceptional)
 
 
+if os.name == 'nt':
+    import ctypes.wintypes
+
+    wintypes = ctypes.wintypes
+    GENERIC_READ = 0x80000000
+    GENERIC_WRITE = 0x40000000
+    FILE_FLAG_OVERLAPPED = 0x40000000
+    OPEN_EXISTING = 3
+    INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value
+    FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
+    FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+    FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200
+    WAIT_FAILED = 0xFFFFFFFF
+    WAIT_TIMEOUT = 0x00000102
+    WAIT_OBJECT_0 = 0x00000000
+    WAIT_IO_COMPLETION = 0x000000C0
+    INFINITE = 0xFFFFFFFF
+
+    # Overlapped I/O operation is in progress. (997)
+    ERROR_IO_PENDING = 0x000003E5
+    ERROR_PIPE_BUSY = 231
+
+    # The pointer size follows the architecture
+    # We use WPARAM since this type is already conditionally defined
+    ULONG_PTR = ctypes.wintypes.WPARAM
+
+    class OVERLAPPED(ctypes.Structure):
+        _fields_ = [
+            ("Internal", ULONG_PTR), ("InternalHigh", ULONG_PTR),
+            ("Offset", wintypes.DWORD), ("OffsetHigh", wintypes.DWORD),
+            ("hEvent", wintypes.HANDLE)
+        ]
+
+    LPDWORD = ctypes.POINTER(wintypes.DWORD)
+
+    CreateFile = ctypes.windll.kernel32.CreateFileW
+    CreateFile.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                           wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                           wintypes.HANDLE]
+    CreateFile.restype = wintypes.HANDLE
+
+    CloseHandle = ctypes.windll.kernel32.CloseHandle
+    CloseHandle.argtypes = [wintypes.HANDLE]
+    CloseHandle.restype = wintypes.BOOL
+
+    ReadFile = ctypes.windll.kernel32.ReadFile
+    ReadFile.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD,
+                         LPDWORD, ctypes.POINTER(OVERLAPPED)]
+    ReadFile.restype = wintypes.BOOL
+
+    WriteFile = ctypes.windll.kernel32.WriteFile
+    WriteFile.argtypes = [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD,
+                          LPDWORD, ctypes.POINTER(OVERLAPPED)]
+    WriteFile.restype = wintypes.BOOL
+
+    GetLastError = ctypes.windll.kernel32.GetLastError
+    GetLastError.argtypes = []
+    GetLastError.restype = wintypes.DWORD
+
+    SetLastError = ctypes.windll.kernel32.SetLastError
+    SetLastError.argtypes = [wintypes.DWORD]
+    SetLastError.restype = None
+
+    FormatMessage = ctypes.windll.kernel32.FormatMessageW
+    FormatMessage.argtypes = [wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD,
+                              wintypes.DWORD, ctypes.POINTER(wintypes.LPCWSTR),
+                              wintypes.DWORD, wintypes.LPVOID]
+    FormatMessage.restype = wintypes.DWORD
+
+    LocalFree = ctypes.windll.kernel32.LocalFree
+
+    GetOverlappedResult = ctypes.windll.kernel32.GetOverlappedResult
+    GetOverlappedResult.argtypes = [wintypes.HANDLE,
+                                    ctypes.POINTER(OVERLAPPED), LPDWORD,
+                                    wintypes.BOOL]
+    GetOverlappedResult.restype = wintypes.BOOL
+
+    CreateEvent = ctypes.windll.kernel32.CreateEventW
+    CreateEvent.argtypes = [LPDWORD, wintypes.BOOL, wintypes.BOOL,
+                            wintypes.LPCWSTR]
+    CreateEvent.restype = wintypes.HANDLE
+
+    PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
+    PeekNamedPipe.argtypes = [
+        wintypes.HANDLE,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        LPDWORD,
+        LPDWORD,
+        LPDWORD,
+    ]
+    PeekNamedPipe.restype = wintypes.BOOL
+
+    WaitNamedPipe = ctypes.windll.kernel32.WaitNamedPipeW
+    WaitNamedPipe.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+    ]
+    WaitNamedPipe.restype = wintypes.BOOL
+
+    def _win32_strerror(err):
+        """ expand a win32 error code into a human readable message """
+        # FormatMessage will allocate memory and assign it here
+        buf = ctypes.c_wchar_p()
+        FormatMessage(
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_IGNORE_INSERTS, None, err, 0, buf, 0, None)
+        try:
+            return buf.value
+        finally:
+            LocalFree(buf)
+
+
+class WindowsNamedPipeTransport(Transport):
+    """ connect to a named pipe """
+
+    def __init__(self, sockpath):
+        self.sockpath = ur'\\.\pipe\{0}'.format(sockpath)
+
+        while True:
+            self.pipe = CreateFile(self.sockpath,
+                                   GENERIC_READ | GENERIC_WRITE,
+                                   0,
+                                   None,
+                                   OPEN_EXISTING,
+                                   FILE_FLAG_OVERLAPPED,
+                                   None)
+            err1 = GetLastError()
+            msg = _win32_strerror(err1)
+            if self.pipe != INVALID_HANDLE_VALUE:
+                break
+            if err1 != ERROR_PIPE_BUSY:
+                self.pipe = None
+                raise NailgunException(
+                    msg,
+                    NailgunException.CONNECT_FAILED)
+            if not WaitNamedPipe(self.sockpath, 5000):
+                self.pipe = None
+                raise NailgunException(
+                    "time out while waiting for a pipe",
+                    NailgunException.CONNECT_FAILED)
+
+        # event for the overlapped I/O operations
+        self.read_waitable = CreateEvent(None, True, False, None)
+        if self.read_waitable is None:
+            raise NailgunException(
+                'CreateEvent failed',
+                NailgunException.CONNECT_FAILED)
+        self.write_waitable = CreateEvent(None, True, False, None)
+        if self.write_waitable is None:
+            raise NailgunException(
+                'CreateEvent failed',
+                NailgunException.CONNECT_FAILED)
+
+    def _raise_win_err(self, msg, err):
+        raise IOError('%s win32 error code: %d %s' %
+                      (msg, err, _win32_strerror(err)))
+
+    def close(self):
+        if self.pipe:
+            CloseHandle(self.pipe)
+        self.pipe = None
+
+        if self.read_waitable is not None:
+            CloseHandle(self.read_waitable)
+        self.read_waitable = None
+
+        if self.write_waitable is not None:
+            CloseHandle(self.write_waitable)
+        self.write_waitable = None
+
+    def recv_into(self, buffer, nbytes):
+        # we don't use memoryview because OVERLAPPED I/O happens
+        # after the method (ReadFile) returns
+        buf = ctypes.create_string_buffer(nbytes)
+        olap = OVERLAPPED()
+        olap.hEvent = self.read_waitable
+
+        immediate = ReadFile(self.pipe, buf, nbytes, None, olap)
+
+        if not immediate:
+            err = GetLastError()
+            if err != ERROR_IO_PENDING:
+                self._raise_win_err('failed to read %d bytes' % nbytes,
+                                    GetLastError())
+
+        nread = wintypes.DWORD()
+        if not GetOverlappedResult(self.pipe,
+                                   olap,
+                                   nread,
+                                   True):
+            err = GetLastError()
+            self._raise_win_err('error while waiting for read', err)
+
+        nread = nread.value
+        buffer[:nread] = buf[:nread]
+        return nread
+
+    def sendall(self, data):
+        olap = OVERLAPPED()
+        olap.hEvent = self.write_waitable
+        p = (ctypes.c_ubyte*len(data))(*(bytearray(data)))
+        immediate = WriteFile(self.pipe,
+                              p,
+                              len(data),
+                              None,
+                              olap)
+
+        if not immediate:
+            err = GetLastError()
+            if err != ERROR_IO_PENDING:
+                self._raise_win_err('failed to write %d bytes' % len(data),
+                                    GetLastError())
+
+        # Obtain results, waiting if needed
+        nwrote = wintypes.DWORD()
+        if not GetOverlappedResult(self.pipe,
+                                   olap,
+                                   nwrote,
+                                   True):
+            err = GetLastError()
+            self._raise_win_err('error while waiting for write', err)
+        nwrote = nwrote.value
+        if nwrote != len(data):
+            raise IOError('Async wrote less bytes!')
+        return nwrote
+
+    def select(self, timeout_secs):
+        start = monotonic_time_nanos()
+        timeout_nanos = timeout_secs * NSEC_PER_SEC
+        while True:
+            readable, exceptional = self.select_now()
+            if readable or exceptional or monotonic_time_nanos() - start > timeout_nanos:
+                return readable, exceptional
+
+    def select_now(self):
+        available_total = wintypes.DWORD()
+        exceptional = not PeekNamedPipe(self.pipe,
+                                        None,
+                                        0,
+                                        None,
+                                        available_total,
+                                        None)
+        readable = available_total.value > 0
+        result = readable, exceptional
+        return result
+
+
 class NailgunConnection(object):
     '''Stateful object holding the connection to the Nailgun server.'''
 
@@ -483,7 +731,8 @@ def make_nailgun_transport(nailgun_server, nailgun_port=None, cwd=None):
     transport = None
     if nailgun_server.startswith('local:'):
         if platform.system() == 'Windows':
-            raise NotImplementedError("Windows local pipes are not implemented yet")
+            pipe_addr = nailgun_server[6:]
+            transport = WindowsNamedPipeTransport(pipe_addr)
         else:
             try:
                 s = socket.socket(socket.AF_UNIX)
