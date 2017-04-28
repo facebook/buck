@@ -108,8 +108,8 @@ public class ApplePackageDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {

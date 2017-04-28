@@ -131,8 +131,8 @@ public class TargetNodeTest {
   public static class ExampleDescription implements Description<Arg> {
 
     @Override
-    public Arg createUnpopulatedConstructorArg() {
-      return new Arg();
+    public Class<Arg> getConstructorArgType() {
+      return Arg.class;
     }
 
     @Override

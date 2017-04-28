@@ -52,8 +52,8 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public ReactNativeLibraryArgs createUnpopulatedConstructorArg() {
-    return new ReactNativeLibraryArgs();
+  public Class<ReactNativeLibraryArgs> getConstructorArgType() {
+    return ReactNativeLibraryArgs.class;
   }
 
   @Override

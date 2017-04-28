@@ -85,8 +85,8 @@ public class PrebuiltAppleFrameworkDescription
   }
 
   @Override
-  public PrebuiltAppleFrameworkDescription.Arg createUnpopulatedConstructorArg() {
-    return new PrebuiltAppleFrameworkDescription.Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

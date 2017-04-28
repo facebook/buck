@@ -58,8 +58,8 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
       ImmutableSet.of(JsFlavors.PLATFORM_DOMAIN, JsFlavors.OPTIMIZATION_DOMAIN);
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

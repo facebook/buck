@@ -32,8 +32,8 @@ import java.util.Optional;
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

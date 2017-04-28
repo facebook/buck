@@ -110,8 +110,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   @Override
-  public SwiftLibraryDescription.Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

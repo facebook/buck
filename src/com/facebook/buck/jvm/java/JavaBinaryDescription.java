@@ -71,8 +71,8 @@ public class JavaBinaryDescription
   }
 
   @Override
-  public Args createUnpopulatedConstructorArg() {
-    return new Args();
+  public Class<Args> getConstructorArgType() {
+    return Args.class;
   }
 
   @Override

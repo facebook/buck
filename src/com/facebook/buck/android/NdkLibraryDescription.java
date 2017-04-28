@@ -88,8 +88,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   private Iterable<String> escapeForMakefile(ProjectFilesystem filesystem, Iterable<String> args) {

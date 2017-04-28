@@ -147,8 +147,8 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public AppleLibraryDescription.Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

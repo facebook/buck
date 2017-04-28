@@ -23,8 +23,8 @@ import java.util.Optional;
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

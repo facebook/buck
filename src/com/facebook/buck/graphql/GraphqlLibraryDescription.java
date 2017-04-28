@@ -32,8 +32,8 @@ import com.google.common.collect.ImmutableSortedSet;
 public class GraphqlLibraryDescription implements Description<GraphqlLibraryDescription.Arg> {
 
   @Override
-  public GraphqlLibraryDescription.Arg createUnpopulatedConstructorArg() {
-    return new GraphqlLibraryDescription.Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

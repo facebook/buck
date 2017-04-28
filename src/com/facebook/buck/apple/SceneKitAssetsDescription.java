@@ -38,8 +38,8 @@ public class SceneKitAssetsDescription implements Description<AppleWrapperResour
   private static final String SCENEKIT_ASSETS_EXTENSION = "scnassets";
 
   @Override
-  public AppleWrapperResourceArg createUnpopulatedConstructorArg() {
-    return new AppleWrapperResourceArg();
+  public Class<AppleWrapperResourceArg> getConstructorArgType() {
+    return AppleWrapperResourceArg.class;
   }
 
   @Override

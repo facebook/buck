@@ -35,8 +35,8 @@ import java.util.SortedSet;
 public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

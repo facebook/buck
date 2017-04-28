@@ -35,8 +35,8 @@ abstract class AbstractVersionedAliasDescription
     implements Description<AbstractVersionedAliasDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

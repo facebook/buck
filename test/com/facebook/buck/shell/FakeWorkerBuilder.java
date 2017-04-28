@@ -125,8 +125,8 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public Object createUnpopulatedConstructorArg() {
-      return new Object();
+    public Class<Object> getConstructorArgType() {
+      return Object.class;
     }
 
     @Override

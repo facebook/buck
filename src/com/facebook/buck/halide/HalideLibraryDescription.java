@@ -97,8 +97,8 @@ public class HalideLibraryDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   public static BuildTarget createHalideCompilerBuildTarget(BuildTarget target) {

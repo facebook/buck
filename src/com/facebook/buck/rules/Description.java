@@ -66,11 +66,24 @@ public interface Description<T> {
         CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptionClassName));
   }
 
+  /** The class of the argument of this Description uses in createBuildRule(). */
+  Class<? extends T> getConstructorArgType();
+
   /**
    * @return An instance of the argument that must later be passed to createBuildRule().
    * @see ConstructorArgMarshaller
    */
-  T createUnpopulatedConstructorArg();
+  default T createUnpopulatedConstructorArg() {
+    try {
+      return getConstructorArgType().newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Badly written Description %s had un-instantiable constructor arg type %s",
+              getClass(), getConstructorArgType()),
+          e);
+    }
+  }
 
   /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link

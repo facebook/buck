@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableSortedSet;
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

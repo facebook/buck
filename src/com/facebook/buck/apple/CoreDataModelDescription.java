@@ -39,8 +39,8 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 
   @Override
-  public AppleWrapperResourceArg createUnpopulatedConstructorArg() {
-    return new AppleWrapperResourceArg();
+  public Class<AppleWrapperResourceArg> getConstructorArgType() {
+    return AppleWrapperResourceArg.class;
   }
 
   @Override

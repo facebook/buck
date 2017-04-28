@@ -82,8 +82,8 @@ public class HaskellBinaryDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   private Linker.LinkableDepType getLinkStyle(BuildTarget target, Arg arg) {

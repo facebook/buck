@@ -80,8 +80,8 @@ public class RustLibraryDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   private RustCompileRule requireBuild(

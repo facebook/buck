@@ -196,8 +196,8 @@ public class TargetNodeVisibilityTest {
   public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
 
     @Override
-    public FakeArg createUnpopulatedConstructorArg() {
-      return new FakeArg();
+    public Class<FakeArg> getConstructorArgType() {
+      return FakeArg.class;
     }
 
     @Override

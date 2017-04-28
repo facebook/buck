@@ -113,8 +113,8 @@ public class PrebuiltCxxLibraryDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   // Using the {@code MACRO_FINDER} above, return the given string with any `platform` or

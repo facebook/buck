@@ -87,8 +87,8 @@ public class PythonBinaryDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   public static BuildTarget getEmptyInitTarget(BuildTarget baseTarget) {

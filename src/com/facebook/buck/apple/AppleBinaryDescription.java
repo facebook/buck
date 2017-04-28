@@ -114,8 +114,8 @@ public class AppleBinaryDescription
   }
 
   @Override
-  public AppleBinaryDescription.Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

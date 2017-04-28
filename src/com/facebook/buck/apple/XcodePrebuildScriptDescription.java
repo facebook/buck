@@ -46,8 +46,8 @@ public class XcodePrebuildScriptDescription
     implements Description<XcodeScriptDescriptionArg>, Flavored {
 
   @Override
-  public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {
-    return new XcodeScriptDescriptionArg();
+  public Class<XcodeScriptDescriptionArg> getConstructorArgType() {
+    return XcodeScriptDescriptionArg.class;
   }
 
   @Override

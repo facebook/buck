@@ -70,8 +70,8 @@ public class WorkerToolDescription
   }
 
   @Override
-  public WorkerToolDescription.Arg createUnpopulatedConstructorArg() {
-    return new WorkerToolDescription.Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

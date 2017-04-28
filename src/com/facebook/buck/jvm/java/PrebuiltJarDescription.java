@@ -48,8 +48,8 @@ import java.util.Optional;
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override

@@ -43,8 +43,8 @@ import com.facebook.buck.rules.TargetGraph;
 public class XcodePostbuildScriptDescription implements Description<XcodeScriptDescriptionArg> {
 
   @Override
-  public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {
-    return new XcodeScriptDescriptionArg();
+  public Class<XcodeScriptDescriptionArg> getConstructorArgType() {
+    return XcodeScriptDescriptionArg.class;
   }
 
   @Override

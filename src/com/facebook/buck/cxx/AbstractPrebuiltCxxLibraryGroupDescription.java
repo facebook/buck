@@ -85,8 +85,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   }
 
   @Override
-  public Args createUnpopulatedConstructorArg() {
-    return new Args();
+  public Class<Args> getConstructorArgType() {
+    return Args.class;
   }
 
   /**

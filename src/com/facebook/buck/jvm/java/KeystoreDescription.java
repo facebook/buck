@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableSortedSet;
 public class KeystoreDescription implements Description<KeystoreDescription.Arg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<Arg> getConstructorArgType() {
+    return Arg.class;
   }
 
   @Override
