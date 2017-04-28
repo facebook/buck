@@ -1,10 +1,18 @@
-standard_java_testutil(
+java_library(
     name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.
         "//third-party/java/jdk:compiler-tree-api",
     ],
+    visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",

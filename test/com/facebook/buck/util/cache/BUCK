@@ -168,6 +168,7 @@ java_library(
         "//src/com/facebook/buck/util:watchman",
         "//src/com/facebook/buck/util/cache:cache",
         "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/caliper:caliper",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",

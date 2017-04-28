@@ -1,7 +1,3 @@
-standard_java_testutil(
-    name = "testutil",
-)
-
 standard_java_test(
     name = "autodeps",
     deps = [

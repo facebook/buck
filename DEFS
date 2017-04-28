@@ -173,22 +173,3 @@ def standard_java_test(
           labels = labels or [],
 	  **kwargs
         )
-
-def standard_java_testutil(name, deps = None, exported_deps = None, provided_deps = None):
-    srcs = glob(['*.java'])
-    testutil_srcs = []
-    for src in srcs:
-        if not src.endswith('Test.java'):
-            testutil_srcs.append(src)
-
-    if len(testutil_srcs) > 0:
-        java_library(
-          name = name,
-          srcs = testutil_srcs,
-          deps = deps or [],
-          exported_deps = exported_deps or [],
-          provided_deps = provided_deps or [],
-          visibility = [
-            '//test/...',
-          ]
-        )

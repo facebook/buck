@@ -1,5 +1,13 @@
-standard_java_testutil(
+java_library(
     name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/model:simple_types",
