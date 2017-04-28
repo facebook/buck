@@ -1602,17 +1602,22 @@ public final class Main {
   private static class DaemonKillers {
     private final NGServer server;
     private final IdleKiller idleKiller;
-    private final SocketLossKiller socketLossKiller;
+    private final SocketLossKiller unixDomainSocketLossKiller;
 
     DaemonKillers(ScheduledExecutorService executorService, NGServer server, Path socketPath) {
       this.server = server;
       this.idleKiller = new IdleKiller(executorService, DAEMON_SLAYER_TIMEOUT, this::killServer);
-      this.socketLossKiller =
-          new SocketLossKiller(executorService, socketPath.toAbsolutePath(), this::killServer);
+      this.unixDomainSocketLossKiller =
+          Platform.detect() == Platform.WINDOWS
+              ? null
+              : new SocketLossKiller(
+                  executorService, socketPath.toAbsolutePath(), this::killServer);
     }
 
     IdleKiller.CommandExecutionScope newCommandExecutionScope() {
-      socketLossKiller.arm(); // Arm the socket loss killer also.
+      if (unixDomainSocketLossKiller != null) {
+        unixDomainSocketLossKiller.arm(); // Arm the socket loss killer also.
+      }
       return idleKiller.newCommandExecutionScope();
     }
 

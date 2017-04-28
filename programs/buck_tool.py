@@ -180,15 +180,12 @@ class BuckTool(object):
             env = self._environ_for_buck()
             env['BUCK_BUILD_ID'] = build_id
 
-            buck_socket_path = self._buck_project.get_buckd_socket_path()
-
-            if use_buckd and self._is_buckd_running() and \
-                    os.path.exists(buck_socket_path):
+            if use_buckd and self._is_buckd_running():
                 with Tracing('buck', args={'command': sys.argv[1:]}):
                     exit_code = 2
                     last_diagnostic_time = 0
                     while exit_code == 2:
-                        with NailgunConnection('local:.buckd/sock',
+                        with NailgunConnection(self._buck_project.get_buckd_transport_address(),
                                                cwd=self._buck_project.root) as c:
                             now = int(round(time.time() * 1000))
                             env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
@@ -299,47 +296,53 @@ class BuckTool(object):
             command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
-            command.append("local:.buckd/sock")
+            command.append(self._buck_project.get_buckd_transport_address())
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
-            '''
-            Change the process group of the child buckd process so that when this
-            script is interrupted, it does not kill buckd.
-            '''
-            def preexec_func():
-                # Close any open file descriptors to further separate buckd from its
-                # invoking context (e.g. otherwise we'd hang when running things like
-                # `ssh localhost buck clean`).
-                dev_null_fd = os.open("/dev/null", os.O_RDWR)
-                os.dup2(dev_null_fd, 0)
-                os.dup2(dev_null_fd, 1)
-                os.dup2(dev_null_fd, 2)
-                os.close(dev_null_fd)
-            buck_socket_path = self._buck_project.get_buckd_socket_path()
-
-            # Make sure the Unix domain socket doesn't exist before this call.
-            try:
-                os.unlink(buck_socket_path)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    # Socket didn't previously exist.
-                    pass
-                else:
-                    raise e
-
+            buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
+            if os.name == 'nt':
+                preexec_fn = None
+                # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx#DETACHED_PROCESS
+                DETACHED_PROCESS = 0x00000008
+                creationflags = DETACHED_PROCESS
+            else:
+                # Make sure the Unix domain socket doesn't exist before this call.
+                try:
+                    os.unlink(buckd_transport_file_path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # Socket didn't previously exist.
+                        pass
+                    else:
+                        raise e
+                '''
+                Change the process group of the child buckd process so that when this
+                script is interrupted, it does not kill buckd.
+                '''
+                def preexec_fn():
+                    # Close any open file descriptors to further separate buckd from its
+                    # invoking context (e.g. otherwise we'd hang when running things like
+                    # `ssh localhost buck clean`).
+                    dev_null_fd = os.open("/dev/null", os.O_RDWR)
+                    os.dup2(dev_null_fd, 0)
+                    os.dup2(dev_null_fd, 1)
+                    os.dup2(dev_null_fd, 2)
+                    os.close(dev_null_fd)
+                creationflags = 0
             process = subprocess.Popen(
                 command,
                 executable=which("java"),
                 cwd=self._buck_project.root,
                 close_fds=True,
-                preexec_fn=preexec_func,
-                env=self._environ_for_buck())
+                preexec_fn=preexec_fn,
+                env=self._environ_for_buck(),
+                creationflags=creationflags)
 
             self._buck_project.save_buckd_version(buck_version_uid)
 
             # Give Java some time to create the listening socket.
             for i in range(0, 300):
-                if not os.path.exists(buck_socket_path):
+                if not transport_exists(buckd_transport_file_path):
                     time.sleep(0.01)
 
             returncode = process.poll()
@@ -352,11 +355,12 @@ class BuckTool(object):
 
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
-            buckd_socket_path = self._buck_project.get_buckd_socket_path()
-            if os.path.exists(buckd_socket_path):
+            buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
+            if transport_exists(buckd_transport_file_path):
                 print("Shutting down nailgun server...", file=sys.stderr)
                 try:
-                    with NailgunConnection('local:.buckd/sock', cwd=self._buck_project.root) as c:
+                    with NailgunConnection(self._buck_project.get_buckd_transport_address(),
+                                           cwd=self._buck_project.root) as c:
                         c.send_command('ng-stop')
                 except NailgunException as e:
                     if e.code not in (NailgunException.CONNECT_FAILED,
@@ -370,14 +374,14 @@ class BuckTool(object):
 
     def _is_buckd_running(self):
         with Tracing('BuckTool._is_buckd_running'):
-            buckd_socket_path = self._buck_project.get_buckd_socket_path()
+            transport_file_path = self._buck_project.get_buckd_transport_file_path()
 
-            if not os.path.exists(buckd_socket_path):
+            if not transport_exists(transport_file_path):
                 return False
 
             try:
                 with NailgunConnection(
-                        'local:.buckd/sock',
+                        self._buck_project.get_buckd_transport_address(),
                         stdin=None,
                         stdout=None,
                         stderr=None,
@@ -478,3 +482,25 @@ def setup_watchman_watch():
             raise BuckToolException(message)
 
         print("Using watchman.", file=sys.stderr)
+
+
+def transport_exists(path):
+    return os.path.exists(path)
+
+
+if os.name == 'nt':
+    import ctypes
+    from ctypes.wintypes import WIN32_FIND_DATAW as WIN32_FIND_DATA
+
+    INVALID_HANDLE_VALUE = -1
+    FindFirstFile = ctypes.windll.kernel32.FindFirstFileW
+    FindClose = ctypes.windll.kernel32.FindClose
+
+    # on windows os.path.exists doen't allow to check reliably that pipe exists
+    # (os.path.exists tries to open connection to a pipe)
+    def transport_exists(transport_path):
+        wfd = WIN32_FIND_DATA()
+        handle = FindFirstFile(transport_path, ctypes.byref(wfd))
+        result = handle != INVALID_HANDLE_VALUE
+        FindClose(handle)
+        return result

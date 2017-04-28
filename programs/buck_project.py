@@ -7,6 +7,7 @@ import sys
 
 import file_locks
 from tracing import Tracing
+import hashlib
 
 
 def get_file_contents_if_exists(path, default=None):
@@ -63,8 +64,20 @@ class BuckProject:
         self.buck_javaargs_local = get_file_contents_if_exists(
             buck_javaargs_path_local)
 
-    def get_buckd_socket_path(self):
-        return os.path.join(self.buckd_dir, 'sock')
+    def get_root_hash(self):
+        return hashlib.sha256(self.root).hexdigest()
+
+    def get_buckd_transport_file_path(self):
+        if os.name == 'nt':
+            return ur'\\.\pipe\buckd_{0}'.format(self.get_root_hash())
+        else:
+            return os.path.join(self.buckd_dir, 'sock')
+
+    def get_buckd_transport_address(self):
+        if os.name == 'nt':
+            return 'local:buckd_{0}'.format(self.get_root_hash())
+        else:
+            return 'local:.buckd/sock'
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
