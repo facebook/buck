@@ -318,12 +318,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @Override
-  public <A extends Arg> NdkLibrary createBuildRule(
+  public NdkLibrary createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
 

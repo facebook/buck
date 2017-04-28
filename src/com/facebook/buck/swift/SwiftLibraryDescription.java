@@ -134,12 +134,12 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   @Override
-  public <A extends SwiftLibraryDescription.Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -329,12 +329,12 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             inputBuilder.build()));
   }
 
-  public <A extends CxxLibraryDescription.Arg> Optional<BuildRule> createCompanionBuildRule(
+  public Optional<BuildRule> createCompanionBuildRule(
       final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      CxxLibraryDescription.Arg args)
       throws NoSuchBuildTargetException {
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {

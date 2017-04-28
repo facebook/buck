@@ -43,12 +43,12 @@ public class LuaLibraryDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args) {
+      final Arg args) {
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(params) {

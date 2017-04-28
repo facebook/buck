@@ -50,12 +50,12 @@ public class FakeTargetNodeBuilder
     }
 
     @Override
-    public <A extends Arg> BuildRule createBuildRule(
+    public BuildRule createBuildRule(
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args)
+        Arg args)
         throws NoSuchBuildTargetException {
       return rule;
     }

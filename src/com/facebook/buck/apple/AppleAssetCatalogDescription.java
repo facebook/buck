@@ -40,12 +40,12 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   }
 
   @Override
-  public <A extends Arg> NoopBuildRule createBuildRule(
+  public NoopBuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new NoopBuildRule(params);
   }
 

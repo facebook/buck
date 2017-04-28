@@ -43,12 +43,12 @@ public class PrebuiltNativeLibraryDescription
   }
 
   @Override
-  public <A extends Arg> PrebuiltNativeLibrary createBuildRule(
+  public PrebuiltNativeLibrary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     ImmutableSortedSet<? extends SourcePath> librarySources;
     try {
       librarySources =

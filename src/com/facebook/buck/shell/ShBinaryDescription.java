@@ -37,12 +37,12 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
   }
 
   @Override
-  public <A extends Arg> ShBinary createBuildRule(
+  public ShBinary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ShBinary(params, ruleFinder, args.main, args.resources);
   }

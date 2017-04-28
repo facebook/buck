@@ -130,12 +130,12 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public <A> BuildRule createBuildRule(
+    public BuildRule createBuildRule(
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        A args)
+        Object args)
         throws NoSuchBuildTargetException {
       return create.apply(params);
     }

@@ -130,12 +130,12 @@ public class CxxTestDescription
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams inputParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Arg args)
       throws NoSuchBuildTargetException {
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());

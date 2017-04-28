@@ -35,12 +35,12 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
   }
 
   @Override
-  public <A extends Arg> GenAidl createBuildRule(
+  public GenAidl createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new GenAidl(params, args.aidl, args.importPath);
   }
 

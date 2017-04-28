@@ -53,12 +53,12 @@ public class ScalaLibraryDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     ScalaLibraryBuilder scalaLibraryBuilder =
         new ScalaLibraryBuilder(rawParams, resolver, scalaBuckConfig).setArgs(args);

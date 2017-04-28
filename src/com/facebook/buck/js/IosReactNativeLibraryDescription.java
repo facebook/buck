@@ -57,12 +57,12 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public <A extends ReactNativeLibraryArgs> ReactNativeBundle createBuildRule(
+  public ReactNativeBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      ReactNativeLibraryArgs args) {
     return enhancer.enhanceForIos(params, resolver, args);
   }
 

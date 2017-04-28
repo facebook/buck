@@ -181,12 +181,12 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public <A extends AppleLibraryDescription.Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget());
@@ -207,7 +207,7 @@ public class AppleLibraryDescription
   }
 
   private <A extends Arg> BuildRule createFrameworkBundleBuildRule(
-      TargetGraph targetGraph, BuildRuleParams params, BuildRuleResolver resolver, A args)
+      TargetGraph targetGraph, BuildRuleParams params, BuildRuleResolver resolver, Arg args)
       throws NoSuchBuildTargetException {
     if (!args.infoPlist.isPresent()) {
       throw new HumanReadableException(

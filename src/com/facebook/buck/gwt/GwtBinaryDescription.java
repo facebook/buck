@@ -68,12 +68,12 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 

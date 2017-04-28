@@ -50,10 +50,10 @@ public class SwiftDescriptions {
     return swiftSrcsBuilder.build();
   }
 
-  static <A extends CxxLibraryDescription.Arg> void populateSwiftLibraryDescriptionArg(
+  static void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
       SwiftLibraryDescription.Arg output,
-      final A args,
+      final CxxLibraryDescription.Arg args,
       BuildTarget buildTarget) {
 
     output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);

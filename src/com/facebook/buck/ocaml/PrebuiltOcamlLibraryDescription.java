@@ -45,12 +45,12 @@ public class PrebuiltOcamlLibraryDescription
   }
 
   @Override
-  public <A extends Arg> OcamlLibrary createBuildRule(
+  public OcamlLibrary createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args) {
+      final Arg args) {
 
     final BuildTarget target = params.getBuildTarget();
 

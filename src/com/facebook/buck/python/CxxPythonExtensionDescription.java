@@ -256,7 +256,7 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -308,12 +308,12 @@ public class CxxPythonExtensionDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Arg args)
       throws NoSuchBuildTargetException {
 
     Optional<Map.Entry<Flavor, CxxPlatform>> platform =

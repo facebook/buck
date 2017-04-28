@@ -54,12 +54,12 @@ public class AndroidReactNativeLibraryDescription
   }
 
   @Override
-  public <A extends Args> AndroidReactNativeLibrary createBuildRule(
+  public AndroidReactNativeLibrary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Args args) {
     return enhancer.enhanceForAndroid(params, resolver, args);
   }
 

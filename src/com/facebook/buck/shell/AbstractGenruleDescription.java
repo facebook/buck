@@ -70,10 +70,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
               .build());
 
-  protected <A extends T> BuildRule createBuildRule(
+  protected BuildRule createBuildRule(
       final BuildRuleParams params,
       @SuppressWarnings("unused") final BuildRuleResolver resolver,
-      A args,
+      T args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
@@ -84,12 +84,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return PARSE_TIME_MACRO_HANDLER;
   }
 
-  protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
+  protected MacroHandler getMacroHandler(
       @SuppressWarnings("unused") BuildTarget buildTarget,
       @SuppressWarnings("unused") ProjectFilesystem filesystem,
       @SuppressWarnings("unused") BuildRuleResolver resolver,
       TargetGraph targetGraph,
-      @SuppressWarnings("unused") A args) {
+      @SuppressWarnings("unused") Arg args) {
     return new MacroHandler(
         ImmutableMap.<String, MacroExpander>builder()
             .put("classpath", new ClasspathMacroExpander())
@@ -103,12 +103,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   @Override
-  public <A extends T> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args)
+      final T args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =

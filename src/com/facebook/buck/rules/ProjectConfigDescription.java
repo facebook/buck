@@ -28,12 +28,12 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
   }
 
   @Override
-  public <A extends Arg> ProjectConfig createBuildRule(
+  public ProjectConfig createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new ProjectConfig(
         params,
         args.srcTarget.map(resolver::getRule).orElse(null),

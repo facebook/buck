@@ -90,12 +90,12 @@ public class PrebuiltAppleFrameworkDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Arg args)
       throws NoSuchBuildTargetException {
     return new PrebuiltAppleFramework(
         params,

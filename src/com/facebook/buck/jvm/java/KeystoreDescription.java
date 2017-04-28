@@ -35,12 +35,12 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
   }
 
   @Override
-  public <A extends Arg> Keystore createBuildRule(
+  public Keystore createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new Keystore(params, args.store, args.properties);
   }
 

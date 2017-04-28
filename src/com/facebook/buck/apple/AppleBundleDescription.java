@@ -130,12 +130,12 @@ public class AppleBundleDescription
   }
 
   @Override
-  public <A extends Arg> AppleBundle createBuildRule(
+  public AppleBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     AppleDebugFormat flavoredDebugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN

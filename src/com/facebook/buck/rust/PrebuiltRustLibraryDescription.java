@@ -46,12 +46,12 @@ public class PrebuiltRustLibraryDescription
   }
 
   @Override
-  public <A extends Arg> PrebuiltRustLibrary createBuildRule(
+  public PrebuiltRustLibrary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));

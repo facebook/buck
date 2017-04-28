@@ -43,12 +43,12 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     HashCode sha1;
     try {
       sha1 = HashCode.fromString(args.sha1);

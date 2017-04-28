@@ -48,12 +48,12 @@ public class XcodePostbuildScriptDescription implements Description<XcodeScriptD
   }
 
   @Override
-  public <A extends XcodeScriptDescriptionArg> NoopBuildRule createBuildRule(
+  public NoopBuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      XcodeScriptDescriptionArg args) {
     return new NoopBuildRule(params);
   }
 }

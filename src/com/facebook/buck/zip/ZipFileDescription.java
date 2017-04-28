@@ -38,12 +38,12 @@ public class ZipFileDescription
   }
 
   @Override
-  public <A extends Arg> Zip createBuildRule(
+  public Zip createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new Zip(
         params, args.out.orElse(params.getBuildTarget().getShortName() + ".zip"), args.srcs);
   }

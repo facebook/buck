@@ -49,12 +49,12 @@ public class AndroidInstrumentationTestDescription
   }
 
   @Override
-  public <A extends Arg> AndroidInstrumentationTest createBuildRule(
+  public AndroidInstrumentationTest createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     BuildRule apk = resolver.getRule(args.apk);
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(

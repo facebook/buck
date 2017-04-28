@@ -154,12 +154,12 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   }
 
   @Override
-  public <A extends Args> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Args args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new CustomPrebuiltCxxLibrary(params) {

@@ -30,10 +30,10 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   }
 
   @Override
-  protected <A extends GenruleDescription.Arg> BuildRule createBuildRule(
+  protected BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args,
+      Arg args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {

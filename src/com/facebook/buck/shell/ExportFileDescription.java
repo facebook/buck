@@ -45,12 +45,12 @@ public class ExportFileDescription
   }
 
   @Override
-  public <A extends Arg> ExportFile createBuildRule(
+  public ExportFile createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     BuildTarget target = params.getBuildTarget();
 
     Mode mode = args.mode.orElse(Mode.COPY);

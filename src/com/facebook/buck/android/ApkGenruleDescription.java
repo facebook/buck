@@ -37,10 +37,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
   }
 
   @Override
-  protected <A extends ApkGenruleDescription.Arg> BuildRule createBuildRule(
+  protected BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args,
+      Arg args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {

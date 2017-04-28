@@ -41,12 +41,12 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   }
 
   @Override
-  public <A extends Arg> AndroidManifest createBuildRule(
+  public AndroidManifest createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =

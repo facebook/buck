@@ -74,7 +74,7 @@ public class CxxBinaryDescription
    * @return a {@link com.facebook.buck.cxx.HeaderSymlinkTree} for the headers of this C/C++ binary.
    */
   public static <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, A args)
+      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -117,12 +117,12 @@ public class CxxBinaryDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(targetGraph, params, resolver, cellRoots, args, ImmutableSortedSet.of());
   }

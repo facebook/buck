@@ -68,12 +68,12 @@ public class ApplePackageDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     final BuildRule bundle =
         resolver.getRule(propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));

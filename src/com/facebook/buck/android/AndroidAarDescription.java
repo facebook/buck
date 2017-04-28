@@ -94,12 +94,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     originalBuildRuleParams.getBuildTarget().checkUnflavored();

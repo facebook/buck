@@ -40,12 +40,12 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
 
     ImmutableList.Builder<Either<BuildRule, String>> refsAsRules = ImmutableList.builder();
     for (Either<BuildTarget, String> ref : args.deps.get()) {

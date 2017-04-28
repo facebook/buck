@@ -167,12 +167,12 @@ public class AppleBinaryDescription
   }
 
   @Override
-  public <A extends AppleBinaryDescription.Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(APP_FLAVOR)) {
       return createBundleBuildRule(targetGraph, params, resolver, args);
@@ -197,7 +197,7 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget =
@@ -262,7 +262,7 @@ public class AppleBinaryDescription
   }
 
   private <A extends Arg> BuildRule createBundleBuildRule(
-      TargetGraph targetGraph, BuildRuleParams params, BuildRuleResolver resolver, A args)
+      TargetGraph targetGraph, BuildRuleParams params, BuildRuleResolver resolver, Arg args)
       throws NoSuchBuildTargetException {
     if (!args.infoPlist.isPresent()) {
       throw new HumanReadableException(
@@ -327,7 +327,7 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     if (AppleDescriptions.flavorsDoNotAllowLinkerMapMode(params)) {
@@ -368,7 +368,7 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     Optional<BuildRule> existingThinRule = resolver.getRuleOptional(params.getBuildTarget());
     if (existingThinRule.isPresent()) {
@@ -423,7 +423,7 @@ public class AppleBinaryDescription
         || flavors.contains(LEGACY_WATCH_FLAVOR));
   }
 
-  private <A extends Arg> Optional<Path> getStubBinaryPath(BuildRuleParams params, A args) {
+  private <A extends Arg> Optional<Path> getStubBinaryPath(BuildRuleParams params, Arg args) {
     Optional<Path> stubBinaryPath = Optional.empty();
     Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
     if (appleCxxPlatform.isPresent() && args.srcs.isEmpty()) {

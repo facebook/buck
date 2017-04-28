@@ -298,7 +298,7 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link HeaderSymlinkTree} for the exported headers of this prebuilt C/C++ library.
    */
   private static <A extends Arg> HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, A args)
+      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
       throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
@@ -310,7 +310,7 @@ public class PrebuiltCxxLibraryDescription
   }
 
   private static <A extends Arg> ImmutableMap<Path, SourcePath> parseExportedHeaders(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, A args)
+      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
       throws NoSuchBuildTargetException {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -345,7 +345,7 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
@@ -483,7 +483,7 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<String> versionSubdir,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     if (!args.supportsSharedLibraryInterface) {
@@ -527,12 +527,12 @@ public class PrebuiltCxxLibraryDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Arg args)
       throws NoSuchBuildTargetException {
 
     // See if we're building a particular "type" of this library, and if so, extract

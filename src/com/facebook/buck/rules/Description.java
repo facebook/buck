@@ -95,11 +95,11 @@ public interface Description<T> {
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
-  <A extends T> BuildRule createBuildRule(
+  BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      T args)
       throws NoSuchBuildTargetException;
 }

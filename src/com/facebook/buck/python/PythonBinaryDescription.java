@@ -244,12 +244,12 @@ public class PythonBinaryDescription
   }
 
   @Override
-  public <A extends Arg> PythonBinary createBuildRule(
+  public PythonBinary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
       throw new HumanReadableException(

@@ -36,12 +36,12 @@ public class PrebuiltPythonLibraryDescription
   }
 
   @Override
-  public <A extends Arg> PrebuiltPythonLibrary createBuildRule(
+  public PrebuiltPythonLibrary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new PrebuiltPythonLibrary(params, args.binarySrc);
   }
 

@@ -201,12 +201,12 @@ public class CxxGenruleDescription
   }
 
   @Override
-  protected <A extends Arg> MacroHandler getMacroHandler(
+  protected MacroHandler getMacroHandler(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       TargetGraph targetGraph,
-      A args) {
+      Arg args) {
     CxxPlatform cxxPlatform = cxxPlatforms.getRequiredValue(buildTarget);
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
@@ -253,12 +253,12 @@ public class CxxGenruleDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
     if (cxxPlatform.isPresent()) {

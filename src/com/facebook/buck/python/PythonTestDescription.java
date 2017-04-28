@@ -159,12 +159,12 @@ public class PythonTestDescription
   }
 
   @Override
-  public <A extends Arg> PythonTest createBuildRule(
+  public PythonTest createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args)
+      final Arg args)
       throws HumanReadableException, NoSuchBuildTargetException {
 
     PythonPlatform pythonPlatform =

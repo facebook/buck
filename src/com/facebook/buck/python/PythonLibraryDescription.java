@@ -70,12 +70,12 @@ public class PythonLibraryDescription
   }
 
   @Override
-  public <A extends Arg> PythonLibrary createBuildRule(
+  public PythonLibrary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new PythonLibrary(params, resolver);
   }
 

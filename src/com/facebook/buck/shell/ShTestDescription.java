@@ -72,12 +72,12 @@ public class ShTestDescription
   }
 
   @Override
-  public <A extends Arg> ShTest createBuildRule(
+  public ShTest createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);

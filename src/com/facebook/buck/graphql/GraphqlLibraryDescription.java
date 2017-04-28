@@ -37,12 +37,12 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
 
     return new GraphqlLibrary(params, args.srcs);

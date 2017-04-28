@@ -44,12 +44,12 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
   }
 
   @Override
-  public <A extends AppleWrapperResourceArg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args) {
+      AppleWrapperResourceArg args) {
     String extension = Files.getFileExtension(args.path.getFileName().toString());
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension)

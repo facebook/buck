@@ -38,12 +38,12 @@ public class CxxPrecompiledHeaderDescription
   }
 
   @Override
-  public <A extends Arg> CxxPrecompiledHeaderTemplate createBuildRule(
+  public CxxPrecompiledHeaderTemplate createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      A args) {
+      Arg args) {
     return new CxxPrecompiledHeaderTemplate(
         params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.deps)), ruleResolver, args.src);
   }

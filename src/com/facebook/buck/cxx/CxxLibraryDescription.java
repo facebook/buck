@@ -469,7 +469,7 @@ public class CxxLibraryDescription
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library. */
   private <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, A args)
+      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
       throws NoSuchBuildTargetException {
     boolean shouldCreatePrivateHeaderSymlinks =
         args.xcodePrivateHeadersSymlinks.orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
@@ -495,7 +495,7 @@ public class CxxLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPreprocessables.HeaderMode mode,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -510,7 +510,7 @@ public class CxxLibraryDescription
 
   /** @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library. */
   private <A extends Arg> HeaderSymlinkTree createExportedPlatformHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, A args)
+      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
       throws NoSuchBuildTargetException {
     boolean shouldCreatePublicHeaderSymlinks =
         args.xcodePublicHeadersSymlinks.orElse(cxxPlatform.getPublicHeadersSymlinksEnabled());
@@ -668,12 +668,12 @@ public class CxxLibraryDescription
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args)
+      Arg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(
         params,
@@ -686,11 +686,11 @@ public class CxxLibraryDescription
         ImmutableSortedSet.of());
   }
 
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       BuildRuleParams metadataRuleParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final A args,
+      final Arg args,
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
