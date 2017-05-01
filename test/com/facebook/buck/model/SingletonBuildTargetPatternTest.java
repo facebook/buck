@@ -15,9 +15,7 @@
  */
 package com.facebook.buck.model;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
@@ -31,7 +29,7 @@ public class SingletonBuildTargetPatternTest {
   @Test
   public void testApply() {
     SingletonBuildTargetPattern pattern =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
+        SingletonBuildTargetPattern.of(ROOT, "//src/com/facebook/buck:buck");
 
     assertTrue(
         pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
@@ -42,35 +40,5 @@ public class SingletonBuildTargetPatternTest {
         pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/foo", "foo").build()));
     assertFalse(
         pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
-  }
-
-  @Test
-  public void testEquals() {
-    SingletonBuildTargetPattern singletonPattern1 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
-    SingletonBuildTargetPattern singletonPattern2 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
-    SingletonBuildTargetPattern singletonPattern3 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck/cli:cli");
-    SingletonBuildTargetPattern singletonPattern4 =
-        new SingletonBuildTargetPattern(ROOT, "cell//src/com/facebook/buck:buck");
-
-    assertFalse(singletonPattern1.equals(null));
-    assertEquals(singletonPattern1, singletonPattern2);
-    assertFalse(singletonPattern2.equals(singletonPattern3));
-    assertEquals(singletonPattern1, singletonPattern4);
-  }
-
-  @Test
-  public void testHashCode() {
-    SingletonBuildTargetPattern singletonPattern1 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
-    SingletonBuildTargetPattern singletonPattern2 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
-    SingletonBuildTargetPattern singletonPattern3 =
-        new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck/cli:cli");
-
-    assertEquals(singletonPattern1.hashCode(), singletonPattern2.hashCode());
-    assertNotSame(singletonPattern1.hashCode(), singletonPattern3.hashCode());
   }
 }

@@ -151,17 +151,17 @@ public abstract class BuildTargetPatternParser<T> {
 
     @Override
     public BuildTargetPattern createForDescendants(Path cellPath, Path basePath) {
-      return new SubdirectoryBuildTargetPattern(cellPath, basePath);
+      return SubdirectoryBuildTargetPattern.of(cellPath, basePath);
     }
 
     @Override
     public BuildTargetPattern createForChildren(Path cellPath, Path basePath) {
-      return new ImmediateDirectoryBuildTargetPattern(cellPath, basePath);
+      return ImmediateDirectoryBuildTargetPattern.of(cellPath, basePath);
     }
 
     @Override
     public BuildTargetPattern createForSingleton(BuildTarget target) {
-      return new SingletonBuildTargetPattern(
+      return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
     }
   }

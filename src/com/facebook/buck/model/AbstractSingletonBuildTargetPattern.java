@@ -15,28 +15,30 @@
  */
 package com.facebook.buck.model;
 
-import com.google.common.base.Objects;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /** A pattern that matches only one build target. */
-public class SingletonBuildTargetPattern implements BuildTargetPattern {
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleTuple
+abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern {
 
-  private final UnflavoredBuildTarget target;
+  protected abstract UnflavoredBuildTarget getTarget();
 
   /**
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to match the
    *     value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
-  public SingletonBuildTargetPattern(Path cellPath, String fullyQualifiedName) {
-
+  public static SingletonBuildTargetPattern of(Path cellPath, String fullyQualifiedName) {
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
-    target =
+    return SingletonBuildTargetPattern.of(
         UnflavoredBuildTarget.builder()
             .setBaseName(fullyQualifiedName.substring(buildTarget, colon))
             .setShortName(fullyQualifiedName.substring(colon + 1))
             .setCellPath(cellPath)
-            .build();
+            .build());
   }
 
   /**
@@ -45,31 +47,17 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    */
   @Override
   public boolean matches(BuildTarget target) {
-    return this.target.getCellPath().equals(target.getCellPath())
-        && this.target.equals(target.getUnflavoredBuildTarget());
+    return this.getTarget().getCellPath().equals(target.getCellPath())
+        && this.getTarget().equals(target.getUnflavoredBuildTarget());
   }
 
   @Override
   public String getCellFreeRepresentation() {
-    return target.getBaseName() + ":" + target.getShortName();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof SingletonBuildTargetPattern)) {
-      return false;
-    }
-    SingletonBuildTargetPattern that = (SingletonBuildTargetPattern) o;
-    return Objects.equal(this.target, that.target);
-  }
-
-  @Override
-  public int hashCode() {
-    return target.hashCode();
+    return getTarget().getBaseName() + ":" + getTarget().getShortName();
   }
 
   @Override
   public String toString() {
-    return target.toString();
+    return getTarget().toString();
   }
 }

@@ -52,19 +52,19 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     assertEquals(
-        new ImmediateDirectoryBuildTargetPattern(
+        ImmediateDirectoryBuildTargetPattern.of(
             filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern(
+        SingletonBuildTargetPattern.of(
             filesystem.getRootPath(), "//test/com/facebook/buck/parser:parser"),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
+        SubdirectoryBuildTargetPattern.of(
             filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
@@ -84,15 +84,15 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     assertEquals(
-        new ImmediateDirectoryBuildTargetPattern(filesystem.getRootPath(), vfs.getPath("")),
+        ImmediateDirectoryBuildTargetPattern.of(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:parser"),
+        SingletonBuildTargetPattern.of(filesystem.getRootPath(), "//:parser"),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
-        new SubdirectoryBuildTargetPattern(filesystem.getRootPath(), vfs.getPath("")),
+        SubdirectoryBuildTargetPattern.of(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
@@ -108,10 +108,10 @@ public class BuildTargetPatternParserTest {
             ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
     assertEquals(
-        new SingletonBuildTargetPattern(filesystem.getPath("foo/other"), "//:something"),
+        SingletonBuildTargetPattern.of(filesystem.getPath("foo/other"), "//:something"),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
+        SubdirectoryBuildTargetPattern.of(
             filesystem.getPath("foo/other"), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
