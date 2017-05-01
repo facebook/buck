@@ -400,7 +400,8 @@ public class ProjectCommand extends BuildCommand {
             projectView,
             projectGraph,
             passedInTargetsSet,
-            params.getBuckEventBus());
+            params.getBuckEventBus(),
+            params.getBuckConfig().getConfig());
       }
 
       projectIde =

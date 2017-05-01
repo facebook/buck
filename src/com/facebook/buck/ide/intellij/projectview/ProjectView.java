@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij.projectview;
 
+import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
@@ -68,8 +69,10 @@ public class ProjectView {
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      BuckEventBus eventBus) {
-    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, eventBus).run();
+      BuckEventBus eventBus,
+      Config config) {
+    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, eventBus, config)
+        .run();
   }
 
   // endregion Public API
@@ -90,6 +93,7 @@ public class ProjectView {
   private final TargetGraph targetGraph;
   private final ImmutableSet<BuildTarget> buildTargets;
   private final BuckEventBus eventBus;
+  private final Config config;
 
   private final String repository = new File("").getAbsolutePath();
 
@@ -99,7 +103,8 @@ public class ProjectView {
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Config config) {
     this.stdErr = stdErr;
     this.viewPath = viewPath;
     this.dryRun = dryRun;
@@ -108,6 +113,7 @@ public class ProjectView {
     this.buildTargets = buildTargets;
 
     this.eventBus = eventBus;
+    this.config = config;
   }
 
   private int run() {
@@ -526,19 +532,72 @@ public class ProjectView {
         COMPONENT,
         attribute(NAME, "FrameworkDetectionExcludesConfiguration"),
         attribute("detection-enabled", false));
+
+    String languageLevel = getIntellijSectionValue(INTELLIJ_LANGUAGE_LEVEL, "JDK_1_7");
+    String jdkName = getIntellijSectionValue(INTELLIJ_JDK_NAME, "Android API 23 Platform");
+    String jdkType = getIntellijSectionValue(INTELLIJ_JDK_TYPE, "Android SDK");
+
     addElement(
         project,
         COMPONENT,
         attribute(NAME, "ProjectRootManager"),
         attribute("VERSION", 2),
-        attribute("languageLevel", "JDK_1_7"),
+        attribute("languageLevel", languageLevel),
         attribute("assert-keyword", true),
-        attribute("jdk-15", true),
-        attribute("project-jdk-name", "Android API 23 Platform"),
-        attribute("project-jdk-type", "Android SDK"));
+        attribute("jdk-15", jdk15(languageLevel)),
+        attribute("project-jdk-name", jdkName),
+        attribute("project-jdk-type", jdkType));
 
     saveDocument(dotIdea, "misc.xml", XML.DECLARATION, project);
   }
+
+  // region .buckconfig wrappers
+
+  /** All the values we currently read come from the [intellij] section of the .buckconfig file */
+  private static final String INTELLIJ_SECTION = "intellij";
+
+  // Values in the [intellij] section
+  private static final String INTELLIJ_LANGUAGE_LEVEL = "language_level";
+  private static final String INTELLIJ_JDK_NAME = "jdk_name";
+  private static final String INTELLIJ_JDK_TYPE = "jdk_type";
+
+  private String getIntellijSectionValue(String propertyName, String defaultValue) {
+    return config.getValue(INTELLIJ_SECTION, propertyName).orElse(defaultValue);
+  }
+
+  /**
+   * Tries to parse the language level. Will always return {@code false} if the string doesn't look
+   * like {@code /JDK_\d_\d/}. Otherwise, will return {@code true} iff language level {@literal >=}
+   * 1.5
+   */
+  private static boolean jdk15(String languageLevel) {
+    if (languageLevel.length() < 7 || !languageLevel.startsWith("JDK_")) {
+      return false;
+    }
+    if (languageLevel.charAt(3) != '_' || languageLevel.charAt(5) != '_') {
+      return false;
+    }
+    char major = languageLevel.charAt(4);
+    char minor = languageLevel.charAt(6);
+    if (!Character.isDigit(major) || !Character.isDigit(minor)) {
+      return false;
+    }
+
+    // If we get here, languageLevel looks like /JDK_\d_\d/
+    int majorValue = Character.getNumericValue(major);
+    int minorValue = Character.getNumericValue(minor);
+    if (majorValue < 1 || minorValue < 1) {
+      // We passed the isDigit() tests, but either MIGHT be 0 ...
+      return false;
+    }
+    if (majorValue > 1) {
+      return true;
+    }
+    // majorValue == 1
+    return minorValue >= 5;
+  }
+
+  // endregion .buckconfig wrappers
 
   private List<String> buildDotIdeaDotLibrariesFolder(String dotIdea, List<String> inputs) {
     String libraries = fileJoin(dotIdea, "libraries");
