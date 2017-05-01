@@ -23,7 +23,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -71,9 +70,6 @@ public class IjProjectBuckConfig {
                         .split(value))
             .orElse(Collections.emptyMap());
 
-    List<String> intellijSdkTargets =
-        buckConfig.getListWithoutComments(INTELLIJ_BUCK_CONFIG_SECTION, "intellij_sdk_targets");
-
     Optional<Path> androidManifest =
         buckConfig.getPath(INTELLIJ_BUCK_CONFIG_SECTION, "default_android_manifest_path", false);
 
@@ -91,7 +87,9 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
         .setIntellijModuleSdkName(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "intellij_module_sdk_name"))
-        .setIntellijSdkTargets(intellijSdkTargets)
+        .setIntellijPluginLabels(
+            buckConfig.getListWithoutComments(
+                INTELLIJ_BUCK_CONFIG_SECTION, "intellij_plugin_labels"))
         .setJavaModuleSdkName(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "java_module_sdk_name"))
         .setJavaModuleSdkType(

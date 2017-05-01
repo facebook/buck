@@ -23,12 +23,13 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 
 public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription.Args> {
 
@@ -52,24 +53,29 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
 
   private void saveMetaInfDirectoryForIntellijPlugin(
       TargetNode<JavaBinaryDescription.Args, ?> target, ModuleBuildContext context) {
-    Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
-    for (BuildTarget dep : target.getBuildDeps()) {
-      Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
-      if (metaInfDirectory.isPresent() && intellijLibraries.contains(dep.getFullyQualifiedName())) {
-        context.setMetaInfDirectory(metaInfDirectory.get());
-        break;
-      }
+    ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
+    if (intellijPluginLabels.isEmpty()) {
+      return;
+    }
+    ImmutableSortedSet<String> labels = target.getConstructorArg().labels;
+    Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
+    if (metaInfDirectory.isPresent()
+        && !Sets.intersection(labels, intellijPluginLabels).isEmpty()) {
+      context.setMetaInfDirectory(metaInfDirectory.get());
     }
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescription.Args, ?> targetNode) {
-    Set<String> intellijLibraries = projectConfig.getIntellijSdkTargets();
-    for (BuildTarget dep : targetNode.getBuildDeps()) {
-      Optional<Path> metaInfDirectory = targetNode.getConstructorArg().metaInfDirectory;
-      if (metaInfDirectory.isPresent() && intellijLibraries.contains(dep.getFullyQualifiedName())) {
-        return IjModuleType.INTELLIJ_PLUGIN_MODULE;
-      }
+  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescription.Args, ?> target) {
+    ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
+    if (intellijPluginLabels.isEmpty()) {
+      return IjModuleType.JAVA_MODULE;
+    }
+    ImmutableSortedSet<String> labels = target.getConstructorArg().labels;
+    Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
+    if (metaInfDirectory.isPresent()
+        && !Sets.intersection(labels, intellijPluginLabels).isEmpty()) {
+      return IjModuleType.INTELLIJ_PLUGIN_MODULE;
     }
     return IjModuleType.JAVA_MODULE;
   }

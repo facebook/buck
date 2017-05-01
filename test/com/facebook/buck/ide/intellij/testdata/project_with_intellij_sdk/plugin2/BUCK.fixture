@@ -13,6 +13,9 @@ java_binary(
     ':lib',
     '//lib:openapi',
   ],
+  labels = [
+    "intellij_plugin",
+  ],
 )
 
 # Other executables with meta_inf_directories shouldn't overwrite the plugin's meta_inf

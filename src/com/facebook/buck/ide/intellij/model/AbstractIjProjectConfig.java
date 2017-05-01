@@ -49,7 +49,7 @@ abstract class AbstractIjProjectConfig {
 
   public abstract Optional<String> getIntellijModuleSdkName();
 
-  public abstract ImmutableSet<String> getIntellijSdkTargets();
+  public abstract ImmutableSet<String> getIntellijPluginLabels();
 
   public abstract Optional<String> getJavaModuleSdkName();
 
