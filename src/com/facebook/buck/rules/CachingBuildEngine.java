@@ -91,7 +91,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -650,36 +649,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
   }
 
-  private void checkBuildInfoType(ProjectFilesystem filesystem) throws IOException {
-    Path metadataTypePath = filesystem.getBuckPaths().getScratchDir().resolve("metadata.type");
-    Optional<String> metadataType = filesystem.readFileIfItExists(metadataTypePath);
-    if (metadataType.isPresent()) {
-      MetadataStorage old = MetadataStorage.valueOf(metadataType.get());
-      if (old == metadataStorage) {
-        // Our state is consistent, no need to write anything.
-        return;
-      }
-      if (old == MetadataStorage.ROCKSDB && metadataStorage == MetadataStorage.FILESYSTEM) {
-        LOG.error(
-            "Can't downgrade build.metadata_storage from rocksdb to filesystem without cleaning. "
-                + "Run `buck clean` before rebuilding.  If you are bisecting across a change to this "
-                + "config setting, consider pinning it by adding this to your .buckconfig.local:\n"
-                + "[build]\n"
-                + "    metadata_storage = rocksdb");
-        throw new RuntimeException("Can't downgrade build.metadata_storage");
-      }
-    }
-    filesystem.createParentDirs(metadataTypePath);
-    // If metadata.type becomes corrupt (e.g., is created but not written), then buck-out is in an
-    // unrecoverable state, since we don't know how the existing metadata is stored.  Prevent this
-    // from happening by writing to a temp file and then moving it into place.
-    Path tempMetadataTypePath = filesystem.createTempFile("metadata", ".type");
-    filesystem.getPathForRelativePath(tempMetadataTypePath).toFile().setReadable(true, false);
-    filesystem.writeContentsToPath(metadataStorage.toString(), tempMetadataTypePath);
-    // Using {@link StandardCopyOption#ATOMIC_MOVE} would be ideal, but it's implementation-defined
-    // whether overwrites can be done atomically.  Since overwriting is what we need, let's hope
-    // this is "atomic enough".
-    filesystem.move(tempMetadataTypePath, metadataTypePath, StandardCopyOption.REPLACE_EXISTING);
+  private MetadataStorage getMetadataStorage(ProjectFilesystem filesystem) {
+    Path metadataPath = BuildInfoStore.getMetadataTypePath(filesystem);
+    Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
+    // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the
+    // default for this build engine.
+    return metadataString.isPresent()
+        ? MetadataStorage.valueOf(metadataString.get())
+        : metadataStorage;
   }
 
   private BuildInfoStore getOrCreateBuildInfoStore(ProjectFilesystem filesystem) {
@@ -687,8 +664,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         filesystem.getRootPath(),
         path -> {
           try {
-            checkBuildInfoType(filesystem);
-            switch (metadataStorage) {
+            switch (getMetadataStorage(filesystem)) {
               case ROCKSDB:
                 return new RocksDBBuildInfoStore(filesystem);
               case FILESYSTEM:
@@ -697,7 +673,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 throw new IllegalStateException();
             }
           } catch (IOException e) {
-            LOG.error("Can't open metadata storage. Do you have multiple `buckd`s running?");
             throw new RuntimeException(e);
           }
         });

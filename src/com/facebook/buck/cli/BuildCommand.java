@@ -808,6 +808,7 @@ public class BuildCommand extends AbstractCommand {
       BuckConfig rootCellBuckConfig,
       Iterable<BuildTarget> targetsToBuild)
       throws IOException, InterruptedException {
+    MetadataChecker.checkAndCleanIfNeeded(params.getCell());
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
     try (CommandThreadManager artifactFetchService =

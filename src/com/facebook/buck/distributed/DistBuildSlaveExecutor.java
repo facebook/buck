@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -284,6 +285,7 @@ public class DistBuildSlaveExecutor {
     public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
         throws IOException, InterruptedException {
       // TODO(ruibm): Fix this to work with Android.
+      MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
       try (CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   Preconditions.checkNotNull(cachingBuildEngineDelegate),

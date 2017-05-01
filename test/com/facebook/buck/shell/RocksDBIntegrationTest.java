@@ -17,19 +17,15 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class RocksDBIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testSwitchingBackPrintsWarning() throws IOException {
@@ -38,15 +34,19 @@ public class RocksDBIntegrationTest {
             this, "rocksdb_downgrade", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult =
-        workspace.runBuckCommand(
-            "build", "--config", "build.metadata_storage=rocksdb", "//:rocksdb_downgrade");
-    buildResult.assertSuccess();
+    workspace
+        .runBuckCommand(
+            "build", "--config", "build.metadata_storage=filesystem", "//:rocksdb_downgrade")
+        .assertSuccess();
 
-    exception.expect(RuntimeException.class);
-    exception.expectMessage("Can't downgrade build.metadata_storage");
-    buildResult =
-        workspace.runBuckCommand(
-            "build", "--config", "build.metadata_storage=filesystem", "//:rocksdb_downgrade");
+    workspace
+        .runBuckCommand(
+            "build", "--config", "build.metadata_storage=rocksdb", "//:rocksdb_downgrade")
+        .assertSuccess();
+
+    workspace
+        .runBuckCommand(
+            "build", "--config", "build.metadata_storage=filesystem", "//:rocksdb_downgrade")
+        .assertSuccess();
   }
 }

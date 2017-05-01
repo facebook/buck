@@ -495,6 +495,7 @@ public class TestCommand extends BuildCommand {
                 params.getBuckConfig(), targetGraphAndBuildTargets.getBuildTargets(), testRules);
       }
 
+      MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       try (CommandThreadManager artifactFetchService =

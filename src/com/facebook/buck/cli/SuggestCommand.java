@@ -48,6 +48,7 @@ public class SuggestCommand extends AbstractCommand {
             getCommandLineBuildTargetNormalizer(params.getBuckConfig())
                 .normalize(targetToBreakDown));
 
+    MetadataChecker.checkAndCleanIfNeeded(params.getCell());
     JavaBuildGraphProcessor.Processor processor =
         (graph, javaDepsFinder, executorService) -> {
           BuildTarget buildTarget =

@@ -101,6 +101,7 @@ public class FetchCommand extends BuildCommand {
         return 1;
       }
 
+      MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
