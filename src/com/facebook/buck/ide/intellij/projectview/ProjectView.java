@@ -16,8 +16,15 @@
 
 package com.facebook.buck.ide.intellij.projectview;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -33,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,8 +67,9 @@ public class ProjectView {
       boolean dryRun,
       String viewPath,
       TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> buildTargets) {
-    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets).run();
+      ImmutableSet<BuildTarget> buildTargets,
+      BuckEventBus eventBus) {
+    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, eventBus).run();
   }
 
   // endregion Public API
@@ -81,8 +88,9 @@ public class ProjectView {
   private final String viewPath;
   private final boolean dryRun;
   private final TargetGraph targetGraph;
-
   private final ImmutableSet<BuildTarget> buildTargets;
+  private final BuckEventBus eventBus;
+
   private final String repository = new File("").getAbsolutePath();
 
   private ProjectView(
@@ -90,13 +98,16 @@ public class ProjectView {
       boolean dryRun,
       String viewPath,
       TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> buildTargets) {
+      ImmutableSet<BuildTarget> buildTargets,
+      BuckEventBus eventBus) {
     this.stdErr = stdErr;
     this.viewPath = viewPath;
     this.dryRun = dryRun;
 
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
+
+    this.eventBus = eventBus;
   }
 
   private int run() {
@@ -392,7 +403,7 @@ public class ProjectView {
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
-  private static final String IS_TEST_SOURCE = "isTestSource";
+  //  private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
   private static final String MODULES = "modules";
   private static final String NAME = "name";
@@ -583,33 +594,20 @@ public class ProjectView {
     String buckOut = fileJoin(viewPath, BUCK_OUT);
     immediateSymlink(fileJoin(repository, BUCK_OUT), buckOut);
 
-    String app = null, target = null;
-    Pattern targetPath = Pattern.compile("//([^:]*):.*");
-    for (BuildTarget buildTarget : buildTargets) {
-      String aTarget = buildTarget.toString();
-      Matcher matcher = targetPath.matcher(aTarget);
-      if (matcher.matches()) {
-        String candidate = fileJoin(buckOut, "android", matcher.group(1), "gen");
-        if (isDirectory(candidate)) {
-          app = candidate;
-          target = aTarget;
-          break;
-        }
+    String apkPath = null;
+    Map<BuildTarget, String> outputs = getOutputs();
+    // Find the 1st target that has output
+    for (BuildTarget target : buildTargets) {
+      String output = outputs.get(target);
+      if (output != null && output.endsWith(".apk")) {
+        apkPath = File.separator + output;
+
+        break;
       }
-    }
-    if (app != null) {
-      app = /**/ File.separator + /**/ getRelativePath(viewPath, app);
     }
 
     String manifestPath = fileJoin(File.separator, RES, ANDROID_MANIFEST);
     symlink(fileJoin(repository, ANDROID_RES, ANDROID_MANIFEST), fileJoin(viewPath, manifestPath));
-
-    String apkPath = null;
-    if (target != null) {
-      apkPath = target.substring(1).replace(':', '/'); // strip leading /, turn : into /
-      apkPath = fileJoin(buckOut, "gen", apkPath);
-      apkPath = /**/ File.separator + /**/ getRelativePath(viewPath, apkPath + ".apk");
-    }
 
     Element module = newElement("module", attribute(TYPE, "JAVA_MODULE"), attribute(VERSION, 4));
 
@@ -619,18 +617,18 @@ public class ProjectView {
 
     Element configuration = addElement(facet, "configuration");
 
-    if (app != null) {
-      addElement(
-          configuration,
-          OPTION,
-          attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_APT"),
-          attribute(VALUE, app));
-      addElement(
-          configuration,
-          OPTION,
-          attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_AIDL"),
-          attribute(VALUE, app));
-    }
+    String genFolder = fileJoin(File.separator, BUCK_OUT, "gen");
+    addElement(
+        configuration,
+        OPTION,
+        attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_APT"),
+        attribute(VALUE, genFolder));
+    addElement(
+        configuration,
+        OPTION,
+        attribute(NAME, "GEN_FOLDER_RELATIVE_PATH_AIDL"),
+        attribute(VALUE, fileJoin(genFolder, "aidl")));
+
     addElement(
         configuration,
         OPTION,
@@ -658,12 +656,6 @@ public class ProjectView {
             attribute(NAME, "NewModuleRootManager"),
             attribute("inherit-compiler-output", true));
     addElement(rootManager, "exclude-output");
-
-    if (app != null) {
-      app = fileJoin(FILE_MODULE_DIR, app);
-      Element content = addElement(rootManager, CONTENT, attribute(URL, app));
-      addElement(content, SOURCE_FOLDER, attribute(URL, app), attribute(IS_TEST_SOURCE, false));
-    }
 
     Element folders = addElement(rootManager, CONTENT, attribute(URL, FILE_MODULE_DIR));
 
@@ -703,6 +695,25 @@ public class ProjectView {
     saveDocument(viewPath, ROOT_IML, XML.DECLARATION, module);
   }
 
+  private Map<BuildTarget, String> getOutputs() {
+    Map<BuildTarget, String> outputs = new HashMap<>();
+
+    // TODO(shemitz) Use ActionGraphCache.getActionGraph()?
+    ActionGraphAndResolver actionGraph =
+        ActionGraphCache.getFreshActionGraph(eventBus, targetGraph);
+    BuildRuleResolver ruleResolver = actionGraph.getResolver();
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+
+    for (BuildTarget target : buildTargets) {
+      BuildRule rule = ruleResolver.getRule(target);
+      Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
+      outputs.put(target, outputPath.toString());
+    }
+
+    return outputs;
+  }
+
   private List<String> sortSourceFolders(Set<String> sourceFolders) {
     List<String> folders = new ArrayList<>(sourceFolders);
     Collections.sort(folders);
@@ -724,6 +735,7 @@ public class ProjectView {
   }
 
   private static Set<String> foldersUnder(String root) {
+    // TODO(shemitz) This really should use Files.find() ...
     Set<String> result = new HashSet<>();
     File directory = new File(root);
     if (directory.isDirectory()) {
@@ -821,6 +833,8 @@ public class ProjectView {
   }
 
   private void buildAllDirectoriesAndSymlinks() {
+    Set<Path> deletedDirectories = new HashSet<>();
+
     // Delete any directories that should no longer exist
     for (Path path : existingDirectories) {
       if (!directoriesToMake.contains(path)) {
@@ -828,6 +842,7 @@ public class ProjectView {
           stderr("rm -rf %s\n", path);
         } else {
           deleteAll(path);
+          deletedDirectories.add(path);
         }
       }
     }
@@ -859,8 +874,9 @@ public class ProjectView {
               try {
                 Files.delete(linkPath);
               } catch (IOException e) {
-                e.printStackTrace();
-                stderr("'%s' deleting symlink %s\n", e.getMessage(), linkPath);
+                if (!linkInDeletedDirectories(deletedDirectories, linkPath)) {
+                  stderr("'%s' deleting symlink %s\n", e.getMessage(), linkPath);
+                }
               }
             }
           }
@@ -877,6 +893,16 @@ public class ProjectView {
         });
   }
 
+  private boolean linkInDeletedDirectories(Set<Path> deletedDirectories, Path linkPath) {
+    Path linkDirectory = linkPath;
+    while ((linkDirectory = linkDirectory.getParent()) != null) {
+      if (deletedDirectories.contains(linkDirectory)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static String basename(File file) {
     return file.getName();
   }
@@ -891,19 +917,6 @@ public class ProjectView {
 
   private static String dirname(String filename) {
     return dirname(new File(filename));
-  }
-
-  private static String fileJoin(Iterable<String> components) {
-    StringBuilder join = new StringBuilder();
-    if (components != null) {
-      for (String component : components) {
-        if (needSeparator(join, component)) {
-          join.append(File.separatorChar);
-        }
-        join.append(component);
-      }
-    }
-    return join.toString();
   }
 
   private static String fileJoin(String... components) {
@@ -1005,22 +1018,6 @@ public class ProjectView {
   private static boolean isDirectory(String name) {
     File file = new File(name);
     return file.isDirectory();
-  }
-
-  private static String getRelativePath(String referencePath, String otherPath) {
-    List<String> reference = Arrays.asList(referencePath.split(File.separator));
-    List<String> other = Arrays.asList(otherPath.split(File.separator));
-
-    int index = 0;
-    final int limit = Math.min(reference.size(), other.size());
-    while (index < limit && reference.get(index).equals(other.get(index))) {
-      index += 1;
-    }
-    reference = reference.subList(index, reference.size());
-    other = other.subList(index, other.size());
-
-    List<String> dots = reference.stream().map((node) -> "..").collect(Collectors.toList());
-    return fileJoin(fileJoin(dots), fileJoin(other));
   }
 
   private static final FilenameFilter neitherDotOrDotDot =

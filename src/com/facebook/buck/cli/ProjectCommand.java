@@ -399,7 +399,8 @@ public class ProjectCommand extends BuildCommand {
             getDryRun(),
             projectView,
             projectGraph,
-            passedInTargetsSet);
+            passedInTargetsSet,
+            params.getBuckEventBus());
       }
 
       projectIde =
