@@ -80,7 +80,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       Path developerDirectory =
           delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
               Paths.get(xcodeDeveloperDirectory.get()));
-      return Suppliers.ofInstance(Optional.of(developerDirectory));
+      return Suppliers.ofInstance(Optional.of(normalizePath(developerDirectory)));
     } else {
       return createAppleDeveloperDirectorySupplier(processExecutor);
     }
@@ -99,7 +99,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       Path developerDirectory =
           delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
               Paths.get(xcodeDeveloperDirectory.get()));
-      return Suppliers.ofInstance(Optional.of(developerDirectory));
+      return Suppliers.ofInstance(Optional.of(normalizePath(developerDirectory)));
     } else {
       return getAppleDeveloperDirectorySupplier(processExecutor);
     }
@@ -111,7 +111,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return ImmutableList.copyOf(
         Lists.transform(
             extraPathsStrings,
-            string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
+            string ->
+                normalizePath(
+                    delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string)))));
   }
 
   public ImmutableList<Path> getExtraPlatformPaths() {
@@ -120,7 +122,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return ImmutableList.copyOf(
         Lists.transform(
             extraPathsStrings,
-            string -> delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string))));
+            string ->
+                normalizePath(
+                    delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string)))));
+  }
+
+  private Path normalizePath(Path path) {
+    try {
+      return path.toRealPath();
+    } catch (IOException e) {
+      return path;
+    }
   }
 
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {

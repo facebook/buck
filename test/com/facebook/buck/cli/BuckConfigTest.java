@@ -335,6 +335,15 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testResolveHomeDirPathThatMayBeOutsideTheProjectFilesystem() throws IOException {
+    BuckConfig config = createFromText("");
+    Path homePath = Paths.get("").getFileSystem().getPath(System.getProperty("user.home"));
+    assertEquals(
+        homePath.resolve("foo/bar"),
+        config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("~/foo/bar")));
+  }
+
+  @Test
   public void testBuckPyIgnorePaths() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

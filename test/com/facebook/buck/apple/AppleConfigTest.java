@@ -33,6 +33,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -99,6 +101,70 @@ public class AppleConfigTest {
         config.getAppleDeveloperDirectorySupplierForTests(new FakeProcessExecutor());
     assertNotNull(supplierForTests);
     assertEquals(Optional.of(Paths.get("/path/to/somewhere2")), supplierForTests.get());
+  }
+
+  @Test
+  public void getExtraAppleDeveloperDirectories() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "apple",
+                    ImmutableMap.of(
+                        "extra_toolchain_paths", "/path/to/somewhere/Toolchain",
+                        "extra_platform_paths", "/path/to/somewhere/Platform")))
+            .build();
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
+    ImmutableList<Path> extraToolchainPaths = config.getExtraToolchainPaths();
+    ImmutableList<Path> extraPlatformPaths = config.getExtraPlatformPaths();
+    assertEquals(ImmutableList.of(Paths.get("/path/to/somewhere/Toolchain")), extraToolchainPaths);
+    assertEquals(ImmutableList.of(Paths.get("/path/to/somewhere/Platform")), extraPlatformPaths);
+  }
+
+  @Test
+  public void resolveAppleToolchainDirectoriesWithSymlinks() throws IOException {
+    Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
+    Path symlink = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery-symlink");
+    Files.deleteIfExists(symlink);
+    Files.createSymbolicLink(symlink, root.toAbsolutePath());
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "apple",
+                    ImmutableMap.of(
+                        "xcode_developer_dir", root.toString(),
+                        "extra_toolchain_paths", symlink.resolve("Toolchains").toString())))
+            .build();
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
+    Supplier<Optional<Path>> developerDirectories =
+        config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
+    ImmutableList<Path> extraToolchainPaths = config.getExtraToolchainPaths();
+
+    ImmutableMap<String, AppleToolchain> expected =
+        ImmutableMap.of(
+            "com.facebook.foo.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/foo.xctoolchain").toAbsolutePath())
+                .build(),
+            "com.facebook.bar.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/bar.xctoolchain").toAbsolutePath())
+                .build());
+
+    try {
+      assertThat(
+          AppleToolchainDiscovery.discoverAppleToolchains(
+              developerDirectories.get(), extraToolchainPaths),
+          equalTo(expected));
+    } finally {
+      Files.deleteIfExists(symlink);
+    }
   }
 
   @Test
