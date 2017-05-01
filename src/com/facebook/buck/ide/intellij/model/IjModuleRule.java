@@ -17,6 +17,7 @@ package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
@@ -26,7 +27,7 @@ import com.facebook.buck.rules.TargetNode;
  *
  * @param <T> TargetNode type.
  */
-public interface IjModuleRule<T> {
+public interface IjModuleRule<T extends AbstractDescriptionArg> {
   Class<? extends Description<?>> getDescriptionClass();
 
   void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);

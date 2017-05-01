@@ -17,6 +17,7 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
+import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
@@ -27,6 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
@@ -42,7 +44,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
+public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
+    implements IjModuleRule<T> {
 
   protected final ProjectFilesystem projectFilesystem;
   protected final IjModuleFactoryResolver moduleFactoryResolver;
@@ -102,11 +105,11 @@ public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
   private void addDepsAndFolder(
       IJFolderFactory folderFactory,
       DependencyType dependencyType,
-      TargetNode<?, ?> targetNode,
+      TargetNode<T, ?> targetNode,
       boolean wantsPackagePrefix,
-      ModuleBuildContext context,
-      ImmutableSet<Path> inputPaths) {
-    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(inputPaths);
+      ModuleBuildContext context) {
+    ImmutableMultimap<Path, Path> foldersToInputsIndex =
+        getSourceFoldersToInputsIndex(targetNode.getInputs());
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
     addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
 
@@ -117,36 +120,21 @@ public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
     }
   }
 
-  private void addDepsAndFolder(
-      IJFolderFactory folderFactory,
-      DependencyType dependencyType,
-      TargetNode<?, ?> targetNode,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
-    addDepsAndFolder(
-        folderFactory,
-        dependencyType,
-        targetNode,
-        wantsPackagePrefix,
-        context,
-        targetNode.getInputs());
-  }
-
   protected void addDepsAndSources(
-      TargetNode<?, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
+      TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
         SourceFolder.FACTORY, DependencyType.PROD, targetNode, wantsPackagePrefix, context);
   }
 
   protected void addDepsAndTestSources(
-      TargetNode<?, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
+      TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
         TestFolder.FACTORY, DependencyType.TEST, targetNode, wantsPackagePrefix, context);
   }
 
-  private static void addDeps(
+  private void addDeps(
       ImmutableMultimap<Path, Path> foldersToInputsIndex,
-      TargetNode<?, ?> targetNode,
+      TargetNode<T, ?> targetNode,
       DependencyType dependencyType,
       ModuleBuildContext context) {
     context.addDeps(foldersToInputsIndex.keySet(), targetNode.getBuildDeps(), dependencyType);
@@ -154,7 +142,7 @@ public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
 
   @SuppressWarnings("unchecked")
   private void addAnnotationOutputIfNeeded(
-      IJFolderFactory folderFactory, TargetNode<?, ?> targetNode, ModuleBuildContext context) {
+      IJFolderFactory folderFactory, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
     TargetNode<? extends JvmLibraryArg, ?> jvmLibraryTargetNode =
         (TargetNode<? extends JvmLibraryArg, ?>) targetNode;
 
@@ -171,7 +159,7 @@ public abstract class BaseIjModuleRule<T> implements IjModuleRule<T> {
   }
 
   private void addGeneratedOutputIfNeeded(
-      IJFolderFactory folderFactory, TargetNode<?, ?> targetNode, ModuleBuildContext context) {
+      IJFolderFactory folderFactory, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
 
     Set<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
 
