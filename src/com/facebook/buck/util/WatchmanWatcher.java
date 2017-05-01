@@ -68,6 +68,15 @@ public class WatchmanWatcher {
   };
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
+  /**
+   * The maximum number of watchman changes to process in each call to postEvents before giving up
+   * and generating an overflow. The goal is to be able to process a reasonable number of human
+   * generated changes quickly, but not spend a long time processing lots of changes after a branch
+   * switch which will end up invalidating the entire cache anyway. If overflow is negative calls to
+   * postEvents will just generate a single overflow event.
+   */
+  private static final int OVERFLOW_THRESHOLD = 10000;
+
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
@@ -291,6 +300,15 @@ public class WatchmanWatcher {
 
         List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
         if (files != null) {
+          if (files.size() > OVERFLOW_THRESHOLD) {
+            String message =
+                "Too many changed files (" + files.size() + " > " + OVERFLOW_THRESHOLD + ")";
+            LOG.warn("%s, posting overflow event", message);
+            postWatchEvent(WatchmanOverflowEvent.of(cellPath, message));
+            filesHaveChanged.set(true);
+            return;
+          }
+
           for (Map<String, Object> file : files) {
             String fileName = (String) file.get("name");
             if (fileName == null) {

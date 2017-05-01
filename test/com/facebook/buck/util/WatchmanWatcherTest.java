@@ -205,6 +205,24 @@ public class WatchmanWatcherTest {
   }
 
   @Test
+  public void whenTooManyChangesThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
+    ImmutableList.Builder<ImmutableMap<String, Object>> changedFiles =
+        new ImmutableList.Builder<>();
+    // The threshold is 10000; go a little above that.
+    for (int i = 0; i < 10010; i++) {
+      changedFiles.add(
+          ImmutableMap.<String, Object>of("name", "foo/bar/baz" + Integer.toString(i)));
+    }
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", changedFiles.build());
+    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
+    watcher.postEvents(
+        BuckEventBusFactory.newInstance(new FakeClock(0)),
+        WatchmanWatcher.FreshInstanceAction.NONE);
+    assertThat(eventBuffer.getOnlyEvent(), instanceOf(WatchmanOverflowEvent.class));
+  }
+
+  @Test
   public void whenWatchmanFailsThenOverflowEventGenerated()
       throws IOException, InterruptedException {
     WatchmanWatcher watcher =
