@@ -41,7 +41,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,6 +50,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.jdom2.Attribute;
 import org.jdom2.Document;
@@ -177,11 +177,12 @@ public class ProjectView {
     }
 
     for (Map.Entry<String, List<String>> mapping : resources.entrySet()) {
-      List<String> candidates = mapping.getValue();
-      if (candidates.size() > 1) {
-        Collections.sort(candidates);
+      List<String> candidateList = mapping.getValue();
+      Stream<String> candidateStream = candidateList.stream();
+      if (candidateList.size() > 1) {
+        candidateStream = candidateStream.sorted();
       }
-      result.add(candidates.get(0));
+      result.add(candidateStream.findFirst().get());
     }
 
     return result;
@@ -228,13 +229,13 @@ public class ProjectView {
       return;
     }
 
-    match = getMatcherOnFind(ASSETS_RES, input);
+    match = matches(ASSETS_RES, input);
     if (match != null) {
       assetsLink(input);
       return;
     }
 
-    match = getMatcherOnFind(FONTS_RES, input);
+    match = matches(FONTS_RES, input);
     if (match != null) {
       fontsLink(match, input);
       return;
@@ -297,7 +298,7 @@ public class ProjectView {
   }
 
   @Nullable
-  private static Matcher getMatcherOnFind(Pattern pattern, String target) {
+  private static Matcher matches(Pattern pattern, String target) {
     Matcher match = pattern.matcher(target);
     return match.find() ? match : null;
   }
@@ -337,7 +338,7 @@ public class ProjectView {
       roots.add(bestRoot);
 
       index += 1;
-      String prefix = bestRoot.endsWith(File.separator) ? bestRoot : bestRoot + File.separator;
+      String prefix = bestRoot.endsWith("/") ? bestRoot : bestRoot + '/';
       while (index < size && paths.get(index).startsWith(prefix)) {
         index += 1;
       }
@@ -352,7 +353,7 @@ public class ProjectView {
     }
   }
 
-  /** Maintains a set of source paths, and a map of paths -> excludes */
+  /** Maintains a set of source pathes, and a map of paths -> excludes */
   private class RootsHelper {
     private final Set<String> sourcePaths = new HashSet<>();
     private final Map<String, Integer> excludes = new HashMap<>();
@@ -366,9 +367,7 @@ public class ProjectView {
     }
 
     List<String> getSortedSourcePaths() {
-      List<String> paths = new ArrayList<>(sourcePaths);
-      Collections.sort(paths);
-      return paths;
+      return sourcePaths.stream().sorted().collect(Collectors.toList());
     }
 
     int excludesUnder(String path) {
@@ -403,7 +402,6 @@ public class ProjectView {
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
-  //  private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
   private static final String MODULES = "modules";
   private static final String NAME = "name";
@@ -528,7 +526,6 @@ public class ProjectView {
         COMPONENT,
         attribute(NAME, "FrameworkDetectionExcludesConfiguration"),
         attribute("detection-enabled", false));
-    // TODO(shemitz) Should really get ProjectRootManager values from .buckconfig
     addElement(
         project,
         COMPONENT,
@@ -548,18 +545,20 @@ public class ProjectView {
     immediateMkdir(libraries);
 
     Map<String, List<String>> directories = new HashMap<>();
-    List<String> jars =
-        inputs.stream().filter((input) -> input.endsWith(".jar")).collect(Collectors.toList());
-    for (String jar : jars) {
-      String dirname = dirname(jar);
-      String basename = basename(jar);
-      List<String> basenames = directories.get(dirname);
-      if (basenames == null) {
-        basenames = new ArrayList<>();
-        directories.put(dirname, basenames);
-      }
-      basenames.add(basename);
-    }
+    inputs
+        .stream()
+        .filter((input) -> input.endsWith(".jar"))
+        .forEach(
+            jar -> {
+              String dirname = dirname(jar);
+              String basename = basename(jar);
+              List<String> basenames = directories.get(dirname);
+              if (basenames == null) {
+                basenames = new ArrayList<>();
+                directories.put(dirname, basenames);
+              }
+              basenames.add(basename);
+            });
 
     List<String> libraryXmls = new ArrayList<>();
     for (Map.Entry<String, List<String>> entry : directories.entrySet()) {
@@ -715,9 +714,7 @@ public class ProjectView {
   }
 
   private List<String> sortSourceFolders(Set<String> sourceFolders) {
-    List<String> folders = new ArrayList<>(sourceFolders);
-    Collections.sort(folders);
-    return folders;
+    return sourceFolders.stream().sorted().collect(Collectors.toList());
   }
 
   private static Set<String> getExcludedFolders(Set<String> sourceFolders, Set<String> roots) {
