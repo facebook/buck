@@ -1389,12 +1389,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               .map(Map.Entry::getValue)
               .map(RuleKey::new)
               .toImmutableSet();
-      Preconditions.checkState(
-          ruleKeys.contains(ruleKey),
-          "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-          rule.getBuildTarget(),
-          ruleKey,
-          ruleKeys);
+      if (!ruleKeys.contains(ruleKey)) {
+        LOG.warn(
+            "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
+            rule.getBuildTarget(), ruleKey, ruleKeys);
+      }
     }
 
     return unzipArtifactFromCacheResult(
