@@ -17,6 +17,8 @@ package com.facebook.buck.parser;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -24,10 +26,13 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CellPathResolverView;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.FileSystem;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,6 +119,67 @@ public class BuildTargetPatternParserTest {
         SubdirectoryBuildTargetPattern.of(
             filesystem.getPath("foo/other"), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
+  }
+
+  @Test
+  public void visibilityCanMatchCrossCellTargets() throws Exception {
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+        BuildTargetPatternParser.forVisibilityArgument();
+
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    CellPathResolver rootCellPathResolver =
+        new DefaultCellPathResolver(
+            filesystem.getPath("root").normalize(),
+            ImmutableMap.of(
+                "other", filesystem.getPath("other").normalize(),
+                "root", filesystem.getPath("root").normalize()));
+    CellPathResolver otherCellPathResolver =
+        new CellPathResolverView(
+            rootCellPathResolver, ImmutableSet.of("root"), filesystem.getPath("other").normalize());
+
+    // Root cell visibility from non-root cell
+    Stream.of("other//lib:lib", "other//lib:", "other//lib/...")
+        .forEach(
+            patternString -> {
+              BuildTargetPattern pattern =
+                  buildTargetPatternParser.parse(rootCellPathResolver, patternString);
+              assertTrue(
+                  "from root matching something in non-root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          otherCellPathResolver)));
+              assertFalse(
+                  "from root failing to match something in root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          rootCellPathResolver)));
+            });
+
+    // Non-root cell visibility from root cell.
+    Stream.of("root//lib:lib", "root//lib:", "root//lib/...")
+        .forEach(
+            patternString -> {
+              BuildTargetPattern pattern =
+                  buildTargetPatternParser.parse(otherCellPathResolver, patternString);
+              assertTrue(
+                  "from non-root matching something in root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          rootCellPathResolver)));
+              assertFalse(
+                  "from non-root matching something in non-root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          otherCellPathResolver)));
+            });
   }
 
   @Test
