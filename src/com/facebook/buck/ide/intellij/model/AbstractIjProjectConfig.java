@@ -61,6 +61,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract ImmutableMap<String, String> getDepToGeneratedSourcesMap();
 
+  public abstract ImmutableMap<String, String> getLabelToGeneratedSourcesMap();
+
   public abstract Optional<Path> getAndroidManifest();
 
   public abstract boolean isCleanerEnabled();

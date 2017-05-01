@@ -70,6 +70,20 @@ public class IjProjectBuckConfig {
                         .split(value))
             .orElse(Collections.emptyMap());
 
+    Optional<String> generatedSourcesLabelMap =
+        buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "generated_sources_label_map");
+
+    Map<String, String> labelToGeneratedSourcesMap =
+        generatedSourcesLabelMap
+            .map(
+                value ->
+                    Splitter.on(',')
+                        .omitEmptyStrings()
+                        .trimResults()
+                        .withKeyValueSeparator(Splitter.on("=>").trimResults())
+                        .split(value))
+            .orElse(Collections.emptyMap());
+
     Optional<Path> androidManifest =
         buckConfig.getPath(INTELLIJ_BUCK_CONFIG_SECTION, "default_android_manifest_path", false);
 
@@ -98,6 +112,7 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
         .setExcludedResourcePaths(excludedResourcePaths)
         .setDepToGeneratedSourcesMap(depToGeneratedSourcesMap)
+        .setLabelToGeneratedSourcesMap(labelToGeneratedSourcesMap)
         .setAndroidManifest(androidManifest)
         .setCleanerEnabled(isCleanerEnabled)
         .setRemovingUnusedLibrariesEnabled(

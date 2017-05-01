@@ -1,0 +1,9 @@
+java_library(
+    name = "labels",
+    srcs = [
+        "Test.java",
+    ],
+    labels = [
+        "guava_generated_sources",
+    ],
+)

@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -161,7 +162,7 @@ public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
   private void addGeneratedOutputIfNeeded(
       IJFolderFactory folderFactory, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
 
-    Set<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
+    ImmutableSet<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
 
     for (Path generatedSourcePath : generatedSourcePaths) {
       context.addGeneratedSourceCodeFolder(
@@ -170,7 +171,16 @@ public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
     }
   }
 
-  private Set<Path> findConfiguredGeneratedSourcePaths(TargetNode<?, ?> targetNode) {
+  private ImmutableSet<Path> findConfiguredGeneratedSourcePaths(TargetNode<T, ?> targetNode) {
+    ImmutableSet.Builder<Path> generatedSourcePaths = ImmutableSet.builder();
+
+    generatedSourcePaths.addAll(findConfiguredGeneratedSourcePathsUsingDeps(targetNode));
+    generatedSourcePaths.addAll(findConfiguredGeneratedSourcePathsUsingLabels(targetNode));
+
+    return generatedSourcePaths.build();
+  }
+
+  private Set<Path> findConfiguredGeneratedSourcePathsUsingDeps(TargetNode<T, ?> targetNode) {
     ImmutableMap<String, String> depToGeneratedSourcesMap =
         projectConfig.getDepToGeneratedSourcesMap();
     BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -192,6 +202,23 @@ public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
     }
 
     return generatedSourcePaths;
+  }
+
+  private ImmutableSet<Path> findConfiguredGeneratedSourcePathsUsingLabels(
+      TargetNode<T, ?> targetNode) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    ImmutableMap<String, String> labelToGeneratedSourcesMap =
+        projectConfig.getLabelToGeneratedSourcesMap();
+
+    return targetNode
+        .getConstructorArg()
+        .labels
+        .stream()
+        .map(labelToGeneratedSourcesMap::get)
+        .filter(Objects::nonNull)
+        .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))
+        .map(path -> BuildTargets.getGenPath(projectFilesystem, buildTarget, path))
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override

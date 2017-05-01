@@ -8,3 +8,4 @@
   exclude_artifacts = true
 [intellij]
   generated_srcs_map = //libs:guava => %name%__guava__
+  generated_sources_label_map = guava_generated_sources => %name%__guava__
