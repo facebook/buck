@@ -44,7 +44,7 @@ public class VisibilityPatternParser {
 
     @Override
     public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
-      return viewerPattern.apply(viewer.getBuildTarget());
+      return viewerPattern.matches(viewer.getBuildTarget());
     }
 
     @Override

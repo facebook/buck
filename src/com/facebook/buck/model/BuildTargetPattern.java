@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.model;
 
-import com.google.common.base.Predicate;
-
 /** A pattern that matches one or more build targets. */
-public interface BuildTargetPattern extends Predicate<BuildTarget> {
+public interface BuildTargetPattern {
+
+  boolean matches(BuildTarget target);
 
   /**
    * Value used in a build file to specify this pattern, devoid of any {@link

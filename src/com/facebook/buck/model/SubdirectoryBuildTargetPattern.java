@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Objects;
 import java.nio.file.Path;
-import javax.annotation.Nullable;
 
 /** A pattern matches build targets that have the specified ancestor directory. */
 public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
@@ -40,11 +39,7 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
    *     false.
    */
   @Override
-  public boolean apply(@Nullable BuildTarget target) {
-    if (target == null) {
-      return false;
-    }
-
+  public boolean matches(BuildTarget target) {
     if (!cellPath.equals(target.getCellPath())) {
       return false;
     }

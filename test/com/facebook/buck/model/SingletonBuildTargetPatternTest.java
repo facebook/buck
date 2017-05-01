@@ -33,13 +33,15 @@ public class SingletonBuildTargetPatternTest {
     SingletonBuildTargetPattern pattern =
         new SingletonBuildTargetPattern(ROOT, "//src/com/facebook/buck:buck");
 
-    assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
+    assertTrue(
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
     assertFalse(
-        pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "otherTarget").build()));
-    assertFalse(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/foo", "foo").build()));
+        pattern.matches(
+            BuildTarget.builder(ROOT, "//src/com/facebook/buck", "otherTarget").build()));
     assertFalse(
-        pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/foo", "foo").build()));
+    assertFalse(
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
   }
 
   @Test

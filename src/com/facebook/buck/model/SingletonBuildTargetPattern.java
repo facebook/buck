@@ -17,7 +17,6 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
 import java.nio.file.Path;
-import javax.annotation.Nullable;
 
 /** A pattern that matches only one build target. */
 public class SingletonBuildTargetPattern implements BuildTargetPattern {
@@ -45,11 +44,7 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    *     false.
    */
   @Override
-  public boolean apply(@Nullable BuildTarget target) {
-    if (target == null) {
-      return false;
-    }
-
+  public boolean matches(BuildTarget target) {
     return this.target.getCellPath().equals(target.getCellPath())
         && this.target.equals(target.getUnflavoredBuildTarget());
   }

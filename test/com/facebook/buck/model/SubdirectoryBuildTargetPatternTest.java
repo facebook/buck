@@ -35,17 +35,16 @@ public class SubdirectoryBuildTargetPatternTest {
         new SubdirectoryBuildTargetPattern(
             filesystem.getRootPath(), Paths.get("src/com/facebook/buck/"));
 
-    assertFalse(pattern.apply(null));
     assertTrue(
-        pattern.apply(
+        pattern.matches(
             BuildTargetFactory.newInstance(
                 filesystem.getRootPath(), "//src/com/facebook/buck:buck")));
     assertTrue(
-        pattern.apply(
+        pattern.matches(
             BuildTargetFactory.newInstance(
                 filesystem.getRootPath(), "//src/com/facebook/buck/bar:bar")));
     assertFalse(
-        pattern.apply(
+        pattern.matches(
             BuildTargetFactory.newInstance(
                 filesystem.getRootPath(), "//src/com/facebook/foo:foo")));
   }
