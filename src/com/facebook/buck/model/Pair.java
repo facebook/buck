@@ -30,7 +30,8 @@ public class Pair<FIRST, SECOND> {
   private FIRST first;
   private SECOND second;
 
-  @Nullable private WeakReference<Integer> hashCache = null;
+  private volatile boolean hashCodeComputed = false;
+  private int hashCode;
   @Nullable private WeakReference<String> stringCache = null;
 
   public Pair(FIRST first, SECOND second) {
@@ -58,22 +59,16 @@ public class Pair<FIRST, SECOND> {
 
   @Override
   public int hashCode() {
-    synchronized (this) {
-      if (hashCache == null) {
-        return calculateHashAndCache();
+    if (!hashCodeComputed) {
+      synchronized (this) {
+        if (!hashCodeComputed) {
+          hashCode = Objects.hash(first, second);
+          hashCodeComputed = true;
+        }
       }
-      Integer hash = hashCache.get();
-      if (hash == null) {
-        return calculateHashAndCache();
-      }
-      return hash;
     }
-  }
 
-  private int calculateHashAndCache() {
-    int hash = Objects.hash(first, second);
-    hashCache = new WeakReference<>(hash);
-    return hash;
+    return hashCode;
   }
 
   @Override
