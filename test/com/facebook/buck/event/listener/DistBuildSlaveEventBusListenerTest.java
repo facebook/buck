@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -141,6 +142,16 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedStatus.setRunId(runId);
     expectedStatus.setTotalRulesCount(100);
 
+    CacheRateStats cacheRateStats = new CacheRateStats();
+    expectedStatus.setCacheRateStats(cacheRateStats);
+    cacheRateStats.setTotalRulesCount(100);
+    cacheRateStats.setUpdatedRulesCount(0);
+    cacheRateStats.setCacheHitsCount(0);
+    cacheRateStats.setCacheMissesCount(0);
+    cacheRateStats.setCacheErrorsCount(0);
+    cacheRateStats.setCacheIgnoresCount(0);
+    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
 
@@ -165,6 +176,16 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedStatus.setRunId(runId);
     expectedStatus.setTotalRulesCount(50);
 
+    CacheRateStats cacheRateStats = new CacheRateStats();
+    expectedStatus.setCacheRateStats(cacheRateStats);
+    cacheRateStats.setTotalRulesCount(50);
+    cacheRateStats.setUpdatedRulesCount(0);
+    cacheRateStats.setCacheHitsCount(0);
+    cacheRateStats.setCacheMissesCount(0);
+    cacheRateStats.setCacheErrorsCount(0);
+    cacheRateStats.setCacheIgnoresCount(0);
+    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
 
@@ -188,14 +209,21 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildSlaveStatus expectedStatus = new BuildSlaveStatus();
     expectedStatus.setStampedeId(stampedeId);
     expectedStatus.setRunId(runId);
+    expectedStatus.setTotalRulesCount(6);
     expectedStatus.setRulesStartedCount(1);
     expectedStatus.setRulesFinishedCount(5);
     expectedStatus.setRulesSuccessCount(3);
     expectedStatus.setRulesFailureCount(1);
-    expectedStatus.setCacheHitsCount(1);
-    expectedStatus.setCacheMissesCount(1);
-    expectedStatus.setCacheErrorsCount(1);
-    expectedStatus.setCacheIgnoresCount(2);
+
+    CacheRateStats cacheRateStats = new CacheRateStats();
+    expectedStatus.setCacheRateStats(cacheRateStats);
+    cacheRateStats.setTotalRulesCount(6);
+    cacheRateStats.setUpdatedRulesCount(4);
+    cacheRateStats.setCacheHitsCount(1);
+    cacheRateStats.setCacheMissesCount(1);
+    cacheRateStats.setCacheErrorsCount(1);
+    cacheRateStats.setCacheIgnoresCount(1);
+    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
@@ -226,6 +254,7 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildRuleEvent.Resumed resumed3 = BuildRuleEvent.resumed(fakeRule, tracker, fakeRuleKeyFactory);
     BuildRuleEvent.Suspended suspended7 = BuildRuleEvent.suspended(started7, fakeRuleKeyFactory);
 
+    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 6));
     eventBus.post(started1);
     eventBus.post(started2);
     eventBus.post(
@@ -270,7 +299,7 @@ public class DistBuildSlaveEventBusListenerTest {
             started4,
             BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.CANCELED,
-            CacheResult.ignored(),
+            CacheResult.miss(), // This value will be ignored, since the rule was canceled.
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

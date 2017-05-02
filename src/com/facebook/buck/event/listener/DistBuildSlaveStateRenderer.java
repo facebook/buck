@@ -77,17 +77,21 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
         columns.add(String.format("%d JOBS FAILED", status.getRulesFailureCount()));
       }
 
-      double cacheMissRate =
-          100 * (double) status.getCacheMissesCount() / status.getTotalRulesCount();
-      columns.add(
-          String.format("%d [%.1f%%] CACHE MISS", status.getCacheMissesCount(), cacheMissRate));
-
-      if (status.getCacheErrorsCount() != 0) {
-        double cacheErrorRate =
-            100 * (double) status.getCacheErrorsCount() / status.getTotalRulesCount();
+      if (status.isSetCacheRateStats()) {
+        CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheStats =
+            CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
+                status.getCacheRateStats());
         columns.add(
             String.format(
-                "%d [%.1f%%] CACHE ERRORS", status.getCacheErrorsCount(), cacheErrorRate));
+                "%d [%.1f%%] CACHE MISS",
+                cacheStats.getCacheMissCount(), cacheStats.getCacheMissRate()));
+
+        if (cacheStats.getCacheErrorCount() != 0) {
+          columns.add(
+              String.format(
+                  "%d [%.1f%%] CACHE ERRORS",
+                  cacheStats.getCacheErrorCount(), cacheStats.getCacheErrorRate()));
+        }
       }
 
       lineBuilder.append(

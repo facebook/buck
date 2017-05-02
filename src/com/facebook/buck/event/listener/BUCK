@@ -7,6 +7,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:thrift",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

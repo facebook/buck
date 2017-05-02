@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.external.events.CacheRateStatsUpdateExternalEventInterface;
@@ -44,6 +45,8 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheMisses = new AtomicInteger(0);
   private final AtomicInteger cacheErrors = new AtomicInteger(0);
   private final AtomicInteger cacheHits = new AtomicInteger(0);
+  private final AtomicInteger cacheIgnores = new AtomicInteger(0);
+  private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
 
   protected volatile Optional<Integer> ruleCount = Optional.empty();
 
@@ -63,7 +66,10 @@ public class CacheRateStatsKeeper {
         cacheHits.incrementAndGet();
         break;
       case IGNORED:
+        cacheIgnores.incrementAndGet();
+        break;
       case LOCAL_KEY_UNCHANGED_HIT:
+        cacheLocalKeyUnchangedHits.incrementAndGet();
         break;
     }
     if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
@@ -77,6 +83,30 @@ public class CacheRateStatsKeeper {
 
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount = Optional.of(updated.getNumRules());
+  }
+
+  public CacheRateStats getSerializableStats() {
+    CacheRateStats serializableStats = new CacheRateStats();
+    serializableStats.setTotalRulesCount(ruleCount.orElse(0));
+    serializableStats.setUpdatedRulesCount(updated.get());
+    serializableStats.setCacheHitsCount(cacheHits.get());
+    serializableStats.setCacheMissesCount(cacheMisses.get());
+    serializableStats.setCacheErrorsCount(cacheErrors.get());
+    serializableStats.setCacheLocalKeyUnchangedHitsCount(cacheLocalKeyUnchangedHits.get());
+    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
+    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
+
+    return serializableStats;
+  }
+
+  public static CacheRateStatsUpdateEvent getCacheRateStatsUpdateEventFromSerializedStats(
+      CacheRateStats serializedStats) {
+    return new CacheRateStatsUpdateEvent(
+        serializedStats.getCacheMissesCount(),
+        serializedStats.getCacheErrorsCount(),
+        serializedStats.getCacheHitsCount(),
+        serializedStats.getTotalRulesCount(),
+        serializedStats.getUpdatedRulesCount());
   }
 
   public CacheRateStatsUpdateEvent getStats() {

@@ -67,6 +67,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   @GuardedBy("statusLock")
   private final BuildSlaveStatus status = new BuildSlaveStatus();
 
+  protected final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
+
   private volatile @Nullable DistBuildService distBuildService;
 
   public DistBuildSlaveEventBusListener(
@@ -87,6 +89,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     // No synchronization needed here because status is final.
     status.setStampedeId(stampedeId);
     status.setRunId(runId);
+    // Set the cache rate stats with zero values, so that we don't have to keep checking for nulls.
+    status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
 
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
@@ -164,15 +168,19 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
+    cacheRateStatsKeeper.ruleCountCalculated(calculated);
     synchronized (statusLock) {
       status.setTotalRulesCount(calculated.getNumRules());
+      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
     }
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
+    cacheRateStatsKeeper.ruleCountUpdated(updated);
     synchronized (statusLock) {
       status.setTotalRulesCount(updated.getNumRules());
+      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
     }
   }
 
@@ -186,6 +194,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    cacheRateStatsKeeper.buildRuleFinished(finished);
     synchronized (statusLock) {
       status.setRulesStartedCount(status.getRulesStartedCount() - 1);
       status.setRulesFinishedCount(status.getRulesFinishedCount() + 1);
@@ -201,24 +210,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
           break;
       }
 
-      switch (finished.getCacheResult().getType()) {
-        case HIT:
-          status.setCacheHitsCount(status.getCacheHitsCount() + 1);
-          break;
-        case MISS:
-          status.setCacheMissesCount(status.getCacheMissesCount() + 1);
-          break;
-        case ERROR:
-          status.setCacheErrorsCount(status.getCacheErrorsCount() + 1);
-          break;
-        case IGNORED:
-          status.setCacheIgnoresCount(status.getCacheIgnoresCount() + 1);
-          break;
-        case LOCAL_KEY_UNCHANGED_HIT:
-          status.setCacheLocalKeyUnchangedHitsCount(
-              status.getCacheLocalKeyUnchangedHitsCount() + 1);
-          break;
-      }
+      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
     }
   }
 

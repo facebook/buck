@@ -38,6 +38,7 @@ import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
@@ -853,14 +854,24 @@ public class SuperConsoleEventBusListenerTest {
     slave1.setTotalRulesCount(10);
     slave1.setRulesFinishedCount(5);
     slave1.setRulesSuccessCount(5);
-    slave1.setCacheHitsCount(4);
-    slave1.setCacheMissesCount(1);
+    CacheRateStats cacheRateStatsForSlave1 = new CacheRateStats();
+    slave1.setCacheRateStats(cacheRateStatsForSlave1);
+    cacheRateStatsForSlave1.setTotalRulesCount(10);
+    cacheRateStatsForSlave1.setUpdatedRulesCount(5);
+    cacheRateStatsForSlave1.setCacheHitsCount(4);
+    cacheRateStatsForSlave1.setCacheMissesCount(1);
 
     slave2.setTotalRulesCount(20);
     slave2.setRulesStartedCount(5);
     slave2.setRulesFinishedCount(5);
     slave2.setRulesSuccessCount(4);
     slave2.setRulesFailureCount(1);
+    CacheRateStats cacheRateStatsForSlave2 = new CacheRateStats();
+    slave2.setCacheRateStats(cacheRateStatsForSlave2);
+    cacheRateStatsForSlave2.setTotalRulesCount(20);
+    cacheRateStatsForSlave2.setUpdatedRulesCount(5);
+    cacheRateStatsForSlave2.setCacheHitsCount(5);
+    cacheRateStatsForSlave2.setCacheMissesCount(0);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -889,17 +900,19 @@ public class SuperConsoleEventBusListenerTest {
     slave1.setRulesStartedCount(1);
     slave1.setRulesFinishedCount(9);
     slave1.setRulesSuccessCount(10);
-    slave1.setCacheHitsCount(8);
-    slave1.setCacheMissesCount(1);
+    cacheRateStatsForSlave1.setUpdatedRulesCount(9);
+    cacheRateStatsForSlave1.setCacheHitsCount(8);
+    cacheRateStatsForSlave1.setCacheMissesCount(1);
 
     slave2.setTotalRulesCount(20);
     slave2.setRulesStartedCount(0);
     slave2.setRulesFinishedCount(20);
     slave2.setRulesSuccessCount(19);
     slave2.setRulesFailureCount(1);
-    slave2.setCacheErrorsCount(1);
-    slave2.setCacheMissesCount(0);
-    slave2.setCacheHitsCount(19);
+    cacheRateStatsForSlave2.setUpdatedRulesCount(20);
+    cacheRateStatsForSlave2.setCacheHitsCount(19);
+    cacheRateStatsForSlave2.setCacheMissesCount(0);
+    cacheRateStatsForSlave2.setCacheErrorsCount(1);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
