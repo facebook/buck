@@ -255,6 +255,7 @@ public class DefaultJavaLibraryBuilder {
         return new CompareAbis(
             params.copyReplacingDeclaredAndExtraDeps(
                 () -> ImmutableSortedSet.of(classAbi, sourceAbi), ImmutableSortedSet::of),
+            sourcePathResolver,
             classAbi.getSourcePathToOutput(),
             sourceAbi.getSourcePathToOutput(),
             javaBuckConfig.getSourceAbiVerificationMode());

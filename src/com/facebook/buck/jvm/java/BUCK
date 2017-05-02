@@ -326,7 +326,6 @@ java_library(
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryBuilder.java",
         "ForkMode.java",
-        "JarArchiveDependencySupplier.java",
         "JarFattener.java",
         "JarShape.java",
         "JavaAnnotationProcessor.java",

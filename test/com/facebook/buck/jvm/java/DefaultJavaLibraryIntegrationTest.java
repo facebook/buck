@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.WRITE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -64,6 +63,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
@@ -76,6 +76,7 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -154,17 +155,21 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             .toFile();
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
     Path outputInZip = zipFs.getPath("/" + outputPath.toString());
-    Files.write(outputInZip, "Hello world!".getBytes(), WRITE);
+    new ZipOutputStream(Files.newOutputStream(outputInZip, StandardOpenOption.TRUNCATE_EXISTING))
+        .close();
     zipFs.close();
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult2.assertSuccess("Successful build should exit with 0.");
     assertTrue(Files.isRegularFile(outputFile));
+
+    ZipFile outputZipFile = new ZipFile(outputFile.toFile());
     assertEquals(
-        "The content of the output file will be 'Hello World!' if it is read from the build cache.",
-        "Hello world!",
-        new String(Files.readAllBytes(outputFile), UTF_8));
+        "The output file will be an empty zip if it is read from the build cache.",
+        0,
+        outputZipFile.stream().count());
+    outputZipFile.close();
 
     // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
     ProcessResult cleanResult2 = workspace.runBuckCommand("clean");
@@ -172,10 +177,12 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult3 =
         workspace.runBuckCommand("build", "--no-cache", target.getFullyQualifiedName());
     buildResult3.assertSuccess();
+    outputZipFile = new ZipFile(outputFile.toFile());
     assertNotEquals(
         "The contents of the file should no longer be pulled from the corrupted build cache.",
-        "Hello world!",
-        new String(Files.readAllBytes(outputFile), UTF_8));
+        0,
+        outputZipFile.stream().count());
+    outputZipFile.close();
     assertEquals(
         "We cannot do a byte-for-byte comparision with the original JAR because timestamps might "
             + "have changed, but we verify that they are the same size, as a proxy.",

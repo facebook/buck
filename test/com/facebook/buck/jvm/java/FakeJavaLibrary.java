@@ -103,6 +103,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return srcs;
   }

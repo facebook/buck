@@ -170,11 +170,11 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
     // Should show the rule that failed.
-    assertThat(result.getStderr(), containsString("//:broken_01"));
+    assertThat(result.getStderr(), containsString("//:simple-lib"));
     // Should show the jar we were operating on.
     assertThat(result.getStderr(), containsString(libJar));
     // Should show the original exception.
-    assertThat(result.getStderr(), containsString("ZipException"));
+    assertThat(result.getStderr(), containsString("ZipError"));
   }
 
   private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {

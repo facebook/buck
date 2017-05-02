@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.zip.ZipError;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
@@ -261,6 +262,12 @@ public class Unzip {
           .map(root::relativize)
           .map(path -> Paths.get(path.toString())) // Clear the filesystem from the path
           .collect(MoreCollectors.toImmutableSet());
+    } catch (ZipError error) {
+      // For some reason the zip filesystem support throws an error when an IOException would do
+      // just as well.
+      throw new IOException(
+          String.format("Could not read %s because of %s", archiveAbsolutePath, error.toString()),
+          error);
     }
   }
 }

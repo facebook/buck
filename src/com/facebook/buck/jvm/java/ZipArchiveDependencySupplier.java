@@ -16,21 +16,23 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.Unzip;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
+  private final SourcePathRuleFinder ruleFinder;
   private final ImmutableSortedSet<SourcePath> zipFiles;
 
-  public ZipArchiveDependencySupplier(ImmutableSortedSet<SourcePath> zipFiles) {
+  public ZipArchiveDependencySupplier(
+      SourcePathRuleFinder ruleFinder, ImmutableSortedSet<SourcePath> zipFiles) {
+    this.ruleFinder = ruleFinder;
     this.zipFiles = zipFiles;
   }
 
@@ -45,14 +47,10 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
         .stream()
         .flatMap(
             zipSourcePath -> {
-              final Path zipAbsolutePath = resolver.getAbsolutePath(zipSourcePath);
-              try {
-                return Unzip.getZipMembers(zipAbsolutePath)
-                    .stream()
-                    .map(member -> new ArchiveMemberSourcePath(zipSourcePath, member));
-              } catch (IOException e) {
-                throw new HumanReadableException(e, "Failed to read archive: " + zipAbsolutePath);
-              }
+              BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) zipSourcePath);
+              HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
+              Preconditions.checkState(rule.getSourcePathToOutput().equals(zipSourcePath));
+              return hasJavaAbi.getJarContents().stream();
             });
   }
 }

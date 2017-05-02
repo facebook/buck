@@ -903,7 +903,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               doInitializeFromDisk((InitializableFromDisk<?>) rule, onDiskBuildInfo);
             }
           } catch (IOException e) {
-            throw new IOException(String.format("Error initializing %s from disk.", rule), e);
+            throw new IOException(
+                String.format("Error initializing %s from disk: %s.", rule, e.getMessage()), e);
           }
 
           return Futures.immediateFuture(input);

@@ -26,10 +26,14 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
@@ -61,10 +65,11 @@ import java.util.zip.ZipFile;
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
 public class DummyRDotJava extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, HasJavaAbi {
+    implements SupportsInputBasedRuleKey, InitializableFromDisk<Object>, HasJavaAbi {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
+  private final JarContentsSupplier outputJarContentsSupplier;
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey CompileToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
@@ -108,6 +113,7 @@ public class DummyRDotJava extends AbstractBuildRule
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
@@ -122,6 +128,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
+    this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
   }
 
   private static ImmutableList<SourcePath> abiPaths(Iterable<HasAndroidResourceDeps> deps) {
@@ -237,6 +244,18 @@ public class DummyRDotJava extends AbstractBuildRule
     return steps.build();
   }
 
+  @Override
+  public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
+    outputJarContentsSupplier.load();
+    return new Object();
+  }
+
+  @Override
+  public BuildOutputInitializer<Object> getBuildOutputInitializer() {
+    return new BuildOutputInitializer<>(getBuildTarget(), this);
+  }
+
   private class CheckDummyRJarNotEmptyStep implements Step {
     private final ImmutableSortedSet<Path> javaSourceFilePaths;
 
@@ -304,6 +323,11 @@ public class DummyRDotJava extends AbstractBuildRule
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    return outputJarContentsSupplier.get();
   }
 
   @Override

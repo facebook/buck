@@ -19,9 +19,21 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.jar.JarFile;
+import javax.annotation.Nullable;
 
 public interface HasJavaAbi {
   Flavor CLASS_ABI_FLAVOR = InternalFlavor.of("class-abi");
@@ -74,8 +86,51 @@ public interface HasJavaAbi {
 
   BuildTarget getBuildTarget();
 
+  ImmutableSortedSet<SourcePath> getJarContents();
+
   /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
     return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
+  }
+
+  class JarContentsSupplier {
+    private final SourcePathResolver resolver;
+    @Nullable private final SourcePath jarSourcePath;
+    @Nullable private ImmutableSortedSet<SourcePath> contents;
+
+    public JarContentsSupplier(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath) {
+      this.resolver = resolver;
+      this.jarSourcePath = jarSourcePath;
+    }
+
+    public void load() throws IOException {
+      if (jarSourcePath == null) {
+        contents = ImmutableSortedSet.of();
+      } else {
+        Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
+        if (Files.isDirectory(jarAbsolutePath)) {
+          BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) jarSourcePath;
+          contents =
+              Files.walk(jarAbsolutePath)
+                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
+                  .map(
+                      path ->
+                          new ExplicitBuildTargetSourcePath(
+                              buildTargetSourcePath.getTarget(), path))
+                  .collect(MoreCollectors.toImmutableSortedSet());
+        } else {
+          contents =
+              Unzip.getZipMembers(jarAbsolutePath)
+                  .stream()
+                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
+                  .map(path -> new ArchiveMemberSourcePath(jarSourcePath, path))
+                  .collect(MoreCollectors.toImmutableSortedSet());
+        }
+      }
+    }
+
+    public ImmutableSortedSet<SourcePath> get() {
+      return Preconditions.checkNotNull(contents, "Must call load first.");
+    }
   }
 }

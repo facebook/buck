@@ -21,10 +21,14 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -33,18 +37,22 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class CalculateAbiFromClasses extends AbstractBuildRule
-    implements CalculateAbi, SupportsInputBasedRuleKey {
+    implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
   private final Path outputPath;
+  private final JarContentsSupplier abiJarContentsSupplier;
 
-  public CalculateAbiFromClasses(BuildRuleParams buildRuleParams, SourcePath binaryJar) {
+  public CalculateAbiFromClasses(
+      BuildRuleParams buildRuleParams, SourcePathResolver resolver, SourcePath binaryJar) {
     super(buildRuleParams);
     this.binaryJar = binaryJar;
     this.outputPath = getAbiJarPath();
+    this.abiJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
   }
 
   public static CalculateAbiFromClasses of(
@@ -59,6 +67,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
                 Suppliers.ofInstance(
                     ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
+        new SourcePathResolver(ruleFinder),
         library);
   }
 
@@ -83,5 +92,22 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    return abiJarContentsSupplier.get();
+  }
+
+  @Override
+  public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
+    abiJarContentsSupplier.load();
+    return new Object();
+  }
+
+  @Override
+  public BuildOutputInitializer<Object> getBuildOutputInitializer() {
+    return new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 }

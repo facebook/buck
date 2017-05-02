@@ -107,6 +107,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
   @AddToRuleKey private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
+  private final JarContentsSupplier outputJarContentsSupplier;
   private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final ImmutableList<String> postprocessClassesCommands;
@@ -127,7 +128,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final JarArchiveDependencySupplier abiClasspath;
+  private final ZipArchiveDependencySupplier abiClasspath;
 
   @Nullable private Path depFileRelativePath;
 
@@ -211,12 +212,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       depFileRelativePath =
           getUsedClassesFilePath(params.getBuildTarget(), params.getProjectFilesystem());
     }
-    this.abiClasspath = new JarArchiveDependencySupplier(abiInputs);
+    this.abiClasspath = new ZipArchiveDependencySupplier(ruleFinder, abiInputs);
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
       this.outputJar = Optional.empty();
     }
+    this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
 
     this.outputClasspathEntriesSupplier =
@@ -373,9 +375,16 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     return steps.build();
   }
 
+  @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    return outputJarContentsSupplier.get();
+  }
+
   /** Instructs this rule to report the ABI it has on disk as its current ABI. */
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
+    outputJarContentsSupplier.load();
     return JavaLibraryRules.initializeFromDisk(
         getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
   }

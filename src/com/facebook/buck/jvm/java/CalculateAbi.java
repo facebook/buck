@@ -16,5 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.model.BuildTarget;
+import java.util.Optional;
+
 /** Tag interface for rules that calculate ABIs for Java code. */
-public interface CalculateAbi {}
+public interface CalculateAbi extends HasJavaAbi {
+  @Override
+  default Optional<BuildTarget> getAbiJar() {
+    return Optional.of(getBuildTarget());
+  }
+}

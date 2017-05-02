@@ -66,6 +66,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   @AddToRuleKey private final SourcePath binaryJar;
+  private final JarContentsSupplier binaryJarContentsSupplier;
   private final Path copiedBinaryJar;
   @AddToRuleKey private final Optional<SourcePath> sourceJar;
 
@@ -125,6 +126,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     copiedBinaryJar =
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
+    this.binaryJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -149,6 +151,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
 
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
+    binaryJarContentsSupplier.load();
     return JavaLibraryRules.initializeFromDisk(
         getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
   }
@@ -278,6 +282,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), copiedBinaryJar);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    return binaryJarContentsSupplier.get();
   }
 
   @Override
