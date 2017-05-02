@@ -67,7 +67,7 @@ public interface Description<T> {
   }
 
   /** The class of the argument of this Description uses in createBuildRule(). */
-  Class<? extends T> getConstructorArgType();
+  Class<T> getConstructorArgType();
 
   /**
    * @return An instance of the argument that must later be passed to createBuildRule().
