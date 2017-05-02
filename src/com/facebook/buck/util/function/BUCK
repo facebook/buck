@@ -1,8 +1,5 @@
 standard_java_library(
     name = "function",
-    tests = [
-        "//test/com/facebook/buck/util/function:function",
-    ],
     deps = [
         "//third-party/java/guava:guava",
     ],
