@@ -74,4 +74,19 @@ public class ZipRuleIntegrationTest {
     ZipInspector inspector = new ZipInspector(zip);
     inspector.assertFileExists("menu.txt");
   }
+
+  @Test
+  public void shouldSupportInputBasedRuleKey() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+    // Warm the cache
+    workspace.runBuckBuild("//example:inputbased");
+    // Edit src in a non-output affecting fashion
+    workspace.replaceFileContents("example/A.java", "ReplaceMe", "");
+    // Re-build and expect input-based hit
+    workspace.runBuckBuild("//example:inputbased");
+    workspace.getBuildLog().assertTargetBuiltLocally("//example:lib");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//example:inputbased");
+  }
 }

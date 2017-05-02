@@ -9,6 +9,16 @@ export_file(
   out = 'source-1.0-sources.jar',
 )
 
+java_library(
+  name = 'lib',
+  srcs = [ 'A.java' ],
+)
+
+zip_file(
+  name = 'inputbased',
+  srcs = [ ':lib' ],
+)
+
 zip_file(
   name = 'unrolled',
   srcs = [ ':source-jar' ],
