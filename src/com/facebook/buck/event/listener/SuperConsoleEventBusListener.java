@@ -310,8 +310,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         /* suffix */ Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
-        autoSparseStateSparseRefreshStarted,
-        autoSparseStateSparseRefreshFinished,
+        autoSparseState.values(),
         /* progress*/ Optional.empty(),
         lines);
 

@@ -98,12 +98,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final Ansi ansi;
   private final Locale locale;
 
-  @Nullable
-  protected volatile AutoSparseStateEvents.SparseRefreshStarted autoSparseStateSparseRefreshStarted;
-
-  @Nullable
-  protected volatile AutoSparseStateEvents.SparseRefreshFinished
-      autoSparseStateSparseRefreshFinished;
+  protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
   @Nullable protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
   @Nullable protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
@@ -180,8 +175,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.buckFilesProcessing = new ConcurrentHashMap<>();
 
-    this.autoSparseStateSparseRefreshStarted = null;
-    this.autoSparseStateSparseRefreshFinished = null;
+    this.autoSparseState = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -477,22 +471,34 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
+  public static void aggregateStartedEvent(
+      ConcurrentHashMap<EventKey, EventPair> map, BuckEvent started) {
+    map.compute(
+        started.getEventKey(),
+        (key, pair) ->
+            pair == null ? EventPair.builder().setStart(started).build() : pair.withStart(started));
+  }
+
+  public static void aggregateFinishedEvent(
+      ConcurrentHashMap<EventKey, EventPair> map, BuckEvent finished) {
+    map.compute(
+        finished.getEventKey(),
+        (key, pair) ->
+            pair == null
+                ? EventPair.builder().setFinish(finished).build()
+                : pair.withFinish(finished));
+  }
+
   @Subscribe
   public void autoSparseStateSparseRefreshStarted(
       AutoSparseStateEvents.SparseRefreshStarted started) {
-    // we may have to run multiple sparse refreshes (one per cell), at which point the previous
-    // end time is now invalid. Sparse refreshes are always sequentially run.
-    if (autoSparseStateSparseRefreshFinished != null
-        && !started.isRelatedTo(autoSparseStateSparseRefreshFinished)) {
-      autoSparseStateSparseRefreshFinished = null;
-    }
-    autoSparseStateSparseRefreshStarted = started;
+    aggregateStartedEvent(autoSparseState, started);
   }
 
   @Subscribe
   public void autoSparseStateSparseRefreshFinished(
       AutoSparseStateEvents.SparseRefreshFinished finished) {
-    autoSparseStateSparseRefreshFinished = finished;
+    aggregateFinishedEvent(autoSparseState, finished);
   }
 
   @Subscribe
@@ -529,13 +535,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {
     parseStarted.add(started);
-    EventKey eventKey = started.getEventKey();
-    if (!buckFilesProcessing.containsKey(eventKey)) {
-      buckFilesProcessing.put(eventKey, EventPair.builder().setStart(started).build());
-    } else {
-      EventPair pair = buckFilesProcessing.get(eventKey);
-      buckFilesProcessing.put(eventKey, pair.withStart(started));
-    }
+    aggregateStartedEvent(buckFilesProcessing, started);
   }
 
   @Subscribe
@@ -551,37 +551,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didFinishParsing();
     }
-    EventKey eventKey = finished.getEventKey();
-    if (!buckFilesProcessing.containsKey(eventKey)) {
-      buckFilesProcessing.put(eventKey, EventPair.builder().setFinish(finished).build());
-    } else {
-      EventPair pair = buckFilesProcessing.get(eventKey);
-      buckFilesProcessing.put(eventKey, pair.withFinish(finished));
-    }
+    aggregateFinishedEvent(buckFilesProcessing, finished);
   }
 
   @Subscribe
   public void actionGraphStarted(ActionGraphEvent.Started started) {
     actionGraphStarted.add(started);
-    EventKey eventKey = started.getEventKey();
-    if (!buckFilesProcessing.containsKey(eventKey)) {
-      buckFilesProcessing.put(eventKey, EventPair.builder().setStart(started).build());
-    } else {
-      EventPair pair = buckFilesProcessing.get(eventKey);
-      buckFilesProcessing.put(eventKey, pair.withStart(started));
-    }
+    aggregateStartedEvent(buckFilesProcessing, started);
   }
 
   @Subscribe
   public void actionGraphFinished(ActionGraphEvent.Finished finished) {
     actionGraphFinished.add(finished);
-    EventKey eventKey = finished.getEventKey();
-    if (!buckFilesProcessing.containsKey(eventKey)) {
-      buckFilesProcessing.put(eventKey, EventPair.builder().setFinish(finished).build());
-    } else {
-      EventPair pair = buckFilesProcessing.get(eventKey);
-      buckFilesProcessing.put(eventKey, pair.withFinish(finished));
-    }
+    aggregateFinishedEvent(buckFilesProcessing, finished);
   }
 
   @Subscribe

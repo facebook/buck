@@ -1965,27 +1965,28 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
-            0L,
+            500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(
-        listener, 0L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.0s"));
+        listener, 500L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.5s"));
 
-    // starting a new refresh resets the message
+    // starting a new refresh adds on to running time
     sparseRefreshStarted = new AutoSparseStateEvents.SparseRefreshStarted();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            sparseRefreshStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(listener, 0L, ImmutableList.of("[+] REFRESHING SPARSE CHECKOUT...0.0s"));
+            sparseRefreshStarted, 1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(listener, 1000L, ImmutableList.of("[+] REFRESHING SPARSE CHECKOUT...0.5s"));
 
+    // ending a new refresh shows the total running time for both events
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
-            0L,
+            1500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(
-        listener, 0L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.0s"));
+        listener, 1500L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 1.0s"));
   }
 
   @Test
