@@ -71,25 +71,26 @@ public class ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param params The parameters to be used to populate the {@code dto} instance.
-   * @param dto The constructor dto to be populated.
+   * @param dtoClass The type of the constructor dto to be populated.
    * @param declaredDeps A builder to be populated with the declared dependencies.
    */
-  public void populate(
+  public <T> T populate(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Object dto,
+      Class<T> dtoClass,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException {
+    T dto = CoercedTypeCache.instantiateSkeleton(dtoClass);
     for (ParamInfo info :
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dto.getClass()).values()) {
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass).values()) {
       info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
     }
+    return dto;
   }
 
   private void populateDeclaredDeps(

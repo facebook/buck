@@ -36,7 +36,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -50,11 +49,10 @@ public class JvmLibraryArgInterpreterTest {
   private BuildRuleResolver ruleResolver;
 
   @Before
-  public void createHelpers() {
+  public void createHelpers() throws Exception {
     defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
 
-    arg = new JvmLibraryArg();
-    populateWithDefaultValues(arg);
+    arg = makeArgWithDefaultValues();
 
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -165,19 +163,15 @@ public class JvmLibraryArgInterpreterTest {
         defaults, new FakeBuildRuleParamsBuilder("//not:real").build(), ruleResolver, arg);
   }
 
-  private void populateWithDefaultValues(Object arg) {
+  private JvmLibraryArg makeArgWithDefaultValues() throws ParamInfoException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    try {
-      new ConstructorArgMarshaller(new DefaultTypeCoercerFactory())
-          .populate(
-              createCellRoots(filesystem),
-              filesystem,
-              BuildTargetFactory.newInstance("//example:target"),
-              arg,
-              ImmutableSet.builder(),
-              ImmutableMap.of());
-    } catch (ParamInfoException error) {
-      Throwables.throwIfUnchecked(error);
-    }
+    return new ConstructorArgMarshaller(new DefaultTypeCoercerFactory())
+        .populate(
+            createCellRoots(filesystem),
+            filesystem,
+            BuildTargetFactory.newInstance("//example:target"),
+            JvmLibraryArg.class,
+            ImmutableSet.builder(),
+            ImmutableMap.of());
   }
 }

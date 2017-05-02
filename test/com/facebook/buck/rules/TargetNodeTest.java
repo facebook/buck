@@ -189,18 +189,16 @@ public class TargetNodeTest {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Arg constructorArg = new Arg();
     try {
-      marshaller.populate(
+      return marshaller.populate(
           createCellRoots(projectFilesystem),
           projectFilesystem,
           buildTarget,
-          constructorArg,
+          Arg.class,
           ImmutableSet.builder(),
           instance);
     } catch (ParamInfoException e) {
       throw new RuntimeException(e);
     }
-    return constructorArg;
   }
 }

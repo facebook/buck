@@ -76,59 +76,45 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldNotPopulateAnEmptyArg() throws Exception {
-    class Dto {}
-
-    Dto dto = new Dto();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.of());
-  }
-
-  @Test
   public void shouldPopulateAStringValue() throws Exception {
-    DtoWithString dto = new DtoWithString();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("string", "cheese"));
+    DtoWithString dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithString.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("string", "cheese"));
 
     assertEquals("cheese", dto.string);
   }
 
   @Test
   public void shouldPopulateABooleanValue() throws Exception {
-    DtoWithBoolean dto = new DtoWithBoolean();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("value", true));
+    DtoWithBoolean dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithBoolean.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("value", true));
 
     assertTrue(dto.value);
   }
 
   @Test
   public void shouldPopulateBuildTargetValues() throws Exception {
-    DtoWithBuildTargets dto = new DtoWithBuildTargets();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "target", "//cake:walk",
-            "local", ":fish"));
+    DtoWithBuildTargets dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithBuildTargets.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "target", "//cake:walk",
+                "local", ":fish"));
 
     assertEquals(
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cake:walk"), dto.target);
@@ -138,28 +124,28 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateANumericValue() throws Exception {
-    DtoWithLong dto = new DtoWithLong();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("number", 42L));
+    DtoWithLong dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithLong.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("number", 42L));
 
     assertEquals(42, dto.number);
   }
 
   @Test
   public void shouldPopulateAPathValue() throws Exception {
-    DtoWithRenamedPath dto = new DtoWithRenamedPath();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("somePath", "Fish.java"));
+    DtoWithRenamedPath dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithRenamedPath.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("somePath", "Fish.java"));
 
     assertEquals(Paths.get("example/path", "Fish.java"), dto.somePath);
   }
@@ -175,16 +161,16 @@ public class ConstructorArgMarshallerTest {
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     FakeBuildRule rule = new FakeBuildRule(target, resolver);
     ruleResolver.addToIndex(rule);
-    DtoWithSourcePaths dto = new DtoWithSourcePaths();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "filePath", "cheese.txt",
-            "targetPath", ":peas"));
+    DtoWithSourcePaths dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithSourcePaths.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "filePath", "cheese.txt",
+                "targetPath", ":peas"));
 
     assertEquals(
         new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")), dto.filePath);
@@ -196,29 +182,30 @@ public class ConstructorArgMarshallerTest {
     BuildTarget t1 = BuildTargetFactory.newInstance("//please/go:here");
     BuildTarget t2 = BuildTargetFactory.newInstance("//example/path:there");
 
-    DtoWithImmutableSortedSet dto = new DtoWithImmutableSortedSet();
     // Note: the ordering is reversed from the natural ordering
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("deps", ImmutableList.of("//please/go:here", ":there")));
+    DtoWithImmutableSortedSet dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithImmutableSortedSet.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "deps", ImmutableList.of("//please/go:here", ":there")));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), dto.deps);
   }
 
   @Test
   public void shouldPopulateSets() throws Exception {
-    DtoWithSetOfPaths dto = new DtoWithSetOfPaths();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
+    DtoWithSetOfPaths dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithSetOfPaths.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
 
     assertEquals(
         ImmutableSet.of(Paths.get("example/path/one"), Paths.get("example/path/two")), dto.paths);
@@ -226,14 +213,14 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateLists() throws Exception {
-    DtoWithListOfStrings dto = new DtoWithListOfStrings();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
+    DtoWithListOfStrings dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithListOfStrings.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
     assertEquals(ImmutableList.of("alpha", "beta"), dto.list);
   }
@@ -245,14 +232,20 @@ public class ConstructorArgMarshallerTest {
 
     BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
 
-    DtoWithDepsAndNotDeps dto = new DtoWithDepsAndNotDeps();
     Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
     args.put("notdeps", ImmutableList.of(notDep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
-    marshaller.populate(createCellRoots(filesystem), filesystem, TARGET, dto, declaredDeps, args);
+    DtoWithDepsAndNotDeps dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithDepsAndNotDeps.class,
+            declaredDeps,
+            args);
 
     assertEquals(ImmutableSet.of(declaredDep), declaredDeps.build());
   }
@@ -261,13 +254,19 @@ public class ConstructorArgMarshallerTest {
   public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps() throws Exception {
     final String dep = "//should/be:ignored";
 
-    DtoWithFakeDeps dto = new DtoWithFakeDeps();
     Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
-    marshaller.populate(createCellRoots(filesystem), filesystem, TARGET, dto, declaredDeps, args);
+    DtoWithFakeDeps dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithFakeDeps.class,
+            declaredDeps,
+            args);
 
     assertEquals(ImmutableSet.of(), declaredDeps.build());
   }
@@ -275,12 +274,17 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
       throws Exception {
-    DtoWithOptionalSetOfStrings dto = new DtoWithOptionalSetOfStrings();
     Map<String, Object> args = new HashMap<>();
     // Deliberately not populating args
 
-    marshaller.populate(
-        createCellRoots(filesystem), filesystem, TARGET, dto, ImmutableSet.builder(), args);
+    DtoWithOptionalSetOfStrings dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithOptionalSetOfStrings.class,
+            ImmutableSet.builder(),
+            args);
 
     assertEquals(Optional.empty(), dto.strings);
   }
@@ -288,50 +292,50 @@ public class ConstructorArgMarshallerTest {
   @Test(expected = ParamInfoException.class)
   public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() throws Exception {
 
-    DtoWithString dto = new DtoWithString();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
+    DtoWithString dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithString.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
   }
 
   @Test(expected = ParamInfoException.class)
   public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() throws Exception {
-    DtoWithSetOfStrings dto = new DtoWithSetOfStrings();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
+    DtoWithSetOfStrings dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithSetOfStrings.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
 
   @Test(expected = ParamInfoException.class)
   public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() throws Exception {
-    DtoWithSetOfStrings dto = new DtoWithSetOfStrings();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
+    DtoWithSetOfStrings dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithSetOfStrings.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
   }
 
   @Test
   public void shouldNormalizePaths() throws Exception {
-    DtoWithPath dto = new DtoWithPath();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
+    DtoWithPath dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithPath.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
 
     assertEquals(basePath.resolve("bar/fish.txt").normalize(), dto.path);
   }
@@ -343,29 +347,29 @@ public class ConstructorArgMarshallerTest {
       public List<? super BuildTarget> nope;
     }
 
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        new Dto(),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("nope", ImmutableList.of("//will/not:happen")));
+    Dto dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            Dto.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("nope", ImmutableList.of("//will/not:happen")));
   }
 
   @Test
   public void shouldSetBuildTargetParameters() throws Exception {
-    DtoWithBuildTargetList dto = new DtoWithBuildTargetList();
-
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "single", "//com/example:cheese",
-            "sameBuildFileTarget", ":cake",
-            "targets", ImmutableList.of(":cake", "//com/example:cheese")));
+    DtoWithBuildTargetList dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithBuildTargetList.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "single", "//com/example:cheese",
+                "sameBuildFileTarget", ":cake",
+                "targets", ImmutableList.of(":cake", "//com/example:cheese")));
 
     BuildTarget cheese = BuildTargetFactory.newInstance("//com/example:cheese");
     BuildTarget cake = BuildTargetFactory.newInstance("//example/path:cake");
@@ -385,15 +389,15 @@ public class ConstructorArgMarshallerTest {
     BuildRule rule =
         new FakeBuildRule(BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
-    DtoWithWildcardList dto = new DtoWithWildcardList();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "yup", ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
+    DtoWithWildcardList dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithWildcardList.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "yup", ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
 
     DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
     assertEquals(ImmutableList.of(path), dto.yup);
@@ -401,14 +405,14 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void specifyingZeroIsNotConsideredOptional() throws Exception {
-    DtoWithOptionalInteger dto = new DtoWithOptionalInteger();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("number", 0));
+    DtoWithOptionalInteger dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithOptionalInteger.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of("number", 0));
 
     assertTrue(dto.number.isPresent());
     assertEquals(Optional.of(0), dto.number);
@@ -438,9 +442,14 @@ public class ConstructorArgMarshallerTest {
             .put("aPath", "./File.java")
             .put("notAPath", "./NotFile.java")
             .build();
-    DtoWithVariousTypes dto = new DtoWithVariousTypes();
-    marshaller.populate(
-        createCellRoots(filesystem), filesystem, TARGET, dto, ImmutableSet.builder(), args);
+    DtoWithVariousTypes dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithVariousTypes.class,
+            ImmutableSet.builder(),
+            args);
 
     assertEquals("cheese", dto.required);
     assertEquals("cake", dto.notRequired.get());
@@ -460,9 +469,14 @@ public class ConstructorArgMarshallerTest {
     Map<String, Object> args = new HashMap<>();
     args.put("defaultString", null);
     args.put("defaultSourcePath", null);
-    DtoWithOptionalValues dto = new DtoWithOptionalValues();
-    marshaller.populate(
-        createCellRoots(filesystem), filesystem, TARGET, dto, ImmutableSet.builder(), args);
+    DtoWithOptionalValues dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithOptionalValues.class,
+            ImmutableSet.builder(),
+            args);
 
     assertEquals(Optional.empty(), dto.noString);
     assertEquals(Optional.empty(), dto.defaultString);
@@ -477,9 +491,14 @@ public class ConstructorArgMarshallerTest {
     args.put("something", null);
     args.put("things", null);
     args.put("another", null);
-    DtoWithDefaultValues dto = new DtoWithDefaultValues();
-    marshaller.populate(
-        createCellRoots(filesystem), filesystem, TARGET, dto, ImmutableSet.builder(), args);
+    DtoWithDefaultValues dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithDefaultValues.class,
+            ImmutableSet.builder(),
+            args);
 
     assertThat(dto.something, is("foo"));
     assertThat(dto.things, is(ImmutableList.of("bar")));
@@ -495,9 +514,14 @@ public class ConstructorArgMarshallerTest {
     args.put("things", ImmutableList.of("qux", "quz"));
     args.put("another", 1234L);
     args.put("beGood", false);
-    DtoWithDefaultValues dto = new DtoWithDefaultValues();
-    marshaller.populate(
-        createCellRoots(filesystem), filesystem, TARGET, dto, ImmutableSet.builder(), args);
+    DtoWithDefaultValues dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithDefaultValues.class,
+            ImmutableSet.builder(),
+            args);
 
     assertThat(dto.something, is("bar"));
     assertThat(dto.things, is(ImmutableList.of("qux", "quz")));
@@ -514,15 +538,15 @@ public class ConstructorArgMarshallerTest {
         new FakeBuildRule(target, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(rule);
 
-    DtoWithSetOfSourcePaths dto = new DtoWithSetOfSourcePaths();
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        dto,
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
+    DtoWithSetOfSourcePaths dto =
+        marshaller.populate(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithSetOfSourcePaths.class,
+            ImmutableSet.builder(),
+            ImmutableMap.<String, Object>of(
+                "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
 
     ImmutableSet<String> observedValues =
         dto.srcs

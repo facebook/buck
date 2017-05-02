@@ -71,4 +71,15 @@ public class CoercedTypeCache {
       TypeCoercerFactory typeCoercerFactory, Class<?> coercableType) {
     return coercedTypeCache.getUnchecked(typeCoercerFactory).getUnchecked(coercableType);
   }
+
+  /** Returns an unpopulated DTO object. */
+  public static <T> T instantiateSkeleton(Class<T> dtoType) {
+    try {
+      return dtoType.newInstance();
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Could not instantiate constructor arg type %s: %s", dtoType, e.getMessage(), e));
+    }
+  }
 }

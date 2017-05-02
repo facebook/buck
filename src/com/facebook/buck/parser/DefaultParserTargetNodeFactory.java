@@ -135,20 +135,21 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     }
 
     Cell targetCell = cell.getCell(target);
-    Object constructorArg = description.createUnpopulatedConstructorArg();
+    Object constructorArg;
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
       ImmutableSet<VisibilityPattern> visibilityPatterns;
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
-        marshaller.populate(
-            targetCell.getCellPathResolver(),
-            targetCell.getFilesystem(),
-            target,
-            constructorArg,
-            declaredDeps,
-            rawNode);
+        constructorArg =
+            marshaller.populate(
+                targetCell.getCellPathResolver(),
+                targetCell.getFilesystem(),
+                target,
+                description.getConstructorArgType(),
+                declaredDeps,
+                rawNode);
         visibilityPatterns =
             ConstructorArgMarshaller.populateVisibilityPatterns(
                 targetCell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
