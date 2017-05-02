@@ -1,0 +1,5 @@
+[2017-05-02 13:22:53.764][debug][command:c0d07334-7c18-4b91-93d0-214c52bbd373][tid:117][com.facebook.buck.event.listener.SuperConsoleEventBusListener] Starting render scheduler (interval 100 ms)
+[2017-05-02 13:22:53.765][debug][command:c0d07334-7c18-4b91-93d0-214c52bbd373][tid:117][com.google.common.util.concurrent.ServiceManager] Starting PerfStatsTracking [RUNNING].
+[2017-05-02 13:22:53.766][debug][command:c0d07334-7c18-4b91-93d0-214c52bbd373][tid:117][com.google.common.util.concurrent.ServiceManager] Started PerfStatsTracking [RUNNING] in 817.3 μs.
+[2017-05-02 13:22:53.766][debug][command:c0d07334-7c18-4b91-93d0-214c52bbd373][tid:117][com.google.common.util.concurrent.ServiceManager] Starting ProcessTracker [STARTING].
+[2017-05-02 13:22:53.766][debug][command:c0d07334-7c18-4b91-93d0-214c52bbd373][tid:117][com.facebook.buck.cli.Main] InvocationInfo BuildId=[c0d07334-7c18-4b91-93d0-214c52bbd373] Args=[server, status, --http-port]

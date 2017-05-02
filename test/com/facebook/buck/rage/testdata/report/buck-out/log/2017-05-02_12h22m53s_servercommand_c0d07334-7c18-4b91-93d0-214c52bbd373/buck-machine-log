@@ -1,0 +1,3 @@
+InvocationInfo {"buildId":"c0d07334-7c18-4b91-93d0-214c52bbd373","superConsoleEnabled":true,"isDaemon":true,"subCommand":"servercommand","commandArgs":["server","status","--http-port"],"unexpandedCommandArgs":["server","status","--http-port"],"buckLogDir":"buck-out/log","timestampMillis":1493727773763}
+PertTimesStats {"timestamp":1493727773990,"perfTimesStats":{"pythonTimeMs":100,"initTimeMs":360,"processingTimeMs":0,"parseTimeMs":0,"actionGraphTimeMs":0,"rulekeyTimeMs":0,"fetchTimeMs":0,"buildTimeMs":0,"installTimeMs":0}}
+ExitCode {"exitCode":0}
