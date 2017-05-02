@@ -267,25 +267,27 @@ final class Daemon implements Closeable {
             hashCache -> {
               if (hashCache instanceof WatchedFileHashCache) {
                 WatchedFileHashCache cache = (WatchedFileHashCache) hashCache;
-                eventBus.post(
-                    new FileHashCacheEvent(
-                        "file_hash_cache_invalidation.new",
-                        cache.getNewCacheAggregatedNanoTime(),
-                        cache.getNewCacheAggregatedNanoTime(),
-                        cache.getNumberOfInvalidations()));
-                eventBus.post(
-                    new FileHashCacheEvent(
-                        "file_hash_cache_invalidation.old",
-                        cache.getOldCacheAggregatedNanoTime(),
-                        cache.getOldCacheAggregatedNanoTime(),
-                        cache.getNumberOfInvalidations()));
-                eventBus.post(
-                    new ExperimentEvent(
-                        "file_hash_cache_invalidation",
-                        "sha1",
-                        "mismatches",
-                        cache.getSha1Mismatches(),
-                        null));
+                if (cache.getNumberOfInvalidations() != 0) {
+                  eventBus.post(
+                      new FileHashCacheEvent(
+                          "new",
+                          cache.getNewCacheAggregatedNanoTime(),
+                          cache.getNewCacheAggregatedNanoTime(),
+                          cache.getNumberOfInvalidations()));
+                  eventBus.post(
+                      new FileHashCacheEvent(
+                          "old",
+                          cache.getOldCacheAggregatedNanoTime(),
+                          cache.getOldCacheAggregatedNanoTime(),
+                          cache.getNumberOfInvalidations()));
+                  eventBus.post(
+                      new ExperimentEvent(
+                          "file_hash_cache_invalidation",
+                          "sha1",
+                          "mismatches",
+                          cache.getSha1Mismatches(),
+                          null));
+                }
               }
             });
       }

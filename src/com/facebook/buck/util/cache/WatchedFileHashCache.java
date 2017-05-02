@@ -57,6 +57,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     long start = System.nanoTime();
     invalidateNew(path);
     newCacheAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
     invalidateOldCache(path);
     oldCacheAggregatedNanoTime += System.nanoTime() - start;
     numberOfInvalidations++;
