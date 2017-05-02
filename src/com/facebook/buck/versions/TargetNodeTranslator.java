@@ -283,7 +283,8 @@ public abstract class TargetNodeTranslator {
           .translateConstructorArg(
               node.getBuildTarget(), node.getCellNames(), this, constructorArg);
     } else {
-      A newConstructorArg = node.getDescription().createUnpopulatedConstructorArg();
+      A newConstructorArg =
+          CoercedTypeCache.instantiateSkeleton(node.getDescription().getConstructorArgType());
       boolean modified =
           translateConstructorArg(cellPathResolver, pattern, constructorArg, newConstructorArg);
       return modified ? Optional.of(newConstructorArg) : Optional.empty();
