@@ -17,11 +17,12 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import java.nio.file.Path;
 
 public class CoreDataModelBuilder
-    extends AbstractNodeBuilder<AppleWrapperResourceArg, CoreDataModelDescription, CoreDataModel> {
+    extends AbstractNodeBuilderWithMutableArg<
+        AppleWrapperResourceArg, CoreDataModelDescription, CoreDataModel> {
 
   protected CoreDataModelBuilder(BuildTarget target) {
     super(new CoreDataModelDescription(), target);

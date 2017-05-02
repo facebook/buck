@@ -17,7 +17,7 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -25,7 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class LuaLibraryBuilder
-    extends AbstractNodeBuilder<LuaLibraryDescription.Arg, LuaLibraryDescription, LuaLibrary> {
+    extends AbstractNodeBuilderWithMutableArg<
+        LuaLibraryDescription.Arg, LuaLibraryDescription, LuaLibrary> {
 
   public LuaLibraryBuilder(LuaLibraryDescription description, BuildTarget target) {
     super(description, target);

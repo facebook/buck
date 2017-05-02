@@ -19,10 +19,10 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 
 public class DBinaryBuilder
-    extends AbstractNodeBuilder<DBinaryDescription.Arg, DBinaryDescription, DBinary> {
+    extends AbstractNodeBuilderWithMutableArg<DBinaryDescription.Arg, DBinaryDescription, DBinary> {
 
   public DBinaryBuilder(
       BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {

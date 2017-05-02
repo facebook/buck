@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryGroupBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         PrebuiltCxxLibraryGroupDescription.Args, PrebuiltCxxLibraryGroupDescription, BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {

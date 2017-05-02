@@ -23,12 +23,13 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class JavaBinaryRuleBuilder
-    extends AbstractNodeBuilder<JavaBinaryDescription.Args, JavaBinaryDescription, JavaBinary> {
+    extends AbstractNodeBuilderWithMutableArg<
+        JavaBinaryDescription.Args, JavaBinaryDescription, JavaBinary> {
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
     super(

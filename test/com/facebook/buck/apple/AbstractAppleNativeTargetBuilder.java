@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -39,7 +39,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
         DESCRIPTION extends Description<ARG>,
         BUILDRULE extends BuildRule,
         BUILDER extends AbstractAppleNativeTargetBuilder<ARG, DESCRIPTION, BUILDRULE, BUILDER>>
-    extends AbstractNodeBuilder<ARG, DESCRIPTION, BUILDRULE> {
+    extends AbstractNodeBuilderWithMutableArg<ARG, DESCRIPTION, BUILDRULE> {
 
   public AbstractAppleNativeTargetBuilder(DESCRIPTION description, BuildTarget target) {
     super(description, target);

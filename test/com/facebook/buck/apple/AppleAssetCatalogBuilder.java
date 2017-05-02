@@ -17,12 +17,12 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.SourcePath;
 import java.util.SortedSet;
 
 public class AppleAssetCatalogBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription, AppleAssetCatalog> {
 
   protected AppleAssetCatalogBuilder(BuildTarget target) {

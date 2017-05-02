@@ -18,12 +18,13 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import java.util.Optional;
 
 public class CxxGenruleBuilder
-    extends AbstractNodeBuilder<CxxGenruleDescription.Arg, CxxGenruleDescription, BuildRule> {
+    extends AbstractNodeBuilderWithMutableArg<
+        CxxGenruleDescription.Arg, CxxGenruleDescription, BuildRule> {
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(new CxxGenruleDescription(cxxPlatforms), target);

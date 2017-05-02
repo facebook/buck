@@ -18,14 +18,14 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class XcodeWorkspaceConfigBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         XcodeWorkspaceConfigDescription.Arg, XcodeWorkspaceConfigDescription, BuildRule> {
 
   protected XcodeWorkspaceConfigBuilder(BuildTarget target) {

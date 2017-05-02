@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class VersionPropagatorBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         VersionPropagatorBuilder.Arg, VersionPropagatorBuilder.VersionPropagatorDescription,
         BuildRule> {
 

@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 public class FakeTargetNodeBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         FakeTargetNodeBuilder.Arg, FakeTargetNodeBuilder.FakeDescription, BuildRule> {
 
   private FakeTargetNodeBuilder(FakeDescription description, BuildTarget target) {

@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +30,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class JavaTestBuilder
-    extends AbstractNodeBuilder<JavaTestDescription.Arg, JavaTestDescription, JavaTest> {
+    extends AbstractNodeBuilderWithMutableArg<
+        JavaTestDescription.Arg, JavaTestDescription, JavaTest> {
   private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(

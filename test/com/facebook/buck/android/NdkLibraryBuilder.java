@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -31,7 +31,8 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class NdkLibraryBuilder
-    extends AbstractNodeBuilder<NdkLibraryDescription.Arg, NdkLibraryDescription, NdkLibrary> {
+    extends AbstractNodeBuilderWithMutableArg<
+        NdkLibraryDescription.Arg, NdkLibraryDescription, NdkLibrary> {
 
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
       NdkCxxPlatform.builder()

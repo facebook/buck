@@ -17,11 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import java.nio.file.Path;
 
 public class SceneKitAssetsBuilder
-    extends AbstractNodeBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         AppleWrapperResourceArg, SceneKitAssetsDescription, SceneKitAssets> {
 
   protected SceneKitAssetsBuilder(BuildTarget target) {
