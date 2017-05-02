@@ -35,7 +35,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -55,8 +55,7 @@ public final class ProjectGeneratorTestUtils {
   /** Utility class should not be instantiated. */
   private ProjectGeneratorTestUtils() {}
 
-  public static <T> T createDescriptionArgWithDefaults(Description<T> description) {
-    T arg = description.createUnpopulatedConstructorArg();
+  public static <T extends AbstractDescriptionArg> T populateArgWithDefaults(T arg) {
     for (Field field : arg.getClass().getFields()) {
       Object value;
       if (field.getType().isAssignableFrom(ImmutableSortedSet.class)) {

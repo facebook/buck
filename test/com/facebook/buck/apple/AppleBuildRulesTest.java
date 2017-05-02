@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.AppleResources.IS_APPLE_BUNDLE_RESOURCE_NODE;
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.populateArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -112,8 +112,7 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//foo:lib")).build();
-    AppleLibraryDescription.Arg arg =
-        createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
+    AppleLibraryDescription.Arg arg = populateArgWithDefaults(new AppleLibraryDescription.Arg());
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
             TargetGraph.EMPTY,

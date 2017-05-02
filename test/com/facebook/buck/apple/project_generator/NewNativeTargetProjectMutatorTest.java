@@ -19,8 +19,8 @@ package com.facebook.buck.apple.project_generator;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.populateArgWithDefaults;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -251,8 +251,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void testResourcesBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
-    AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
+    AppleResourceDescription.Arg arg = populateArgWithDefaults(new AppleResourceDescription.Arg());
     arg.files = ImmutableSet.of(new FakeSourcePath("foo.png"));
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
