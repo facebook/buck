@@ -24,6 +24,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -754,7 +755,7 @@ public class ProjectView {
   }
 
   private Map<BuildTarget, String> getOutputs() {
-    Map<BuildTarget, String> outputs = new HashMap<>();
+    Map<BuildTarget, String> outputs = new HashMap<>(buildTargets.size());
 
     // TODO(shemitz) Use ActionGraphCache.getActionGraph()?
     ActionGraphAndResolver actionGraph =
@@ -765,7 +766,11 @@ public class ProjectView {
 
     for (BuildTarget target : buildTargets) {
       BuildRule rule = ruleResolver.getRule(target);
-      Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
+      SourcePath sourcePathToOutput = rule.getSourcePathToOutput();
+      if (sourcePathToOutput == null) {
+        continue;
+      }
+      Path outputPath = pathResolver.getRelativePath(sourcePathToOutput);
       outputs.put(target, outputPath.toString());
     }
 
