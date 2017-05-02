@@ -125,7 +125,7 @@ public class ApkGenruleTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
     ApkGenruleDescription description = new ApkGenruleDescription();
-    ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    ApkGenruleDescription.Arg arg = new ApkGenruleDescription.Arg();
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     arg.apk = new FakeInstallable(apkTarget, pathResolver).getBuildTarget();

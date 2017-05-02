@@ -187,8 +187,7 @@ public class SwiftLibraryIntegrationTest {
   }
 
   private SwiftLibraryDescription.Arg createDummySwiftArg() {
-    SwiftLibraryDescription.Arg args =
-        FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createUnpopulatedConstructorArg();
+    SwiftLibraryDescription.Arg args = new SwiftLibraryDescription.Arg();
     args.soname = Optional.empty();
     args.moduleName = Optional.empty();
     args.srcs = ImmutableSortedSet.of();

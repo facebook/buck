@@ -67,7 +67,7 @@ public class RemoteFileDescriptionTest {
   public void badSha1HasUseableException() throws NoSuchBuildTargetException {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
 
-    RemoteFileDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    RemoteFileDescription.Arg arg = new RemoteFileDescription.Arg();
     arg.sha1 = "";
 
     exception.expect(HumanReadableException.class);
@@ -86,7 +86,7 @@ public class RemoteFileDescriptionTest {
   public void remoteFileBinaryRuleIsCreatedForExecutableType() throws NoSuchBuildTargetException {
     BuildTarget target = BuildTargetFactory.newInstance("//mmmm:kale");
 
-    RemoteFileDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    RemoteFileDescription.Arg arg = new RemoteFileDescription.Arg();
     arg.type = Optional.of(RemoteFile.Type.EXECUTABLE);
     arg.sha1 = "cf23df2207d99a74fbe169e3eba035e633b65d94";
     arg.out = Optional.of("kale");

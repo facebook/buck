@@ -54,7 +54,7 @@ public class ApplePackageDescriptionTest {
                 .setExtension(Either.ofLeft(AppleBundleExtension.APP))
                 .build());
 
-    ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    ApplePackageDescription.Arg arg = new ApplePackageDescription.Arg();
     arg.bundle = bundleBuildTarget;
 
     BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
@@ -101,7 +101,7 @@ public class ApplePackageDescriptionTest {
                 .setExtension(Either.ofLeft(AppleBundleExtension.APP))
                 .build());
 
-    ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    ApplePackageDescription.Arg arg = new ApplePackageDescription.Arg();
     arg.bundle = bundleBuildTarget;
 
     BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");

@@ -77,7 +77,7 @@ public class OwnersReportTest {
 
   private TargetNode<?, ?> createTargetNode(BuildTarget buildTarget, ImmutableSet<Path> inputs) {
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
-    FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
+    FakeRuleDescription.FakeArg arg = new FakeRuleDescription.FakeArg();
     arg.inputs = inputs;
     try {
       return new TargetNodeFactory(new DefaultTypeCoercerFactory())

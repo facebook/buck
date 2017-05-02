@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -45,8 +44,7 @@ public class SwiftDescriptionsTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
-    SwiftLibraryDescription.Arg output =
-        FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createUnpopulatedConstructorArg();
+    SwiftLibraryDescription.Arg output = new SwiftLibraryDescription.Arg();
 
     CxxLibraryDescription.Arg args = CxxLibraryDescription.createEmptyConstructorArg();
 

@@ -225,7 +225,7 @@ public class TargetNodeVisibilityTest {
     VisibilityPatternParser parser = new VisibilityPatternParser();
     CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
     Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
-    FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
+    FakeRuleDescription.FakeArg arg = new FakeRuleDescription.FakeArg();
     return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),

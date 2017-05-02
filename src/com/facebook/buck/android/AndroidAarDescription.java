@@ -108,8 +108,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         ImmutableList.<BuildRule>builder().addAll(originalBuildRuleParams.getExtraDeps().get());
 
     /* android_manifest */
-    AndroidManifestDescription.Arg androidManifestArgs =
-        androidManifestDescription.createUnpopulatedConstructorArg();
+    AndroidManifestDescription.Arg androidManifestArgs = new AndroidManifestDescription.Arg();
     androidManifestArgs.skeleton = args.manifestSkeleton;
     androidManifestArgs.deps = args.deps;
 

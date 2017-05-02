@@ -415,7 +415,7 @@ public class AppleLibraryDescription
       }
     }
 
-    CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+    CxxLibraryDescription.Arg delegateArg = new CxxLibraryDescription.Arg();
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver, delegateArg, args, params.getBuildTarget());
 
@@ -466,7 +466,7 @@ public class AppleLibraryDescription
 
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
-      CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      CxxLibraryDescription.Arg delegateArg = new CxxLibraryDescription.Arg();
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           delegateArg,

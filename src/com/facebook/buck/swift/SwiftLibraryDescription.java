@@ -348,7 +348,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           : Optional.empty();
     }
 
-    final SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();
+    Arg delegateArgs = new Arg();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         delegateArgs,

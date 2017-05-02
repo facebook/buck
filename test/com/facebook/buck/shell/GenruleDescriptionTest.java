@@ -63,7 +63,7 @@ public class GenruleDescriptionTest {
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
-    GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
+    GenruleDescription.Arg constructorArg = new GenruleDescription.Arg();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     marshaller.populate(
         createCellRoots(projectFilesystem),

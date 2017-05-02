@@ -407,7 +407,7 @@ public class AppleBinaryDescription
         throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
       }
     } else {
-      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      CxxBinaryDescription.Arg delegateArg = new CxxBinaryDescription.Arg();
       AppleDescriptions.populateCxxBinaryDescriptionArg(
           pathResolver, delegateArg, args, params.getBuildTarget());
       return resolver.addToIndex(
@@ -445,7 +445,7 @@ public class AppleBinaryDescription
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
-      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      CxxBinaryDescription.Arg delegateArg = new CxxBinaryDescription.Arg();
       AppleDescriptions.populateCxxBinaryDescriptionArg(
           new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           delegateArg,

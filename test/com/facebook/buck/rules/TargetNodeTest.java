@@ -175,7 +175,7 @@ public class TargetNodeTest {
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
-            createPopulatedConstructorArg(description, buildTarget, rawNode),
+            createPopulatedConstructorArg(buildTarget, rawNode),
             filesystem,
             buildTarget,
             declaredDeps,
@@ -185,12 +185,11 @@ public class TargetNodeTest {
   }
 
   private static Arg createPopulatedConstructorArg(
-      Description<Arg> description, BuildTarget buildTarget, Map<String, Object> instance)
-      throws NoSuchBuildTargetException {
+      BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Arg constructorArg = description.createUnpopulatedConstructorArg();
+    Arg constructorArg = new Arg();
     try {
       marshaller.populate(
           createCellRoots(projectFilesystem),

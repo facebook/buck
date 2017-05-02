@@ -113,7 +113,7 @@ public class AndroidManifestTest {
     // First, create the AndroidManifest object.
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(MANIFEST_TARGET).build();
     AndroidManifestDescription description = new AndroidManifestDescription();
-    AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
     arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");
     arg.deps = ImmutableSortedSet.<BuildTarget>of();
     return description.createBuildRule(

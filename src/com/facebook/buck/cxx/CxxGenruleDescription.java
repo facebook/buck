@@ -352,7 +352,7 @@ public class CxxGenruleDescription
       CellPathResolver cellNames,
       TargetNodeTranslator translator,
       Arg constructorArg) {
-    Arg newConstructorArg = createUnpopulatedConstructorArg();
+    Arg newConstructorArg = new Arg();
     translator.translateConstructorArg(
         cellNames,
         BuildTargetPatternParser.forBaseName(target.getBaseName()),

@@ -59,7 +59,7 @@ public class AppleBundleDescriptionTest {
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
-    AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
+    AppleBundleDescription.Arg constructorArg = new AppleBundleDescription.Arg();
     constructorArg.binary = binary;
     constructorArg.deps =
         ImmutableSortedSet.of(binary, unflavoredDep, flavoredDep, flavoredDepNotInDomain, watchDep);
@@ -111,7 +111,7 @@ public class AppleBundleDescriptionTest {
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
-    AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
+    AppleBundleDescription.Arg constructorArg = new AppleBundleDescription.Arg();
     constructorArg.binary = binary;
     constructorArg.deps =
         ImmutableSortedSet.<BuildTarget>naturalOrder()
