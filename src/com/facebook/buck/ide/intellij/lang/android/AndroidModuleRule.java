@@ -20,10 +20,10 @@ import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 
-public abstract class AndroidModuleRule<T extends AbstractDescriptionArg>
+public abstract class AndroidModuleRule<T extends CommonDescriptionArg>
     extends BaseIjModuleRule<T> {
 
   private final boolean isAndroidLibrary;

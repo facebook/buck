@@ -145,11 +145,13 @@ java_library(
     name = "abstract_description_arg",
     srcs = [
         "AbstractDescriptionArg.java",
+        "CommonDescriptionArg.java",
     ],
     visibility = ["PUBLIC"],
     deps = [
         ":source_path",
         "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
 )

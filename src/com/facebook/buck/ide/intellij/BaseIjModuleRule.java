@@ -28,7 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
@@ -45,8 +45,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
-    implements IjModuleRule<T> {
+public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
 
   protected final ProjectFilesystem projectFilesystem;
   protected final IjModuleFactoryResolver moduleFactoryResolver;
@@ -212,7 +211,7 @@ public abstract class BaseIjModuleRule<T extends AbstractDescriptionArg>
 
     return targetNode
         .getConstructorArg()
-        .labels
+        .getLabels()
         .stream()
         .map(labelToGeneratedSourcesMap::get)
         .filter(Objects::nonNull)
