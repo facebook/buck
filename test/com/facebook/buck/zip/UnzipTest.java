@@ -154,6 +154,8 @@ public class UnzipTest {
       zip.closeArchiveEntry();
       zip.putArchiveEntry(new ZipArchiveEntry("foo/"));
       zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("qux/"));
+      zip.closeArchiveEntry();
     }
 
     Path extractFolder = tmpFolder.newFolder();

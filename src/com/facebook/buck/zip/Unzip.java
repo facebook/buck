@@ -36,6 +36,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.SortedMap;
@@ -193,7 +194,7 @@ public class Unzip {
       }
       // A zip file isn't required to list intermediate paths (e.g., it can contain "foo/" and
       // "foo/bar/baz"), but we need to know not to delete those intermediates, so fill them in.
-      for (SortedMap.Entry<Path, ZipArchiveEntry> p : pathMap.entrySet()) {
+      for (SortedMap.Entry<Path, ZipArchiveEntry> p : new ArrayList<>(pathMap.entrySet())) {
         if (!isTopLevel(p.getKey(), pathMap)) {
           fillIntermediatePaths(p.getKey(), pathMap);
         }
