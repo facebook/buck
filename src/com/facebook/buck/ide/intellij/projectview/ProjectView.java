@@ -216,7 +216,8 @@ public class ProjectView {
 
   private static final Pattern[] MANGLED_RESOURCE_PATTERNS = new Pattern[] {COLOR_RES, VALUES_RES};
 
-  private static final Pattern ASSETS_RES = Pattern.compile("/assets/");
+  // Group 1 has any path under ...//assets/ while group 2 has the filename
+  private static final Pattern ASSETS_RES = Pattern.compile("/assets/" + "((?:[^/]+/)*)" + "(.*)");
   private static final Pattern FONTS_RES = Pattern.compile("/fonts/(.*\\.\\w+)");
 
   private void linkResourceFile(String input) {
@@ -238,7 +239,7 @@ public class ProjectView {
 
     match = matches(ASSETS_RES, input);
     if (match != null) {
-      assetsLink(input);
+      assetsLink(match, input);
       return;
     }
 
@@ -278,11 +279,13 @@ public class ProjectView {
     return dash < 0 ? name : name.substring(0, dash);
   }
 
-  private void assetsLink(String input) {
-    String directory = fileJoin(viewPath, ASSETS);
+  private void assetsLink(Matcher match, String input) {
+    String inside = match.group(1); // everything between .../assets/ and filename
+    String name = match.group(2); // basename(input)
+
+    String directory = fileJoin(viewPath, ASSETS, inside);
     mkdir(directory);
 
-    String name = basename(input);
     symlink(fileJoin(repository, input), fileJoin(directory, name));
   }
 
