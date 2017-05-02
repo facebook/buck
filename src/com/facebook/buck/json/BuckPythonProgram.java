@@ -110,8 +110,7 @@ class BuckPythonProgram implements AutoCloseable {
       for (Description<?> description : descriptions) {
         out.write(
             function.toPythonFunction(
-                Description.getBuildRuleType(description),
-                description.createUnpopulatedConstructorArg()));
+                Description.getBuildRuleType(description), description.getConstructorArgType()));
         out.write('\n');
       }
     }

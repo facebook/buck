@@ -69,16 +69,14 @@ public class BuckPyFunction {
     this.typeCoercerFactory = typeCoercerFactory;
   }
 
-  public String toPythonFunction(BuildRuleType type, Object dto) {
-    @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
+  public String toPythonFunction(BuildRuleType type, Class<?> dtoClass) {
+    @Nullable TargetName defaultName = dtoClass.getAnnotation(TargetName.class);
 
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
         ImmutableSortedSet.copyOf(
-            CoercedTypeCache.INSTANCE
-                .getAllParamInfo(typeCoercerFactory, dto.getClass())
-                .values())) {
+            CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass).values())) {
       if (isSkippable(param)) {
         continue;
       }
