@@ -160,7 +160,8 @@ public class VersionedTargetGraphBuilder {
     } else {
 
       // Merge in the constraints and version domain/deps from transitive deps.
-      for (BuildTarget depTarget : TargetGraphVersionTransformations.getDeps(node)) {
+      for (BuildTarget depTarget :
+          TargetGraphVersionTransformations.getDeps(typeCoercerFactory, node)) {
         TargetNode<?, ?> dep = getNode(depTarget);
         if (TargetGraphVersionTransformations.isVersionPropagator(dep)
             || TargetGraphVersionTransformations.getVersionedNode(dep).isPresent()) {
