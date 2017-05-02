@@ -70,29 +70,13 @@ public interface Description<T> {
   Class<T> getConstructorArgType();
 
   /**
-   * @return An instance of the argument that must later be passed to createBuildRule().
-   * @see ConstructorArgMarshaller
-   */
-  default T createUnpopulatedConstructorArg() {
-    try {
-      return getConstructorArgType().newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new IllegalStateException(
-          String.format(
-              "Badly written Description %s had un-instantiable constructor arg type %s",
-              getClass(), getConstructorArgType()),
-          e);
-    }
-  }
-
-  /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
    * com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the {@link
    * Flavor} to create.
    *
    * @param resolver For querying for build rules by their targets.
    * @param cellRoots The roots of known cells.
-   * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
+   * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
   BuildRule createBuildRule(

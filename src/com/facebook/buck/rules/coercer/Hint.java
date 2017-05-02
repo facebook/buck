@@ -24,8 +24,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Represents hints given when deal with the value returned by {@link
- * com.facebook.buck.rules.Description#createUnpopulatedConstructorArg()}.
+ * Represents hints given when deal with the value of a type returned by {@link
+ * com.facebook.buck.rules.Description#getConstructorArgType()}.
  */
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})
