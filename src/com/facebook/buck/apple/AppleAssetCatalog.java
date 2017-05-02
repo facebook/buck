@@ -44,6 +44,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   @AddToRuleKey private final String applePlatformName;
 
+  @AddToRuleKey private final String targetSDKVersion;
+
   @AddToRuleKey private final Tool actool;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> assetCatalogDirs;
@@ -62,6 +64,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   AppleAssetCatalog(
       BuildRuleParams params,
       String applePlatformName,
+      String targetSDKVersion,
       Tool actool,
       SortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
@@ -70,6 +73,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       String bundleName) {
     super(params);
     this.applePlatformName = applePlatformName;
+    this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;
     this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);
     this.outputDir =
@@ -96,6 +100,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         new ActoolStep(
             getProjectFilesystem().getRootPath(),
             applePlatformName,
+            targetSDKVersion,
             actool.getEnvironment(context.getSourcePathResolver()),
             actool.getCommandPrefix(context.getSourcePathResolver()),
             absoluteAssetCatalogDirs,

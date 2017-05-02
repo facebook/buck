@@ -299,6 +299,7 @@ public class AppleDescriptions {
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
+      String targetSDKVersion,
       Tool actool) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
@@ -376,6 +377,7 @@ public class AppleDescriptions {
         new AppleAssetCatalog(
             assetCatalogParams,
             applePlatform.getName(),
+            targetSDKVersion,
             actool,
             assetCatalogDirs,
             appIcon,
@@ -652,6 +654,7 @@ public class AppleDescriptions {
             paramsWithoutBundleSpecificFlavors,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
+            appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool());
     addToIndex(resolver, assetCatalog);
 

@@ -29,6 +29,7 @@ import java.util.SortedSet;
 class ActoolStep extends ShellStep {
 
   private final String applePlatformName;
+  private final String targetSDKVersion;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
@@ -41,6 +42,7 @@ class ActoolStep extends ShellStep {
   public ActoolStep(
       Path workingDirectory,
       String applePlatformName,
+      String targetSDKVersion,
       ImmutableMap<String, String> environment,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
@@ -51,6 +53,7 @@ class ActoolStep extends ShellStep {
       AppleAssetCatalogDescription.Optimization optimization) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
+    this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
@@ -65,9 +68,6 @@ class ActoolStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
-    //TODO(jakubzika): Let apps select their minimum target.
-    String target = "7.0";
-
     commandBuilder.addAll(actoolCommand);
     commandBuilder.add(
         "--output-format",
@@ -78,7 +78,7 @@ class ActoolStep extends ShellStep {
         "--platform",
         applePlatformName,
         "--minimum-deployment-target",
-        target,
+        targetSDKVersion,
         "--compress-pngs",
         "--compile",
         output.toString(),
