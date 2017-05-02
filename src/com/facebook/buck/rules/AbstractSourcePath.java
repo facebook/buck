@@ -54,6 +54,10 @@ abstract class AbstractSourcePath<T extends AbstractSourcePath<T>> implements So
 
   @Override
   public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
     if (other == null || !(other instanceof AbstractSourcePath)) {
       return false;
     }
