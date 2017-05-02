@@ -48,7 +48,7 @@ public class CacheRateStatsKeeper {
   protected volatile Optional<Integer> ruleCount = Optional.empty();
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
-    if (finished.getStatus() != BuildRuleStatus.SUCCESS) {
+    if (finished.getStatus() == BuildRuleStatus.CANCELED) {
       return;
     }
     CacheResult cacheResult = finished.getCacheResult();
