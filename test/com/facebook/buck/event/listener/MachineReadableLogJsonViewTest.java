@@ -22,6 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.log.CacheUploadInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
@@ -44,6 +45,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -184,6 +186,15 @@ public class MachineReadableLogJsonViewTest {
             + "\"buildTimeMs\":23,"
             + "\"installTimeMs\":42}}",
         message);
+  }
+
+  @Test
+  public void testCacheUploadInfo() throws IOException {
+    CacheUploadInfo cacheUploadInfo =
+        CacheUploadInfo.of(new AtomicInteger(1), new AtomicInteger(2));
+    assertJsonEquals(
+        WRITER.writeValueAsString(cacheUploadInfo),
+        "{\"successUploadCount\":1,\"failureUploadCount\":2}");
   }
 
   private void assertJsonEquals(String expected, String actual) throws IOException {

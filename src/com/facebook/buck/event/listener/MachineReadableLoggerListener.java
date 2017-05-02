@@ -18,12 +18,16 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_UPLOAD_TO_CACHE_STATS;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.CacheUploadInfo;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.views.JsonViews;
@@ -48,6 +52,7 @@ import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
@@ -64,6 +69,10 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   // Values to be written in the end of the log.
   private OptionalInt exitCode = OptionalInt.empty();
+
+  // Cache upload statistics
+  private AtomicInteger cacheUploadSuccessCount = new AtomicInteger();
+  private AtomicInteger cacheUploadFailureCount = new AtomicInteger();
 
   public MachineReadableLoggerListener(
       InvocationInfo info, ProjectFilesystem filesystem, ExecutorService executor)
@@ -163,6 +172,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     writeToLog("Autosparse.SparseRefreshFailed", event);
   }
 
+  @Subscribe
+  public void onArtifactCacheEvent(HttpArtifactCacheEvent.Finished event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
+        cacheUploadSuccessCount.incrementAndGet();
+      } else {
+        cacheUploadFailureCount.incrementAndGet();
+      }
+    }
+  }
+
   private Path getLogFilePath() {
     return filesystem
         .resolve(info.getLogDirectoryPath())
@@ -170,20 +190,21 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   private void writeToLog(final String prefix, final Object obj) {
-    executor.submit(
-        () -> {
-          try {
-            byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
-            outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
-            outputStream.write(serializedObj);
-            outputStream.write(NEWLINE);
-            outputStream.flush();
-          } catch (JsonProcessingException e) {
-            LOG.warn("Failed to process json for event type: %s ", prefix);
-          } catch (IOException e) {
-            LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
-          }
-        });
+    executor.submit(() -> writeToLogImpl(prefix, obj));
+  }
+
+  private void writeToLogImpl(String prefix, Object obj) {
+    try {
+      byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
+      outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
+      outputStream.write(serializedObj);
+      outputStream.write(NEWLINE);
+      outputStream.flush();
+    } catch (JsonProcessingException e) {
+      LOG.warn("Failed to process json for event type: %s ", prefix);
+    } catch (IOException e) {
+      LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
+    }
   }
 
   @Override
@@ -195,6 +216,10 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         executor.submit(
             () -> {
               try {
+                writeToLogImpl(
+                    PREFIX_UPLOAD_TO_CACHE_STATS,
+                    CacheUploadInfo.of(cacheUploadSuccessCount, cacheUploadFailureCount));
+
                 outputStream.write(
                     String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
                         .getBytes(Charsets.UTF_8));
