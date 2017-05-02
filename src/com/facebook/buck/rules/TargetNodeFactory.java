@@ -88,9 +88,10 @@ public class TargetNodeFactory {
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
-    T arg = description.createUnpopulatedConstructorArg();
     for (ParamInfo info :
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, arg.getClass()).values()) {
+        CoercedTypeCache.INSTANCE
+            .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())
+            .values()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
