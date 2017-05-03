@@ -2690,9 +2690,7 @@ public class StubJarTest {
   }
 
   @Test
-  public void shouldIncludeBridgeMethods() throws IOException {
-    notYetImplementedForSource();
-
+  public void shouldNotIncludeGenericBridgeMethods() throws IOException {
     tester
         .setSourceFile(
             "A.java",
@@ -2735,9 +2733,60 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public compareTo(Lcom/example/buck/A;)I",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  /**
+   * There's this fun case in javac where if a public class has a non-public superclass, all public
+   * methods on the superclass get bridges in the subclass. Let's make sure
+   */
+  @Test
+  public void shouldNotIncludeNonPublicBaseClassBridgeMethods() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A extends B {",
+            "}",
+            "class B {",
+            "  public void foo() {};",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/B  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
             "",
             "  // access flags 0x1041",
-            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            "  public synthetic bridge foo()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/B  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/B {",
+            "",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public foo()V",
             "}")
         .createAndCheckStubJar();
   }

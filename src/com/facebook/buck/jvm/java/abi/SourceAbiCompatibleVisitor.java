@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -39,6 +41,16 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
       String[] interfaces) {
     access = stripAbstractFromEnums(access);
     super.visit(version, access, name, signature, superName, interfaces);
+  }
+
+  @Override
+  @Nullable
+  public MethodVisitor visitMethod(
+      int access, String name, String desc, String signature, String[] exceptions) {
+    if ((access & Opcodes.ACC_BRIDGE) != 0) {
+      return null;
+    }
+    return super.visitMethod(access, name, desc, signature, exceptions);
   }
 
   @Override
