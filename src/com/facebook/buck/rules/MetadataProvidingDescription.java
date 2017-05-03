@@ -24,10 +24,10 @@ import java.util.Optional;
 
 public interface MetadataProvidingDescription<T> {
 
-  <A extends T, U> Optional<U> createMetadata(
+  <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      A args,
+      T args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException;
