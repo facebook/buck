@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -64,6 +66,74 @@ public class TreeBackedExecutableElementTest extends CompilerTreeApiParameterize
     TypeMirror voidType = types.getNoType(TypeKind.VOID);
 
     assertSameType(voidType, element.getReturnType());
+  }
+
+  /** The docs claim this should be a NoType of TypeKind.NONE. The docs lie. */
+  @Test
+  public void testGetReceiverTypeOfStaticIsNull() throws IOException {
+    compile(Joiner.on('\n').join("class Foo {", "  static void foo() { }", "}"));
+
+    ExecutableElement element = findMethod("foo", elements.getTypeElement("Foo"));
+    TypeMirror receiverType = element.getReceiverType();
+
+    assertNull(receiverType);
+  }
+
+  /** The docs claim this should be a NoType of TypeKind.NONE. The docs lie. */
+  @Test
+  public void testGetReceiverTypeOfTopLevelConstructorIsNull() throws IOException {
+    compile(Joiner.on('\n').join("class Foo {", "  Foo () { }", "}"));
+
+    ExecutableElement element = findDefaultConstructor(elements.getTypeElement("Foo"));
+    TypeMirror receiverType = element.getReceiverType();
+
+    assertNull(receiverType);
+  }
+
+  @Test
+  public void testGetReceiverTypeOfInnerConstructorIsEnclosingType() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join("class Foo {", "  class Bar {", "  Bar (Foo Foo.this) { }", "  }", "}"));
+
+    ExecutableElement element = findDefaultConstructor(elements.getTypeElement("Foo.Bar"));
+    TypeMirror receiverType = element.getReceiverType();
+
+    assertSameType(elements.getTypeElement("Foo").asType(), receiverType);
+  }
+
+  @Test
+  public void testGetReceiverTypeOfInnerConstructorIsEnclosingTypeGeneric() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join("class Foo<T> {", "  class Bar {", "  Bar (Foo<T> Foo.this) { }", "  }", "}"));
+
+    ExecutableElement element = findDefaultConstructor(elements.getTypeElement("Foo.Bar"));
+    TypeMirror receiverType = element.getReceiverType();
+
+    assertSameType(elements.getTypeElement("Foo").asType(), receiverType);
+  }
+
+  @Test
+  public void testGetReceiverTypeOfInstanceMethodIsEnclosingType() throws IOException {
+    compile(Joiner.on('\n').join("class Foo {", "  void foo(Foo this) { }", "}"));
+
+    TypeElement fooClass = elements.getTypeElement("Foo");
+    ExecutableElement fooMethod = findMethod("foo", fooClass);
+    TypeMirror receiverType = fooMethod.getReceiverType();
+
+    assertSameType(fooClass.asType(), receiverType);
+  }
+
+  @Test
+  public void testGetReceiverTypeOfInstanceMethodIsEnclosingTypeGeneric() throws IOException {
+    compile(Joiner.on('\n').join("class Foo<T> {", "  void foo(Foo<T> this) { }", "}"));
+
+    TypeElement fooClass = elements.getTypeElement("Foo");
+    ExecutableElement fooMethod = findMethod("foo", fooClass);
+    TypeMirror receiverType = fooMethod.getReceiverType();
+
+    assertSameType(fooClass.asType(), receiverType);
   }
 
   @Test
