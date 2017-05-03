@@ -30,9 +30,9 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/assets" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/proj-assets" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/proj-res" isTestSource="false"  packagePrefix="com.test" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/proj-res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/res" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false"  packagePrefix="com.test"/>
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="com.test" />
 
     </content>
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/dep1/gen">
@@ -40,7 +40,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_modules_dep1_extra_classpath" scope="COMPILE" level="project"  />
+    <orderEntry type="library" name="library_modules_dep1_extra_classpath" scope="COMPILE" level="project" />
 
   </component>
 </module>

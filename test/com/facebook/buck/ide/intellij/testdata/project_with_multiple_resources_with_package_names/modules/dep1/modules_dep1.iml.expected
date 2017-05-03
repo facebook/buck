@@ -30,7 +30,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/assets" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/proj-assets" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/proj-res" isTestSource="false"  packagePrefix="com.test" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/proj-res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/res" isTestSource="false" />
 
     </content>

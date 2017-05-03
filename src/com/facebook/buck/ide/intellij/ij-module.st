@@ -40,8 +40,8 @@
 %contentRoot.folders:{folder |
       <%folder.type% url="%folder.url%" %\\%
         isTestSource="%folder.isTestSource%" %\\%
-        %if(folder.packagePrefix)% packagePrefix="%folder.packagePrefix%"%endif%%\\%
-        %if(folder.isAndroidResources)% type="java-resource" %endif%/>
+        %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
+        %if(folder.isAndroidResources)%type="java-resource" %endif%/>
 }%
     </content>
 %if(androidFacet.enabled)%
@@ -53,8 +53,8 @@
     <content url="%generatedFolder.url%">
       <%generatedFolder.type% url="%generatedFolder.url%" %\\%
         isTestSource="%generatedFolder.isTestSource%" generated="true" %\\%
-        %if(generatedFolder.packagePrefix)% packagePrefix="%generatedFolder.packagePrefix%"%endif%%\\%
-        %if(generatedFolder.isAndroidResources)% type="java-resource" %endif%/>
+        %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
+        %if(generatedFolder.isAndroidResources)%type="java-resource" %endif%/>
     </content>
 }%
 %if(sdk)%
@@ -66,10 +66,10 @@
 %dependencies:{dep |
   %if(dep.module)%
     <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%
-      %if(dep.module.exported)% exported="" %endif% />
+      %if(dep.module.exported)%exported="" %endif%/>
   %elseif(dep.library)%
     <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" %\\%
-      level="project" %if(dep.library.exported)% exported="" %endif% />
+      level="project" %if(dep.library.exported)%exported="" %endif%/>
   %endif%
 }%
   </component>

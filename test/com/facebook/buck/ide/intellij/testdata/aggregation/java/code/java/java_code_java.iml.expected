@@ -12,8 +12,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="java_code_java_modules_with_java_7" scope="COMPILE"  />
-    <orderEntry type="module" module-name="java_code_java_modules_with_java_8" scope="COMPILE"  />
+    <orderEntry type="module" module-name="java_code_java_modules_with_java_7" scope="COMPILE" />
+    <orderEntry type="module" module-name="java_code_java_modules_with_java_8" scope="COMPILE" />
 
   </component>
 </module>

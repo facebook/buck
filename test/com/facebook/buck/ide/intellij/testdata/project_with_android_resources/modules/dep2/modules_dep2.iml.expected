@@ -28,7 +28,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false"  packagePrefix="com.example"/>
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="com.example" />
 
     </content>
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/dep2/gen">
@@ -36,8 +36,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE"  />
-    <orderEntry type="library" name="library_modules_dep2_extra_classpath" scope="COMPILE" level="project"  />
+    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />
+    <orderEntry type="library" name="library_modules_dep2_extra_classpath" scope="COMPILE" level="project" />
 
   </component>
 </module>
