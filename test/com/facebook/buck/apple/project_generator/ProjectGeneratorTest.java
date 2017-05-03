@@ -105,7 +105,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.ExportFileBuilder;
-import com.facebook.buck.shell.ExportFileDescriptionArg;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -3448,25 +3448,25 @@ public class ProjectGeneratorTest {
     BuildTarget headerTarget = BuildTarget.builder(rootPath, "//Vendor", "header").build();
     BuildTarget libTarget = BuildTarget.builder(rootPath, "//Libraries", "foo").build();
 
-    TargetNode<ExportFileDescriptionArg, ?> source1 =
+    TargetNode<ExportFileDescription.Arg, ?> source1 =
         ExportFileBuilder.newExportFileBuilder(source1Target)
             .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/sources/source1")))
             .build();
 
-    TargetNode<ExportFileDescriptionArg, ?> source2 =
+    TargetNode<ExportFileDescription.Arg, ?> source2 =
         ExportFileBuilder.newExportFileBuilder(source2Target)
             .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/source2")))
             .build();
 
-    TargetNode<ExportFileDescriptionArg, ?> source2Ref =
+    TargetNode<ExportFileDescription.Arg, ?> source2Ref =
         ExportFileBuilder.newExportFileBuilder(source2RefTarget)
             .setSrc(new DefaultBuildTargetSourcePath(source2Target))
             .build();
 
-    TargetNode<ExportFileDescriptionArg, ?> source3 =
+    TargetNode<ExportFileDescription.Arg, ?> source3 =
         ExportFileBuilder.newExportFileBuilder(source3Target).build();
 
-    TargetNode<ExportFileDescriptionArg, ?> header =
+    TargetNode<ExportFileDescription.Arg, ?> header =
         ExportFileBuilder.newExportFileBuilder(headerTarget).build();
 
     TargetNode<AppleLibraryDescription.Arg, ?> library =
