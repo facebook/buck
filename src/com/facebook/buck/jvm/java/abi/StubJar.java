@@ -16,23 +16,18 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InnerClassNode;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
@@ -64,46 +59,20 @@ public class StubJar {
 
   private void writeTo(StubJarWriter writer) throws IOException {
     try (LibraryReader input = libraryReaderSupplier.get()) {
-      List<Path> paths = new ArrayList<>(input.getRelativePaths());
-      Collections.sort(paths);
+      List<Path> paths =
+          input
+              .getRelativePaths()
+              .stream()
+              .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
+              .collect(Collectors.toList());
 
       for (Path path : paths) {
-        if (isStubbableResource(input, path)) {
-          try (InputStream resourceContents = input.openResourceFile(path)) {
-            writer.writeResource(path, resourceContents);
-          }
-        } else if (input.isClass(path)) {
-          ClassNode stub = new ClassNode(Opcodes.ASM5);
-          input.visitClass(path, new AbiFilteringClassVisitor(stub));
-          if (!isAnonymousOrLocalClass(stub)) {
-            writer.writeClass(path, stub);
-          }
+        StubJarEntry entry = StubJarEntry.of(input, path);
+        if (entry == null) {
+          continue;
         }
+        entry.write(writer);
       }
     }
-  }
-
-  private static boolean isAnonymousOrLocalClass(ClassNode node) {
-    InnerClassNode innerClass = getInnerClassMetadata(node);
-    if (innerClass == null) {
-      return false;
-    }
-
-    return innerClass.outerName == null;
-  }
-
-  @Nullable
-  private static InnerClassNode getInnerClassMetadata(ClassNode node) {
-    for (InnerClassNode innerClass : node.innerClasses) {
-      if (innerClass.name.equals(node.name)) {
-        return innerClass;
-      }
-    }
-
-    return null;
-  }
-
-  private boolean isStubbableResource(LibraryReader input, Path path) {
-    return input.isResource(path) && !path.endsWith("META-INF" + File.separator + "MANIFEST.MF");
   }
 }
