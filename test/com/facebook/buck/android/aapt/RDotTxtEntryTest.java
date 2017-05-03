@@ -32,10 +32,13 @@ public class RDotTxtEntryTest {
         ImmutableList.of(
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBar", null),
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBarLayout", "0x7f060008"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_background", "2"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "0"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBarLayout_android", "0"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_backgroundStack", "1"));
+            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_background", "2", "ActionBar"),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "0", "ActionBar"),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBarLayout_android", "0", "ActionBarLayout"),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBar_backgroundStack", "1", "ActionBar"));
 
     ImmutableList<RDotTxtEntry> sortedEntries =
         ImmutableList.copyOf(Ordering.natural().sortedCopy(entries));
@@ -43,21 +46,14 @@ public class RDotTxtEntryTest {
     assertEquals(
         ImmutableList.of(
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBar", null),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_background", "2"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_backgroundStack", "1"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "0"),
+            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_background", "2", "ActionBar"),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBar_backgroundStack", "1", "ActionBar"),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "0", "ActionBar"),
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBarLayout", "0x7f060008"),
-            new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBarLayout_android", "0")),
+            new RDotTxtEntry(
+                IdType.INT, RType.STYLEABLE, "ActionBarLayout_android", "0", "ActionBarLayout")),
         sortedEntries);
-  }
-
-  @Test
-  public void testRDotTxtEntryCompareToWithDifferentLengthStyleables() {
-    RDotTxtEntry entry1 =
-        new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "1");
-    RDotTxtEntry entry2 =
-        new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd__android", "0");
-
-    assertEquals(entry1.compareTo(entry2), -1);
   }
 }

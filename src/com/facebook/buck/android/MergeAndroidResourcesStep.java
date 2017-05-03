@@ -338,7 +338,7 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<RDotTxtEntry, Path> bannedDuplicateResourceToSymbolsFiles =
         TreeMultimap.create();
 
-    HashMap<RDotTxtEntry, String> resourceToIdValuesMap = new HashMap<>();
+    HashMap<Integer, RDotTxtEntry> resourceToIdValuesMap = new HashMap<>();
 
     for (Map.Entry<Path, String> entry : symbolsFileToRDotJavaPackage.entrySet()) {
       Path symbolsFile = entry.getKey();
@@ -375,15 +375,16 @@ public class MergeAndroidResourcesStep implements Step {
         } else if (useOldStyleableFormat) { // NOPMD  more readable this way, IMO.
           // Nothing extra to do in this case.
 
-        } else if (resourceToIdValuesMap.get(resource) != null) {
-          resource = resource.copyWithNewIdValue(resourceToIdValuesMap.get(resource));
+        } else if (resourceToIdValuesMap.get(resource.hashCode()) != null) {
+          resource = resourceToIdValuesMap.get(resource.hashCode());
+          resource = resource.copyWithNewIdValue(resource.idValue);
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
           Map<RDotTxtEntry, String> styleableResourcesMap =
               getStyleableResources(resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
 
           for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
-            resourceToIdValuesMap.put(styleableResource, styleableResource.idValue);
+            resourceToIdValuesMap.put(styleableResource.hashCode(), styleableResource);
           }
 
           // int[] styleable entry is not added to the cache as
@@ -400,7 +401,7 @@ public class MergeAndroidResourcesStep implements Step {
           resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
 
           // Add resource to cache so that the id value is consistent across all R.txt
-          resourceToIdValuesMap.put(resource, resource.idValue);
+          resourceToIdValuesMap.put(resource.hashCode(), resource);
         }
 
         if (bannedDuplicateResourceTypes.contains(resource.type)) {
@@ -439,7 +440,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private static Map<RDotTxtEntry, String> getStyleableResources(
-      Map<RDotTxtEntry, String> resourceToIdValuesMap,
+      Map<Integer, RDotTxtEntry> resourceToIdValuesMap,
       List<String> linesInSymbolsFile,
       RDotTxtEntry resource,
       int index) {
@@ -460,12 +461,17 @@ public class MergeAndroidResourcesStep implements Step {
           && styleableResource.type == RType.STYLEABLE
           && styleableResource.name.startsWith(styleablePrefix)) {
 
+        styleableResource = styleableResource.copyWithNewParent(resource.name);
         String attrName = styleableResource.name.substring(styleablePrefix.length());
+
         RDotTxtEntry attrResource = new RDotTxtEntry(IdType.INT, RType.ATTR, attrName, "");
 
-        String attrIdValue = resourceToIdValuesMap.get(attrResource);
-        if (attrIdValue == null) {
+        if (resourceToIdValuesMap.containsKey(attrResource.hashCode())) {
+          attrResource = resourceToIdValuesMap.get(attrResource.hashCode());
+        }
 
+        if (Strings.isNullOrEmpty(attrResource.idValue)) {
+          String attrIdValue;
           if (givenResourceIds == null) {
             if (resource.idValue.startsWith("{") && resource.idValue.endsWith("}")) {
               givenResourceIds =
@@ -494,11 +500,13 @@ public class MergeAndroidResourcesStep implements Step {
           }
 
           // Add resource to cache so that the id value is consistent across all R.txt
-          resourceToIdValuesMap.put(attrResource.copyWithNewIdValue(attrIdValue), attrIdValue);
+          attrResource = attrResource.copyWithNewIdValue(attrIdValue);
+          resourceToIdValuesMap.put(attrResource.hashCode(), attrResource);
         }
 
         styleableResourceMap.put(
-            styleableResource.copyWithNewIdValue(String.valueOf(styleableIndex)), attrIdValue);
+            styleableResource.copyWithNewIdValue(String.valueOf(styleableIndex)),
+            attrResource.idValue);
 
       } else {
         break;

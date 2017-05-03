@@ -437,7 +437,8 @@ public class MiniAapt implements Step {
             RType.STYLEABLE,
             IdType.INT,
             String.format("%s_%s", resourceName, attrName),
-            Integer.toString(count++));
+            Integer.toString(count++),
+            resourceName);
 
         if (!rawAttrName.startsWith("android:")) {
           resourceCollector.addIntResourceIfNotPresent(RType.ATTR, attrName);
