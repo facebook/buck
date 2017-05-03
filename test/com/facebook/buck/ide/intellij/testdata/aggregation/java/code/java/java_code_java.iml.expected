@@ -8,12 +8,10 @@
       <excludeFolder url="file://$MODULE_DIR$/default/tip/src/module" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/modules_with_java_7" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/modules_with_java_8" isTestSource="false" />
-
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="java_code_java_modules_with_java_7" scope="COMPILE" />
     <orderEntry type="module" module-name="java_code_java_modules_with_java_8" scope="COMPILE" />
-
   </component>
 </module>

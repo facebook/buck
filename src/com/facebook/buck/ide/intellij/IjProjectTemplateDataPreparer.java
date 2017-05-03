@@ -332,8 +332,6 @@ public class IjProjectTemplateDataPreparer {
 
     Path basePath = module.getModuleBasePath();
 
-    addAndroidConstants(androidProperties);
-
     addAndroidApkPaths(androidProperties, module, basePath, androidFacet);
     addAndroidAssetPaths(androidProperties, module, androidFacet);
     addAndroidGenPath(androidProperties, androidFacet, basePath);
@@ -344,23 +342,12 @@ public class IjProjectTemplateDataPreparer {
     return androidProperties;
   }
 
-  private void addAndroidConstants(Map<String, Object> androidProperties) {
-    androidProperties.put("run_proguard", false);
-
-    // TODO(alsutton): Fix keystore detection
-    androidProperties.put("keystore", "");
-
-    // TODO(alsutton): See if we need nativeLibs and libs
-    androidProperties.put("libs_path", "/libs");
-  }
-
   private void addAndroidApkPaths(
       Map<String, Object> androidProperties,
       IjModule module,
       Path moduleBasePath,
       IjModuleAndroidFacet androidFacet) {
     if (androidFacet.isAndroidLibrary()) {
-      androidProperties.put(APK_PATH_TEMPLATE_PARAMETER, EMPTY_STRING);
       return;
     }
 
@@ -377,16 +364,15 @@ public class IjProjectTemplateDataPreparer {
       Map<String, Object> androidProperties, IjModule module, IjModuleAndroidFacet androidFacet) {
     ImmutableSet<Path> assetPaths = androidFacet.getAssetPaths();
     if (assetPaths.isEmpty()) {
-      androidProperties.put(ASSETS_FOLDER_TEMPLATE_PARAMETER, "/assets");
-    } else {
-      Set<Path> relativeAssetPaths = new HashSet<>(assetPaths.size());
-      Path moduleBase = module.getModuleBasePath();
-      for (Path assetPath : assetPaths) {
-        relativeAssetPaths.add(moduleBase.relativize(assetPath));
-      }
-      androidProperties.put(
-          ASSETS_FOLDER_TEMPLATE_PARAMETER, "/" + Joiner.on(";/").join(relativeAssetPaths));
+      return;
     }
+    Set<Path> relativeAssetPaths = new HashSet<>(assetPaths.size());
+    Path moduleBase = module.getModuleBasePath();
+    for (Path assetPath : assetPaths) {
+      relativeAssetPaths.add(moduleBase.relativize(assetPath));
+    }
+    androidProperties.put(
+        ASSETS_FOLDER_TEMPLATE_PARAMETER, "/" + Joiner.on(";/").join(relativeAssetPaths));
   }
 
   private void addAndroidGenPath(
@@ -415,12 +401,11 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidProguardPath(
       Map<String, Object> androidProperties, IjModuleAndroidFacet androidFacet) {
-    Optional<Path> proguardPath = androidFacet.getProguardConfigPath();
-    if (proguardPath.isPresent()) {
-      androidProperties.put(PROGUARD_CONFIG_TEMPLATE_PARAMETER, proguardPath.get());
-    } else {
-      androidProperties.put(PROGUARD_CONFIG_TEMPLATE_PARAMETER, EMPTY_STRING);
-    }
+    androidFacet
+        .getProguardConfigPath()
+        .ifPresent(
+            proguardPath ->
+                androidProperties.put(PROGUARD_CONFIG_TEMPLATE_PARAMETER, proguardPath));
   }
 
   private void addAndroidResourcePaths(

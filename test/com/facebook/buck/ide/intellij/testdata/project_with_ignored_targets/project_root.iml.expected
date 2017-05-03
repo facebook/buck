@@ -6,7 +6,6 @@
       <excludeFolder url="file://$MODULE_DIR$/buck-out" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/libs" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/modules/labels" isTestSource="false" />
-
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -11,21 +11,21 @@
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%androidFacet.module_gen_path%" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%androidFacet.android_manifest%" />
         <option name="RES_FOLDERS_RELATIVE_PATH" value="%androidFacet.res%" />
+%if(androidFacet.asset_folder)%
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%androidFacet.asset_folder%" />
-        <option name="LIBS_FOLDER_RELATIVE_PATH" value="%androidFacet.libs_path%" />
+%endif%
+%if(androidFacet.apk_path)%
         <option name="APK_PATH" value="%androidFacet.apk_path%" />
+%endif%
         <option name="LIBRARY_PROJECT" value="%androidFacet.is_android_library_project%" />
-        <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="true" />
-        <option name="GENERATE_UNSIGNED_APK" value="false" />
+%if(androidFacet.keystore)%
         <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="%androidFacet.keystore%" />
-        <option name="PACK_TEST_CODE" value="false" />
-        <option name="RUN_PROGUARD" value="%androidFacet.run_proguard%" />
+%endif%
+%if(androidFacet.proguard_config)%
         <option name="PROGUARD_CFG_PATH" value="%androidFacet.proguard_config%" />
+%endif%
         <option name="ENABLE_SOURCES_AUTOGENERATION" value="%androidFacet.autogenerate_sources%" />
-        <resOverlayFolders />
-        <includeSystemProguardFile>false</includeSystemProguardFile>
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
-        <additionalNativeLibs />
       </configuration>
     </facet>
   </component>
@@ -42,8 +42,7 @@
         isTestSource="%folder.isTestSource%" %\\%
         %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
         %if(folder.isAndroidResources)%type="java-resource" %endif%/>
-}%
-    </content>
+}%    </content>
 %if(androidFacet.enabled)%
     <content url="file://$MODULE_DIR$%androidFacet.module_gen_path%">
       <sourceFolder url="file://$MODULE_DIR$%androidFacet.module_gen_path%" isTestSource="false" />
@@ -56,11 +55,8 @@
         %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
         %if(generatedFolder.isAndroidResources)%type="java-resource" %endif%/>
     </content>
-}%
-%if(sdk)%
-    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
-%else%
-    <orderEntry type="inheritedJdk" />
+}%%if(sdk)%    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
+%else%    <orderEntry type="inheritedJdk" />
 %endif%
     <orderEntry type="sourceFolder" forTests="false" />
 %dependencies:{dep |
@@ -71,6 +67,5 @@
     <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" %\\%
       level="project" %if(dep.library.exported)%exported="" %endif%/>
   %endif%
-}%
-  </component>
+}%  </component>
 </module>

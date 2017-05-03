@@ -6,7 +6,6 @@
       <sourceFolder url="file://$MODULE_DIR$/dep1/jni" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dep1/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tip/src" isTestSource="false" />
-
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

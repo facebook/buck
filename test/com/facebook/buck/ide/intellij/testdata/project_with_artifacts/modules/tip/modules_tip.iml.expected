@@ -7,6 +7,5 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="library_modules_tip_tip" scope="PROVIDED" level="project"  exported=""  />
-
   </component>
 </module>
