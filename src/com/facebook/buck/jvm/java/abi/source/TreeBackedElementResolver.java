@@ -30,6 +30,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 /** Used to resolve type references in {@link TreeBackedElement}s after they've all been created. */
@@ -51,6 +52,21 @@ class TreeBackedElementResolver {
             .stream()
             .map(TypeParameterElement::asType)
             .collect(Collectors.toList()));
+  }
+
+  /* package */ StandaloneExecutableType createType(TreeBackedExecutableElement element) {
+    return new StandaloneExecutableType(
+        element.getReturnType(),
+        element
+            .getTypeParameters()
+            .stream()
+            .map(TypeParameterElement::asType)
+            .map(type -> (TypeVariable) type)
+            .collect(Collectors.toList()),
+        element.getParameters().stream().map(VariableElement::asType).collect(Collectors.toList()),
+        element.getReceiverType(),
+        element.getThrownTypes(),
+        element.getAnnotationMirrors());
   }
 
   /* package */ StandaloneTypeVariable createType(TreeBackedTypeParameterElement element) {

@@ -45,6 +45,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   @Nullable private TypeMirror receiverType;
   @Nullable private List<TypeMirror> thrownTypes;
   @Nullable private TreeBackedAnnotationValue defaultValue;
+  @Nullable private StandaloneExecutableType typeMirror;
 
   TreeBackedExecutableElement(
       ExecutableElement underlyingElement,
@@ -59,7 +60,10 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
 
   @Override
   public StandaloneTypeMirror asType() {
-    throw new UnsupportedOperationException("NYI");
+    if (typeMirror == null) {
+      typeMirror = getResolver().createType(this);
+    }
+    return typeMirror;
   }
 
   @Override
