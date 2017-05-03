@@ -39,7 +39,7 @@ public class MapDBBuildInfoStore implements BuildInfoStore {
         filesystem
             .getRootPath()
             .resolve(filesystem.getBuckPaths().getScratchDir().resolve("metadata.db"));
-    db = DBMaker.fileDB(dbPath.toString()).fileMmapEnableIfSupported().make();
+    db = DBMaker.fileDB(dbPath.toString()).fileMmapEnableIfSupported().transactionEnable().make();
     map = db.treeMap("map", Serializer.STRING, Serializer.STRING).createOrOpen();
   }
 
