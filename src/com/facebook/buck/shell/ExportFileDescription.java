@@ -18,10 +18,10 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -30,18 +30,19 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class ExportFileDescription
-    implements Description<ExportFileDescription.Arg>,
-        ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
+    implements Description<ExportFileDescriptionArg>,
+        ImplicitInputsInferringDescription<ExportFileDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<ExportFileDescriptionArg> getConstructorArgType() {
+    return ExportFileDescriptionArg.class;
   }
 
   @Override
@@ -50,19 +51,19 @@ public class ExportFileDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      ExportFileDescriptionArg args) {
     BuildTarget target = params.getBuildTarget();
 
-    Mode mode = args.mode.orElse(Mode.COPY);
+    Mode mode = args.getMode().orElse(Mode.COPY);
 
     String name;
-    if (args.out.isPresent()) {
+    if (args.getOut().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE) {
         throw new HumanReadableException(
             "%s: must not set `out` for `export_file` when using `REFERENCE` mode",
             params.getBuildTarget());
       }
-      name = args.out.get();
+      name = args.getOut().get();
     } else {
       name = target.getShortNameAndFlavorPostfix();
     }
@@ -70,14 +71,16 @@ public class ExportFileDescription
     SourcePath src;
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    if (args.src.isPresent()) {
+    if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
-          && !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
+          && !pathResolver
+              .getFilesystem(args.getSrc().get())
+              .equals(params.getProjectFilesystem())) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
-            target, args.src.get());
+            target, args.getSrc().get());
       }
-      src = args.src.get();
+      src = args.getSrc().get();
     } else {
       src =
           new PathSourcePath(
@@ -91,9 +94,9 @@ public class ExportFileDescription
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
   public Iterable<Path> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget, ExportFileDescription.Arg constructorArg) {
+      UnflavoredBuildTarget buildTarget, ExportFileDescriptionArg constructorArg) {
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
-    if (!constructorArg.src.isPresent()) {
+    if (!constructorArg.getSrc().isPresent()) {
       inputs.add(buildTarget.getBasePath().resolve(buildTarget.getShortName()));
     }
     return inputs.build();
@@ -115,10 +118,13 @@ public class ExportFileDescription
     COPY,
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<SourcePath> src;
-    public Optional<String> out;
-    public Optional<Mode> mode;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractExportFileDescriptionArg extends CommonDescriptionArg {
+    Optional<SourcePath> getSrc();
+
+    Optional<String> getOut();
+
+    Optional<Mode> getMode();
   }
 }
