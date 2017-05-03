@@ -22,9 +22,10 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.Lists;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -130,7 +131,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
     Path logDir = params.getInvocationInfo().get().getLogDirectoryPath();
     Path outputFileAbs = logDir.resolve(outputFilename).normalize();
     int writtenLineCount = 0;
-    try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputFileAbs))) {
+    try (ThrowingPrintWriter writer =
+        new ThrowingPrintWriter(new BufferedOutputStream(Files.newOutputStream(outputFileAbs)))) {
       ProjectFilesystem fs = params.getCell().getFilesystem();
       Path cellsCommonRootPath = fs.resolve(Paths.get(cellsRootPath).normalize());
       for (BuildJobStateFileHashes cellHashes : jobState.getFileHashes()) {

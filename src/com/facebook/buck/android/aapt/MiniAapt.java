@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -187,8 +187,8 @@ public class MiniAapt implements Step {
       }
     }
 
-    try (PrintWriter writer =
-        new PrintWriter(filesystem.newFileOutputStream(pathToTextSymbolsFile))) {
+    try (ThrowingPrintWriter writer =
+        new ThrowingPrintWriter(filesystem.newFileOutputStream(pathToTextSymbolsFile))) {
       Set<RDotTxtEntry> sortedResources =
           ImmutableSortedSet.copyOf(Ordering.natural(), resourceCollector.getResources());
       for (RDotTxtEntry entry : sortedResources) {

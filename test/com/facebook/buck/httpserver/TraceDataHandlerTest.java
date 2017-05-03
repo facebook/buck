@@ -26,7 +26,7 @@ import com.google.common.base.Charsets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -67,7 +67,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("application/javascript; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
@@ -97,7 +97,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("application/javascript; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
@@ -130,7 +130,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("application/javascript; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
@@ -160,7 +160,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("application/javascript; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 

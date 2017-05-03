@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -259,7 +259,7 @@ public abstract class Jsr199Javac implements Javac {
 
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-    Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
+    Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
     PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
     BuckJavacTaskProxy javacTask;
 

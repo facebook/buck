@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -41,7 +42,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -251,7 +251,8 @@ public class MergeAndroidResourcesStep implements Step {
     for (String rDotJavaPackage : packageToResources.keySet()) {
       Path outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
-      try (PrintWriter writer = new PrintWriter(filesystem.newFileOutputStream(outputFile))) {
+      try (ThrowingPrintWriter writer =
+          new ThrowingPrintWriter(filesystem.newFileOutputStream(outputFile))) {
         writer.format("package %s;\n\n", rDotJavaPackage);
         writer.format("public class %s {\n", rName);
 

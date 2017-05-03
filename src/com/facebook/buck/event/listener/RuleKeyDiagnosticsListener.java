@@ -27,18 +27,18 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -132,7 +132,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     try {
       projectFilesystem.createParentDirs(path);
       try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, true);
-          PrintWriter out = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {
+          ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8)) {
         for (RuleKeyDiagnostics.Result<?, ?> keys : keysToFlush) {
           out.println(String.format("%s %s", keys.ruleKey, keys.diagKey));
         }
@@ -181,21 +181,22 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     try {
       projectFilesystem.createParentDirs(path);
       try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, false);
-          PrintWriter out = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)); ) {
+          ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8); ) {
         out.println(rulesInfo.size());
-        rulesInfo.forEach(
-            (rule, info) -> {
-              out.printf(
-                  "%d %d %s %s %d %s %s %s%n",
-                  info.id,
-                  info.duration,
-                  rule.getType(),
-                  rule.getBuildTarget(),
-                  rule.isCacheable() ? 1 : 0,
-                  info.ruleKeys.getRuleKey(),
-                  info.ruleKeys.getInputRuleKey().map(RuleKey::toString).orElse("null"),
-                  info.outputHash.map(HashCode::toString).orElse("null"));
-            });
+        for (Map.Entry<BuildRule, RuleInfo> entry : rulesInfo.entrySet()) {
+          BuildRule rule = entry.getKey();
+          RuleInfo info = entry.getValue();
+          out.printf(
+              "%d %d %s %s %d %s %s %s%n",
+              info.id,
+              info.duration,
+              rule.getType(),
+              rule.getBuildTarget(),
+              rule.isCacheable() ? 1 : 0,
+              info.ruleKeys.getRuleKey(),
+              info.ruleKeys.getInputRuleKey().map(RuleKey::toString).orElse("null"),
+              info.outputHash.map(HashCode::toString).orElse("null"));
+        }
         out.println(dirtyEdges.size());
         for (DepEdge edge : dirtyEdges) {
           out.printf("%d %d%n", rulesInfo.get(edge.rule).id, rulesInfo.get(edge.dep).id);

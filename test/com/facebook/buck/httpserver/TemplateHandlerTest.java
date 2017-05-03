@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -63,7 +63,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("text/html; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
@@ -106,7 +106,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
     response.setStatus(500);
     response.setContentType("text/plain; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 

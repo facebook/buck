@@ -209,6 +209,19 @@ private static final Logger LOG = Logger.getLogger(Main.class.getName());
       ]]>
     </example>
   </rule>
+  <rule name="BlacklistedPrintWriterUsage"
+        message="Use com.facebook.buck.util.ThrowingPrintWriter instead of java.io.PrintWriter"
+        class="com.liveramp.pmd_extensions.BlacklistClassUsages">
+    <description>
+java.io.PrintWriter eats IOExceptions. Using it when writing build artifacts and metadata risks
+generation of corrupted artifacts when I/O operations fail (such as in low-disk-space situations).
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistClassUsages.BlacklistedClasses" value="java.io.PrintWriter" />
+      <property name="violationSuppressRegex" value=".*/buck/test/.*" />
+    </properties>
+  </rule>
   <rule name="SimplifyStringReplace"
         message="[perf] Use String.replace(char, char) for one-character replacements"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
