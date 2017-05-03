@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -65,6 +66,13 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   // TODO(rvitale): remove block below after the file hash cache experiment is over.
   /* *****************************************************************************/
+  public void resetCounters() {
+    newCacheAggregatedNanoTime = 0;
+    oldCacheAggregatedNanoTime = 0;
+    numberOfInvalidations = 0;
+    sha1Mismatches = 0;
+  }
+
   public long getNewCacheAggregatedNanoTime() {
     return newCacheAggregatedNanoTime;
   }
@@ -116,13 +124,25 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-    HashCodeAndFileType fileHashCodeAndFileType = newLoadingCache.get(relativeFilePath);
     HashCode sha1 = super.get(archiveMemberPath);
-    sha1Mismatches += sha1.equals(fileHashCodeAndFileType.getHashCode()) ? 0 : 1;
+    HashCode newSha1 = getFromNewCache(archiveMemberPath);
+    sha1Mismatches += sha1.equals(newSha1) ? 0 : 1;
     return sha1;
   }
   /* *****************************************************************************/
+
+  private HashCode getFromNewCache(ArchiveMemberPath archiveMemberPath) throws IOException {
+    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
+    HashCodeAndFileType fileHashCodeAndFileType = newLoadingCache.get(relativeFilePath);
+    Path memberPath = archiveMemberPath.getMemberPath();
+    HashCodeAndFileType memberHashCodeAndFileType =
+        fileHashCodeAndFileType.getContents().get(memberPath);
+    if (memberHashCodeAndFileType == null) {
+      throw new NoSuchFileException(archiveMemberPath.toString());
+    }
+
+    return memberHashCodeAndFileType.getHashCode();
+  }
 
   @SuppressWarnings("unused")
   @Subscribe

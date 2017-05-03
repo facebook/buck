@@ -287,6 +287,7 @@ final class Daemon implements Closeable {
                           "mismatches",
                           cache.getSha1Mismatches(),
                           null));
+                  cache.resetCounters();
                 }
               }
             });
