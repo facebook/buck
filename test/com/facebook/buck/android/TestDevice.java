@@ -53,7 +53,7 @@ public class TestDevice implements IDevice {
     device.setIsEmulator(true);
     device.setSerialNumber(serial);
     device.setName("emulator-" + serial);
-    device.setState(DeviceState.ONLINE);
+    device.setState(IDevice.DeviceState.ONLINE);
     return device;
   }
 
@@ -62,7 +62,7 @@ public class TestDevice implements IDevice {
     device.setIsEmulator(false);
     device.setSerialNumber(serial);
     device.setName("device-" + serial);
-    device.setState(DeviceState.ONLINE);
+    device.setState(IDevice.DeviceState.ONLINE);
     return device;
   }
 
@@ -106,28 +106,28 @@ public class TestDevice implements IDevice {
     return isEmulator;
   }
 
-  public void setState(DeviceState state) {
+  public void setState(IDevice.DeviceState state) {
     this.state = state;
   }
 
   @Override
-  public DeviceState getState() {
+  public IDevice.DeviceState getState() {
     return state;
   }
 
   @Override
   public boolean isOnline() {
-    return state == DeviceState.ONLINE;
+    return state == IDevice.DeviceState.ONLINE;
   }
 
   @Override
   public boolean isOffline() {
-    return state == DeviceState.OFFLINE;
+    return state == IDevice.DeviceState.OFFLINE;
   }
 
   @Override
   public boolean isBootLoader() {
-    return state == DeviceState.BOOTLOADER;
+    return state == IDevice.DeviceState.BOOTLOADER;
   }
 
   @Override
@@ -165,12 +165,12 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public boolean supportsFeature(Feature feature) {
+  public boolean supportsFeature(IDevice.Feature feature) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean supportsFeature(HardwareFeature feature) {
+  public boolean supportsFeature(IDevice.HardwareFeature feature) {
     return false;
   }
 
@@ -280,7 +280,8 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public void createForward(int i, String s, DeviceUnixSocketNamespace deviceUnixSocketNamespace)
+  public void createForward(
+      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace)
       throws TimeoutException, AdbCommandRejectedException, IOException {
     throw new UnsupportedOperationException();
   }
@@ -292,7 +293,8 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public void removeForward(int i, String s, DeviceUnixSocketNamespace deviceUnixSocketNamespace)
+  public void removeForward(
+      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace)
       throws TimeoutException, AdbCommandRejectedException, IOException {
     throw new UnsupportedOperationException();
   }
