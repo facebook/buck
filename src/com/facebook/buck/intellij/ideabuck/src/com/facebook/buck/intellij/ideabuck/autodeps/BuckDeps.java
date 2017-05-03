@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD not in core Buck
 import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -221,7 +221,7 @@ public class BuckDeps {
 
   private static void writeBuckFile(String buckFilePath, String text) {
 
-    try (PrintWriter out = new PrintWriter(buckFilePath)) {
+    try (PrintWriter out = new PrintWriter(buckFilePath)) { // NOPMD not in core Buck
       out.write(text);
     } catch (FileNotFoundException e) {
       LOG.error(e.toString());

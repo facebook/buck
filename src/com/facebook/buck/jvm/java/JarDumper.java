@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +98,7 @@ public class JarDumper {
   private Stream<String> dumpClassFile(InputStream stream) throws IOException {
     byte[] textifiedClass;
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        PrintWriter pw = new PrintWriter(bos)) {
+        PrintWriter pw = new PrintWriter(bos)) { // NOPMD required by API
       ClassReader reader = new ClassReader(stream);
       TraceClassVisitor traceVisitor = new TraceClassVisitor(null, new Textifier(), pw);
       reader.accept(traceVisitor, asmFlags);

@@ -17,7 +17,7 @@
 package com.facebook.buck.testrunner;
 
 import com.facebook.buck.log.AppendableLogRecord;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -71,7 +71,7 @@ public class JulLogFormatter extends Formatter {
       // try-with-resources (but oddly, it throws IOException, so we couldn't
       // use it in a try-with-resources if we wanted to).
       StringWriter sw = new StringWriter();
-      try (PrintWriter pw = new PrintWriter(sw)) {
+      try (PrintWriter pw = new PrintWriter(sw)) { // NOPMD can't depend on Guava
         t.printStackTrace(pw);
         sb.append(sw).append("\n");
       }
