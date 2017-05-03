@@ -28,7 +28,7 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 public class MapDBBuildInfoStore implements BuildInfoStore {
-  private static final char KEY_SEP = '\t';
+  private static final char KEY_SEP = ' ';
   private static final char KEY_END = KEY_SEP + 1;
 
   private final DB db;

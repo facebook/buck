@@ -503,6 +503,25 @@ java_binary(
 )
 
 java_library(
+    name = "mapdb-command-line",
+    srcs = [
+        "MapDBCommandLine.java",
+    ],
+    deps = [
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/mapdb:mapdb",
+    ],
+)
+
+java_binary(
+    name = "mapdb",
+    main_class = "com.facebook.buck.rules.MapDBCommandLine",
+    deps = [
+        ":mapdb-command-line",
+    ],
+)
+
+java_library(
     name = "visibility",
     srcs = [
         "ObeysVisibility.java",
