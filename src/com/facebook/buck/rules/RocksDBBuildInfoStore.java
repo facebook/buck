@@ -31,7 +31,7 @@ import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
 public class RocksDBBuildInfoStore implements BuildInfoStore {
-  private static final char KEY_SEP = '\0';
+  private static final char KEY_SEP = '\t';
 
   private final RocksDB db;
 
