@@ -339,7 +339,7 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<RDotTxtEntry, Path> bannedDuplicateResourceToSymbolsFiles =
         TreeMultimap.create();
 
-    HashMap<Integer, RDotTxtEntry> resourceToIdValuesMap = new HashMap<>();
+    HashMap<RDotTxtEntry, RDotTxtEntry> resourceToIdValuesMap = new HashMap<>();
 
     for (Map.Entry<Path, String> entry : symbolsFileToRDotJavaPackage.entrySet()) {
       Path symbolsFile = entry.getKey();
@@ -376,8 +376,8 @@ public class MergeAndroidResourcesStep implements Step {
         } else if (useOldStyleableFormat) { // NOPMD  more readable this way, IMO.
           // Nothing extra to do in this case.
 
-        } else if (resourceToIdValuesMap.get(resource.hashCode()) != null) {
-          resource = resourceToIdValuesMap.get(resource.hashCode());
+        } else if (resourceToIdValuesMap.containsKey(resource)) {
+          resource = resourceToIdValuesMap.get(resource);
           resource = resource.copyWithNewIdValue(resource.idValue);
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
@@ -385,7 +385,7 @@ public class MergeAndroidResourcesStep implements Step {
               getStyleableResources(resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
 
           for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
-            resourceToIdValuesMap.put(styleableResource.hashCode(), styleableResource);
+            resourceToIdValuesMap.put(styleableResource, styleableResource);
           }
 
           // int[] styleable entry is not added to the cache as
@@ -402,7 +402,7 @@ public class MergeAndroidResourcesStep implements Step {
           resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
 
           // Add resource to cache so that the id value is consistent across all R.txt
-          resourceToIdValuesMap.put(resource.hashCode(), resource);
+          resourceToIdValuesMap.put(resource, resource);
         }
 
         if (bannedDuplicateResourceTypes.contains(resource.type)) {
@@ -441,7 +441,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private static Map<RDotTxtEntry, String> getStyleableResources(
-      Map<Integer, RDotTxtEntry> resourceToIdValuesMap,
+      Map<RDotTxtEntry, RDotTxtEntry> resourceToIdValuesMap,
       List<String> linesInSymbolsFile,
       RDotTxtEntry resource,
       int index) {
@@ -467,8 +467,8 @@ public class MergeAndroidResourcesStep implements Step {
 
         RDotTxtEntry attrResource = new RDotTxtEntry(IdType.INT, RType.ATTR, attrName, "");
 
-        if (resourceToIdValuesMap.containsKey(attrResource.hashCode())) {
-          attrResource = resourceToIdValuesMap.get(attrResource.hashCode());
+        if (resourceToIdValuesMap.containsKey(attrResource)) {
+          attrResource = resourceToIdValuesMap.get(attrResource);
         }
 
         if (Strings.isNullOrEmpty(attrResource.idValue)) {
@@ -502,7 +502,7 @@ public class MergeAndroidResourcesStep implements Step {
 
           // Add resource to cache so that the id value is consistent across all R.txt
           attrResource = attrResource.copyWithNewIdValue(attrIdValue);
-          resourceToIdValuesMap.put(attrResource.hashCode(), attrResource);
+          resourceToIdValuesMap.put(attrResource, attrResource);
         }
 
         styleableResourceMap.put(
