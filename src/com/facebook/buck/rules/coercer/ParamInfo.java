@@ -19,12 +19,24 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.Types;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -34,13 +46,8 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   private final TypeCoercer<?> typeCoercer;
 
-  private final boolean isOptional;
-  @Nullable private final Object defaultValue;
   private final String name;
-  private final String pythonName;
-  private final boolean isDep;
-  private final boolean isInput;
-  private final Field field;
+  private final ParamInteractor paramInteractor;
 
   private static final LoadingCache<Class<?>, Object> EMPTY_CONSTRUCTOR_ARGS =
       CacheBuilder.newBuilder()
@@ -62,26 +69,10 @@ public class ParamInfo implements Comparable<ParamInfo> {
                 }
               });
 
-  public ParamInfo(TypeCoercerFactory typeCoercerFactory, Class<?> cls, Field field) {
-    this.field = field;
-    this.name = field.getName();
-    Hint hint = field.getAnnotation(Hint.class);
-    this.pythonName = determinePythonName(this.name, hint);
-    this.isDep = hint != null ? hint.isDep() : Hint.DEFAULT_IS_DEP;
-    this.isInput = hint != null ? hint.isInput() : Hint.DEFAULT_IS_INPUT;
-
-    Object emptyConstructorArg = EMPTY_CONSTRUCTOR_ARGS.getUnchecked(cls);
-    try {
-      this.defaultValue = field.get(emptyConstructorArg);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-    if (defaultValue != null) {
-      this.isOptional = true;
-    } else {
-      this.isOptional = Optional.class.isAssignableFrom(field.getType());
-    }
-    this.typeCoercer = typeCoercerFactory.typeCoercerForType(field.getGenericType());
+  public ParamInfo(TypeCoercerFactory typeCoercerFactory, ParamInteractor paramInteractor) {
+    this.paramInteractor = paramInteractor;
+    this.name = paramInteractor.getName();
+    this.typeCoercer = typeCoercerFactory.typeCoercerForType(paramInteractor.getGenericType());
   }
 
   public String getName() {
@@ -89,19 +80,19 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public boolean isOptional() {
-    return isOptional;
+    return paramInteractor.isOptional();
   }
 
   public String getPythonName() {
-    return pythonName;
+    return paramInteractor.getPythonName();
   }
 
   public boolean isDep() {
-    return isDep;
+    return paramInteractor.isDep();
   }
 
   public boolean isInput() {
-    return isInput;
+    return paramInteractor.isInput();
   }
 
   /**
@@ -136,11 +127,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   /** Get the value of this param as set on dto. */
   public Object get(Object dto) {
-    try {
-      return field.get(dto);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
+    return paramInteractor.get(dto);
   }
 
   public boolean hasElementTypes(final Class<?>... types) {
@@ -175,19 +162,23 @@ public class ParamInfo implements Comparable<ParamInfo> {
       throws ParamInfoException {
     Object result;
 
-    if (value == null) {
-      if (defaultValue != null) {
-        result = defaultValue;
-      } else if (isOptional) {
-        result = Optional.empty();
-      } else {
-        throw new IllegalStateException("Parser did not specify value for non-optional field");
-      }
-    } else {
+    if (value != null) {
       try {
         result = typeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, value);
       } catch (CoerceFailedException e) {
         throw new ParamInfoException(name, e.getMessage(), e);
+      }
+    } else {
+      if (!paramInteractor.explicitSetDefaultValues()) {
+        return;
+      }
+      @Nullable Object defaultValue = paramInteractor.getDefaultValue();
+      if (defaultValue != null) {
+        result = defaultValue;
+      } else if (paramInteractor.isOptional()) {
+        result = Optional.empty();
+      } else {
+        throw new IllegalStateException("Parser did not specify value for non-optional field");
       }
     }
     setCoercedValue(dto, result);
@@ -199,11 +190,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
    * <p>This is useful for things like making copies of dtos.
    */
   public void setCoercedValue(Object dto, Object value) {
-    try {
-      field.set(dto, value);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
+    paramInteractor.set(dto, value);
   }
 
   /** Only valid when comparing {@link ParamInfo} instances from the same description. */
@@ -231,12 +218,337 @@ public class ParamInfo implements Comparable<ParamInfo> {
     return name.equals(that.getName());
   }
 
-  private String determinePythonName(String javaName, @Nullable Hint hint) {
-    if (hint != null && !Hint.DEFAULT_NAME.equals(hint.name())) {
-      return hint.name();
-    }
-    return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, javaName);
+  public interface Traversal extends TypeCoercer.Traversal {}
+
+  /** Interface to manipulate the actual underlying param. */
+  interface ParamInteractor {
+    /** Set the value of the param to value, on target. */
+    void set(Object target, Object value);
+
+    /** @return the value of the param from target. */
+    Object get(Object target);
+
+    /** @return The default value which this param should have if un-set. */
+    @Nullable
+    Object getDefaultValue();
+
+    /** @return The type of the param. */
+    Class<?> getType();
+
+    /** @return The generic type of the param. */
+    Type getGenericType();
+
+    /** @return The name of the param. */
+    String getName();
+
+    /**
+     * @return The name of the param as it would appear in a python Buck file. See {@link
+     *     Hint#name()}. TODO(dwh): Remove this when FieldParamInteractor is removed.
+     */
+    String getPythonName();
+
+    /** See {@link Hint#isDep}. */
+    boolean isDep();
+
+    /** See {@link Hint#isInput()}. */
+    boolean isInput();
+
+    /** @return Whether the param is optional. */
+    boolean isOptional();
+
+    /**
+     * @return Whether, if the param is optional, the default value needs to be explicitly set when
+     *     setting.
+     */
+    boolean explicitSetDefaultValues();
   }
 
-  public interface Traversal extends TypeCoercer.Traversal {}
+  /**
+   * ParamInteractor which interacts with a field by reflection.
+   *
+   * <p>This is a legacy implementation which only exists because not everything we need to interact
+   * with is an Immutable yet.
+   */
+  @VisibleForTesting
+  public static class FieldParamInteractor implements ParamInteractor {
+
+    private final Class<?> clazz;
+    private final Field field;
+
+    public FieldParamInteractor(Class<?> clazz, Field field) {
+      this.clazz = clazz;
+      this.field = field;
+    }
+
+    @Override
+    public void set(Object target, Object value) {
+      try {
+        field.set(target, value);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Object get(Object target) {
+      try {
+        return field.get(target);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    @Nullable
+    public Object getDefaultValue() {
+      Object emptyConstructorArg = EMPTY_CONSTRUCTOR_ARGS.getUnchecked(clazz);
+      try {
+        return field.get(emptyConstructorArg);
+      } catch (ReflectiveOperationException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Class<?> getType() {
+      return field.getType();
+    }
+
+    @Override
+    public Type getGenericType() {
+      return field.getGenericType();
+    }
+
+    @Override
+    public String getName() {
+      return field.getName();
+    }
+
+    @Override
+    public String getPythonName() {
+      Hint hint = getHint();
+      if (hint != null && !Hint.DEFAULT_NAME.equals(hint.name())) {
+        return hint.name();
+      }
+      return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
+    }
+
+    @Override
+    public boolean isDep() {
+      Hint hint = getHint();
+      if (hint != null) {
+        return hint.isDep();
+      }
+      return Hint.DEFAULT_IS_DEP;
+    }
+
+    @Override
+    public boolean isInput() {
+      Hint hint = getHint();
+      if (hint != null) {
+        return hint.isInput();
+      }
+      return Hint.DEFAULT_IS_INPUT;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return getDefaultValue() != null || Optional.class.isAssignableFrom(field.getType());
+    }
+
+    @Override
+    public boolean explicitSetDefaultValues() {
+      return true;
+    }
+
+    @Nullable
+    private Hint getHint() {
+      return field.getAnnotation(Hint.class);
+    }
+  }
+
+  /** ParamInteractor which interacts with a property of an Immutable and its Builder. */
+  @VisibleForTesting
+  public static class BuilderParamInteractor implements ParamInteractor {
+
+    private final Method setter;
+    /**
+     * Holds the closest getter for this property defined on the abstract class or interface.
+     *
+     * <p>Note that this may not be abstract, for instance if a @Value.Default is specified.
+     */
+    private final Supplier<Method> closestGetterOnAbstractClassOrInterface;
+
+    private final Supplier<Boolean> isOptional;
+
+    public BuilderParamInteractor(Method setter) {
+      Preconditions.checkArgument(
+          setter.getParameterCount() == 1,
+          "Setter is expected to have exactly one parameter but had %s",
+          setter.getParameterCount());
+      Preconditions.checkArgument(
+          setter.getName().startsWith("set"),
+          "Setter is expected to have name starting with 'set' but was %s",
+          setter.getName());
+      Preconditions.checkArgument(
+          setter.getName().length() > 3,
+          "Setter must have name longer than just 'set' but was %s",
+          setter.getName());
+      this.setter = setter;
+
+      this.closestGetterOnAbstractClassOrInterface =
+          Suppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
+      this.isOptional =
+          Suppliers.memoize(
+              () -> {
+                Method getter = closestGetterOnAbstractClassOrInterface.get();
+                Class<?> type = getter.getReturnType();
+                if (CoercedTypeCache.OPTIONAL_TYPES.contains(type)) {
+                  return true;
+                }
+
+                if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+                  return true;
+                }
+
+                // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
+                // as a proxy for whether something has a default value.
+                if (!Modifier.isAbstract(getter.getModifiers())) {
+                  return true;
+                }
+                return false;
+              });
+    }
+
+    @Override
+    public void set(Object builder, Object value) {
+      try {
+        setter.invoke(builder, value);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    /** @param target The built Immutable from which to get the value. */
+    @Override
+    @SuppressWarnings("PMD.EmptyCatchBlock")
+    public Object get(Object target) {
+      // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
+      // getter from a superclass.
+      // Accordingly, we manually find the getter there, rather than using
+      // closestGetterOnAbstractClassOrInterface.
+      Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
+      if (enclosingClass == null) {
+        throw new IllegalStateException(
+            String.format(
+                "Couldn't find enclosing class of Builder %s", setter.getDeclaringClass()));
+      }
+      Iterable<String> getterNames = getGetterNames();
+      for (String possibleGetterName : getterNames) {
+        try {
+          return enclosingClass.getMethod(possibleGetterName).invoke(target);
+        } catch (NoSuchMethodException e) {
+          // Handled below
+        } catch (InvocationTargetException | IllegalAccessException e) {
+          throw new IllegalStateException(
+              String.format(
+                  "Error invoking getter %s on class %s", possibleGetterName, enclosingClass),
+              e);
+        }
+      }
+      throw new IllegalStateException(
+          String.format(
+              "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
+              setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
+    }
+
+    @Override
+    public Object getDefaultValue() {
+      throw new IllegalStateException("Cannot call getDefaultValue on BuilderParamInteractor");
+    }
+
+    @Override
+    public Class<?> getType() {
+      return setter.getParameterTypes()[0];
+    }
+
+    @Override
+    public Type getGenericType() {
+      return setter.getGenericParameterTypes()[0];
+    }
+
+    @Override
+    public String getName() {
+      StringBuilder builder = new StringBuilder();
+      builder.append(setter.getName().substring(3, 4).toLowerCase());
+      if (setter.getName().length() > 4) {
+        builder.append(setter.getName().substring(4));
+      }
+      return builder.toString();
+    }
+
+    @Override
+    public String getPythonName() {
+      return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
+    }
+
+    @Override
+    public boolean isDep() {
+      Hint hint = getHint();
+      if (hint != null) {
+        return hint.isDep();
+      }
+      return Hint.DEFAULT_IS_DEP;
+    }
+
+    @Override
+    public boolean isInput() {
+      Hint hint = getHint();
+      if (hint != null) {
+        return hint.isInput();
+      }
+      return Hint.DEFAULT_IS_INPUT;
+    }
+
+    @Override
+    public boolean isOptional() {
+      return this.isOptional.get();
+    }
+
+    @Override
+    public boolean explicitSetDefaultValues() {
+      return false;
+    }
+
+    /** Returns the most-overridden getter on the abstract Immutable. */
+    @SuppressWarnings("PMD.EmptyCatchBlock")
+    private Method findClosestGetterOnAbstractClassOrInterface() {
+      Iterable<Class<?>> superClasses =
+          Iterables.skip(Types.getSupertypes(setter.getDeclaringClass().getEnclosingClass()), 1);
+      ImmutableList<String> getterNames = getGetterNames();
+
+      for (Class<?> clazz : superClasses) {
+        for (String getterName : getterNames) {
+          try {
+            return clazz.getDeclaredMethod(getterName);
+          } catch (NoSuchMethodException e) {
+            // Handled below
+          }
+        }
+      }
+      throw new IllegalStateException(
+          String.format(
+              "Couldn't find declared getter for %s#%s. Tried parent classes %s methods: %s",
+              setter.getDeclaringClass(), setter.getName(), superClasses, getterNames));
+    }
+
+    private ImmutableList<String> getGetterNames() {
+      String suffix = setter.getName().substring(3);
+      return ImmutableList.of("get" + suffix, "is" + suffix);
+    }
+
+    private Hint getHint() {
+      return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
+    }
+  }
 }

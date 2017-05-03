@@ -24,10 +24,6 @@ package com.facebook.buck.rules.coercer;
 @SuppressWarnings("serial")
 public class ParamInfoException extends Exception {
 
-  public ParamInfoException(String parameterName, String message) {
-    super(String.format("parameter '%s': %s", parameterName, message));
-  }
-
   public ParamInfoException(String parameterName, String message, Throwable throwable) {
     super(String.format("parameter '%s': %s", parameterName, message), throwable);
   }

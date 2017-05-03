@@ -43,5 +43,5 @@ import org.immutables.value.Value;
   forceJacksonPropertyNames = false
 )
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface BuckStyleImmutable {}

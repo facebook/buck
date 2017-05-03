@@ -19,13 +19,17 @@ package com.facebook.buck.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Primitives;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
@@ -125,5 +129,31 @@ public class Types {
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Returns a Set of classes and interfaces inherited or implemented by clazz.
+   *
+   * <p>Result includes clazz itself. Result is ordered closest to furthest, i.e. first entry will
+   * always be clazz and last entry will always be {@link java.lang.Object}.
+   */
+  public static ImmutableSet<Class<?>> getSupertypes(Class<?> clazz) {
+    LinkedHashSet<Class<?>> ret = new LinkedHashSet<>();
+
+    Queue<Class<?>> toExpand = new LinkedList<>();
+    toExpand.add(clazz);
+    while (!toExpand.isEmpty()) {
+      Class<?> current = toExpand.remove();
+      if (!ret.add(current)) {
+        continue;
+      }
+      for (Class<?> i : current.getInterfaces()) {
+        toExpand.add(i);
+      }
+      if (current.getSuperclass() != null) {
+        toExpand.add(current.getSuperclass());
+      }
+    }
+    return ImmutableSet.copyOf(ret);
   }
 }

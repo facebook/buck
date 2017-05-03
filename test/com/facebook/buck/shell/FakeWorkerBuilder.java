@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,7 +42,8 @@ import java.util.function.Function;
 
 public class FakeWorkerBuilder
     extends AbstractNodeBuilderWithMutableArg<
-        Object, FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
+        FakeWorkerBuilder.FakeWorkerDescription.Arg, FakeWorkerBuilder.FakeWorkerDescription,
+        FakeWorkerBuilder.FakeWorkerTool> {
 
   public FakeWorkerBuilder(BuildTarget target) {
     this(target, FakeWorkerTool::new);
@@ -117,7 +119,7 @@ public class FakeWorkerBuilder
     }
   }
 
-  public static class FakeWorkerDescription implements Description<Object> {
+  public static class FakeWorkerDescription implements Description<FakeWorkerDescription.Arg> {
     private final Function<BuildRuleParams, BuildRule> create;
 
     private FakeWorkerDescription(Function<BuildRuleParams, BuildRule> create) {
@@ -125,8 +127,8 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public Class<Object> getConstructorArgType() {
-      return Object.class;
+    public Class<Arg> getConstructorArgType() {
+      return Arg.class;
     }
 
     @Override
@@ -135,9 +137,11 @@ public class FakeWorkerBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        Object args)
+        Arg args)
         throws NoSuchBuildTargetException {
       return create.apply(params);
     }
+
+    public static class Arg extends AbstractDescriptionArg {}
   }
 }

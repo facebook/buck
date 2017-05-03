@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -26,26 +25,19 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,12 +48,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("unused") // Many unused fields in sample DTO objects.
-public class ConstructorArgMarshallerTest {
+public class ConstructorArgMarshallerFieldBasedTest {
 
   public static final BuildTarget TARGET = BuildTargetFactory.newInstance("//example/path:three");
   private Path basePath;
   private ConstructorArgMarshaller marshaller;
-  private BuildRuleResolver ruleResolver;
   private ProjectFilesystem filesystem;
 
   @Rule public ExpectedException mExpected = ExpectedException.none();
@@ -70,8 +61,6 @@ public class ConstructorArgMarshallerTest {
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
     marshaller = new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
-    ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     filesystem = new FakeProjectFilesystem();
   }
 
@@ -154,13 +143,6 @@ public class ConstructorArgMarshallerTest {
   public void shouldPopulateSourcePaths() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule rule = new FakeBuildRule(target, resolver);
-    ruleResolver.addToIndex(rule);
     DtoWithSourcePaths dto =
         marshaller.populate(
             createCellRoots(filesystem),
@@ -174,7 +156,7 @@ public class ConstructorArgMarshallerTest {
 
     assertEquals(
         new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")), dto.filePath);
-    assertEquals(new DefaultBuildTargetSourcePath(rule.getBuildTarget()), dto.targetPath);
+    assertEquals(new DefaultBuildTargetSourcePath(target), dto.targetPath);
   }
 
   @Test
@@ -232,9 +214,10 @@ public class ConstructorArgMarshallerTest {
 
     BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
 
-    Map<String, Object> args = new HashMap<>();
-    args.put("deps", ImmutableList.of(dep));
-    args.put("notdeps", ImmutableList.of(notDep));
+    Map<String, Object> args =
+        ImmutableMap.of(
+            "deps", ImmutableList.of(dep),
+            "notdeps", ImmutableList.of(notDep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
@@ -254,8 +237,7 @@ public class ConstructorArgMarshallerTest {
   public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps() throws Exception {
     final String dep = "//should/be:ignored";
 
-    Map<String, Object> args = new HashMap<>();
-    args.put("deps", ImmutableList.of(dep));
+    Map<String, Object> args = ImmutableMap.of("deps", ImmutableList.of(dep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
@@ -274,7 +256,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
       throws Exception {
-    Map<String, Object> args = new HashMap<>();
+    Map<String, Object> args = ImmutableMap.of();
     // Deliberately not populating args
 
     DtoWithOptionalSetOfStrings dto =
@@ -380,30 +362,6 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    BuildRule rule =
-        new FakeBuildRule(BuildTargetFactory.newInstance("//will:happen"), pathResolver);
-    ruleResolver.addToIndex(rule);
-    DtoWithWildcardList dto =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithWildcardList.class,
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of(
-                "yup", ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
-
-    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
-    assertEquals(ImmutableList.of(path), dto.yup);
-  }
-
-  @Test
   public void specifyingZeroIsNotConsideredOptional() throws Exception {
     DtoWithOptionalInteger dto =
         marshaller.populate(
@@ -420,14 +378,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void canPopulateSimpleConstructorArgFromBuildFactoryParams() throws Exception {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule expectedRule =
-        new FakeBuildRule(BuildTargetFactory.newInstance("//example/path:path"), resolver);
-    ruleResolver.addToIndex(expectedRule);
+    BuildTarget target = BuildTargetFactory.newInstance("//example/path:path");
 
     ImmutableMap<String, Object> args =
         ImmutableMap.<String, Object>builder()
@@ -457,8 +408,7 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.of(88L), dto.optionalLong);
     assertTrue(dto.needed);
     assertEquals(Optional.empty(), dto.notNeeded);
-    DefaultBuildTargetSourcePath expected =
-        new DefaultBuildTargetSourcePath(expectedRule.getBuildTarget());
+    DefaultBuildTargetSourcePath expected = new DefaultBuildTargetSourcePath(target);
     assertEquals(expected, dto.aSrcPath);
     assertEquals(Paths.get("example/path/NotFile.java"), dto.notAPath.get());
   }
@@ -466,7 +416,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldPopulateDefaultValuesAsBeingAbsent() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = new HashMap<>();
+    Map<String, Object> args = Maps.newHashMap();
     args.put("defaultString", null);
     args.put("defaultSourcePath", null);
     DtoWithOptionalValues dto =
@@ -487,7 +437,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldRespectSpecifiedDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = new HashMap<>();
+    Map<String, Object> args = Maps.newHashMap();
     args.put("something", null);
     args.put("things", null);
     args.put("another", null);
@@ -509,7 +459,7 @@ public class ConstructorArgMarshallerTest {
   @Test
   public void shouldAllowOverridingDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = new HashMap<>();
+    Map<String, Object> args = Maps.newHashMap();
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
     args.put("another", 1234L);
@@ -531,12 +481,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldResolveCollectionOfSourcePaths() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
-    BuildRule rule =
-        new FakeBuildRule(target, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
-    resolver.addToIndex(rule);
 
     DtoWithSetOfSourcePaths dto =
         marshaller.populate(
@@ -561,98 +506,84 @@ public class ConstructorArgMarshallerTest {
         observedValues);
   }
 
-  @Test
-  public void bogusVisibilityGivesFriendlyError() throws Exception {
-    mExpected.expect(HumanReadableException.class);
-    mExpected.expectMessage(containsString(":marmosets"));
-
-    EmptyDto dto = new EmptyDto();
-    ConstructorArgMarshaller.populateVisibilityPatterns(
-        createCellRoots(filesystem), "visibility", ImmutableList.of(":marmosets"), TARGET);
-  }
-
-  public static class DtoWithString {
+  public static class DtoWithString extends AbstractDescriptionArg {
     public String string;
   }
 
-  public static class DtoWithListOfStrings {
+  public static class DtoWithListOfStrings extends AbstractDescriptionArg {
     public List<String> list;
   }
 
-  public static class DtoWithSetOfStrings {
+  public static class DtoWithSetOfStrings extends AbstractDescriptionArg {
     public Set<String> strings;
   }
 
-  public static class DtoWithOptionalSetOfStrings {
+  public static class DtoWithOptionalSetOfStrings extends AbstractDescriptionArg {
     public Optional<Set<String>> strings;
   }
 
-  public static class DtoWithPath {
+  public static class DtoWithPath extends AbstractDescriptionArg {
     public Path path;
   }
 
-  public static class DtoWithSetOfPaths {
+  public static class DtoWithSetOfPaths extends AbstractDescriptionArg {
     public Set<Path> paths;
   }
 
-  public static class DtoWithBoolean {
+  public static class DtoWithBoolean extends AbstractDescriptionArg {
     public boolean value;
   }
 
-  public static class DtoWithFakeDeps {
+  public static class DtoWithFakeDeps extends AbstractDescriptionArg {
     @Hint(isDep = false)
     public Optional<Set<BuildTarget>> deps;
   }
 
-  public static class DtoWithOptionalInteger {
+  public static class DtoWithOptionalInteger extends AbstractDescriptionArg {
     public Optional<Integer> number;
   }
 
-  public static class DtoWithRenamedPath {
+  public static class DtoWithRenamedPath extends AbstractDescriptionArg {
     @Hint(name = "some_path")
     public Path somePath;
   }
 
-  public static class EmptyDto {}
+  public static class EmptyDto extends AbstractDescriptionArg {}
 
-  public static class DtoWithBuildTargets {
+  public static class DtoWithBuildTargets extends AbstractDescriptionArg {
     public BuildTarget target;
     public BuildTarget local;
   }
 
-  public static class DtoWithBuildTargetList {
+  public static class DtoWithBuildTargetList extends AbstractDescriptionArg {
     public BuildTarget single;
     public BuildTarget sameBuildFileTarget;
     public List<BuildTarget> targets;
   }
 
-  public static class DtoWithSourcePaths {
+  public static class DtoWithSourcePaths extends AbstractDescriptionArg {
     public SourcePath filePath;
     public SourcePath targetPath;
   }
 
-  public static class DtoWithDepsAndNotDeps {
+  public static class DtoWithDepsAndNotDeps extends AbstractDescriptionArg {
     public Optional<Set<BuildTarget>> deps;
     public Optional<Set<BuildTarget>> notdeps;
   }
 
-  public static class DtoWithImmutableSortedSet {
+  public static class DtoWithImmutableSortedSet extends AbstractDescriptionArg {
     public ImmutableSortedSet<BuildTarget> deps;
   }
 
-  public static class DtoWithSetOfSourcePaths {
+  public static class DtoWithSetOfSourcePaths extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs;
   }
 
-  public static class DtoWithLong {
+  public static class DtoWithLong extends AbstractDescriptionArg {
     public long number;
   }
 
-  public static class DtoWithWildcardList {
-    public List<? extends SourcePath> yup;
-  }
-
-  public static class DtoWithVariousTypes {
+  public static class DtoWithVariousTypes extends AbstractDescriptionArg {
     public String required;
     public Optional<String> notRequired;
 
@@ -669,7 +600,7 @@ public class ConstructorArgMarshallerTest {
     public Optional<Path> notAPath;
   }
 
-  public static class DtoWithOptionalValues {
+  public static class DtoWithOptionalValues extends AbstractDescriptionArg {
     public Optional<String> noString;
     public Optional<String> defaultString;
 
@@ -677,7 +608,7 @@ public class ConstructorArgMarshallerTest {
     public Optional<SourcePath> defaultSourcePath;
   }
 
-  public static class DtoWithDefaultValues {
+  public static class DtoWithDefaultValues extends AbstractDescriptionArg {
     public String something = "foo";
     public List<String> things = ImmutableList.of("bar");
     public int another = 365;

@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * A helper class which uses reflection to translate {@link BuildTarget}s in {@link TargetNode}s.
@@ -252,11 +253,11 @@ public abstract class TargetNodeTranslator {
     }
   }
 
-  public <A> boolean translateConstructorArg(
+  public boolean translateConstructorArg(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
-      A constructorArg,
-      A newConstructorArg) {
+      Object constructorArg,
+      Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
     for (ParamInfo param :
@@ -266,9 +267,8 @@ public abstract class TargetNodeTranslator {
       Object value = param.get(constructorArg);
       Optional<Object> newValue = translate(cellPathResolver, pattern, value);
       modified |= newValue.isPresent();
-      param.setCoercedValue(newConstructorArg, newValue.orElse(value));
+      param.setCoercedValue(newConstructorArgOrBuilder, newValue.orElse(value));
     }
-
     return modified;
   }
 
@@ -283,11 +283,16 @@ public abstract class TargetNodeTranslator {
           .translateConstructorArg(
               node.getBuildTarget(), node.getCellNames(), this, constructorArg);
     } else {
-      A newConstructorArg =
-          CoercedTypeCache.instantiateSkeleton(node.getDescription().getConstructorArgType());
+      Pair<Object, Function<Object, A>> newArgAndBuild =
+          CoercedTypeCache.instantiateSkeleton(
+              node.getDescription().getConstructorArgType(), node.getBuildTarget());
       boolean modified =
-          translateConstructorArg(cellPathResolver, pattern, constructorArg, newConstructorArg);
-      return modified ? Optional.of(newConstructorArg) : Optional.empty();
+          translateConstructorArg(
+              cellPathResolver, pattern, constructorArg, newArgAndBuild.getFirst());
+      if (!modified) {
+        return Optional.empty();
+      }
+      return Optional.of(newArgAndBuild.getSecond().apply(newArgAndBuild.getFirst()));
     }
   }
 

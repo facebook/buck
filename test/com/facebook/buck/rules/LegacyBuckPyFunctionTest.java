@@ -23,30 +23,28 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
 
-public class BuckPyFunctionTest {
+public class LegacyBuckPyFunctionTest {
 
   private BuckPyFunction buckPyFunction;
 
   @Before
   public void setUpMarshaller() {
-    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory(), CoercedTypeCache.INSTANCE);
+    buckPyFunction =
+        new BuckPyFunction(new DefaultTypeCoercerFactory(), new CoercedTypeCache(true));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNoName {
-    abstract String getRandom();
+  public static class NoName {
+    public String random;
   }
 
   @Test
@@ -57,10 +55,8 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("name"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNoVis {
-    abstract String getRandom();
+  public static class NoVis {
+    public String random;
   }
 
   @Test
@@ -70,10 +66,8 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("visibility=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNamed {
-    abstract String getName();
+  public static class Named {
+    public String name;
   }
 
   @Test
@@ -98,7 +92,7 @@ public class BuckPyFunctionTest {
   }
 
   @TargetName(name = "lollerskates")
-  public static class TargetNameOnly extends AbstractDescriptionArg {
+  public static class TargetNameOnly {
     public String foobar;
   }
 
@@ -112,14 +106,11 @@ public class BuckPyFunctionTest {
         Joiner.on("\n")
             .join(
                 "@provide_for_build",
-                "def noname(foobar, labels=None, licenses=None, autodeps=None, "
-                    + "visibility=None, within_view=None, build_env=None):",
+                "def noname(foobar, autodeps=None, visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",
                 "        'buck.type': 'noname',",
                 "        'name': 'lollerskates',",
                 "        'foobar': foobar,",
-                "        'labels': labels,",
-                "        'licenses': licenses,",
                 "        'autodeps': autodeps,",
                 "        'visibility': visibility,",
                 "        'within_view': within_view,",
@@ -129,10 +120,8 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractBadName {
-    abstract int getName();
+  public static class BadName {
+    public int name;
   }
 
   @Test(expected = HumanReadableException.class)
@@ -140,26 +129,13 @@ public class BuckPyFunctionTest {
     buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), BadName.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractLotsOfOptions {
-    abstract Optional<String> getThing();
-
-    abstract Optional<List<BuildTarget>> getTargets();
-
-    @Value.Default
-    List<String> getStrings() {
-      return ImmutableList.of("123");
-    }
-
-    abstract Optional<Integer> getVersion();
-
-    abstract Optional<Boolean> isDoStuff();
-
-    @Value.Default
-    boolean isDoSomething() {
-      return true;
-    }
+  public static class LotsOfOptions {
+    public Optional<String> thing;
+    public Optional<List<BuildTarget>> targets;
+    public List<String> strings = ImmutableList.of("123");
+    public Optional<Integer> version;
+    public Optional<Boolean> doStuff;
+    public boolean doSomething = true;
   }
 
   @Test
@@ -174,20 +150,12 @@ public class BuckPyFunctionTest {
                 + "thing=None, version=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractEither {
+  public static class Either {
     // Alphabetical ordering is deliberate.
-    abstract Optional<String> getCat();
-
-    abstract String getDog();
-
-    @Value.Default
-    String getEgg() {
-      return "EGG";
-    }
-
-    abstract String getFake();
+    public Optional<String> cat;
+    public String dog;
+    public String egg = "EGG";
+    public String fake;
   }
 
   @Test
@@ -216,10 +184,8 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractVisible {
-    abstract Set<BuildTargetPattern> getVisibility();
+  public static class Visible {
+    public Set<BuildTargetPattern> visibility;
   }
 
   @Test(expected = HumanReadableException.class)
@@ -227,10 +193,11 @@ public class BuckPyFunctionTest {
     buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), Visible.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDto {
-    abstract String getSomeField();
+  public static class Dto {
+    public String someField;
+
+    @Hint(name = "all_this_was_fields")
+    public String hintedField;
   }
 
   @Test
@@ -241,11 +208,12 @@ public class BuckPyFunctionTest {
         Joiner.on("\n")
             .join(
                 "@provide_for_build",
-                "def case(name, some_field, "
+                "def case(name, all_this_was_fields, some_field, "
                     + "autodeps=None, visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",
                 "        'buck.type': 'case',",
                 "        'name': name,",
+                "        'hintedField': all_this_was_fields,",
                 "        'someField': some_field,",
                 "        'autodeps': autodeps,",
                 "        'visibility': visibility,",

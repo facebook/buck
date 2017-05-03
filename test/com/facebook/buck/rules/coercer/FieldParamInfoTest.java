@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.Hint;
-import com.facebook.buck.rules.coercer.ParamInfo;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -31,7 +28,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
-public class ParamInfoTest {
+public class FieldParamInfoTest {
 
   private Path testPath = Paths.get("path");
   private TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -43,7 +40,9 @@ public class ParamInfoTest {
   @Test
   public void shouldReportWildcardsWithUpperBoundsAsUpperBound() throws NoSuchFieldException {
     Field field = WithUpperBound.class.getField("path");
-    ParamInfo info = new ParamInfo(typeCoercerFactory, WithUpperBound.class, field);
+    ParamInfo info =
+        new ParamInfo(
+            typeCoercerFactory, new ParamInfo.FieldParamInteractor(WithUpperBound.class, field));
 
     Class<?> type = info.getResultClass();
     assertEquals(SourcePath.class, type);
@@ -56,7 +55,10 @@ public class ParamInfoTest {
   @Test
   public void anOptionalFieldMayBeWildcardedWithAnUpperBound() throws NoSuchFieldException {
     Field field = OptionalWithWildcard.class.getField("path");
-    ParamInfo info = new ParamInfo(typeCoercerFactory, OptionalWithWildcard.class, field);
+    ParamInfo info =
+        new ParamInfo(
+            typeCoercerFactory,
+            new ParamInfo.FieldParamInteractor(OptionalWithWildcard.class, field));
 
     Class<?> type = info.getResultClass();
     assertEquals(Optional.class, type);
@@ -69,7 +71,8 @@ public class ParamInfoTest {
   @Test(expected = IllegalArgumentException.class)
   public void wildcardedFieldsWithNoUpperBoundAreNotAllowed() throws NoSuchFieldException {
     Field field = UnboundedWildcard.class.getField("bad");
-    new ParamInfo(typeCoercerFactory, UnboundedWildcard.class, field);
+    new ParamInfo(
+        typeCoercerFactory, new ParamInfo.FieldParamInteractor(UnboundedWildcard.class, field));
   }
 
   public static class WithLowerBound {
@@ -79,7 +82,8 @@ public class ParamInfoTest {
   @Test(expected = IllegalArgumentException.class)
   public void superTypesForGenericsAreNotAllowedEither() throws NoSuchFieldException {
     Field field = WithLowerBound.class.getField("bad");
-    new ParamInfo(typeCoercerFactory, WithLowerBound.class, field);
+    new ParamInfo(
+        typeCoercerFactory, new ParamInfo.FieldParamInteractor(WithLowerBound.class, field));
   }
 
   public static class PythonNames {
@@ -95,12 +99,16 @@ public class ParamInfoTest {
 
     info =
         new ParamInfo(
-            typeCoercerFactory, PythonNames.class, PythonNames.class.getField("isDefaultName"));
+            typeCoercerFactory,
+            new ParamInfo.FieldParamInteractor(
+                PythonNames.class, PythonNames.class.getField("isDefaultName")));
     assertEquals("is_default_name", info.getPythonName());
 
     info =
         new ParamInfo(
-            typeCoercerFactory, PythonNames.class, PythonNames.class.getField("notDefaultName"));
+            typeCoercerFactory,
+            new ParamInfo.FieldParamInteractor(
+                PythonNames.class, PythonNames.class.getField("notDefaultName")));
     assertEquals("not_the_default_name_123", info.getPythonName());
   }
 
@@ -116,7 +124,9 @@ public class ParamInfoTest {
 
     ParamInfo info =
         new ParamInfo(
-            typeCoercerFactory, OptionalString.class, OptionalString.class.getField("field"));
+            typeCoercerFactory,
+            new ParamInfo.FieldParamInteractor(
+                OptionalString.class, OptionalString.class.getField("field")));
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
     assertEquals(Optional.empty(), example.field);
@@ -140,7 +150,9 @@ public class ParamInfoTest {
 
     ParamInfo info =
         new ParamInfo(
-            typeCoercerFactory, DefaultString.class, DefaultString.class.getField("field"));
+            typeCoercerFactory,
+            new ParamInfo.FieldParamInteractor(
+                DefaultString.class, DefaultString.class.getField("field")));
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
     assertEquals("FIELD", example.field);

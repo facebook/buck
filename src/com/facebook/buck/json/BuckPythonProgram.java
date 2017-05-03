@@ -22,6 +22,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
@@ -106,7 +107,7 @@ class BuckPythonProgram implements AutoCloseable {
     LOG.debug("Writing python rules stub to %s.", generatedRoot);
     try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("generated_rules.py"), UTF_8)) {
       out.write("from buck_parser.buck import *\n\n");
-      BuckPyFunction function = new BuckPyFunction(typeCoercerFactory);
+      BuckPyFunction function = new BuckPyFunction(typeCoercerFactory, CoercedTypeCache.INSTANCE);
       for (Description<?> description : descriptions) {
         out.write(
             function.toPythonFunction(

@@ -18,16 +18,20 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.VisibilityPatternParser;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -71,9 +75,12 @@ public class ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param dtoClass The type of the constructor dto to be populated.
+   * @param dtoClass The type of the constructor dto to be populated, either an
+   *     AbstractDescriptionArg or an Immutable.
    * @param declaredDeps A builder to be populated with the declared dependencies.
+   * @return The fully populated DTO.
    */
+  @CheckReturnValue
   public <T> T populate(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -82,22 +89,17 @@ public class ConstructorArgMarshaller {
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException {
-    T dto = CoercedTypeCache.instantiateSkeleton(dtoClass);
-    for (ParamInfo info :
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass).values()) {
-      info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
-      if (info.getName().equals("deps")) {
-        populateDeclaredDeps(info, declaredDeps, dto);
-      }
+    Pair<Object, Function<Object, T>> dtoAndBuild =
+        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
+    ImmutableMap<String, ParamInfo> allParamInfo =
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+    for (ParamInfo info : allParamInfo.values()) {
+      info.setFromParams(cellRoots, filesystem, buildTarget, dtoAndBuild.getFirst(), instance);
     }
-    return dto;
-  }
-
-  private void populateDeclaredDeps(
-      ParamInfo paramInfo, final ImmutableSet.Builder<BuildTarget> declaredDeps, Object dto) {
-
-    if (paramInfo.isDep()) {
-      paramInfo.traverse(
+    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    ParamInfo deps = allParamInfo.get("deps");
+    if (deps != null && deps.isDep()) {
+      deps.traverse(
           object -> {
             if (!(object instanceof BuildTarget)) {
               return;
@@ -106,6 +108,7 @@ public class ConstructorArgMarshaller {
           },
           dto);
     }
+    return dto;
   }
 
   @SuppressWarnings("unchecked")
