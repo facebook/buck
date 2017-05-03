@@ -93,6 +93,10 @@ public class LoggingBuildListener implements BuckEventListener {
 
   @Subscribe
   public void handleFallback(Object event) {
+    // This receives a lot of events. Exit fast if verbose logging is not enabled.
+    if (!LOG.isVerboseEnabled()) {
+      return;
+    }
     if (EXPLICITLY_HANDLED_EVENT_TYPES.contains(event.getClass())) {
       return;
     }
