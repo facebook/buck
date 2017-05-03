@@ -77,7 +77,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
     Builder<HashCode> builder = newVerifyingBuilder(buildRule);
-    ruleKeyFieldLoader.setFields(buildRule, builder);
+    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.INPUT);
     return builder.buildResult(RuleKey::new);
   }
 

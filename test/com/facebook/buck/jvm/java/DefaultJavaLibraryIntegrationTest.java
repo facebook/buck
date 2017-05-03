@@ -135,8 +135,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     int totalArtifactsCount = DirArtifactCacheTestUtil.getAllFilesInCache(dirCache).size();
 
     assertEquals(
-        "There should be two entries (a zip and metadata) in the build cache.",
-        2,
+        "There should be two entries (a zip and metadata) per rule key type (default and input-"
+            + "based) in the build cache.",
+        4,
         totalArtifactsCount);
 
     // Run `buck clean`.
@@ -144,7 +145,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     cleanResult.assertSuccess("Successful clean should exit with 0.");
 
     totalArtifactsCount = getAllFilesInPath(buildCache).size();
-    assertEquals("The build cache should still exist.", 2, totalArtifactsCount);
+    assertEquals("The build cache should still exist.", 4, totalArtifactsCount);
 
     // Corrupt the build cache!
     File artifactZip =

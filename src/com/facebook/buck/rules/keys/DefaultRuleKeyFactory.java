@@ -73,7 +73,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   private <HASH> Builder<HASH> newPopulatedBuilder(
       BuildRule buildRule, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);
-    ruleKeyFieldLoader.setFields(buildRule, builder);
+    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.DEFAULT);
     addDepsToRuleKey(buildRule, builder);
     return builder;
   }

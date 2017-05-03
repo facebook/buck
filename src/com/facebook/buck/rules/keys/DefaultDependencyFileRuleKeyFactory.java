@@ -93,8 +93,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
             rule.getCoveredByDepFilePredicate(),
             rule.getExistenceOfInterestPredicate(),
             RuleKeyBuilder.createDefaultHasher());
-    ruleKeyFieldLoader.setFields(rule, builder);
-    builder.setReflectively("buck.key_type", keyType);
+    ruleKeyFieldLoader.setFields(builder, rule, keyType.toRuleKeyType());
     Result<RuleKey> result = builder.buildResult(RuleKey::new);
     return RuleKeyAndInputs.of(result.getRuleKey(), result.getSourcePaths());
   }
@@ -286,7 +285,18 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   }
 
   private enum KeyType {
-    DEP_FILE,
-    MANIFEST
+    DEP_FILE(RuleKeyType.DEP_FILE),
+    MANIFEST(RuleKeyType.MANIFEST),
+    ;
+
+    private final RuleKeyType ruleKeyType;
+
+    KeyType(RuleKeyType ruleKeyType) {
+      this.ruleKeyType = ruleKeyType;
+    }
+
+    public RuleKeyType toRuleKeyType() {
+      return ruleKeyType;
+    }
   }
 }

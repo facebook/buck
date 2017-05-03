@@ -71,7 +71,7 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
     Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
-    ruleKeyFieldLoader.setFields(buildRule, builder);
+    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.CONTENT_AGNOSTIC);
     return builder.build(RuleKey::new);
   }
 
