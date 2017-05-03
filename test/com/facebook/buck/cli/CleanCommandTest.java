@@ -26,7 +26,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.ide.intellij.IjAndroidHelper;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -88,24 +87,6 @@ public class CleanCommandTest extends EasyMockSupport {
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
-  }
-
-  @Test
-  public void testCleanCommandWithProjectArgument()
-      throws CmdLineException, IOException, InterruptedException {
-    CleanCommand cleanCommand = createCommandFromArgs("--project");
-    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
-
-    // Set up mocks.
-    projectFilesystem.mkdirs(IjAndroidHelper.getAndroidGenPath(projectFilesystem));
-    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getAnnotationDir());
-
-    // Simulate `buck clean --project`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
-
-    assertFalse(projectFilesystem.exists(IjAndroidHelper.getAndroidGenPath(projectFilesystem)));
-    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getAnnotationDir()));
   }
 
   @Test

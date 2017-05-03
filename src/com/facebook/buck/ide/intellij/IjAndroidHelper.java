@@ -36,10 +36,6 @@ public final class IjAndroidHelper {
         filesystem.getBuckPaths().getBuckOut().resolve("android"));
   }
 
-  public static Path getAndroidGenPath(ProjectFilesystem filesystem) {
-    return filesystem.getBuckPaths().getBuckOut().resolve("android");
-  }
-
   public static String getAndroidApkDir(ProjectFilesystem filesystem) {
     return filesystem.getBuckPaths().getGenDir().toString();
   }
