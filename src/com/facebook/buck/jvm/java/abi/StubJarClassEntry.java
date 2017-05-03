@@ -46,7 +46,7 @@ class StubJarClassEntry extends StubJarEntry {
 
   @Override
   public void write(StubJarWriter writer) throws IOException {
-    writer.writeClass(path, stub);
+    writer.writeClass(path, classWriter -> stub.accept(new AbiFilteringClassVisitor(classWriter)));
   }
 
   private static boolean isAnonymousOrLocalClass(ClassNode node) {

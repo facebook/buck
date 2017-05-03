@@ -19,13 +19,14 @@ package com.facebook.buck.jvm.java.abi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import org.objectweb.asm.tree.ClassNode;
+import java.util.function.Consumer;
+import org.objectweb.asm.ClassWriter;
 
 /** An interface for writing to stub jars. */
 interface StubJarWriter extends AutoCloseable {
   void writeResource(Path relativePath, InputStream resourceContents) throws IOException;
 
-  void writeClass(Path relativePath, ClassNode stub) throws IOException;
+  void writeClass(Path relativePath, Consumer<ClassWriter> writer) throws IOException;
 
   @Override
   void close() throws IOException;

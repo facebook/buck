@@ -21,13 +21,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteSource;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
 
 /** A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}. */
 class FilesystemStubJarWriter implements StubJarWriter {
@@ -53,16 +53,12 @@ class FilesystemStubJarWriter implements StubJarWriter {
   }
 
   @Override
-  public void writeClass(Path relativePath, ClassNode stub) throws IOException {
-    try (InputStream contents = getStubClassBytes(stub).openStream()) {
+  public void writeClass(Path relativePath, Consumer<ClassWriter> stubber) throws IOException {
+    ClassWriter writer = new ClassWriter(0);
+    stubber.accept(writer);
+    try (InputStream contents = new ByteArrayInputStream(writer.toByteArray())) {
       jar.writeEntry(MorePaths.pathWithUnixSeparators(relativePath), contents);
     }
-  }
-
-  private static ByteSource getStubClassBytes(ClassNode node) {
-    ClassWriter writer = new ClassWriter(0);
-    node.accept(new AbiFilteringClassVisitor(writer));
-    return ByteSource.wrap(writer.toByteArray());
   }
 
   @Override

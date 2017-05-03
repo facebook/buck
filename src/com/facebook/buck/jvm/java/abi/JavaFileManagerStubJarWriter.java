@@ -16,17 +16,18 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
 
 public class JavaFileManagerStubJarWriter implements StubJarWriter {
   private final JavaFileManager fileManager;
@@ -41,17 +42,20 @@ public class JavaFileManagerStubJarWriter implements StubJarWriter {
   }
 
   @Override
-  public void writeClass(Path relativePath, ClassNode stub) throws IOException {
+  public void writeClass(Path relativePath, Consumer<ClassWriter> stubber) throws IOException {
+    String relativePathString = MorePaths.pathWithUnixSeparators(relativePath);
+    String className =
+        relativePathString
+            .replace('/', '.')
+            .substring(0, relativePathString.length() - 6); // Strip .class off the end
+
     ClassWriter writer = new ClassWriter(0);
-    stub.accept(new AbiFilteringClassVisitor(writer));
+    stubber.accept(writer);
     try (InputStream inputStream = new ByteArrayInputStream(writer.toByteArray());
         OutputStream outputStream =
             fileManager
                 .getJavaFileForOutput(
-                    StandardLocation.CLASS_OUTPUT,
-                    stub.name.replace('/', '.'),
-                    JavaFileObject.Kind.CLASS,
-                    null)
+                    StandardLocation.CLASS_OUTPUT, className, JavaFileObject.Kind.CLASS, null)
                 .openOutputStream()) {
       ByteStreams.copy(inputStream, outputStream);
     }
