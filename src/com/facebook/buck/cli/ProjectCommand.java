@@ -74,9 +74,7 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -98,6 +96,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.kohsuke.args4j.CmdLineException;
@@ -635,13 +634,14 @@ public class ProjectCommand extends BuildCommand {
 
   private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
       final TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
-    return FluentIterable.from(buildTargets)
+    return buildTargets
+        .stream()
         .filter(
             input -> {
               TargetNode<?, ?> targetNode = targetGraph.get(input);
               return targetNode != null && isTargetWithAnnotations(targetNode);
             })
-        .toSet();
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   private void addBuildFailureError(CommandRunnerParams params) {
@@ -1022,10 +1022,12 @@ public class ProjectCommand extends BuildCommand {
   @VisibleForTesting
   static ImmutableSet<BuildTarget> getRootsFromPredicate(
       TargetGraph projectGraph, Predicate<TargetNode<?, ?>> rootsPredicate) {
-    return FluentIterable.from(projectGraph.getNodes())
+    return projectGraph
+        .getNodes()
+        .stream()
         .filter(rootsPredicate)
-        .transform(TargetNode::getBuildTarget)
-        .toSet();
+        .map(TargetNode::getBuildTarget)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   private TargetGraph getProjectGraphForIde(
