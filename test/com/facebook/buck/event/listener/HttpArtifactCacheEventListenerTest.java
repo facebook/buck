@@ -62,8 +62,7 @@ public class HttpArtifactCacheEventListenerTest {
     String errorMsg = "My super cool error message!!!";
 
     HttpArtifactCacheEvent.Started startedEvent =
-        HttpArtifactCacheEvent.newFetchStartedEvent(new RuleKey("1234"));
-    startedEvent.configure(-1, -1, -1, -1, null);
+        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(new RuleKey("1234"));
     Finished.Builder builder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
     builder.getFetchBuilder().setFetchResult(CacheResult.hit("http")).setErrorMessage(errorMsg);
     Finished event = builder.build();

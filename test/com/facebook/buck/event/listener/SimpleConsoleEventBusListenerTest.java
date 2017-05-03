@@ -16,9 +16,6 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -137,13 +134,13 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(started, 600L, TimeUnit.MILLISECONDS, threadId));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
-        postStoreScheduled(eventBus, threadId, TARGET_ONE, 700L);
+        ArtifactCacheTestUtils.postStoreScheduled(eventBus, threadId, TARGET_ONE, 700L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
-        postStoreScheduled(eventBus, threadId, TARGET_TWO, 700L);
+        ArtifactCacheTestUtils.postStoreScheduled(eventBus, threadId, TARGET_TWO, 700L);
 
     HttpArtifactCacheEvent.Started storeStartedOne =
-        postStoreStarted(eventBus, threadId, 710L, storeScheduledOne);
+        ArtifactCacheTestUtils.postStoreStarted(eventBus, threadId, 710L, storeScheduledOne);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -195,13 +192,15 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
 
     long artifactSizeOne = SizeUnit.MEGABYTES.toBytes(1.5);
-    postStoreFinished(eventBus, threadId, artifactSizeOne, 5015L, true, storeStartedOne);
+    ArtifactCacheTestUtils.postStoreFinished(
+        eventBus, threadId, artifactSizeOne, 5015L, true, storeStartedOne);
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
-        postStoreStarted(eventBus, threadId, 5020L, storeScheduledTwo);
+        ArtifactCacheTestUtils.postStoreStarted(eventBus, threadId, 5020L, storeScheduledTwo);
 
     long artifactSizeTwo = 600;
-    postStoreFinished(eventBus, threadId, artifactSizeTwo, 5020L, false, storeStartedTwo);
+    ArtifactCacheTestUtils.postStoreFinished(
+        eventBus, threadId, artifactSizeTwo, 5020L, false, storeStartedTwo);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

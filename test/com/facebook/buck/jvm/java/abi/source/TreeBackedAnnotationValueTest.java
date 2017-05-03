@@ -56,6 +56,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("true", defaultValue.toString());
   }
 
   @Test
@@ -74,6 +75,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("(byte)0x2a", defaultValue.toString());
   }
 
   @Test
@@ -92,6 +94,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("'x'", defaultValue.toString());
   }
 
   @Test
@@ -110,6 +113,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("42", defaultValue.toString());
   }
 
   @Test
@@ -128,6 +132,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("42", defaultValue.toString());
   }
 
   @Test
@@ -146,6 +151,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("42L", defaultValue.toString());
   }
 
   @Test
@@ -164,6 +170,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("42.0f", defaultValue.toString());
   }
 
   @Test
@@ -182,6 +189,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("42.0", defaultValue.toString());
   }
 
   @Test
@@ -201,6 +209,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("\"42\"", defaultValue.toString());
   }
 
   @Test
@@ -223,6 +232,8 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+
+    assertEquals("{'4', '2'}", defaultValue.toString());
   }
 
   @Test
@@ -249,6 +260,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("java.lang.annotation.RetentionPolicy.SOURCE", defaultValue.toString());
   }
 
   @Test
@@ -275,6 +287,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("FooEnum.Bar", defaultValue.toString());
   }
 
   @Test
@@ -294,6 +307,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("int.class", defaultValue.toString());
   }
 
   @Test
@@ -313,6 +327,28 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("Foo.class", defaultValue.toString());
+  }
+
+  @Test
+  public void testClassValueBuiltinType() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join("public @interface Foo {", "  Class value() default String.class;", "}"));
+
+    ExecutableElement method = findMethod("value", elements.getTypeElement("Foo"));
+    AnnotationValue defaultValue = method.getDefaultValue();
+    defaultValue.accept(
+        new TestVisitor() {
+          @Override
+          public Void visitType(TypeMirror t, Void aVoid) {
+            assertSameType(elements.getTypeElement("java.lang.String").asType(), t);
+            assertSame(t, defaultValue.getValue());
+            return null;
+          }
+        },
+        null);
+    assertEquals("java.lang.String.class", defaultValue.toString());
   }
 
   @Test
@@ -340,6 +376,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("{int.class, Foo.class}", defaultValue.toString());
   }
 
   @Test
@@ -364,6 +401,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("@FooHelper", defaultValue.toString());
   }
 
   @Test
@@ -394,6 +432,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("@FooHelper(42)", defaultValue.toString());
   }
 
   @Test
@@ -430,6 +469,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
           }
         },
         null);
+    assertEquals("@FooHelper(number=42, string=\"42\")", defaultValue.toString());
   }
 
   private static class TestVisitor extends SimpleAnnotationValueVisitor8<Void, Void> {

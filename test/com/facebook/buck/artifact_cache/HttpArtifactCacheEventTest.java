@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
@@ -34,40 +34,20 @@ public class HttpArtifactCacheEventTest {
 
   @Test
   public void storeDataContainsRuleKeys() throws IOException {
-    HttpArtifactCacheEvent.Finished finishedEvent = createStoreBuilder(TEST_RULE_KEYS).build();
-    configureEvent(finishedEvent);
-    Assert.assertEquals(TEST_RULE_KEYS, finishedEvent.getStoreData().getRuleKeys());
+    HttpArtifactCacheEvent.Started started =
+        ArtifactCacheTestUtils.newUploadConfiguredStartedEvent(
+            new BuildId("monkey"), Optional.of("target"), TEST_RULE_KEYS);
+    HttpArtifactCacheEvent.Finished finished =
+        ArtifactCacheTestUtils.newFinishedEvent(started, true);
+    Assert.assertEquals(TEST_RULE_KEYS, finished.getStoreData().getRuleKeys());
   }
 
   @Test
   public void fetchDataContainsRuleKey() throws IOException {
-    HttpArtifactCacheEvent.Finished finishedEvent = createFetchBuilder(TEST_RULE_KEY).build();
-    configureEvent(finishedEvent);
-    Assert.assertEquals(TEST_RULE_KEY, finishedEvent.getFetchData().getRequestedRuleKey());
-  }
-
-  private static HttpArtifactCacheEvent.Finished.Builder createStoreBuilder(
-      ImmutableSet<RuleKey> ruleKeys) {
-
-    HttpArtifactCacheEvent.Scheduled scheduledEvent =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("target"), ruleKeys);
-    HttpArtifactCacheEvent.Started startedEvent =
-        HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvent);
-    configureEvent(startedEvent);
-    return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-  }
-
-  private static HttpArtifactCacheEvent.Finished.Builder createFetchBuilder(RuleKey ruleKey) {
-    HttpArtifactCacheEvent.Started startedEvent =
-        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
-    configureEvent(startedEvent);
-    HttpArtifactCacheEvent.Finished.Builder builder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    builder.getFetchBuilder().setFetchResult(CacheResult.hit("super source"));
-    return builder;
-  }
-
-  private static void configureEvent(AbstractBuckEvent event) {
-    event.configure(-1, -1, -1, -1, new BuildId());
+    HttpArtifactCacheEvent.Finished finished =
+        ArtifactCacheTestUtils.newFetchFinishedEvent(
+            ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(TEST_RULE_KEY),
+            CacheResult.hit("super source"));
+    Assert.assertEquals(TEST_RULE_KEY, finished.getFetchData().getRequestedRuleKey());
   }
 }

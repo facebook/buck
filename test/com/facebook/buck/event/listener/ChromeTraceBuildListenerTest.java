@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -216,13 +215,11 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(buildEventStarted);
 
     HttpArtifactCacheEvent.Started artifactCacheEventStarted =
-        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+        ArtifactCacheTestUtils.newFetchStartedEvent(ruleKey);
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
-        HttpArtifactCacheEvent.newFinishedEventBuilder(artifactCacheEventStarted)
-            .setFetchDataBuilder(
-                HttpArtifactCacheEventFetchData.builder().setFetchResult(CacheResult.hit("http")))
-            .build());
+        ArtifactCacheTestUtils.newFetchFinishedEvent(
+            artifactCacheEventStarted, CacheResult.hit("http")));
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
@@ -248,17 +245,12 @@ public class ChromeTraceBuildListenerTest {
             target, annotationProcessorName, operation, annotationRound, isLastRound);
     eventBus.post(annotationProcessingEventStarted);
 
-    HttpArtifactCacheEvent.Scheduled httpScheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("TARGET_ONE"), ImmutableSet.of(ruleKey));
     HttpArtifactCacheEvent.Started httpStarted =
-        HttpArtifactCacheEvent.newStoreStartedEvent(httpScheduled);
-
+        ArtifactCacheTestUtils.newUploadStartedEvent(
+            new BuildId("horse"), Optional.of("TARGET_ONE"), ImmutableSet.of(ruleKey));
     eventBus.post(httpStarted);
-
     HttpArtifactCacheEvent.Finished httpFinished =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(httpStarted).build();
-
+        ArtifactCacheTestUtils.newFinishedEvent(httpStarted, false);
     eventBus.post(httpFinished);
 
     final CompilerPluginDurationEvent.Started processingPartOneStarted =

@@ -29,9 +29,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.type.DeclaredType;
 
 class TreeBackedAnnotationMirror implements AnnotationMirror {
@@ -96,5 +98,34 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
       elementValues = Collections.unmodifiableMap(result);
     }
     return elementValues;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder result = new StringBuilder();
+    result.append("@");
+    result.append(getAnnotationType().toString());
+    Map<ExecutableElement, TreeBackedAnnotationValue> elementValues = getElementValues();
+    if (!elementValues.isEmpty()) {
+      result.append("(");
+      result.append(
+          elementValues
+              .entrySet()
+              .stream()
+              .map(
+                  entry -> {
+                    Name key = entry.getKey().getSimpleName();
+                    TreeBackedAnnotationValue value = entry.getValue();
+                    if (elementValues.size() == 1 && key.contentEquals("value")) {
+                      return value.toString();
+                    } else {
+                      return String.format("%s=%s", key, value);
+                    }
+                  })
+              .collect(Collectors.joining(", ")));
+      result.append(")");
+    }
+
+    return result.toString();
   }
 }
