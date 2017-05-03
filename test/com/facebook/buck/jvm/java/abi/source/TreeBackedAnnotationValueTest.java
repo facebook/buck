@@ -316,6 +316,26 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
   }
 
   @Test
+  public void testClassValueBuiltinType() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join("public @interface Foo {", "  Class value() default String.class;", "}"));
+
+    ExecutableElement method = findMethod("value", elements.getTypeElement("Foo"));
+    AnnotationValue defaultValue = method.getDefaultValue();
+    defaultValue.accept(
+        new TestVisitor() {
+          @Override
+          public Void visitType(TypeMirror t, Void aVoid) {
+            assertSameType(elements.getTypeElement("java.lang.String").asType(), t);
+            assertSame(t, defaultValue.getValue());
+            return null;
+          }
+        },
+        null);
+  }
+
+  @Test
   public void testClassArrayValue() throws IOException {
     compile(
         Joiner.on('\n')

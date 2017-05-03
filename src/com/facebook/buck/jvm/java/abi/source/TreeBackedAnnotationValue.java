@@ -23,6 +23,7 @@ import com.sun.source.util.TreePath;
 import java.util.List;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.AnnotationValueVisitor;
+import javax.lang.model.type.TypeMirror;
 
 class TreeBackedAnnotationValue implements AnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
@@ -65,8 +66,8 @@ class TreeBackedAnnotationValue implements AnnotationValue {
 
     if (value instanceof TreeBackedVariableElement) {
       return v.visitEnumConstant((TreeBackedVariableElement) value, p);
-    } else if (value instanceof StandaloneTypeMirror) {
-      return v.visitType((StandaloneTypeMirror) value, p);
+    } else if (value instanceof TypeMirror) {
+      return v.visitType((TypeMirror) value, p);
     } else if (value instanceof TreeBackedAnnotationMirror) {
       return v.visitAnnotation((TreeBackedAnnotationMirror) value, p);
     } else if (value instanceof List) {
