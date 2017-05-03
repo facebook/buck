@@ -118,7 +118,14 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .build();
   }
 
-  public AbiGenerationMode getAbiGenerationMode() {
+  public boolean shouldGenerateAbisFromSource() {
+    AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
+
+    return abiGenerationMode == AbiGenerationMode.SOURCE
+        || abiGenerationMode == AbiGenerationMode.SOURCE_WITH_DEPS;
+  }
+
+  private AbiGenerationMode getAbiGenerationMode() {
     return delegate
         .getEnum(SECTION, "abi_generation_mode", AbiGenerationMode.class)
         .orElse(AbiGenerationMode.CLASS);
@@ -191,6 +198,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
    * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
   public SourceAbiVerificationMode getSourceAbiVerificationMode() {
+    if (!shouldGenerateAbisFromSource()) {
+      return SourceAbiVerificationMode.OFF;
+    }
+
     return delegate
         .getEnum(SECTION, "source_abi_verification_mode", SourceAbiVerificationMode.class)
         // TODO(jkeljo): Flip the default to OFF when the feature is considered debugged

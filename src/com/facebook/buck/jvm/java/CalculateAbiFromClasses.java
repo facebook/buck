@@ -44,13 +44,23 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
+  /**
+   * Strip out things that are intentionally not included in ABI jars generated from source, so that
+   * we can still detect bugs by binary comparison.
+   */
+  @AddToRuleKey private final boolean sourceAbiCompatible;
+
   private final Path outputPath;
   private final JarContentsSupplier abiJarContentsSupplier;
 
   public CalculateAbiFromClasses(
-      BuildRuleParams buildRuleParams, SourcePathResolver resolver, SourcePath binaryJar) {
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      SourcePath binaryJar,
+      boolean sourceAbiCompatible) {
     super(buildRuleParams);
     this.binaryJar = binaryJar;
+    this.sourceAbiCompatible = sourceAbiCompatible;
     this.outputPath = getAbiJarPath();
     this.abiJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
   }
@@ -60,6 +70,15 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
       SourcePathRuleFinder ruleFinder,
       BuildRuleParams libraryParams,
       SourcePath library) {
+    return of(target, ruleFinder, libraryParams, library, false);
+  }
+
+  public static CalculateAbiFromClasses of(
+      BuildTarget target,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleParams libraryParams,
+      SourcePath library,
+      boolean sourceAbiCompatible) {
     return new CalculateAbiFromClasses(
         libraryParams
             .withBuildTarget(target)
@@ -68,7 +87,8 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
                     ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library))),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
         new SourcePathResolver(ruleFinder),
-        library);
+        library,
+        sourceAbiCompatible);
   }
 
   private Path getAbiJarPath() {
@@ -86,7 +106,8 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
             buildableContext,
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(binaryJar),
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            sourceAbiCompatible));
   }
 
   @Override

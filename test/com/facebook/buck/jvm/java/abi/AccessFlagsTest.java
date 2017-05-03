@@ -211,8 +211,13 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
         "enum Foo { Item }", "Foo", Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL);
   }
 
+  /**
+   * The {@link javax.lang.model.element.TypeElement} for an abstract Enum will *sometimes* report
+   * that the enum is abstract, but not in all the cases where ACC_ABSTRACT needs to appear in the
+   * class file. For this and other reasons we just never use the flag.
+   */
   @Test
-  public void testEnumAbstractFlagIsInferred() throws IOException {
+  public void testEnumAbstractFlagIsRemoved() throws IOException {
     testTypeFlags(
         Joiner.on('\n')
             .join(
@@ -223,7 +228,7 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
                 "  abstract int get();",
                 "}"),
         "Foo",
-        Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_ABSTRACT);
+        Opcodes.ACC_ENUM | Opcodes.ACC_SUPER);
   }
 
   @Test

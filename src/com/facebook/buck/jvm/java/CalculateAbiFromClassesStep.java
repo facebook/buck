@@ -31,23 +31,26 @@ public class CalculateAbiFromClassesStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path binaryJar;
   private final Path abiJar;
+  private final boolean sourceAbiCompatible;
 
   public CalculateAbiFromClassesStep(
       BuildableContext buildableContext,
       ProjectFilesystem filesystem,
       Path binaryJar,
-      Path abiJar) {
+      Path abiJar,
+      boolean sourceAbiCompatible) {
     this.buildableContext = buildableContext;
     this.filesystem = filesystem;
     this.binaryJar = binaryJar;
     this.abiJar = abiJar;
+    this.sourceAbiCompatible = sourceAbiCompatible;
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
       Path binJar = filesystem.resolve(binaryJar);
-      new StubJar(binJar).writeTo(filesystem, abiJar);
+      new StubJar(binJar).setSourceAbiCompatible(sourceAbiCompatible).writeTo(filesystem, abiJar);
       buildableContext.recordArtifact(abiJar);
     } catch (IOException | IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);

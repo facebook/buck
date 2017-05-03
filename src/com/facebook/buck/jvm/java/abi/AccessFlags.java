@@ -49,14 +49,11 @@ public final class AccessFlags {
         result = result | Opcodes.ACC_SUPER; // JVMS 4.1
         result = result | Opcodes.ACC_ENUM;
 
-        // Enums have this lovely property that they can have abstract members without themselves
-        // having to be declared abstract
-        for (Element enclosed : typeElement.getEnclosedElements()) {
-          if (enclosed.getModifiers().contains(Modifier.ABSTRACT)) {
-            result = result | Opcodes.ACC_ABSTRACT;
-            break;
-          }
-        }
+        // Enums have this lovely property that you can't declare them abstract in source, even
+        // if they have abstract methods or incompletely implemented interfaces, yet the class
+        // file will have ACC_ABSTRACT in that case. Because it's a pain to figure out if an
+        // enum is abstract (and impossible in the no-deps case), and you can't instantiate or
+        // subclass one directly anyway, we just leave the flag off.
         break;
       case INTERFACE:
         // No ACC_SUPER here per JVMS 4.1

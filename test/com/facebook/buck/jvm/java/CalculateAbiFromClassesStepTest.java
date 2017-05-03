@@ -54,7 +54,8 @@ public class CalculateAbiFromClassesStepTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     FakeBuildableContext context = new FakeBuildableContext();
-    new CalculateAbiFromClassesStep(context, filesystem, binJar, abiJar).execute(executionContext);
+    new CalculateAbiFromClassesStep(context, filesystem, binJar, abiJar, false)
+        .execute(executionContext);
 
     String seenHash = filesystem.computeSha1(Paths.get("abi.jar")).getHash();
 

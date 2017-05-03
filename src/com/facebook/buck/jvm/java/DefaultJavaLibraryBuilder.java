@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -295,10 +294,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean sourceAbisEnabled() {
-      return EnumSet.of(
-              JavaBuckConfig.AbiGenerationMode.SOURCE,
-              JavaBuckConfig.AbiGenerationMode.SOURCE_WITH_DEPS)
-          .contains(Preconditions.checkNotNull(javaBuckConfig).getAbiGenerationMode());
+      return javaBuckConfig != null && javaBuckConfig.shouldGenerateAbisFromSource();
     }
 
     private boolean argsAllowSourceAbis() {
@@ -347,7 +343,10 @@ public class DefaultJavaLibraryBuilder {
           abiTarget,
           ruleFinder,
           params,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
+          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()),
+          javaBuckConfig != null
+              && javaBuckConfig.getSourceAbiVerificationMode()
+                  != JavaBuckConfig.SourceAbiVerificationMode.OFF);
     }
 
     protected final BuildRuleParams getFinalParams() throws NoSuchBuildTargetException {

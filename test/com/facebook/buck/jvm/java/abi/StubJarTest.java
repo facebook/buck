@@ -1207,24 +1207,63 @@ public class StubJarTest {
   }
 
   @Test
-  public void stubsAbstractEnums() throws IOException {
+  public void stubsExplicitlyAbstractEnums() throws IOException {
     tester
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
             "public enum A {",
             "  Value1 {",
-            "    public int get() { return 1; }",
+            "    @Override",
+            "    public void run() { }",
             "  };",
-            "  public abstract int get();",
+            "  public abstract void run();",
             "}")
-        .addExpectedStub(
+        .addExpectedFullAbi(
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
             "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            // abstract flag is removed in the stub:
             "public abstract enum com/example/buck/A extends java/lang/Enum  {",
+            "",
+            "  // access flags 0x4008",
+            "  static enum INNERCLASS com/example/buck/A$1 null null",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x101A",
+            "  private final static synthetic [Lcom/example/buck/A; $VALUES",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x2",
+            "  // signature ()V",
+            "  // declaration: void <init>()",
+            "  private <init>(Ljava/lang/String;I)V",
+            "",
+            "  // access flags 0x401",
+            "  public abstract run()V",
+            "",
+            "  // access flags 0x1000",
+            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4021",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
+            "public enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "",
             "  // access flags 0x4019",
@@ -1237,7 +1276,78 @@ public class StubJarTest {
             "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
             "",
             "  // access flags 0x401",
-            "  public abstract get()I",
+            "  public abstract run()V",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Ljava/lang/String;I)V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void stubsImplicitlyAbstractEnums() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public enum A implements Runnable {",
+            "  Value1 {",
+            "    @Override",
+            "    public void run() { }",
+            "  };",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4421",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/lang/Runnable;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
+            // abstract flag is removed in the stub:
+            "public abstract enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
+            "",
+            "  // access flags 0x4008",
+            "  static enum INNERCLASS com/example/buck/A$1 null null",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x101A",
+            "  private final static synthetic [Lcom/example/buck/A; $VALUES",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x2",
+            "  // signature ()V",
+            "  // declaration: void <init>()",
+            "  private <init>(Ljava/lang/String;I)V",
+            "",
+            "  // access flags 0x1000",
+            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4021",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/lang/Runnable;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
+            "public enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
+            "",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
             "",
             "  // access flags 0x2",
             "  private <init>(Ljava/lang/String;I)V",
@@ -1466,6 +1576,113 @@ public class StubJarTest {
             "",
             "  // access flags 0x4019",
             "  public final static enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void stubsAbstractInnerEnums() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public enum B implements Runnable {",
+            "    Value {",
+            "      @Override",
+            "      public void run() {}",
+            "    }",
+            "  }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A$B",
+            "// class version 52.0 (52)",
+            "// access flags 0x4421",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
+            "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
+            // abstract flag is removed in the stub:
+            "public abstract enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
+            "",
+            "  // access flags 0x4409",
+            // abstract flag is removed in the stub:
+            "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x4008",
+            "  static enum INNERCLASS com/example/buck/A$B$1 null null",
+            "  // access flags 0x1008",
+            "  static synthetic INNERCLASS com/example/buck/A$1 null null",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A$B; Value",
+            "",
+            "  // access flags 0x101A",
+            "  private final static synthetic [Lcom/example/buck/A$B; $VALUES",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A$B;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A$B;",
+            "",
+            "  // access flags 0x2",
+            "  // signature ()V",
+            "  // declaration: void <init>()",
+            "  private <init>(Ljava/lang/String;I)V",
+            "",
+            "  // access flags 0x1000",
+            "  synthetic <init>(Ljava/lang/String;ILcom/example/buck/A$1;)V",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$B",
+            "// class version 52.0 (52)",
+            "// access flags 0x4021",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
+            "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
+            "public enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
+            "",
+            "  // access flags 0x4009",
+            "  public static enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A$B; Value",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A$B;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A$B;",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Ljava/lang/String;I)V",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1008",
+            "  static synthetic INNERCLASS com/example/buck/A$1 null null",
+            "  // access flags 0x4409",
+            // abstract flag is removed in the stub:
+            "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x4009",
+            "  public static enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -2566,7 +2783,7 @@ public class StubJarTest {
 
   private Path createStubJar(Path fullJar) throws IOException {
     Path stubJar = fullJar.getParent().resolve("stub.jar");
-    new StubJar(fullJar).writeTo(filesystem, stubJar);
+    new StubJar(fullJar).setSourceAbiCompatible(true).writeTo(filesystem, stubJar);
     return stubJar;
   }
 

@@ -18,7 +18,10 @@ package com.facebook.buck.jvm.java.abi;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
@@ -26,6 +29,7 @@ import org.objectweb.asm.tree.InnerClassNode;
 class StubJarClassEntry extends StubJarEntry {
   private final Path path;
   private final ClassNode stub;
+  private boolean sourceAbiCompatible;
 
   @Nullable
   public static StubJarClassEntry of(LibraryReader input, Path path) throws IOException {
@@ -44,9 +48,22 @@ class StubJarClassEntry extends StubJarEntry {
     this.stub = stub;
   }
 
+  /**
+   * Filters the stub class through {@link SourceAbiCompatibleVisitor}. See that class for details.
+   */
+  public void setSourceAbiCompatible(boolean sourceAbiCompatible) {
+    this.sourceAbiCompatible = sourceAbiCompatible;
+  }
+
   @Override
   public void write(StubJarWriter writer) throws IOException {
-    writer.writeClass(path, classWriter -> stub.accept(new AbiFilteringClassVisitor(classWriter)));
+    Function<ClassWriter, ? extends ClassVisitor> getFinalVisitor =
+        sourceAbiCompatible ? SourceAbiCompatibleVisitor::new : Function.identity();
+
+    writer.writeClass(
+        path,
+        classWriter ->
+            stub.accept(new AbiFilteringClassVisitor(getFinalVisitor.apply(classWriter))));
   }
 
   private static boolean isAnonymousOrLocalClass(ClassNode node) {

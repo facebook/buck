@@ -31,6 +31,7 @@ import javax.tools.JavaFileManager;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
+  private boolean sourceAbiCompatible;
 
   public StubJar(Path toMirror) {
     libraryReaderSupplier = () -> LibraryReader.of(toMirror);
@@ -43,6 +44,14 @@ public class StubJar {
   public StubJar(
       SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
     libraryReaderSupplier = () -> LibraryReader.of(targetVersion, elements, topLevelTypes);
+  }
+
+  /**
+   * Filters the stub jar through {@link SourceAbiCompatibleVisitor}. See that class for details.
+   */
+  public StubJar setSourceAbiCompatible(boolean sourceAbiCompatible) {
+    this.sourceAbiCompatible = sourceAbiCompatible;
+    return this;
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
@@ -70,6 +79,8 @@ public class StubJar {
         StubJarEntry entry = StubJarEntry.of(input, path);
         if (entry == null) {
           continue;
+        } else if (entry instanceof StubJarClassEntry) {
+          ((StubJarClassEntry) entry).setSourceAbiCompatible(sourceAbiCompatible);
         }
         entry.write(writer);
       }
