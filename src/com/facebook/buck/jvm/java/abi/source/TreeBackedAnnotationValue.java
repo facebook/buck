@@ -21,9 +21,13 @@ import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.AnnotationValueVisitor;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 class TreeBackedAnnotationValue implements AnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
@@ -56,7 +60,7 @@ class TreeBackedAnnotationValue implements AnnotationValue {
   }
 
   @Override
-  public <R, P> R accept(AnnotationValueVisitor<R, P> v, P p) {
+  public <R, P> R accept(AnnotationValueVisitor<R, P> v, @Nullable P p) {
     Object underlyingValue = underlyingAnnotationValue.getValue();
     Object value = getValue();
 
@@ -77,5 +81,61 @@ class TreeBackedAnnotationValue implements AnnotationValue {
     } else {
       throw new IllegalStateException(String.format("Unexpected annotation value: %s", value));
     }
+  }
+
+  @Override
+  public String toString() {
+    return accept(
+        new SimpleAnnotationValueVisitor8<String, Void>() {
+          @Override
+          protected String defaultAction(Object o, Void aVoid) {
+            return o.toString();
+          }
+
+          @Override
+          public String visitByte(byte b, Void aVoid) {
+            return String.format("(byte)0x%x", b);
+          }
+
+          @Override
+          public String visitChar(char c, Void aVoid) {
+            return String.format("'%c'", c);
+          }
+
+          @Override
+          public String visitString(String s, Void aVoid) {
+            return String.format("\"%s\"", s);
+          }
+
+          @Override
+          public String visitLong(long l, Void aVoid) {
+            return String.format("%dL", l);
+          }
+
+          @Override
+          public String visitFloat(float f, Void aVoid) {
+            return String.format("%.1ff", f);
+          }
+
+          @Override
+          public String visitEnumConstant(VariableElement c, Void aVoid) {
+            TypeElement enumType = (TypeElement) c.getEnclosingElement();
+
+            return String.format("%s.%s", enumType.getQualifiedName(), c.getSimpleName());
+          }
+
+          @Override
+          public String visitType(TypeMirror t, Void aVoid) {
+            return String.format("%s.class", t.toString());
+          }
+
+          @Override
+          public String visitArray(List<? extends AnnotationValue> vals, Void aVoid) {
+            return String.format(
+                "{%s}",
+                vals.stream().map(val -> val.accept(this, null)).collect(Collectors.joining(", ")));
+          }
+        },
+        null);
   }
 }
