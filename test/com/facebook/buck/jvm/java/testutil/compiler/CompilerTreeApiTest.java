@@ -42,6 +42,9 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 
@@ -177,6 +180,24 @@ public abstract class CompilerTreeApiTest {
     if (!types.isSameType(expected, actual)) {
       fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
     }
+  }
+
+  protected Matcher<TypeMirror> sameType(TypeMirror expected) {
+    return new BaseMatcher<TypeMirror>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText(expected.toString());
+      }
+
+      @Override
+      public boolean matches(Object o) {
+        if (o instanceof TypeMirror) {
+          return types.isSameType(expected, (TypeMirror) o);
+        }
+
+        return false;
+      }
+    };
   }
 
   protected void assertNotSameType(TypeMirror expected, TypeMirror actual) {
