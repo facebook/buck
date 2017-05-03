@@ -1,0 +1,9 @@
+java_library(
+    name = "labels",
+    srcs = [
+        "Test.java",
+    ],
+    labels = [
+        "ignore_in_intellij",
+    ],
+)

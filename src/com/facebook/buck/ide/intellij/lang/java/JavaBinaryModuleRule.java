@@ -26,8 +26,6 @@ import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -57,10 +55,9 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
     if (intellijPluginLabels.isEmpty()) {
       return;
     }
-    ImmutableSortedSet<String> labels = target.getConstructorArg().labels;
     Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
     if (metaInfDirectory.isPresent()
-        && !Sets.intersection(labels, intellijPluginLabels).isEmpty()) {
+        && target.getConstructorArg().labelsContainsAnyOf(intellijPluginLabels)) {
       context.setMetaInfDirectory(metaInfDirectory.get());
     }
   }
@@ -71,10 +68,9 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
     if (intellijPluginLabels.isEmpty()) {
       return IjModuleType.JAVA_MODULE;
     }
-    ImmutableSortedSet<String> labels = target.getConstructorArg().labels;
     Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
     if (metaInfDirectory.isPresent()
-        && !Sets.intersection(labels, intellijPluginLabels).isEmpty()) {
+        && target.getConstructorArg().labelsContainsAnyOf(intellijPluginLabels)) {
       return IjModuleType.INTELLIJ_PLUGIN_MODULE;
     }
     return IjModuleType.JAVA_MODULE;

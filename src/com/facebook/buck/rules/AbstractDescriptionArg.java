@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Set;
 import org.immutables.value.Value;
 
 @SuppressFieldNotInitialized
@@ -35,5 +37,9 @@ public abstract class AbstractDescriptionArg implements CommonDescriptionArg {
   @Override
   public ImmutableSortedSet<String> getLabels() {
     return labels;
+  }
+
+  public final boolean labelsContainsAnyOf(Set<String> labels) {
+    return !Sets.intersection(this.labels, labels).isEmpty();
   }
 }

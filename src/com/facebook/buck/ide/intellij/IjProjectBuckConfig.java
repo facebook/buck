@@ -120,6 +120,9 @@ public class IjProjectBuckConfig {
         .setExcludeArtifactsEnabled(isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))
         .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
         .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
+        .setIgnoredTargetLabels(
+            buckConfig.getListWithoutComments(
+                INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))
         .build();
   }
 

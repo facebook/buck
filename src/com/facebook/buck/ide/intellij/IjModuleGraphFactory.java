@@ -27,6 +27,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
@@ -58,7 +59,8 @@ public final class IjModuleGraphFactory {
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
       AggregationModuleFactory aggregationModuleFactory,
-      final int minimumPathDepth) {
+      final int minimumPathDepth,
+      ImmutableSet<String> ignoredTargetLabels) {
 
     ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
         targetGraph
@@ -68,6 +70,12 @@ public final class IjModuleGraphFactory {
                 input ->
                     SupportedTargetTypeRegistry.isTargetTypeSupported(
                         input.getDescription().getClass()))
+            .filter(
+                targetNode -> {
+                  AbstractDescriptionArg arg =
+                      (AbstractDescriptionArg) targetNode.getConstructorArg();
+                  return !arg.labelsContainsAnyOf(ignoredTargetLabels);
+                })
             // IntelliJ doesn't support referring to source files which aren't below the root of the
             // project. Filter out those cases proactively, so that we don't try to resolve files
             // relative to the wrong ProjectFilesystem.
@@ -156,15 +164,17 @@ public final class IjModuleGraphFactory {
       final IjLibraryFactory libraryFactory,
       final IjModuleFactory moduleFactory,
       final AggregationModuleFactory aggregationModuleFactory) {
+    ImmutableSet<String> ignoredTargetLabels = projectConfig.getIgnoredTargetLabels();
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
             projectFilesystem,
             targetGraph,
             moduleFactory,
             aggregationModuleFactory,
-            projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()));
+            projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()),
+            ignoredTargetLabels);
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
-        new ExportedDepsClosureResolver(targetGraph);
+        new ExportedDepsClosureResolver(targetGraph, ignoredTargetLabels);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
         depsBuilder = ImmutableMap.builder();
     final Set<IjLibrary> referencedLibraries = new HashSet<>();
@@ -174,12 +184,18 @@ public final class IjModuleGraphFactory {
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
         BuildTarget depBuildTarget = entry.getKey();
+        TargetNode<?, ?> depTargetNode = targetGraph.get(depBuildTarget);
+
+        AbstractDescriptionArg arg = (AbstractDescriptionArg) depTargetNode.getConstructorArg();
+        if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
+          continue;
+        }
+
         DependencyType depType = entry.getValue();
         ImmutableSet<IjProjectElement> depElements;
 
         if (depType.equals(DependencyType.COMPILED_SHADOW)) {
-          TargetNode<?, ?> targetNode = targetGraph.get(depBuildTarget);
-          Optional<IjLibrary> library = libraryFactory.getLibrary(targetNode);
+          Optional<IjLibrary> library = libraryFactory.getLibrary(depTargetNode);
           if (library.isPresent()) {
             depElements = ImmutableSet.of(library.get());
           } else {

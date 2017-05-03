@@ -174,6 +174,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("project_with_multiple_libraries");
   }
 
+  @Test
+  public void testProjectWithIgnoredTargets() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_ignored_targets");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
