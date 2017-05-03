@@ -40,11 +40,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Optional;
 
@@ -96,21 +94,12 @@ public class WorkerToolDescription
     final ImmutableList<com.facebook.buck.rules.args.Arg> workerToolArgs =
         args.getStartupArgs().stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
 
-    ImmutableMap<String, String> expandedEnv =
-        ImmutableMap.copyOf(
-            FluentIterable.from(args.env.entrySet())
-                .transform(
-                    input -> {
-                      try {
-                        return Maps.immutableEntry(
-                            input.getKey(),
-                            MACRO_HANDLER.expand(
-                                params.getBuildTarget(), cellRoots, resolver, input.getValue()));
-                      } catch (MacroException e) {
-                        throw new HumanReadableException(
-                            e, "%s: %s", params.getBuildTarget(), e.getMessage());
-                      }
-                    }));
+    ImmutableMap<String, com.facebook.buck.rules.args.Arg> unexpandedEnv =
+        args.env
+            .entrySet()
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(Map.Entry::getKey, e -> toArg.apply(e.getValue())));
 
     int maxWorkers;
     if (args.maxWorkers.isPresent()) {
@@ -125,7 +114,7 @@ public class WorkerToolDescription
         params,
         (BinaryBuildRule) rule,
         workerToolArgs,
-        expandedEnv,
+        unexpandedEnv,
         maxWorkers,
         args.persistent.orElse(
             buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));

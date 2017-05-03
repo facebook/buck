@@ -51,7 +51,7 @@ public class DefaultWorkerTool extends NoopBuildRule
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableMap<String, String> env;
+  private final ImmutableMap<String, Arg> env;
 
   private final BinaryBuildRule exe;
   private final int maxWorkers;
@@ -63,7 +63,7 @@ public class DefaultWorkerTool extends NoopBuildRule
       BuildRuleParams ruleParams,
       BinaryBuildRule exe,
       ImmutableList<Arg> args,
-      ImmutableMap<String, String> env,
+      ImmutableMap<String, Arg> env,
       int maxWorkers,
       boolean isPersistent) {
     super(ruleParams);
@@ -81,7 +81,7 @@ public class DefaultWorkerTool extends NoopBuildRule
                     .stream()
                     .map(BuildRule::getSourcePathToOutput)
                     .collect(MoreCollectors.toImmutableList()));
-    for (Map.Entry<String, String> e : env.entrySet()) {
+    for (Map.Entry<String, Arg> e : env.entrySet()) {
       builder.addEnv(e.getKey(), e.getValue());
     }
     tool = builder.build();

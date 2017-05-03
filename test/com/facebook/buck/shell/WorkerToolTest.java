@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -113,6 +114,41 @@ public class WorkerToolTest {
     assertThat(
         workerTool.getArgs(pathResolver),
         Matchers.containsString(
+            pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
+  }
+
+  @Test
+  public void testEnvWithLocationMacroAffectDependenciesAndExpands() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+
+    BuildRule shBinaryRule =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
+            .setMain(new FakeSourcePath("bin/exe"))
+            .build(resolver);
+
+    BuildRule exportFileRule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+            .setSrc(new FakeSourcePath("file.txt"))
+            .build(resolver);
+
+    WorkerToolBuilder workerToolBuilder =
+        WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
+            .setExe(shBinaryRule.getBuildTarget())
+            .setEnv(ImmutableMap.of("ENV_VAR_NAME", "$(location //:file)"));
+    DefaultWorkerTool workerTool = workerToolBuilder.build(resolver);
+
+    assertThat(
+        workerToolBuilder.findImplicitDeps(), Matchers.hasItem(exportFileRule.getBuildTarget()));
+    assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(
+        workerTool.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
+    assertThat(
+        workerTool.getTool().getEnvironment(pathResolver),
+        Matchers.hasEntry(
+            "ENV_VAR_NAME",
             pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
   }
 

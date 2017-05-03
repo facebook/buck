@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 public class WorkerToolBuilder
@@ -32,6 +33,11 @@ public class WorkerToolBuilder
 
   public static WorkerToolBuilder newWorkerToolBuilder(BuildTarget target) {
     return new WorkerToolBuilder(target);
+  }
+
+  public WorkerToolBuilder setEnv(ImmutableMap<String, String> env) {
+    arg.env = env;
+    return this;
   }
 
   public WorkerToolBuilder setExe(BuildTarget exe) {
