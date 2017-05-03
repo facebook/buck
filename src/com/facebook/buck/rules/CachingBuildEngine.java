@@ -667,6 +667,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             switch (getMetadataStorage(filesystem)) {
               case ROCKSDB:
                 return new RocksDBBuildInfoStore(filesystem);
+              case MAPDB:
+                return new MapDBBuildInfoStore(filesystem);
               case FILESYSTEM:
                 return new FilesystemBuildInfoStore(filesystem);
               default:
@@ -1950,6 +1952,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public enum MetadataStorage {
     FILESYSTEM,
+    MAPDB,
     ROCKSDB,
   }
 

@@ -1,0 +1,33 @@
+java_library(
+    name = "mapdb",
+    exported_deps = [
+        ":mapdb-jar",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":elsa",
+        "//third-party/java/eclipse-collections:eclipse-collections",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jcip-annotations:jcip-annotations",
+        "//third-party/java/kotlin:kotlin",
+        "//third-party/java/lz4:lz4",
+    ],
+)
+
+prebuilt_jar(
+    name = "elsa",
+    binary_jar = "elsa-3.0.0-M5.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "mapdb-jar",
+    binary_jar = "mapdb-3.0.3.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)

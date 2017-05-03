@@ -1,0 +1,10 @@
+prebuilt_jar(
+    name = "lz4",
+    binary_jar = "lz4-1.3.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

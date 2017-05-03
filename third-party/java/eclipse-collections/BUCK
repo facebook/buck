@@ -1,0 +1,38 @@
+java_library(
+    name = "eclipse-collections",
+    exported_deps = [
+        ":eclipse-collections-api",
+        ":eclipse-collections-forkjoin",
+        ":eclipse-collections-jar",
+    ],
+    licenses = [
+        "LICENSE.html",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "eclipse-collections-jar",
+    binary_jar = "eclipse-collections-7.1.1.jar",
+    licenses = [
+        "LICENSE.html",
+    ],
+)
+
+prebuilt_jar(
+    name = "eclipse-collections-api",
+    binary_jar = "eclipse-collections-api-7.1.1.jar",
+    licenses = [
+        "LICENSE.html",
+    ],
+)
+
+prebuilt_jar(
+    name = "eclipse-collections-forkjoin",
+    binary_jar = "eclipse-collections-forkjoin-7.1.1.jar",
+    licenses = [
+        "LICENSE.html",
+    ],
+)
