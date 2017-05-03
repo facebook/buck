@@ -157,21 +157,20 @@ standard_java_test(
 )
 
 java_library(
-    name = "benchmarks",
-    srcs = glob(["*Benchmark.java"]),
-    visibility = [
-        "//test/com/facebook/buck/benchmarks/...",
-    ],
-    deps = [
+    name = "cache_benchmark_lib",
+    srcs = ["CacheBenchmark.java"],
+    exported_deps = [
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/util:watchman",
         "//src/com/facebook/buck/util/cache:cache",
         "//test/com/facebook/buck/testutil:testutil",
-        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/caliper:caliper",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/benchmarks/...",
     ],
 )
 
@@ -179,13 +178,6 @@ java_test(
     name = "cache_benchmark",
     srcs = ["CacheBenchmark.java"],
     deps = [
-        "//src/com/facebook/buck/hashing:hashing",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/util:watchman",
-        "//src/com/facebook/buck/util/cache:cache",
-        "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/caliper:caliper",
-        "//third-party/java/guava:guava",
-        "//third-party/java/junit:junit",
+        ":cache_benchmark_lib",
     ],
 )
