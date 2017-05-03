@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
@@ -97,8 +98,7 @@ public class HttpArtifactCacheTest {
 
   private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
     HttpArtifactCacheEvent.Started started =
-        HttpArtifactCacheEvent.newFetchStartedEvent(new RuleKey("1234"));
-    started.configure(-1, -1, -1, -1, new BuildId());
+        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(new RuleKey("1234"));
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }
 

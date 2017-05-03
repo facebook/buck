@@ -16,9 +16,6 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
-import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_BUNNY;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_SNAIL;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_WHALE;
@@ -444,13 +441,13 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, installingFinished));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
-        postStoreScheduled(eventBus, 0L, TARGET_ONE, 6000L);
+        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_ONE, 6000L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
-        postStoreScheduled(eventBus, 0L, TARGET_TWO, 6010L);
+        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_TWO, 6010L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledThree =
-        postStoreScheduled(eventBus, 0L, TARGET_THREE, 6020L);
+        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_THREE, 6020L);
 
     validateConsole(
         listener,
@@ -463,7 +460,7 @@ public class SuperConsoleEventBusListenerTest {
             "[+] HTTP CACHE UPLOAD...0.00 B (0 COMPLETE/0 FAILED/0 UPLOADING/3 PENDING)"));
 
     HttpArtifactCacheEvent.Started storeStartedOne =
-        postStoreStarted(eventBus, 0, 6025L, storeScheduledOne);
+        ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 6025L, storeScheduledOne);
 
     validateConsole(
         listener,
@@ -476,7 +473,8 @@ public class SuperConsoleEventBusListenerTest {
             "[+] HTTP CACHE UPLOAD...0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/2 PENDING)"));
 
     long artifactSizeOne = SizeUnit.KILOBYTES.toBytes(1.5);
-    postStoreFinished(eventBus, 0, artifactSizeOne, 7020L, true, storeStartedOne);
+    ArtifactCacheTestUtils.postStoreFinished(
+        eventBus, 0, artifactSizeOne, 7020L, true, storeStartedOne);
 
     validateConsole(
         listener,
@@ -489,9 +487,10 @@ public class SuperConsoleEventBusListenerTest {
             "[+] HTTP CACHE UPLOAD...1.50 KB (1 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)"));
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
-        postStoreStarted(eventBus, 0, 7030L, storeScheduledTwo);
+        ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 7030L, storeScheduledTwo);
     long artifactSizeTwo = SizeUnit.KILOBYTES.toBytes(1.6);
-    postStoreFinished(eventBus, 0, artifactSizeTwo, 7030L, false, storeStartedTwo);
+    ArtifactCacheTestUtils.postStoreFinished(
+        eventBus, 0, artifactSizeTwo, 7030L, false, storeStartedTwo);
 
     validateConsole(
         listener,
@@ -504,9 +503,10 @@ public class SuperConsoleEventBusListenerTest {
             "[+] HTTP CACHE UPLOAD...1.50 KB (1 COMPLETE/1 FAILED/0 UPLOADING/1 PENDING)"));
 
     HttpArtifactCacheEvent.Started storeStartedThree =
-        postStoreStarted(eventBus, 0, 7040L, storeScheduledThree);
+        ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 7040L, storeScheduledThree);
     long artifactSizeThree = SizeUnit.KILOBYTES.toBytes(0.6);
-    postStoreFinished(eventBus, 0, artifactSizeThree, 7040L, true, storeStartedThree);
+    ArtifactCacheTestUtils.postStoreFinished(
+        eventBus, 0, artifactSizeThree, 7040L, true, storeStartedThree);
 
     validateConsole(
         listener,

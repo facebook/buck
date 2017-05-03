@@ -237,11 +237,6 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         return this;
       }
 
-      public Builder setStoreDataBuilder(HttpArtifactCacheEventStoreData.Builder storeDataBuilder) {
-        this.storeDataBuilder = storeDataBuilder;
-        return this;
-      }
-
       public Builder setTarget(Optional<String> target) {
         this.target = target;
         return this;
