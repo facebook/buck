@@ -687,26 +687,6 @@ public class InterCellIntegrationTest {
       assertTrue(Files.exists(dir));
     }
 
-    primary.runBuckCommand("clean", "--root-cell-only").assertSuccess();
-
-    // We should only clean up the directories for the primary cell
-    for (Path dir : primaryDirs) {
-      assertFalse(Files.exists(dir));
-    }
-    for (Path dir : secondaryDirs) {
-      assertTrue(Files.exists(dir));
-    }
-
-    // Reset the directories
-    for (Path dir : primaryDirs) {
-      Files.createDirectories(dir);
-      assertTrue(Files.exists(dir));
-    }
-    for (Path dir : secondaryDirs) {
-      Files.createDirectories(dir);
-      assertTrue(Files.exists(dir));
-    }
-
     primary.runBuckCommand("clean").assertSuccess();
 
     for (Path dir : primaryDirs) {

@@ -25,9 +25,6 @@ import org.kohsuke.args4j.Option;
 
 public class CleanCommand extends AbstractCommand {
 
-  @Option(name = "--root-cell-only", usage = "Only clean the root cell.")
-  private boolean isCleaningOnlyRootCell = false;
-
   @Option(
     name = "--project",
     aliases = {"-p"},
@@ -78,12 +75,8 @@ public class CleanCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException {
-    if (isCleaningOnlyRootCell) {
-      cleanCell(params.getCell());
-    } else {
-      for (Cell cell : params.getCell().getLoadedCells().values()) {
-        cleanCell(cell);
-      }
+    for (Cell cell : params.getCell().getLoadedCells().values()) {
+      cleanCell(cell);
     }
     return 0;
   }
