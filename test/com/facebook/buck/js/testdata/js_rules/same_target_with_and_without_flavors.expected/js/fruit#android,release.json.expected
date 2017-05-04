@@ -1,4 +1,4 @@
-library --platform android --root @
+library --release --platform android --root @
 optimize --platform android
 transform --filename js/apple.js
 var apple;
