@@ -1,20 +1,20 @@
-{namespace buck.get_cell_name}
+{namespace buck.get_base_path}
 
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'get_cell_name()' /}
-    {param navid: 'function_get_cell_name' /}
+    {param title: 'get_base_path()' /}
+    {param navid: 'function_get_base_path' /}
     {param prettify: true /}
     {param description}
-      The get_cell_name() function is used to get the canonical cell name of the build file.
+      The get_base_path() function is used to get the relative path to the build file.
     {/param}
     {param content}
 
 {call buck.function}
 {param status: 'FROZEN' /}
 {param overview}
-The <code>get_cell_name()</code> function is used the canonical cell name of the build file
+The <code>get_base_path()</code> function is used to get the relative path to build file
 from within a build file.
 {/param}
 
