@@ -180,8 +180,7 @@ public class IjProjectTemplateDataPreparer {
       final Path moduleLocationBasePath) {
     String url = IjProjectPaths.toModuleDirRelativeString(contentRootPath, moduleLocationBasePath);
     ImmutableSet<IjFolder> simplifiedFolders =
-        sourceRootSimplifier.simplify(
-            SimplificationLimit.of(contentRootPath.getNameCount()), folders);
+        sourceRootSimplifier.simplify(contentRootPath.getNameCount(), folders);
     IjFolderToIjSourceFolderTransform transformToFolder =
         new IjFolderToIjSourceFolderTransform(module);
     ImmutableSortedSet<IjSourceFolder> sourceFolders =

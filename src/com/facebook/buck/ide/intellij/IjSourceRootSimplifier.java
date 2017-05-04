@@ -25,7 +25,6 @@ import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
-import org.immutables.value.Value;
 
 /**
  * Groups {@link IjFolder}s into sets which are of the same type and belong to the same package
@@ -55,23 +53,16 @@ public class IjSourceRootSimplifier {
   /**
    * Merges {@link IjFolder}s of the same type and package prefix.
    *
-   * @param limit if a path has this many segments it will not be simplified further.
+   * @param simplificationLimit if a path has this many segments it will not be simplified further.
    * @param folders set of {@link IjFolder}s to simplify.
    * @return simplified set of {@link IjFolder}s.
    */
-  public ImmutableSet<IjFolder> simplify(
-      SimplificationLimit limit, ImmutableSet<IjFolder> folders) {
+  public ImmutableSet<IjFolder> simplify(int simplificationLimit, ImmutableSet<IjFolder> folders) {
     PackagePathCache packagePathCache = new PackagePathCache(folders, javaPackageFinder);
-    BottomUpPathMerger walker = new BottomUpPathMerger(folders, limit.getValue(), packagePathCache);
+    BottomUpPathMerger walker =
+        new BottomUpPathMerger(folders, simplificationLimit, packagePathCache);
 
     return walker.getMergedFolders();
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractSimplificationLimit {
-    @Value.Parameter
-    public abstract int getValue();
   }
 
   private static class BottomUpPathMerger {
