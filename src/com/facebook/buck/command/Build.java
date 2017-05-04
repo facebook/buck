@@ -33,6 +33,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
+import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -79,6 +80,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
@@ -256,14 +258,16 @@ public class Build implements Closeable {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
 
-    List<ListenableFuture<BuildResult>> futures =
+    List<BuildEngineResult> futures =
         rulesToBuild
             .stream()
             .map(rule -> buildEngine.build(buildContext, executionContext, rule))
             .collect(MoreCollectors.toImmutableList());
 
     // Get the Future representing the build and then block until everything is built.
-    ListenableFuture<List<BuildResult>> buildFuture = Futures.allAsList(futures);
+    ListenableFuture<List<BuildResult>> buildFuture =
+        Futures.allAsList(
+            futures.stream().map(BuildEngineResult::getResult).collect(Collectors.toList()));
     List<BuildResult> results;
     try {
       results = buildFuture.get();

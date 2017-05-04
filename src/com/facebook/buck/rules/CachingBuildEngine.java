@@ -1369,7 +1369,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   @Override
-  public ListenableFuture<BuildResult> build(
+  public BuildEngineResult build(
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
     // to make sure we wait for these before calling yielding the final build result.
@@ -1380,10 +1380,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             registerTopLevelRule(rule, buildContext.getEventBus()),
             getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, asyncCallbacks),
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
-    return Futures.transformAsync(
-        resultFuture,
-        result -> Futures.transform(Futures.allAsList(asyncCallbacks), Functions.constant(result)),
-        serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+    return BuildEngineResult.builder()
+        .setResult(
+            Futures.transformAsync(
+                resultFuture,
+                result ->
+                    Futures.transform(
+                        Futures.allAsList(asyncCallbacks), Functions.constant(result)),
+                serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)))
+        .build();
   }
 
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(

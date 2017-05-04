@@ -59,6 +59,7 @@ public class FakeBuildEngineTest {
                     .build(),
                 TestExecutionContext.newInstance(),
                 fakeBuildRule)
+            .getResult()
             .get(),
         equalTo(fakeBuildResult));
   }

@@ -189,7 +189,7 @@ public class JavaDepsFinder {
     JavaSymbolsRule buildRule =
         new JavaSymbolsRule(buildTarget, symbolsFinder, node.getFilesystem());
     ListenableFuture<BuildResult> future =
-        buildEngine.build(buildContext, executionContext, buildRule);
+        buildEngine.build(buildContext, executionContext, buildRule).getResult();
     BuildResult result = Futures.getUnchecked(future);
 
     Symbols features;

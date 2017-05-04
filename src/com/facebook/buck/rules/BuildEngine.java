@@ -18,9 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * A build engine is responsible for building a given build rule, which includes all its transitive
@@ -32,7 +34,7 @@ public interface BuildEngine {
   int getNumRulesToBuild(Iterable<BuildRule> rule);
 
   /** Build the given build rule and return a future to the build rule success. */
-  ListenableFuture<BuildResult> build(
+  BuildEngineResult build(
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule);
 
   /**
@@ -50,4 +52,11 @@ public interface BuildEngine {
 
   /** This is a temporary hack to expose a build rule's rule key to the associated buildable. */
   RuleKey getRuleKey(BuildTarget buildTarget);
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract class AbstractBuildEngineResult {
+    /** @return a future that will contain the result of running the rule */
+    public abstract ListenableFuture<BuildResult> getResult();
+  }
 }
