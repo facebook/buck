@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -35,9 +37,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -62,12 +67,19 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   @GuardedBy("consoleEventsLock")
   private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
 
-  private final Object statusLock = new Object();
-
-  @GuardedBy("statusLock")
-  private final BuildSlaveStatus status = new BuildSlaveStatus();
-
   protected final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
+
+  protected volatile int ruleCount = 0;
+  protected final AtomicInteger buildRulesStartedCount = new AtomicInteger(0);
+  protected final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
+  protected final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
+  protected final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
+
+  protected final AtomicLong httpArtifactTotalBytesUploaded = new AtomicLong(0);
+  protected final AtomicInteger httpArtifactUploadScheduledCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadStartedCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadSuccessCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadFailureCount = new AtomicInteger(0);
 
   private volatile @Nullable DistBuildService distBuildService;
 
@@ -85,12 +97,6 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     this.stampedeId = stampedeId;
     this.runId = runId;
     this.clock = clock;
-
-    // No synchronization needed here because status is final.
-    status.setStampedeId(stampedeId);
-    status.setRunId(runId);
-    // Set the cache rate stats with zero values, so that we don't have to keep checking for nulls.
-    status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
 
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
@@ -116,12 +122,25 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       return;
     }
 
-    BuildSlaveStatus statusCopy;
-    synchronized (statusLock) {
-      statusCopy = status.deepCopy();
-    }
+    BuildSlaveStatus status = new BuildSlaveStatus();
+    status.setStampedeId(stampedeId);
+    status.setRunId(runId);
+
+    status.setTotalRulesCount(ruleCount);
+    status.setRulesStartedCount(buildRulesStartedCount.get());
+    status.setRulesFinishedCount(buildRulesFinishedCount.get());
+    status.setRulesSuccessCount(buildRulesSuccessCount.get());
+    status.setRulesFailureCount(buildRulesFailureCount.get());
+
+    status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
+    status.setHttpArtifactTotalBytesUploaded(httpArtifactTotalBytesUploaded.get());
+    status.setHttpArtifactUploadScheduledCount(httpArtifactUploadScheduledCount.get());
+    status.setHttpArtifactUploadStartedCount(httpArtifactUploadStartedCount.get());
+    status.setHttpArtifactUploadSuccessCount(httpArtifactUploadSuccessCount.get());
+    status.setHttpArtifactUploadFailureCount(httpArtifactUploadFailureCount.get());
+
     try {
-      distBuildService.updateBuildSlaveStatus(stampedeId, runId, statusCopy);
+      distBuildService.updateBuildSlaveStatus(stampedeId, runId, status);
     } catch (IOException e) {
       LOG.error(e, "Could not update slave status to frontend.");
     }
@@ -169,69 +188,84 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     cacheRateStatsKeeper.ruleCountCalculated(calculated);
-    synchronized (statusLock) {
-      status.setTotalRulesCount(calculated.getNumRules());
-      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
-    }
+    ruleCount = calculated.getNumRules();
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     cacheRateStatsKeeper.ruleCountUpdated(updated);
-    synchronized (statusLock) {
-      status.setTotalRulesCount(updated.getNumRules());
-      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
-    }
+    ruleCount = updated.getNumRules();
   }
 
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
-    synchronized (statusLock) {
-      status.setRulesStartedCount(status.getRulesStartedCount() + 1);
-    }
+    buildRulesStartedCount.incrementAndGet();
   }
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     cacheRateStatsKeeper.buildRuleFinished(finished);
-    synchronized (statusLock) {
-      status.setRulesStartedCount(status.getRulesStartedCount() - 1);
-      status.setRulesFinishedCount(status.getRulesFinishedCount() + 1);
+    buildRulesStartedCount.decrementAndGet();
+    buildRulesFinishedCount.incrementAndGet();
 
-      switch (finished.getStatus()) {
-        case SUCCESS:
-          status.setRulesSuccessCount(status.getRulesSuccessCount() + 1);
-          break;
-        case FAIL:
-          status.setRulesFailureCount(status.getRulesFailureCount() + 1);
-          break;
-        case CANCELED:
-          break;
-      }
-
-      status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
+    switch (finished.getStatus()) {
+      case SUCCESS:
+        buildRulesSuccessCount.incrementAndGet();
+        break;
+      case FAIL:
+        buildRulesFailureCount.incrementAndGet();
+        break;
+      case CANCELED:
+        break;
     }
   }
 
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    synchronized (statusLock) {
-      status.setRulesStartedCount(status.getRulesStartedCount() + 1);
-    }
+    buildRulesStartedCount.incrementAndGet();
   }
 
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    synchronized (statusLock) {
-      status.setRulesStartedCount(status.getRulesStartedCount() - 1);
-    }
+    buildRulesStartedCount.decrementAndGet();
   }
 
-  /**
-   * TODO(shivanker): Add support for keeping track of cache uploads. @Subscribe public void
-   * onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {}
-   */
+  @Subscribe
+  public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
+    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
+      return;
+    }
+
+    httpArtifactUploadScheduledCount.incrementAndGet();
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
+    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
+      return;
+    }
+
+    httpArtifactUploadStartedCount.incrementAndGet();
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
+    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
+      return;
+    }
+
+    httpArtifactUploadStartedCount.decrementAndGet();
+    if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
+      httpArtifactUploadSuccessCount.incrementAndGet();
+      Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
+      if (artifactSizeBytes.isPresent()) {
+        httpArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
+      }
+    } else {
+      httpArtifactUploadFailureCount.incrementAndGet();
+    }
+  }
 }

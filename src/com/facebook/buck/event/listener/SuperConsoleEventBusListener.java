@@ -45,7 +45,6 @@ import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -484,19 +483,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       } else {
         columns.add("STATUS: " + distBuildStatus.get().getStatus());
 
-        ImmutableList<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
-            distBuildStatus
-                .get()
-                .getSlaveStatuses()
-                .stream()
-                .filter(slaveStatus -> slaveStatus.isSetCacheRateStats())
-                .map(
-                    slaveStatus ->
-                        CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
-                            slaveStatus.getCacheRateStats()))
-                .collect(MoreCollectors.toImmutableList());
+        int totalUploadErrorsCount = 0;
+        ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
+            new ImmutableList.Builder<>();
+
+        for (BuildSlaveStatus slaveStatus : distBuildStatus.get().getSlaveStatuses()) {
+          totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadFailureCount();
+
+          if (slaveStatus.isSetCacheRateStats()) {
+            slaveCacheStats.add(
+                CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
+                    slaveStatus.getCacheRateStats()));
+          }
+        }
+
         CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
-            CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats);
+            CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
 
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
           columns.add(
@@ -512,6 +514,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
                     aggregatedCacheStats.getCacheErrorCount(),
                     aggregatedCacheStats.getCacheErrorRate()));
           }
+        }
+
+        if (totalUploadErrorsCount > 0) {
+          columns.add(String.format("%d UPLOAD ERRORS", totalUploadErrorsCount));
         }
 
         if (distBuildStatus.get().getMessage().isPresent()) {

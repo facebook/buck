@@ -906,6 +906,10 @@ public class SuperConsoleEventBusListenerTest {
     slave2.setRulesStartedCount(0);
     slave2.setRulesFinishedCount(20);
     slave2.setRulesSuccessCount(19);
+    slave2.setHttpArtifactUploadScheduledCount(3);
+    slave2.setHttpArtifactUploadStartedCount(1);
+    slave2.setHttpArtifactUploadSuccessCount(1);
+    slave2.setHttpArtifactUploadFailureCount(1);
     cacheRateStatsForSlave2.setUpdatedRulesCount(20);
     cacheRateStatsForSlave2.setCacheHitsCount(19);
     cacheRateStatsForSlave2.setCacheMissesCount(0);
@@ -930,10 +934,10 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             "[+] DISTBUILD...1.5s [96%] (STATUS: CUSTOM,"
-                + " 1 [3.3%] CACHE MISS, 1 [3.4%] CACHE ERRORS, [step 2])",
+                + " 1 [3.3%] CACHE MISS, 1 [3.4%] CACHE ERRORS, 1 UPLOAD ERRORS, [step 2])",
             " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, "
-                + "1 [5.0%] CACHE ERRORS)"));
+                + "1 [5.0%] CACHE ERRORS, 1/3 UPLOADED, 1 UPLOAD ERRORS)"));
 
     timeMillis += 100;
     slave1.setRulesStartedCount(0);
@@ -964,7 +968,7 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     final String distbuildLine =
         "[-] DISTBUILD...FINISHED 1.6s [100%] (STATUS: FINISHED_SUCCESSFULLY,"
-            + " 1 [3.3%] CACHE MISS, 1 [3.3%] CACHE ERRORS, [step 3])";
+            + " 1 [3.3%] CACHE MISS, 1 [3.3%] CACHE ERRORS, 1 UPLOAD ERRORS, [step 3])";
     validateConsole(
         listener,
         timeMillis,

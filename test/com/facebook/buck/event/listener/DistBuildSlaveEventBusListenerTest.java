@@ -24,6 +24,8 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -50,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -96,6 +99,35 @@ public class DistBuildSlaveEventBusListenerTest {
     listener.close();
   }
 
+  public BuildSlaveStatus createBuildSlaveStatusWithZeros() {
+    BuildSlaveStatus status = new BuildSlaveStatus();
+    status.setStampedeId(stampedeId);
+    status.setRunId(runId);
+    status.setTotalRulesCount(0);
+    status.setRulesStartedCount(0);
+    status.setRulesFinishedCount(0);
+    status.setRulesSuccessCount(0);
+    status.setRulesFailureCount(0);
+
+    status.setHttpArtifactTotalBytesUploaded(0);
+    status.setHttpArtifactUploadScheduledCount(0);
+    status.setHttpArtifactUploadStartedCount(0);
+    status.setHttpArtifactUploadSuccessCount(0);
+    status.setHttpArtifactUploadFailureCount(0);
+
+    CacheRateStats cacheRateStats = new CacheRateStats();
+    status.setCacheRateStats(cacheRateStats);
+    cacheRateStats.setTotalRulesCount(0);
+    cacheRateStats.setUpdatedRulesCount(0);
+    cacheRateStats.setCacheHitsCount(0);
+    cacheRateStats.setCacheMissesCount(0);
+    cacheRateStats.setCacheErrorsCount(0);
+    cacheRateStats.setCacheIgnoresCount(0);
+    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+
+    return status;
+  }
+
   @Test
   public void testHandlingConsoleEvents() throws IOException {
     List<ConsoleEvent> consoleEvents = new LinkedList<>();
@@ -137,20 +169,11 @@ public class DistBuildSlaveEventBusListenerTest {
 
   @Test
   public void testHandlingRuleCountCalculatedEvent() throws IOException {
-    BuildSlaveStatus expectedStatus = new BuildSlaveStatus();
-    expectedStatus.setStampedeId(stampedeId);
-    expectedStatus.setRunId(runId);
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setTotalRulesCount(100);
 
-    CacheRateStats cacheRateStats = new CacheRateStats();
-    expectedStatus.setCacheRateStats(cacheRateStats);
+    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
     cacheRateStats.setTotalRulesCount(100);
-    cacheRateStats.setUpdatedRulesCount(0);
-    cacheRateStats.setCacheHitsCount(0);
-    cacheRateStats.setCacheMissesCount(0);
-    cacheRateStats.setCacheErrorsCount(0);
-    cacheRateStats.setCacheIgnoresCount(0);
-    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
@@ -171,20 +194,11 @@ public class DistBuildSlaveEventBusListenerTest {
 
   @Test
   public void testHandlingRuleCountUpdateEvent() throws IOException {
-    BuildSlaveStatus expectedStatus = new BuildSlaveStatus();
-    expectedStatus.setStampedeId(stampedeId);
-    expectedStatus.setRunId(runId);
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setTotalRulesCount(50);
 
-    CacheRateStats cacheRateStats = new CacheRateStats();
-    expectedStatus.setCacheRateStats(cacheRateStats);
+    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
     cacheRateStats.setTotalRulesCount(50);
-    cacheRateStats.setUpdatedRulesCount(0);
-    cacheRateStats.setCacheHitsCount(0);
-    cacheRateStats.setCacheMissesCount(0);
-    cacheRateStats.setCacheErrorsCount(0);
-    cacheRateStats.setCacheIgnoresCount(0);
-    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
@@ -206,24 +220,20 @@ public class DistBuildSlaveEventBusListenerTest {
 
   @Test
   public void testHandlingBuildRuleEvents() throws IOException {
-    BuildSlaveStatus expectedStatus = new BuildSlaveStatus();
-    expectedStatus.setStampedeId(stampedeId);
-    expectedStatus.setRunId(runId);
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setTotalRulesCount(6);
     expectedStatus.setRulesStartedCount(1);
     expectedStatus.setRulesFinishedCount(5);
     expectedStatus.setRulesSuccessCount(3);
     expectedStatus.setRulesFailureCount(1);
 
-    CacheRateStats cacheRateStats = new CacheRateStats();
-    expectedStatus.setCacheRateStats(cacheRateStats);
+    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
     cacheRateStats.setTotalRulesCount(6);
     cacheRateStats.setUpdatedRulesCount(4);
     cacheRateStats.setCacheHitsCount(1);
     cacheRateStats.setCacheMissesCount(1);
     cacheRateStats.setCacheErrorsCount(1);
     cacheRateStats.setCacheIgnoresCount(1);
-    cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();
@@ -320,6 +330,72 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty()));
     eventBus.post(suspended7);
+
+    listener.close();
+    verify(distBuildServiceMock);
+    Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
+  }
+
+  @Test
+  public void testCacheUploadEvents() throws IOException {
+    final long kSizeBytesMultiplier = 1234567890000L;
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
+    expectedStatus.setHttpArtifactTotalBytesUploaded((1 + 2) * kSizeBytesMultiplier);
+    expectedStatus.setHttpArtifactUploadScheduledCount(6);
+    expectedStatus.setHttpArtifactUploadStartedCount(2);
+    expectedStatus.setHttpArtifactUploadSuccessCount(3);
+    expectedStatus.setHttpArtifactUploadFailureCount(1);
+
+    distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
+    expectLastCall().anyTimes();
+
+    Capture<BuildSlaveStatus> capturedStatus = Capture.newInstance(CaptureType.LAST);
+    distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(runId), capture(capturedStatus));
+    expectLastCall().atLeastOnce();
+
+    replay(distBuildServiceMock);
+    setUpDistBuildSlaveEventBusListener();
+
+    List<HttpArtifactCacheEvent.Scheduled> scheduledEvents = new ArrayList<>();
+    List<HttpArtifactCacheEvent.Started> startedEvents = new ArrayList<>();
+    List<HttpArtifactCacheEvent.Finished> finishedEvents = new ArrayList<>();
+    for (int i = 0; i < 6; ++i) {
+      scheduledEvents.add(
+          HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("fake"), ImmutableSet.of()));
+
+      startedEvents.add(HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvents.get(i)));
+
+      HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvents.get(i));
+      HttpArtifactCacheEventStoreData.Builder storeData = finishedEventBuilder.getStoreBuilder();
+      if (i < 3) {
+        storeData.setWasStoreSuccessful(true);
+        storeData.setArtifactSizeBytes(i * kSizeBytesMultiplier);
+      } else {
+        storeData.setWasStoreSuccessful(false);
+      }
+      finishedEvents.add(finishedEventBuilder.build());
+    }
+
+    eventBus.post(scheduledEvents.get(0));
+    eventBus.post(scheduledEvents.get(1));
+    eventBus.post(startedEvents.get(1));
+    eventBus.post(scheduledEvents.get(2));
+    eventBus.post(startedEvents.get(0));
+    eventBus.post(finishedEvents.get(1));
+    eventBus.post(startedEvents.get(2));
+
+    eventBus.post(scheduledEvents.get(3));
+    eventBus.post(scheduledEvents.get(4));
+    eventBus.post(scheduledEvents.get(5));
+
+    eventBus.post(startedEvents.get(3));
+    eventBus.post(startedEvents.get(4));
+    eventBus.post(startedEvents.get(5));
+
+    eventBus.post(finishedEvents.get(0));
+    eventBus.post(finishedEvents.get(2));
+    eventBus.post(finishedEvents.get(3));
 
     listener.close();
     verify(distBuildServiceMock);
