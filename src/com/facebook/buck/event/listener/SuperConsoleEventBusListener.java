@@ -45,6 +45,7 @@ import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -482,6 +483,36 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         columns.add("STATUS: INIT");
       } else {
         columns.add("STATUS: " + distBuildStatus.get().getStatus());
+
+        ImmutableList<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
+            distBuildStatus
+                .get()
+                .getSlaveStatuses()
+                .stream()
+                .filter(slaveStatus -> slaveStatus.isSetCacheRateStats())
+                .map(
+                    slaveStatus ->
+                        CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
+                            slaveStatus.getCacheRateStats()))
+                .collect(MoreCollectors.toImmutableList());
+        CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
+            CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats);
+
+        if (aggregatedCacheStats.getTotalRulesCount() != 0) {
+          columns.add(
+              String.format(
+                  "%d [%.1f%%] CACHE MISS",
+                  aggregatedCacheStats.getCacheMissCount(),
+                  aggregatedCacheStats.getCacheMissRate()));
+
+          if (aggregatedCacheStats.getCacheErrorCount() != 0) {
+            columns.add(
+                String.format(
+                    "%d [%.1f%%] CACHE ERRORS",
+                    aggregatedCacheStats.getCacheErrorCount(),
+                    aggregatedCacheStats.getCacheErrorRate()));
+          }
+        }
 
         if (distBuildStatus.get().getMessage().isPresent()) {
           columns.add("[" + distBuildStatus.get().getMessage().get() + "]");

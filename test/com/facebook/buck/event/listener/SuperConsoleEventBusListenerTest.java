@@ -891,24 +891,21 @@ public class SuperConsoleEventBusListenerTest {
         timeMillis,
         ImmutableList.of(
             parsingLine,
-            "[+] DISTBUILD...1.3s [33%] (STATUS: BUILDING, [step 2])",
+            "[+] DISTBUILD...1.3s [33%] (STATUS: BUILDING, 1 [3.3%] CACHE MISS, [step 2])",
             " SERVER 0)=> IDLE... (BUILT 5/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> WORKING ON 5 JOBS... (BUILT 5/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS)"));
 
     timeMillis += 100;
-    slave1.setTotalRulesCount(10);
     slave1.setRulesStartedCount(1);
     slave1.setRulesFinishedCount(9);
-    slave1.setRulesSuccessCount(10);
+    slave1.setRulesSuccessCount(9);
     cacheRateStatsForSlave1.setUpdatedRulesCount(9);
     cacheRateStatsForSlave1.setCacheHitsCount(8);
     cacheRateStatsForSlave1.setCacheMissesCount(1);
 
-    slave2.setTotalRulesCount(20);
     slave2.setRulesStartedCount(0);
     slave2.setRulesFinishedCount(20);
     slave2.setRulesSuccessCount(19);
-    slave2.setRulesFailureCount(1);
     cacheRateStatsForSlave2.setUpdatedRulesCount(20);
     cacheRateStatsForSlave2.setCacheHitsCount(19);
     cacheRateStatsForSlave2.setCacheMissesCount(0);
@@ -932,12 +929,19 @@ public class SuperConsoleEventBusListenerTest {
         timeMillis,
         ImmutableList.of(
             parsingLine,
-            "[+] DISTBUILD...1.5s [96%] (STATUS: CUSTOM, [step 2])",
+            "[+] DISTBUILD...1.5s [96%] (STATUS: CUSTOM,"
+                + " 1 [3.3%] CACHE MISS, 1 [3.4%] CACHE ERRORS, [step 2])",
             " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, "
                 + "1 [5.0%] CACHE ERRORS)"));
 
     timeMillis += 100;
+    slave1.setRulesStartedCount(0);
+    slave1.setRulesFinishedCount(10);
+    slave1.setRulesSuccessCount(10);
+    cacheRateStatsForSlave1.setUpdatedRulesCount(10);
+    cacheRateStatsForSlave1.setCacheHitsCount(9);
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
@@ -959,7 +963,8 @@ public class SuperConsoleEventBusListenerTest {
 
     timeMillis += 100;
     final String distbuildLine =
-        "[-] DISTBUILD...FINISHED 1.6s [100%] (STATUS: FINISHED_SUCCESSFULLY, [step 3])";
+        "[-] DISTBUILD...FINISHED 1.6s [100%] (STATUS: FINISHED_SUCCESSFULLY,"
+            + " 1 [3.3%] CACHE MISS, 1 [3.3%] CACHE ERRORS, [step 3])";
     validateConsole(
         listener,
         timeMillis,

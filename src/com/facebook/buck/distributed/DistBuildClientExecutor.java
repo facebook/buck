@@ -161,11 +161,12 @@ public class DistBuildClientExecutor {
     return job;
   }
 
-  private void checkTerminateScheduledUpdates(BuildJob job) {
+  private void checkTerminateScheduledUpdates(
+      BuildJob job, Optional<List<BuildSlaveStatus>> slaveStatuses) {
     if (job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
         || job.getStatus().equals(BuildStatus.FAILED)) {
       // Terminate scheduled tasks with a custom exception to indicate success.
-      throw new JobCompletedException(job);
+      throw new JobCompletedException(job, slaveStatuses);
     }
   }
 
@@ -182,7 +183,7 @@ public class DistBuildClientExecutor {
 
     if (!job.isSetSlaveInfoByRunId()) {
       postDistBuildStatusEvent(eventBus, job, ImmutableList.of());
-      checkTerminateScheduledUpdates(job);
+      checkTerminateScheduledUpdates(job, Optional.empty());
       return job;
     }
 
@@ -193,8 +194,10 @@ public class DistBuildClientExecutor {
     ListenableFuture<?> logStreamingFuture =
         fetchAndProcessRealTimeSlaveLogsAsync(job, networkExecutorService);
 
+    List<BuildSlaveStatus> slaveStatuses = ImmutableList.of();
     try {
-      postDistBuildStatusEvent(eventBus, job, slaveStatusesFuture.get());
+      slaveStatuses = slaveStatusesFuture.get();
+      postDistBuildStatusEvent(eventBus, job, slaveStatuses);
       slaveEventsFuture.get();
       logStreamingFuture.get();
     } catch (ExecutionException e) {
@@ -203,7 +206,7 @@ public class DistBuildClientExecutor {
       throw new RuntimeException(e);
     }
 
-    checkTerminateScheduledUpdates(job);
+    checkTerminateScheduledUpdates(job, Optional.of(slaveStatuses));
     return job;
   }
 
@@ -216,7 +219,8 @@ public class DistBuildClientExecutor {
 
     final BuildJob initJob =
         initBuild(networkExecutorService, projectFilesystem, fileHashCache, eventBus);
-    BuildJob finalJob;
+    final BuildJob finalJob;
+    final List<BuildSlaveStatus> buildSlaveStatusList;
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
@@ -233,20 +237,24 @@ public class DistBuildClientExecutor {
       if (e.getCause() instanceof JobCompletedException) {
         // Everything is awesome.
         finalJob = ((JobCompletedException) e.getCause()).getDistBuildJob();
+        buildSlaveStatusList =
+            ((JobCompletedException) e.getCause())
+                .getBuildSlaveStatuses()
+                .orElse(ImmutableList.of());
       } else {
         throw new HumanReadableException(e, "Failed to fetch build information from server.");
       }
     }
 
-    postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FETCHING LOG DIRS");
+    postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
     materializeSlaveLogDirs(finalJob);
 
     if (finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)) {
       LOG.info("DistBuild was successful!");
-      postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FINISHED");
+      postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FINISHED");
     } else {
       LOG.info("DistBuild was not successful!");
-      postDistBuildStatusEvent(eventBus, finalJob, ImmutableList.of(), "FAILED");
+      postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FAILED");
     }
 
     logDebugInfo(finalJob);
@@ -448,14 +456,21 @@ public class DistBuildClientExecutor {
   public static final class JobCompletedException extends RuntimeException {
 
     private final BuildJob job;
+    private final Optional<List<BuildSlaveStatus>> buildSlaveStatuses;
 
-    private JobCompletedException(BuildJob job) {
+    private JobCompletedException(
+        BuildJob job, Optional<List<BuildSlaveStatus>> buildSlaveStatuses) {
       super(String.format("DistBuild job completed with status: [%s]", job.getStatus().toString()));
       this.job = job;
+      this.buildSlaveStatuses = buildSlaveStatuses;
     }
 
     public BuildJob getDistBuildJob() {
       return job;
+    }
+
+    public Optional<List<BuildSlaveStatus>> getBuildSlaveStatuses() {
+      return buildSlaveStatuses;
     }
   }
 }

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableCollection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -109,6 +110,26 @@ public class CacheRateStatsKeeper {
         serializedStats.getUpdatedRulesCount());
   }
 
+  public static CacheRateStatsUpdateEvent getAggregatedCacheRateStats(
+      ImmutableCollection<CacheRateStatsUpdateEvent> statsEvents) {
+    int cacheMisses = 0;
+    int cacheErrors = 0;
+    int cacheHits = 0;
+    int totalRuleCount = 0;
+    int updatedRuleCount = 0;
+
+    for (CacheRateStatsUpdateEvent stats : statsEvents) {
+      cacheMisses += stats.getCacheMissCount();
+      cacheErrors += stats.getCacheErrorCount();
+      cacheHits += stats.getCacheHitCount();
+      totalRuleCount += stats.getTotalRulesCount();
+      updatedRuleCount += stats.getUpdatedRulesCount();
+    }
+
+    return new CacheRateStatsUpdateEvent(
+        cacheMisses, cacheErrors, cacheHits, totalRuleCount, updatedRuleCount);
+  }
+
   public CacheRateStatsUpdateEvent getStats() {
     return new CacheRateStatsUpdateEvent(
         cacheMisses.get(), cacheErrors.get(), cacheHits.get(), ruleCount.orElse(0), updated.get());
@@ -174,6 +195,10 @@ public class CacheRateStatsKeeper {
     @Override
     public int getUpdatedRulesCount() {
       return updated;
+    }
+
+    public int getTotalRulesCount() {
+      return ruleCount;
     }
 
     @Override
