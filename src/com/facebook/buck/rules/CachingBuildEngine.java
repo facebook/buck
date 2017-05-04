@@ -23,7 +23,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
@@ -1365,7 +1364,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final RuleKey ruleKey,
       final ArtifactCache artifactCache,
       final ProjectFilesystem filesystem,
-      final BuildEngineBuildContext buildContext) {
+      final BuildEngineBuildContext buildContext)
+      throws IOException {
 
     if (!rule.isCacheable()) {
       return CacheResult.ignored();
@@ -1414,7 +1414,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       LazyPath lazyZipPath,
       BuildEngineBuildContext buildContext,
       ProjectFilesystem filesystem,
-      CacheResult cacheResult) {
+      CacheResult cacheResult)
+      throws IOException {
 
     // We only unpack artifacts from hits.
     if (!cacheResult.getType().isSuccess()) {
@@ -1467,21 +1468,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // Also write out the build metadata.
       buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
-    } catch (IOException e) {
-      // In the wild, we have seen some inexplicable failures during this step. For now, we try to
-      // give the user as much information as we can to debug the issue, but return CacheResult.MISS
-      // so that Buck will fall back on doing a local build.
-      buildContext
-          .getEventBus()
-          .post(
-              ConsoleEvent.warning(
-                  "Failed to unzip the artifact for %s at %s.\n"
-                      + "The rule will be built locally, "
-                      + "but here is the stacktrace of the failed unzip call:\n"
-                      + rule.getBuildTarget(),
-                  zipPath.toAbsolutePath(),
-                  Throwables.getStackTraceAsString(e)));
-      return CacheResult.miss();
     } finally {
       buildContext.getEventBus().post(ArtifactCompressionEvent.finished(started));
     }
@@ -1879,7 +1865,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
-      RuleKey inputRuleKey) {
+      RuleKey inputRuleKey)
+      throws IOException {
     Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
 
     buildInfoRecorder.addBuildMetadata(
