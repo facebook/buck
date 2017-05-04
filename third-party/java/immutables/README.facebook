@@ -1,6 +1,4 @@
 This is the Immutables.org open-source library.
 
 License: Apache 2.0
-Fetched from: https://github.com/immutables/immutables.git
-Built from revision: 6a3f9371b0edc6e46c94a2f3e6ffc9b498e48e63
-Built using: mvn package
+Fetched from: http://central.maven.org/maven2/org/immutables/value/2.4.6/value-2.4.6.jar
