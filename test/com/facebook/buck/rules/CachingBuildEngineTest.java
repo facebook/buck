@@ -79,7 +79,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -93,7 +92,6 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.Unzip;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -2550,15 +2548,6 @@ public class CachingBuildEngineTest {
               BuildInfo.getPathToMetadataDirectory(target, filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-              BuildInfo.getPathToMetadataDirectory(target, filesystem)
-                  .resolve(BuildInfo.MetadataKey.DEP_FILE),
-              ObjectMappers.WRITER.writeValueAsString(
-                  depFileKey
-                      .getInputs()
-                      .stream()
-                      .map(in -> DependencyFileEntry.fromSourcePath(in, pathResolver))
-                      .map(MoreFunctions.toJsonFunction())
-                      .collect(MoreCollectors.toImmutableList())),
               output,
               "stuff"));
       cache.store(
@@ -2569,6 +2558,14 @@ public class CachingBuildEngineTest {
                   BuildInfo.MetadataKey.ORIGIN_BUILD_ID, buildContext.getBuildId().toString())
               .putMetadata(
                   BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileKey.getRuleKey().toString())
+              .putMetadata(
+                  BuildInfo.MetadataKey.DEP_FILE,
+                  ObjectMappers.WRITER.writeValueAsString(
+                      depFileKey
+                          .getInputs()
+                          .stream()
+                          .map(pathResolver::getRelativePath)
+                          .collect(MoreCollectors.toImmutableList())))
               .build(),
           BorrowablePath.notBorrowablePath(artifact));
 
@@ -2585,10 +2582,6 @@ public class CachingBuildEngineTest {
       for (RuleKey key : ImmutableSet.of(ruleKey, depFileKey.getRuleKey())) {
         LazyPath fetchedArtifact = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
         CacheResult cacheResult = cache.fetch(key, fetchedArtifact);
-        ProjectFilesystem temp = new FakeProjectFilesystem();
-        Unzip.extractZipFile(
-            fetchedArtifact.get(), temp, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-        OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(target, temp, buildInfoStore);
         assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
         assertThat(
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.RULE_KEY),
@@ -2597,14 +2590,13 @@ public class CachingBuildEngineTest {
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
             equalTo(depFileKey.getRuleKey().toString()));
         assertThat(
-            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.DEP_FILE).orElse(null),
+            cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE),
             equalTo(
                 ObjectMappers.WRITER.writeValueAsString(
                     depFileKey
                         .getInputs()
                         .stream()
-                        .map(in -> DependencyFileEntry.fromSourcePath(in, pathResolver))
-                        .map(MoreFunctions.toJsonFunction())
+                        .map(pathResolver::getRelativePath)
                         .collect(MoreCollectors.toImmutableList()))));
         Files.delete(fetchedArtifact.get());
       }
