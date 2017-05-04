@@ -114,61 +114,108 @@ class NativeLibraryMergeEnhancer {
 
     ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
 
+    Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
+    ImmutableSet.Builder<NativeLinkable> linkableAssetSetBuilder = ImmutableSet.builder();
     for (APKModule module : modules) {
-      // Sort by build target here to ensure consistent behavior.
-      Iterable<NativeLinkable> allLinkables =
-          Stream.concat(linkables.get(module).stream(), linkablesAssets.get(module).stream())
-              .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
-              .collect(MoreCollectors.toImmutableList());
+      allModulesLinkables = Stream.concat(allModulesLinkables, linkables.get(module).stream());
+      allModulesLinkables =
+          Stream.concat(allModulesLinkables, linkablesAssets.get(module).stream());
+      linkableAssetSetBuilder.addAll(linkablesAssets.get(module));
+    }
 
-      final ImmutableSet<NativeLinkable> linkableAssetSet =
-          ImmutableSet.copyOf(linkablesAssets.get(module));
-      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
-          makeConstituentMap(buildRuleParams, mergeMap, allLinkables, linkableAssetSet);
+    // Sort by build target here to ensure consistent behavior.
+    Iterable<NativeLinkable> allLinkables =
+        allModulesLinkables
+            .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
+            .collect(MoreCollectors.toImmutableList());
 
-      sonameMapBuilder.putAll(
-          makeSonameMap(
-              // sonames can *theoretically* differ per-platform, but right now they don't on Android,
-              // so just pick the first platform and use that to get all the sonames.
-              nativePlatforms.values().iterator().next().getCxxPlatform(), linkableMembership));
+    final ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
+    Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
+        makeConstituentMap(buildRuleParams, mergeMap, allLinkables, linkableAssetSet);
 
-      Iterable<MergedNativeLibraryConstituents> orderedConstituents =
-          getOrderedMergedConstituents(buildRuleParams, linkableMembership);
+    sonameMapBuilder.putAll(
+        makeSonameMap(
+            // sonames can *theoretically* differ per-platform, but right now they don't on Android,
+            // so just pick the first platform and use that to get all the sonames.
+            nativePlatforms.values().iterator().next().getCxxPlatform(), linkableMembership));
 
-      Optional<NativeLinkable> glueLinkable = Optional.empty();
-      if (nativeLibraryMergeGlue.isPresent()) {
-        BuildRule rule = ruleResolver.getRule(nativeLibraryMergeGlue.get());
-        if (!(rule instanceof NativeLinkable)) {
-          throw new RuntimeException(
-              "Native library merge glue "
-                  + rule.getBuildTarget()
-                  + " for application "
-                  + buildRuleParams.getBuildTarget()
-                  + " is not linkable.");
-        }
-        glueLinkable = Optional.of(((NativeLinkable) rule));
+    Iterable<MergedNativeLibraryConstituents> orderedConstituents =
+        getOrderedMergedConstituents(buildRuleParams, linkableMembership);
+
+    Optional<NativeLinkable> glueLinkable = Optional.empty();
+    if (nativeLibraryMergeGlue.isPresent()) {
+      BuildRule rule = ruleResolver.getRule(nativeLibraryMergeGlue.get());
+      if (!(rule instanceof NativeLinkable)) {
+        throw new RuntimeException(
+            "Native library merge glue "
+                + rule.getBuildTarget()
+                + " for application "
+                + buildRuleParams.getBuildTarget()
+                + " is not linkable.");
       }
+      glueLinkable = Optional.of(((NativeLinkable) rule));
+    }
 
-      Set<MergedLibNativeLinkable> mergedLinkables =
-          createLinkables(
-              cxxBuckConfig,
-              ruleResolver,
-              pathResolver,
-              ruleFinder,
-              buildRuleParams,
-              glueLinkable,
-              orderedConstituents);
+    Set<MergedLibNativeLinkable> mergedLinkables =
+        createLinkables(
+            cxxBuckConfig,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            buildRuleParams,
+            glueLinkable,
+            orderedConstituents);
 
-      for (MergedLibNativeLinkable linkable : mergedLinkables) {
-        if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetSet)) {
-          builder.putMergedLinkables(module, linkable);
-        } else if (linkableAssetSet.containsAll(linkable.constituents.getLinkables())) {
-          builder.putMergedLinkablesAssets(module, linkable);
-        }
+    ImmutableMap.Builder<NativeLinkable, APKModule> linkableToModuleMapBuilder =
+        ImmutableMap.builder();
+    for (Map.Entry<APKModule, NativeLinkable> entry : linkables.entries()) {
+      linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
+    }
+    for (Map.Entry<APKModule, NativeLinkable> entry : linkablesAssets.entries()) {
+      linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
+    }
+    ImmutableMap<NativeLinkable, APKModule> linkableToModuleMap =
+        linkableToModuleMapBuilder.build();
+
+    for (MergedLibNativeLinkable linkable : mergedLinkables) {
+      APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
+      if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetSet)) {
+        builder.putMergedLinkables(module, linkable);
+      } else if (linkableAssetSet.containsAll(linkable.constituents.getLinkables())) {
+        builder.putMergedLinkablesAssets(module, linkable);
       }
     }
+
     builder.setSonameMapping(sonameMapBuilder.build());
     return builder.build();
+  }
+
+  private static APKModule getModuleForLinkable(
+      MergedLibNativeLinkable linkable,
+      ImmutableMap<NativeLinkable, APKModule> linkableToModuleMap) {
+    APKModule module = null;
+    for (NativeLinkable constituent : linkable.constituents.getLinkables()) {
+      APKModule constituentModule = linkableToModuleMap.get(constituent);
+      if (module == null) {
+        module = constituentModule;
+      }
+      if (module != constituentModule) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Native library merge of ")
+            .append(linkable.toString())
+            .append(" has inconsistent application module mappings: ");
+        for (NativeLinkable innerConstituent : linkable.constituents.getLinkables()) {
+          APKModule innerConstituentModule = linkableToModuleMap.get(constituent);
+          sb.append(innerConstituent).append(" -> ").append(innerConstituentModule).append(", ");
+        }
+        throw new RuntimeException(
+            "Native library merge of "
+                + linkable.toString()
+                + " has inconsistent application module mappings: "
+                + sb.toString());
+      }
+    }
+    return Preconditions.checkNotNull(module);
   }
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
