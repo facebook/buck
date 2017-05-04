@@ -158,12 +158,12 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
    * first line contains an integer N that denotes the number of diagnosed rules (nodes). The
    * following N lines describe each diagnosed rule as a space-separated list of values. Those
    * values are in order: node id, duration (ns), rule type, target name, cacheable, default rule
-   * key, input key, output hash. A line with an integer M that denotes the number of edges follows.
-   * Edge represents a dependency relation between two nodes. The following M lines describe each
-   * edge as two integers: id of a node and id of its dependency. Node ids are not assigned in any
-   * specific way and are not compatible across different builds. The only purpose is to reduce the
-   * amount of data required to represent edges by using integers instead of long strings (fully
-   * qualified target names).
+   * key, input key, dep-file key, manifest key, output hash. A line with an integer M that denotes
+   * the number of edges follows. Edge represents a dependency relation between two nodes. The
+   * following M lines describe each edge as two integers: id of a node and id of its dependency.
+   * Node ids are not assigned in any specific way and are not compatible across different builds.
+   * The only purpose is to reduce the amount of data required to represent edges by using integers
+   * instead of long strings (fully qualified target names).
    */
   private void writeDiagGraph() {
     ImmutableList.Builder<DepEdge> dirtyEdgesBuilder = ImmutableList.builder();
@@ -187,7 +187,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
           BuildRule rule = entry.getKey();
           RuleInfo info = entry.getValue();
           out.printf(
-              "%d %d %s %s %d %s %s %s%n",
+              "%d %d %s %s %d %s %s %s %s %s%n",
               info.id,
               info.duration,
               rule.getType(),
@@ -195,6 +195,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
               rule.isCacheable() ? 1 : 0,
               info.ruleKeys.getRuleKey(),
               info.ruleKeys.getInputRuleKey().map(RuleKey::toString).orElse("null"),
+              info.ruleKeys.getDepFileRuleKey().map(RuleKey::toString).orElse("null"),
+              info.ruleKeys.getManifestRuleKey().map(RuleKey::toString).orElse("null"),
               info.outputHash.map(HashCode::toString).orElse("null"));
         }
         out.println(dirtyEdges.size());
