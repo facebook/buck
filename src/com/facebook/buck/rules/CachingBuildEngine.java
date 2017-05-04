@@ -1742,6 +1742,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         if (existingManifest.getKey().equals(manifestKey.getRuleKey())) {
           manifest = existingManifest;
         }
+      } catch (Exception e) {
+        LOG.error(e, "Failed to deserialize on-disk manifest for rule %s.", rule);
       }
     } else {
       // Ensure the path to manifest exist
@@ -1847,6 +1849,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Manifest manifest;
     try (InputStream input = rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
       manifest = new Manifest(input);
+    } catch (Exception e) {
+      LOG.error(
+          e,
+          "Failed to deserialize fetched-from-cache manifest for rule %s with key %s",
+          rule,
+          manifestKey.getRuleKey());
+      return Optional.empty();
     }
 
     // Verify the manifest.
