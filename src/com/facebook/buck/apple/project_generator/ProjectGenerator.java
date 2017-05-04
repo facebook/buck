@@ -111,7 +111,7 @@ import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
-import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -2544,8 +2544,8 @@ public class ProjectGenerator {
     BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) sourcePath;
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
     TargetNode<?, ?> node = targetGraph.get(buildTarget);
-    Optional<TargetNode<ExportFileDescription.Arg, ?>> exportFileNode =
-        node.castArg(ExportFileDescription.Arg.class);
+    Optional<TargetNode<ExportFileDescriptionArg, ?>> exportFileNode =
+        node.castArg(ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -2559,7 +2559,7 @@ public class ProjectGenerator {
       return projectFilesystem.relativize(output);
     }
 
-    Optional<SourcePath> src = exportFileNode.get().getConstructorArg().src;
+    Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
       Path output =
           buildTarget

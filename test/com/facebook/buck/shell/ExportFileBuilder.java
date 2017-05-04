@@ -17,14 +17,15 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class ExportFileBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        ExportFileDescription.Arg, ExportFileDescription, ExportFile> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
+        ExportFile> {
   private ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(), target);
   }
@@ -34,17 +35,17 @@ public class ExportFileBuilder
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {
-    arg.src = Optional.ofNullable(path);
+    getArgForPopulating().setSrc(Optional.ofNullable(path));
     return this;
   }
 
   public ExportFileBuilder setOut(String out) {
-    arg.out = Optional.of(out);
+    getArgForPopulating().setOut(out);
     return this;
   }
 
   public ExportFileBuilder setMode(ExportFileDescription.Mode mode) {
-    arg.mode = Optional.of(mode);
+    getArgForPopulating().setMode(mode);
     return this;
   }
 }
