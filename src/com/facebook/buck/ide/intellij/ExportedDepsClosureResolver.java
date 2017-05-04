@@ -19,7 +19,7 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
@@ -68,8 +68,8 @@ public class ExportedDepsClosureResolver {
             .stream()
             .filter(
                 target -> {
-                  AbstractDescriptionArg arg =
-                      (AbstractDescriptionArg) targetGraph.get(target).getConstructorArg();
+                  CommonDescriptionArg arg =
+                      (CommonDescriptionArg) targetGraph.get(target).getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
             .flatMap(

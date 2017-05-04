@@ -27,7 +27,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
@@ -72,8 +72,7 @@ public final class IjModuleGraphFactory {
                         input.getDescription().getClass()))
             .filter(
                 targetNode -> {
-                  AbstractDescriptionArg arg =
-                      (AbstractDescriptionArg) targetNode.getConstructorArg();
+                  CommonDescriptionArg arg = (CommonDescriptionArg) targetNode.getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
             // IntelliJ doesn't support referring to source files which aren't below the root of the
@@ -186,7 +185,7 @@ public final class IjModuleGraphFactory {
         BuildTarget depBuildTarget = entry.getKey();
         TargetNode<?, ?> depTargetNode = targetGraph.get(depBuildTarget);
 
-        AbstractDescriptionArg arg = (AbstractDescriptionArg) depTargetNode.getConstructorArg();
+        CommonDescriptionArg arg = (CommonDescriptionArg) depTargetNode.getConstructorArg();
         if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
           continue;
         }

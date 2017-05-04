@@ -19,10 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
-import java.util.Set;
 import org.immutables.value.Value;
 
+/**
+ * THIS IS A LEGACY CLASS WHICH IS ABOUT TO BE DELETED.
+ *
+ * <p>DO NOT ADD ANY NEW BEHAVIOR TO IT, OR NEW REFERENCES TO IT.
+ *
+ * <p>YOUR NEW BEHAVIOR PROBABLY WANTS TO LIVE ON CommonDescriptionArg.
+ */
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg implements CommonDescriptionArg {
   public ImmutableSet<SourcePath> licenses = ImmutableSet.of();
@@ -37,9 +42,5 @@ public abstract class AbstractDescriptionArg implements CommonDescriptionArg {
   @Override
   public ImmutableSortedSet<String> getLabels() {
     return labels;
-  }
-
-  public final boolean labelsContainsAnyOf(Set<String> labels) {
-    return !Sets.intersection(this.labels, labels).isEmpty();
   }
 }
