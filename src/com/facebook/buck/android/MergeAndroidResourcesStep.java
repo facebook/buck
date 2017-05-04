@@ -377,8 +377,7 @@ public class MergeAndroidResourcesStep implements Step {
           // Nothing extra to do in this case.
 
         } else if (resourceToIdValuesMap.containsKey(resource)) {
-          resource = resourceToIdValuesMap.get(resource);
-          resource = resource.copyWithNewIdValue(resource.idValue);
+          resource = resource.copyWithNewIdValue(resourceToIdValuesMap.get(resource).idValue);
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
           Map<RDotTxtEntry, String> styleableResourcesMap =
@@ -453,8 +452,9 @@ public class MergeAndroidResourcesStep implements Step {
         styleableIndex + index < linesInSymbolsFile.size();
         styleableIndex++) {
 
-      RDotTxtEntry styleableResource =
-          getResourceAtIndex(linesInSymbolsFile, styleableIndex + index);
+      RDotTxtEntry styleableResource = getResourceAtIndex(linesInSymbolsFile,
+          styleableIndex + index)
+          .copyWithNewParent(resource.name);
 
       String styleablePrefix = resource.name + "_";
 
@@ -462,7 +462,6 @@ public class MergeAndroidResourcesStep implements Step {
           && styleableResource.type == RType.STYLEABLE
           && styleableResource.name.startsWith(styleablePrefix)) {
 
-        styleableResource = styleableResource.copyWithNewParent(resource.name);
         String attrName = styleableResource.name.substring(styleablePrefix.length());
 
         RDotTxtEntry attrResource = new RDotTxtEntry(IdType.INT, RType.ATTR, attrName, "");
