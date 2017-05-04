@@ -65,6 +65,8 @@ public class ProvisioningProfileCopyStepTest {
   private ExecutionContext executionContext;
   private CodeSignIdentityStore codeSignIdentityStore;
 
+  private static final ImmutableList<String> FAKE_READ_COMMAND = ImmutableList.of("cat");
+
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
@@ -107,9 +109,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             Optional.of(testdataDir.resolve("Invalid.plist")),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                testdataDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -132,9 +132,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                testdataDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -161,9 +159,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                emptyDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -186,9 +182,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                emptyDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -220,9 +214,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                testdataDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -246,9 +238,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.empty(),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                testdataDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
@@ -285,9 +275,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.of(entitlementsFile),
             ProvisioningProfileStore.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()),
-                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-                testdataDir),
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
             codeSignIdentityStore,
