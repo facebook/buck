@@ -363,22 +363,30 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     };
   }
 
-  private void fillMissingBuildMetadataFromCache(
-      CacheResult cacheResult, BuildInfoRecorder buildInfoRecorder, String... names) {
-    Preconditions.checkState(cacheResult.getType() == CacheResultType.HIT);
-    for (String name : names) {
+  private void fillMissingMetadataFromCache(
+      CacheResult cacheResult,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder,
+      String... extraBuildMetaData) {
+
+    // All cache hits should have the build ID in their metadata.
+    buildInfoRecorder.addBuildMetadata(
+        BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+        Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
+
+    // The dep file is actually stored as in-artifact metadata.
+    onDiskBuildInfo
+        .getValue(BuildInfo.MetadataKey.DEP_FILE)
+        .ifPresent(
+            depFile -> buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.DEP_FILE, depFile));
+
+    // Fill in any extra build metadata.
+    for (String name : extraBuildMetaData) {
       String value = cacheResult.getMetadata().get(name);
       if (value != null) {
         buildInfoRecorder.addBuildMetadata(name, value);
       }
     }
-  }
-
-  // Copy the fetched artifacts build ID to the current builds "origin" build ID.
-  private void fillInOriginFromCache(CacheResult cacheResult, BuildInfoRecorder buildInfoRecorder) {
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
-        Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
   }
 
   private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
@@ -465,7 +473,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               BuildRuleCacheEvent.startCacheCheckScope(
                   context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
             Optional<BuildResult> manifestResult =
-                performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
+                performManifestBasedCacheFetch(
+                    rule, context, onDiskBuildInfo, buildInfoRecorder, manifestKey.get());
             if (manifestResult.isPresent()) {
               return Futures.immediateFuture(manifestResult);
             }
@@ -534,13 +543,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                         rule.getProjectFilesystem(),
                         buildContext);
                 if (cacheResult.getType().isSuccess()) {
-                  fillInOriginFromCache(cacheResult, buildInfoRecorder);
-                  fillMissingBuildMetadataFromCache(
+                  fillMissingMetadataFromCache(
                       cacheResult,
+                      onDiskBuildInfo,
                       buildInfoRecorder,
                       BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
-                      BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-                      BuildInfo.MetadataKey.DEP_FILE);
+                      BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
                 }
                 return cacheResult;
               },
@@ -979,6 +987,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
                 if (useManifestCaching(rule)) {
+                  ImmutableList<String> inputs =
+                      onDiskBuildInfo
+                          .getValues(BuildInfo.MetadataKey.DEP_FILE)
+                          .orElseThrow(
+                              () ->
+                                  new IllegalStateException(
+                                      String.format(
+                                          "%s: %s: cannot load dep file inputs",
+                                          rule.getBuildTarget(), success)));
+                  Optional<RuleKey> calculatedRuleKey =
+                      calculateDepFileRuleKey(
+                              rule,
+                              buildContext,
+                              Optional.of(inputs),
+                              /* allowMissingInputs */ false)
+                          .map(RuleKeyAndInputs::getRuleKey);
                   Optional<RuleKey> onDiskRuleKey =
                       onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
                   Optional<RuleKey> metaDataRuleKey =
@@ -986,11 +1010,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                           .getBuildMetadataFor(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)
                           .map(RuleKey::new);
                   Preconditions.checkState(
-                      onDiskRuleKey.equals(metaDataRuleKey),
-                      "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
+                      calculatedRuleKey.equals(onDiskRuleKey),
+                      "%s: %s: invalid on-disk dep-file rule key: %s != %s",
                       rule.getBuildTarget(),
                       success,
-                      onDiskRuleKey,
+                      calculatedRuleKey,
+                      onDiskRuleKey);
+                  Preconditions.checkState(
+                      calculatedRuleKey.equals(metaDataRuleKey),
+                      "%s: %s: invalid meta-data dep-file rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      calculatedRuleKey,
                       metaDataRuleKey);
                   ruleKeys.addAll(OptionalCompat.asSet(onDiskRuleKey));
                 }
@@ -1637,8 +1668,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildRule rule,
       BuildEngineBuildContext context,
       Optional<ImmutableList<String>> depFile,
-      boolean allowMissingInputs)
-      throws IOException {
+      boolean allowMissingInputs) {
 
     Preconditions.checkState(useDependencyFileRuleKey(rule));
 
@@ -1670,7 +1700,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       if (allowMissingInputs && Throwables.getRootCause(e) instanceof NoSuchFileException) {
         return Optional.empty();
       }
-      throw e;
+      throw new RuntimeException(e);
     }
   }
 
@@ -1772,6 +1802,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private Optional<BuildResult> performManifestBasedCacheFetch(
       final BuildRule rule,
       final BuildEngineBuildContext context,
+      OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
       RuleKeyAndInputs manifestKey)
       throws IOException {
@@ -1838,12 +1869,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             context);
 
     if (cacheResult.getType().isSuccess()) {
-      fillInOriginFromCache(cacheResult, buildInfoRecorder);
-      fillMissingBuildMetadataFromCache(
-          cacheResult,
-          buildInfoRecorder,
-          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-          BuildInfo.MetadataKey.DEP_FILE);
+      fillMissingMetadataFromCache(
+          cacheResult, onDiskBuildInfo, buildInfoRecorder, BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
       return Optional.of(
           BuildResult.success(
               rule, BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED, cacheResult));
@@ -1893,12 +1920,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             context);
 
     if (cacheResult.getType().isSuccess()) {
-      fillInOriginFromCache(cacheResult, buildInfoRecorder);
-      fillMissingBuildMetadataFromCache(
-          cacheResult,
-          buildInfoRecorder,
-          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-          BuildInfo.MetadataKey.DEP_FILE);
+      fillMissingMetadataFromCache(
+          cacheResult, onDiskBuildInfo, buildInfoRecorder, BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
       return Optional.of(
           BuildResult.success(
               rule, BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
