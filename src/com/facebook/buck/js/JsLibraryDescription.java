@@ -126,6 +126,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
     private final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
         sourcesToFlavors;
     private final BuildRuleParams baseParams;
+    private final BuildTarget fileBaseTarget;
 
     @Nullable private ImmutableList<JsFile> sourceFiles;
 
@@ -140,6 +141,15 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
       this.baseParams = baseParams;
       this.resolver = resolver;
       this.sourcesToFlavors = sourcesToFlavors;
+
+      BuildTarget buildTarget = baseParams.getBuildTarget();
+      // Platform information is only relevant when building release-optimized files.
+      // Stripping platform targets from individual files allows us to use the base version of
+      // every file in the build for all supported platforms, leading to improved cache reuse.
+      this.fileBaseTarget =
+          !buildTarget.getFlavors().contains(JsFlavors.RELEASE)
+              ? buildTarget.withFlavors()
+              : buildTarget;
     }
 
     private LibraryBuilder setSources(
@@ -197,7 +207,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescription.Ar
     private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file)
         throws NoSuchBuildTargetException {
       final Flavor fileFlavor = sourcesToFlavors.get(file);
-      final BuildTarget target = baseParams.getBuildTarget().withAppendedFlavors(fileFlavor);
+      final BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       resolver.requireRule(target);
       return resolver.getRuleWithType(target, JsFile.class);
     }

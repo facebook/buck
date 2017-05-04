@@ -16,11 +16,11 @@
 
 package com.facebook.buck.js;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.in;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
@@ -134,23 +134,25 @@ public class JsLibraryDescriptionTest {
   @Test
   public void doesNotpropagatePlatformFlavorsWithoutRelease() throws NoSuchBuildTargetException {
     UserFlavor platformFlavor = JsFlavors.ANDROID;
-    BuildTarget withPlatformFlavor = this.target.withFlavors(platformFlavor);
+    BuildTarget withPlatformFlavor = target.withFlavors(platformFlavor);
     JsTestScenario scenario =
         scenarioBuilder
             .library(withPlatformFlavor, new FakeSourcePath("apples"), new FakeSourcePath("pears"))
             .build();
 
-    RichStream.from(scenario.resolver.getRule(withPlatformFlavor).getBuildDeps())
-        .filter(JsFile.class)
-        .map(JsFile::getBuildTarget)
-        .forEach(
-            target ->
-                assertThat(
-                    String.format(
-                        "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
-                        target, withPlatformFlavor, platformFlavor),
-                    target.getFlavors(),
-                    not(contains(platformFlavor))));
+    long numFileDeps =
+        RichStream.from(scenario.resolver.getRule(withPlatformFlavor).getBuildDeps())
+            .filter(JsFile.class)
+            .map(JsFile::getBuildTarget)
+            .peek(
+                fileTarget ->
+                    assertFalse(
+                        String.format(
+                            "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
+                            fileTarget, withPlatformFlavor, platformFlavor),
+                        fileTarget.getFlavors().contains(platformFlavor)))
+            .count();
+    assertNotEquals(0, numFileDeps);
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source)
