@@ -32,7 +32,7 @@ import java.nio.file.Path;
  * kind of object file in the list of args, so later we can easily create such file list for the
  * linker.
  */
-public class FileListableLinkerInputArg extends Arg implements HasSourcePath {
+public class FileListableLinkerInputArg implements Arg, HasSourcePath {
 
   private final SourcePathArg value;
 

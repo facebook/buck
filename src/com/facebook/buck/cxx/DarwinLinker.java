@@ -185,10 +185,10 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
    * linker via the `-u` argument.
    *
    * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
-   * another way to do this (perhaps other than creating a dymmy object file whose symbol table only
+   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
    * contains the undefined symbols listed in the symbol files).
    */
-  private static class UndefinedSymbolsArg extends Arg {
+  private static class UndefinedSymbolsArg implements Arg {
 
     private final Iterable<? extends SourcePath> symbolFiles;
 

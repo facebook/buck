@@ -43,7 +43,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractStringWithMacrosArg extends Arg {
+abstract class AbstractStringWithMacrosArg implements Arg {
 
   abstract StringWithMacros getStringWithMacros();
 

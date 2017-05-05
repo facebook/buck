@@ -42,7 +42,7 @@ import java.util.Objects;
  *         "/opt/toolchain/bin/tool");
  * }</pre>
  */
-public class SanitizedArg extends Arg {
+public class SanitizedArg implements Arg {
 
   private final Function<? super String, String> sanitizer;
   private final String unsanitzed;

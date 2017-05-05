@@ -30,7 +30,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractStringArg extends Arg {
+abstract class AbstractStringArg implements Arg {
 
   abstract String getArg();
 

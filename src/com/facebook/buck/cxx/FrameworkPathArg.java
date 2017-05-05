@@ -23,13 +23,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.OptionalCompat;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 
 /** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
-public abstract class FrameworkPathArg extends Arg {
+public abstract class FrameworkPathArg implements Arg {
 
   protected final ImmutableCollection<FrameworkPath> frameworkPaths;
 
@@ -41,26 +40,14 @@ public abstract class FrameworkPathArg extends Arg {
   public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
     FluentIterable<SourcePath> sourcePaths =
         FluentIterable.from(frameworkPaths)
-            .transformAndConcat(
-                new Function<FrameworkPath, Iterable<SourcePath>>() {
-                  @Override
-                  public Iterable<SourcePath> apply(FrameworkPath input) {
-                    return OptionalCompat.asSet(input.getSourcePath());
-                  }
-                });
+            .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()));
     return ruleFinder.filterBuildRuleInputs(sourcePaths);
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     return FluentIterable.from(frameworkPaths)
-        .transformAndConcat(
-            new Function<FrameworkPath, Iterable<SourcePath>>() {
-              @Override
-              public Iterable<SourcePath> apply(FrameworkPath input) {
-                return OptionalCompat.asSet(input.getSourcePath());
-              }
-            })
+        .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()))
         .toList();
   }
 

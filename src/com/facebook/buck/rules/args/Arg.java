@@ -29,41 +29,41 @@ import java.util.Map;
 
 /**
  * An abstraction for modeling the arguments that contribute to a command run by a {@link
- * BuildRule}.
+ * BuildRule}, and also carry information for computing a rule key.
  */
-public abstract class Arg implements RuleKeyAppendable {
+public interface Arg extends RuleKeyAppendable {
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  public abstract ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+  ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  public abstract ImmutableCollection<SourcePath> getInputs();
+  ImmutableCollection<SourcePath> getInputs();
 
   /**
    * Append the contents of the Arg to the supplied builder. This call may inject any number of
    * elements (including zero) into the builder. This is only ever safe to call when the rule is
    * running, as it may do things like resolving source paths.
    */
-  public abstract void appendToCommandLine(
+  void appendToCommandLine(
       ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver);
 
   /** @return a {@link String} representation suitable to use for debugging. */
   @Override
-  public abstract String toString();
+  String toString();
 
   @Override
-  public abstract boolean equals(Object other);
+  boolean equals(Object other);
 
   @Override
-  public abstract int hashCode();
+  int hashCode();
 
-  public static ImmutableList<String> stringifyList(Arg input, SourcePathResolver pathResolver) {
+  static ImmutableList<String> stringifyList(Arg input, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     input.appendToCommandLine(builder, pathResolver);
     return builder.build();
   }
 
-  public static ImmutableList<String> stringify(
+  static ImmutableList<String> stringify(
       ImmutableCollection<Arg> args, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
@@ -72,7 +72,7 @@ public abstract class Arg implements RuleKeyAppendable {
     return builder.build();
   }
 
-  public static <K> ImmutableMap<K, String> stringify(
+  static <K> ImmutableMap<K, String> stringify(
       ImmutableMap<K, Arg> argMap, SourcePathResolver pathResolver) {
     ImmutableMap.Builder<K, String> stringMap = ImmutableMap.builder();
     for (Map.Entry<K, Arg> ent : argMap.entrySet()) {

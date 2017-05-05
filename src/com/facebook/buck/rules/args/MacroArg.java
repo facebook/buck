@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 
 /** An {@link Arg} which contains macros that need to be expanded. */
-public class MacroArg extends Arg {
+public class MacroArg implements Arg {
 
   protected final MacroHandler expander;
   protected final BuildTarget target;

@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /** Generate linker command line for Rust library when used as a dependency. */
-public class RustLibraryArg extends Arg implements HasSourcePath {
+public class RustLibraryArg implements Arg, HasSourcePath {
   private final SourcePathResolver resolver;
   private final String crate;
   private final ImmutableSortedSet<BuildRule> deps;

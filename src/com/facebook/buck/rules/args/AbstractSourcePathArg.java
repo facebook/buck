@@ -31,7 +31,7 @@ import org.immutables.value.Value;
 /** An {@link Arg} which wraps a {@link SourcePath}. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractSourcePathArg extends Arg implements HasSourcePath {
+abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
 
   @Override
   public abstract SourcePath getPath();

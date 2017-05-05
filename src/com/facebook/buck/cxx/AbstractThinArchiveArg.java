@@ -35,7 +35,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractThinArchiveArg extends Arg implements HasSourcePath {
+abstract class AbstractThinArchiveArg implements Arg, HasSourcePath {
 
   @Override
   public abstract SourcePath getPath();
