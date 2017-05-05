@@ -1,8 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "js",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/js:js",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",

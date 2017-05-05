@@ -46,9 +46,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.CoreReactNativeLibraryArg;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
-import com.facebook.buck.js.ReactNativeLibraryArgs;
+import com.facebook.buck.js.ReactNativeLibraryArg;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
@@ -702,7 +703,7 @@ class NewNativeTargetProjectMutator {
   }
 
   private String generateXcodeShellScript(TargetNode<?, ?> targetNode) {
-    Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArgs);
+    Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArg);
 
     ST template;
     try {
@@ -716,14 +717,15 @@ class NewNativeTargetProjectMutator {
       throw new RuntimeException("There was an error loading 'rn_package.st' template", e);
     }
 
-    ReactNativeLibraryArgs args = (ReactNativeLibraryArgs) targetNode.getConstructorArg();
+    CoreReactNativeLibraryArg args = (CoreReactNativeLibraryArg) targetNode.getConstructorArg();
 
-    template.add("bundle_name", args.bundleName);
+    template.add("bundle_name", args.getBundleName());
 
     ProjectFilesystem filesystem = targetNode.getFilesystem();
     BuildTarget buildTarget = targetNode.getBuildTarget();
     Path jsOutput =
-        ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem).resolve(args.bundleName);
+        ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)
+            .resolve(args.getBundleName());
     template.add("built_bundle_path", filesystem.resolve(jsOutput));
 
     Path resourceOutput = ReactNativeBundle.getPathToResources(buildTarget, filesystem);

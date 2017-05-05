@@ -38,10 +38,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
 public class IosReactNativeLibraryDescription
-    implements Description<ReactNativeLibraryArgs>,
+    implements Description<ReactNativeLibraryArg>,
         Flavored,
-        HasAppleBundleResourcesDescription<ReactNativeLibraryArgs>,
-        ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
+        HasAppleBundleResourcesDescription<ReactNativeLibraryArg>,
+        ImplicitDepsInferringDescription<ReactNativeLibraryArg> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
@@ -52,8 +52,8 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public Class<ReactNativeLibraryArgs> getConstructorArgType() {
-    return ReactNativeLibraryArgs.class;
+  public Class<ReactNativeLibraryArg> getConstructorArgType() {
+    return ReactNativeLibraryArg.class;
   }
 
   @Override
@@ -62,7 +62,7 @@ public class IosReactNativeLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      ReactNativeLibraryArgs args) {
+      ReactNativeLibraryArg args) {
     return enhancer.enhanceForIos(params, resolver, args);
   }
 
@@ -75,7 +75,7 @@ public class IosReactNativeLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ReactNativeLibraryArgs constructorArg,
+      ReactNativeLibraryArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     RichStream.of(packager.get())
@@ -87,7 +87,7 @@ public class IosReactNativeLibraryDescription
   @Override
   public void addAppleBundleResources(
       AppleBundleResources.Builder builder,
-      TargetNode<ReactNativeLibraryArgs, ?> targetNode,
+      TargetNode<ReactNativeLibraryArg, ?> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     BuildTarget buildTarget = targetNode.getBuildTarget();

@@ -16,19 +16,9 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-@SuppressFieldNotInitialized
-public class ReactNativeLibraryArgs extends AbstractDescriptionArg {
-  public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  public SourcePath entryPath;
-  public String bundleName;
-  public Optional<String> packagerFlags;
-
-  public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-}
+@BuckStyleImmutable
+@Value.Immutable
+interface AbstractReactNativeLibraryArg extends CoreReactNativeLibraryArg {}
