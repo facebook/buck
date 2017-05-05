@@ -23,6 +23,8 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 public interface CommonDescriptionArg {
+  String getName();
+
   ImmutableSet<SourcePath> getLicenses();
 
   @Value.NaturalOrder

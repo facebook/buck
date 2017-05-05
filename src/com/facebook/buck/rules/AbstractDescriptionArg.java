@@ -34,6 +34,11 @@ public abstract class AbstractDescriptionArg implements CommonDescriptionArg {
   public ImmutableSortedSet<String> labels = ImmutableSortedSet.of();
 
   @Override
+  public String getName() {
+    throw new UnsupportedOperationException("Legacy Descriptions don't support getName");
+  }
+
+  @Override
   public ImmutableSet<SourcePath> getLicenses() {
     return licenses;
   }

@@ -50,11 +50,17 @@ public abstract class AbstractNodeBuilderWithImmutableArg<
   @SuppressWarnings("unchecked")
   private TArgBuilder makeArgBuilder(TDescription description) {
     Class<? extends TArg> constructorArgType = description.getConstructorArgType();
+    TArgBuilder builder;
     try {
-      return (TArgBuilder) constructorArgType.getMethod("builder").invoke(null);
+      builder = (TArgBuilder) constructorArgType.getMethod("builder").invoke(null);
+      // Set a default value for name from the target. The real coercer stack implicitly sets name,
+      // but we're not going through that stack so we emulate it instead.
+      // If setName is explicitly called, its value with override this one.
+      builder.getClass().getMethod("setName", String.class).invoke(builder, target.getShortName());
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    return builder;
   }
 
   @Override
