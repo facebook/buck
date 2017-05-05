@@ -99,5 +99,6 @@
     <orderEntry type="library" name="kotlin" level="project" />
     <orderEntry type="library" name="lz4" level="project" />
     <orderEntry type="library" name="mapdb" level="project" />
+    <orderEntry type="library" name="sqlite" level="project" />
   </component>
 </module>

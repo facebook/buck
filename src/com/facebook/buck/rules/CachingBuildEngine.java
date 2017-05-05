@@ -668,6 +668,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 return new RocksDBBuildInfoStore(filesystem);
               case MAPDB:
                 return new MapDBBuildInfoStore(filesystem);
+              case SQLITE:
+                return new SQLiteBuildInfoStore(filesystem);
               case FILESYSTEM:
                 return new FilesystemBuildInfoStore(filesystem);
               default:
@@ -1953,6 +1955,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public enum MetadataStorage {
     FILESYSTEM,
+    SQLITE,
     MAPDB,
     ROCKSDB,
   }

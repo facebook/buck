@@ -83,6 +83,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/rocksdbjni/rocksdbjni-5.1.2.jar",
     "third-party/java/servlet-api/javax.servlet-api-3.1.0.jar",
     "third-party/java/slf4j/slf4j-jdk14-1.7.5.jar",
+    "third-party/java/sqlite/sqlite-jdbc-3.16.1.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
     "third-party/java/thrift/libthrift-0.9.3.jar",
     "third-party/java/xz-java-1.5/xz-1.5.jar",
