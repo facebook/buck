@@ -1,5 +1,6 @@
-standard_java_library(
+java_immutables_library(
     name = "dotnet",
+    srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/rules:types",
         "//test/com/facebook/buck/dotnet:",
@@ -19,6 +20,7 @@ standard_java_library(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],

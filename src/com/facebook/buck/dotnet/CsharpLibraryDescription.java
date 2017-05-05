@@ -18,25 +18,25 @@ package com.facebook.buck.dotnet;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
+import org.immutables.value.Value;
 
-public class CsharpLibraryDescription implements Description<CsharpLibraryDescription.Arg> {
+public class CsharpLibraryDescription implements Description<CsharpLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<CsharpLibraryDescriptionArg> getConstructorArgType() {
+    return CsharpLibraryDescriptionArg.class;
   }
 
   @Override
@@ -45,10 +45,10 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      CsharpLibraryDescriptionArg args) {
 
     ImmutableList.Builder<Either<BuildRule, String>> refsAsRules = ImmutableList.builder();
-    for (Either<BuildTarget, String> ref : args.deps.get()) {
+    for (Either<BuildTarget, String> ref : args.getDeps()) {
       if (ref.isLeft()) {
         refsAsRules.add(Either.ofLeft(resolver.getRule(ref.getLeft())));
       } else {
@@ -56,21 +56,28 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
       }
     }
 
-    String suggestedOut = args.dllName.orElse(params.getBuildTarget().getShortName() + ".dll");
-
     return new CsharpLibrary(
-        params, suggestedOut, args.srcs, refsAsRules.build(), args.resources, args.frameworkVer);
+        params,
+        args.getDllName(),
+        args.getSrcs(),
+        refsAsRules.build(),
+        args.getResources(),
+        args.getFrameworkVer());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public FrameworkVersion frameworkVer;
-    public ImmutableSortedSet<SourcePath> srcs;
-    public ImmutableMap<String, SourcePath> resources = ImmutableMap.of();
-    public Optional<String> dllName;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCsharpLibraryDescriptionArg extends CommonDescriptionArg, HasSrcs {
+    FrameworkVersion getFrameworkVer();
+
+    ImmutableMap<String, SourcePath> getResources();
+
+    @Value.Default
+    default String getDllName() {
+      return getName() + ".dll";
+    }
 
     // We may have system-provided references ("System.Core.dll") or other build targets
-    public Optional<ImmutableList<Either<BuildTarget, String>>> deps =
-        Optional.of(ImmutableList.of());
+    ImmutableList<Either<BuildTarget, String>> getDeps();
   }
 }
