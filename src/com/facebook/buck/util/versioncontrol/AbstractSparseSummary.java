@@ -68,4 +68,14 @@ public abstract class AbstractSparseSummary {
   public int getFilesConflicting() {
     return 0;
   }
+
+  public SparseSummary combineSummaries(SparseSummary other) {
+    return SparseSummary.of(
+        getProfilesAdded() + other.getProfilesAdded(),
+        getIncludeRulesAdded() + other.getIncludeRulesAdded(),
+        getExcludeRulesAdded() + other.getExcludeRulesAdded(),
+        getFilesAdded() + other.getFilesAdded(),
+        getFilesDropped() + other.getFilesDropped(),
+        getFilesConflicting() + other.getFilesConflicting());
+  }
 }

@@ -43,7 +43,9 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -93,6 +95,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting static final String EMOJI_SNAIL = "\uD83D\uDC0C";
   @VisibleForTesting static final String EMOJI_WHALE = "\uD83D\uDC33";
   @VisibleForTesting static final String EMOJI_BEACH = "\uD83C\uDFD6";
+  @VisibleForTesting static final String EMOJI_DESERT = "\uD83C\uDFDD";
+  @VisibleForTesting static final String EMOJI_ROLODEX = "\uD83D\uDCC7";
 
   @VisibleForTesting
   static final Optional<String> NEW_DAEMON_INSTANCE_MSG =
@@ -139,6 +143,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private int lastNumLinesPrinted;
 
   private Optional<String> parsingStatus = Optional.empty();
+  private Optional<SparseSummary> autoSparseSummary = Optional.empty();
   // Save if Watchman reported zero file changes in case we receive an ActionGraphCache hit. This
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
@@ -302,7 +307,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     logEventPair(
         "REFRESHING SPARSE CHECKOUT",
-        /* suffix */ Optional.empty(),
+        createAutoSparseStatusMessage(autoSparseSummary),
         currentTimeMillis,
         /* offsetMs */ 0L,
         autoSparseState.values(),
@@ -587,6 +592,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Override
   @Subscribe
+  public void autoSparseStateSparseRefreshFinished(
+      AutoSparseStateEvents.SparseRefreshFinished finished) {
+    super.autoSparseStateSparseRefreshFinished(finished);
+    autoSparseSummary =
+        Optional.of(
+            autoSparseSummary
+                .map(s -> s.combineSummaries(finished.summary))
+                .orElse(finished.summary));
+  }
+
+  @Override
+  @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
     super.buildRuleStarted(started);
   }
@@ -832,6 +849,23 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         return Optional.of("(SLOW) " + reason);
       }
     }
+  }
+
+  static Optional<String> createAutoSparseStatusMessage(Optional<SparseSummary> summary) {
+    if (!summary.isPresent()) {
+      return Optional.empty();
+    }
+    SparseSummary sparse_summary = summary.get();
+    // autosparse only ever exports include rules, we are only interested in added include rules and
+    // the files added count.
+    if (sparse_summary.getIncludeRulesAdded() == 0 && sparse_summary.getFilesAdded() == 0) {
+      return createParsingMessage(EMOJI_DESERT, "Working copy size unchanged");
+    }
+    return createParsingMessage(
+        EMOJI_ROLODEX,
+        String.format(
+            "%d new sparse rules imported, %d files added to the working copy",
+            sparse_summary.getIncludeRulesAdded(), sparse_summary.getFilesAdded()));
   }
 
   @VisibleForTesting

@@ -17,6 +17,8 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_BUNNY;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_DESERT;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_ROLODEX;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_SNAIL;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_WHALE;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.NEW_DAEMON_INSTANCE_MSG;
@@ -1993,25 +1995,41 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(
-        listener, 500L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.5s"));
+        listener,
+        500L,
+        ImmutableList.of(
+            "[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.5s "
+                + createParsingMessage(EMOJI_DESERT, "Working copy size unchanged").get()));
 
     // starting a new refresh adds on to running time
     sparseRefreshStarted = new AutoSparseStateEvents.SparseRefreshStarted();
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             sparseRefreshStarted, 1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(listener, 1000L, ImmutableList.of("[+] REFRESHING SPARSE CHECKOUT...0.5s"));
+    validateConsole(
+        listener,
+        1000L,
+        ImmutableList.of(
+            "[+] REFRESHING SPARSE CHECKOUT...0.5s "
+                + createParsingMessage(EMOJI_DESERT, "Working copy size unchanged").get()));
 
     // ending a new refresh shows the total running time for both events
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new AutoSparseStateEvents.SparseRefreshFinished(
-                sparseRefreshStarted, SparseSummary.of()),
+                sparseRefreshStarted, SparseSummary.of(0, 10, 0, 42, 0, 0)),
             1500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(
-        listener, 1500L, ImmutableList.of("[-] REFRESHING SPARSE CHECKOUT...FINISHED 1.0s"));
+        listener,
+        1500L,
+        ImmutableList.of(
+            "[-] REFRESHING SPARSE CHECKOUT...FINISHED 1.0s "
+                + createParsingMessage(
+                        EMOJI_ROLODEX,
+                        "10 new sparse rules imported, 42 files added to the working copy")
+                    .get()));
   }
 
   @Test
