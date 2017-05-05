@@ -25,13 +25,10 @@ import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
@@ -47,7 +44,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
-import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -81,7 +77,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 /** Console that provides rich, updating ansi output about the current build. */
@@ -443,36 +438,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
-  private String getNetworkStatsLine(@Nullable BuildEvent.Finished finishedEvent) {
-    String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + "DOWNLOADING" + "...";
-    List<String> columns = new ArrayList<>();
-    if (finishedEvent != null) {
-      Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
-      Pair<Double, SizeUnit> readableSpeed =
-          SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale, "%s/S " + "AVG", SizeUnit.toHumanReadableString(readableSpeed, locale)));
-    } else {
-      Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
-      Pair<Double, SizeUnit> readableDownloadSpeed =
-          SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale, "%s/S", SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
-    }
-    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
-    Pair<Double, SizeUnit> readableBytesDownloaded =
-        SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
-    columns.add(
-        String.format(
-            locale, "TOTAL: %s", SizeUnit.toHumanReadableString(readableBytesDownloaded, locale)));
-    columns.add(
-        String.format(
-            locale, "%d Artifacts", networkStatsKeeper.getDownloadedArtifactDownloaded()));
-    return parseLine + " " + "(" + Joiner.on(", ").join(columns) + ")";
-  }
-
   private Optional<String> getOptionalDistBuildLineSuffix() {
     String parseLine;
     List<String> columns = new ArrayList<>();
@@ -803,11 +768,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Override
   public void printSevereWarningDirectly(String line) {
     logEvents.add(ConsoleEvent.severe(line));
-  }
-
-  @Subscribe
-  public void bytesReceived(NetworkEvent.BytesReceivedEvent bytesReceivedEvent) {
-    networkStatsKeeper.bytesReceived(bytesReceivedEvent);
   }
 
   @Subscribe

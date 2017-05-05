@@ -66,6 +66,9 @@ public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
+  private static final String FINISHED_DOWNLOAD_STRING =
+      "[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)";
+
   private BuildRuleDurationTracker durationTracker;
 
   private BuckEventBus eventBus;
@@ -164,7 +167,9 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
             + "[-] BUILDING...FINISHED 0.8s\n"
-            + "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
+            + "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
+            + FINISHED_DOWNLOAD_STRING
+            + "\n";
     assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
@@ -234,7 +239,10 @@ public class SimpleConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     assertOutput(
-        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n", console);
+        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n"
+            + FINISHED_DOWNLOAD_STRING
+            + "\n",
+        console);
   }
 
   @Test
@@ -280,6 +288,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     expectedOutput += "[-] BUILDING...FINISHED 0.1s\n";
+    expectedOutput += FINISHED_DOWNLOAD_STRING + "\n";
     assertOutput(expectedOutput, console);
   }
 

@@ -121,6 +121,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus);
     }
 
+    lines.add(getNetworkStatsLine(finished));
+
     printLines(lines);
   }
 
