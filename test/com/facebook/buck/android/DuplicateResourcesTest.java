@@ -71,10 +71,10 @@ public class DuplicateResourcesTest {
 
   private FakeProjectFilesystem filesystem;
 
-  private TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> mainRes;
-  private TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> directDepRes;
-  private TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> transitiveDepRes;
-  private TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> bottomDepRes;
+  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> mainRes;
+  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> directDepRes;
+  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> transitiveDepRes;
+  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> bottomDepRes;
   private TargetNode<AndroidLibraryDescription.Arg, AndroidLibraryDescription> transitiveDepLib;
   private TargetNode<AndroidLibraryDescription.Arg, AndroidLibraryDescription> library;
   private TargetNode<KeystoreDescription.Arg, KeystoreDescription> keystore;

@@ -250,7 +250,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void testClasspathContainsOnlyJavaTargets() throws Exception {
-    TargetNode<AndroidResourceDescription.Arg, AndroidResourceDescription> resourceRule =
+    TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> resourceRule =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:res")).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceRule);

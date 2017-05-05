@@ -19,6 +19,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
@@ -99,13 +100,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   @Override
   public Optional<Path> getAndroidResourcePath(
-      TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+      TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
     return AndroidResourceDescription.getResDirectoryForProject(buildRuleResolver, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }
 
   @Override
-  public Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+  public Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
     return AndroidResourceDescription.getAssetsDirectoryForProject(buildRuleResolver, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }

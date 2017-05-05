@@ -19,18 +19,18 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class AndroidResourceBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        AndroidResourceDescription.Arg, AndroidResourceDescription, AndroidResource> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        AndroidResourceDescriptionArg.Builder, AndroidResourceDescriptionArg,
+        AndroidResourceDescription, AndroidResource> {
 
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(new AndroidResourceDescription(false), target, filesystem);
@@ -46,12 +46,12 @@ public class AndroidResourceBuilder
   }
 
   public AndroidResourceBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public AndroidResourceBuilder setRes(SourcePath res) {
-    arg.res = Optional.of(Either.ofLeft(res));
+    getArgForPopulating().setRes(Either.ofLeft(res));
     return this;
   }
 
@@ -60,22 +60,22 @@ public class AndroidResourceBuilder
   }
 
   public AndroidResourceBuilder setAssets(SourcePath assets) {
-    arg.assets = Optional.of(Either.ofLeft(assets));
+    getArgForPopulating().setAssets(Either.ofLeft(assets));
     return this;
   }
 
   public AndroidResourceBuilder setAssets(ImmutableSortedMap<String, SourcePath> assets) {
-    arg.assets = Optional.of(Either.ofRight(assets));
+    getArgForPopulating().setAssets(Either.ofRight(assets));
     return this;
   }
 
   public AndroidResourceBuilder setRDotJavaPackage(String rDotJavaPackage) {
-    arg.rDotJavaPackage = Optional.of(rDotJavaPackage);
+    getArgForPopulating().setPackage(rDotJavaPackage);
     return this;
   }
 
   public AndroidResourceBuilder setManifest(SourcePath manifest) {
-    arg.manifest = Optional.of(manifest);
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 }

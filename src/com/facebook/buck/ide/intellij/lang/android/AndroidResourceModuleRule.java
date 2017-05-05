@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResourceDescription.Arg> {
+public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResourceDescriptionArg> {
 
   public AndroidResourceModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -47,7 +48,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
 
   @Override
   public void apply(
-      TargetNode<AndroidResourceDescription.Arg, ?> target, ModuleBuildContext context) {
+      TargetNode<AndroidResourceDescriptionArg, ?> target, ModuleBuildContext context) {
     super.apply(target, context);
 
     IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
@@ -78,7 +79,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
       resourceFolders = ImmutableSet.of();
     }
 
-    androidFacetBuilder.setPackageName(target.getConstructorArg().rDotJavaPackage);
+    androidFacetBuilder.setPackageName(target.getConstructorArg().getPackage());
 
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
@@ -89,7 +90,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
     return IjModuleType.ANDROID_RESOURCES_MODULE;
   }
 }

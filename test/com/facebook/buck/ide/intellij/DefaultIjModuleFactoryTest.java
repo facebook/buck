@@ -27,7 +27,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
-import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -680,13 +680,13 @@ public class DefaultIjModuleFactoryTest {
 
               @Override
               public Optional<Path> getAndroidResourcePath(
-                  TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+                  TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getAssetsPath(
-                  TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
+                  TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
                 return Optional.empty();
               }
 

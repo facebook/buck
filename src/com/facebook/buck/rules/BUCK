@@ -146,10 +146,12 @@ java_library(
     srcs = [
         "AbstractDescriptionArg.java",
         "CommonDescriptionArg.java",
+        "HasDeclaredDeps.java",
     ],
     visibility = ["PUBLIC"],
     deps = [
         ":source_path",
+        "//src/com/facebook/buck/model:model",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
