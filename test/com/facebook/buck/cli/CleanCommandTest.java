@@ -30,6 +30,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
@@ -131,6 +132,7 @@ public class CleanCommandTest extends EasyMockSupport {
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     return CommandRunnerParams.builder()
         .setConsole(new TestConsole())
+        .setBuildInfoStoreManager(new BuildInfoStoreManager())
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)

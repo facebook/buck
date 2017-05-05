@@ -110,6 +110,7 @@ public abstract class DistBuildFactory {
                 .setCoordinatorPort(coordinatorPort)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
+                .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .build());
     return executor;
   }

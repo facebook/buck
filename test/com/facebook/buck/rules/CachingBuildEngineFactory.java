@@ -124,6 +124,7 @@ public class CachingBuildEngineFactory {
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         buildRuleResolver,
+        new BuildInfoStoreManager(),
         resourceAwareSchedulingInfo,
         RuleKeyFactories.of(
             0,

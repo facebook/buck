@@ -164,7 +164,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
 
-  private final BuildInfoStoreManager buildInfoStoreManager = new BuildInfoStoreManager();
+  private final BuildInfoStoreManager buildInfoStoreManager;
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -177,6 +177,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       final BuildRuleResolver resolver,
+      BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyFactories ruleKeyFactories) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
@@ -192,6 +193,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
@@ -245,6 +247,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+    this.buildInfoStoreManager = new BuildInfoStoreManager();
 
     this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =
@@ -253,9 +256,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   @Override
-  public void close() {
-    buildInfoStoreManager.close();
-  }
+  public void close() {}
 
   /**
    * We have a lot of places where tasks are submitted into a service implicitly. There is no way to

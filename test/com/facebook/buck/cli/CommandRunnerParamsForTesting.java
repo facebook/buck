@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -88,6 +89,7 @@ public class CommandRunnerParamsForTesting {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     return CommandRunnerParams.builder()
         .setConsole(console)
+        .setBuildInfoStoreManager(new BuildInfoStoreManager())
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
         .setAndroidPlatformTargetSupplier(

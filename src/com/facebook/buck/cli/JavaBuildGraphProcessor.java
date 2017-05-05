@@ -145,6 +145,7 @@ final class JavaBuildGraphProcessor {
               cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
               cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
               buildRuleResolver,
+              params.getBuildInfoStoreManager(),
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
               RuleKeyFactories.of(
                   params.getBuckConfig().getKeySeed(),

@@ -298,6 +298,7 @@ public class DistBuildSlaveExecutor {
                   engineConfig.getBuildMaxDepFileCacheEntries(),
                   engineConfig.getBuildArtifactCacheSizeLimit(),
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+                  args.getBuildInfoStoreManager(),
                   engineConfig.getResourceAwareSchedulingInfo(),
                   RuleKeyFactories.of(
                       distBuildConfig.getKeySeed(),

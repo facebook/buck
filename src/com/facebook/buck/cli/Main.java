@@ -74,6 +74,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
@@ -662,6 +663,7 @@ public final class Main {
         try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
                 GlobalStateManager.singleton()
                     .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
+            BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
@@ -925,6 +927,7 @@ public final class Main {
                         .setKnownBuildRuleTypesFactory(factory)
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
+                        .setBuildInfoStoreManager(storeManager)
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             exitCode = INTERRUPTED_EXIT_CODE;

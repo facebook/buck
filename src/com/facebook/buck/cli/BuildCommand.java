@@ -836,6 +836,7 @@ public class BuildCommand extends AbstractCommand {
                 cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                 cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                 actionGraphAndResolver.getResolver(),
+                params.getBuildInfoStoreManager(),
                 cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                 RuleKeyFactories.of(
                     rootCellBuckConfig.getKeySeed(),
