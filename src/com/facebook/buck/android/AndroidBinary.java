@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -48,7 +49,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep;
-import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -766,11 +766,11 @@ public class AndroidBinary extends AbstractBuildRule
         enhancementResult.getPackageableCollection();
 
     ImmutableSet<Path> classpathEntriesToDex =
-        Stream.concat(
-                enhancementResult.getClasspathEntriesToDex().stream(),
+        RichStream.from(enhancementResult.getClasspathEntriesToDex())
+            .concat(
                 RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
-            .map(resolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet());
+            .map(input -> getProjectFilesystem().relativize(resolver.getAbsolutePath(input)))
+            .toImmutableSet();
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
@@ -783,7 +783,9 @@ public class AndroidBinary extends AbstractBuildRule
             .map(
                 input ->
                     new AbstractMap.SimpleEntry<>(
-                        input.getKey(), resolver.getRelativePath(input.getValue())))
+                        input.getKey(),
+                        getProjectFilesystem()
+                            .relativize(resolver.getAbsolutePath(input.getValue()))))
             .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
@@ -791,23 +793,48 @@ public class AndroidBinary extends AbstractBuildRule
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
-      // directory. Expect parallel outputs in the output directory and update classpathEntriesToDex
+      // directory.
+      Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
+      Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+      Path ESCAPED_PARENT = getProjectFilesystem().getPath("_.._");
+
+      ImmutableList.Builder<Pair<Path, Path>> pathToTargetBuilder = ImmutableList.builder();
+      ImmutableSet.Builder<Path> outDirPaths = ImmutableSet.builder();
+      for (Path entry : classpathEntriesToDex) {
+        // The entries are relative to the current cell root, and may contain '..' to
+        // reference entries in other roots. To construct the path in InDir, escape '..'
+        // with a normal directory name, so that the path does not escape InDir.
+        Path relPath =
+            RichStream.from(entry)
+                .map(fragment -> fragment.toString().equals("..") ? ESCAPED_PARENT : fragment)
+                .reduce(Path::resolve)
+                .orElse(getProjectFilesystem().getPath(""));
+        pathToTargetBuilder.add(new Pair<>(preprocessJavaClassesInDir.resolve(relPath), entry));
+        outDirPaths.add(preprocessJavaClassesOutDir.resolve(relPath));
+      }
+      // cell relative path of where the symlink should go, to where the symlink should map to.
+      ImmutableList<Pair<Path, Path>> pathToTarget = pathToTargetBuilder.build();
+      // Expect parallel outputs in the output directory and update classpathEntriesToDex
       // to reflect that.
-      final Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
-      final Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+      classpathEntriesToDex = outDirPaths.build();
+
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), preprocessJavaClassesInDir));
       steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), preprocessJavaClassesOutDir));
+
       steps.add(
-          new SymlinkFilesIntoDirectoryStep(
-              getProjectFilesystem(),
-              getProjectFilesystem().getRootPath(),
-              classpathEntriesToDex,
-              preprocessJavaClassesInDir));
-      classpathEntriesToDex =
-          classpathEntriesToDex
-              .stream()
-              .map(preprocessJavaClassesOutDir::resolve)
-              .collect(MoreCollectors.toImmutableSet());
+          new AbstractExecutionStep("symlinking for preprocessing") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              for (Pair<Path, Path> entry : pathToTarget) {
+                Path symlinkPath = getProjectFilesystem().resolve(entry.getFirst());
+                Path symlinkTarget = getProjectFilesystem().resolve(entry.getSecond());
+                java.nio.file.Files.createDirectories(symlinkPath.getParent());
+                java.nio.file.Files.createSymbolicLink(symlinkPath, symlinkTarget);
+              }
+              return StepExecutionResult.SUCCESS;
+            }
+          });
 
       AbstractGenruleStep.CommandString commandString =
           new AbstractGenruleStep.CommandString(
