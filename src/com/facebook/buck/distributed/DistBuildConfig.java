@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -35,6 +36,12 @@ public class DistBuildConfig {
 
   private static final String ENABLE_SLOW_LOCAL_BUILD_FALLBACK = "enable_slow_local_build_fallback";
   private static final boolean ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE = false;
+
+  private static final String BUILD_MODE = "build_mode";
+  private static final BuildMode BUILD_MODE_DEFAULT_VALUE = BuildMode.REMOTE_BUILD;
+
+  private static final String NUMBER_OF_MINIONS = "number_of_minions";
+  private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -60,6 +67,18 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
         .orElse(REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
+  }
+
+  public BuildMode getBuildMode() {
+    return buckConfig
+        .getEnum(STAMPEDE_SECTION, BUILD_MODE, BuildMode.class)
+        .orElse(BUILD_MODE_DEFAULT_VALUE);
+  }
+
+  public int getNumberOfMinions() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
+        .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
   }
 
   /**

@@ -627,9 +627,15 @@ public class BuildCommand extends AbstractCommand {
                 distBuildLogStateTracker,
                 buckVersion,
                 Executors.newScheduledThreadPool(1));
+        DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
         distBuildResult =
             build.executeAndPrintFailuresToEventBus(
-                executorService, filesystem, fileHashCache, params.getBuckEventBus());
+                executorService,
+                filesystem,
+                fileHashCache,
+                params.getBuckEventBus(),
+                distBuildConfig.getBuildMode(),
+                distBuildConfig.getNumberOfMinions());
         distBuildExitCode = distBuildResult.exitCode;
       } finally {
         BuildEvent.DistBuildFinished finished =

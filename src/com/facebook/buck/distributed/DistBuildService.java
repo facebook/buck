@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
@@ -225,10 +226,23 @@ public class DistBuildService implements Closeable {
     // No response expected.
   }
 
-  public BuildJob createBuild() throws IOException {
+  public BuildJob createBuild(BuildMode buildMode, int numberOfMinions) throws IOException {
+    Preconditions.checkArgument(
+        buildMode == BuildMode.REMOTE_BUILD
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR,
+        "BuildMode [%s=%d] is currently not supported.",
+        buildMode.toString(),
+        buildMode.ordinal());
+    Preconditions.checkArgument(
+        numberOfMinions > 0,
+        "The number of minions must be greater than zero. Value [%d] found.",
+        numberOfMinions);
     // Tell server to create the build and get the build id.
     CreateBuildRequest createTimeRequest = new CreateBuildRequest();
-    createTimeRequest.setCreateTimestampMillis(System.currentTimeMillis());
+    createTimeRequest
+        .setCreateTimestampMillis(System.currentTimeMillis())
+        .setBuildMode(buildMode)
+        .setNumberOfMinions(numberOfMinions);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.CREATE_BUILD);
     request.setCreateBuildRequest(createTimeRequest);

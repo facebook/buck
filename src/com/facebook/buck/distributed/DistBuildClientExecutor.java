@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
@@ -115,9 +116,11 @@ public class DistBuildClientExecutor {
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      BuildMode buildMode,
+      int numberOfMinions)
       throws IOException, InterruptedException {
-    BuildJob job = distBuildService.createBuild();
+    BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions);
     final StampedeId stampedeId = job.getStampedeId();
     LOG.info("Created job. Build id = " + stampedeId.getId());
     logDebugInfo(job);
@@ -214,13 +217,19 @@ public class DistBuildClientExecutor {
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      BuildMode buildMode,
+      int numberOfMinions)
       throws IOException, InterruptedException {
 
     final BuildJob initJob =
-        initBuild(networkExecutorService, projectFilesystem, fileHashCache, eventBus);
-    final BuildJob finalJob;
-    final List<BuildSlaveStatus> buildSlaveStatusList;
+        initBuild(
+            networkExecutorService,
+            projectFilesystem,
+            fileHashCache,
+            eventBus,
+            buildMode,
+            numberOfMinions);
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
@@ -230,6 +239,8 @@ public class DistBuildClientExecutor {
             statusPollIntervalMillis,
             TimeUnit.MILLISECONDS);
 
+    final List<BuildSlaveStatus> buildSlaveStatusList;
+    BuildJob finalJob;
     try {
       distBuildStatusUpdatingFuture.get();
       throw new RuntimeException("Unreachable State.");
