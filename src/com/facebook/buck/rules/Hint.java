@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

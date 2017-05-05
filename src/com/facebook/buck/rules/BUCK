@@ -148,6 +148,7 @@ java_library(
         "CommonDescriptionArg.java",
         "HasDeclaredDeps.java",
         "HasSrcs.java",
+        "Hint.java",
     ],
     visibility = ["PUBLIC"],
     deps = [
