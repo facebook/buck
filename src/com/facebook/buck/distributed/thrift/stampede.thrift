@@ -30,8 +30,9 @@ struct StampedeId {
   1 : optional string id;
 }
 
-# Uniquely identifies the run of a specific remote build server. One StampedeId will have one or
-# more RunId's associated with it. (one RunId per Minion that contributes to the build).
+# Uniquely identifies the run of a specific remote build server.
+# One StampedeId will have one or more RunId's associated with it.
+# (one RunId per Minion that contributes to the build).
 struct RunId {
   1 : optional string id;
 }
@@ -117,6 +118,15 @@ enum LogRequestType {
   SCRIBE_DATA = 1,
 }
 
+enum BuildMode {
+  UNKNOWN = 0,
+  REMOTE_BUILD = 1,
+  // A random BuildSlave will be the Coordinator.
+  DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR = 2
+  // The machine launching the build is the Coordinator.
+  DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR = 3,
+}
+
 struct PathInfo {
   1: optional string contentHash;
   2: optional string path;
@@ -139,6 +149,13 @@ struct BuckVersion {
   3: optional FileInfo developmentVersion;
 }
 
+struct BuildModeInfo {
+  1: optional BuildMode mode = BuildMode.UNKNOWN;
+  2: optional i32 numberOfMinions;
+  3: optional string coordinatorAddress;
+  4: optional i32 coordinatorPort;
+}
+
 struct BuildJob {
   1: optional StampedeId stampedeId;
   2: optional DebugInfo debug;
@@ -146,6 +163,7 @@ struct BuildJob {
   4: optional BuckVersion buckVersion;
   5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
+  7: optional BuildModeInfo buildModeInfo;
 }
 
 struct Announcement {
@@ -186,8 +204,13 @@ struct BuildSlaveEventsRange {
 ## Request/Response structs
 ##############################################################################
 
+# Creates a brand new distributed build request with some initial configuration.
+# NOTE: The distributed build won't start at this point.
 struct CreateBuildRequest {
   1: optional i64 createTimestampMillis;
+  2: optional BuildMode buildMode = BuildMode.REMOTE_BUILD;
+  // Maximum number of minions to be used in this distributed build.
+  3: optional i32 numberOfMinions;
 }
 
 struct CreateBuildResponse {
