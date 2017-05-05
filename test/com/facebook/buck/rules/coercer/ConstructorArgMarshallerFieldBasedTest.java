@@ -126,20 +126,6 @@ public class ConstructorArgMarshallerFieldBasedTest {
   }
 
   @Test
-  public void shouldPopulateAPathValue() throws Exception {
-    DtoWithRenamedPath dto =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithRenamedPath.class,
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("somePath", "Fish.java"));
-
-    assertEquals(Paths.get("example/path", "Fish.java"), dto.somePath);
-  }
-
-  @Test
   public void shouldPopulateSourcePaths() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
@@ -541,11 +527,6 @@ public class ConstructorArgMarshallerFieldBasedTest {
 
   public static class DtoWithOptionalInteger extends AbstractDescriptionArg {
     public Optional<Integer> number;
-  }
-
-  public static class DtoWithRenamedPath extends AbstractDescriptionArg {
-    @Hint(name = "some_path")
-    public Path somePath;
   }
 
   public static class EmptyDto extends AbstractDescriptionArg {}

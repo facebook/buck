@@ -134,16 +134,16 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void shouldPopulateAPathValue() throws Exception {
-    DtoWithRenamedPath built =
+    DtoWithPath built =
         marshaller.populate(
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithRenamedPath.class,
+            DtoWithPath.class,
             ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("somePath", "Fish.java"));
+            ImmutableMap.<String, Object>of("path", "Fish.java"));
 
-    assertEquals(Paths.get("example/path", "Fish.java"), built.getSomePath());
+    assertEquals(Paths.get("example/path", "Fish.java"), built.getPath());
   }
 
   @Test
@@ -631,13 +631,6 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithRenamedPath {
-    @Hint(name = "some_path")
-    abstract Path getSomePath();
   }
 
   @BuckStyleImmutable

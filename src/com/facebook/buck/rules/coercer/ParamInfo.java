@@ -84,7 +84,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public String getPythonName() {
-    return paramInteractor.getPythonName();
+    return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
   }
 
   public boolean isDep() {
@@ -241,12 +241,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
     /** @return The name of the param. */
     String getName();
 
-    /**
-     * @return The name of the param as it would appear in a python Buck file. See {@link
-     *     Hint#name()}. TODO(dwh): Remove this when FieldParamInteractor is removed.
-     */
-    String getPythonName();
-
     /** See {@link Hint#isDep}. */
     boolean isDep();
 
@@ -322,15 +316,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
     @Override
     public String getName() {
       return field.getName();
-    }
-
-    @Override
-    public String getPythonName() {
-      Hint hint = getHint();
-      if (hint != null && !Hint.DEFAULT_NAME.equals(hint.name())) {
-        return hint.name();
-      }
-      return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
     }
 
     @Override
@@ -485,11 +470,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
         builder.append(setter.getName().substring(4));
       }
       return builder.toString();
-    }
-
-    @Override
-    public String getPythonName() {
-      return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
     }
 
     @Override

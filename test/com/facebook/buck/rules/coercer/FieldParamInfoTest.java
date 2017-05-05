@@ -88,9 +88,6 @@ public class FieldParamInfoTest {
 
   public static class PythonNames {
     public String isDefaultName;
-
-    @Hint(name = "not_the_default_name_123")
-    public String notDefaultName;
   }
 
   @Test
@@ -103,13 +100,6 @@ public class FieldParamInfoTest {
             new ParamInfo.FieldParamInteractor(
                 PythonNames.class, PythonNames.class.getField("isDefaultName")));
     assertEquals("is_default_name", info.getPythonName());
-
-    info =
-        new ParamInfo(
-            typeCoercerFactory,
-            new ParamInfo.FieldParamInteractor(
-                PythonNames.class, PythonNames.class.getField("notDefaultName")));
-    assertEquals("not_the_default_name_123", info.getPythonName());
   }
 
   public static class OptionalString {

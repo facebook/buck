@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.Hint;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -195,9 +194,6 @@ public class LegacyBuckPyFunctionTest {
 
   public static class Dto {
     public String someField;
-
-    @Hint(name = "all_this_was_fields")
-    public String hintedField;
   }
 
   @Test
@@ -208,12 +204,11 @@ public class LegacyBuckPyFunctionTest {
         Joiner.on("\n")
             .join(
                 "@provide_for_build",
-                "def case(name, all_this_was_fields, some_field, "
+                "def case(name, some_field, "
                     + "autodeps=None, visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",
                 "        'buck.type': 'case',",
                 "        'name': name,",
-                "        'hintedField': all_this_was_fields,",
                 "        'someField': some_field,",
                 "        'autodeps': autodeps,",
                 "        'visibility': visibility,",
