@@ -19,6 +19,7 @@ package com.facebook.buck.ide.intellij.projectview;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -48,6 +49,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,8 +95,9 @@ public class ProjectView {
   private final boolean dryRun;
   private final TargetGraph targetGraph;
   private final ImmutableSet<BuildTarget> buildTargets;
-  private final BuckEventBus eventBus;
   private final Config config;
+
+  private final ActionGraphAndResolver actionGraph;
 
   private final String repository = new File("").getAbsolutePath();
 
@@ -113,8 +116,10 @@ public class ProjectView {
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
 
-    this.eventBus = eventBus;
     this.config = config;
+
+    // TODO(shemitz) Use ActionGraphCache.getActionGraph()?
+    actionGraph = ActionGraphCache.getFreshActionGraph(eventBus, targetGraph);
   }
 
   private int run() {
@@ -412,6 +417,7 @@ public class ProjectView {
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
+  private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
   private static final String MODULES = "modules";
   private static final String NAME = "name";
@@ -728,7 +734,7 @@ public class ProjectView {
     for (String source : sortSourceFolders(sourceFolders)) {
       List<Attribute> attributes = new ArrayList<>(3);
       attributes.add(attribute(URL, fileJoin(FILE_MODULE_DIR, source)));
-      attributes.add(attribute("isTestSource", false));
+      attributes.add(attribute(IS_TEST_SOURCE, false));
 
       String packagePrefix = getPackage(fileJoin(repository, source));
       if (packagePrefix != null) {
@@ -754,15 +760,24 @@ public class ProjectView {
           attribute("level", "project"));
     }
 
+    for (String annotationFolder : getAnnotationFolders()) {
+      String folder = fileJoin(FILE_MODULE_DIR, annotationFolder);
+      Attribute url = attribute(URL, folder);
+      Element content = addElement(rootManager, CONTENT, url);
+      addElement(
+          content,
+          SOURCE_FOLDER,
+          url.clone(),
+          attribute(IS_TEST_SOURCE, false),
+          attribute("generated", true));
+    }
+
     saveDocument(viewPath, ROOT_IML, XML.DECLARATION, module);
   }
 
   private Map<BuildTarget, String> getOutputs() {
     Map<BuildTarget, String> outputs = new HashMap<>(buildTargets.size());
 
-    // TODO(shemitz) Use ActionGraphCache.getActionGraph()?
-    ActionGraphAndResolver actionGraph =
-        ActionGraphCache.getFreshActionGraph(eventBus, targetGraph);
     BuildRuleResolver ruleResolver = actionGraph.getResolver();
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
@@ -838,6 +853,21 @@ public class ProjectView {
       }
     }
     return null;
+  }
+
+  private Collection<String> getAnnotationFolders() {
+    Collection<String> annotationFolders = new ArrayList<>();
+
+    for (BuildRule buildRule : actionGraph.getActionGraph().getNodes()) {
+      if (buildRule instanceof JavaLibrary) {
+        Optional<Path> generatedSourcePath = ((JavaLibrary) buildRule).getGeneratedSourcePath();
+        if (generatedSourcePath.isPresent()) {
+          annotationFolders.add(generatedSourcePath.get().toString());
+        }
+      }
+    }
+
+    return annotationFolders;
   }
 
   // endregion .idea folder
