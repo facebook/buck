@@ -610,7 +610,7 @@ public class TargetsCommandIntegrationTest {
     JsonNode expected =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
-    assertEquals("Output from targets command should match expected JSON.", observed, expected);
+    assertEquals("Output from targets command should match expected JSON.", expected, observed);
   }
 
   @Test
@@ -632,6 +632,6 @@ public class TargetsCommandIntegrationTest {
     JsonNode expected =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
-    assertEquals("Output from targets command should match expected JSON.", observed, expected);
+    assertEquals("Output from targets command should match expected JSON.", expected, observed);
   }
 }

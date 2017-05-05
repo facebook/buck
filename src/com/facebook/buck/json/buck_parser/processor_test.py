@@ -13,14 +13,15 @@ from typing import Sequence
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 
 
-def foo_rule(name, srcs=[], visibility=[], options={}, build_env=None):
+def foo_rule(name, srcs=None, visibility=None, options=None, some_optional=None, build_env=None):
     """A dummy build rule."""
     add_rule({
         'buck.type': 'foo',
         'name': name,
-        'srcs': srcs,
-        'options': options,
-        'visibility': visibility,
+        'srcs': srcs or [],
+        'options': options or {},
+        'some_optional': some_optional,
+        'visibility': visibility or [],
     }, build_env)
 
 
@@ -853,6 +854,36 @@ class BuckTest(unittest.TestCase):
             self.assertRaises(
                 NameError,
                 lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
+
+    def test_json_encoding_skips_None(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+foo_rule(
+  name="foo",
+  srcs=['Foo.java'],
+)
+'''
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertNotIn('some_optional', decoded_result['values'][0])
+        self.assertIn('srcs', decoded_result['values'][0])
 
     def test_json_encoding_list_like_object(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])

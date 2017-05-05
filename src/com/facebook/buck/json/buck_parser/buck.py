@@ -1158,7 +1158,9 @@ def format_exception_info(exception_info):
 
 
 def encode_result(values, diagnostics, profile):
-    result = {'values': values}
+    result = {'values': [
+        dict((k, v) for k, v in value.iteritems() if v is not None)
+        for value in values]}
     json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
