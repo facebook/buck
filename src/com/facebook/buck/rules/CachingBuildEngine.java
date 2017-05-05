@@ -96,7 +96,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -165,7 +164,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
 
-  private final ConcurrentHashMap<Path, BuildInfoStore> buildInfoStores = new ConcurrentHashMap<>();
+  private final BuildInfoStoreManager buildInfoStoreManager = new BuildInfoStoreManager();
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -255,9 +254,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   @Override
   public void close() {
-    for (BuildInfoStore store : buildInfoStores.values()) {
-      store.close();
-    }
+    buildInfoStoreManager.close();
   }
 
   /**
@@ -648,46 +645,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
   }
 
-  private MetadataStorage getMetadataStorage(ProjectFilesystem filesystem) {
-    Path metadataPath = BuildInfoStore.getMetadataTypePath(filesystem);
-    Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
-    // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the
-    // default for this build engine.
-    return metadataString.isPresent()
-        ? MetadataStorage.valueOf(metadataString.get())
-        : metadataStorage;
-  }
-
-  private BuildInfoStore getOrCreateBuildInfoStore(ProjectFilesystem filesystem) {
-    return buildInfoStores.computeIfAbsent(
-        filesystem.getRootPath(),
-        path -> {
-          try {
-            switch (getMetadataStorage(filesystem)) {
-              case ROCKSDB:
-                return new RocksDBBuildInfoStore(filesystem);
-              case MAPDB:
-                return new MapDBBuildInfoStore(filesystem);
-              case SQLITE:
-                return new SQLiteBuildInfoStore(filesystem);
-              case FILESYSTEM:
-                return new FilesystemBuildInfoStore(filesystem);
-              default:
-                throw new IllegalStateException();
-            }
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule,
       BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
-    final BuildInfoStore buildInfoStore = getOrCreateBuildInfoStore(rule.getProjectFilesystem());
+    final BuildInfoStore buildInfoStore =
+        buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
     final OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore);
@@ -1450,7 +1415,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
       BuildInfoStore buildInfoStore =
-          buildInfoStores.get(rule.getProjectFilesystem().getRootPath());
+          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
       buildInfoStore.deleteMetadata(rule.getBuildTarget());
 
       // Always remove the on-disk metadata dir, as some pieces of metadata are still stored here

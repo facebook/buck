@@ -332,6 +332,7 @@ java_immutables_library(
         "BuildInfo.java",
         "BuildInfoRecorder.java",
         "BuildInfoStore.java",
+        "BuildInfoStoreManager.java",
         "BuildOutputInitializer.java",
         "BuildResult.java",
         "BuildRuleCacheEvent.java",
