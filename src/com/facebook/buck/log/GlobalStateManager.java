@@ -180,11 +180,7 @@ public class GlobalStateManager {
         oldWriter = commandIdToLogFileHandlerWriter.put(commandId, newWriter);
       }
       if (oldWriter != null) {
-        if (oldWriter instanceof ReferenceCountedWriter) {
-          ((ReferenceCountedWriter) oldWriter).flushAndClose();
-        } else {
-          oldWriter.close();
-        }
+        oldWriter.close();
       }
     } catch (IOException e) {
       throw new RuntimeException(String.format("Exception closing writer [%s].", commandId), e);
