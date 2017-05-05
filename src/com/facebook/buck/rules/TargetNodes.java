@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasTests;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** Utility class to work with {@link TargetNode} objects. */

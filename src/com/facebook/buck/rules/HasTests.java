@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** A constructor arg of source rules with a list of their tests. */
