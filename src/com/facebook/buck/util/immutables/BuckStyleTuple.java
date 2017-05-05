@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.immutables;
 
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -37,7 +38,8 @@ import org.immutables.value.Value;
   visibility = Value.Style.ImplementationVisibility.PUBLIC,
   allParameters = true,
   defaults = @Value.Immutable(builder = false),
-  forceJacksonPropertyNames = false
+  forceJacksonPropertyNames = false,
+  additionalJsonAnnotations = {JsonNaming.class}
 )
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)

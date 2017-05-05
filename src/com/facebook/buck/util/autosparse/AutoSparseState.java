@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.autosparse;
 
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -60,5 +61,5 @@ public interface AutoSparseState {
    * Update the working copy to include new paths added to the sparse profile. Paths added with
    * <code>addToSparseProfile</code> will now be physically available on the filesystem.
    */
-  void materialiseSparseProfile() throws IOException, InterruptedException;
+  SparseSummary materialiseSparseProfile() throws IOException, InterruptedException;
 }

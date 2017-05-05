@@ -21,6 +21,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.fasterxml.jackson.annotation.JsonView;
 
 /** Events posted to mark AutoSparse progress. */
@@ -55,8 +56,13 @@ public abstract class AutoSparseStateEvents extends AbstractBuckEvent
 
   /** Event posted immediately after refreshing the sparse profile */
   public static class SparseRefreshFinished extends AutoSparseStateEvents {
-    public SparseRefreshFinished(AutoSparseStateEvents.SparseRefreshStarted started) {
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public final SparseSummary summary;
+
+    public SparseRefreshFinished(
+        AutoSparseStateEvents.SparseRefreshStarted started, SparseSummary summary) {
       super(started.getEventKey());
+      this.summary = summary;
     }
 
     @Override

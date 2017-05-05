@@ -39,6 +39,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.hash.HashCode;
@@ -108,7 +109,12 @@ public class MachineReadableLogJsonViewTest {
     AutoSparseStateEvents.SparseRefreshStarted startEvent =
         new AutoSparseStateEvents.SparseRefreshStarted();
     AutoSparseStateEvents finishedEvent =
-        new AutoSparseStateEvents.SparseRefreshFinished(startEvent);
+        new AutoSparseStateEvents.SparseRefreshFinished(
+            startEvent, SparseSummary.of(0, 5, 0, 10, 0, 0));
+    String expectedSummary =
+        "{"
+            + "\"profiles_added\":0,\"include_rules_added\":5,\"exclude_rules_added\":0,"
+            + "\"files_added\":10,\"files_dropped\":0,\"files_conflicting\":0}";
     AutoSparseStateEvents failedEvent =
         new AutoSparseStateEvents.SparseRefreshFailed(startEvent, "output string\n");
 
@@ -117,7 +123,8 @@ public class MachineReadableLogJsonViewTest {
     failedEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
 
     assertJsonEquals("{%s}", WRITER.writeValueAsString(startEvent));
-    assertJsonEquals("{%s}", WRITER.writeValueAsString(finishedEvent));
+    assertJsonEquals(
+        "{%s,\"summary\":" + expectedSummary + "}", WRITER.writeValueAsString(finishedEvent));
     assertJsonEquals(
         "{%s,\"output\":\"output string\\n\"}", WRITER.writeValueAsString(failedEvent));
   }

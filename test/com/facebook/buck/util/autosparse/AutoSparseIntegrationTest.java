@@ -19,6 +19,7 @@ package com.facebook.buck.util.autosparse;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
@@ -26,11 +27,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,6 +44,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
@@ -202,7 +206,11 @@ public class AutoSparseIntegrationTest {
     // Only include the parent directory, not the file
     delegate.exists(repoPath.resolve("not_hidden_subdir/file_in_subdir_not_hidden"));
 
-    delegate.ensureConcreteFilesExist(BuckEventBusFactory.newInstance(new FakeClock(0)));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener listener =
+        new AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener();
+    eventBus.register(listener);
+    delegate.ensureConcreteFilesExist(eventBus);
 
     List<String> lines =
         Files.readAllLines(
@@ -220,6 +228,19 @@ public class AutoSparseIntegrationTest {
             "" // sparse always writes a newline at the end
             );
     Assert.assertEquals(expected, lines);
+
+    // assert we got events with a matching summary
+    List<AutoSparseStateEvents> events = listener.getLoggedEvents();
+    Assert.assertEquals(events.size(), 2);
+    Assert.assertTrue(events.get(0) instanceof AutoSparseStateEvents.SparseRefreshStarted);
+    Assert.assertTrue(events.get(1) instanceof AutoSparseStateEvents.SparseRefreshFinished);
+    SparseSummary summary = ((AutoSparseStateEvents.SparseRefreshFinished) events.get(1)).summary;
+    Assert.assertEquals(summary.getProfilesAdded(), 0);
+    Assert.assertEquals(summary.getIncludeRulesAdded(), 4);
+    Assert.assertEquals(summary.getExcludeRulesAdded(), 0);
+    Assert.assertEquals(summary.getFilesAdded(), 3);
+    Assert.assertEquals(summary.getFilesDropped(), 0);
+    Assert.assertEquals(summary.getFilesConflicting(), 0);
   }
 
   private static void assumeHgInstalled() throws InterruptedException {
@@ -272,5 +293,18 @@ public class AutoSparseIntegrationTest {
         hgRepoZipCopyPath, repoPath, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return repoPath;
+  }
+
+  public static class CapturingAutoSparseStateEventListener {
+    private final List<AutoSparseStateEvents> logEvents = new ArrayList<>();
+
+    @Subscribe
+    public void logEvent(AutoSparseStateEvents event) {
+      logEvents.add(event);
+    }
+
+    public List<AutoSparseStateEvents> getLoggedEvents() {
+      return logEvents;
+    }
   }
 }

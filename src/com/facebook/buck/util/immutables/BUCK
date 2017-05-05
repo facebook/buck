@@ -1,4 +1,7 @@
 standard_java_library(
     name = "immutables",
-    deps = ["//third-party/java/immutables:immutables"],
+    deps = [
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+    ],
 )

@@ -33,6 +33,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//third-party/java/jackson:jackson-annotations",
     ],

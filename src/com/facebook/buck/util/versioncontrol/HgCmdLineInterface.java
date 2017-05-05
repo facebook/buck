@@ -19,9 +19,12 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,7 +83,8 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-mardu", "-0", "--rev", REVISION_ID_TEMPLATE);
 
   private static final ImmutableList<String> SPARSE_IMPORT_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "sparse", "--import-rules", PATH_TEMPLATE, "--traceback");
+      ImmutableList.of(
+          HG_CMD_TEMPLATE, "sparse", "-Tjson", "--import-rules", PATH_TEMPLATE, "--traceback");
 
   private static final ImmutableList<String> RAW_MANIFEST_COMMAND =
       ImmutableList.of(
@@ -238,10 +242,18 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return hgRoot.orElse(null);
   }
 
-  public void exportHgSparseRules(Path exportFile)
+  public SparseSummary exportHgSparseRules(Path exportFile)
       throws VersionControlCommandFailedException, InterruptedException {
-    executeCommand(
-        replaceTemplateValue(SPARSE_IMPORT_COMMAND, PATH_TEMPLATE, exportFile.toString()));
+    String json =
+        executeCommand(
+            replaceTemplateValue(SPARSE_IMPORT_COMMAND, PATH_TEMPLATE, exportFile.toString()));
+    try (JsonParser parser = ObjectMappers.createParser(json)) {
+      return ObjectMappers.READER
+          .with(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
+          .readValue(parser, SparseSummary.class);
+    } catch (IOException e) {
+      throw new VersionControlCommandFailedException("Unable to parse sparse summary output");
+    }
   }
 
   private String executeCommand(Iterable<String> command)

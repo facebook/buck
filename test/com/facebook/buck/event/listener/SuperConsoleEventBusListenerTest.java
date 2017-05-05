@@ -84,6 +84,7 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1986,7 +1987,8 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
+            new AutoSparseStateEvents.SparseRefreshFinished(
+                sparseRefreshStarted, SparseSummary.of()),
             500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2003,7 +2005,8 @@ public class SuperConsoleEventBusListenerTest {
     // ending a new refresh shows the total running time for both events
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
+            new AutoSparseStateEvents.SparseRefreshFinished(
+                sparseRefreshStarted, SparseSummary.of()),
             1500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

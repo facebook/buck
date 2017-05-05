@@ -18,6 +18,7 @@ package com.facebook.buck.util.autosparse;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -89,7 +90,7 @@ public class HgAutoSparseState implements AutoSparseState {
   }
 
   @Override
-  public void materialiseSparseProfile() throws IOException, InterruptedException {
+  public SparseSummary materialiseSparseProfile() throws IOException, InterruptedException {
     if (!hgSparseSeen.isEmpty()) {
       LOG.debug("Exporting %d entries to the sparse profile", hgSparseSeen.size());
       try {
@@ -101,7 +102,7 @@ public class HgAutoSparseState implements AutoSparseState {
           }
         }
         try {
-          hgCmdLine.exportHgSparseRules(exportFile);
+          return hgCmdLine.exportHgSparseRules(exportFile);
         } catch (VersionControlCommandFailedException e) {
           LOG.debug(e, "Sparse profile refresh command failed");
           throw new IOException("Sparse profile refresh command failed", e);
@@ -110,6 +111,8 @@ public class HgAutoSparseState implements AutoSparseState {
         LOG.debug(e, "Failed to write out sparse profile export");
         throw e;
       }
+    } else {
+      return SparseSummary.of();
     }
   }
 
