@@ -13,6 +13,14 @@ Note that Buck has evolved over time, so more recent presentations
 may have information that supersedes information in older presentations.
 <p>
 {call .presentation}
+  {param title: 'Lightning fast iOS builds with Buck' /}
+  {param speaker: 'Alan Zeino, Uber' /}
+  {param event: 'Sydney CocoaHeads' /}
+  {param eventUrl: 'https://www.meetup.com/sydneycocoaheads/events/237577980/' /}
+  {param date: 'February 16, 2017' /}
+  {param vimeoId: '208053716' /}
+{/call}
+{call .presentation}
   {param title: 'Lightning fast Android builds with Gradle + Buck' /}
   {param speaker: 'Gautam Korlam, Uber' /}
   {param event: 'DroidCon NYC' /}
@@ -105,6 +113,7 @@ ill-fated downstairs breakout room</a>.
  * @param? youTubeStart
  * @param? slides
  * @param? embedSlides
+ * @param? vimeoId
  */
 {template .presentation}
 <hr>
@@ -129,6 +138,13 @@ ill-fated downstairs breakout room</a>.
   {/call}
 {/if}
 
+{if $vimeoId}
+  <p>
+  {call .vimeoVideo}
+    {param id: $vimeoId /}
+  {/call}
+{/if}
+
 {if $slides}
   <br>
   Slides: <a href="{$slides}">{$slides}</a>
@@ -148,6 +164,15 @@ ill-fated downstairs breakout room</a>.
 {template .youTubeVideo}
   {call .iframe}
     {param url}//www.youtube.com/embed/{$id}{if $start}?start={$start}{/if}{/param}
+  {/call}
+{/template}
+
+/**
+ * @param id
+ */
+{template .vimeoVideo}
+  {call .iframe}
+    {param url}//player.vimeo.com/video/{$id}{/param}
   {/call}
 {/template}
 
