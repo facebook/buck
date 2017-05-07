@@ -2,7 +2,7 @@ java_immutables_library(
     name = "projectview",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/ide/intellij:intellij",
     ],
     deps = [
         "//src/com/facebook/buck/config:config",

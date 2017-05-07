@@ -33,7 +33,6 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
-import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -322,15 +321,6 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (projectView != null && getArguments().isEmpty()) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nParams are view_path target(s), but you didn't supply any targets");
-
-      return 1;
-    }
-
     int rc = runPreprocessScriptIfNeeded(params);
     if (rc != 0) {
       return rc;
@@ -350,92 +340,7 @@ public class ProjectCommand extends BuildCommand {
         return 1;
       }
 
-      List<String> targets = getArguments();
-      if (projectIde != Ide.XCODE && targets.isEmpty()) {
-        targets = ImmutableList.of("//...");
-      }
-
-      ImmutableSet<BuildTarget> passedInTargetsSet;
-      TargetGraph projectGraph;
-
-      try {
-        ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-        passedInTargetsSet =
-            ImmutableSet.copyOf(
-                Iterables.concat(
-                    params
-                        .getParser()
-                        .resolveTargetSpecs(
-                            params.getBuckEventBus(),
-                            params.getCell(),
-                            getEnableParserProfiling(),
-                            pool.getExecutor(),
-                            parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
-                            SpeculativeParsing.of(true),
-                            parserConfig.getDefaultFlavorsMode())));
-        projectGraph = getProjectGraphForIde(params, pool.getExecutor(), passedInTargetsSet);
-      } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-        params
-            .getBuckEventBus()
-            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
-      }
-
-      if (projectView != null) {
-        return ProjectView.run(
-            params.getConsole().getStdErr(),
-            getDryRun(),
-            projectView,
-            projectGraph,
-            passedInTargetsSet,
-            params.getBuckEventBus(),
-            params.getBuckConfig().getConfig());
-      }
-
-      if (projectIde == ProjectCommand.Ide.XCODE) {
-        checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
-      }
-
-      ImmutableSet<BuildTarget> graphRoots;
-      if (passedInTargetsSet.isEmpty()) {
-        graphRoots =
-            getRootsFromPredicate(
-                projectGraph,
-                node ->
-                    projectIde == ProjectCommand.Ide.XCODE
-                        && node.getDescription() instanceof XcodeWorkspaceConfigDescription);
-      } else {
-        graphRoots = passedInTargetsSet;
-      }
-
-      TargetGraphAndTargets targetGraphAndTargets;
-      try {
-        targetGraphAndTargets =
-            createTargetGraph(
-                params,
-                projectGraph,
-                graphRoots,
-                isWithTests(params.getBuckConfig()),
-                isWithDependenciesTests(params.getBuckConfig()),
-                passedInTargetsSet.isEmpty(),
-                pool.getExecutor());
-      } catch (BuildFileParseException
-          | TargetGraph.NoSuchNodeException
-          | BuildTargetException
-          | HumanReadableException e) {
-        params
-            .getBuckEventBus()
-            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
-      }
-
-      if (getDryRun()) {
-        for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
-          params.getConsole().getStdOut().println(targetNode.toString());
-        }
-
-        return 0;
-      }
+      ListeningExecutorService executor = pool.getExecutor();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       int result;
@@ -445,10 +350,12 @@ public class ProjectCommand extends BuildCommand {
             IjProjectCommandHelper projectCommandHelper =
                 new IjProjectCommandHelper(
                     params.getBuckEventBus(),
-                    params.getCell().getFilesystem(),
                     params.getConsole(),
+                    executor,
+                    params.getParser(),
                     params.getBuckConfig(),
                     params.getActionGraphCache(),
+                    params.getCell(),
                     skipBuild,
                     build,
                     intellijAggregationMode,
@@ -457,14 +364,20 @@ public class ProjectCommand extends BuildCommand {
                     runIjCleaner,
                     removeUnusedLibraries,
                     excludeArtifacts,
+                    getEnableParserProfiling(),
+                    projectView,
+                    dryRun,
+                    withTests,
+                    withoutTests,
+                    withoutDependenciesTests,
                     (buildTargets, disableCaching) ->
-                        runBuild(params, buildTargets, disableCaching));
-            result = projectCommandHelper.runIntellijProjectGenerator(targetGraphAndTargets);
+                        runBuild(params, buildTargets, disableCaching),
+                    arguments ->
+                        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments));
+            result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
-            result =
-                runXcodeProjectGenerator(
-                    params, pool.getExecutor(), targetGraphAndTargets, passedInTargetsSet);
+            result = parseTargetsAndRunXCodeGenerator(params, executor);
             break;
           default:
             // unreachable
@@ -477,6 +390,81 @@ public class ProjectCommand extends BuildCommand {
 
       return result;
     }
+  }
+
+  private int parseTargetsAndRunXCodeGenerator(
+      CommandRunnerParams params, ListeningExecutorService executor)
+      throws IOException, InterruptedException {
+    List<String> targets = getArguments();
+
+    ImmutableSet<BuildTarget> passedInTargetsSet;
+    TargetGraph projectGraph;
+
+    try {
+      ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
+      passedInTargetsSet =
+          ImmutableSet.copyOf(
+              Iterables.concat(
+                  params
+                      .getParser()
+                      .resolveTargetSpecs(
+                          params.getBuckEventBus(),
+                          params.getCell(),
+                          getEnableParserProfiling(),
+                          executor,
+                          parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
+                          SpeculativeParsing.of(true),
+                          parserConfig.getDefaultFlavorsMode())));
+      projectGraph = getProjectGraphForIde(params, executor, passedInTargetsSet);
+    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return 1;
+    }
+
+    checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
+
+    ImmutableSet<BuildTarget> graphRoots;
+    if (passedInTargetsSet.isEmpty()) {
+      graphRoots =
+          getRootsFromPredicate(
+              projectGraph,
+              node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
+    } else {
+      graphRoots = passedInTargetsSet;
+    }
+
+    TargetGraphAndTargets targetGraphAndTargets;
+    try {
+      targetGraphAndTargets =
+          createTargetGraph(
+              params,
+              projectGraph,
+              graphRoots,
+              isWithTests(params.getBuckConfig()),
+              isWithDependenciesTests(params.getBuckConfig()),
+              passedInTargetsSet.isEmpty(),
+              executor);
+    } catch (BuildFileParseException
+        | TargetGraph.NoSuchNodeException
+        | BuildTargetException
+        | HumanReadableException e) {
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return 1;
+    }
+
+    if (getDryRun()) {
+      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+        params.getConsole().getStdOut().println(targetNode.toString());
+      }
+
+      return 0;
+    }
+
+    return runXcodeProjectGenerator(params, executor, targetGraphAndTargets, passedInTargetsSet);
   }
 
   @Override
