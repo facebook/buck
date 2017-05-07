@@ -27,6 +27,9 @@ standard_java_library(
         ["*.java"],
         excludes = EVENT_INTERFACES,
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/event/external:external_lib",
+    ],
     has_immutable_types = True,
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly

@@ -31,17 +31,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
-import com.facebook.buck.ide.intellij.IjProject;
-import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
+import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
-import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -52,7 +45,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
@@ -278,14 +270,6 @@ public class ProjectCommand extends BuildCommand {
     return dryRun;
   }
 
-  public boolean shouldProcessAnnotations() {
-    return processAnnotations;
-  }
-
-  public JavaPackageFinder getJavaPackageFinder(BuckConfig buckConfig) {
-    return buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
-  }
-
   private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "pre_process");
   }
@@ -334,10 +318,6 @@ public class ProjectCommand extends BuildCommand {
 
   public boolean isWithDependenciesTests(BuckConfig buckConfig) {
     return testsMode(buckConfig) == ProjectTestsMode.WITH_TESTS;
-  }
-
-  private boolean getSkipBuildFromConfig(BuckConfig buckConfig) {
-    return buckConfig.getBooleanValue("project", "skip_build", false);
   }
 
   @Override
@@ -462,7 +442,24 @@ public class ProjectCommand extends BuildCommand {
       try {
         switch (projectIde) {
           case INTELLIJ:
-            result = runIntellijProjectGenerator(params, targetGraphAndTargets);
+            IjProjectCommandHelper projectCommandHelper =
+                new IjProjectCommandHelper(
+                    params.getBuckEventBus(),
+                    params.getCell().getFilesystem(),
+                    params.getConsole(),
+                    params.getBuckConfig(),
+                    params.getActionGraphCache(),
+                    skipBuild,
+                    build,
+                    intellijAggregationMode,
+                    generatedFilesListFilename,
+                    processAnnotations,
+                    runIjCleaner,
+                    removeUnusedLibraries,
+                    excludeArtifacts,
+                    (buildTargets, disableCaching) ->
+                        runBuild(params, buildTargets, disableCaching));
+            result = projectCommandHelper.runIntellijProjectGenerator(targetGraphAndTargets);
             break;
           case XCODE:
             result =
@@ -487,103 +484,6 @@ public class ProjectCommand extends BuildCommand {
     return false;
   }
 
-  /** Run intellij specific project generation actions. */
-  int runIntellijProjectGenerator(
-      CommandRunnerParams params, final TargetGraphAndTargets targetGraphAndTargets)
-      throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> requiredBuildTargets =
-        writeProjectAndGetRequiredBuildTargets(params, targetGraphAndTargets);
-
-    if (requiredBuildTargets.isEmpty()) {
-      return 0;
-    }
-
-    boolean skipBuilds = skipBuild || getSkipBuildFromConfig(params.getBuckConfig()) || !build;
-    if (skipBuilds) {
-      ConsoleEvent.severe(
-          "Please remember to buck build --deep the targets you intent to work with.");
-      return 0;
-    }
-
-    return shouldProcessAnnotations()
-        ? buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-            params, targetGraphAndTargets, requiredBuildTargets)
-        : runBuild(params, requiredBuildTargets);
-  }
-
-  private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
-      CommandRunnerParams params, final TargetGraphAndTargets targetGraphAndTargets)
-      throws IOException {
-    ActionGraphAndResolver result =
-        Preconditions.checkNotNull(
-            params
-                .getActionGraphCache()
-                .getActionGraph(
-                    params.getBuckEventBus(),
-                    params.getBuckConfig().isActionGraphCheckingEnabled(),
-                    params.getBuckConfig().isSkipActionGraphCache(),
-                    targetGraphAndTargets.getTargetGraph(),
-                    params.getBuckConfig().getKeySeed()));
-
-    BuckConfig buckConfig = params.getBuckConfig();
-    BuildRuleResolver ruleResolver = result.getResolver();
-
-    JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
-
-    IjProjectConfig projectConfig =
-        IjProjectBuckConfig.create(
-            buckConfig,
-            intellijAggregationMode,
-            generatedFilesListFilename,
-            runIjCleaner,
-            removeUnusedLibraries,
-            excludeArtifacts);
-
-    IjProject project =
-        new IjProject(
-            targetGraphAndTargets,
-            getJavaPackageFinder(buckConfig),
-            JavaFileParser.createJavaFileParser(javacOptions),
-            ruleResolver,
-            params.getCell().getFilesystem(),
-            projectConfig);
-
-    return project.write();
-  }
-
-  private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-      CommandRunnerParams params,
-      final TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> requiredBuildTargets)
-      throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> annotatedTargets =
-        getTargetsWithAnnotations(targetGraphAndTargets.getTargetGraph(), requiredBuildTargets);
-
-    ImmutableSet<BuildTarget> unannotatedTargets =
-        Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
-
-    int exitCode = runBuild(params, unannotatedTargets);
-    if (exitCode != 0) {
-      addBuildFailureError(params);
-    }
-
-    if (annotatedTargets.isEmpty()) {
-      return exitCode;
-    }
-
-    int annotationExitCode = runBuild(params, annotatedTargets, true);
-    if (exitCode == 0 && annotationExitCode != 0) {
-      addBuildFailureError(params);
-    }
-
-    return exitCode == 0 ? annotationExitCode : exitCode;
-  }
-
-  private int runBuild(CommandRunnerParams params, ImmutableSet<BuildTarget> targets)
-      throws IOException, InterruptedException {
-    return runBuild(params, targets, false);
-  }
-
   private int runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
@@ -593,28 +493,6 @@ public class ProjectCommand extends BuildCommand {
     buildCommand.setKeepGoing(true);
     buildCommand.setArtifactCacheDisabled(disableCaching);
     return buildCommand.run(params);
-  }
-
-  private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
-      final TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
-    return buildTargets
-        .stream()
-        .filter(
-            input -> {
-              TargetNode<?, ?> targetNode = targetGraph.get(input);
-              return targetNode != null && isTargetWithAnnotations(targetNode);
-            })
-        .collect(MoreCollectors.toImmutableSet());
-  }
-
-  private void addBuildFailureError(CommandRunnerParams params) {
-    params
-        .getConsole()
-        .getAnsi()
-        .printHighlightedSuccessText(
-            params.getConsole().getStdErr(),
-            "Because the build did not complete successfully some parts of the project may not\n"
-                + "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
   }
 
   private int runPreprocessScriptIfNeeded(CommandRunnerParams params)
@@ -1125,14 +1003,6 @@ public class ProjectCommand extends BuildCommand {
     workspaceArgs.explicitRunnablePath = Optional.empty();
     workspaceArgs.launchStyle = Optional.empty();
     return workspaceArgs;
-  }
-
-  private static boolean isTargetWithAnnotations(TargetNode<?, ?> target) {
-    if (target.getDescription() instanceof JavaLibraryDescription) {
-      return false;
-    }
-    JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());
-    return !arg.annotationProcessors.isEmpty();
   }
 
   @Override
