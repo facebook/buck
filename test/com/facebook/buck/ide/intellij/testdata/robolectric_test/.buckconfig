@@ -5,3 +5,4 @@
 [project]
   ignore = buck-out
   intellij_aggregation_mode = shallow
+  ide = intellij

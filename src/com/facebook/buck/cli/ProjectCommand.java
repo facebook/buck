@@ -359,15 +359,24 @@ public class ProjectCommand extends BuildCommand {
     try (CommandThreadManager pool =
         new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
 
-      ImmutableSet<BuildTarget> passedInTargetsSet;
-      TargetGraph projectGraph;
+      final Ide projectIde =
+          (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
+
+      if (projectIde == null) {
+        params
+            .getConsole()
+            .getStdErr()
+            .println("\nCannot build a project: project IDE is not specified.");
+        return 1;
+      }
 
       List<String> targets = getArguments();
-      Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orElse(null);
-
       if (projectIde != Ide.XCODE && targets.isEmpty()) {
         targets = ImmutableList.of("//...");
       }
+
+      ImmutableSet<BuildTarget> passedInTargetsSet;
+      TargetGraph projectGraph;
 
       try {
         ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -403,21 +412,17 @@ public class ProjectCommand extends BuildCommand {
             params.getBuckConfig().getConfig());
       }
 
-      projectIde =
-          getIdeBasedOnPassedInTargetsAndProjectGraph(
-              params.getBuckConfig(), passedInTargetsSet, Optional.of(projectGraph));
       if (projectIde == ProjectCommand.Ide.XCODE) {
         checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
       }
 
-      final Ide finalIde = projectIde;
       ImmutableSet<BuildTarget> graphRoots;
       if (passedInTargetsSet.isEmpty()) {
         graphRoots =
             getRootsFromPredicate(
                 projectGraph,
                 node ->
-                    finalIde == ProjectCommand.Ide.XCODE
+                    projectIde == ProjectCommand.Ide.XCODE
                         && node.getDescription() instanceof XcodeWorkspaceConfigDescription);
       } else {
         graphRoots = passedInTargetsSet;
@@ -475,48 +480,6 @@ public class ProjectCommand extends BuildCommand {
 
       return result;
     }
-  }
-
-  private Ide getIdeBasedOnPassedInTargetsAndProjectGraph(
-      BuckConfig buckConfig,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
-      Optional<TargetGraph> projectGraph) {
-    if (ide != null) {
-      return ide;
-    }
-    Ide projectIde = getIdeFromBuckConfig(buckConfig).orElse(null);
-    if (projectIde == null && !passedInTargetsSet.isEmpty() && projectGraph.isPresent()) {
-      Ide guessedIde = null;
-      for (BuildTarget buildTarget : passedInTargetsSet) {
-        Optional<TargetNode<?, ?>> node = projectGraph.get().getOptional(buildTarget);
-        if (!node.isPresent()) {
-          throw new HumanReadableException(
-              "Project graph %s doesn't contain build target " + "%s",
-              projectGraph.get(), buildTarget);
-        }
-        Description<?> description = node.get().getDescription();
-        boolean canGenerateXcodeProject = canGenerateImplicitWorkspaceForDescription(description);
-        canGenerateXcodeProject |= description instanceof XcodeWorkspaceConfigDescription;
-        if (guessedIde == null && canGenerateXcodeProject) {
-          guessedIde = Ide.XCODE;
-        } else if (guessedIde == Ide.XCODE && !canGenerateXcodeProject
-            || guessedIde == Ide.INTELLIJ && canGenerateXcodeProject) {
-          throw new HumanReadableException(
-              "Passed targets (%s) contain both Xcode and Idea "
-                  + "projects.\nCan't choose Ide from this mixed set. "
-                  + "Please pass only Xcode targets or only Idea targets.",
-              passedInTargetsSet);
-        } else {
-          guessedIde = Ide.INTELLIJ;
-        }
-      }
-      projectIde = guessedIde;
-    }
-    if (projectIde == null) {
-      throw new HumanReadableException(
-          "Please specify ide using --ide option or set ide in " + ".buckconfig");
-    }
-    return projectIde;
   }
 
   @Override

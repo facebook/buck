@@ -5,3 +5,4 @@
 [project]
   ignore = buck-out
   pre_process = ./preprocessing-script.sh
+  ide = intellij

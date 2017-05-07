@@ -4,3 +4,4 @@
   root=//:root_repo
 [project]
   ignore = buck-out
+  ide = intellij

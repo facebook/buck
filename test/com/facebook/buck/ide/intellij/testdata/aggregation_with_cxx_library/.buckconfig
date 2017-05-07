@@ -2,3 +2,4 @@
     default_android_manifest_path = src/main/AndroidManifest.xml
 [project]
     intellij_aggregation_mode = shallow
+    ide = intellij
