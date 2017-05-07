@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.apple.project_generator;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
@@ -26,12 +25,8 @@ import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.apple.project_generator.FocusedModuleTargetMatcher;
-import com.facebook.buck.apple.project_generator.ProjectGenerator;
-import com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -43,12 +38,10 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.SettableFakeClock;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,7 +51,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ProjectCommandXcodeTest {
+public class XCodeProjectCommandHelperTest {
 
   private TargetNode<?, ?> barLibNode;
   private TargetNode<?, ?> fooLibNode;
@@ -396,18 +389,19 @@ public class ProjectCommandXcodeTest {
       graphRoots = passedInTargetsSet;
     } else {
       graphRoots =
-          ProjectCommand.getRootsFromPredicate(
+          XCodeProjectCommandHelper.getRootsFromPredicate(
               projectGraph,
               node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
     }
 
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
-        ProjectCommand.replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
+        XCodeProjectCommandHelper.replaceWorkspacesWithSourceTargetsIfPossible(
+            graphRoots, projectGraph);
 
     ImmutableSet<BuildTarget> explicitTests;
     if (withTests) {
       explicitTests =
-          ProjectCommand.getExplicitTestTargets(
+          XCodeProjectCommandHelper.getExplicitTestTargets(
               graphRootsOrSourceTargets,
               projectGraph,
               withDependenciesTests,
@@ -429,11 +423,18 @@ public class ProjectCommandXcodeTest {
         createTargetGraph(targetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    ProjectCommand.generateWorkspacesForTargets(
-        createCommandRunnerParamsForTests(),
+    Cell cell =
+        new TestCellBuilder()
+            .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
+            .build();
+    XCodeProjectCommandHelper.generateWorkspacesForTargets(
+        BuckEventBusFactory.newInstance(),
+        cell,
+        FakeBuckConfig.builder().build(),
+        MoreExecutors.newDirectExecutorService(),
         targetGraphAndTargets,
         passedInTargetsSet,
-        ProjectCommand.buildWorkspaceGeneratorOptions(
+        XCodeProjectCommandHelper.buildWorkspaceGeneratorOptions(
             false,
             isWithTests,
             isWithDependenciesTests,
@@ -445,24 +446,5 @@ public class ProjectCommandXcodeTest {
         projectGenerators,
         false);
     return projectGenerators;
-  }
-
-  private static CommandRunnerParams createCommandRunnerParamsForTests()
-      throws IOException, InterruptedException {
-    Cell cell =
-        new TestCellBuilder()
-            .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
-            .build();
-    return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        new TestConsole(),
-        cell,
-        new FakeAndroidDirectoryResolver(),
-        new NoopArtifactCache(),
-        BuckEventBusFactory.newInstance(),
-        FakeBuckConfig.builder().build(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        Optional.empty());
   }
 }

@@ -16,80 +16,28 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBundleDescription;
-import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.apple.project_generator.FocusedModuleTargetMatcher;
-import com.facebook.buck.apple.project_generator.ProjectGenerator;
-import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphAndTargets;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.RichStream;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.channels.Channels;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -99,10 +47,6 @@ import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
 public class ProjectCommand extends BuildCommand {
-
-  private static final Logger LOG = Logger.get(ProjectCommand.class);
-
-  private static final String XCODE_PROCESS_NAME = "Xcode";
 
   public enum Ide {
     INTELLIJ,
@@ -261,62 +205,19 @@ public class ProjectCommand extends BuildCommand {
   @Nullable
   private String projectView = null;
 
-  public boolean getCombinedProject() {
-    return combinedProject;
-  }
-
-  public boolean getDryRun() {
-    return dryRun;
-  }
-
   private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "pre_process");
-  }
-
-  public boolean getReadOnly(BuckConfig buckConfig) {
-    if (readOnly) {
-      return readOnly;
-    }
-    return buckConfig.getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
-  }
-
-  /**
-   * Returns true if Buck should prompt to kill a running IDE before changing its files, false
-   * otherwise.
-   */
-  public boolean getIdePrompt(BuckConfig buckConfig) {
-    return buckConfig.getBooleanValue("project", "ide_prompt", true);
   }
 
   private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "ide").map(Ide::fromString);
   }
 
-  private ProjectTestsMode testsMode(BuckConfig buckConfig) {
-    ProjectTestsMode parameterMode = ProjectTestsMode.WITH_TESTS;
-
-    Ide projectIde = getIdeFromBuckConfig(buckConfig).orElse(null);
-    if (projectIde == Ide.XCODE) {
-      parameterMode = buckConfig.xcodeProjectTestsMode();
+  private boolean getReadOnly(BuckConfig buckConfig) {
+    if (readOnly) {
+      return readOnly;
     }
-
-    if (withoutTests) {
-      parameterMode = ProjectTestsMode.WITHOUT_TESTS;
-    } else if (withoutDependenciesTests) {
-      parameterMode = ProjectTestsMode.WITHOUT_DEPENDENCIES_TESTS;
-    } else if (withTests) {
-      parameterMode = ProjectTestsMode.WITH_TESTS;
-    }
-
-    return parameterMode;
-  }
-
-  public boolean isWithTests(BuckConfig buckConfig) {
-    return testsMode(buckConfig) != ProjectTestsMode.WITHOUT_TESTS;
-  }
-
-  public boolean isWithDependenciesTests(BuckConfig buckConfig) {
-    return testsMode(buckConfig) == ProjectTestsMode.WITH_TESTS;
+    return buckConfig.getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
   }
 
   @Override
@@ -377,7 +278,34 @@ public class ProjectCommand extends BuildCommand {
             result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
-            result = parseTargetsAndRunXCodeGenerator(params, executor);
+            XCodeProjectCommandHelper xcodeProjectCommandHelper =
+                new XCodeProjectCommandHelper(
+                    params.getBuckEventBus(),
+                    params.getParser(),
+                    params.getBuckConfig(),
+                    params.getCell(),
+                    params.getConsole(),
+                    params.getProcessManager(),
+                    params.getEnvironment(),
+                    params.getExecutors().get(ExecutorPool.PROJECT),
+                    getArguments(),
+                    getEnableParserProfiling(),
+                    withTests,
+                    withoutTests,
+                    withoutDependenciesTests,
+                    modulesToFocusOn,
+                    combinedProject,
+                    dryRun,
+                    getReadOnly(params.getBuckConfig()),
+                    arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
+                    arguments -> {
+                      try {
+                        return runBuild(params, arguments);
+                      } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException("Cannot run a build", e);
+                      }
+                    });
+            result = xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator(executor);
             break;
           default:
             // unreachable
@@ -392,84 +320,15 @@ public class ProjectCommand extends BuildCommand {
     }
   }
 
-  private int parseTargetsAndRunXCodeGenerator(
-      CommandRunnerParams params, ListeningExecutorService executor)
-      throws IOException, InterruptedException {
-    List<String> targets = getArguments();
-
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    TargetGraph projectGraph;
-
-    try {
-      ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-      passedInTargetsSet =
-          ImmutableSet.copyOf(
-              Iterables.concat(
-                  params
-                      .getParser()
-                      .resolveTargetSpecs(
-                          params.getBuckEventBus(),
-                          params.getCell(),
-                          getEnableParserProfiling(),
-                          executor,
-                          parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
-                          SpeculativeParsing.of(true),
-                          parserConfig.getDefaultFlavorsMode())));
-      projectGraph = getProjectGraphForIde(params, executor, passedInTargetsSet);
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
-
-    checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
-
-    ImmutableSet<BuildTarget> graphRoots;
-    if (passedInTargetsSet.isEmpty()) {
-      graphRoots =
-          getRootsFromPredicate(
-              projectGraph,
-              node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    } else {
-      graphRoots = passedInTargetsSet;
-    }
-
-    TargetGraphAndTargets targetGraphAndTargets;
-    try {
-      targetGraphAndTargets =
-          createTargetGraph(
-              params,
-              projectGraph,
-              graphRoots,
-              isWithTests(params.getBuckConfig()),
-              isWithDependenciesTests(params.getBuckConfig()),
-              passedInTargetsSet.isEmpty(),
-              executor);
-    } catch (BuildFileParseException
-        | TargetGraph.NoSuchNodeException
-        | BuildTargetException
-        | HumanReadableException e) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
-    }
-
-    if (getDryRun()) {
-      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
-        params.getConsole().getStdOut().println(targetNode.toString());
-      }
-
-      return 0;
-    }
-
-    return runXcodeProjectGenerator(params, executor, targetGraphAndTargets, passedInTargetsSet);
-  }
-
   @Override
   public boolean isReadOnly() {
     return false;
+  }
+
+  private int runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+      throws IOException, InterruptedException {
+    BuildCommand buildCommand = new BuildCommand(arguments);
+    return buildCommand.run(params);
   }
 
   private int runBuild(
@@ -528,500 +387,9 @@ public class ProjectCommand extends BuildCommand {
     }
   }
 
-  /** Run xcode specific project generation actions. */
-  private int runXcodeProjectGenerator(
-      final CommandRunnerParams params,
-      ListeningExecutorService executor,
-      final TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet)
-      throws IOException, InterruptedException {
-    int exitCode = 0;
-    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
-    ImmutableSet<ProjectGenerator.Option> options =
-        buildWorkspaceGeneratorOptions(
-            getReadOnly(params.getBuckConfig()),
-            isWithTests(params.getBuckConfig()),
-            isWithDependenciesTests(params.getBuckConfig()),
-            getCombinedProject(),
-            appleConfig.shouldUseHeaderMapsInXcodeProject(),
-            appleConfig.shouldMergeHeaderMapsInXcodeProject(),
-            appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
-
-    ImmutableSet<BuildTarget> requiredBuildTargets =
-        generateWorkspacesForTargets(
-            params,
-            targetGraphAndTargets,
-            passedInTargetsSet,
-            options,
-            getFocusModules(params, executor),
-            new HashMap<>(),
-            getCombinedProject());
-    if (!requiredBuildTargets.isEmpty()) {
-      ImmutableMultimap<Path, String> cellPathToCellName =
-          params.getCell().getCellPathResolver().getCellPaths().asMultimap().inverse();
-      BuildCommand buildCommand =
-          new BuildCommand(
-              RichStream.from(requiredBuildTargets)
-                  .map(
-                      target -> {
-                        if (!target.getCellPath().equals(params.getCell().getRoot())) {
-                          Optional<String> cellName =
-                              cellPathToCellName.get(target.getCellPath()).stream().findAny();
-                          if (cellName.isPresent()) {
-                            return target.withUnflavoredBuildTarget(
-                                UnflavoredBuildTarget.of(
-                                    target.getCellPath(),
-                                    cellName,
-                                    target.getBaseName(),
-                                    target.getShortName()));
-                          } else {
-                            throw new IllegalStateException(
-                                "Failed to find cell name for cell path while constructing parameters to "
-                                    + "build dependencies for project generation. "
-                                    + "Build target: "
-                                    + target
-                                    + " cell path: "
-                                    + target.getCellPath());
-                          }
-                        } else {
-                          return target;
-                        }
-                      })
-                  .map(Object::toString)
-                  .toImmutableList());
-      exitCode = buildCommand.runWithoutHelp(params);
-    }
-    return exitCode;
-  }
-
-  @VisibleForTesting
-  static ImmutableSet<BuildTarget> generateWorkspacesForTargets(
-      final CommandRunnerParams params,
-      final TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
-      ImmutableSet<ProjectGenerator.Option> options,
-      FocusedModuleTargetMatcher focusModules,
-      Map<Path, ProjectGenerator> projectGenerators,
-      boolean combinedProject)
-      throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets;
-    if (passedInTargetsSet.isEmpty()) {
-      targets =
-          targetGraphAndTargets
-              .getProjectRoots()
-              .stream()
-              .map(TargetNode::getBuildTarget)
-              .collect(MoreCollectors.toImmutableSet());
-    } else {
-      targets = passedInTargetsSet;
-    }
-
-    LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), params.getBuckEventBus());
-
-    LOG.debug("Generating workspace for config targets %s", targets);
-    ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (final BuildTarget inputTarget : targets) {
-      TargetNode<?, ?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
-      XcodeWorkspaceConfigDescription.Arg workspaceArgs;
-      if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
-            castToXcodeWorkspaceTargetNode(inputNode);
-        workspaceArgs = castedWorkspaceNode.getConstructorArg();
-      } else if (canGenerateImplicitWorkspaceForDescription(inputNode.getDescription())) {
-        workspaceArgs = createImplicitWorkspaceArgs(inputNode);
-      } else {
-        throw new HumanReadableException(
-            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library",
-            inputNode);
-      }
-
-      BuckConfig buckConfig = params.getBuckConfig();
-      AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
-      HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);
-      CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-      SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
-
-      CxxPlatform defaultCxxPlatform =
-          params.getCell().getKnownBuildRuleTypes().getDefaultCxxPlatforms();
-      WorkspaceAndProjectGenerator generator =
-          new WorkspaceAndProjectGenerator(
-              params.getCell(),
-              targetGraphAndTargets.getTargetGraph(),
-              workspaceArgs,
-              inputTarget,
-              options,
-              combinedProject,
-              focusModules,
-              !appleConfig.getXcodeDisableParallelizeBuild(),
-              defaultCxxPlatform,
-              params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-              lazyActionGraph::getBuildRuleResolverWhileRequiringSubgraph,
-              params.getBuckEventBus(),
-              halideBuckConfig,
-              cxxBuckConfig,
-              swiftBuckConfig);
-      ListeningExecutorService executorService = params.getExecutors().get(ExecutorPool.PROJECT);
-      Preconditions.checkNotNull(
-          executorService, "CommandRunnerParams does not have executor for PROJECT pool");
-      generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);
-      ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
-          generator.getRequiredBuildTargets();
-      LOG.debug(
-          "Required build targets for workspace %s: %s",
-          inputTarget, requiredBuildTargetsForWorkspace);
-      requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
-    }
-
-    return requiredBuildTargetsBuilder.build();
-  }
-
-  private FocusedModuleTargetMatcher getFocusModules(
-      CommandRunnerParams params, ListeningExecutorService executor)
-      throws IOException, InterruptedException {
-    if (modulesToFocusOn == null) {
-      return FocusedModuleTargetMatcher.noFocus();
-    }
-
-    Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
-    // Parse patterns with the following syntax:
-    // https://buckbuild.com/concept/build_target_pattern.html
-    ImmutableList<TargetNodeSpec> specs =
-        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), patterns);
-
-    // Resolve the list of targets matching the patterns.
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-    try {
-      passedInTargetsSet =
-          params
-              .getParser()
-              .resolveTargetSpecs(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
-                  specs,
-                  SpeculativeParsing.of(false),
-                  parserConfig.getDefaultFlavorsMode())
-              .stream()
-              .flatMap(Collection::stream)
-              .map(target -> target.withoutCell())
-              .collect(MoreCollectors.toImmutableSet());
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return FocusedModuleTargetMatcher.noFocus();
-    }
-    LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
-
-    ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet =
-        RichStream.from(passedInTargetsSet)
-            .map(BuildTarget::getUnflavoredBuildTarget)
-            .toImmutableSet();
-    LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
-    return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
-  }
-
-  public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
-      boolean isReadonly,
-      boolean isWithTests,
-      boolean isWithDependenciesTests,
-      boolean isProjectsCombined,
-      boolean shouldUseHeaderMaps,
-      boolean shouldMergeHeaderMaps,
-      boolean shouldGenerateHeaderSymlinkTreesOnly) {
-    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
-    if (isReadonly) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
-    }
-    if (isWithTests) {
-      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
-    }
-    if (isWithDependenciesTests) {
-      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS);
-    }
-    if (isProjectsCombined) {
-      optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
-    } else {
-      optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
-    }
-    if (!shouldUseHeaderMaps) {
-      optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADER_MAPS);
-    }
-    if (shouldMergeHeaderMaps) {
-      optionsBuilder.add(ProjectGenerator.Option.MERGE_HEADER_MAPS);
-    }
-    if (shouldGenerateHeaderSymlinkTreesOnly) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
-    }
-    return optionsBuilder.build();
-  }
-
-  @SuppressWarnings(value = "unchecked")
-  private static TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castToXcodeWorkspaceTargetNode(
-      TargetNode<?, ?> targetNode) {
-    Preconditions.checkArgument(
-        targetNode.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    return (TargetNode<XcodeWorkspaceConfigDescription.Arg, ?>) targetNode;
-  }
-
-  private void checkForAndKillXcodeIfRunning(CommandRunnerParams params, boolean enablePrompt)
-      throws InterruptedException, IOException {
-    Optional<ProcessManager> processManager = params.getProcessManager();
-    if (!processManager.isPresent()) {
-      LOG.warn("Could not check if Xcode is running (no process manager)");
-      return;
-    }
-
-    if (!processManager.get().isProcessRunning(XCODE_PROCESS_NAME)) {
-      LOG.debug("Xcode is not running.");
-      return;
-    }
-
-    boolean canPromptResult = canPrompt(params.getEnvironment());
-    if (enablePrompt && canPromptResult) {
-      if (prompt(
-          params,
-          "Xcode is currently running. Buck will modify files Xcode currently has "
-              + "open, which can cause it to become unstable.\n\n"
-              + "Kill Xcode and continue?")) {
-        processManager.get().killProcess(XCODE_PROCESS_NAME);
-      } else {
-        params
-            .getConsole()
-            .getStdOut()
-            .println(
-                params
-                    .getConsole()
-                    .getAnsi()
-                    .asWarningText(
-                        "Xcode is running. Generated projects might be lost or corrupted if Xcode "
-                            + "currently has them open."));
-      }
-      params
-          .getConsole()
-          .getStdOut()
-          .format(
-              "To disable this prompt in the future, add the following to %s: \n\n"
-                  + "[project]\n"
-                  + "  ide_prompt = false\n\n",
-              params
-                  .getCell()
-                  .getFilesystem()
-                  .getRootPath()
-                  .resolve(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME)
-                  .toAbsolutePath());
-    } else {
-      LOG.debug(
-          "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",
-          enablePrompt, canPromptResult);
-    }
-  }
-
-  private boolean canPrompt(ImmutableMap<String, String> environment) {
-    String nailgunStdinTty = environment.get("NAILGUN_TTY_0");
-    if (nailgunStdinTty != null) {
-      return nailgunStdinTty.equals("1");
-    } else {
-      return System.console() != null;
-    }
-  }
-
-  private boolean prompt(CommandRunnerParams params, String prompt) throws IOException {
-    Preconditions.checkState(canPrompt(params.getEnvironment()));
-
-    LOG.debug("Displaying prompt %s..", prompt);
-    params
-        .getConsole()
-        .getStdOut()
-        .print(params.getConsole().getAnsi().asWarningText(prompt + " [Y/n] "));
-
-    Optional<String> result;
-    try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);
-        BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
-      result = Optional.ofNullable(bufferedStdinReader.readLine());
-    }
-    LOG.debug("Result of prompt: [%s]", result);
-    return result.isPresent()
-        && (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
-  }
-
-  @VisibleForTesting
-  static ImmutableSet<BuildTarget> getRootsFromPredicate(
-      TargetGraph projectGraph, Predicate<TargetNode<?, ?>> rootsPredicate) {
-    return projectGraph
-        .getNodes()
-        .stream()
-        .filter(rootsPredicate)
-        .map(TargetNode::getBuildTarget)
-        .collect(MoreCollectors.toImmutableSet());
-  }
-
-  private TargetGraph getProjectGraphForIde(
-      CommandRunnerParams params,
-      ListeningExecutorService executor,
-      ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-
-    if (passedInTargets.isEmpty()) {
-      return params
-          .getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
-              ImmutableList.of(
-                  TargetNodePredicateSpec.of(
-                      x -> true,
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), params.getCell().getRoot()))),
-              /* ignoreBuckAutodepsFiles */ false)
-          .getTargetGraph();
-    }
-    Preconditions.checkState(!passedInTargets.isEmpty());
-    return params
-        .getParser()
-        .buildTargetGraph(
-            params.getBuckEventBus(),
-            params.getCell(),
-            getEnableParserProfiling(),
-            executor,
-            passedInTargets);
-  }
-
-  private TargetGraphAndTargets createTargetGraph(
-      CommandRunnerParams params,
-      TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> graphRoots,
-      boolean isWithTests,
-      boolean isWithDependenciesTests,
-      boolean needsFullRecursiveParse,
-      ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-
-    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-    ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
-        replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
-
-    if (isWithTests) {
-      FocusedModuleTargetMatcher focusedModules = getFocusModules(params, executor);
-
-      explicitTestTargets =
-          getExplicitTestTargets(
-              graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
-      if (!needsFullRecursiveParse) {
-        projectGraph =
-            params
-                .getParser()
-                .buildTargetGraph(
-                    params.getBuckEventBus(),
-                    params.getCell(),
-                    getEnableParserProfiling(),
-                    executor,
-                    Sets.union(graphRoots, explicitTestTargets));
-      } else {
-        projectGraph =
-            params
-                .getParser()
-                .buildTargetGraph(
-                    params.getBuckEventBus(),
-                    params.getCell(),
-                    getEnableParserProfiling(),
-                    executor,
-                    Sets.union(
-                        projectGraph
-                            .getNodes()
-                            .stream()
-                            .map(TargetNode::getBuildTarget)
-                            .collect(MoreCollectors.toImmutableSet()),
-                        explicitTestTargets));
-      }
-    }
-
-    return TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
-  }
-
-  public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
-      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?, ?>> targetNodes = projectGraph.getAll(buildTargets);
-    ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
-    for (TargetNode<?, ?> node : targetNodes) {
-      if (node.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
-            castToXcodeWorkspaceTargetNode(node);
-        Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().srcTarget;
-        if (srcTarget.isPresent()) {
-          resultBuilder.add(srcTarget.get());
-        } else {
-          resultBuilder.add(node.getBuildTarget());
-        }
-      } else {
-        resultBuilder.add(node.getBuildTarget());
-      }
-    }
-    return resultBuilder.build();
-  }
-
-  private static boolean canGenerateImplicitWorkspaceForDescription(Description<?> description) {
-    // We weren't given a workspace target, but we may have been given something that could
-    // still turn into a workspace (for example, a library or an actual app rule). If that's the
-    // case we still want to generate a workspace.
-    return description instanceof AppleBinaryDescription
-        || description instanceof AppleBundleDescription
-        || description instanceof AppleLibraryDescription;
-  }
-
-  /**
-   * @param sourceTargetNode - The TargetNode which will act as our fake workspaces `src_target`
-   * @return Workspace Args that describe a generic Xcode workspace containing `src_target` and its
-   *     tests
-   */
-  private static XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
-      TargetNode<?, ?> sourceTargetNode) {
-    XcodeWorkspaceConfigDescription.Arg workspaceArgs = new XcodeWorkspaceConfigDescription.Arg();
-    workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());
-    workspaceArgs.actionConfigNames = ImmutableMap.of();
-    workspaceArgs.extraTests = ImmutableSortedSet.of();
-    workspaceArgs.extraTargets = ImmutableSortedSet.of();
-    workspaceArgs.workspaceName = Optional.empty();
-    workspaceArgs.extraSchemes = ImmutableSortedMap.of();
-    workspaceArgs.isRemoteRunnable = Optional.empty();
-    workspaceArgs.explicitRunnablePath = Optional.empty();
-    workspaceArgs.launchStyle = Optional.empty();
-    return workspaceArgs;
-  }
-
   @Override
   public String getShortDescription() {
     return "generates project configuration files for an IDE";
-  }
-
-  /**
-   * @param buildTargets The set of targets for which we would like to find tests
-   * @param projectGraph A TargetGraph containing all nodes and their tests.
-   * @param shouldIncludeDependenciesTests Should or not include tests that test dependencies
-   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
-   */
-  @VisibleForTesting
-  static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      ImmutableSet<BuildTarget> buildTargets,
-      TargetGraph projectGraph,
-      boolean shouldIncludeDependenciesTests,
-      FocusedModuleTargetMatcher focusedModules) {
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
-    Iterable<TargetNode<?, ?>> nodes;
-    if (shouldIncludeDependenciesTests) {
-      nodes = projectGraph.getSubgraph(projectRoots).getNodes();
-    } else {
-      nodes = projectRoots;
-    }
-
-    return TargetGraphAndTargets.getExplicitTestTargets(
-        RichStream.from(nodes)
-            .filter(node -> focusedModules.isFocusedOn(node.getBuildTarget()))
-            .iterator());
   }
 
   public static class AggregationModeOptionHandler extends OptionHandler<AggregationMode> {
@@ -1042,45 +410,6 @@ public class ProjectCommand extends BuildCommand {
     @Nullable
     public String getDefaultMetaVariable() {
       return null;
-    }
-  }
-
-  /**
-   * An action graph where subtrees are populated as needed.
-   *
-   * <p>This is useful when only select sub-graphs of the action graph needs to be generated, but
-   * the subgraph is not known at this point in time. The synchronization and bottom-up traversal is
-   * necessary as this will be accessed from multiple threads during project generation, and
-   * BuildRuleResolver is not 100% thread safe when it comes to mutations.
-   */
-  @ThreadSafe
-  private static class LazyActionGraph {
-    private final TargetGraph targetGraph;
-    private final BuildRuleResolver resolver;
-
-    public LazyActionGraph(TargetGraph targetGraph, BuckEventBus buckEventBus) {
-      this.targetGraph = targetGraph;
-      this.resolver =
-          new BuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
-    }
-
-    public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {
-      TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
-
-      try {
-        synchronized (this) {
-          new AbstractBottomUpTraversal<TargetNode<?, ?>, NoSuchBuildTargetException>(subgraph) {
-            @Override
-            public void visit(TargetNode<?, ?> node) throws NoSuchBuildTargetException {
-              resolver.requireRule(node.getBuildTarget());
-            }
-          }.traverse();
-        }
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(e);
-      }
-      return resolver;
     }
   }
 }
