@@ -62,7 +62,6 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -135,13 +134,7 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            cell,
-            enableProfiling,
-            SpeculativeParsing.of(true),
-            /* ignoreBuckAutodepsFiles */ false)) {
+            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(true))) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -155,13 +148,7 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException {
     try (PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            cell,
-            enableProfiling,
-            SpeculativeParsing.of(false),
-            /* ignoreBuckAutodepsFiles */ false)) {
+            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
       return state.getTargetNode(target);
     }
   }
@@ -208,13 +195,7 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            cell,
-            enableProfiling,
-            SpeculativeParsing.of(false),
-            /* ignoreBuckAutodepsFiles */ false)) {
+            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
       return getRawTargetNode(state, cell, targetNode);
     }
   }
@@ -246,23 +227,14 @@ public class Parser {
 
     try (final PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            rootCell,
-            enableProfiling,
-            SpeculativeParsing.of(true),
-            /* ignoreBuckAutodepsFiles */ false)) {
-      return buildTargetGraph(state, eventBus, toExplore, /* ignoreBuckAutodepsFiles */ false);
+            this, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.of(true))) {
+      return buildTargetGraph(state, eventBus, toExplore);
     }
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   protected TargetGraph buildTargetGraph(
-      final PerBuildState state,
-      final BuckEventBus eventBus,
-      final Iterable<BuildTarget> toExplore,
-      final boolean ignoreBuckAutodepsFiles)
+      final PerBuildState state, final BuckEventBus eventBus, final Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 
     if (Iterables.isEmpty(toExplore)) {
@@ -282,10 +254,6 @@ public class Parser {
             node = state.getTargetNode(target);
           } catch (BuildFileParseException | BuildTargetException e) {
             throw new RuntimeException(e);
-          }
-
-          if (ignoreBuckAutodepsFiles) {
-            return Collections.emptyIterator();
           }
 
           // this second lookup loop may *seem* pointless, but it allows us to report which node is
@@ -345,7 +313,6 @@ public class Parser {
   /**
    * @param eventBus used to log events while parsing.
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
-   * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
   public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
@@ -353,8 +320,7 @@ public class Parser {
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean ignoreBuckAutodepsFiles)
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
         eventBus,
@@ -362,14 +328,12 @@ public class Parser {
         enableProfiling,
         executor,
         targetNodeSpecs,
-        ignoreBuckAutodepsFiles,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
   }
 
   /**
    * @param eventBus used to log events while parsing.
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
-   * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
    * @return the target graph containing the build targets and their related targets.
    */
   public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
@@ -378,26 +342,19 @@ public class Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean ignoreBuckAutodepsFiles,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            rootCell,
-            enableProfiling,
-            SpeculativeParsing.of(true),
-            ignoreBuckAutodepsFiles)) {
+            this, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.of(true))) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
               Iterables.concat(
                   resolveTargetSpecs(
                       state, eventBus, rootCell, targetNodeSpecs, applyDefaultFlavorsMode)));
-      TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
+      TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets);
 
       return TargetGraphAndBuildTargets.builder()
           .setBuildTargets(buildTargets)
@@ -423,13 +380,7 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
-            eventBus,
-            executor,
-            rootCell,
-            enableProfiling,
-            speculativeParsing,
-            /* ignoreBuckAutodepsFiles */ false)) {
+            this, eventBus, executor, rootCell, enableProfiling, speculativeParsing)) {
       return resolveTargetSpecs(state, eventBus, rootCell, specs, applyDefaultFlavorsMode);
     }
   }

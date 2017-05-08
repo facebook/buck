@@ -157,13 +157,7 @@ public class ParserTest {
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
-            parser,
-            eventBus,
-            executor,
-            cell,
-            enableProfiling,
-            SpeculativeParsing.of(false),
-            /* ignoreBuckAutodepsFiles */ false)) {
+            parser, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
       return Parser.getRawTargetNodes(state, cell, buildFile);
     }
   }
@@ -1878,7 +1872,6 @@ public class ParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTarget.builder(cellRoot, "//lib", "lib").build())),
-                /* ignoreBuckAutodepsFiles */ false,
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
@@ -1923,7 +1916,6 @@ public class ParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTarget.builder(cellRoot, "//lib", "lib").build())),
-                /* ignoreBuckAutodepsFiles */ false,
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
@@ -1972,7 +1964,6 @@ public class ParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTarget.builder(cellRoot, "//lib", "lib").build())),
-                /* ignoreBuckAutodepsFiles */ false,
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
@@ -2011,7 +2002,6 @@ public class ParserTest {
         executorService,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
-        /* ignoreBuckAutodepsFiles */ false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2030,7 +2020,6 @@ public class ParserTest {
         executorService,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
-        /* ignoreBuckAutodepsFiles */ false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
@@ -2284,8 +2273,7 @@ public class ParserTest {
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
                             filter,
-                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-                    /* ignoreBuckAutodepsFiles */ false)
+                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph()
                 .getNodes())
         .filter(filter)

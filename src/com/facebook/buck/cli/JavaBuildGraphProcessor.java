@@ -51,8 +51,7 @@ import java.nio.file.Paths;
 
 /**
  * Utility that aids in creating the objects necessary to traverse the target graph with special
- * knowledge of Java-based rules. This is needed by commands such as {@code buck autodeps} and
- * {@code buck suggest}.
+ * knowledge of Java-based rules. This is needed by commands such as {@code buck suggest}.
  */
 final class JavaBuildGraphProcessor {
 
@@ -97,13 +96,6 @@ final class JavaBuildGraphProcessor {
       Cell cell = params.getCell();
       WeightedListeningExecutorService executorService = pool.getExecutor();
 
-      // Ideally, we should be able to construct the TargetGraph quickly assuming most of it is
-      // already in memory courtesy of buckd. Though we could make a performance optimization where
-      // we pass an option to buck.py that tells it to ignore reading the BUCK.autodeps files when
-      // parsing the BUCK files because we never need to consider the existing auto-generated deps
-      // when creating the new auto-generated deps. If we did so, we would have to make sure to keep
-      // the nodes for that version of the graph separate from the ones that are actually used for
-      // building.
       TargetGraph graph;
       try {
         graph =
@@ -117,8 +109,7 @@ final class JavaBuildGraphProcessor {
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
                             x -> true,
-                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-                    /* ignoreBuckAutodepsFiles */ true)
+                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph();
       } catch (BuildTargetException | BuildFileParseException e) {
         params

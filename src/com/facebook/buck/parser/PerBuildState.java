@@ -61,7 +61,6 @@ public class PerBuildState implements AutoCloseable {
   private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
-  private final boolean ignoreBuckAutodepsFiles;
 
   private final PrintStream stdout;
   private final PrintStream stderr;
@@ -91,13 +90,11 @@ public class PerBuildState implements AutoCloseable {
       ListeningExecutorService executorService,
       Cell rootCell,
       boolean enableProfiling,
-      SpeculativeParsing speculativeParsing,
-      boolean ignoreBuckAutodepsFiles) {
+      SpeculativeParsing speculativeParsing) {
 
     this.parser = parser;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
-    this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
 
     this.cells = new ConcurrentHashMap<>();
     this.cellSymlinkAllowability = new ConcurrentHashMap<>();
@@ -114,7 +111,7 @@ public class PerBuildState implements AutoCloseable {
     this.projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
-            input -> createBuildFileParser(input, PerBuildState.this.ignoreBuckAutodepsFiles));
+            input -> createBuildFileParser(input));
 
     this.rawNodeParsePipeline =
         new RawNodeParsePipeline(
@@ -173,10 +170,9 @@ public class PerBuildState implements AutoCloseable {
     return rawNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
   }
 
-  private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
+  private ProjectBuildFileParser createBuildFileParser(Cell cell) {
     ProjectBuildFileParser parser =
-        cell.createBuildFileParser(
-            this.parser.getTypeCoercerFactory(), console, eventBus, ignoreBuckAutodepsFiles);
+        cell.createBuildFileParser(this.parser.getTypeCoercerFactory(), console, eventBus);
     parser.setEnableProfiling(enableProfiling);
     return parser;
   }
@@ -317,12 +313,6 @@ public class PerBuildState implements AutoCloseable {
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
     projectBuildFileParserPool.close();
-
-    if (ignoreBuckAutodepsFiles) {
-      LOG.debug("Invalidating all caches because buck autodeps ran.");
-      parser.getPermState().invalidateAllCaches();
-      return;
-    }
 
     if (!buildInputPathsUnderSymlink.isEmpty()) {
       LOG.debug(

@@ -26,19 +26,13 @@ final class Symbols {
   static final Symbols EMPTY = new Symbols();
 
   @JsonSerialize @JsonDeserialize final Iterable<String> provided;
-  @JsonSerialize @JsonDeserialize final Iterable<String> required;
-  @JsonSerialize @JsonDeserialize final Iterable<String> exported;
 
   // For JsonDeserialize.
   Symbols() {
     this.provided = ImmutableList.of();
-    this.required = ImmutableList.of();
-    this.exported = ImmutableList.of();
   }
 
-  Symbols(Iterable<String> provided, Iterable<String> required, Iterable<String> exported) {
+  Symbols(Iterable<String> provided) {
     this.provided = provided;
-    this.required = required;
-    this.exported = exported;
   }
 }

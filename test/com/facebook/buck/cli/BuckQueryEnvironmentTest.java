@@ -90,8 +90,7 @@ public class BuckQueryEnvironmentTest {
             executor,
             cell,
             /* enableProfiling */ false,
-            SpeculativeParsing.of(true),
-            /* ignoreBuckAutodepsFiles */ false);
+            SpeculativeParsing.of(true));
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

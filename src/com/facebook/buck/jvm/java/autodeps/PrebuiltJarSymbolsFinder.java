@@ -21,7 +21,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipFileTraversal;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -63,7 +62,7 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
         providedSymbols.add(fullyQualifiedName);
       }
     }.traverse();
-    return new Symbols(providedSymbols, ImmutableList.of(), ImmutableList.of());
+    return new Symbols(providedSymbols);
   }
 
   @Override

@@ -84,7 +84,6 @@ public class FetchCommand extends BuildCommand {
                     getEnableParserProfiling(),
                     pool.getExecutor(),
                     parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
-                    /* ignoreBuckAutodepsFiles */ false,
                     parserConfig.getDefaultFlavorsMode());
         if (params.getBuckConfig().getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);

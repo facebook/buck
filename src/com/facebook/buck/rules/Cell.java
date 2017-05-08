@@ -237,10 +237,7 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      boolean ignoreBuckAutodepsFiles) {
+      TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
 
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
@@ -265,7 +262,6 @@ public class Cell {
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(getBuildFileName())
-            .setAutodepsFilesHaveSignatures(config.getIncludeAutodepsSignature())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(getAllDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
@@ -280,8 +276,7 @@ public class Cell {
         typeCoercerFactory,
         config.getEnvironment(),
         eventBus,
-        new DefaultProcessExecutor(console),
-        ignoreBuckAutodepsFiles);
+        new DefaultProcessExecutor(console));
   }
 
   @Override

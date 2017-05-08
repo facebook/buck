@@ -71,11 +71,6 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
-  public boolean getAutodepsFilesHaveSignatures() {
-    return true;
-  }
-
-  @Value.Default
   Watchman getWatchman() {
     return Watchman.NULL_WATCHMAN;
   }

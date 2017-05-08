@@ -39,7 +39,6 @@ java_library(
     'Charlie.java',
     'Delta.java',
   ],
-  autodeps = True,
   visibility = [
     'PUBLIC',
   ],
@@ -121,12 +120,6 @@ java_library(
 In this particular case, the output from <code>buck suggest</code> could be used verbatim to replace
 the contents of the original <code>BUCK</code> file. However, the more common thing to do is to
 take the output and massage it into a level of granularity that is appropriate for your project.
-</p>
-
-<p>
-Note that this technique complements <code>buck autodeps</code> in that if you choose to repartition
-a large library, you can automatically update all of the rules that depend on the original rule that
-you refactored if they have <code>autodeps=True</code>.
 </p>
 
 {/param} // overview

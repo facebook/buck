@@ -111,7 +111,7 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, dirname, cell_name, autodeps, allow_empty_globs,
+    def __init__(self, project_root, base_path, dirname, cell_name, allow_empty_globs,
                  ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob):
@@ -126,7 +126,6 @@ class BuildFileContext(AbstractContext):
         self.base_path = base_path
         self.cell_name = cell_name
         self.dirname = dirname
-        self.autodeps = autodeps
         self.allow_empty_globs = allow_empty_globs
         self.ignore_paths = ignore_paths
         self.watchman_client = watchman_client
@@ -284,51 +283,6 @@ def add_rule(rule, build_env):
                          (rule, build_env.rules[rule_name]))
     rule['buck.base_path'] = build_env.base_path
 
-    # It is possible that the user changed the rule from autodeps=True to autodeps=False
-    # without re-running `buck autodeps` (this is common when resolving merge conflicts).
-    # When this happens, the deps in BUCK.autodeps should be ignored because autodeps is
-    # set to False.
-    if rule_name in build_env.autodeps:
-        if rule.get('autodeps', False):
-            # TODO(mbolin): One major edge case that exists right now when using a set to de-dupe
-            # elements is that the same target may be referenced in two different ways:
-            # 1. As a fully-qualified target: //src/com/facebook/buck/android:packageable
-            # 2. As a local target:           :packageable
-            # Because of this, we may end up with two entries for the same target even though we
-            # are trying to use a set to remove duplicates.
-
-            # Combine all of the deps into a set to eliminate duplicates. Although we would prefer
-            # it if each dep were exclusively in BUCK or BUCK.autodeps, that is not always
-            # possible. For example, if a user-defined macro creates a library that hardcodes a dep
-            # and the tooling to produce BUCK.autodeps also infers the need for that dep and adds
-            # it to BUCK.autodeps, then it will appear in both places.
-            auto_deps = build_env.autodeps[rule_name].get('deps', None)
-            if auto_deps:
-                # The default value for the map entries is None which means we cannot use
-                # rule.get('deps', []) as it would return None.
-                explicit_deps = rule.get('deps')
-                if explicit_deps is None:
-                    explicit_deps = []
-                deps = set(explicit_deps)
-                deps.update(auto_deps)
-                rule['deps'] = list(deps)
-
-            auto_exported_deps = build_env.autodeps[rule_name].get('exported_deps', None)
-            if auto_exported_deps:
-                # The default value for the map entries is None which means we cannot use
-                # rule.get('exportedDeps', []) as it would return None.
-                explicit_exported_deps = rule.get('exportedDeps')
-                if explicit_exported_deps is None:
-                    explicit_exported_deps = []
-                exported_deps = set(explicit_exported_deps)
-                exported_deps.update(auto_exported_deps)
-                rule['exportedDeps'] = list(exported_deps)
-        else:
-            # If there is an entry in the .autodeps file for the rule, but the rule has autodeps
-            # set to False, then the .autodeps file is likely out of date. Ideally, we would warn
-            # the user to re-run `buck autodeps` in this scenario. Unfortunately, we do not have
-            # a mechanism to relay warnings from buck.py at the time of this writing.
-            pass
     build_env.rules[rule_name] = rule
 
 
@@ -534,8 +488,7 @@ class BuildFileProcessor(object):
         'pipes': ['quote'],
     }
 
-    def __init__(self, project_root, cell_roots, cell_name, build_file_name,
-                 allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
+    def __init__(self, project_root, cell_roots, cell_name, build_file_name, allow_empty_globs,
                  watchman_client, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob,
                  project_import_whitelist=None, implicit_includes=None,
@@ -563,8 +516,6 @@ class BuildFileProcessor(object):
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
-        self._ignore_buck_autodeps_files = ignore_buck_autodeps_files
-        self._no_autodeps_signatures = no_autodeps_signatures
         self._watchman_client = watchman_client
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
@@ -997,23 +948,11 @@ class BuildFileProcessor(object):
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
 
-        # If there is a signature failure, then record the error, but do not blow up.
-        autodeps = None
-        autodeps_file = None
-        invalid_signature_error_message = None
-        try:
-            results = self._try_parse_autodeps(dirname)
-            if results:
-                (autodeps, autodeps_file) = results
-        except InvalidSignatureError as e:
-            invalid_signature_error_message = e.message
-
         build_env = BuildFileContext(
             self._project_root,
             base_path,
             dirname,
             self._cell_name,
-            autodeps or {},
             self._allow_empty_globs,
             self._ignore_paths,
             self._watchman_client,
@@ -1024,79 +963,7 @@ class BuildFileProcessor(object):
             self._watchman_use_glob_generator,
             self._use_mercurial_glob)
 
-        # If the .autodeps file has been successfully parsed, then treat it as if it were
-        # a file loaded via include_defs() in that a change to the .autodeps file should
-        # force all of the build rules in the build file to be invalidated.
-        if autodeps_file:
-            build_env.includes.add(autodeps_file)
-
-        if invalid_signature_error_message:
-            build_env.diagnostics.append(
-                Diagnostic(
-                    message=invalid_signature_error_message,
-                    level='fatal',
-                    source='autodeps',
-                    exception=None))
-
         return self._process(build_env, path, is_implicit_include=False)
-
-    def _try_parse_autodeps(self, dirname):
-        """
-        Returns a tuple of (autodeps dict, autodeps_file string), or None.
-        """
-        # When we are running as part of `buck autodeps`, we ignore existing BUCK.autodeps files.
-        if self._ignore_buck_autodeps_files:
-            return None
-
-        autodeps_file = dirname + '/' + self._build_file_name + '.autodeps'
-        if not os.path.isfile(autodeps_file):
-            return None
-
-        autodeps = self._parse_autodeps(autodeps_file)
-        return (autodeps, autodeps_file)
-
-    def _parse_autodeps(self, autodeps_file):
-        """
-        A BUCK file may have a BUCK.autodeps file that lives alongside it. (If a custom build file
-        name is used, then <file-name>.autodeps must be the name of the .autodeps file.)
-
-        The .autodeps file is a JSON file with a special header that is used to sign the file,
-        containing a SHA-1 of the contents following the header. If the header does not match the
-        contents, an error will be thrown.
-
-        The JSON contains a mapping of build targets (by short name) to lists of build targets that
-        represent dependencies. For each mapping, the list of dependencies will be merged with that
-        of the original rule declared in the build file. This affords end users the ability to
-        partially generate build files.
-
-        :param autodeps_file: Absolute path to the expected .autodeps file.
-        :raises InvalidSignatureError:
-        """
-        if self._no_autodeps_signatures:
-            with self._wrap_file_access(wrap=False):
-                with open(autodeps_file, 'r') as stream:
-                    return json.load(stream)
-        else:
-            with self._wrap_file_access(wrap=False):
-                with open(autodeps_file, 'r') as stream:
-                    signature_line = stream.readline()
-                    contents = stream.read()
-
-            match = GENDEPS_SIGNATURE.match(signature_line)
-            if match:
-                signature = match.group(1)
-                hash = hashlib.new('sha1')
-                hash.update(contents)
-                sha1 = hash.hexdigest()
-
-                if sha1 == signature:
-                    return json.loads(contents)
-                else:
-                    raise InvalidSignatureError(
-                        'Signature did not match contents in {0}'.format(autodeps_file))
-            else:
-                raise InvalidSignatureError('{0} did not contain an autodeps signature'.
-                                            format(autodeps_file))
 
     def process(self, watch_root, project_prefix, path, diagnostics):
         # type: (str, Optional[str], str, List[Diagnostic]) -> List[Dict[str, Any]]
@@ -1378,15 +1245,6 @@ def main():
         dest='quiet',
         help='Stifles exception backtraces printed to stderr during parsing.')
     parser.add_option(
-        '--ignore_buck_autodeps_files',
-        action='store_true',
-        help='do not consider .autodeps files when parsing rules')
-    parser.add_option(
-        '--no_autodeps_signatures',
-        action='store_true',
-        dest='no_autodeps_signatures',
-        help='.autodeps files are not expected to contain signatures')
-    parser.add_option(
         '--profile',
         action='store_true',
         help='Profile every buck file execution')
@@ -1456,8 +1314,6 @@ def main():
         options.cell_name,
         options.build_file_name,
         options.allow_empty_globs,
-        options.ignore_buck_autodeps_files,
-        options.no_autodeps_signatures,
         watchman_client,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,

@@ -740,7 +740,6 @@ public class BuildCommand extends AbstractCommand {
               getEnableParserProfiling(),
               executor,
               parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
-              /* ignoreBuckAutodepsFiles */ false,
               parserConfig.getDefaultFlavorsMode());
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

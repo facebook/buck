@@ -84,7 +84,6 @@ public class PrebuiltJarSymbolsFinderTest {
         "Only entries that correspond to .class files for top-level types should be included.",
         ImmutableSet.of("com.facebook.buck.cli.Main", "com.facebook.buck.cli.TestSelectorOptions"),
         ImmutableSet.copyOf(symbols.provided));
-    assertTrue(Iterables.isEmpty(symbols.required));
   }
 
   @Test
@@ -95,9 +94,6 @@ public class PrebuiltJarSymbolsFinderTest {
     assertTrue(
         "There should be no provided symbols if the binaryJar is not a PathSourcePath.",
         Iterables.isEmpty(symbols.provided));
-    assertTrue(
-        "There should be no required symbols if the binaryJar is not a PathSourcePath.",
-        Iterables.isEmpty(symbols.required));
   }
 
   @Test

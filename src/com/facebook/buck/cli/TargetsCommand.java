@@ -398,7 +398,6 @@ public class TargetsCommand extends AbstractCommand {
                           x -> true,
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))),
-                  false,
                   parserConfig.getDefaultFlavorsMode());
       SortedMap<String, TargetNode<?, ?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -418,8 +417,7 @@ public class TargetsCommand extends AbstractCommand {
               params.getCell(),
               getEnableParserProfiling(),
               executor,
-              parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
-              false);
+              parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()));
     }
   }
 
@@ -477,7 +475,6 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-    boolean ignoreBuckAutodepsFiles = false;
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
     // dependencies.
@@ -499,7 +496,6 @@ public class TargetsCommand extends AbstractCommand {
                                   x -> true,
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))),
-                          ignoreBuckAutodepsFiles,
                           parserConfig.getDefaultFlavorsMode())
                       .getTargetGraph())
               .build();
@@ -513,7 +509,6 @@ public class TargetsCommand extends AbstractCommand {
                   getEnableParserProfiling(),
                   executor,
                   parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
-                  ignoreBuckAutodepsFiles,
                   parserConfig.getDefaultFlavorsMode());
     }
     return params.getBuckConfig().getTargetsVersions()

@@ -1,7 +1,6 @@
 java_library(
     name = "external",
     srcs = glob(["*.java"]),
-    autodeps = False,  # See below.
     visibility = [
         "PUBLIC",
     ],

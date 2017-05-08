@@ -76,7 +76,7 @@ public class JavaSymbolsRuleTest {
         JavaFileParser.createJavaFileParser(
             JavacOptions.builder().setSourceLevel("7").setTargetLevel("7").build());
     JavaLibrarySymbolsFinder symbolsFinder =
-        new JavaLibrarySymbolsFinder(srcs, javaFileParser, /* shouldRecordRequiredSymbols */ true);
+        new JavaLibrarySymbolsFinder(srcs, javaFileParser /* shouldRecordRequiredSymbols */);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:examples");
     JavaSymbolsRule javaSymbolsRule =
@@ -109,11 +109,6 @@ public class JavaSymbolsRuleTest {
       assertEquals(
           ImmutableSet.of("com.example.Example1", "com.example.Example2"),
           StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
-              .map(JsonNode::textValue)
-              .collect(MoreCollectors.toImmutableSet()));
-      assertEquals(
-          ImmutableSet.of("com.example.other.Bar", "com.example.other.Foo"),
-          StreamSupport.stream(jsonNode.get("required").spliterator(), false)
               .map(JsonNode::textValue)
               .collect(MoreCollectors.toImmutableSet()));
     }

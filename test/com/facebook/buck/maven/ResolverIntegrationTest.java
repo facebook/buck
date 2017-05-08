@@ -122,8 +122,7 @@ public class ResolverIntegrationTest {
             new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),
             BuckEventBusFactory.newInstance(),
-            new DefaultProcessExecutor(new TestConsole()),
-            /* ignoreBuckAutodepsFiles */ false);
+            new DefaultProcessExecutor(new TestConsole()));
   }
 
   @AfterClass

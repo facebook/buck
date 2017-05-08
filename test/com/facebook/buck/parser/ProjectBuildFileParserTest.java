@@ -565,8 +565,7 @@ public class ProjectBuildFileParserTest {
             new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),
             buckEventBus,
-            processExecutor,
-            /* ignoreBuckAutodepsFiles */ false);
+            processExecutor);
       }
     }
   }

@@ -364,8 +364,7 @@ public class ParsePipelineTest {
               4, // max parsers
               input -> {
                 ProjectBuildFileParser buildFileParser =
-                    input.createBuildFileParser(
-                        coercerFactory, console, eventBus, /* ignoreBuckAutodepsFiles */ false);
+                    input.createBuildFileParser(coercerFactory, console, eventBus);
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

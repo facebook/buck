@@ -29,13 +29,8 @@ public class SuggestPartitionIntegrationTest {
 
   /**
    * We take a small Java project with three java_library() rules: //lib:lib, //app:app, and
-   * //third-party:third-party, all of which have autodeps=True. We run `buck suggest //lib:lib` and
-   * replace lib/BUCK with its output. We verify that the project still builds with the new rule
-   * definitions for //lib:lib.
-   *
-   * <p>Then we run `buck autodeps` again and verify the new app/BUCK.autodeps file to verify that
-   * //app:app depends on //lib:lib.Bravo instead of //lib:lib. This demonstrates how this tooling
-   * can be used to automatically generate finer-grained dependencies.
+   * //third-party:third-party. We run `buck suggest //lib:lib` and replace lib/BUCK with its
+   * output. We verify that the project still builds with the new rule definitions for //lib:lib.
    */
   @Test
   public void suggestPartitionAndVerifyItWorksInPlaceOfTheOriginalContents() throws IOException {
@@ -59,6 +54,6 @@ public class SuggestPartitionIntegrationTest {
     workspace.verify(Paths.get("app"));
     workspace
         .runBuckBuild("//app:app")
-        .assertSuccess("//app:app should still build with more fine-grained autodeps");
+        .assertSuccess("//app:app should still build with more fine-grained deps");
   }
 }

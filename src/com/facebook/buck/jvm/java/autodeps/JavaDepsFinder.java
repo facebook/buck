@@ -36,10 +36,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.HashSet;
 import java.util.Set;
 
 public class JavaDepsFinder {
@@ -85,43 +83,13 @@ public class JavaDepsFinder {
 
   /** Java dependency information that is extracted from a {@link TargetGraph}. */
   public static class DependencyInfo {
-    final Set<TargetNode<?, ?>> rulesWithAutodeps = new HashSet<>();
-
-    /**
-     * Keys are rules with autodeps = True. Values are symbols that are referenced by Java files in
-     * the rule. These need to satisfied by one of the following:
-     *
-     * <ul>
-     *   <li>The hardcoded deps for the rule defined in the build file.
-     *   <li>The provided_deps of the rule.
-     *   <li>The auto-generated deps provided by this class.
-     *   <li>The exported_deps of one of the above.
-     * </ul>
-     */
-    final HashMultimap<TargetNode<?, ?>, String> ruleToRequiredSymbols = HashMultimap.create();
-
-    final HashMultimap<TargetNode<?, ?>, String> ruleToExportedSymbols = HashMultimap.create();
-
     public final HashMultimap<String, TargetNode<?, ?>> symbolToProviders = HashMultimap.create();
-
-    /**
-     * Keys are rules with {@code autodeps = True}. Values are the provided_deps for the rule. Note
-     * that not every entry in rulesWithAutodeps will have an entry in this multimap.
-     */
-    final HashMultimap<TargetNode<?, ?>, BuildTarget> rulesWithAutodepsToProvidedDeps =
-        HashMultimap.create();
-
-    final HashMultimap<TargetNode<?, ?>, TargetNode<?, ?>> ruleToRulesThatExportIt =
-        HashMultimap.create();
   }
 
   public DependencyInfo findDependencyInfoForGraph(final TargetGraph graph) {
     final DependencyInfo dependencyInfo = new DependencyInfo();
 
-    // Walk the graph and for each Java rule we find, do the following:
-    // 1. Make note if it has autodeps = True.
-    // 2. If it does, record its required symbols.
-    // 3. Record the Java entities it provides (regardless of whether autodeps = True).
+    // Walk the graph and for each Java rule we record the Java entities it provides.
     //
     // Currently, we traverse the entire target graph using a single thread. However, the work to
     // visit each node could be done in parallel, so long as the updates to the above collections
@@ -131,37 +99,12 @@ public class JavaDepsFinder {
         continue;
       }
 
-      // Set up the appropriate fields for java_library() vs. prebuilt_jar().
-      boolean autodeps;
-      ImmutableSortedSet<BuildTarget> providedDeps;
-      ImmutableSortedSet<BuildTarget> exportedDeps;
-      if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
-        JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-        autodeps = arg.autodeps.orElse(false);
-        providedDeps = arg.providedDeps;
-        exportedDeps = arg.exportedDeps;
-      } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {
-        autodeps = false;
-        providedDeps = ImmutableSortedSet.of();
-        exportedDeps = ImmutableSortedSet.of();
-      } else {
-        throw new IllegalStateException("This rule is not supported by autodeps: " + node);
+      if (!(node.getConstructorArg() instanceof JavaLibraryDescription.Arg)
+          && !(node.getConstructorArg() instanceof PrebuiltJarDescription.Arg)) {
+        throw new IllegalStateException("This rule is not supported by suggest: " + node);
       }
 
-      if (autodeps) {
-        dependencyInfo.rulesWithAutodeps.add(node);
-        dependencyInfo.rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
-      }
-
-      for (BuildTarget exportedDep : exportedDeps) {
-        dependencyInfo.ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
-      }
-
-      Symbols symbols = getJavaFileFeatures(node, autodeps);
-      if (autodeps) {
-        dependencyInfo.ruleToRequiredSymbols.putAll(node, symbols.required);
-        dependencyInfo.ruleToExportedSymbols.putAll(node, symbols.exported);
-      }
+      Symbols symbols = getJavaFileFeatures(node);
       for (String providedEntity : symbols.provided) {
         dependencyInfo.symbolToProviders.put(providedEntity, node);
       }
@@ -170,7 +113,7 @@ public class JavaDepsFinder {
     return dependencyInfo;
   }
 
-  private Symbols getJavaFileFeatures(TargetNode<?, ?> node, boolean shouldRecordRequiredSymbols) {
+  private Symbols getJavaFileFeatures(TargetNode<?, ?> node) {
     // Build a JavaLibrarySymbolsFinder to create the JavaFileFeatures. By making use of Buck's
     // build cache, we can often avoid running a Java parser.
     BuildTarget buildTarget = node.getBuildTarget();
@@ -178,8 +121,7 @@ public class JavaDepsFinder {
     JavaSymbolsRule.SymbolsFinder symbolsFinder;
     if (argForNode instanceof JavaLibraryDescription.Arg) {
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) argForNode;
-      symbolsFinder =
-          new JavaLibrarySymbolsFinder(arg.srcs, javaFileParser, shouldRecordRequiredSymbols);
+      symbolsFinder = new JavaLibrarySymbolsFinder(arg.srcs, javaFileParser);
     } else {
       PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) argForNode;
       symbolsFinder = new PrebuiltJarSymbolsFinder(arg.binaryJar);

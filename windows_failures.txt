@@ -30,7 +30,6 @@
 !com.facebook.buck.cxx.OmnibusTest
 !com.facebook.buck.cxx.ToolTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
-!com.facebook.buck.parser.ParserIntegrationTest#testModifyingAutodepsShouldInvalidateCorrespondingBuildRules
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest
 !com.facebook.buck.python.PythonSrcZipIntegrationTest#testDependingOnSrcZipWorks

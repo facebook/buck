@@ -1035,10 +1035,6 @@ public class BuckConfig implements ConfigPathGetter {
             .orElse(estimated.getNetworkIO()));
   }
 
-  public boolean getIncludeAutodepsSignature() {
-    return getBooleanValue("autodeps", "include_signature", true);
-  }
-
   /** @return whether to enabled versions on build/test command. */
   public boolean getBuildVersions() {
     return getBooleanValue("build", "versions", false);

@@ -33,28 +33,19 @@ public class SymbolsTest {
     // Note that because these are immutable collections from Guava, iteration order is guaranteed.
     ImmutableSet<String> providedSymbols =
         ImmutableSet.of("com.example.Example1", "com.example.Example2", "com.example.Example3");
-    ImmutableList<String> requiredSymbols =
-        ImmutableList.of("com.example.Required1", "com.example.Required2", "com.example.Required3");
-    ImmutableList<String> exportedSymbols =
-        ImmutableList.of("com.example.Exported1", "com.example.Exported2", "com.example.Exported3");
-    Symbols symbols = new Symbols(providedSymbols, requiredSymbols, exportedSymbols);
+    Symbols symbols = new Symbols(providedSymbols);
 
     StringWriter writer = new StringWriter();
     ObjectMappers.WRITER.writeValue(writer, symbols);
 
     assertEquals(
         "{\"provided\":"
-            + "[\"com.example.Example1\",\"com.example.Example2\",\"com.example.Example3\"],"
-            + "\"required\":"
-            + "[\"com.example.Required1\",\"com.example.Required2\",\"com.example.Required3\"],"
-            + "\"exported\":"
-            + "[\"com.example.Exported1\",\"com.example.Exported2\",\"com.example.Exported3\"]}",
+            + "[\"com.example.Example1\",\"com.example.Example2\",\"com.example.Example3\"]}",
         writer.toString());
 
     Symbols restoredSymbols = ObjectMappers.readValue(writer.toString(), Symbols.class);
     // We compare using lists to ensure order was preserved.
     assertEquals(
         ImmutableList.copyOf(providedSymbols), ImmutableList.copyOf(restoredSymbols.provided));
-    assertEquals(requiredSymbols, ImmutableList.copyOf(restoredSymbols.required));
   }
 }

@@ -34,12 +34,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
   private final JavaFileParser javaFileParser;
 
-  private final boolean shouldRecordRequiredSymbols;
-
-  JavaLibrarySymbolsFinder(
-      ImmutableSortedSet<SourcePath> srcs,
-      JavaFileParser javaFileParser,
-      boolean shouldRecordRequiredSymbols) {
+  JavaLibrarySymbolsFinder(ImmutableSortedSet<SourcePath> srcs, JavaFileParser javaFileParser) {
     // Avoid all the construction in the common case where all srcs are instances of PathSourcePath.
     this.srcs =
         Iterables.all(srcs, PathSourcePath.class::isInstance)
@@ -48,7 +43,6 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
                 .filter(PathSourcePath.class::isInstance)
                 .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     this.javaFileParser = javaFileParser;
-    this.shouldRecordRequiredSymbols = shouldRecordRequiredSymbols;
   }
 
   @Override
@@ -65,13 +59,11 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
                   return absolutePath;
                 })
             .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
-    return SymbolExtractor.extractSymbols(
-        javaFileParser, shouldRecordRequiredSymbols, absolutePaths);
+    return SymbolExtractor.extractSymbols(javaFileParser, absolutePaths);
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("srcs", srcs)
-        .setReflectively("recordRequires", shouldRecordRequiredSymbols);
+    sink.setReflectively("srcs", srcs);
   }
 }

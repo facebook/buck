@@ -78,14 +78,11 @@ public class JavaLibrarySymbolsFinderTest {
             .build();
 
     JavaLibrarySymbolsFinder finder =
-        new JavaLibrarySymbolsFinder(srcs, javaFileParser, /* shouldRecordRequiredSymbols */ true);
+        new JavaLibrarySymbolsFinder(srcs, javaFileParser /* shouldRecordRequiredSymbols */);
     Symbols symbols = finder.extractSymbols();
     assertEquals(
         ImmutableSet.of("com.example.Example1", "com.example.Example2"),
         ImmutableSet.copyOf(symbols.provided));
-    assertEquals(
-        ImmutableSet.of("com.example.other.Bar", "com.example.other.Foo"),
-        ImmutableSet.copyOf(symbols.required));
   }
 
   @Test
@@ -102,18 +99,12 @@ public class JavaLibrarySymbolsFinderTest {
     final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");
     SourcePath generated = new DefaultBuildTargetSourcePath(fakeBuildTarget);
 
-    final boolean shouldRecordRequiredSymbols = true;
     JavaLibrarySymbolsFinder example1Finder =
-        new JavaLibrarySymbolsFinder(
-            ImmutableSortedSet.of(example1), javaFileParser, shouldRecordRequiredSymbols);
+        new JavaLibrarySymbolsFinder(ImmutableSortedSet.of(example1), javaFileParser);
     JavaLibrarySymbolsFinder example2Finder =
-        new JavaLibrarySymbolsFinder(
-            ImmutableSortedSet.of(example2), javaFileParser, shouldRecordRequiredSymbols);
+        new JavaLibrarySymbolsFinder(ImmutableSortedSet.of(example2), javaFileParser);
     JavaLibrarySymbolsFinder example1AndGeneratedSrcFinder =
-        new JavaLibrarySymbolsFinder(
-            ImmutableSortedSet.of(example1, generated),
-            javaFileParser,
-            shouldRecordRequiredSymbols);
+        new JavaLibrarySymbolsFinder(ImmutableSortedSet.of(example1, generated), javaFileParser);
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.

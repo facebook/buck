@@ -89,7 +89,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
-  private final boolean ignoreBuckAutodepsFiles;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -104,8 +103,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       final TypeCoercerFactory typeCoercerFactory,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
-      ProcessExecutor processExecutor,
-      boolean ignoreBuckAutodepsFiles) {
+      ProcessExecutor processExecutor) {
     this.buckPythonProgram = null;
     this.options = options;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -113,7 +111,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
-    this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
 
     this.rawConfigJson =
         Suppliers.memoize(
@@ -264,10 +261,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--profile");
     }
 
-    if (ignoreBuckAutodepsFiles) {
-      argBuilder.add("--ignore_buck_autodeps_files");
-    }
-
     if (options.getAllowEmptyGlobs()) {
       argBuilder.add("--allow_empty_globs");
     }
@@ -314,10 +307,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     argBuilder.add("--cell_name", options.getCellName());
 
     argBuilder.add("--build_file_name", options.getBuildFileName());
-
-    if (!options.getAutodepsFilesHaveSignatures()) {
-      argBuilder.add("--no_autodeps_signatures");
-    }
 
     // Tell the parser not to print exceptions to stderr.
     argBuilder.add("--quiet");

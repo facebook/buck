@@ -103,8 +103,7 @@ public class UninstallCommand extends AbstractCommand {
                   params.getCell(),
                   getEnableParserProfiling(),
                   pool.getExecutor(),
-                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
-                  /* ignoreBuckAutodepsFiles */ false);
+                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()));
       buildTargets = result.getBuildTargets();
       resolver =
           Preconditions.checkNotNull(
