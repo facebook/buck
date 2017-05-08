@@ -16,8 +16,18 @@
 
 package com.facebook.buck.rules.keys;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class StringRuleKeyHasherTest extends AbstractRuleKeyHasherTest<String> {
+
+  @Test
+  public void testStringEscaping() {
+    assertEquals("string(\"abc\")::", newHasher().putString("abc").hash());
+    assertEquals("string(\"abc\\ndef\\\"g\\\"\")::", newHasher().putString("abc\ndef\"g\"").hash());
+  }
 
   /** String hasher doesn't distinguish number types and that's fine. */
   @Override
