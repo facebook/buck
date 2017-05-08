@@ -66,8 +66,8 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "clang_version");
   }
 
-  public Optional<NdkCxxPlatforms.CxxRuntime> getNdkCxxRuntime() {
-    return delegate.getEnum("ndk", "cxx_runtime", NdkCxxPlatforms.CxxRuntime.class);
+  public Optional<NdkCxxRuntime> getNdkCxxRuntime() {
+    return delegate.getEnum("ndk", "cxx_runtime", NdkCxxRuntime.class);
   }
 
   /**

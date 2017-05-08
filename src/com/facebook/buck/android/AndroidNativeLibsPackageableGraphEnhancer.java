@@ -214,10 +214,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
         if (module.isRootModule()) {
           // If we're using a C/C++ runtime other than the system one, add it to the APK.
-          NdkCxxPlatforms.CxxRuntime cxxRuntime = platform.getCxxRuntime();
+          NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
           if ((platformsWithNativeLibs.contains(platform)
                   || platformsWithNativeLibsAssets.contains(platform))
-              && !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
+              && !cxxRuntime.equals(NdkCxxRuntime.SYSTEM)) {
             nativeLinkableLibsBuilder.put(
                 new Pair<>(targetCpuType, cxxRuntime.getSoname()),
                 new PathSourcePath(

@@ -108,7 +108,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     NdkCxxPlatform ndkCxxPlatform =
         NdkCxxPlatform.builder()
             .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-            .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
+            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
             .setCxxSharedRuntimePath(Paths.get("runtime"))
             .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();

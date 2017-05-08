@@ -37,7 +37,7 @@ public class NdkLibraryBuilder
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
       NdkCxxPlatform.builder()
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-          .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
+          .setCxxRuntime(NdkCxxRuntime.GNUSTL)
           .setCxxSharedRuntimePath(Paths.get("runtime"))
           .setObjdump(new CommandTool.Builder().addArg("objdump").build())
           .build();

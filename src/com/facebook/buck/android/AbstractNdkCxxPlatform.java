@@ -30,7 +30,7 @@ interface AbstractNdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();
 
-  NdkCxxPlatforms.CxxRuntime getCxxRuntime();
+  NdkCxxRuntime getCxxRuntime();
 
   Tool getObjdump();
 

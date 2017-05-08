@@ -194,12 +194,12 @@ public class NdkCxxPlatformTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     // Test all major compiler and runtime combinations.
-    ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime>> configs =
+    ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime>> configs =
         ImmutableList.of(
-            new Pair<>(NdkCxxPlatformCompiler.Type.GCC, NdkCxxPlatforms.CxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.LIBCXX));
-    for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
+            new Pair<>(NdkCxxPlatformCompiler.Type.GCC, NdkCxxRuntime.GNUSTL),
+            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.GNUSTL),
+            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.LIBCXX));
+    for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime> config : configs) {
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessAndCompileRukeKeys = new HashMap<>();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>> compileRukeKeys =
@@ -224,7 +224,7 @@ public class NdkCxxPlatformTest {
                       .setVersion("gcc-version")
                       .setGccVersion("clang-version")
                       .build(),
-                  NdkCxxPlatforms.CxxRuntime.GNUSTL,
+                  NdkCxxRuntime.GNUSTL,
                   "target-app-platform",
                   ImmutableSet.of("x86"),
                   platform,
@@ -276,7 +276,7 @@ public class NdkCxxPlatformTest {
                 .setVersion("gcc-version")
                 .setGccVersion("clang-version")
                 .build(),
-            NdkCxxPlatforms.CxxRuntime.GNUSTL,
+            NdkCxxRuntime.GNUSTL,
             "target-app-platform",
             ImmutableSet.of("x86"),
             Platform.LINUX,

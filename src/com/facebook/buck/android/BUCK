@@ -31,6 +31,17 @@ java_immutables_library(
     ],
 )
 
+CXXRUNTIME_SRCS = [
+    "AbstractNdkCxxPlatformCompiler.java",
+    "NdkCxxRuntime.java",
+]
+
+java_immutables_library(
+    name = "cxxruntime",
+    srcs = CXXRUNTIME_SRCS,
+    visibility = ["PUBLIC"],
+)
+
 RULES_SRCS = [
     "Aapt2Compile.java",
     "Aapt2Link.java",
@@ -132,6 +143,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":apkmodule",
+        ":cxxruntime",
         ":helpers",
         ":packageable",
         ":split_dex",
@@ -347,8 +359,8 @@ java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
-        excludes = PACKAGEABLE_SRCS + RULES_SRCS + SPLIT_DEX_SRCS +
-                   UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
+        excludes = PACKAGEABLE_SRCS + CXXRUNTIME_SRCS + RULES_SRCS +
+                   SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/android:integration1",
@@ -358,6 +370,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":apkmodule",
+        ":cxxruntime",
         ":packageable",
         ":split_dex",
         ":utils",

@@ -86,8 +86,7 @@ public class NdkCxxPlatforms {
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-9";
   public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
       ImmutableSet.of("arm", "armv7", "x86");
-  public static final NdkCxxPlatforms.CxxRuntime DEFAULT_CXX_RUNTIME =
-      NdkCxxPlatforms.CxxRuntime.GNUSTL;
+  public static final NdkCxxRuntime DEFAULT_CXX_RUNTIME = NdkCxxRuntime.GNUSTL;
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
       ImmutableMap.of(
@@ -128,12 +127,11 @@ public class NdkCxxPlatforms {
     return "3.8";
   }
 
-  public static boolean isSupportedConfiguration(Path ndkRoot, CxxRuntime cxxRuntime) {
+  public static boolean isSupportedConfiguration(Path ndkRoot, NdkCxxRuntime cxxRuntime) {
     // TODO(12846101): With ndk r12, Android has started to use libc++abi. Buck
     // needs to figure out how to support that.
     String ndkVersion = readVersion(ndkRoot);
-    return !(cxxRuntime == NdkCxxPlatforms.CxxRuntime.LIBCXX
-        && getNdkMajorVersion(ndkVersion) >= 12);
+    return !(cxxRuntime == NdkCxxRuntime.LIBCXX && getNdkMajorVersion(ndkVersion) >= 12);
   }
 
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
@@ -141,7 +139,7 @@ public class NdkCxxPlatforms {
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
-      CxxRuntime cxxRuntime,
+      NdkCxxRuntime cxxRuntime,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform) {
@@ -164,7 +162,7 @@ public class NdkCxxPlatforms {
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
-      CxxRuntime cxxRuntime,
+      NdkCxxRuntime cxxRuntime,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform,
@@ -441,7 +439,7 @@ public class NdkCxxPlatforms {
       Platform platform,
       Path ndkRoot,
       NdkCxxPlatformTargetConfiguration targetConfiguration,
-      CxxRuntime cxxRuntime,
+      NdkCxxRuntime cxxRuntime,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
     // Create a version string to use when generating rule keys via the NDK tools we'll generate
@@ -596,7 +594,7 @@ public class NdkCxxPlatforms {
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
 
-    if (cxxRuntime != CxxRuntime.SYSTEM) {
+    if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(
           Linker.LinkableDepType.SHARED, "-l" + cxxRuntime.getSharedName());
       cxxPlatformBuilder.putRuntimeLdflags(
@@ -610,7 +608,7 @@ public class NdkCxxPlatforms {
         .setCxxPlatform(cxxPlatform)
         .setCxxRuntime(cxxRuntime)
         .setObjdump(getGccTool(toolchainPaths, "objdump", version, executableFinder));
-    if (cxxRuntime != CxxRuntime.SYSTEM) {
+    if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
       builder.setCxxSharedRuntimePath(
           toolchainPaths.getCxxRuntimeLibsDirectory().resolve(cxxRuntime.getSoname()));
     }
@@ -716,7 +714,7 @@ public class NdkCxxPlatforms {
       NdkCxxToolchainPaths toolchainPaths,
       String tool,
       String version,
-      CxxRuntime cxxRuntime,
+      NdkCxxRuntime cxxRuntime,
       ExecutableFinder executableFinder) {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
@@ -735,7 +733,7 @@ public class NdkCxxPlatforms {
     }
 
     // Add the path to the C/C++ runtime libraries, if necessary.
-    if (cxxRuntime != CxxRuntime.SYSTEM) {
+    if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
       flags.add("-L" + toolchainPaths.getCxxRuntimeLibsDirectory().toString());
     }
 
@@ -980,47 +978,6 @@ public class NdkCxxPlatforms {
     }
   }
 
-  /** The C/C++ runtime library to link against. */
-  public enum CxxRuntime {
-    SYSTEM("system", "system", "system"),
-    GABIXX("gabi++", "gabi++_shared", "gabi++_static"),
-    STLPORT("stlport", "stlport_shared", "stlport_static"),
-    GNUSTL("gnu-libstdc++", "gnustl_shared", "gnustl_static"),
-    LIBCXX("llvm-libc++", "c++_shared", "c++_static"),
-    ;
-
-    private final String name;
-    private final String sharedName;
-    private final String staticName;
-
-    /**
-     * @param name the runtimes directory name in the NDK.
-     * @param sharedName the shared library name used for this runtime.
-     * @param staticName the the static library used for this runtime.
-     */
-    CxxRuntime(String name, String sharedName, String staticName) {
-      this.name = name;
-      this.sharedName = sharedName;
-      this.staticName = staticName;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public String getStaticName() {
-      return staticName;
-    }
-
-    public String getSharedName() {
-      return sharedName;
-    }
-
-    public String getSoname() {
-      return "lib" + sharedName + ".so";
-    }
-  }
-
   /** The toolchains name for the platform being targeted. */
   public enum ToolchainTarget {
     I686_LINUX_ANDROID("i686-linux-android"),
@@ -1046,7 +1003,7 @@ public class NdkCxxPlatforms {
     private String ndkVersion;
     private NdkCxxPlatformTargetConfiguration targetConfiguration;
     private String hostName;
-    private CxxRuntime cxxRuntime;
+    private NdkCxxRuntime cxxRuntime;
     private Map<String, Path> cachedPaths;
     private boolean strict;
     private int ndkMajorVersion;
@@ -1057,7 +1014,7 @@ public class NdkCxxPlatforms {
         Path ndkRoot,
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
-        CxxRuntime cxxRuntime,
+        NdkCxxRuntime cxxRuntime,
         boolean strict) {
       this(
           filesystem,
@@ -1075,7 +1032,7 @@ public class NdkCxxPlatforms {
         String ndkVersion,
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
-        CxxRuntime cxxRuntime,
+        NdkCxxRuntime cxxRuntime,
         boolean strict) {
       this.filesystem = filesystem;
       this.cachedPaths = new HashMap<>();
@@ -1210,7 +1167,7 @@ public class NdkCxxPlatforms {
     }
 
     private Path getCxxRuntimeDirectory() {
-      if (cxxRuntime == CxxRuntime.GNUSTL) {
+      if (cxxRuntime == NdkCxxRuntime.GNUSTL) {
         return processPathPattern(
             "sources/cxx-stl/" + cxxRuntime.getName() + "/{gcc_compiler_version}");
       } else {
@@ -1234,7 +1191,7 @@ public class NdkCxxPlatforms {
       return ndkRoot;
     }
 
-    public CxxRuntime getCxxRuntime() {
+    public NdkCxxRuntime getCxxRuntime() {
       return cxxRuntime;
     }
   }
