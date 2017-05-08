@@ -86,7 +86,7 @@ public class HalideLibraryBuilder
 
   // The #halide-compiler version of the HalideLibrary rule expects to be able
   // to find a CxxFlavor to use when building for the host architecture.
-  // AbstractCxxBuilder doesn't create the default host flavor, so we "override"
+  // AbstractCxxSourceBuilder doesn't create the default host flavor, so we "override"
   // the createDefaultPlatforms() method here.
   public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
     Flavor hostFlavor = CxxPlatforms.getHostFlavor();

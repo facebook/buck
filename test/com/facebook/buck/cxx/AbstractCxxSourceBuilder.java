@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -35,7 +36,7 @@ public abstract class AbstractCxxSourceBuilder<
         U extends Description<T>,
         R extends BuildRule,
         V extends AbstractCxxSourceBuilder<T, U, R, V>>
-    extends AbstractCxxBuilder<T, U, R> {
+    extends AbstractNodeBuilderWithMutableArg<T, U, R> {
 
   public AbstractCxxSourceBuilder(U description, BuildTarget target) {
     super(description, target);

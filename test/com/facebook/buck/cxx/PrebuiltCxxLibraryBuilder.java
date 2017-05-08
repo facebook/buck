@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -28,7 +29,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
-    extends AbstractCxxBuilder<
+    extends AbstractNodeBuilderWithMutableArg<
         PrebuiltCxxLibraryDescription.Arg, PrebuiltCxxLibraryDescription, BuildRule> {
 
   public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
