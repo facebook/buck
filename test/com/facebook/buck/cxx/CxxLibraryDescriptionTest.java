@@ -352,16 +352,14 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
 
     // First, create a cxx library without using link whole.
-    CxxLibraryBuilder normalBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
+    CxxLibraryBuilder normalBuilder =
+        new CxxLibraryBuilder(target, cxxBuckConfig)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(normalGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    CxxLibrary normal =
-        (CxxLibrary)
-            normalBuilder
-                .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))))
-                .build(resolver, filesystem, normalGraph);
+    CxxLibrary normal = (CxxLibrary) normalBuilder.build(resolver, filesystem, normalGraph);
 
     // Lookup the link whole flags.
     Linker linker = cxxPlatform.getLd().resolve(resolver);
