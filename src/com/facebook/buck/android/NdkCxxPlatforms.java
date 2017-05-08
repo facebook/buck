@@ -267,7 +267,8 @@ public class NdkCxxPlatforms {
     return ndkCxxPlatformBuilder.build();
   }
 
-  private static NdkCxxPlatformTargetConfiguration getTargetConfiguration(
+  @VisibleForTesting
+  static NdkCxxPlatformTargetConfiguration getTargetConfiguration(
       TargetCpuType targetCpuType, NdkCxxPlatformCompiler compiler, String androidPlatform) {
     switch (targetCpuType) {
       case ARM:

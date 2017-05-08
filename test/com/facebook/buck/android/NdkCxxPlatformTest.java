@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -185,6 +187,38 @@ public class NdkCxxPlatformTest {
     assertEquals(11, NdkCxxPlatforms.getNdkMajorVersion("11.2.2725575"));
     assertEquals(12, NdkCxxPlatforms.getNdkMajorVersion("12.0.1234"));
     assertEquals(12, NdkCxxPlatforms.getNdkMajorVersion("12.1.2977051"));
+  }
+
+  @Test
+  public void testNdkFlags() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    NdkCxxPlatformTargetConfiguration targetConfiguration =
+        NdkCxxPlatforms.getTargetConfiguration(
+            NdkCxxPlatforms.TargetCpuType.X86,
+            NdkCxxPlatformCompiler.builder()
+                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setVersion("gcc-version")
+                .setGccVersion("clang-version")
+                .build(),
+            "target-app-platform");
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    NdkCxxPlatform platform =
+        NdkCxxPlatforms.build(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            filesystem,
+            InternalFlavor.of("android-x86"),
+            Platform.detect(),
+            ndkRoot,
+            targetConfiguration,
+            NdkCxxRuntime.GNUSTL,
+            new AlwaysFoundExecutableFinder(),
+            false /* strictToolchainPaths */);
+    assertThat(platform.getCxxPlatform().getCflags(), hasItems("-std=gnu11", "-O2"));
+    assertThat(
+        platform.getCxxPlatform().getCxxflags(),
+        hasItems("-std=gnu++11", "-O2", "-fno-exceptions", "-fno-rtti"));
+    assertThat(platform.getCxxPlatform().getCppflags(), hasItems("-std=gnu11", "-O2"));
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
