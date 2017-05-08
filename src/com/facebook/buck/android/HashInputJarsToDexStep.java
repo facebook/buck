@@ -20,6 +20,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLikes;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
@@ -46,6 +48,8 @@ import java.util.Set;
  */
 public class HashInputJarsToDexStep extends AbstractExecutionStep
     implements SmartDexingStep.DexInputHashesProvider {
+
+  private static final Logger LOG = Logger.get(HashInputJarsToDexStep.class);
 
   private final ProjectFilesystem filesystem;
   private final Supplier<Set<Path>> primaryInputsToDex;
@@ -88,11 +92,16 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
                 new ClasspathTraversal(Collections.singleton(path), filesystem) {
                   @Override
                   public void visit(FileLike fileLike) throws IOException {
-                    String className = fileLike.getRelativePath().replaceAll("\\.class$", "");
-                    if (classNamesToHashes.containsKey(className)) {
-                      HashCode classHash =
-                          Preconditions.checkNotNull(classNamesToHashes.get(className));
-                      hasher.putBytes(classHash.asBytes());
+                    if (FileLikes.isClassFile(fileLike)) {
+                      String className = FileLikes.getFileNameWithoutClassSuffix(fileLike);
+
+                      if (classNamesToHashes.containsKey(className)) {
+                        HashCode classHash =
+                            Preconditions.checkNotNull(classNamesToHashes.get(className));
+                        hasher.putBytes(classHash.asBytes());
+                      } else {
+                        LOG.warn("%s hashes not found", className);
+                      }
                     }
                   }
                 });

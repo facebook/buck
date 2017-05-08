@@ -762,9 +762,6 @@ public class AndroidBinary extends AbstractBuildRule
       SourcePathResolver resolver,
       ImmutableList.Builder<Step> steps) {
 
-    AndroidPackageableCollection packageableCollection =
-        enhancementResult.getPackageableCollection();
-
     ImmutableSet<Path> classpathEntriesToDex =
         RichStream.from(enhancementResult.getClasspathEntriesToDex())
             .concat(
@@ -887,16 +884,6 @@ public class AndroidBinary extends AbstractBuildRule
               resolver);
     }
 
-    Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier;
-    boolean classFilesHaveChanged =
-        preprocessJavaClassesBash.isPresent() || packageType.isBuildWithObfuscation();
-
-    if (classFilesHaveChanged) {
-      classNamesToHashesSupplier = addAccumulateClassNamesStep(classpathEntriesToDex, steps);
-    } else {
-      classNamesToHashesSupplier = packageableCollection.getClassNamesToHashesSupplier();
-    }
-
     // Create the final DEX (or set of DEX files in the case of split dex).
     // The APK building command needs to take a directory of raw files, so primaryDexPath
     // can only contain .dex files from this build rule.
@@ -920,6 +907,9 @@ public class AndroidBinary extends AbstractBuildRule
     ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
     Optional<PreDexMerge> preDexMerge = enhancementResult.getPreDexMerge();
     if (!preDexMerge.isPresent()) {
+      Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier =
+          addAccumulateClassNamesStep(classpathEntriesToDex, steps);
+
       steps.add(MkdirStep.of(getProjectFilesystem(), primaryDexPath.getParent()));
 
       addDexingSteps(
