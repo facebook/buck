@@ -226,6 +226,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
     return new CxxPreprocessAndCompileStep(
+        getBuildTarget(),
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
         resolver.getRelativePath(getSourcePathToOutput()),

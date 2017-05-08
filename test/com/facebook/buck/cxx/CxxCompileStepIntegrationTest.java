@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -81,6 +82,7 @@ public class CxxCompileStepIntegrationTest {
     // Build an archive step.
     CxxPreprocessAndCompileStep step =
         new CxxPreprocessAndCompileStep(
+            BuildTarget.builder(tmp.getRoot(), "//foo", "bar").build(),
             filesystem,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,
@@ -162,6 +164,7 @@ public class CxxCompileStepIntegrationTest {
     // Build an archive step.
     CxxPreprocessAndCompileStep step =
         new CxxPreprocessAndCompileStep(
+            BuildTarget.builder(tmp.getRoot(), "//foo", "bar").build(),
             filesystem,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,

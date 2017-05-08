@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -50,6 +51,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
+  private final BuildTarget target;
   private final ProjectFilesystem filesystem;
   private final Operation operation;
   private final Path output;
@@ -72,6 +74,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       new FileLastModifiedDateContentsScrubber();
 
   public CxxPreprocessAndCompileStep(
+      BuildTarget target,
       ProjectFilesystem filesystem,
       Operation operation,
       Path output,
@@ -89,6 +92,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
+    this.target = target;
     this.filesystem = filesystem;
     this.operation = operation;
     this.output = output;
@@ -135,6 +139,11 @@ public class CxxPreprocessAndCompileStep implements Step {
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
     env.put("TMPDIR", filesystem.resolve(scratchDir).toString());
+
+    // Add some diagnostic strings into the subprocess's env as well.
+    // Note: the current process's env already contains `BUCK_BUILD_ID`, which will be inherited.
+    env.put("BUCK_BUILD_TARGET", target.toString());
+
     // Add additional environment variables.
     env.putAll(additionalEnvironment);
 

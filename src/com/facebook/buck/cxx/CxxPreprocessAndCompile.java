@@ -230,6 +230,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     }
 
     return new CxxPreprocessAndCompileStep(
+        getBuildTarget(),
         getProjectFilesystem(),
         operation,
         output,
