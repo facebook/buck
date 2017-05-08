@@ -17,15 +17,14 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -40,6 +39,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Manifest {
 
@@ -129,12 +130,13 @@ public class Manifest {
     return hashIndex;
   }
 
+  /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
   protected static HashCode hashSourcePathGroup(
       FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
-      return hashSourcePath(paths.asList().get(0), fileHashCache, resolver);
+      return hashSourcePath(paths.get(0), fileHashCache, resolver);
     }
     Hasher hasher = Hashing.md5().newHasher();
     for (SourcePath path : paths) {
@@ -187,8 +189,20 @@ public class Manifest {
   public Optional<RuleKey> lookup(
       FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
       throws IOException {
+    // Create a set of all paths we care about.
+    ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
+    for (Pair<?, int[]> entry : entries) {
+      for (int hashIndex : entry.getSecond()) {
+        interestingPathsBuilder.add(headers.get(hashes.get(hashIndex).getFirst()));
+      }
+    }
+    ImmutableSet<String> interestingPaths = interestingPathsBuilder.build();
+
+    // Create a multimap from paths we care about to SourcePaths that maps to them.
     ImmutableListMultimap<String, SourcePath> mappedUniverse =
-        Multimaps.index(universe, sourcePathToManifestHeaderFunction(resolver));
+        index(universe, sourcePathToManifestHeaderFunction(resolver), interestingPaths::contains);
+
+    // Find a matching entry.
     for (Pair<RuleKey, int[]> entry : entries) {
       if (hashesMatch(fileHashCache, resolver, mappedUniverse, entry.getSecond())) {
         return Optional.of(entry.getFirst());
@@ -218,12 +232,19 @@ public class Manifest {
       ImmutableSet<SourcePath> universe,
       ImmutableSet<SourcePath> inputs)
       throws IOException {
+
+    // Construct the input sub-paths that we care about.
+    ImmutableSet<String> inputPaths =
+        RichStream.from(inputs).map(sourcePathToManifestHeaderFunction(resolver)).toImmutableSet();
+
+    // Create a multimap from paths we care about to SourcePaths that maps to them.
+    ImmutableListMultimap<String, SourcePath> sortedUniverse =
+        index(universe, sourcePathToManifestHeaderFunction(resolver), inputPaths::contains);
+
+    // Record the Entry.
     int index = 0;
     int[] hashIndices = new int[inputs.size()];
-    ImmutableListMultimap<String, SourcePath> sortedUniverse =
-        Multimaps.index(universe, sourcePathToManifestHeaderFunction(resolver));
-    for (SourcePath input : inputs) {
-      String relativePath = sourcePathToManifestHeader(input, resolver);
+    for (String relativePath : inputPaths) {
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
@@ -294,5 +315,23 @@ public class Manifest {
       manifest.entries.add(new Pair<>(entry.getKey(), entryHashIndices));
     }
     return manifest;
+  }
+  /**
+   * Create a multimap that's the result of apply the function to the input values, filtered by a
+   * predicate.
+   *
+   * <p>This is conceptually similar to {@code filterKeys(index(values, keyFunc), filter)}, but much
+   * more efficient as it doesn't construct entries that will be filtered out.
+   */
+  private static <K, V> ImmutableListMultimap<K, V> index(
+      Iterable<V> values, Function<V, K> keyFunc, Predicate<K> keyFilter) {
+    ImmutableListMultimap.Builder<K, V> builder = new ImmutableListMultimap.Builder<>();
+    for (V value : values) {
+      K key = keyFunc.apply(value);
+      if (keyFilter.test(key)) {
+        builder.put(key, value);
+      }
+    }
+    return builder.build();
   }
 }
