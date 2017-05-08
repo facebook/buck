@@ -19,8 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -31,8 +34,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class CxxLibraryBuilder
-    extends AbstractCxxSourceBuilder<
-        CxxLibraryDescription.Arg, CxxLibraryDescription, BuildRule, CxxLibraryBuilder> {
+    extends AbstractNodeBuilderWithMutableArg<
+        CxxLibraryDescription.Arg, CxxLibraryDescription, BuildRule> {
 
   public CxxLibraryBuilder(
       BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -74,7 +77,7 @@ public class CxxLibraryBuilder
   public CxxLibraryBuilder setExportedPreprocessorFlags(
       ImmutableList<String> exportedPreprocessorFlags) {
     arg.exportedPreprocessorFlags = exportedPreprocessorFlags;
-    return getThis();
+    return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformPreprocessorFlags(
@@ -147,8 +150,71 @@ public class CxxLibraryBuilder
     return this;
   }
 
-  @Override
-  protected CxxLibraryBuilder getThis() {
+  public CxxLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public CxxLibraryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    arg.headers = SourceList.ofUnnamedSources(headers);
+    return this;
+  }
+
+  public CxxLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    arg.headers = SourceList.ofNamedSources(headers);
+    return this;
+  }
+
+  public CxxLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
+    arg.preprocessorFlags = preprocessorFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    arg.linkerFlags = linkerFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setPlatformCompilerFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags) {
+    arg.platformCompilerFlags = platformCompilerFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setPlatformPreprocessorFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
+    arg.platformPreprocessorFlags = platformPreprocessorFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    arg.platformLinkerFlags = platformLinkerFlags;
+    return this;
+  }
+
+  public CxxLibraryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
+  public CxxLibraryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = libraries;
+    return this;
+  }
+
+  public CxxLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
+    return this;
+  }
+
+  public CxxLibraryBuilder setHeaderNamespace(String namespace) {
+    arg.headerNamespace = Optional.of(namespace);
     return this;
   }
 }

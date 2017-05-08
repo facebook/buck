@@ -18,7 +18,6 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPlatforms;
@@ -26,10 +25,18 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,8 +44,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibraryBuilder
-    extends AbstractCxxSourceBuilder<
-        HalideLibraryDescription.Arg, HalideLibraryDescription, BuildRule, HalideLibraryBuilder> {
+    extends AbstractNodeBuilderWithMutableArg<
+        HalideLibraryDescription.Arg, HalideLibraryDescription, BuildRule> {
   public HalideLibraryBuilder(
       BuildTarget target,
       HalideBuckConfig halideBuckConfig,
@@ -103,11 +110,6 @@ public class HalideLibraryBuilder
             .build());
   }
 
-  @Override
-  protected HalideLibraryBuilder getThis() {
-    return this;
-  }
-
   public HalideLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
     arg.supportedPlatformsRegex = Optional.of(supportedPlatformsRegex);
     return this;
@@ -120,6 +122,46 @@ public class HalideLibraryBuilder
 
   public HalideLibraryBuilder setFunctionNameOverride(String functionName) {
     arg.functionName = Optional.of(functionName);
+    return this;
+  }
+
+  public HalideLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public HalideLibraryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    arg.headers = SourceList.ofUnnamedSources(headers);
+    return this;
+  }
+
+  public HalideLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    arg.headers = SourceList.ofNamedSources(headers);
+    return this;
+  }
+
+  public HalideLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return this;
+  }
+
+  public HalideLibraryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    arg.linkerFlags = linkerFlags;
+    return this;
+  }
+
+  public HalideLibraryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
+  public HalideLibraryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = libraries;
+    return this;
+  }
+
+  public HalideLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
     return this;
   }
 }

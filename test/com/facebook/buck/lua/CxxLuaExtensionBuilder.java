@@ -17,16 +17,23 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
-    extends AbstractCxxSourceBuilder<
-        CxxLuaExtensionDescription.Arg, CxxLuaExtensionDescription, CxxLuaExtension,
-        CxxLuaExtensionBuilder> {
+    extends AbstractNodeBuilderWithMutableArg<
+        CxxLuaExtensionDescription.Arg, CxxLuaExtensionDescription, CxxLuaExtension> {
 
   public CxxLuaExtensionBuilder(CxxLuaExtensionDescription description, BuildTarget target) {
     super(description, target);
@@ -45,13 +52,48 @@ public class CxxLuaExtensionBuilder
     this(target, FakeLuaConfig.DEFAULT);
   }
 
-  @Override
-  protected CxxLuaExtensionBuilder getThis() {
+  public CxxLuaExtensionBuilder setBaseModule(String baseModule) {
+    arg.baseModule = Optional.of(baseModule);
     return this;
   }
 
-  public CxxLuaExtensionBuilder setBaseModule(String baseModule) {
-    arg.baseModule = Optional.of(baseModule);
+  public CxxLuaExtensionBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    arg.headers = SourceList.ofUnnamedSources(headers);
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    arg.headers = SourceList.ofNamedSources(headers);
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    arg.linkerFlags = linkerFlags;
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = libraries;
+    return this;
+  }
+
+  public CxxLuaExtensionBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
     return this;
   }
 }

@@ -16,18 +16,24 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class CxxTestBuilder
-    extends AbstractCxxSourceBuilder<
-        CxxTestDescription.Arg, CxxTestDescription, CxxTest, CxxTestBuilder> {
+    extends AbstractNodeBuilderWithMutableArg<CxxTestDescription.Arg, CxxTestDescription, CxxTest> {
 
   public CxxTestBuilder(
       BuildTarget target,
@@ -45,14 +51,6 @@ public class CxxTestBuilder
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
     this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
-  }
-
-  public CxxTestBuilder(BuildTarget target) {
-    this(
-        target,
-        new CxxBuckConfig(FakeBuckConfig.builder().build()),
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
@@ -85,8 +83,49 @@ public class CxxTestBuilder
     return this;
   }
 
-  @Override
-  protected CxxTestBuilder getThis() {
+  public CxxTestBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public CxxTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    arg.headers = SourceList.ofUnnamedSources(headers);
+    return this;
+  }
+
+  public CxxTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    arg.headers = SourceList.ofNamedSources(headers);
+    return this;
+  }
+
+  public CxxTestBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return this;
+  }
+
+  public CxxTestBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    arg.linkerFlags = linkerFlags;
+    return this;
+  }
+
+  public CxxTestBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    arg.platformLinkerFlags = platformLinkerFlags;
+    return this;
+  }
+
+  public CxxTestBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
+  public CxxTestBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = libraries;
+    return this;
+  }
+
+  public CxxTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
     return this;
   }
 }

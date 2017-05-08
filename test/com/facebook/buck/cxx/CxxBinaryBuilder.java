@@ -20,12 +20,22 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class CxxBinaryBuilder
-    extends AbstractCxxSourceBuilder<
-        CxxBinaryDescription.Arg, CxxBinaryDescription, CxxBinary, CxxBinaryBuilder> {
+    extends AbstractNodeBuilderWithMutableArg<
+        CxxBinaryDescription.Arg, CxxBinaryDescription, CxxBinary> {
 
   public CxxBinaryBuilder(
       BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -64,11 +74,6 @@ public class CxxBinaryBuilder
         cxxBuckConfig);
   }
 
-  @Override
-  protected CxxBinaryBuilder getThis() {
-    return this;
-  }
-
   public CxxBinaryBuilder setDepQuery(Query depQuery) {
     arg.depsQuery = Optional.of(depQuery);
     return this;
@@ -81,6 +86,52 @@ public class CxxBinaryBuilder
 
   public CxxBinaryBuilder setDefaultPlatform(Flavor flavor) {
     arg.defaultPlatform = Optional.of(flavor);
+    return this;
+  }
+
+  public CxxBinaryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public CxxBinaryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    arg.headers = SourceList.ofUnnamedSources(headers);
+    return this;
+  }
+
+  public CxxBinaryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    arg.headers = SourceList.ofNamedSources(headers);
+    return this;
+  }
+
+  public CxxBinaryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return this;
+  }
+
+  public CxxBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    arg.linkerFlags = linkerFlags;
+    return this;
+  }
+
+  public CxxBinaryBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    arg.platformLinkerFlags = platformLinkerFlags;
+    return this;
+  }
+
+  public CxxBinaryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
+  public CxxBinaryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    arg.libraries = libraries;
+    return this;
+  }
+
+  public CxxBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
     return this;
   }
 }
