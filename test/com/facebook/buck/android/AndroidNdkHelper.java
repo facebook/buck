@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,6 +43,9 @@ public class AndroidNdkHelper {
 
   private AndroidNdkHelper() {}
 
+  public static final AndroidBuckConfig DEFAULT_CONFIG =
+      new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
+
   public static NdkCxxPlatform getNdkCxxPlatform(
       ProjectWorkspace workspace, ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
@@ -62,6 +66,7 @@ public class AndroidNdkHelper {
     ImmutableCollection<NdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
                 ndkPath.get(),
                 NdkCxxPlatformCompiler.builder()

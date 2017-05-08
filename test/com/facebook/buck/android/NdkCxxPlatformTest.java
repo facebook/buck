@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -206,6 +209,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatform platform =
         NdkCxxPlatforms.build(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
             InternalFlavor.of("android-x86"),
             Platform.detect(),
@@ -219,6 +223,55 @@ public class NdkCxxPlatformTest {
         platform.getCxxPlatform().getCxxflags(),
         hasItems("-std=gnu++11", "-O2", "-fno-exceptions", "-fno-rtti"));
     assertThat(platform.getCxxPlatform().getCppflags(), hasItems("-std=gnu11", "-O2"));
+  }
+
+  public void testExtraNdkFlags() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    NdkCxxPlatformTargetConfiguration targetConfiguration =
+        NdkCxxPlatforms.getTargetConfiguration(
+            NdkCxxPlatforms.TargetCpuType.X86,
+            NdkCxxPlatformCompiler.builder()
+                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setVersion("gcc-version")
+                .setGccVersion("clang-version")
+                .build(),
+            "target-app-platform");
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "ndk",
+                        ImmutableMap.of(
+                            "extra_cflags", "-fa-flag",
+                            "extra_cppflags", "-DSOME_FLAG -DSOME_OTHER_FLAG",
+                            "extra_cxxflags", "-fc++flag"),
+                    "cxx",
+                        ImmutableMap.of(
+                            "cxxflags", "-Wignored-cxx-flag",
+                            "cflags", "-Wignored-c-flag",
+                            "cppflags", "-Wignored-cpp-flag")))
+            .build();
+    NdkCxxPlatform platform =
+        NdkCxxPlatforms.build(
+            new CxxBuckConfig(buckConfig),
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
+            filesystem,
+            InternalFlavor.of("android-x86"),
+            Platform.detect(),
+            ndkRoot,
+            targetConfiguration,
+            NdkCxxRuntime.GNUSTL,
+            new AlwaysFoundExecutableFinder(),
+            false /* strictToolchainPaths */);
+    assertThat(platform.getCxxPlatform().getCflags(), hasItems("-std=gnu11", "-O2", "-fa-flag"));
+    assertThat(
+        platform.getCxxPlatform().getCxxflags(),
+        hasItems("-std=gnu++11", "-O2", "-fno-exceptions", "-fno-rtti", "-fc++flag"));
+    assertThat(
+        platform.getCxxPlatform().getCppflags(),
+        hasItems("-std=gnu11", "-O2", "-DSOME_FLAG", "-DSOME_OTHER_FLAG"));
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
@@ -251,6 +304,7 @@ public class NdkCxxPlatformTest {
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
+                  new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                   filesystem,
                   root,
                   NdkCxxPlatformCompiler.builder()
@@ -303,6 +357,7 @@ public class NdkCxxPlatformTest {
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
             root,
             NdkCxxPlatformCompiler.builder()

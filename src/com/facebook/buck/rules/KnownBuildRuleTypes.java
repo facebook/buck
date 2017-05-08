@@ -299,6 +299,7 @@ public class KnownBuildRuleTypes {
       ndkCxxPlatformsBuilder.putAll(
           NdkCxxPlatforms.getPlatforms(
               cxxBuckConfig,
+              androidConfig,
               filesystem,
               ndkRoot.get(),
               compiler,

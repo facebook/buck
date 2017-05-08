@@ -42,6 +42,27 @@ java_immutables_library(
     visibility = ["PUBLIC"],
 )
 
+BUCK_CONFIG_SRCS = [
+    "AndroidBuckConfig.java",
+]
+
+java_immutables_library(
+    name = "config",
+    srcs = BUCK_CONFIG_SRCS,
+    resources = [
+        ":guava.jar",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android:unit",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":cxxruntime",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/util/environment:platform",
+    ],
+)
+
 RULES_SRCS = [
     "Aapt2Compile.java",
     "Aapt2Link.java",
@@ -54,7 +75,6 @@ RULES_SRCS = [
     "AndroidBinaryDescription.java",
     "AndroidBinaryGraphEnhancer.java",
     "AndroidBinaryResourcesGraphEnhancer.java",
-    "AndroidBuckConfig.java",
     "AndroidBuildConfig.java",
     "AndroidBuildConfigDescription.java",
     "AndroidBuildConfigJavaLibrary.java",
@@ -359,7 +379,7 @@ java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
-        excludes = PACKAGEABLE_SRCS + CXXRUNTIME_SRCS + RULES_SRCS +
+        excludes = PACKAGEABLE_SRCS + CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
                    SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
     ),
     tests = [
@@ -370,6 +390,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":apkmodule",
+        ":config",
         ":cxxruntime",
         ":packageable",
         ":split_dex",

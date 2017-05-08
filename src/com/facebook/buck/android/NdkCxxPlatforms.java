@@ -94,6 +94,25 @@ public class NdkCxxPlatforms {
           Platform.MACOS, Host.DARWIN_X86_64,
           Platform.WINDOWS, Host.WINDOWS_X86_64);
 
+  /** Defaults for c and c++ flags */
+  public static final ImmutableList<String> DEFAULT_COMMON_CFLAGS =
+      ImmutableList.of(
+          // Default to the C11 standard.
+          "-std=gnu11");
+
+  public static final ImmutableList<String> DEFAULT_COMMON_CXXFLAGS =
+      ImmutableList.of(
+          // Default to the C++11 standard.
+          "-std=gnu++11", "-fno-exceptions", "-fno-rtti");
+  public static final ImmutableList<String> DEFAULT_COMMON_CPPFLAGS =
+      ImmutableList.of(
+          // Disable searching for headers provided by the system.  This limits headers to just
+          // those provided by the NDK and any library dependencies.
+          "-nostdinc",
+          // Default macro definitions applied to all builds.
+          "-DNDEBUG",
+          "-DANDROID");
+
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
 
@@ -136,6 +155,7 @@ public class NdkCxxPlatforms {
 
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
@@ -145,6 +165,7 @@ public class NdkCxxPlatforms {
       Platform platform) {
     return getPlatforms(
         config,
+        androidConfig,
         filesystem,
         ndkRoot,
         compiler,
@@ -159,6 +180,7 @@ public class NdkCxxPlatforms {
   /** @return the map holding the available {@link NdkCxxPlatform}s. */
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
@@ -178,6 +200,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatform armeabi =
           build(
               config,
+              androidConfig,
               filesystem,
               InternalFlavor.of("android-arm"),
               platform,
@@ -196,6 +219,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatform armeabiv7 =
           build(
               config,
+              androidConfig,
               filesystem,
               InternalFlavor.of("android-armv7"),
               platform,
@@ -214,6 +238,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatform arm64 =
           build(
               config,
+              androidConfig,
               filesystem,
               InternalFlavor.of("android-arm64"),
               platform,
@@ -232,6 +257,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatform x86 =
           build(
               config,
+              androidConfig,
               filesystem,
               InternalFlavor.of("android-x86"),
               platform,
@@ -253,6 +279,7 @@ public class NdkCxxPlatforms {
           // CHECKSTYLE.ON
           build(
               config,
+              androidConfig,
               filesystem,
               InternalFlavor.of("android-x86_64"),
               platform,
@@ -435,6 +462,7 @@ public class NdkCxxPlatforms {
   @VisibleForTesting
   static NdkCxxPlatform build(
       CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Flavor flavor,
       Platform platform,
@@ -519,13 +547,13 @@ public class NdkCxxPlatforms {
         .addAllAsflags(getAsflags(targetConfiguration, toolchainPaths))
         .setAspp(cpp)
         .setCc(cc)
-        .addAllCflags(getCflagsInternal(targetConfiguration, toolchainPaths))
+        .addAllCflags(getCflagsInternal(targetConfiguration, toolchainPaths, androidConfig))
         .setCpp(cpp)
-        .addAllCppflags(getCppflags(targetConfiguration, toolchainPaths))
+        .addAllCppflags(getCppflags(targetConfiguration, toolchainPaths, androidConfig))
         .setCxx(cxx)
-        .addAllCxxflags(getCxxflagsInternal(targetConfiguration, toolchainPaths))
+        .addAllCxxflags(getCxxflagsInternal(targetConfiguration, toolchainPaths, androidConfig))
         .setCxxpp(cxxpp)
-        .addAllCxxppflags(getCxxppflags(targetConfiguration, toolchainPaths))
+        .addAllCxxppflags(getCxxppflags(targetConfiguration, toolchainPaths, androidConfig))
         .setLd(
             new DefaultLinkerProvider(
                 LinkerProvider.Type.GNU,
@@ -781,37 +809,27 @@ public class NdkCxxPlatforms {
   }
 
   /** Flags to be used when either preprocessing or compiling C sources. */
-  private static ImmutableList<String> getCommonCFlags() {
-    return ImmutableList.of(
-        // Default to the newer C11 standard.  This is *not* a default set in the NDK.
-        // Since this flag can be used multiple times, and because the compiler just uses
-        // whichever standard was specified last, cxx_library rules can override this from
-        // their BUCK-file definitions.
-        "-std=gnu11");
+  private static ImmutableList<String> getCommonCFlags(AndroidBuckConfig config) {
+    return ImmutableList.<String>builder()
+        .addAll(DEFAULT_COMMON_CFLAGS)
+        .addAll(config.getExtraNdkCFlags())
+        .build();
   }
 
   /** Flags to be used when either preprocessing or compiling C++ sources. */
-  private static ImmutableList<String> getCommonCxxFlags() {
-    return ImmutableList.of(
-        // Default to the newer C++11 standard.  This is *not* a default set in the NDK.
-        // Since this flag can be used multiple times, and because the compiler just uses
-        // whichever standard was specified last, cxx_library rules can override this from
-        // their BUCK-file definitions.
-        "-std=gnu++11",
-        // By default, Android builds disable exceptions and runtime type identification.
-        "-fno-exceptions",
-        "-fno-rtti");
+  private static ImmutableList<String> getCommonCxxFlags(AndroidBuckConfig config) {
+    return ImmutableList.<String>builder()
+        .addAll(DEFAULT_COMMON_CXXFLAGS)
+        .addAll(config.getExtraNdkCxxFlags())
+        .build();
   }
 
   /** Flags to be used when preprocessing C or C++ sources. */
-  private static ImmutableList<String> getCommonPreprocessorFlags() {
-    return ImmutableList.of(
-        // Disable searching for headers provided by the system.  This limits headers to just
-        // those provided by the NDK and any library dependencies.
-        "-nostdinc",
-        // Default macro definitions applied to all builds.
-        "-DNDEBUG",
-        "-DANDROID");
+  private static ImmutableList<String> getCommonPreprocessorFlags(AndroidBuckConfig config) {
+    return ImmutableList.<String>builder()
+        .addAll(DEFAULT_COMMON_CPPFLAGS)
+        .addAll(config.getExtraNdkCppFlags())
+        .build();
   }
 
   private static ImmutableList<String> getCommonIncludes(NdkCxxToolchainPaths toolchainPaths) {
@@ -837,24 +855,28 @@ public class NdkCxxPlatforms {
   }
 
   private static ImmutableList<String> getCppflags(
-      NdkCxxPlatformTargetConfiguration targetConfiguration, NdkCxxToolchainPaths toolchainPaths) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration,
+      NdkCxxToolchainPaths toolchainPaths,
+      AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(getCommonIncludes(toolchainPaths))
-        .addAll(getCommonPreprocessorFlags())
+        .addAll(getCommonPreprocessorFlags(config))
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
-        .addAll(getCommonCFlags())
+        .addAll(getCommonCFlags(config))
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
         .build();
   }
 
   private static ImmutableList<String> getCxxppflags(
-      NdkCxxPlatformTargetConfiguration targetConfiguration, NdkCxxToolchainPaths toolchainPaths) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration,
+      NdkCxxToolchainPaths toolchainPaths,
+      AndroidBuckConfig config) {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(getCxxRuntimeIncludeFlags(targetConfiguration, toolchainPaths));
     flags.addAll(getCommonIncludes(toolchainPaths));
-    flags.addAll(getCommonPreprocessorFlags());
+    flags.addAll(getCommonPreprocessorFlags(config));
     flags.addAll(getCommonFlags(targetConfiguration, toolchainPaths));
-    flags.addAll(getCommonCxxFlags());
+    flags.addAll(getCommonCxxFlags(config));
     if (targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC) {
       flags.add("-Wno-literal-suffix");
     }
@@ -870,20 +892,24 @@ public class NdkCxxPlatforms {
   }
 
   private static ImmutableList<String> getCflagsInternal(
-      NdkCxxPlatformTargetConfiguration targetConfiguration, NdkCxxToolchainPaths toolchainPaths) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration,
+      NdkCxxToolchainPaths toolchainPaths,
+      AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
-        .addAll(getCommonCFlags())
+        .addAll(getCommonCFlags(config))
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
         .addAll(getCommonNdkCxxPlatformCompilerFlags())
         .build();
   }
 
   private static ImmutableList<String> getCxxflagsInternal(
-      NdkCxxPlatformTargetConfiguration targetConfiguration, NdkCxxToolchainPaths toolchainPaths) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration,
+      NdkCxxToolchainPaths toolchainPaths,
+      AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
-        .addAll(getCommonCxxFlags())
+        .addAll(getCommonCxxFlags(config))
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
         .addAll(getCommonNdkCxxPlatformCompilerFlags())
         .build();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
@@ -76,6 +77,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
             ndkDir.get(),
             compiler,
