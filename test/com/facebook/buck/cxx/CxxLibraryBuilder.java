@@ -46,11 +46,14 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
-    this(target, cxxBuckConfig, createDefaultPlatforms());
+    this(target, cxxBuckConfig, CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxLibraryBuilder(BuildTarget target) {
-    this(target, createDefaultConfig(), createDefaultPlatforms());
+    this(
+        target,
+        new CxxBuckConfig(FakeBuckConfig.builder().build()),
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {

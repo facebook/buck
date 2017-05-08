@@ -36,7 +36,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder(BuildTarget target) {
-    this(target, createDefaultPlatforms());
+    this(target, CxxTestUtils.createDefaultPlatforms());
   }
 
   public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {

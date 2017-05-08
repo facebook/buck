@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.model.FlavorDomain;
 
-public class AbstractCxxBuilder<T, U extends Description<T>, V extends BuildRule>
-    extends AbstractNodeBuilderWithMutableArg<T, U, V> {
-
-  public AbstractCxxBuilder(U description, BuildTarget target) {
-    super(description, target);
+public class CxxTestUtils {
+  public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
+    return FlavorDomain.of("C/C++ Platform", CxxPlatformUtils.DEFAULT_PLATFORM);
   }
 }

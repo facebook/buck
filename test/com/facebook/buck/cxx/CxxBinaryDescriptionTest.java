@@ -123,7 +123,7 @@ public class CxxBinaryDescriptionTest {
     Assume.assumeFalse("this test is not for sandboxing", cxxBuckConfig.sandboxSources());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
@@ -385,7 +385,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void binaryShouldLinkOwnRequiredLibraries() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(
@@ -412,7 +412,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void testBinaryWithStripFlavorHasStripLinkRuleWithCorrectStripStyle() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(

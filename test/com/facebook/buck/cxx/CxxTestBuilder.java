@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.google.common.collect.ImmutableList;
@@ -43,11 +44,15 @@ public class CxxTestBuilder
   }
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
-    this(target, config, createDefaultPlatform(), createDefaultPlatforms());
+    this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder(BuildTarget target) {
-    this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
+    this(
+        target,
+        new CxxBuckConfig(FakeBuckConfig.builder().build()),
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {

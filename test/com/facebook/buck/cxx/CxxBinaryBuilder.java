@@ -53,11 +53,15 @@ public class CxxBinaryBuilder
   }
 
   public CxxBinaryBuilder(BuildTarget target) {
-    this(target, createDefaultPlatform(), createDefaultPlatforms());
+    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxBinaryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
-    this(target, createDefaultPlatform(), createDefaultPlatforms(), cxxBuckConfig);
+    this(
+        target,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms(),
+        cxxBuckConfig);
   }
 
   @Override

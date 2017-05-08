@@ -68,7 +68,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
   private static final BuildTarget TARGET_TWO = BuildTargetFactory.newInstance("//two/:target");
-  private static final CxxPlatform CXX_PLATFORM = PrebuiltCxxLibraryBuilder.createDefaultPlatform();
+  private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
   private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
     String libDir = arg.libDir.orElse("lib");
@@ -498,7 +498,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
     BuildTarget target =
         BuildTargetFactory.newInstance("//:x")
             .withFlavors(platform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -636,12 +636,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        rule.getNativeLinkableDepsForPlatform(CxxLibraryBuilder.createDefaultPlatform()),
+        rule.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.contains(dep));
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkableExportedDepsForPlatform(
-                CxxLibraryBuilder.createDefaultPlatform())),
+            rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)),
         empty());
   }
 
@@ -663,10 +662,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkableDepsForPlatform(CxxLibraryBuilder.createDefaultPlatform())),
+            rule.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)),
         empty());
     assertThat(
-        rule.getNativeLinkableExportedDepsForPlatform(CxxLibraryBuilder.createDefaultPlatform()),
+        rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.contains(dep));
   }
 

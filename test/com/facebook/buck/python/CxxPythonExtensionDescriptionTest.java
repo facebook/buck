@@ -27,7 +27,7 @@ import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.CxxTestBuilder;
+import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
@@ -93,7 +93,7 @@ public class CxxPythonExtensionDescriptionTest {
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
@@ -118,7 +118,7 @@ public class CxxPythonExtensionDescriptionTest {
                 target2,
                 FlavorDomain.of("Python Platform", PY2, PY3),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .setBaseModule(name);
     targetGraph = TargetGraphFactory.newInstance(baseModuleBuilder.build());
     resolver = new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -149,7 +149,7 @@ public class CxxPythonExtensionDescriptionTest {
                 target,
                 FlavorDomain.of("Python Platform", PY2, PY3),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
 
     TargetGraph targetGraph =
@@ -189,7 +189,7 @@ public class CxxPythonExtensionDescriptionTest {
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
@@ -230,7 +230,7 @@ public class CxxPythonExtensionDescriptionTest {
                     PY2.withCxxLibrary(PYTHON2_DEP_TARGET),
                     PY3.withCxxLibrary(PYTHON3_DEP_TARGET)),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .build()
             .getDescription();
     CxxPythonExtensionDescription.Arg constructorArg = new CxxPythonExtensionDescription.Arg();
@@ -266,7 +266,7 @@ public class CxxPythonExtensionDescriptionTest {
             target,
             FlavorDomain.of("Python Platform", py2, py3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
@@ -301,7 +301,7 @@ public class CxxPythonExtensionDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule = builder.build(resolver);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
@@ -321,7 +321,7 @@ public class CxxPythonExtensionDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule =
         builder.setDeps(ImmutableSortedSet.of(dep.getBuildTarget())).build(resolver);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
@@ -341,7 +341,7 @@ public class CxxPythonExtensionDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", platform),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(python2Builder.build(), builder.build());
     BuildRuleResolver resolver =
@@ -362,7 +362,7 @@ public class CxxPythonExtensionDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(
@@ -388,7 +388,7 @@ public class CxxPythonExtensionDescriptionTest {
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxTestBuilder.createDefaultPlatforms());
+            CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule =
         builder
             .setPlatformDeps(
@@ -424,7 +424,7 @@ public class CxxPythonExtensionDescriptionTest {
                 BuildTargetFactory.newInstance("//:rule"),
                 pythonPlatforms,
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .setPlatformDeps(
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
                     .add(
@@ -436,8 +436,8 @@ public class CxxPythonExtensionDescriptionTest {
                 BuildTargetFactory.newInstance("//:bin2"),
                 pythonBuckConfig,
                 pythonPlatforms,
-                CxxTestBuilder.createDefaultPlatform(),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxTestUtils.createDefaultPlatforms())
             .setMainModule("test")
             .setPlatform(PY2.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
@@ -446,8 +446,8 @@ public class CxxPythonExtensionDescriptionTest {
                 BuildTargetFactory.newInstance("//:bin3"),
                 pythonBuckConfig,
                 pythonPlatforms,
-                CxxTestBuilder.createDefaultPlatform(),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxTestUtils.createDefaultPlatforms())
             .setMainModule("test")
             .setPlatform(PY3.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
@@ -484,7 +484,7 @@ public class CxxPythonExtensionDescriptionTest {
                 BuildTargetFactory.newInstance("//:ext"),
                 FlavorDomain.of("Python Platform", PY2, PY3),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     assertThat(
@@ -501,7 +501,7 @@ public class CxxPythonExtensionDescriptionTest {
                 BuildTargetFactory.newInstance("//:ext"),
                 FlavorDomain.of("Python Platform", PY2, PY3),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestBuilder.createDefaultPlatforms())
+                CxxTestUtils.createDefaultPlatforms())
             .setModuleName("blah")
             .build(resolver);
     assertThat(

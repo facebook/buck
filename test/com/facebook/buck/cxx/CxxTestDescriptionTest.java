@@ -109,8 +109,8 @@ public class CxxTestDescriptionTest {
     return new CxxTestBuilder(
         BuildTargetFactory.newInstance(target),
         cxxBuckConfig,
-        CxxTestBuilder.createDefaultPlatform(),
-        CxxTestBuilder.createDefaultPlatforms());
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   @Test

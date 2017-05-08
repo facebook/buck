@@ -43,7 +43,7 @@ public class PrebuiltCxxLibraryTest {
   @Test
   public void testGetNativeLinkWithDep() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     GenruleBuilder genSrcBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_libx"))

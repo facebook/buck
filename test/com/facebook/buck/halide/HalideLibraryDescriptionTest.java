@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -85,7 +84,7 @@ public class HalideLibraryDescriptionTest {
     HalideLibrary lib = (HalideLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Check that the library rule has the correct preprocessor input.
-    CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
     String headerName = "rule.h";
     BuildTarget flavoredLibTarget =
         libTarget.withFlavors(

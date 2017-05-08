@@ -39,7 +39,6 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBus;
@@ -108,7 +107,7 @@ public class WorkspaceAndProjectGeneratorTest {
     rootCell = (new TestCellBuilder()).build();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
-    cxxBuckConfig = CxxLibraryBuilder.createDefaultConfig();
+    cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
     swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
