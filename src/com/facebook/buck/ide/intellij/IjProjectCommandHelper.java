@@ -68,8 +68,6 @@ public class IjProjectCommandHelper {
   private final ActionGraphCache actionGraphCache;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
-  private final boolean skipBuild;
-  private final boolean build;
   private final boolean processAnnotations;
   private final boolean enableParserProfiling;
   private final String projectView;
@@ -89,8 +87,6 @@ public class IjProjectCommandHelper {
       ActionGraphCache actionGraphCache,
       Cell cell,
       IjProjectConfig projectConfig,
-      boolean skipBuild,
-      boolean build,
       boolean processAnnotations,
       boolean enableParserProfiling,
       String projectView,
@@ -108,8 +104,6 @@ public class IjProjectCommandHelper {
     this.actionGraphCache = actionGraphCache;
     this.cell = cell;
     this.projectConfig = projectConfig;
-    this.skipBuild = skipBuild;
-    this.build = build;
     this.processAnnotations = processAnnotations;
     this.enableParserProfiling = enableParserProfiling;
     this.projectView = projectView;
@@ -241,8 +235,7 @@ public class IjProjectCommandHelper {
       return 0;
     }
 
-    boolean skipBuilds = skipBuild || getSkipBuildFromConfig() || !build;
-    if (skipBuilds) {
+    if (projectConfig.isSkipBuildEnabled()) {
       ConsoleEvent.severe(
           "Please remember to buck build --deep the targets you intent to work with.");
       return 0;
@@ -338,10 +331,6 @@ public class IjProjectCommandHelper {
     }
     JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());
     return !arg.annotationProcessors.isEmpty();
-  }
-
-  private boolean getSkipBuildFromConfig() {
-    return buckConfig.getBooleanValue("project", "skip_build", false);
   }
 
   public JavaPackageFinder getJavaPackageFinder(BuckConfig buckConfig) {

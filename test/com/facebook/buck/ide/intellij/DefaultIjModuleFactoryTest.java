@@ -648,9 +648,15 @@ public class DefaultIjModuleFactoryTest {
     IjProjectConfig projectConfig =
         buckConfig == null
             ? IjProjectBuckConfig.create(
-                FakeBuckConfig.builder().build(), AggregationMode.AUTO, null, false, false, false)
+                FakeBuckConfig.builder().build(),
+                AggregationMode.AUTO,
+                null,
+                false,
+                false,
+                false,
+                true)
             : IjProjectBuckConfig.create(
-                buckConfig, AggregationMode.AUTO, null, false, false, false);
+                buckConfig, AggregationMode.AUTO, null, false, false, false, true);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem,

@@ -40,7 +40,8 @@ public class IjProjectBuckConfig {
       @Nullable String generatedFilesListFilename,
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,
-      boolean excludeArtifacts) {
+      boolean excludeArtifacts,
+      boolean skipBuild) {
     Optional<String> excludedResourcePathsOption =
         buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "excluded_resource_paths");
 
@@ -118,6 +119,9 @@ public class IjProjectBuckConfig {
         .setRemovingUnusedLibrariesEnabled(
             isRemovingUnusedLibrariesEnabled(removeUnusedLibraries, buckConfig))
         .setExcludeArtifactsEnabled(isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))
+        .setSkipBuildEnabled(
+            skipBuild
+                || buckConfig.getBooleanValue(PROJECT_BUCK_CONFIG_SECTION, "skip_build", false))
         .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
         .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
         .setIgnoredTargetLabels(

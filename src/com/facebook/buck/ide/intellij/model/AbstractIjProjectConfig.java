@@ -71,6 +71,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract boolean isExcludeArtifactsEnabled();
 
+  public abstract boolean isSkipBuildEnabled();
+
   public abstract AggregationMode getAggregationMode();
 
   public abstract Optional<String> getGeneratedFilesListFilename();

@@ -257,7 +257,8 @@ public class ProjectCommand extends BuildCommand {
                     generatedFilesListFilename,
                     runIjCleaner,
                     removeUnusedLibraries,
-                    excludeArtifacts);
+                    excludeArtifacts,
+                    skipBuild || !build);
 
             IjProjectCommandHelper projectCommandHelper =
                 new IjProjectCommandHelper(
@@ -269,8 +270,6 @@ public class ProjectCommand extends BuildCommand {
                     params.getActionGraphCache(),
                     params.getCell(),
                     projectConfig,
-                    skipBuild,
-                    build,
                     processAnnotations,
                     getEnableParserProfiling(),
                     projectView,
