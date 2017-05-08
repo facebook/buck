@@ -20,7 +20,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.json.BuildFileParseException;
@@ -68,14 +67,10 @@ public class IjProjectCommandHelper {
   private final BuckConfig buckConfig;
   private final ActionGraphCache actionGraphCache;
   private final Cell cell;
+  private final IjProjectConfig projectConfig;
   private final boolean skipBuild;
   private final boolean build;
-  private final AggregationMode intellijAggregationMode;
-  private final String generatedFilesListFilename;
   private final boolean processAnnotations;
-  private final boolean runIjCleaner;
-  private final boolean removeUnusedLibraries;
-  private final boolean excludeArtifacts;
   private final boolean enableParserProfiling;
   private final String projectView;
   private final boolean dryRun;
@@ -93,14 +88,10 @@ public class IjProjectCommandHelper {
       BuckConfig buckConfig,
       ActionGraphCache actionGraphCache,
       Cell cell,
+      IjProjectConfig projectConfig,
       boolean skipBuild,
       boolean build,
-      AggregationMode intellijAggregationMode,
-      String generatedFilesListFilename,
       boolean processAnnotations,
-      boolean runIjCleaner,
-      boolean removeUnusedLibraries,
-      boolean excludeArtifacts,
       boolean enableParserProfiling,
       String projectView,
       boolean dryRun,
@@ -116,14 +107,10 @@ public class IjProjectCommandHelper {
     this.buckConfig = buckConfig;
     this.actionGraphCache = actionGraphCache;
     this.cell = cell;
+    this.projectConfig = projectConfig;
     this.skipBuild = skipBuild;
     this.build = build;
-    this.intellijAggregationMode = intellijAggregationMode;
-    this.generatedFilesListFilename = generatedFilesListFilename;
     this.processAnnotations = processAnnotations;
-    this.runIjCleaner = runIjCleaner;
-    this.removeUnusedLibraries = removeUnusedLibraries;
-    this.excludeArtifacts = excludeArtifacts;
     this.enableParserProfiling = enableParserProfiling;
     this.projectView = projectView;
     this.dryRun = dryRun;
@@ -281,15 +268,6 @@ public class IjProjectCommandHelper {
     BuildRuleResolver ruleResolver = result.getResolver();
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
-
-    IjProjectConfig projectConfig =
-        IjProjectBuckConfig.create(
-            buckConfig,
-            intellijAggregationMode,
-            generatedFilesListFilename,
-            runIjCleaner,
-            removeUnusedLibraries,
-            excludeArtifacts);
 
     IjProject project =
         new IjProject(

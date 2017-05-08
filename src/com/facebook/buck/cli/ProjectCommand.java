@@ -18,8 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -248,6 +250,15 @@ public class ProjectCommand extends BuildCommand {
       try {
         switch (projectIde) {
           case INTELLIJ:
+            IjProjectConfig projectConfig =
+                IjProjectBuckConfig.create(
+                    params.getBuckConfig(),
+                    intellijAggregationMode,
+                    generatedFilesListFilename,
+                    runIjCleaner,
+                    removeUnusedLibraries,
+                    excludeArtifacts);
+
             IjProjectCommandHelper projectCommandHelper =
                 new IjProjectCommandHelper(
                     params.getBuckEventBus(),
@@ -257,14 +268,10 @@ public class ProjectCommand extends BuildCommand {
                     params.getBuckConfig(),
                     params.getActionGraphCache(),
                     params.getCell(),
+                    projectConfig,
                     skipBuild,
                     build,
-                    intellijAggregationMode,
-                    generatedFilesListFilename,
                     processAnnotations,
-                    runIjCleaner,
-                    removeUnusedLibraries,
-                    excludeArtifacts,
                     getEnableParserProfiling(),
                     projectView,
                     dryRun,
