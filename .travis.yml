@@ -1,6 +1,11 @@
 language: java
 jdk:
   - oraclejdk8
+env:
+  - CI_ACTION=build
+  - CI_ACTION=unit
+  - CI_ACTION=integration
+  - CI_ACTION=ant
 
 # Enable container-based architecture.
 sudo: false
