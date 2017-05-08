@@ -26,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
+import org.sqlite.BusyHandler;
 
 public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final Connection connection;
@@ -43,7 +44,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
       Class.forName("org.sqlite.JDBC");
       connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
       connection.createStatement().executeUpdate("PRAGMA SYNCHRONOUS = OFF");
-      connection.createStatement().executeUpdate("PRAGMA JOURNAL_MODE = OFF");
+      connection.createStatement().executeUpdate("PRAGMA JOURNAL_MODE = WAL");
       connection
           .createStatement()
           .executeUpdate(
@@ -57,6 +58,19 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
           connection.prepareStatement(
               "INSERT OR REPLACE INTO metadata (target, key, value) VALUES (?, ?, ?)");
       deleteStmt = connection.prepareStatement("DELETE FROM metadata WHERE target = ?");
+      BusyHandler busyHandler =
+          new BusyHandler() {
+            @Override
+            protected int callback(int retries) throws SQLException {
+              try {
+                Thread.sleep(retries);
+              } catch (InterruptedException e) {
+                throw new SQLException(e);
+              }
+              return 1;
+            }
+          };
+      BusyHandler.setHandler(connection, busyHandler);
     } catch (ClassNotFoundException | SQLException e) {
       throw new IOException(e);
     }
