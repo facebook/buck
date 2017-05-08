@@ -529,7 +529,7 @@ public class ProjectGenerator {
                 HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, defaultCxxPlatform.getFlavor()));
       }
     } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
-      addGenruleFiles(project, (TargetNode<AbstractGenruleDescription.Arg, ?>) targetNode);
+      addGenruleFiles(project, (TargetNode<AbstractGenruleDescription.CommonArg, ?>) targetNode);
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
@@ -1349,9 +1349,9 @@ public class ProjectGenerator {
   }
 
   private void addGenruleFiles(
-      PBXProject project, TargetNode<AbstractGenruleDescription.Arg, ?> targetNode) {
+      PBXProject project, TargetNode<AbstractGenruleDescription.CommonArg, ?> targetNode) {
     PBXGroup group = project.getMainGroup();
-    for (SourcePath sourcePath : targetNode.getConstructorArg().srcs) {
+    for (SourcePath sourcePath : targetNode.getConstructorArg().getSrcs()) {
       Path path = pathRelativizer.outputPathToSourcePath(sourcePath);
       ImmutableList<String> targetGroupPath = null;
       PBXGroup sourceGroup = group.getOrCreateChildGroupByName("Other");

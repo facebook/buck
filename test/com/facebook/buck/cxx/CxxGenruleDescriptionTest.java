@@ -62,7 +62,8 @@ public class CxxGenruleDescriptionTest {
     for (String macro : ImmutableSet.of("ld", "cc", "cxx")) {
       CxxGenruleBuilder builder =
           new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule#default"))
-              .setCmd(String.format("$(%s)", macro));
+              .setCmd(String.format("$(%s)", macro))
+              .setOut("foo");
       assertThat(
           ImmutableSet.copyOf(builder.findImplicitDeps()),
           Matchers.equalTo(
@@ -163,16 +164,19 @@ public class CxxGenruleDescriptionTest {
     BuildTarget original = BuildTargetFactory.newInstance("//hello:world");
     BuildTarget translated = BuildTargetFactory.newInstance("//something:else");
     CxxGenruleBuilder builder =
-        new CxxGenruleBuilder(target).setCmd(String.format("$(cppflags %s)", original));
-    TargetNode<CxxGenruleDescription.Arg, CxxGenruleDescription> node = builder.build();
+        new CxxGenruleBuilder(target)
+            .setCmd(String.format("$(cppflags %s)", original))
+            .setOut("foo");
+    TargetNode<CxxGenruleDescriptionArg, CxxGenruleDescription> node = builder.build();
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
             new DefaultTypeCoercerFactory(), ImmutableMap.of(original, translated));
-    Optional<CxxGenruleDescription.Arg> translatedArg =
+    Optional<CxxGenruleDescriptionArg> translatedArg =
         node.getDescription()
             .translateConstructorArg(
                 target, node.getCellNames(), translator, node.getConstructorArg());
-    assertThat(translatedArg.get().cmd.get(), Matchers.equalTo("$(cppflags //something:else)"));
+    assertThat(
+        translatedArg.get().getCmd().get(), Matchers.equalTo("$(cppflags //something:else)"));
   }
 
   @Test
@@ -182,7 +186,8 @@ public class CxxGenruleDescriptionTest {
         new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep");
     CxxGenruleBuilder genruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setCmd("$(ldflags-shared //:versioned)");
+            .setCmd("$(ldflags-shared //:versioned)")
+            .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
     TargetGraphAndBuildTargets transformed =
@@ -191,11 +196,12 @@ public class CxxGenruleDescriptionTest {
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
             new DefaultTypeCoercerFactory());
-    CxxGenruleDescription.Arg arg =
+    CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
-            CxxGenruleDescription.Arg.class);
-    assertThat(arg.cmd, OptionalMatchers.present(Matchers.equalTo("$(ldflags-shared //:dep)")));
+            CxxGenruleDescriptionArg.class);
+    assertThat(
+        arg.getCmd(), OptionalMatchers.present(Matchers.equalTo("$(ldflags-shared //:dep)")));
   }
 
   @Test
@@ -206,7 +212,8 @@ public class CxxGenruleDescriptionTest {
     VersionPropagatorBuilder dep = new VersionPropagatorBuilder("//:dep").setDeps("//:versioned");
     CxxGenruleBuilder genruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setCmd("$(ldflags-shared //:dep)");
+            .setCmd("$(ldflags-shared //:dep)")
+            .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(
             transitiveDep.build(), versionedDep.build(), dep.build(), genruleBuilder.build());
@@ -216,12 +223,12 @@ public class CxxGenruleDescriptionTest {
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
             new DefaultTypeCoercerFactory());
-    CxxGenruleDescription.Arg arg =
+    CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
-            CxxGenruleDescription.Arg.class);
+            CxxGenruleDescriptionArg.class);
     assertThat(
-        arg.cmd,
+        arg.getCmd(),
         OptionalMatchers.present(
             Matchers.matchesPattern(
                 Pattern.quote("$(ldflags-shared //:dep#v") + "[a-zA-Z0-9]*" + Pattern.quote(")"))));

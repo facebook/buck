@@ -59,7 +59,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
@@ -1557,13 +1557,13 @@ public class ParserTest {
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    TargetNode<GenruleDescription.Arg, ?> node =
+    TargetNode<GenruleDescriptionArg, ?> node =
         parser
             .getTargetNode(eventBus, cell, false, executorService, buildTarget)
-            .castArg(GenruleDescription.Arg.class)
+            .castArg(GenruleDescriptionArg.class)
             .get();
 
-    assertThat(node.getConstructorArg().out, is(equalTo("default.txt")));
+    assertThat(node.getConstructorArg().getOut(), is(equalTo("default.txt")));
 
     config =
         FakeBuckConfig.builder()
@@ -1574,10 +1574,10 @@ public class ParserTest {
     node =
         parser
             .getTargetNode(eventBus, cell, false, executorService, buildTarget)
-            .castArg(GenruleDescription.Arg.class)
+            .castArg(GenruleDescriptionArg.class)
             .get();
 
-    assertThat(node.getConstructorArg().out, is(equalTo("value.txt")));
+    assertThat(node.getConstructorArg().getOut(), is(equalTo("value.txt")));
 
     config =
         FakeBuckConfig.builder()
@@ -1588,10 +1588,10 @@ public class ParserTest {
     node =
         parser
             .getTargetNode(eventBus, cell, false, executorService, buildTarget)
-            .castArg(GenruleDescription.Arg.class)
+            .castArg(GenruleDescriptionArg.class)
             .get();
 
-    assertThat(node.getConstructorArg().out, is(equalTo("other value.txt")));
+    assertThat(node.getConstructorArg().getOut(), is(equalTo("other value.txt")));
   }
 
   @Test

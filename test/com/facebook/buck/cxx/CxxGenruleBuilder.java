@@ -18,13 +18,13 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
-import java.util.Optional;
 
 public class CxxGenruleBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        CxxGenruleDescription.Arg, CxxGenruleDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        CxxGenruleDescriptionArg.Builder, CxxGenruleDescriptionArg, CxxGenruleDescription,
+        BuildRule> {
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(new CxxGenruleDescription(cxxPlatforms), target);
@@ -35,12 +35,12 @@ public class CxxGenruleBuilder
   }
 
   public CxxGenruleBuilder setOut(String out) {
-    arg.out = out;
+    getArgForPopulating().setOut(out);
     return this;
   }
 
   public CxxGenruleBuilder setCmd(String cmd) {
-    arg.cmd = Optional.of(cmd);
+    getArgForPopulating().setCmd(cmd);
     return this;
   }
 }

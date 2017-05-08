@@ -64,7 +64,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
@@ -124,22 +123,24 @@ public class ApkGenruleTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
-    ApkGenruleDescription description = new ApkGenruleDescription();
-    ApkGenruleDescription.Arg arg = new ApkGenruleDescription.Arg();
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-    arg.apk = new FakeInstallable(apkTarget, pathResolver).getBuildTarget();
-    arg.bash = Optional.of("");
-    arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
-    arg.cmdExe = Optional.of("");
-    arg.type = Optional.empty();
-    arg.out = "signed_fb4a.apk";
-    arg.srcs =
-        ImmutableList.of(
-            new PathSourcePath(projectFilesystem, fileSystem.getPath("src/com/facebook/signer.py")),
-            new PathSourcePath(
-                projectFilesystem, fileSystem.getPath("src/com/facebook/key.properties")));
-    arg.tests = ImmutableSortedSet.of();
+    ApkGenruleDescription description = new ApkGenruleDescription();
+    ApkGenruleDescriptionArg arg =
+        ApkGenruleDescriptionArg.builder()
+            .setName(buildTarget.getShortName())
+            .setApk(new FakeInstallable(apkTarget, pathResolver).getBuildTarget())
+            .setBash("")
+            .setCmd("python signer.py $APK key.properties > $OUT")
+            .setCmdExe("")
+            .setOut("signed_fb4a.apk")
+            .setSrcs(
+                ImmutableList.of(
+                    new PathSourcePath(
+                        projectFilesystem, fileSystem.getPath("src/com/facebook/signer.py")),
+                    new PathSourcePath(
+                        projectFilesystem, fileSystem.getPath("src/com/facebook/key.properties"))))
+            .build();
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(buildTarget).setProjectFilesystem(projectFilesystem).build();
     ApkGenrule apkGenrule =

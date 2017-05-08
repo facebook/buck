@@ -59,6 +59,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -415,7 +416,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void requiredBuildTargets() throws IOException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
-    TargetNode<GenruleDescription.Arg, ?> genrule =
+    TargetNode<GenruleDescriptionArg, GenruleDescription> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
     BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
@@ -461,7 +462,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void requiredBuildTargetsForCombinedProject() throws IOException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
-    TargetNode<GenruleDescription.Arg, ?> genrule =
+    TargetNode<GenruleDescriptionArg, GenruleDescription> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
     BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();

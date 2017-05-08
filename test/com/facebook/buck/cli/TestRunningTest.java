@@ -47,6 +47,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
@@ -105,7 +106,7 @@ public class TestRunningTest {
   public void testGeneratedSourceFile() throws Exception {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
-    TargetNode<GenruleDescription.Arg, GenruleDescription> sourceGenerator =
+    TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
         GenruleBuilder.newGenruleBuilder(genSrcTarget)
             .setOut("com/facebook/GeneratedFile.java")
             .build();
@@ -251,7 +252,7 @@ public class TestRunningTest {
   public void testMixedSourceFile() throws Exception {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
-    TargetNode<GenruleDescription.Arg, GenruleDescription> sourceGenerator =
+    TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
         GenruleBuilder.newGenruleBuilder(genSrcTarget)
             .setOut("com/facebook/GeneratedFile.java")
             .build();

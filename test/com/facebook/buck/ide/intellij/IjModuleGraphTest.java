@@ -423,6 +423,7 @@ public class IjModuleGraphTest {
     TargetNode<?, ?> productGenruleTarget =
         GenruleBuilder.newGenruleBuilder(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/product:genrule"))
+            .setOut("out")
             .build();
 
     TargetNode<?, ?> libraryJavaTarget =

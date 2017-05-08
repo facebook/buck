@@ -19,33 +19,36 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
+public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<GenruleDescriptionArg> getConstructorArgType() {
+    return GenruleDescriptionArg.class;
   }
 
   @Override
   protected BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      Arg args,
+      GenruleDescriptionArg args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
-    if (!args.executable.orElse(false)) {
-      return new Genrule(params, args.srcs, cmd, bash, cmdExe, args.type, args.out);
+    if (!args.getExecutable().orElse(false)) {
+      return new Genrule(params, args.getSrcs(), cmd, bash, cmdExe, args.getType(), args.getOut());
     } else {
-      return new GenruleBinary(params, args.srcs, cmd, bash, cmdExe, args.type, args.out);
+      return new GenruleBinary(
+          params, args.getSrcs(), cmd, bash, cmdExe, args.getType(), args.getOut());
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractGenruleDescription.Arg {
-    public Optional<Boolean> executable;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    Optional<Boolean> getExecutable();
   }
 }

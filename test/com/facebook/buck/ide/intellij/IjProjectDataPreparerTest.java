@@ -142,6 +142,7 @@ public class IjProjectDataPreparerTest {
     TargetNode<?, ?> baseGenruleTarget =
         GenruleBuilder.newGenruleBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
+            .setOut("out")
             .build();
 
     TargetNode<?, ?> baseInlineTestsTargetNode =

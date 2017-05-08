@@ -264,6 +264,7 @@ public class ProjectGeneratorTest {
             .setSrcs(
                 ImmutableList.of(
                     new FakeSourcePath("foo/foo.json"), new FakeSourcePath("bar.json")))
+            .setOut("out")
             .build();
 
     ProjectGenerator projectGenerator =

@@ -484,6 +484,7 @@ public class TargetsCommandTest {
     TargetNode<?, ?> genNode =
         GenruleBuilder.newGenruleBuilder(genTarget)
             .setSrcs(ImmutableList.of(new PathSourcePath(projectFilesystem, genSrc)))
+            .setOut("out")
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);

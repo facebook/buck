@@ -17,12 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
-import java.util.Optional;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 
 public class ApkGenruleBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        ApkGenruleDescription.Arg, ApkGenruleDescription, ApkGenrule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        ApkGenruleDescriptionArg.Builder, ApkGenruleDescriptionArg, ApkGenruleDescription,
+        ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target) {
     super(new ApkGenruleDescription(), target);
@@ -33,17 +33,17 @@ public class ApkGenruleBuilder
   }
 
   public ApkGenruleBuilder setOut(String out) {
-    arg.out = out;
+    getArgForPopulating().setOut(out);
     return this;
   }
 
   public ApkGenruleBuilder setCmd(String cmd) {
-    arg.cmd = Optional.of(cmd);
+    getArgForPopulating().setCmd(cmd);
     return this;
   }
 
   public ApkGenruleBuilder setApk(BuildTarget apk) {
-    arg.apk = apk;
+    getArgForPopulating().setApk(apk);
     return this;
   }
 }
