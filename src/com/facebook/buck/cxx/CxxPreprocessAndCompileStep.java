@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -108,15 +107,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   @Override
   public String getShortName() {
-    Optional<CxxSource.Type> type =
-        CxxSource.Type.fromExtension(Files.getFileExtension(input.getFileName().toString()));
-    String fileType;
-    if (type.isPresent()) {
-      fileType = type.get().getLanguage();
-    } else {
-      fileType = "unknown";
-    }
-    return fileType + " " + operation.toString().toLowerCase();
+    return inputType.getLanguage() + " " + operation.toString().toLowerCase();
   }
 
   /**
