@@ -174,12 +174,18 @@ public class MergeAssets extends AbstractBuildRule {
           for (ZipEntry inputEntry = base.getNextEntry();
               inputEntry != null;
               base.closeEntry(), inputEntry = base.getNextEntry()) {
+            String extension = Files.getFileExtension(inputEntry.getName());
+            // Only compress if aapt compressed it and the extension looks compressible.
+            // This is a workaround for aapt2 compressing everything.
+            boolean shouldCompress =
+                inputEntry.getMethod() != ZipEntry.STORED
+                    && !NO_COMPRESS_EXTENSIONS.contains(extension);
             byte[] data = ByteStreams.toByteArray(base);
             addEntry(
                 output,
                 data,
                 inputEntry.getName(),
-                inputEntry.getMethod() == ZipEntry.STORED ? 0 : Deflater.BEST_COMPRESSION,
+                shouldCompress ? Deflater.BEST_COMPRESSION : 0,
                 inputEntry.isDirectory());
           }
         }

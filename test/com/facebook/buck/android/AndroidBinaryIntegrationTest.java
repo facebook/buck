@@ -923,6 +923,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("res/layout/top_layout.xml");
     zipInspector.assertFileExists("assets/asset_file.txt");
 
+    zipInspector.assertFileIsNotCompressed("res/drawable/tiny_black.png");
+
     Map<String, String> rDotJavaContents =
         parseRDotJavaSmali(outputs.get("//apps/sample:disassemble_app_with_aapt2"));
     Map<String, String> resourceBundleContents =
