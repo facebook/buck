@@ -17,6 +17,7 @@
 package com.facebook.buck.android.aapt;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -37,15 +38,18 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Set;
-import javax.xml.xpath.XPathExpressionException;
+
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Set;
+
+import javax.xml.xpath.XPathExpressionException;
 
 public class MiniAaptTest {
 
@@ -71,7 +75,8 @@ public class MiniAaptTest {
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testFindingResourceIdsInXml()
@@ -179,6 +184,74 @@ public class MiniAaptTest {
       }
     }
     assertTrue(foundElement);
+  }
+
+  @Test
+  public void testParentIsSet() throws IOException, ResourceParseException {
+    ImmutableList<String> lines =
+        ImmutableList.<String>builder()
+            .add(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+                    "<resources>\n" +
+                    "    <attr name=\"justAttr\"/>\n" +
+                    "    <declare-styleable name=\"MyLayout\">\n" +
+                    "        <attr name=\"myAttr\"/>\n" +
+                    "        <attr name=\"myAttr2\"/>\n" +
+                    "    </declare-styleable>\n" +
+                    "    <declare-styleable name=\"MyLayout_Layout\">\n" +
+                    "        <attr name=\"android:text\"/>\n" +
+                    "        <attr name=\"android:color\"/>\n" +
+                    "    </declare-styleable>\n" +
+                    "</resources>")
+            .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt =
+        new MiniAapt(
+            resolver,
+            filesystem,
+            new FakeSourcePath(filesystem, "res"),
+            Paths.get("R.txt"),
+            ImmutableSet.of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertThat(definitions.size(), equalTo(9));
+    for (RDotTxtEntry entry : definitions) {
+      switch (entry.name) {
+        case "justAttr":
+          assertEquals("justAttr", entry.parent);
+          break;
+        case "MyLayout":
+          assertEquals("MyLayout", entry.parent);
+          break;
+        case "MyLayout_myAttr":
+          assertEquals("MyLayout", entry.parent);
+          break;
+        case "MyLayout_myAttr2":
+          assertEquals("MyLayout", entry.parent);
+          break;
+        case "MyLayout_Layout":
+          assertEquals("MyLayout_Layout", entry.parent);
+          break;
+        case "MyLayout_Layout_android_text":
+          assertEquals("MyLayout_Layout", entry.parent);
+          break;
+        case "MyLayout_Layout_android_color":
+          assertEquals("MyLayout_Layout", entry.parent);
+          break;
+        case "myAttr":
+          assertEquals("myAttr", entry.parent);
+          break;
+        case "myAttr2":
+          assertEquals("myAttr2", entry.parent);
+          break;
+        default:
+          fail("Unexpected entry: " + entry.name);
+      }
+    }
   }
 
   @Test

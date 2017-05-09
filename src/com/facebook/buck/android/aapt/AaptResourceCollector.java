@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Responsible for collecting resources parsed by {@link MiniAapt} and assigning unique integer ids
  * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
@@ -48,7 +50,7 @@ public class AaptResourceCollector {
   public void addIntResourceIfNotPresent(RType rType, String name) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      addResource(rType, IdType.INT, name, getNextIdValue(rType));
+      addResource(rType, IdType.INT, name, getNextIdValue(rType), null);
     }
   }
 
@@ -70,11 +72,12 @@ public class AaptResourceCollector {
   }
 
   public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
-    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues));
+    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
   }
 
-  public void addResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(new RDotTxtEntry(idType, rType, name, idValue));
+  public void addResource(
+      RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
+    resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
   public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
