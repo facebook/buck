@@ -269,31 +269,36 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @VisibleForTesting
-  List<Path> getAllFilesInCache() throws IOException {
+  List<Path> getAllFilesInCache() {
     final List<Path> allFiles = new ArrayList<>();
-    Files.walkFileTree(
-        filesystem.resolve(cacheDir),
-        ImmutableSet.of(),
-        Integer.MAX_VALUE,
-        new SimpleFileVisitor<Path>() {
+    final Path tempFolderPath = getPathToTempFolder();
+    try {
+      Files.walkFileTree(
+          filesystem.resolve(cacheDir),
+          ImmutableSet.of(),
+          Integer.MAX_VALUE,
+          new SimpleFileVisitor<Path>() {
 
-          @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
-            // do not work with files in temp folder as they will be moved later
-            if (dir.equals(getPathToTempFolder())) {
-              return FileVisitResult.SKIP_SUBTREE;
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                throws IOException {
+              // do not work with files in temp folder as they will be moved later
+              if (dir.equals(tempFolderPath)) {
+                return FileVisitResult.SKIP_SUBTREE;
+              }
+              return super.preVisitDirectory(dir, attrs);
             }
-            return super.preVisitDirectory(dir, attrs);
-          }
 
-          @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
-            allFiles.add(file);
-            return super.visitFile(file, attrs);
-          }
-        });
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              allFiles.add(file);
+              return super.visitFile(file, attrs);
+            }
+          });
+    } catch (IOException e) {
+      LOG.error(e, "Error getting a list of files in %s", tempFolderPath);
+    }
 
     return allFiles;
   }
