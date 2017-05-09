@@ -35,7 +35,7 @@ public class FileFinderTest {
 
   @Test
   public void combine() {
-    Object[] result = FileFinder.combine(null, "foo", null).toArray();
+    Object[] result = FileFinder.combine(ImmutableSet.of(), "foo", ImmutableSet.of()).toArray();
     Arrays.sort(result);
     Assert.assertArrayEquals(new String[] {"foo"}, result);
 
@@ -45,7 +45,7 @@ public class FileFinderTest {
     Arrays.sort(result);
     Assert.assertArrayEquals(new String[] {"foo.bat", "foo.com", "foo.exe"}, result);
 
-    result = FileFinder.combine(ImmutableSet.of("lib", ""), "foo", null).toArray();
+    result = FileFinder.combine(ImmutableSet.of("lib", ""), "foo", ImmutableSet.of()).toArray();
     Arrays.sort(result);
     Assert.assertArrayEquals(new String[] {"foo", "libfoo"}, result);
   }

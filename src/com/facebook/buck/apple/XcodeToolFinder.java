@@ -16,12 +16,15 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FileFinder;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +36,12 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 
 final class XcodeToolFinder {
+  private final Platform platform;
+
+  public XcodeToolFinder() {
+    this.platform = Platform.detect();
+  }
+
   private final LoadingCache<Path, ImmutableSet<Path>> directoryContentsCache =
       CacheBuilder.newBuilder()
           .build(
@@ -49,7 +58,10 @@ final class XcodeToolFinder {
 
   public Optional<Path> getToolPath(ImmutableList<Path> searchPath, String toolName) {
     return FileFinder.getOptionalFile(
-        ImmutableSet.of(toolName),
+        FileFinder.combine(
+            ImmutableSet.of(),
+            toolName,
+            ExecutableFinder.getExecutableSuffixes(platform, ImmutableMap.of())),
         searchPath,
         (path) -> {
           try {

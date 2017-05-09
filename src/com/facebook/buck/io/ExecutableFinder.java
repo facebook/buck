@@ -44,7 +44,8 @@ public class ExecutableFinder {
   private static final Logger LOG = Logger.get(ExecutableFinder.class);
   private static final ImmutableSet<String> DEFAULT_WINDOWS_EXTENSIONS =
       ImmutableSet.of(
-          ".bat", ".cmd", ".com", ".cpl", ".exe", ".js", ".jse", ".msc", ".vbs", ".wsf", ".wsh");
+          "", ".bat", ".cmd", ".com", ".cpl", ".exe", ".js", ".jse", ".msc", ".vbs", ".wsf",
+          ".wsh");
 
   private final Platform platform;
 
@@ -70,12 +71,15 @@ public class ExecutableFinder {
 
   public Optional<Path> getOptionalExecutable(
       Path suggestedExecutable, ImmutableMap<String, String> env) {
-    return getOptionalExecutable(suggestedExecutable, getPaths(env), getExecutableSuffixes(env));
+    return getOptionalExecutable(
+        suggestedExecutable, getPaths(env), getExecutableSuffixes(platform, env));
   }
 
   public Optional<Path> getOptionalExecutable(Path suggestedExecutable, Path basePath) {
     return getOptionalExecutable(
-        suggestedExecutable, ImmutableSet.of(basePath), getExecutableSuffixes(ImmutableMap.of()));
+        suggestedExecutable,
+        ImmutableSet.of(basePath),
+        getExecutableSuffixes(platform, ImmutableMap.of()));
   }
 
   public Optional<Path> getOptionalExecutable(
@@ -91,7 +95,7 @@ public class ExecutableFinder {
     Optional<Path> executable =
         FileFinder.getOptionalFile(
             FileFinder.combine(
-                /* prefixes */ null,
+                ImmutableSet.of(),
                 suggestedExecutable.toString(),
                 ImmutableSet.copyOf(fileSuffixes)),
             path,
@@ -162,7 +166,8 @@ public class ExecutableFinder {
     return paths.build();
   }
 
-  private ImmutableSet<String> getExecutableSuffixes(ImmutableMap<String, String> env) {
+  public static ImmutableSet<String> getExecutableSuffixes(
+      Platform platform, ImmutableMap<String, String> env) {
     if (platform == Platform.WINDOWS) {
       String pathext = env.get("PATHEXT");
       if (pathext == null) {

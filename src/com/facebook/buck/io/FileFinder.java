@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.annotation.Nullable;
 
 /** Methods for finding files. */
 public class FileFinder {
@@ -30,16 +29,16 @@ public class FileFinder {
   /**
    * Combines prefixes, base, and suffixes to create a set of file names.
    *
-   * @param prefixes set of prefixes. May be null or empty.
+   * @param prefixes set of prefixes. May be empty.
    * @param base base name. May be empty.
-   * @param suffixes set of suffixes. May be null or empty.
+   * @param suffixes set of suffixes. May be empty.
    * @return a set containing all combinations of prefix, base, and suffix.
    */
   public static ImmutableSet<String> combine(
-      @Nullable Set<String> prefixes, String base, @Nullable Set<String> suffixes) {
+      Set<String> prefixes, String base, Set<String> suffixes) {
 
     ImmutableSet<String> suffixedSet;
-    if (suffixes == null || suffixes.isEmpty()) {
+    if (suffixes.isEmpty()) {
       suffixedSet = ImmutableSet.of(base);
     } else {
       ImmutableSet.Builder<String> suffixedBuilder = ImmutableSet.builder();
@@ -49,7 +48,7 @@ public class FileFinder {
       suffixedSet = suffixedBuilder.build();
     }
 
-    if (prefixes == null || prefixes.isEmpty()) {
+    if (prefixes.isEmpty()) {
       return suffixedSet;
     } else {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
