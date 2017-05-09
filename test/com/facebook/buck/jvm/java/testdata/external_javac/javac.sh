@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash -x
 
 for i in "$@"; do
     case "$i" in
