@@ -641,17 +641,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public ImmutableMap<String, String> getMap(String section, String field) {
-    Optional<String> value = getValue(section, field);
-    if (value.isPresent()) {
-      return ImmutableMap.copyOf(
-          Splitter.on(',')
-              .omitEmptyStrings()
-              .withKeyValueSeparator("=>")
-              .split(value.get().trim())
-              .entrySet());
-    } else {
-      return ImmutableMap.of();
-    }
+    return config.getMap(section, field);
   }
 
   private <T> T required(String section, String field, Optional<T> value) {

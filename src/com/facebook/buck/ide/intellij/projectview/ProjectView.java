@@ -19,12 +19,15 @@ package com.facebook.buck.ide.intellij.projectview;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -49,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -579,8 +583,12 @@ public class ProjectView {
   private static final String INTELLIJ_JDK_NAME = "jdk_name";
   private static final String INTELLIJ_JDK_TYPE = "jdk_type";
 
+  private Optional<String> getIntellijSectionValue(String propertyName) {
+    return config.getValue(INTELLIJ_SECTION, propertyName);
+  }
+
   private String getIntellijSectionValue(String propertyName, String defaultValue) {
-    return config.getValue(INTELLIJ_SECTION, propertyName).orElse(defaultValue);
+    return getIntellijSectionValue(propertyName).orElse(defaultValue);
   }
 
   /**
@@ -768,8 +776,8 @@ public class ProjectView {
           attribute("level", "project"));
     }
 
-    for (String annotationFolder : getAnnotationFolders()) {
-      String folder = fileJoin(FILE_MODULE_DIR, annotationFolder);
+    for (String relativeFolder : getAnnotationAndGeneratedFolders()) {
+      String folder = fileJoin(FILE_MODULE_DIR, relativeFolder);
       Attribute url = attribute(URL, folder);
       Element content = addElement(rootManager, CONTENT, url);
       addElement(
@@ -863,19 +871,58 @@ public class ProjectView {
     return null;
   }
 
-  private Collection<String> getAnnotationFolders() {
-    Collection<String> annotationFolders = new ArrayList<>();
+  private Collection<String> getAnnotationAndGeneratedFolders() {
+    Collection<String> folders = new HashSet<>();
 
+    getAnnotationFolders(folders);
+    getGeneratedFolders(folders);
+
+    return folders.stream().sorted().collect(Collectors.toList());
+  }
+
+  private void getAnnotationFolders(Collection<String> folders) {
     for (BuildRule buildRule : actionGraph.getActionGraph().getNodes()) {
       if (buildRule instanceof JavaLibrary) {
         Optional<Path> generatedSourcePath = ((JavaLibrary) buildRule).getGeneratedSourcePath();
         if (generatedSourcePath.isPresent()) {
-          annotationFolders.add(generatedSourcePath.get().toString());
+          folders.add(generatedSourcePath.get().toString());
         }
       }
     }
+  }
 
-    return annotationFolders;
+  private void getGeneratedFolders(Collection<String> folders) {
+    Map<String, String> labelToGeneratedSourcesMap =
+        config.getMap(INTELLIJ_SECTION, "generated_sources_label_map");
+    Pattern name = Pattern.compile("%name%");
+
+    AbstractBreadthFirstTraversal.<TargetNode<?, ?>>traverse(
+        targetGraph.getAll(buildTargets),
+        node -> {
+          ProjectFilesystem filesystem = node.getFilesystem();
+          Set<BuildTarget> buildDeps = node.getBuildDeps();
+          for (BuildTarget buildTarget : buildDeps) {
+            Object constructorArg = node.getConstructorArg();
+            if (constructorArg instanceof CommonDescriptionArg) {
+              CommonDescriptionArg commonDescriptionArg = (CommonDescriptionArg) constructorArg;
+              folders.addAll(
+                  commonDescriptionArg
+                      .getLabels()
+                      .stream()
+                      .map(labelToGeneratedSourcesMap::get)
+                      .filter(Objects::nonNull)
+                      .map(
+                          pattern ->
+                              name.matcher(pattern)
+                                  .replaceAll(buildTarget.getShortNameAndFlavorPostfix()))
+                      .map(
+                          (String path) ->
+                              BuildTargets.getGenPath(filesystem, buildTarget, path).toString())
+                      .collect(Collectors.toSet()));
+            }
+          }
+          return targetGraph.getAll(buildDeps);
+        });
   }
 
   // endregion .idea folder

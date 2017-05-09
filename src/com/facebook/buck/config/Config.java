@@ -49,6 +49,10 @@ import java.util.regex.Pattern;
  * override values defined by the previous ones.
  */
 public class Config {
+  /** Used in a string representation of a map; separates pairs of value */
+  public static final String DEFAULT_PAIR_SEPARATOR = ",";
+  /** Used in a string representation of a map; separates keys from values */
+  public static final String DEFAULT_KEY_VALUE_SEPARATOR = "=>";
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
@@ -309,6 +313,68 @@ public class Config {
       throw new HumanReadableException(
           e, "Malformed url [%s]%s: %s", section, field, e.getMessage());
     }
+  }
+
+  /**
+   * Convert a string representation of a map to a binary {@code ImmutableMap<String, String>}
+   *
+   * @param section Config file section name
+   * @param field Config file value name
+   * @param pairSeparator String that separates pairs of keys and values
+   * @param keyValueSeparator String that separates keys and values
+   * @return An {@link ImmutableMap}
+   */
+  public ImmutableMap<String, String> getMap(
+      String section, String field, String pairSeparator, String keyValueSeparator) {
+    return getMap(getValue(section, field), pairSeparator, keyValueSeparator);
+  }
+
+  /**
+   * Convert an {@code Optional<String>} representation of a map to a binary {@code
+   * ImmutableMap<String, String>}
+   *
+   * @param value An {@code Optional<String>}, such as you might get from {@link #getValue(String,
+   *     String)}
+   * @param pairSeparator String that separates pairs of keys and values
+   * @param keyValueSeparator String that separates keys and values
+   * @return An {@link ImmutableMap}
+   */
+  public static ImmutableMap<String, String> getMap(
+      Optional<String> value, String pairSeparator, String keyValueSeparator) {
+    if (value.isPresent()) {
+      return ImmutableMap.copyOf(
+          Splitter.on(pairSeparator)
+              .omitEmptyStrings()
+              .withKeyValueSeparator(Splitter.on(keyValueSeparator).trimResults())
+              .split(value.get())
+              .entrySet());
+    } else {
+      return ImmutableMap.of();
+    }
+  }
+
+  /**
+   * Convert a string representation of a map to a binary {@code ImmutableMap<String, String>},
+   * using default separators
+   *
+   * @param section Config file section name
+   * @param field Config file value name
+   * @return An {@link ImmutableMap}
+   */
+  public ImmutableMap<String, String> getMap(String section, String field) {
+    return getMap(section, field, DEFAULT_PAIR_SEPARATOR, DEFAULT_KEY_VALUE_SEPARATOR);
+  }
+
+  /**
+   * Convert a {@code Optional<String>} representation of a map to a binary {@code
+   * ImmutableMap<String, String>}, using default separators
+   *
+   * @param value An {@code Optional<String>}, such as you might get from {@link #getValue(String,
+   *     String)}
+   * @return An {@link ImmutableMap}
+   */
+  public static ImmutableMap<String, String> getMap(Optional<String> value) {
+    return getMap(value, DEFAULT_PAIR_SEPARATOR, DEFAULT_KEY_VALUE_SEPARATOR);
   }
 
   @Override
