@@ -88,7 +88,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     zipInspector.assertFileDoesNotExist("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
 
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir =
@@ -128,7 +128,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     zipInspector.assertFileExists("classes.dex");
 
-    assertNativeLibrariesDontExist(zipInspector);
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
   }
 
   @Test
@@ -143,22 +143,9 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("classes2.dex");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
 
     zipInspector.assertFileExists("classes.dex");
-
-    assertNativeLibrariesDontExist(zipInspector);
-  }
-
-  private static void assertNativeLibrariesDontExist(ZipInspector zipInspector) {
-    zipInspector.assertFilesDoNotExist(
-        "lib/armeabi/libfakenative.so",
-        "lib/armeabi/libmybinary.so",
-        "lib/armeabi-v7a/libfakenative.so",
-        "lib/armeabi-v7a/libmybinary.so",
-        "lib/x86/libfakenative.so",
-        "lib/x86/libmybinary.so",
-        "lib/mips/libfakenative.so",
-        "lib/mips/libmybinary.so");
   }
 
   @Test
@@ -225,25 +212,11 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   }
 
   @Test
-  public void testEditingNativeForcesRebuild() throws IOException, InterruptedException {
-    // Sleep 1 second (plus another half to be super duper safe) to make sure that
-    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
-    // during the build in setUp.  If we don't do this, there's a chance that the
-    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
-    // that have 1-second granularity for last modified).
-    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
-    // out: in
-    //   cat $< > $@
-    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
-    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
-    // (with very high probability).
-    Thread.sleep(1500);
-
+  public void testEditingNativeForcesRebuild() throws IOException {
     ZipInspector zipInspector;
 
     // Change the binary and ensure that we re-run apkbuilder.
-    workspace.replaceFileContents(
-        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+    workspace.replaceFileContents("native/cxx/lib.cpp", "return 3", "return 4");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
@@ -251,14 +224,12 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
         new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/armeabi/libnative_cxx_lib.so");
 
     // Now convert it into an asset native library and ensure that we re-run apkbuilder.
     workspace.replaceFileContents(
-        "native/fakenative/jni/BUCK",
-        "name = 'fakenative',",
-        "name = 'fakenative',\nis_asset=True,");
+        "native/cxx/BUCK", "name = 'lib',", "name = 'lib',\ncan_be_asset=True,");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
@@ -266,14 +237,11 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
         new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
-    zipInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("assets/lib/armeabi/libnative_cxx_lib.so");
 
     // Now edit it again and make sure we re-run apkbuilder.
-    Thread.sleep(1500);
-
-    workspace.replaceFileContents(
-        "native/fakenative/jni/fakesystem.c", "exit(1+status)", "exit(2+status)");
+    workspace.replaceFileContents("native/cxx/lib.cpp", "return 4", "return 5");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
@@ -284,55 +252,26 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk")));
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
-    zipInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("assets/lib/armeabi/libnative_cxx_lib.so");
   }
 
   @Test
-  public void testEditingNativeGetsAbiHitForNativeExopackage()
-      throws IOException, InterruptedException {
-    // Sleep 1 second (plus another half to be super duper safe) to make sure that
-    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
-    // during the build in setUp.  If we don't do this, there's a chance that the
-    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
-    // that have 1-second granularity for last modified).
-    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
-    // out: in
-    //   cat $< > $@
-    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
-    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
-    // (with very high probability).
-    Thread.sleep(1500);
-
+  public void testEditingNativeGetsAbiHitForNativeExopackage() throws IOException {
     // Change the binary and ensure that we re-run apkbuilder.
-    workspace.replaceFileContents(
-        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+    workspace.replaceFileContents("native/cxx/lib.cpp", "return 3", "return 7");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckBuild(NATIVE_EXOPACKAGE_TARGET).assertSuccess();
+    workspace.runBuckBuild("-v=5", NATIVE_EXOPACKAGE_TARGET).assertSuccess();
 
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(NATIVE_EXOPACKAGE_TARGET);
   }
 
   @Test
   public void testEditingNativeAndSecondaryDexFileGetsAbiHitForDexAndNativeExopackage()
-      throws IOException, InterruptedException {
-    // Sleep 1 second (plus another half to be super duper safe) to make sure that
-    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
-    // during the build in setUp.  If we don't do this, there's a chance that the
-    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
-    // that have 1-second granularity for last modified).
-    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
-    // out: in
-    //   cat $< > $@
-    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
-    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
-    // (with very high probability).
-    Thread.sleep(1500);
-
+      throws IOException {
     // Change the binary and ensure that we re-run apkbuilder.
-    workspace.replaceFileContents(
-        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+    workspace.replaceFileContents("native/cxx/lib.cpp", "return 3", "return 7");
 
     workspace.replaceFileContents("java/com/sample/lib/Sample.java", "package com", "package\ncom");
 

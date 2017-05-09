@@ -68,8 +68,7 @@ android_binary(
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
+    '//native/cxx:lib',
   ],
 )
 
@@ -93,8 +92,7 @@ android_binary(
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
+    '//native/cxx:lib',
   ],
 )
 
@@ -114,14 +112,14 @@ android_binary(
   keystore = '//keystores:debug',
   use_split_dex = True,
   exopackage_modes = ['secondary_dex'],
+  package_asset_libraries = True,
   primary_dex_patterns = [
     '/MyApplication^',
   ],
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
+    '//native/cxx:lib',
     '//third-party:kiwi',
   ],
 )
@@ -131,6 +129,9 @@ android_binary(
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   use_split_dex = True,
+  cpu_filters = [
+    'arm',
+  ],
   exopackage_modes = ['native_library'],
   primary_dex_patterns = [
     '/MyApplication^',
@@ -138,8 +139,7 @@ android_binary(
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
+    '//native/cxx:lib',
     '//third-party:kiwi',
   ],
 )
@@ -149,6 +149,9 @@ android_binary(
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   use_split_dex = True,
+  cpu_filters = [
+    'arm',
+  ],
   exopackage_modes = [
     'native_library',
     'secondary_dex',
@@ -159,8 +162,7 @@ android_binary(
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
+    '//native/cxx:lib',
     '//third-party:kiwi',
   ],
 )
@@ -183,8 +185,6 @@ android_binary(
   deps = [
     '//java/com/sample/app:app',
     '//java/com/sample/lib:lib',
-    '//native/fakenative/jni:fakenative',
-    '//native/mybinary/jni:mybinary',
     '//third-party:kiwi',
   ],
 )

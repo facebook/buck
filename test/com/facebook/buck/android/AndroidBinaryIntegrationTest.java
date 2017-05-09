@@ -123,7 +123,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
   }
 
   @Test
@@ -203,20 +203,48 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
   }
 
   @Test
   public void testDisguisedExecutableIsRenamed() throws IOException {
-    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
-
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargets.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk")));
-
+    Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_disguised_exe");
+    ZipInspector zipInspector = new ZipInspector(output);
     zipInspector.assertFileExists("lib/armeabi/libmybinary.so");
+  }
+
+  @Test
+  public void testNdkLibraryIsIncluded() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_ndk_library");
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+  }
+
+  @Test
+  public void testEditingNdkLibraryForcesRebuild() throws IOException, InterruptedException {
+    String apkWithNdkLibrary = "//apps/sample:app_with_ndk_library";
+    Path output = workspace.buildAndReturnOutput(apkWithNdkLibrary);
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+
+    // Sleep 1 second (plus another half to be super duper safe) to make sure that
+    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
+    // during the build in setUp.  If we don't do this, there's a chance that the
+    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
+    // that have 1-second granularity for last modified).
+    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
+    // out: in
+    //   cat $< > $@
+    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
+    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
+    // (with very high probability).
+    Thread.sleep(1500);
+    workspace.replaceFileContents(
+        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+
+    workspace.resetBuildLogFile();
+    workspace.buildAndReturnOutput(apkWithNdkLibrary);
+    workspace.getBuildLog().assertTargetBuiltLocally(apkWithNdkLibrary);
   }
 
   @Test
