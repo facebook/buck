@@ -54,6 +54,18 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
   private final Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier;
 
+  private static final ImmutableSet<String> FORCE_INCLUDE_ENTITLEMENTS =
+      ImmutableSet.of(
+          "keychain-access-groups",
+          "application-identifier",
+          "com.apple.developer.associated-domains",
+          "com.apple.developer.icloud-container-development-container-identifiers",
+          "com.apple.developer.icloud-container-environment",
+          "com.apple.developer.icloud-container-identifiers",
+          "com.apple.developer.icloud-services",
+          "com.apple.developer.ubiquity-container-identifiers",
+          "com.apple.developer.ubiquity-kvstore-identifier");
+
   private ProvisioningProfileStore(
       Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
     this.provisioningProfilesSupplier = provisioningProfilesSupplier;
@@ -151,11 +163,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
             ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
             for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
-              if (!(entry.getKey().equals("keychain-access-groups")
-                  || entry.getKey().equals("application-identifier")
-                  || entry.getKey().equals("com.apple.developer.associated-domains")
-                  || matchesOrArrayIsSubsetOf(
-                      entry.getValue(), profileEntitlements.get(entry.getKey())))) {
+              NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
+              if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
+                  || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
                 match = false;
                 LOG.debug(
                     "Ignoring profile "
@@ -163,7 +173,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
                         + " with mismatched entitlement "
                         + entry.getKey()
                         + "; value is "
-                        + profileEntitlements.get(entry.getKey())
+                        + profileEntitlement
                         + " but expected "
                         + entry.getValue());
                 break;
