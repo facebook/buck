@@ -91,9 +91,9 @@ public class ProjectView {
   private static final String ASSETS = "assets";
   private static final String CODE_STYLE_SETTINGS = "codeStyleSettings.xml";
   private static final String DOT_IDEA = ".idea";
+  private static final String DOT_XML = ".xml";
   private static final String FONTS = "fonts";
   private static final String RES = "res";
-  private static final String DOT_XML = ".xml";
 
   private final DirtyPrintStreamDecorator stdErr;
   private final String viewPath;
@@ -529,7 +529,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaFolder(List<String> inputs) {
     String dotIdea = fileJoin(viewPath, DOT_IDEA);
-    immediateMkdir(dotIdea);
+    mkdir(dotIdea);
 
     writeModulesXml(dotIdea);
     writeMiscXml(dotIdea);
@@ -638,7 +638,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaDotLibrariesFolder(String dotIdea, List<String> inputs) {
     String libraries = fileJoin(dotIdea, "libraries");
-    immediateMkdir(libraries);
+    mkdir(libraries);
 
     Map<String, List<String>> directories = new HashMap<>();
     inputs
@@ -687,7 +687,7 @@ public class ProjectView {
   private void writeRootDotIml(
       List<String> sourceFiles, Set<String> roots, List<String> libraries) {
     String buckOut = fileJoin(viewPath, BUCK_OUT);
-    immediateSymlink(fileJoin(repository, BUCK_OUT), buckOut);
+    symlink(fileJoin(repository, BUCK_OUT), buckOut);
 
     String apkPath = null;
     Map<BuildTarget, String> outputs = getOutputs();
@@ -954,7 +954,7 @@ public class ProjectView {
   private final Map<Path, Path> symlinksToCreate = new HashMap<>();
 
   private void scanExistingView() {
-    Path root = Paths.get(viewPath); // new File(viewPath).toPath();
+    Path root = Paths.get(viewPath);
     if (!Files.exists(root)) {
       return;
     }
@@ -1107,18 +1107,6 @@ public class ProjectView {
     directoriesToMake.add(Paths.get(name));
   }
 
-  private void immediateMkdir(String name) {
-    File file = new File(name);
-    if (file.isDirectory()) {
-      return;
-    }
-    if (dryRun) {
-      stderr("mkdir(%s)\n", name);
-    } else {
-      file.mkdirs();
-    }
-  }
-
   private void symlink(String filename, String linkname) {
     File link = new File(linkname);
     Path linkPath = link.toPath();
@@ -1127,24 +1115,6 @@ public class ProjectView {
     Path filePath = Paths.get(filename);
 
     symlinksToCreate.put(filePath, linkPath);
-  }
-
-  private void immediateSymlink(String filename, String linkname) {
-    File link = new File(linkname);
-    Path linkPath = link.toPath();
-
-    if (Files.isSymbolicLink(linkPath)) {
-      return; // already exists
-    }
-
-    Path filePath = Paths.get(filename);
-
-    if (dryRun) {
-      stderr("symlink(%s, %s)\n", filename, linkname);
-    } else {
-      immediateMkdir(dirname(link));
-      createSymbolicLink(filePath, linkPath);
-    }
   }
 
   /** Parameter order is compatible with Ruby library code, for porting transparency */
