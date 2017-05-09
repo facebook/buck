@@ -109,7 +109,9 @@ public class AndroidBinaryDescription
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 
-  private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(PACKAGE_STRING_ASSETS_FLAVOR);
+  private static final ImmutableSet<Flavor> FLAVORS =
+      ImmutableSet.of(
+          PACKAGE_STRING_ASSETS_FLAVOR, AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -282,6 +284,11 @@ public class AndroidBinaryDescription
         Optional<PackageStringAssets> packageStringAssets = result.getPackageStringAssets();
         Preconditions.checkState(packageStringAssets.isPresent());
         return packageStringAssets.get();
+      }
+
+      if (target.getFlavors().contains(AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR)) {
+        // Rule already added to index during graph enhancement.
+        return resolver.getRule(target);
       }
 
       // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a

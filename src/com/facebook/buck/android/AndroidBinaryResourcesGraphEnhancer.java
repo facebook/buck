@@ -47,7 +47,7 @@ import org.immutables.value.Value;
 class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
-  private static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
+  static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = InternalFlavor.of("package_string_assets");
   private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
 
