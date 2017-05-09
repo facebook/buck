@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "hashing",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/hashing:hashing",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",

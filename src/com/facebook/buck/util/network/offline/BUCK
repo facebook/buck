@@ -1,6 +1,7 @@
-standard_java_library(
+java_immutables_library(
     name = "offline",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/event:interfaces",

@@ -1,4 +1,4 @@
-standard_java_library(
+java_immutables_library(
     name = "xcode",
     srcs = [
         "GidGenerator.java",
@@ -8,10 +8,10 @@ standard_java_library(
         "util/*.java",
         "xcodeproj/*.java",
     ]),
-    has_immutable_types = True,
     tests = [
         "//test/com/facebook/buck/apple/xcode:xcode",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:util",

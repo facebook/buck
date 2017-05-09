@@ -21,7 +21,7 @@ java_immutables_library(
     ],
 )
 
-standard_java_library(
+java_immutables_library(
     name = "event",
     srcs = glob(
         ["*.java"],
@@ -30,7 +30,6 @@ standard_java_library(
     exported_deps = [
         "//src/com/facebook/buck/event/external:external_lib",
     ],
-    has_immutable_types = True,
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
         "//src/com/facebook/buck/event/api:api",
@@ -38,6 +37,7 @@ standard_java_library(
     tests = [
         "//test/com/facebook/buck/event:event",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         ":interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

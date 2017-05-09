@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "scala",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/jvm/scala:scala",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/cxx:platform",

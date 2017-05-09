@@ -1,5 +1,6 @@
-standard_java_library(
+java_library(
     name = "cli",
+    srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/eden:eden",
         "//src/com/facebook/buck/event:interfaces",

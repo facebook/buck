@@ -1,10 +1,11 @@
-standard_java_library(
+java_immutables_library(
     name = "aapt",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/android:unit",
         "//test/com/facebook/buck/android/aapt:aapt",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/event:event",

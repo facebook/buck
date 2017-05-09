@@ -1,5 +1,6 @@
-standard_java_library(
+java_library(
     name = "coverage",
+    srcs = glob(["*.java"]),
     visibility = [],  # Only visible to this build file.
     deps = [
         "//third-party/java/jacoco:jacoco",

@@ -95,60 +95,6 @@ def java_test(
     **kwargs
   )
 
-def standard_java_library(
-    name,
-    srcs = None,
-    has_immutable_types = False,
-    tests = None,
-    resources = None,
-
-    deps = None,
-    exported_deps = None,
-
-    provided_deps = None,
-    visibility = None,
-):
-    '''By default, generates a java_library() with the following args:
-
-    java_library(
-      name = <DIRECTORY_NAME>,
-      srcs = glob(['*.java']),
-      deps = deps,
-      exported_deps = exported_deps,
-      visibility = [
-        'PUBLIC',
-      ],
-    )
-
-    Some of these fields can be overridden.
-    '''
-    if srcs is None:
-        srcs = glob(['*.java'])
-    if tests is None:
-        tests = []
-    if resources is None:
-        resources = []
-    if provided_deps is None:
-        provided_deps = []
-    if visibility is None:
-        visibility = [ 'PUBLIC' ]
-
-    if has_immutable_types:
-        build_rule = java_immutables_library
-    else:
-        build_rule = java_library
-
-    build_rule(
-        name = name,
-        srcs = srcs,
-        resources = resources,
-        tests = tests,
-        deps = deps or [],
-        exported_deps = exported_deps or [],
-        provided_deps = provided_deps,
-        visibility = visibility,
-    )
-
 def standard_java_test(
     name,
     run_test_separately = False,

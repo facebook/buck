@@ -1,5 +1,7 @@
-standard_java_library(
+java_library(
     name = "memory",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log:log",

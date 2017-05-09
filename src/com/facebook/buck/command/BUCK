@@ -1,6 +1,6 @@
-standard_java_library(
+java_immutables_library(
     name = "command",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/cli:cli",
     ],

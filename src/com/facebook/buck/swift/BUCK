@@ -10,7 +10,7 @@ java_immutables_library(
     deps = ["//src/com/facebook/buck/rules:build_rule"],
 )
 
-standard_java_library(
+java_library(
     name = "swift",
     srcs = glob(
         ["*.java"],
@@ -20,6 +20,7 @@ standard_java_library(
         "//test/com/facebook/buck/swift:integration",
         "//test/com/facebook/buck/swift:unit",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         ":platform",
         "//src/com/facebook/buck/cli:config",

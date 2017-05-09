@@ -1,4 +1,6 @@
-standard_java_library(
+java_library(
     name = "hostname",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = ["//third-party/java/jna:jna"],
 )

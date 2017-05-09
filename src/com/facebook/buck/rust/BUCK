@@ -1,5 +1,6 @@
-standard_java_library(
+java_library(
     name = "rust",
+    srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/rules:types",
         "//test/com/facebook/buck/rust/...",

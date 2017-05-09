@@ -1,4 +1,4 @@
-standard_java_library(
+java_library(
     name = "redex",
     srcs = [
         "ReDexStep.java",
@@ -7,6 +7,7 @@ standard_java_library(
         "//test/com/facebook/buck/android:binary-integration",
         "//test/com/facebook/buck/android/redex:redex",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         ":options",
         "//src/com/facebook/buck/android:steps",

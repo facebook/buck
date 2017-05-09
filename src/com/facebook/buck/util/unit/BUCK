@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "unit",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/util/unit:unit",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",

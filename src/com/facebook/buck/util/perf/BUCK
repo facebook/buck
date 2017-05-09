@@ -1,5 +1,7 @@
-standard_java_library(
+java_library(
     name = "perf",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

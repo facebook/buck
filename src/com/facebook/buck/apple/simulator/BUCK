@@ -1,9 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "simulator",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/apple/simulator:simulator",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:io",

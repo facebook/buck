@@ -1,6 +1,6 @@
-standard_java_library(
+java_immutables_library(
     name = "lua",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     resources = [
         "native-starter.cpp.in",
         "starter.lua.in",
@@ -8,6 +8,7 @@ standard_java_library(
     tests = [
         "//test/com/facebook/buck/lua:lua",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/cli:config",

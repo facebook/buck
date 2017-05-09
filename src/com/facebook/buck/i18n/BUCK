@@ -1,4 +1,5 @@
-standard_java_library(
+java_immutables_library(
     name = "i18n",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
 )

@@ -1,9 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "query",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/query:query",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",

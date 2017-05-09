@@ -1,3 +1,5 @@
-standard_java_library(
+java_library(
     name = "shutdown",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
 )

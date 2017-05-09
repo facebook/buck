@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "halide",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/halide:halide",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/cxx:platform",

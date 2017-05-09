@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "graphql",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/graphql:graphql",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",

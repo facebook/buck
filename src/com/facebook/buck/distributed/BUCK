@@ -1,9 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "distributed",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/distributed:distributed",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",

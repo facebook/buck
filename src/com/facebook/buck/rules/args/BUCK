@@ -1,6 +1,7 @@
-standard_java_library(
+java_immutables_library(
     name = "args",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:macros",
         "//src/com/facebook/buck/model:model",

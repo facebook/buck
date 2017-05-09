@@ -1,4 +1,4 @@
-standard_java_library(
+java_immutables_library(
     name = "intellij",
     srcs = glob(
         ["**/*.java"],
@@ -7,7 +7,6 @@ standard_java_library(
             "projectview/*.*",
         ],
     ),
-    has_immutable_types = True,
     resources = [
         "GeneratedByIdeaClass.st",
         "ij-library.st",

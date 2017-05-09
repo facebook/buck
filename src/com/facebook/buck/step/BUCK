@@ -1,9 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "step",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/step:step",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event:event",

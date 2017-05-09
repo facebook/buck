@@ -1,5 +1,6 @@
-standard_java_library(
+java_library(
     name = "network",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/util:util",
         "//test/com/facebook/buck/util/network:network",

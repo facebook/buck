@@ -1,5 +1,7 @@
-standard_java_library(
+java_library(
     name = "elf",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",

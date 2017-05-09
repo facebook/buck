@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "message_ipc",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/message_ipc:message_ipc",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/shell:worker_process",
         "//src/com/facebook/buck/util:object_mapper",

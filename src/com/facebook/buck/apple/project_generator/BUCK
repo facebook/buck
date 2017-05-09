@@ -1,12 +1,13 @@
-standard_java_library(
+java_immutables_library(
     name = "project_generator",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     resources = [
         "rn-package.st",
     ],
     tests = [
         "//test/com/facebook/buck/apple/project_generator:project_generator",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/clang:headermap",

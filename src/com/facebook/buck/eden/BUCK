@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "eden",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/eden:eden",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",

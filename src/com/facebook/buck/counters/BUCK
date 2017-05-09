@@ -1,6 +1,7 @@
-standard_java_library(
+java_immutables_library(
     name = "counters",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

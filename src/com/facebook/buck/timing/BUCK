@@ -1,1 +1,5 @@
-standard_java_library(name = "timing")
+java_library(
+    name = "timing",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+)

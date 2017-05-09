@@ -1,8 +1,10 @@
-standard_java_library(
+java_library(
     name = "classes",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/jvm/java/classes:classes",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",

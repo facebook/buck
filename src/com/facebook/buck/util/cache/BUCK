@@ -1,9 +1,10 @@
-standard_java_library(
+java_immutables_library(
     name = "cache",
-    has_immutable_types = True,
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/util/cache:cache",
     ],
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",

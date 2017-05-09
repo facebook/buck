@@ -1,5 +1,7 @@
-standard_java_library(
+java_library(
     name = "randomizedtrial",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
         "//third-party/java/guava:guava",

@@ -1,3 +1,5 @@
-standard_java_library(
+java_library(
     name = "string",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
 )
