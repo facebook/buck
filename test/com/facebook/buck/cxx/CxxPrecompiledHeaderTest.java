@@ -80,8 +80,7 @@ public class CxxPrecompiledHeaderTest {
             CxxToolFlags.of(),
             new FakeSourcePath("foo.h"),
             CxxSource.Type.C,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     resolver.addToIndex(precompiledHeader);
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
     ImmutableList<Step> postBuildSteps =

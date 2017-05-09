@@ -61,8 +61,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Optional<ToolCommand> preprocessorCommand;
   private final Optional<ToolCommand> compilerCommand;
   private final HeaderPathNormalizer headerPathNormalizer;
-  private final DebugPathSanitizer compilerSanitizer;
-  private final DebugPathSanitizer assemblerSanitizer;
+  private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
 
   /** Directory to use to store intermediate/temp files used for compilation. */
@@ -84,8 +83,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       Optional<ToolCommand> preprocessorCommand,
       Optional<ToolCommand> compilerCommand,
       HeaderPathNormalizer headerPathNormalizer,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
+      DebugPathSanitizer sanitizer,
       Path scratchDir,
       boolean useArgfile,
       Compiler compiler) {
@@ -102,8 +100,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.preprocessorCommand = preprocessorCommand;
     this.compilerCommand = compilerCommand;
     this.headerPathNormalizer = headerPathNormalizer;
-    this.compilerSanitizer = compilerSanitizer.withProjectFilesystem(filesystem);
-    this.assemblerSanitizer = assemblerSanitizer;
+    this.sanitizer = sanitizer.withProjectFilesystem(filesystem);
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
     this.compiler = compiler;
@@ -132,9 +129,8 @@ public class CxxPreprocessAndCompileStep implements Step {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
 
     env.putAll(
-        getSanitizer()
-            .getCompilationEnvironment(
-                filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
+        sanitizer.getCompilationEnvironment(
+            filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
@@ -174,7 +170,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return ImmutableList.<String>builder()
         .addAll(compilerCommand.get().getArguments(allowColorsInDiagnostics))
         .addAll(getLanguageArgs(inputLanguage))
-        .addAll(getSanitizer().getCompilationFlags())
+        .addAll(sanitizer.getCompilationFlags())
         .add("-c")
         .addAll(preprocessable ? getDepFileArgs(depFile) : ImmutableList.of())
         .add(inputFileName)
@@ -292,8 +288,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       if (exitCode == 0 && shouldSanitizeOutputBinary()) {
         try {
           Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
-          getSanitizer()
-              .restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
+          sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
           FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
@@ -360,10 +355,6 @@ public class CxxPreprocessAndCompileStep implements Step {
           .collect(Collectors.joining(" "));
     }
     return "(verbosity level disables command output)";
-  }
-
-  private DebugPathSanitizer getSanitizer() {
-    return inputType.isAssembly() ? assemblerSanitizer : compilerSanitizer;
   }
 
   private boolean shouldSanitizeOutputBinary() {

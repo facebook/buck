@@ -34,6 +34,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -85,7 +86,6 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
 
   // Fields that are not added to the rule key.
   private final DebugPathSanitizer compilerSanitizer;
-  private final DebugPathSanitizer assemblerSanitizer;
   private final Path output;
 
   /**
@@ -103,9 +103,10 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
       CxxToolFlags compilerFlags,
       SourcePath input,
       CxxSource.Type inputType,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer) {
+      DebugPathSanitizer compilerSanitizer) {
     super(buildRuleParams);
+    Preconditions.checkArgument(
+        !inputType.isAssembly(), "Asm files do not use precompiled headers.");
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -113,7 +114,6 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
     this.input = input;
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
-    this.assemblerSanitizer = assemblerSanitizer;
   }
 
   @Override
@@ -252,7 +252,6 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
         Optional.empty(),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
-        assemblerSanitizer,
         scratchDir,
         /* useArgFile*/ true,
         compilerDelegate.getCompiler());

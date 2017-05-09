@@ -103,7 +103,6 @@ public class CxxCompileStepIntegrationTest {
                     Optional.empty())),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             scratchDir,
             true,
             compiler);
@@ -185,7 +184,6 @@ public class CxxCompileStepIntegrationTest {
                     Optional.empty())),
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             scratchDir,
             true,
             compiler);

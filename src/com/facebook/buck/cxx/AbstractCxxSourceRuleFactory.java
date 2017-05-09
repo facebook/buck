@@ -338,8 +338,7 @@ abstract class AbstractCxxSourceRuleFactory {
             getCompileOutputPath(target, name),
             source.getPath(),
             source.getType(),
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            getCxxPlatform().getAssemblerDebugPathSanitizer(),
+            getSanitizerForSourceType(source.getType()),
             getSandboxTree());
     getResolver().addToIndex(result);
     return result;
@@ -530,8 +529,7 @@ abstract class AbstractCxxSourceRuleFactory {
             source.getPath(),
             source.getType(),
             precompiledHeaderRule,
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            getCxxPlatform().getAssemblerDebugPathSanitizer(),
+            getSanitizerForSourceType(source.getType()),
             getSandboxTree());
     getResolver().addToIndex(result);
     return result;
@@ -747,8 +745,7 @@ abstract class AbstractCxxSourceRuleFactory {
             compilerFlags,
             headerPath,
             sourceType,
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            getCxxPlatform().getAssemblerDebugPathSanitizer());
+            getCxxPlatform().getCompilerDebugPathSanitizer());
 
     getResolver().addToIndex(rule);
 
@@ -836,6 +833,12 @@ abstract class AbstractCxxSourceRuleFactory {
     return cxxBuckConfig.isPCHEnabled()
         && preprocessor.supportsPrecompiledHeaders()
         && sourceType.getPrecompiledHeaderLanguage().isPresent();
+  }
+
+  private DebugPathSanitizer getSanitizerForSourceType(CxxSource.Type type) {
+    return type.isAssembly()
+        ? getCxxPlatform().getAssemblerDebugPathSanitizer()
+        : getCxxPlatform().getCompilerDebugPathSanitizer();
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(

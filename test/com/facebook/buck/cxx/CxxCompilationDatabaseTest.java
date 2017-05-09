@@ -148,7 +148,6 @@ public class CxxCompilationDatabaseTest {
                 CxxSource.Type.CXX,
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
                 Optional.empty())));
 
     CxxCompilationDatabase compilationDatabase =

@@ -57,8 +57,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @AddToRuleKey private final SourcePath input;
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
-  private final DebugPathSanitizer compilerSanitizer;
-  private final DebugPathSanitizer assemblerSanitizer;
+  private final DebugPathSanitizer sanitizer;
   private final Optional<SymlinkTree> sandboxTree;
 
   @VisibleForTesting
@@ -71,8 +70,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
+      DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     super(params);
     this.sandboxTree = sandboxTree;
@@ -89,8 +87,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     this.input = input;
     this.inputType = inputType;
     this.precompiledHeaderRule = precompiledHeaderRule;
-    this.compilerSanitizer = compilerSanitizer;
-    this.assemblerSanitizer = assemblerSanitizer;
+    this.sanitizer = sanitizer;
     performChecks(params);
   }
 
@@ -113,8 +110,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
+      DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
@@ -125,8 +121,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         input,
         inputType,
         Optional.empty(),
-        compilerSanitizer,
-        assemblerSanitizer,
+        sanitizer,
         sandboxTree);
   }
 
@@ -141,8 +136,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
+      DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
@@ -153,8 +147,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         input,
         inputType,
         precompiledHeaderRule,
-        compilerSanitizer,
-        assemblerSanitizer,
+        sanitizer,
         sandboxTree);
   }
 
@@ -163,7 +156,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
     if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
-      sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
+      sink.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
     }
     if (sandboxTree.isPresent()) {
       ImmutableMap<Path, SourcePath> links = sandboxTree.get().getLinks();
@@ -240,8 +233,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         preprocessorCommand,
         compilerCommand,
         headerPathNormalizer,
-        compilerSanitizer,
-        assemblerSanitizer,
+        sanitizer,
         scratchDir,
         useArgfile,
         compilerDelegate.getCompiler());
