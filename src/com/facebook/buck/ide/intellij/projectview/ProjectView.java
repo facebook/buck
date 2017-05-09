@@ -89,6 +89,7 @@ public class ProjectView {
   private static final String DOT_IDEA = ".idea";
   private static final String FONTS = "fonts";
   private static final String RES = "res";
+  private static final String DOT_XML = ".xml";
 
   private final DirtyPrintStreamDecorator stdErr;
   private final String viewPath;
@@ -164,12 +165,13 @@ public class ProjectView {
 
     return inputs
         .stream()
-        .filter(input -> !input.contains("/res/values-"))
+        //ignore non-english strings
+        .filter(input -> !(input.contains("/res/values-") && input.endsWith("strings.xml")))
         .collect(Collectors.toList());
   }
 
   private List<String> pruneInputs(Collection<String> allInputs) {
-    Pattern resource = Pattern.compile("/res/(?!values/)");
+    Pattern resource = Pattern.compile("/res/(?!(?:values(?:-[^/]+)?)/)");
 
     List<String> result = new ArrayList<>();
     Map<String, List<String>> resources = new HashMap<>();
@@ -215,9 +217,10 @@ public class ProjectView {
   private static final Pattern[] SIMPLE_RESOURCE_PATTERNS =
       new Pattern[] {ANIM_RES, ANIMATOR_RES, DRAWABLE_RES, LAYOUT_RES, MENU_RES, RAW_RES, XML_RES};
 
-  private static final Pattern COLOR_RES = Pattern.compile("^android_res/(.*)res/(color)/");
+  private static final Pattern COLOR_RES =
+      Pattern.compile("^android_res/(.*)res/(color)(-[^/]+)?/");
   private static final Pattern VALUES_RES =
-      Pattern.compile("^android_res/(.*)res/(values(?:-[^/]+)?)/");
+      Pattern.compile("^android_res/(.*)res/(values)(-[^/]+)?/");
 
   private static final Pattern[] MANGLED_RESOURCE_PATTERNS = new Pattern[] {COLOR_RES, VALUES_RES};
 
@@ -269,14 +272,19 @@ public class ProjectView {
   }
 
   private void mangledResourceLink(Matcher match, String input) {
-    String name = basename(input);
+    String fileName = basename(input);
+    //its safe to assume input is .xml file
+    String name = fileName.substring(0, fileName.length() - DOT_XML.length());
 
     String path = match.group(1).replace('/', '_');
 
-    String directory = fileJoin(viewPath, RES, flattenResourceDirectoryName(match.group(2)));
+    String configQualifier = match.groupCount() > 2 ? match.group(3) : "";
+
+    String directory = fileJoin(viewPath, RES, match.group(2));
     mkdir(directory);
 
-    symlink(fileJoin(repository, input), fileJoin(directory, path + name));
+    symlink(
+        fileJoin(repository, input), fileJoin(directory, path + name + configQualifier + DOT_XML));
   }
 
   private static String flattenResourceDirectoryName(String name) {
