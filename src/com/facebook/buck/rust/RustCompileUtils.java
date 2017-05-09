@@ -330,8 +330,11 @@ public class RustCompileUtils {
         params
             .getBuildTarget()
             .withAppendedFlavors(
-                cxxPlatform.getFlavor(),
                 isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
+
+    if (!rustBuckConfig.getUnflavoredBinaries()) {
+      binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
+    }
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 

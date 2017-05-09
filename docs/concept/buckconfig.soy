@@ -2761,6 +2761,17 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'unflavored_binaries' /}
+  {param example_value: 'true' /}
+  {param description}
+    Controls whether the output from <code>rust_binary</code> or <code>rust_test</code> rules
+    include a flavor from the platform in the path or not. Even unflavored, the path includes{sp}
+    <code>#binary</code>.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'test' /}
   {param description}

@@ -37,6 +37,7 @@ public class RustBuckConfig {
   private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
   private static final String RUSTC_CHECK_FLAGS = "rustc_check_flags";
   private static final String RUSTC_TEST_FLAGS = "rustc_test_flags";
+  private static final String UNFLAVORED_BINARIES = "unflavored_binaries";
 
   private final BuckConfig delegate;
 
@@ -147,5 +148,14 @@ public class RustBuckConfig {
     }
 
     return linkargs.build();
+  }
+
+  /**
+   * Get rustc flags for rust_library() rules.
+   *
+   * @return List of rustc_library_flags, as well as common rustc_flags.
+   */
+  boolean getUnflavoredBinaries() {
+    return delegate.getBoolean(SECTION, UNFLAVORED_BINARIES).orElse(false);
   }
 }

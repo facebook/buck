@@ -61,6 +61,26 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryUnflavored() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("build", "--config", "rust.unflavored_binaries=true", "//:xyzzy")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(workspace.resolve("buck-out/gen/xyzzy#binary/xyzzy").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void simpleBinaryCheck() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
