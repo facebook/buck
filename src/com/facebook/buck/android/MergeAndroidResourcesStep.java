@@ -377,7 +377,7 @@ public class MergeAndroidResourcesStep implements Step {
           // Nothing extra to do in this case.
 
         } else if (resourceToIdValuesMap.containsKey(resource)) {
-          resource = resource.copyWithNewIdValue(resourceToIdValuesMap.get(resource).idValue);
+          resource = resourceToIdValuesMap.get(resource);
 
         } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
           Map<RDotTxtEntry, String> styleableResourcesMap =
