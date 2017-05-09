@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * Responsible for collecting resources parsed by {@link MiniAapt} and assigning unique integer ids
  * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
@@ -73,7 +75,8 @@ public class AaptResourceCollector {
     addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
   }
 
-  public void addResource(RType rType, IdType idType, String name, String idValue, String parent) {
+  public void addResource(
+      RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
