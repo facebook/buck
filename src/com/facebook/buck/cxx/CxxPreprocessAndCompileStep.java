@@ -31,9 +31,7 @@ import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -45,6 +43,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** A step that preprocesses and/or compiles C/C++ sources in a single step. */
 public class CxxPreprocessAndCompileStep implements Step {
@@ -314,7 +314,8 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  public ImmutableList<String> getCommand() {
+  @VisibleForTesting
+  ImmutableList<String> getCommand() {
     // We set allowColorsInDiagnostics to false here because this function is only used by the
     // compilation database (its contents should not depend on how Buck was invoked) and in the
     // step's description. It is not used to determine what command this step runs, which needs
@@ -325,20 +326,18 @@ public class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  public ImmutableList<String> getCommandPrefix() {
+  private ImmutableList<String> getCommandPrefix() {
     switch (operation) {
       case COMPILE:
       case PREPROCESS_AND_COMPILE:
         return compilerCommand.get().getCommandPrefix();
       case GENERATE_PCH:
         return preprocessorCommand.get().getCommandPrefix();
-        // $CASES-OMITTED$
-      default:
-        throw new RuntimeException("invalid operation type");
     }
+    throw new RuntimeException("invalid operation type");
   }
 
-  public ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
+  private ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
     switch (operation) {
       case COMPILE:
       case PREPROCESS_AND_COMPILE:
@@ -349,24 +348,16 @@ public class CxxPreprocessAndCompileStep implements Step {
             allowColorsInDiagnostics);
       case GENERATE_PCH:
         return makeGeneratePchArguments(allowColorsInDiagnostics);
-        // $CASES-OMITTED$
-      default:
-        throw new RuntimeException("invalid operation type");
     }
-  }
-
-  public String getDescriptionNoContext() {
-    return Joiner.on(' ')
-        .join(
-            FluentIterable.from(getCommandPrefix())
-                .append(getArguments(false))
-                .transform(Escaper.SHELL_ESCAPER));
+    throw new RuntimeException("invalid operation type");
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
     if (context.getVerbosity().shouldPrintCommand()) {
-      return getDescriptionNoContext();
+      return Stream.concat(getCommandPrefix().stream(), getArguments(false).stream())
+          .map(Escaper.SHELL_ESCAPER::apply)
+          .collect(Collectors.joining(" "));
     }
     return "(verbosity level disables command output)";
   }
