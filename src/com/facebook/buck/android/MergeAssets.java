@@ -41,18 +41,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.TreeMultimap;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -180,10 +182,11 @@ public class MergeAssets extends AbstractBuildRule {
             boolean shouldCompress =
                 inputEntry.getMethod() != ZipEntry.STORED
                     && !NO_COMPRESS_EXTENSIONS.contains(extension);
-            byte[] data = ByteStreams.toByteArray(base);
             addEntry(
                 output,
-                data,
+                base,
+                inputEntry.getSize(),
+                inputEntry.getCrc(),
                 inputEntry.getName(),
                 shouldCompress ? Deflater.BEST_COMPRESSION : 0,
                 inputEntry.isDirectory());
@@ -192,12 +195,24 @@ public class MergeAssets extends AbstractBuildRule {
         Path assetsZipRoot = Paths.get("assets");
         for (Path assetRoot : assets.keySet()) {
           for (Path asset : assets.get(assetRoot)) {
-            File file = assetRoot.resolve(asset).toFile();
-            byte[] data = Files.toByteArray(file);
+            ByteSource assetSource = Files.asByteSource(assetRoot.resolve(asset).toFile());
+            HashCode assetCrc32 = assetSource.hash(Hashing.crc32());
             String extension = Files.getFileExtension(asset.toString());
             int compression =
                 NO_COMPRESS_EXTENSIONS.contains(extension) ? 0 : Deflater.BEST_COMPRESSION;
-            addEntry(output, data, assetsZipRoot.resolve(asset).toString(), compression, false);
+            try (InputStream assetStream = assetSource.openStream()) {
+              addEntry(
+                  output,
+                  assetStream,
+                  assetSource.size(),
+                  // CRC32s are only 32 bits, but setCrc() takes a
+                  // long.  Avoid sign-extension here during the
+                  // conversion to long by masking off the high 32 bits.
+                  assetCrc32.asInt() & 0xFFFFFFFFL,
+                  assetsZipRoot.resolve(asset).toString(),
+                  compression,
+                  false);
+            }
           }
         }
         return StepExecutionResult.SUCCESS;
@@ -206,22 +221,22 @@ public class MergeAssets extends AbstractBuildRule {
 
     private void addEntry(
         CustomZipOutputStream output,
-        byte[] data,
+        InputStream data,
+        long dataLength,
+        long crc,
         String name,
         int compressionLevel,
         boolean isDirectory)
         throws IOException {
       CustomZipEntry outputEntry = new CustomZipEntry(Paths.get(name), isDirectory);
       outputEntry.setCompressionLevel(compressionLevel);
-      CRC32 crc = new CRC32();
-      crc.update(data);
-      outputEntry.setCrc(crc.getValue());
+      outputEntry.setCrc(crc);
       if (compressionLevel == 0) {
-        outputEntry.setCompressedSize(data.length);
+        outputEntry.setCompressedSize(dataLength);
       }
-      outputEntry.setSize(data.length);
+      outputEntry.setSize(dataLength);
       output.putNextEntry(outputEntry);
-      output.write(data);
+      ByteStreams.copy(data, output);
       output.closeEntry();
     }
   }
