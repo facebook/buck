@@ -57,7 +57,8 @@ public class AppleTestDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "--linker-script=%s", LocationMacro.of(depBuilder.getTarget()))))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+            .setInfoPlist(new FakeSourcePath("Info.plist"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build(), depBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());

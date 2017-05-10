@@ -18,22 +18,16 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.swift.HasSwiftCompilerFlags;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Arguments common to Apple targets. */
-@SuppressFieldNotInitialized
-public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg
-    implements HasSwiftCompilerFlags {
-  public ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of();
-  public Optional<String> headerPathPrefix;
-  public ImmutableList<String> swiftCompilerFlags = ImmutableList.of();
+public interface AppleNativeTargetDescriptionArg
+    extends CxxLibraryDescription.CommonArg, HasSwiftCompilerFlags {
+  @Value.NaturalOrder
+  ImmutableSortedMap<String, ImmutableMap<String, String>> getConfigs();
 
-  @Override
-  public ImmutableList<String> getSwiftCompilerFlags() {
-    return swiftCompilerFlags;
-  }
+  Optional<String> getHeaderPathPrefix();
 }

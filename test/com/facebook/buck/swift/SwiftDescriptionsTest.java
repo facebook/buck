@@ -19,7 +19,7 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,9 +30,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import org.junit.Test;
 
 public class SwiftDescriptionsTest {
@@ -46,23 +44,23 @@ public class SwiftDescriptionsTest {
 
     SwiftLibraryDescription.Arg output = new SwiftLibraryDescription.Arg();
 
-    CxxLibraryDescription.Arg args = CxxLibraryDescription.createEmptyConstructorArg();
+    CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
 
     FakeSourcePath swiftSrc = new FakeSourcePath("foo/bar.swift");
 
-    args.srcs =
+    args.setSrcs(
         ImmutableSortedSet.of(
-            SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc));
-    args.compilerFlags = ImmutableList.of();
-    args.supportedPlatformsRegex = Optional.empty();
+            SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
 
-    SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        pathResolver, output, args.build(), buildTarget);
     assertThat(output.moduleName.get(), equalTo("bar"));
     assertThat(output.srcs, equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
 
-    args.moduleName = Optional.of("baz");
+    args.setModuleName("baz");
 
-    SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        pathResolver, output, args.build(), buildTarget);
     assertThat(output.moduleName.get(), equalTo("baz"));
   }
 }

@@ -213,7 +213,7 @@ public final class AppleBuildRules {
                 boolean nodeIsCxxLibrary = node.getDescription() instanceof CxxLibraryDescription;
                 if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
                   if (AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
-                      (TargetNode<CxxLibraryDescription.Arg, ?>) node)) {
+                      (TargetNode<CxxLibraryDescription.CommonArg, ?>) node)) {
                     deps = exportedDeps;
                   } else {
                     deps = defaultDeps;
@@ -272,9 +272,10 @@ public final class AppleBuildRules {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDepsStream()::iterator));
     if (targetNode.getDescription() instanceof AppleLibraryDescription
         || targetNode.getDescription() instanceof CxxLibraryDescription) {
-      CxxLibraryDescription.Arg arg = (CxxLibraryDescription.Arg) targetNode.getConstructorArg();
-      LOG.verbose("Exported deps of node %s: %s", targetNode, arg.exportedDeps);
-      Iterable<TargetNode<?, ?>> exportedNodes = targetGraph.getAll(arg.exportedDeps);
+      CxxLibraryDescription.CommonArg arg =
+          (CxxLibraryDescription.CommonArg) targetNode.getConstructorArg();
+      LOG.verbose("Exported deps of node %s: %s", targetNode, arg.getExportedDeps());
+      Iterable<TargetNode<?, ?>> exportedNodes = targetGraph.getAll(arg.getExportedDeps());
       directDepsBuilder.addAll(exportedNodes);
       exportedDepsBuilder.addAll(exportedNodes);
     }

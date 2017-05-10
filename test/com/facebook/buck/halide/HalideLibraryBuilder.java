@@ -25,7 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -44,8 +44,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        HalideLibraryDescription.Arg, HalideLibraryDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        HalideLibraryDescriptionArg.Builder, HalideLibraryDescriptionArg, HalideLibraryDescription,
+        BuildRule> {
   public HalideLibraryBuilder(
       BuildTarget target,
       HalideBuckConfig halideBuckConfig,
@@ -111,57 +112,57 @@ public class HalideLibraryBuilder
   }
 
   public HalideLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
-    arg.supportedPlatformsRegex = Optional.of(supportedPlatformsRegex);
+    getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
     return this;
   }
 
   public HalideLibraryBuilder setCompilerInvocationFlags(ImmutableList<String> flags) {
-    arg.compilerInvocationFlags = flags;
+    getArgForPopulating().setCompilerInvocationFlags(flags);
     return this;
   }
 
   public HalideLibraryBuilder setFunctionNameOverride(String functionName) {
-    arg.functionName = Optional.of(functionName);
+    getArgForPopulating().setFunctionName(Optional.of(functionName));
     return this;
   }
 
   public HalideLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   public HalideLibraryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    arg.headers = SourceList.ofUnnamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
     return this;
   }
 
   public HalideLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    arg.headers = SourceList.ofNamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
     return this;
   }
 
   public HalideLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
-    arg.compilerFlags = compilerFlags;
+    getArgForPopulating().setCompilerFlags(compilerFlags);
     return this;
   }
 
   public HalideLibraryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
-    arg.linkerFlags = linkerFlags;
+    getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
   }
 
   public HalideLibraryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
-    arg.frameworks = frameworks;
+    getArgForPopulating().setFrameworks(frameworks);
     return this;
   }
 
   public HalideLibraryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
-    arg.libraries = libraries;
+    getArgForPopulating().setLibraries(libraries);
     return this;
   }
 
   public HalideLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 }

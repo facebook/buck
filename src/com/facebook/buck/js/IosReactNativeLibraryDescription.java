@@ -41,7 +41,7 @@ public class IosReactNativeLibraryDescription
     implements Description<ReactNativeLibraryArg>,
         Flavored,
         HasAppleBundleResourcesDescription<ReactNativeLibraryArg>,
-        ImplicitDepsInferringDescription<ReactNativeLibraryArg> {
+        ImplicitDepsInferringDescription<AbstractReactNativeLibraryArg> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
@@ -75,7 +75,7 @@ public class IosReactNativeLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ReactNativeLibraryArg constructorArg,
+      AbstractReactNativeLibraryArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     RichStream.of(packager.get())

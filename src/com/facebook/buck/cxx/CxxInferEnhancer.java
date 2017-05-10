@@ -292,7 +292,7 @@ public final class CxxInferEnhancer {
           BuildRuleParams params,
           BuildRuleResolver resolver,
           CxxPlatform cxxPlatform,
-          CxxBinaryDescription.Arg args,
+          CxxBinaryDescription.CommonArg args,
           HeaderSymlinkTree headerSymlinkTree,
           Optional<SymlinkTree> sandboxTree)
           throws NoSuchBuildTargetException {
@@ -302,16 +302,16 @@ public final class CxxInferEnhancer {
         cxxPlatform,
         deps,
         CxxFlags.getLanguageFlags(
-            args.preprocessorFlags,
-            args.platformPreprocessorFlags,
-            args.langPreprocessorFlags,
+            args.getPreprocessorFlags(),
+            args.getPlatformPreprocessorFlags(),
+            args.getLangPreprocessorFlags(),
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        args.frameworks,
+        args.getFrameworks(),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),
-        args.includeDirs,
+        args.getIncludeDirs(),
         sandboxTree);
   }
 
@@ -320,7 +320,7 @@ public final class CxxInferEnhancer {
           BuildRuleParams params,
           BuildRuleResolver resolver,
           CxxPlatform cxxPlatform,
-          CxxLibraryDescription.Arg args,
+          CxxLibraryDescription.CommonArg args,
           HeaderSymlinkTree headerSymlinkTree,
           ImmutableList<String> includeDirs,
           Optional<SymlinkTree> sandboxTree)
@@ -331,9 +331,9 @@ public final class CxxInferEnhancer {
         cxxPlatform,
         deps,
         CxxFlags.getLanguageFlags(
-            args.preprocessorFlags,
-            args.platformPreprocessorFlags,
-            args.langPreprocessorFlags,
+            args.getPreprocessorFlags(),
+            args.getPlatformPreprocessorFlags(),
+            args.getLangPreprocessorFlags(),
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
         ImmutableSet.of(),
@@ -372,10 +372,11 @@ public final class CxxInferEnhancer {
     // and all dependencies.
 
     boolean shouldCreateHeadersSymlinks = true;
-    if (args instanceof CxxLibraryDescription.Arg) {
+    if (args instanceof CxxLibraryDescription.CommonArg) {
       shouldCreateHeadersSymlinks =
-          ((CxxLibraryDescription.Arg) args)
-              .xcodePrivateHeadersSymlinks.orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
+          ((CxxLibraryDescription.CommonArg) args)
+              .getXcodePrivateHeadersSymlinks()
+              .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
     }
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
@@ -392,24 +393,24 @@ public final class CxxInferEnhancer {
 
     ImmutableList<CxxPreprocessorInput> preprocessorInputs;
 
-    if (args instanceof CxxBinaryDescription.Arg) {
+    if (args instanceof CxxBinaryDescription.CommonArg) {
       preprocessorInputs =
           computePreprocessorInputForCxxBinaryDescriptionArg(
               params,
               resolver,
               cxxPlatform,
-              (CxxBinaryDescription.Arg) args,
+              (CxxBinaryDescription.CommonArg) args,
               headerSymlinkTree,
               sandboxTree);
-    } else if (args instanceof CxxLibraryDescription.Arg) {
+    } else if (args instanceof CxxLibraryDescription.CommonArg) {
       preprocessorInputs =
           computePreprocessorInputForCxxLibraryDescriptionArg(
               params,
               resolver,
               cxxPlatform,
-              (CxxLibraryDescription.Arg) args,
+              (CxxLibraryDescription.CommonArg) args,
               headerSymlinkTree,
-              args.includeDirs,
+              args.getIncludeDirs(),
               sandboxTree);
     } else {
       throw new IllegalStateException("Only Binary and Library args supported.");
@@ -425,12 +426,12 @@ public final class CxxInferEnhancer {
             cxxPlatform,
             preprocessorInputs,
             CxxFlags.getLanguageFlags(
-                args.compilerFlags,
-                args.platformCompilerFlags,
-                args.langCompilerFlags,
+                args.getCompilerFlags(),
+                args.getPlatformCompilerFlags(),
+                args.getLangCompilerFlags(),
                 cxxPlatform),
-            args.prefixHeader,
-            args.precompiledHeader,
+            args.getPrefixHeader(),
+            args.getPrecompiledHeader(),
             CxxSourceRuleFactory.PicType.PDC,
             sandboxTree);
     return factory.requireInferCaptureBuildRules(sources, inferBuckConfig, sourceFilter);

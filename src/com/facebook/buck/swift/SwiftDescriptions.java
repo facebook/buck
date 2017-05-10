@@ -53,26 +53,26 @@ public class SwiftDescriptions {
   static void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
       SwiftLibraryDescription.Arg output,
-      final CxxLibraryDescription.Arg args,
+      final CxxLibraryDescription.CommonArg args,
       BuildTarget buildTarget) {
 
-    output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);
+    output.srcs = filterSwiftSources(sourcePathResolver, args.getSrcs());
     if (args instanceof HasSwiftCompilerFlags) {
       output.compilerFlags = ((HasSwiftCompilerFlags) args).getSwiftCompilerFlags();
     } else {
-      output.compilerFlags = args.compilerFlags;
+      output.compilerFlags = args.getCompilerFlags();
     }
-    output.frameworks = args.frameworks;
-    output.libraries = args.libraries;
-    output.deps = args.deps;
-    output.supportedPlatformsRegex = args.supportedPlatformsRegex;
+    output.frameworks = args.getFrameworks();
+    output.libraries = args.getLibraries();
+    output.deps = args.getDeps();
+    output.supportedPlatformsRegex = args.getSupportedPlatformsRegex();
     output.moduleName =
-        args.moduleName.map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
+        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
     output.enableObjcInterop = Optional.of(true);
-    output.bridgingHeader = args.bridgingHeader;
+    output.bridgingHeader = args.getBridgingHeader();
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
-    output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.preferredLinkage;
+    output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage();
   }
 
   static String toSwiftHeaderName(String moduleName) {

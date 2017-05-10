@@ -38,7 +38,8 @@ import org.immutables.value.Value;
 public class AndroidReactNativeLibraryDescription
     implements Description<AndroidReactNativeLibraryDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<AndroidReactNativeLibraryDescriptionArg> {
+        ImplicitDepsInferringDescription<
+            AndroidReactNativeLibraryDescription.AbstractAndroidReactNativeLibraryDescriptionArg> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
@@ -72,7 +73,7 @@ public class AndroidReactNativeLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidReactNativeLibraryDescriptionArg constructorArg,
+      AbstractAndroidReactNativeLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     RichStream.of(packager.get())

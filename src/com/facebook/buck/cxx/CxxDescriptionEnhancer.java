@@ -331,7 +331,8 @@ public class CxxDescriptionEnhancer {
 
     // Add platform-agnostic headers.
     headers.putAll(
-        parseOnlyHeaders(buildTarget, ruleFinder, sourcePathResolver, "headers", args.headers));
+        parseOnlyHeaders(
+            buildTarget, ruleFinder, sourcePathResolver, "headers", args.getHeaders()));
 
     // Add platform-specific headers.
     if (cxxPlatform.isPresent()) {
@@ -343,13 +344,14 @@ public class CxxDescriptionEnhancer {
               sourcePathResolver,
               cxxPlatform.get(),
               "headers",
-              args.headers,
+              args.getHeaders(),
               "platform_headers",
-              args.platformHeaders));
+              args.getPlatformHeaders()));
     }
 
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()), headers.build());
+        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        headers.build());
   }
 
   /**
@@ -362,14 +364,18 @@ public class CxxDescriptionEnhancer {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
       Optional<CxxPlatform> cxxPlatform,
-      CxxLibraryDescription.Arg args)
+      CxxLibraryDescription.CommonArg args)
       throws NoSuchBuildTargetException {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
 
     // Include platform-agnostic headers.
     headers.putAll(
         parseOnlyHeaders(
-            buildTarget, ruleFinder, sourcePathResolver, "exported_headers", args.exportedHeaders));
+            buildTarget,
+            ruleFinder,
+            sourcePathResolver,
+            "exported_headers",
+            args.getExportedHeaders()));
 
     // If a platform is specific, include platform-specific headers.
     if (cxxPlatform.isPresent()) {
@@ -381,13 +387,14 @@ public class CxxDescriptionEnhancer {
               sourcePathResolver,
               cxxPlatform.get(),
               "exported_headers",
-              args.exportedHeaders,
+              args.getExportedHeaders(),
               "exported_platform_headers",
-              args.exportedPlatformHeaders));
+              args.getExportedPlatformHeaders()));
     }
 
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()), headers.build());
+        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
+        headers.build());
   }
 
   /**
@@ -400,10 +407,10 @@ public class CxxDescriptionEnhancer {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
-      CxxLibraryDescription.Arg args)
+      CxxLibraryDescription.CommonArg args)
       throws NoSuchBuildTargetException {
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()),
+        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
         parseOnlyPlatformHeaders(
             buildTarget,
             resolver,
@@ -411,9 +418,9 @@ public class CxxDescriptionEnhancer {
             sourcePathResolver,
             cxxPlatform,
             "exported_headers",
-            args.exportedHeaders,
+            args.getExportedHeaders(),
             "exported_platform_headers",
-            args.exportedPlatformHeaders));
+            args.getExportedPlatformHeaders()));
   }
 
   /**
@@ -428,7 +435,13 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     return parseCxxSources(
-        buildTarget, resolver, ruleFinder, pathResolver, cxxPlatform, args.srcs, args.platformSrcs);
+        buildTarget,
+        resolver,
+        ruleFinder,
+        pathResolver,
+        cxxPlatform,
+        args.getSrcs(),
+        args.getPlatformSrcs());
   }
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
@@ -687,7 +700,7 @@ public class CxxDescriptionEnhancer {
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxBinaryDescription.Arg args,
+      CxxBinaryDescription.CommonArg args,
       ImmutableSet<BuildTarget> extraDeps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode)
@@ -712,11 +725,17 @@ public class CxxDescriptionEnhancer {
     // Add original declared and extra deps.
     args.getCxxDeps().get(resolver, cxxPlatform).forEach(depsBuilder::add);
     // Add in deps found via deps query.
-    args.depsQuery.ifPresent(
-        query ->
-            QueryUtils.resolveDepQuery(
-                    params.getBuildTarget(), query, resolver, cellRoots, targetGraph, args.deps)
-                .forEach(depsBuilder::add));
+    args.getDepsQuery()
+        .ifPresent(
+            query ->
+                QueryUtils.resolveDepQuery(
+                        params.getBuildTarget(),
+                        query,
+                        resolver,
+                        cellRoots,
+                        targetGraph,
+                        args.getDeps())
+                    .forEach(depsBuilder::add));
     // Add any extra deps passed in.
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
@@ -732,22 +751,22 @@ public class CxxDescriptionEnhancer {
         deps,
         stripStyle,
         flavoredLinkerMapMode,
-        args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
-        args.thinLto,
-        args.preprocessorFlags,
-        args.platformPreprocessorFlags,
-        args.langPreprocessorFlags,
-        args.frameworks,
-        args.libraries,
-        args.compilerFlags,
-        args.langCompilerFlags,
-        args.platformCompilerFlags,
-        args.prefixHeader,
-        args.precompiledHeader,
-        args.linkerFlags,
-        args.platformLinkerFlags,
-        args.cxxRuntimeType,
-        args.includeDirs,
+        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+        args.getThinLto(),
+        args.getPreprocessorFlags(),
+        args.getPlatformPreprocessorFlags(),
+        args.getLangPreprocessorFlags(),
+        args.getFrameworks(),
+        args.getLibraries(),
+        args.getCompilerFlags(),
+        args.getLangCompilerFlags(),
+        args.getPlatformCompilerFlags(),
+        args.getPrefixHeader(),
+        args.getPrecompiledHeader(),
+        args.getLinkerFlags(),
+        args.getPlatformLinkerFlags(),
+        args.getCxxRuntimeType(),
+        args.getIncludeDirs(),
         Optional.empty());
   }
 
@@ -1089,7 +1108,7 @@ public class CxxDescriptionEnhancer {
         "Could not find cxx platform in:\n%s",
         Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps) {
+    for (BuildTarget dep : args.getDeps()) {
       Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
@@ -1234,7 +1253,7 @@ public class CxxDescriptionEnhancer {
           Paths.get(sourcePathResolver.getSourcePathName(params.getBuildTarget(), headerPath)),
           headerPath);
     }
-    if (args instanceof CxxLibraryDescription.Arg) {
+    if (args instanceof CxxLibraryDescription.CommonArg) {
       ImmutableCollection<SourcePath> publicHeaders =
           CxxDescriptionEnhancer.parseExportedHeaders(
                   params.getBuildTarget(),
@@ -1242,7 +1261,7 @@ public class CxxDescriptionEnhancer {
                   ruleFinder,
                   sourcePathResolver,
                   Optional.of(platform),
-                  (CxxLibraryDescription.Arg) args)
+                  (CxxLibraryDescription.CommonArg) args)
               .values();
       for (SourcePath headerPath : publicHeaders) {
         links.put(

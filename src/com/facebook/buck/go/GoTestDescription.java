@@ -58,7 +58,7 @@ public class GoTestDescription
     implements Description<GoTestDescriptionArg>,
         Flavored,
         MetadataProvidingDescription<GoTestDescriptionArg>,
-        ImplicitDepsInferringDescription<GoTestDescriptionArg> {
+        ImplicitDepsInferringDescription<GoTestDescription.AbstractGoTestDescriptionArg> {
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
@@ -330,7 +330,7 @@ public class GoTestDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      GoTestDescriptionArg constructorArg,
+      AbstractGoTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.

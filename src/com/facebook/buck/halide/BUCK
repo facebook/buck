@@ -1,4 +1,4 @@
-java_library(
+java_immutables_library(
     name = "halide",
     srcs = glob(["*.java"]),
     tests = [
@@ -24,6 +24,7 @@ java_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",

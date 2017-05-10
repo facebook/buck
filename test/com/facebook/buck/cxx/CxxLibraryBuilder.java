@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -34,8 +34,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class CxxLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        CxxLibraryDescription.Arg, CxxLibraryDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        CxxLibraryDescriptionArg.Builder, CxxLibraryDescriptionArg, CxxLibraryDescription,
+        BuildRule> {
 
   public CxxLibraryBuilder(
       BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -60,161 +61,161 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {
-    arg.exportedHeaders = SourceList.ofUnnamedSources(headers);
+    getArgForPopulating().setExportedHeaders(SourceList.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    arg.exportedHeaders = SourceList.ofNamedSources(headers);
+    getArgForPopulating().setExportedHeaders(SourceList.ofNamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setExportedHeaders(SourceList headers) {
-    arg.exportedHeaders = headers;
+    getArgForPopulating().setExportedHeaders(headers);
     return this;
   }
 
   public CxxLibraryBuilder setExportedPreprocessorFlags(
       ImmutableList<String> exportedPreprocessorFlags) {
-    arg.exportedPreprocessorFlags = exportedPreprocessorFlags;
+    getArgForPopulating().setExportedPreprocessorFlags(exportedPreprocessorFlags);
     return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> exportedPlatformPreprocessorFlags) {
-    arg.exportedPlatformPreprocessorFlags = exportedPlatformPreprocessorFlags;
+    getArgForPopulating().setExportedPlatformPreprocessorFlags(exportedPlatformPreprocessorFlags);
     return this;
   }
 
   public CxxLibraryBuilder setExportedLinkerFlags(
       ImmutableList<StringWithMacros> exportedLinkerFlags) {
-    arg.exportedLinkerFlags = exportedLinkerFlags;
+    getArgForPopulating().setExportedLinkerFlags(exportedLinkerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformLinkerFlags) {
-    arg.exportedPlatformLinkerFlags = exportedPlatformLinkerFlags;
+    getArgForPopulating().setExportedPlatformLinkerFlags(exportedPlatformLinkerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setSoname(String soname) {
-    arg.soname = Optional.of(soname);
+    getArgForPopulating().setSoname(Optional.of(soname));
     return this;
   }
 
   public CxxLibraryBuilder setLinkWhole(boolean linkWhole) {
-    arg.linkWhole = Optional.of(linkWhole);
+    getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
     return this;
   }
 
   public CxxLibraryBuilder setForceStatic(boolean forceStatic) {
-    arg.forceStatic = Optional.of(forceStatic);
+    getArgForPopulating().setForceStatic(Optional.of(forceStatic));
     return this;
   }
 
   public CxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
-    arg.preferredLinkage = Optional.of(linkage);
+    getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }
 
   public CxxLibraryBuilder setSupportedPlatformsRegex(Pattern regex) {
-    arg.supportedPlatformsRegex = Optional.of(regex);
+    getArgForPopulating().setSupportedPlatformsRegex(Optional.of(regex));
     return this;
   }
 
   public CxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    arg.exportedDeps = exportedDeps;
+    getArgForPopulating().setExportedDeps(exportedDeps);
     return this;
   }
 
   public CxxLibraryBuilder setXcodePrivateHeadersSymlinks(boolean xcodePrivateHeadersSymlinks) {
-    arg.xcodePrivateHeadersSymlinks = Optional.of(xcodePrivateHeadersSymlinks);
+    getArgForPopulating().setXcodePrivateHeadersSymlinks(Optional.of(xcodePrivateHeadersSymlinks));
     return this;
   }
 
   public CxxLibraryBuilder setXcodePublicHeadersSymlinks(boolean xcodePublicHeadersSymlinks) {
-    arg.xcodePublicHeadersSymlinks = Optional.of(xcodePublicHeadersSymlinks);
+    getArgForPopulating().setXcodePublicHeadersSymlinks(Optional.of(xcodePublicHeadersSymlinks));
     return this;
   }
 
   public CxxLibraryBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    arg.platformDeps = platformDeps;
+    getArgForPopulating().setPlatformDeps(platformDeps);
     return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> exportedPlatformDeps) {
-    arg.exportedPlatformDeps = exportedPlatformDeps;
+    getArgForPopulating().setExportedPlatformDeps(exportedPlatformDeps);
     return this;
   }
 
   public CxxLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   public CxxLibraryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    arg.headers = SourceList.ofUnnamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    arg.headers = SourceList.ofNamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
-    arg.compilerFlags = compilerFlags;
+    getArgForPopulating().setCompilerFlags(compilerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    arg.preprocessorFlags = preprocessorFlags;
+    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
     return this;
   }
 
   public CxxLibraryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
-    arg.linkerFlags = linkerFlags;
+    getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setPlatformCompilerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags) {
-    arg.platformCompilerFlags = platformCompilerFlags;
+    getArgForPopulating().setPlatformCompilerFlags(platformCompilerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
-    arg.platformPreprocessorFlags = platformPreprocessorFlags;
+    getArgForPopulating().setPlatformPreprocessorFlags(platformPreprocessorFlags);
     return this;
   }
 
   public CxxLibraryBuilder setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
-    arg.platformLinkerFlags = platformLinkerFlags;
+    getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
     return this;
   }
 
   public CxxLibraryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
-    arg.frameworks = frameworks;
+    getArgForPopulating().setFrameworks(frameworks);
     return this;
   }
 
   public CxxLibraryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
-    arg.libraries = libraries;
+    getArgForPopulating().setLibraries(libraries);
     return this;
   }
 
   public CxxLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public CxxLibraryBuilder setHeaderNamespace(String namespace) {
-    arg.headerNamespace = Optional.of(namespace);
+    getArgForPopulating().setHeaderNamespace(Optional.of(namespace));
     return this;
   }
 }

@@ -19,86 +19,107 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
-import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-@SuppressFieldNotInitialized
-public class CxxConstructorArg extends AbstractDescriptionArg
-    implements HasDefaultFlavors, HasTests, HasSystemFrameworkAndLibraries {
+public interface CxxConstructorArg
+    extends CommonDescriptionArg,
+        HasDeclaredDeps,
+        HasDefaultFlavors,
+        HasTests,
+        HasSystemFrameworkAndLibraries {
+  @Value.NaturalOrder
+  ImmutableSortedSet<SourceWithFlags> getSrcs();
 
-  public ImmutableSortedSet<SourceWithFlags> srcs = ImmutableSortedSet.of();
-  public PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs =
-      PatternMatchedCollection.of();
-  public SourceList headers = SourceList.EMPTY;
-  public PatternMatchedCollection<SourceList> platformHeaders = PatternMatchedCollection.of();
-  public Optional<SourcePath> prefixHeader;
-  public Optional<SourcePath> precompiledHeader = Optional.empty();
-  public ImmutableList<String> compilerFlags = ImmutableList.of();
-  public ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
-  public PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags =
-      PatternMatchedCollection.of();
-  public ImmutableList<String> preprocessorFlags = ImmutableList.of();
-  public PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags =
-      PatternMatchedCollection.of();
-  public ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
-      ImmutableMap.of();
-  public ImmutableList<StringWithMacros> linkerFlags = ImmutableList.of();
-  public PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags =
-      PatternMatchedCollection.of();
-  public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
-  public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
-  public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-  public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
-      PatternMatchedCollection.of();
-  public Optional<String> headerNamespace;
-  public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
-  public ImmutableList<String> includeDirs = ImmutableList.of();
-
-  @Hint(isDep = false)
-  public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-
-  public ImmutableMap<String, Flavor> defaults = ImmutableMap.of();
-
-  @Override
-  public ImmutableSortedSet<BuildTarget> getTests() {
-    return tests;
+  @Value.Default
+  default PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> getPlatformSrcs() {
+    return PatternMatchedCollection.of();
   }
 
+  @Value.Default
+  default SourceList getHeaders() {
+    return SourceList.EMPTY;
+  }
+
+  @Value.Default
+  default PatternMatchedCollection<SourceList> getPlatformHeaders() {
+    return PatternMatchedCollection.of();
+  }
+
+  Optional<SourcePath> getPrefixHeader();
+
+  Optional<SourcePath> getPrecompiledHeader();
+
+  ImmutableList<String> getCompilerFlags();
+
+  ImmutableMap<CxxSource.Type, ImmutableList<String>> getLangCompilerFlags();
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableList<String>> getPlatformCompilerFlags() {
+    return PatternMatchedCollection.of();
+  }
+
+  ImmutableList<String> getPreprocessorFlags();
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableList<String>> getPlatformPreprocessorFlags() {
+    return PatternMatchedCollection.of();
+  }
+
+  ImmutableMap<CxxSource.Type, ImmutableList<String>> getLangPreprocessorFlags();
+
+  ImmutableList<StringWithMacros> getLinkerFlags();
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+    return PatternMatchedCollection.of();
+  }
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+    return PatternMatchedCollection.of();
+  }
+
+  Optional<String> getHeaderNamespace();
+
+  Optional<Linker.CxxRuntimeType> getCxxRuntimeType();
+
+  ImmutableList<String> getIncludeDirs();
+
+  ImmutableMap<String, Flavor> getDefaults();
+
   @Override
-  public ImmutableSortedSet<Flavor> getDefaultFlavors() {
+  @Value.Derived
+  default ImmutableSortedSet<Flavor> getDefaultFlavors() {
     // We don't (yet) use the keys in the default_flavors map, but we
     // plan to eventually support key-value flavors.
-    return ImmutableSortedSet.copyOf(defaults.values());
-  }
-
-  @Override
-  public ImmutableSortedSet<FrameworkPath> getFrameworks() {
-    return frameworks;
-  }
-
-  @Override
-  public ImmutableSortedSet<FrameworkPath> getLibraries() {
-    return libraries;
+    return ImmutableSortedSet.copyOf(getDefaults().values());
   }
 
   /** @return the C/C++ deps this rule builds against. */
-  public CxxDeps getCxxDeps() {
+  @Value.Derived
+  default CxxDeps getCxxDeps() {
+    return getPrivateCxxDeps();
+  }
+
+  /** @return C/C++ deps which are *not* propagated to dependents. */
+  @Value.Derived
+  default CxxDeps getPrivateCxxDeps() {
     return CxxDeps.builder()
-        .addDeps(deps)
-        .addPlatformDeps(platformDeps)
-        .addDep(precompiledHeader)
+        .addDeps(getDeps())
+        .addPlatformDeps(getPlatformDeps())
+        .addDep(getPrecompiledHeader())
         .build();
   }
 }

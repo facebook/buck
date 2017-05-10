@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -54,7 +54,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
     final BuildTarget d = BuildTargetFactory.newInstance("//:d");
-    TargetNode<CxxLibraryDescription.Arg, ?> node =
+    TargetNode<CxxLibraryDescriptionArg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
@@ -72,14 +72,14 @@ public class TargetNodeTranslatorTest {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescriptionArg, ?>> translated = translator.translateNode(node);
     assertThat(translated.get().getBuildTarget(), Matchers.equalTo(d));
     assertThat(translated.get().getDeclaredDeps(), Matchers.equalTo(ImmutableSet.of(d)));
     assertThat(translated.get().getExtraDeps(), Matchers.equalTo(ImmutableSet.of(d)));
     assertThat(
-        translated.get().getConstructorArg().deps, Matchers.equalTo(ImmutableSortedSet.of(d)));
+        translated.get().getConstructorArg().getDeps(), Matchers.equalTo(ImmutableSortedSet.of(d)));
     assertThat(
-        translated.get().getConstructorArg().exportedDeps,
+        translated.get().getConstructorArg().getExportedDeps(),
         Matchers.equalTo(ImmutableSortedSet.of(d)));
   }
 
@@ -88,7 +88,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
-    TargetNode<CxxLibraryDescription.Arg, ?> node =
+    TargetNode<CxxLibraryDescriptionArg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
@@ -106,7 +106,7 @@ public class TargetNodeTranslatorTest {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescriptionArg, ?>> translated = translator.translateNode(node);
     assertFalse(translated.isPresent());
   }
 

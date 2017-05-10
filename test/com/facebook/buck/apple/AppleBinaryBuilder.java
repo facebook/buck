@@ -17,16 +17,24 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 public class AppleBinaryBuilder
-    extends AbstractAppleNativeTargetBuilder<
-        AppleBinaryDescription.Arg, AppleBinaryDescription, BuildRule, AppleBinaryBuilder> {
-
-  @Override
-  protected AppleBinaryBuilder getThis() {
-    return this;
-  }
+    extends AbstractNodeBuilderWithImmutableArg<
+        AppleBinaryDescriptionArg.Builder, AppleBinaryDescriptionArg, AppleBinaryDescription,
+        BuildRule> {
 
   protected AppleBinaryBuilder(BuildTarget target) {
     super(FakeAppleRuleDescriptions.BINARY_DESCRIPTION, target);
@@ -34,5 +42,96 @@ public class AppleBinaryBuilder
 
   public static AppleBinaryBuilder createBuilder(BuildTarget target) {
     return new AppleBinaryBuilder(target);
+  }
+
+  public AppleBinaryBuilder setConfigs(
+      ImmutableSortedMap<String, ImmutableMap<String, String>> configs) {
+    getArgForPopulating().setConfigs(configs);
+    return this;
+  }
+
+  public AppleBinaryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(compilerFlags);
+    return this;
+  }
+
+  public AppleBinaryBuilder setPlatformCompilerFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
+    getArgForPopulating().setPlatformPreprocessorFlags(platformPreprocessorFlags);
+    return this;
+  }
+
+  public AppleBinaryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
+    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
+    return this;
+  }
+
+  public AppleBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public AppleBinaryBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> exportedLinkerFlags) {
+    getArgForPopulating().setExportedLinkerFlags(exportedLinkerFlags);
+    return this;
+  }
+
+  public AppleBinaryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
+    return this;
+  }
+
+  public AppleBinaryBuilder setExtraXcodeSources(ImmutableList<SourcePath> extraXcodeSources) {
+    getArgForPopulating().setExtraXcodeSources(extraXcodeSources);
+    return this;
+  }
+
+  public AppleBinaryBuilder setHeaders(SourceList headers) {
+    getArgForPopulating().setHeaders(headers);
+    return this;
+  }
+
+  public AppleBinaryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    return setHeaders(SourceList.ofUnnamedSources(headers));
+  }
+
+  public AppleBinaryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    return setHeaders(SourceList.ofNamedSources(headers));
+  }
+
+  public AppleBinaryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public AppleBinaryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public AppleBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  public AppleBinaryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    getArgForPopulating().setExportedDeps(exportedDeps);
+    return this;
+  }
+
+  public AppleBinaryBuilder setHeaderPathPrefix(Optional<String> headerPathPrefix) {
+    getArgForPopulating().setHeaderPathPrefix(headerPathPrefix);
+    return this;
+  }
+
+  public AppleBinaryBuilder setPrefixHeader(Optional<SourcePath> prefixHeader) {
+    getArgForPopulating().setPrefixHeader(prefixHeader);
+    return this;
+  }
+
+  public AppleBinaryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
+    getArgForPopulating().setTests(tests);
+    return this;
   }
 }

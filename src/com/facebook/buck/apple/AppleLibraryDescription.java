@@ -22,6 +22,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -53,8 +54,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -68,13 +69,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Function;
+import org.immutables.value.Value;
 
 public class AppleLibraryDescription
-    implements Description<AppleLibraryDescription.Arg>,
+    implements Description<AppleLibraryDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<AppleLibraryDescription.Arg>,
+        ImplicitDepsInferringDescription<
+            AppleLibraryDescription.AbstractAppleLibraryDescriptionArg>,
         ImplicitFlavorsInferringDescription,
-        MetadataProvidingDescription<AppleLibraryDescription.Arg> {
+        MetadataProvidingDescription<AppleLibraryDescriptionArg> {
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS =
@@ -147,8 +151,8 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AppleLibraryDescriptionArg> getConstructorArgType() {
+    return AppleLibraryDescriptionArg.class;
   }
 
   @Override
@@ -186,7 +190,7 @@ public class AppleLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      AppleLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget());
@@ -199,17 +203,21 @@ public class AppleLibraryDescription
           resolver,
           cellRoots,
           args,
-          args.linkStyle,
+          args::withExportedDeps,
+          args.getLinkStyle(),
           Optional.empty(),
           ImmutableSet.of(),
           ImmutableSortedSet.of());
     }
   }
 
-  private <A extends Arg> BuildRule createFrameworkBundleBuildRule(
-      TargetGraph targetGraph, BuildRuleParams params, BuildRuleResolver resolver, Arg args)
+  private <A extends AbstractAppleLibraryDescriptionArg> BuildRule createFrameworkBundleBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      AppleLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    if (!args.infoPlist.isPresent()) {
+    if (!args.getInfoPlist().isPresent()) {
       throw new HumanReadableException(
           "Cannot create framework for apple_library '%s':\n"
               + "No value specified for 'info_plist' attribute.",
@@ -240,10 +248,10 @@ public class AppleLibraryDescription
         params.getBuildTarget(),
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),
         Optional.empty(),
-        args.infoPlist.get(),
-        args.infoPlistSubstitutions,
-        args.deps,
-        args.tests,
+        args.getInfoPlist().get(),
+        args.getInfoPlistSubstitutions(),
+        args.getDeps(),
+        args.getTests(),
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages());
@@ -260,6 +268,7 @@ public class AppleLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args,
+      Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -280,6 +289,7 @@ public class AppleLibraryDescription
             cellRoots,
             targetGraph,
             args,
+            copyArgsWithNewExportedDeps,
             linkableDepType,
             bundleLoader,
             blacklist,
@@ -332,6 +342,7 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       TargetGraph targetGraph,
       A args,
+      Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -350,6 +361,7 @@ public class AppleLibraryDescription
                 cellRoots,
                 targetGraph,
                 args,
+                copyArgsWithNewExportedDeps,
                 linkableDepType,
                 bundleLoader,
                 blacklist,
@@ -371,6 +383,7 @@ public class AppleLibraryDescription
           cellRoots,
           targetGraph,
           args,
+          copyArgsWithNewExportedDeps,
           linkableDepType,
           bundleLoader,
           blacklist,
@@ -386,6 +399,7 @@ public class AppleLibraryDescription
           CellPathResolver cellRoots,
           TargetGraph targetGraph,
           A args,
+          Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
           Optional<Linker.LinkableDepType> linkableDepType,
           Optional<SourcePath> bundleLoader,
           ImmutableSet<BuildTarget> blacklist,
@@ -401,11 +415,12 @@ public class AppleLibraryDescription
       if (isSwiftTarget(params.getBuildTarget())) {
         return swiftCompanionBuildRule.get();
       } else {
-        args.exportedDeps =
-            ImmutableSortedSet.<BuildTarget>naturalOrder()
-                .addAll(args.exportedDeps)
-                .add(swiftCompanionBuildRule.get().getBuildTarget())
-                .build();
+        args =
+            copyArgsWithNewExportedDeps.apply(
+                ImmutableSortedSet.<BuildTarget>naturalOrder()
+                    .addAll(args.getExportedDeps())
+                    .add(swiftCompanionBuildRule.get().getBuildTarget())
+                    .build());
         params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
         extraCxxDeps =
             ImmutableSortedSet.<BuildTarget>naturalOrder()
@@ -415,7 +430,7 @@ public class AppleLibraryDescription
       }
     }
 
-    CxxLibraryDescription.Arg delegateArg = new CxxLibraryDescription.Arg();
+    CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver, delegateArg, args, params.getBuildTarget());
 
@@ -435,7 +450,7 @@ public class AppleLibraryDescription
               params.withBuildTarget(unstrippedTarget),
               resolver,
               cellRoots,
-              delegateArg,
+              delegateArg.build(),
               linkableDepType,
               bundleLoader,
               blacklist,
@@ -466,14 +481,14 @@ public class AppleLibraryDescription
 
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
-      CxxLibraryDescription.Arg delegateArg = new CxxLibraryDescription.Arg();
+      CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           delegateArg,
           args,
           buildTarget);
       return delegate.createMetadata(
-          buildTarget, resolver, delegateArg, selectedVersions, metadataClass);
+          buildTarget, resolver, delegateArg.build(), selectedVersions, metadataClass);
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
@@ -484,7 +499,7 @@ public class AppleLibraryDescription
           "Could not find cxx platform in:\n%s",
           Joiner.on(", ").join(buildTarget.getFlavors()));
       ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-      for (BuildTarget dep : args.deps) {
+      for (BuildTarget dep : args.getDeps()) {
         Optional<FrameworkDependencies> frameworks =
             resolver.requireMetadata(
                 BuildTarget.builder(dep)
@@ -511,7 +526,7 @@ public class AppleLibraryDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -532,7 +547,7 @@ public class AppleLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
-      final Arg constructorArg,
+      final AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     findDepsForTargetFromConstructorArgs(
@@ -554,20 +569,26 @@ public class AppleLibraryDescription
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
-      TargetNode<CxxLibraryDescription.Arg, ?> node) {
+      TargetNode<CxxLibraryDescription.CommonArg, ?> node) {
     SortedSet<Flavor> flavors = node.getBuildTarget().getFlavors();
     if (LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
       return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)
           || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     } else {
-      return node.getConstructorArg().preferredLinkage.equals(Optional.of(Linkage.SHARED));
+      return node.getConstructorArg().getPreferredLinkage().equals(Optional.of(Linkage.SHARED));
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AppleNativeTargetDescriptionArg {
-    public Optional<SourcePath> infoPlist;
-    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
-    public boolean modular = false;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {
+    Optional<SourcePath> getInfoPlist();
+
+    ImmutableMap<String, String> getInfoPlistSubstitutions();
+
+    @Value.Default
+    default boolean isModular() {
+      return false;
+    }
   }
 }

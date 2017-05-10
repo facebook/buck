@@ -61,13 +61,13 @@ public class AppleResourcesTest {
             .setDirs(ImmutableSet.of())
             .setVariants(variants)
             .build();
-    TargetNode<AppleLibraryDescription.Arg, ?> libNode =
+    TargetNode<AppleLibraryDescriptionArg, ?> libNode =
         AppleLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:lib"))
             .setDeps(ImmutableSortedSet.of(resourceTarget))
             .build();
     ImmutableSet<TargetNode<?, ?>> graphNodes = ImmutableSet.of(resourceNode, libNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleLibraryDescription.Arg, ?>> targetNodes = ImmutableSet.of(libNode);
+    ImmutableSet<TargetNode<AppleLibraryDescriptionArg, ?>> targetNodes = ImmutableSet.of(libNode);
 
     assertThat(
         AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), targetNodes),
@@ -83,7 +83,7 @@ public class AppleResourcesTest {
             .setDirs(ImmutableSet.of())
             .build();
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<AppleLibraryDescription.Arg, ?> fooLibNode =
+    TargetNode<AppleLibraryDescriptionArg, ?> fooLibNode =
         AppleLibraryBuilder.createBuilder(fooLibTarget)
             .setDeps(ImmutableSortedSet.of(fooResourceTarget))
             .build();
@@ -93,14 +93,14 @@ public class AppleResourcesTest {
             .setFiles(ImmutableSet.of(new FakeSourcePath("bar.png")))
             .setDirs(ImmutableSet.of())
             .build();
-    TargetNode<AppleLibraryDescription.Arg, ?> barLibNode =
+    TargetNode<AppleLibraryDescriptionArg, ?> barLibNode =
         AppleLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//bar:lib"))
             .setDeps(ImmutableSortedSet.of(fooLibTarget, barResourceTarget))
             .build();
     ImmutableSet<TargetNode<?, ?>> graphNodes =
         ImmutableSet.of(fooResourceNode, fooLibNode, barResourceNode, barLibNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleLibraryDescription.Arg, ?>> targetNodes =
+    ImmutableSet<TargetNode<AppleLibraryDescriptionArg, ?>> targetNodes =
         ImmutableSet.of(barLibNode);
 
     assertThat(

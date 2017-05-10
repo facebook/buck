@@ -40,7 +40,7 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleResourceBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
@@ -3470,7 +3470,7 @@ public class ProjectGeneratorTest {
     TargetNode<ExportFileDescriptionArg, ?> header =
         ExportFileBuilder.newExportFileBuilder(headerTarget).build();
 
-    TargetNode<AppleLibraryDescription.Arg, ?> library =
+    TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
@@ -3561,7 +3561,7 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .setTestHostApp(Optional.of(hostAppTarget))
-            .isUiTest(Optional.of(true))
+            .isUiTest(true)
             .build();
 
     ProjectGenerator projectGenerator =

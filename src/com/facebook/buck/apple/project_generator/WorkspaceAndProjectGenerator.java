@@ -19,7 +19,7 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleDependenciesCache;
-import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -187,7 +187,7 @@ public class WorkspaceAndProjectGenerator {
         schemeNameToSrcTargetNodeBuilder = ImmutableSetMultimap.builder();
     ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder =
         ImmutableSetMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>> testsBuilder =
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>> testsBuilder =
         ImmutableSetMultimap.builder();
 
     buildWorkspaceSchemes(
@@ -207,7 +207,7 @@ public class WorkspaceAndProjectGenerator {
         schemeNameToSrcTargetNodeBuilder.build();
     ImmutableSetMultimap<String, TargetNode<?, ?>> buildForTestNodes =
         buildForTestNodesBuilder.build();
-    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> tests =
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg, ?>> tests =
         testsBuilder.build();
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects =
@@ -490,8 +490,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder,
-      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>> testsBuilder) {
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>> testsBuilder) {
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
         extraTestNodesBuilder = ImmutableSetMultimap.builder();
     addWorkspaceScheme(
         projectGraph,
@@ -510,7 +510,7 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder);
     ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode =
         schemeNameToSrcTargetNodeBuilder.build();
-    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> extraTestNodes =
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg, ?>> extraTestNodes =
         extraTestNodesBuilder.build();
 
     buildWorkspaceSchemeTests(
@@ -532,7 +532,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
-      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
           extraTestNodesBuilder) {
     LOG.debug("Adding scheme %s", schemeName);
     schemeConfigsBuilder.put(schemeName, schemeArguments);
@@ -573,7 +573,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
-      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
           extraTestNodesBuilder) {
     for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
@@ -643,15 +643,15 @@ public class WorkspaceAndProjectGenerator {
    * @param extraTestBundleTargets extra tests to include
    * @return test targets that should be run.
    */
-  private ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> getOrderedTestNodes(
+  private ImmutableSet<TargetNode<AppleTestDescriptionArg, ?>> getOrderedTestNodes(
       Optional<BuildTarget> mainTarget,
       TargetGraph targetGraph,
       boolean includeProjectTests,
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?, ?>> orderedTargetNodes,
-      ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> extraTestBundleTargets) {
+      ImmutableSet<TargetNode<AppleTestDescriptionArg, ?>> extraTestBundleTargets) {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
-    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg, ?>> testsBuilder =
+    ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg, ?>> testsBuilder =
         ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?, ?>> mainTargetNode = Optional.empty();
@@ -671,8 +671,8 @@ public class WorkspaceAndProjectGenerator {
             Optional<TargetNode<?, ?>> explicitTestNode =
                 targetGraph.getOptional(explicitTestTarget);
             if (explicitTestNode.isPresent()) {
-              Optional<TargetNode<AppleTestDescription.Arg, ?>> castedNode =
-                  explicitTestNode.get().castArg(AppleTestDescription.Arg.class);
+              Optional<TargetNode<AppleTestDescriptionArg, ?>> castedNode =
+                  explicitTestNode.get().castArg(AppleTestDescriptionArg.class);
               if (castedNode.isPresent()) {
                 testsBuilder.add(castedNode.get());
               } else {
@@ -690,7 +690,7 @@ public class WorkspaceAndProjectGenerator {
         }
       }
     }
-    for (TargetNode<AppleTestDescription.Arg, ?> extraTestTarget : extraTestBundleTargets) {
+    for (TargetNode<AppleTestDescriptionArg, ?> extraTestTarget : extraTestBundleTargets) {
       testsBuilder.add(extraTestTarget);
     }
     return testsBuilder.build();
@@ -730,12 +730,12 @@ public class WorkspaceAndProjectGenerator {
         .toSet();
   }
 
-  private static ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> getExtraTestTargetNodes(
+  private static ImmutableSet<TargetNode<AppleTestDescriptionArg, ?>> getExtraTestTargetNodes(
       TargetGraph graph, Iterable<BuildTarget> targets) {
-    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg, ?>> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg, ?>> builder = ImmutableSet.builder();
     for (TargetNode<?, ?> node : graph.getAll(targets)) {
-      Optional<TargetNode<AppleTestDescription.Arg, ?>> castedNode =
-          node.castArg(AppleTestDescription.Arg.class);
+      Optional<TargetNode<AppleTestDescriptionArg, ?>> castedNode =
+          node.castArg(AppleTestDescriptionArg.class);
       if (castedNode.isPresent()) {
         builder.add(castedNode.get());
       } else {
@@ -752,8 +752,8 @@ public class WorkspaceAndProjectGenerator {
       boolean includeProjectTests,
       boolean includeDependenciesTests,
       ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode,
-      ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> extraTestNodes,
-      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg, ?>>
+      ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg, ?>> extraTestNodes,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
           selectedTestsBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
@@ -763,7 +763,7 @@ public class WorkspaceAndProjectGenerator {
               .stream()
               .flatMap(Optionals::toStream)
               .collect(MoreCollectors.toImmutableSet());
-      ImmutableSet<TargetNode<AppleTestDescription.Arg, ?>> testNodes =
+      ImmutableSet<TargetNode<AppleTestDescriptionArg, ?>> testNodes =
           getOrderedTestNodes(
               mainTarget,
               projectGraph,
@@ -787,7 +787,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigs,
       ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode,
       ImmutableSetMultimap<String, TargetNode<?, ?>> buildForTestNodes,
-      ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg, ?>> ungroupedTests,
+      ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg, ?>> ungroupedTests,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget)
       throws IOException {

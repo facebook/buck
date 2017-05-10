@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.AppleResources.IS_APPLE_BUNDLE_RESOURCE_NODE;
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.populateArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -35,6 +34,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -66,7 +66,7 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
     BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
-    TargetNode<AppleLibraryDescription.Arg, ?> library =
+    TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
     assertTrue(AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
   }
@@ -91,13 +91,17 @@ public class AppleBuildRulesTest {
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
-            TargetGraphFactory.newInstance(new AppleTestBuilder(sandboxTarget).build()),
+            TargetGraphFactory.newInstance(
+                new AppleTestBuilder(sandboxTarget)
+                    .setInfoPlist(new FakeSourcePath("Info.plist"))
+                    .build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     AppleTestBuilder appleTestBuilder =
         new AppleTestBuilder(target)
             .setContacts(ImmutableSortedSet.of())
             .setLabels(ImmutableSortedSet.of())
-            .setDeps(ImmutableSortedSet.of());
+            .setDeps(ImmutableSortedSet.of())
+            .setInfoPlist(new FakeSourcePath("Info.plist"));
 
     TargetNode<?, ?> appleTestNode = appleTestBuilder.build();
 
@@ -112,14 +116,13 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//foo:lib")).build();
-    AppleLibraryDescription.Arg arg = populateArgWithDefaults(new AppleLibraryDescription.Arg());
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
             TargetGraph.EMPTY,
             params,
             new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
             TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
-            arg);
+            AppleLibraryDescriptionArg.builder().setName("lib").build());
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));
   }

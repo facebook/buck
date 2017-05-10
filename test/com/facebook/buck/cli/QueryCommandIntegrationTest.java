@@ -663,7 +663,7 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalToIgnoringPlatformNewlines("example/Test.plist\nexample/4-test.txt\n")));
+        is(equalToIgnoringPlatformNewlines("example/4-test.txt\nexample/Test.plist\n")));
   }
 
   @Test
@@ -681,6 +681,6 @@ public class QueryCommandIntegrationTest {
         is(
             equalToIgnoringPlatformNewlines(
                 String.format(
-                    "%s%n%s%n%s%n", "example/Test.plist", "example/4-test.txt", "example/1.txt"))));
+                    "%s%n%s%n%s%n", "example/4-test.txt", "example/Test.plist", "example/1.txt"))));
   }
 }

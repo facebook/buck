@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -33,8 +33,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class CxxPythonExtensionBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        CxxPythonExtensionDescription.Arg, CxxPythonExtensionDescription, CxxPythonExtension> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        CxxPythonExtensionDescriptionArg.Builder, CxxPythonExtensionDescriptionArg,
+        CxxPythonExtensionDescription, CxxPythonExtension> {
 
   public CxxPythonExtensionBuilder(
       BuildTarget target,
@@ -45,63 +46,63 @@ public class CxxPythonExtensionBuilder
   }
 
   public CxxPythonExtensionBuilder setBaseModule(String baseModule) {
-    arg.baseModule = Optional.of(baseModule);
+    getArgForPopulating().setBaseModule(Optional.of(baseModule));
     return this;
   }
 
   public CxxPythonExtensionBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    arg.platformDeps = platformDeps;
+    getArgForPopulating().setPlatformDeps(platformDeps);
     return this;
   }
 
   public CxxPythonExtensionBuilder setModuleName(String moduleName) {
-    arg.moduleName = Optional.of(moduleName);
+    getArgForPopulating().setModuleName(Optional.of(moduleName));
     return this;
   }
 
   public CxxPythonExtensionBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   public CxxPythonExtensionBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    arg.headers = SourceList.ofUnnamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxPythonExtensionBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    arg.headers = SourceList.ofNamedSources(headers);
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
     return this;
   }
 
   public CxxPythonExtensionBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
-    arg.compilerFlags = compilerFlags;
+    getArgForPopulating().setCompilerFlags(compilerFlags);
     return this;
   }
 
   public CxxPythonExtensionBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    arg.preprocessorFlags = preprocessorFlags;
+    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
     return this;
   }
 
   public CxxPythonExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
-    arg.linkerFlags = linkerFlags;
+    getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
   }
 
   public CxxPythonExtensionBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
-    arg.frameworks = frameworks;
+    getArgForPopulating().setFrameworks(frameworks);
     return this;
   }
 
   public CxxPythonExtensionBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
-    arg.libraries = libraries;
+    getArgForPopulating().setLibraries(libraries);
     return this;
   }
 
   public CxxPythonExtensionBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 }

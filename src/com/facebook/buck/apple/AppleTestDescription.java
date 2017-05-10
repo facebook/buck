@@ -54,10 +54,10 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -73,10 +73,10 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 public class AppleTestDescription
-    implements Description<AppleTestDescription.Arg>,
+    implements Description<AppleTestDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<AppleTestDescription.Arg>,
-        MetadataProvidingDescription<AppleTestDescription.Arg> {
+        ImplicitDepsInferringDescription<AppleTestDescription.AbstractAppleTestDescriptionArg>,
+        MetadataProvidingDescription<AppleTestDescriptionArg> {
 
   /** Flavors for the additional generated build rules. */
   static final Flavor LIBRARY_FLAVOR = InternalFlavor.of("apple-test-library");
@@ -130,8 +130,8 @@ public class AppleTestDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AppleTestDescriptionArg> getConstructorArgType() {
+    return AppleTestDescriptionArg.class;
   }
 
   @Override
@@ -151,7 +151,7 @@ public class AppleTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      AppleTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
@@ -204,13 +204,13 @@ public class AppleTestDescription
     }
 
     Optional<TestHostInfo> testHostInfo;
-    if (args.testHostApp.isPresent()) {
+    if (args.getTestHostApp().isPresent()) {
       testHostInfo =
           Optional.of(
               createTestHostInfo(
                   params,
                   resolver,
-                  args.testHostApp.get(),
+                  args.getTestHostApp().get(),
                   debugFormat,
                   libraryFlavors,
                   cxxPlatforms));
@@ -234,7 +234,7 @@ public class AppleTestDescription
             testHostInfo.map(TestHostInfo::getTestHostAppBinarySourcePath),
             testHostInfo.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
             libraryTarget,
-            ImmutableSortedSet.copyOf(OptionalCompat.asSet(args.testHostApp)));
+            ImmutableSortedSet.copyOf(OptionalCompat.asSet(args.getTestHostApp())));
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
     }
@@ -269,10 +269,10 @@ public class AppleTestDescription
             library.getBuildTarget(),
             args.getExtension(),
             Optional.empty(),
-            args.infoPlist,
-            args.infoPlistSubstitutions,
-            args.deps,
-            args.tests,
+            args.getInfoPlist(),
+            args.getInfoPlistSubstitutions(),
+            args.getDeps(),
+            args.getTests(),
             debugFormat,
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages());
@@ -288,22 +288,22 @@ public class AppleTestDescription
         appleConfig.getXctestPlatformNames().contains(platformName),
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
-        Optional.of(args.destinationSpecifier),
+        Optional.of(args.getDestinationSpecifier()),
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
-        args.contacts,
-        args.labels,
+        args.getContacts(),
+        args.getLabels(),
         args.getRunTestSeparately(),
         xcodeDeveloperDirectorySupplier,
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.isUiTest(),
-        args.snapshotReferenceImagesPath,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getIsUiTest(),
+        args.getSnapshotReferenceImagesPath(),
         ruleFinder);
   }
 
@@ -363,12 +363,12 @@ public class AppleTestDescription
     }
   }
 
-  private <A extends Arg> BuildRule createTestLibraryRule(
+  private BuildRule createTestLibraryRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      A args,
+      AppleTestDescriptionArg args,
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
       BuildTarget libraryTarget,
@@ -390,6 +390,7 @@ public class AppleTestDescription
               resolver,
               cellRoots,
               args,
+              args::withExportedDeps,
               // For now, instead of building all deps as dylibs and fixing up their install_names,
               // we'll just link them statically.
               Optional.of(Linker.LinkableDepType.STATIC),
@@ -405,7 +406,7 @@ public class AppleTestDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractAppleTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // TODO(beng, coneko): This should technically only be a runtime dependency;
@@ -466,7 +467,7 @@ public class AppleTestDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      AppleTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -489,56 +490,41 @@ public class AppleTestDescription
     ImmutableSet<BuildTarget> getBlacklist();
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public Optional<Boolean> runTestSeparately;
-    public Optional<Boolean> isUiTest;
-    public Optional<BuildTarget> testHostApp;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAppleTestDescriptionArg
+      extends AppleNativeTargetDescriptionArg, HasAppleBundleFields {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getIsUiTest() {
+      return false;
+    }
+
+    Optional<BuildTarget> getTestHostApp();
 
     // for use with FBSnapshotTestcase, injects the path as FB_REFERENCE_IMAGE_DIR
-    public Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+    Optional<Either<SourcePath, String>> getSnapshotReferenceImagesPath();
 
     // Bundle related fields.
-    public SourcePath infoPlist;
-    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
-    public Optional<String> xcodeProductType;
+    ImmutableMap<String, String> getDestinationSpecifier();
 
-    public ImmutableMap<String, String> destinationSpecifier = ImmutableMap.of();
-
-    public Optional<Long> testRuleTimeoutMs;
+    Optional<Long> getTestRuleTimeoutMs();
 
     @Override
-    public Either<AppleBundleExtension, String> getExtension() {
+    default Either<AppleBundleExtension, String> getExtension() {
       return Either.ofLeft(AppleBundleExtension.XCTEST);
     }
 
     @Override
-    public SourcePath getInfoPlist() {
-      return infoPlist;
-    }
-
-    @Override
-    public Optional<String> getProductName() {
+    default Optional<String> getProductName() {
       return Optional.empty();
-    }
-
-    @Override
-    public Optional<String> getXcodeProductType() {
-      return xcodeProductType;
-    }
-
-    @Override
-    public ImmutableMap<String, String> getInfoPlistSubstitutions() {
-      return infoPlistSubstitutions;
-    }
-
-    public boolean getRunTestSeparately() {
-      return runTestSeparately.orElse(false);
-    }
-
-    public boolean isUiTest() {
-      return isUiTest.orElse(false);
     }
   }
 }

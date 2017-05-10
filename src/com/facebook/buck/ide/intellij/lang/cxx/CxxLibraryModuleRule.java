@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij.lang.cxx;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
@@ -26,7 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
-public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription.Arg> {
+public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescriptionArg> {
 
   public CxxLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -41,7 +42,7 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   }
 
   @Override
-  public void apply(TargetNode<CxxLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<CxxLibraryDescriptionArg, ?> target, ModuleBuildContext context) {
     addSourceFolders(
         SourceFolder.FACTORY,
         getSourceFoldersToInputsIndex(target.getInputs()),
@@ -50,7 +51,7 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<CxxLibraryDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<CxxLibraryDescriptionArg, ?> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

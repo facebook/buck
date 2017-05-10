@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  *
  * <p>DO NOT ADD ANY NEW BEHAVIOR TO IT, OR NEW REFERENCES TO IT.
  *
- * <p>YOUR NEW BEHAVIOR PROBABLY WANTS TO LIVE ON CommonDescriptionArg.
+ * <p>YOUR NEW BEHAVIOR PROBABLY WANTS TO LIVE ON CommonArg.
  */
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg implements CommonDescriptionArg {

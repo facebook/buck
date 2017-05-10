@@ -334,13 +334,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxLibraryDescription.Arg args)
+      CxxLibraryDescription.CommonArg args)
       throws NoSuchBuildTargetException {
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  new SourcePathResolver(new SourcePathRuleFinder(resolver)), args.srcs)
+                  new SourcePathResolver(new SourcePathRuleFinder(resolver)), args.getSrcs())
               .isEmpty();
       return hasSwiftSource
           ? Optional.of(

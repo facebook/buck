@@ -35,9 +35,9 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,14 +45,15 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 public class CxxBinaryDescription
-    implements Description<CxxBinaryDescription.Arg>,
+    implements Description<CxxBinaryDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<CxxBinaryDescription.Arg>,
+        ImplicitDepsInferringDescription<CxxBinaryDescription.AbstractCxxBinaryDescriptionArg>,
         ImplicitFlavorsInferringDescription,
-        MetadataProvidingDescription<CxxBinaryDescription.Arg>,
-        VersionRoot<CxxBinaryDescription.Arg> {
+        MetadataProvidingDescription<CxxBinaryDescriptionArg>,
+        VersionRoot<CxxBinaryDescriptionArg> {
 
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
@@ -73,8 +74,11 @@ public class CxxBinaryDescription
   /**
    * @return a {@link com.facebook.buck.cxx.HeaderSymlinkTree} for the headers of this C/C++ binary.
    */
-  public static <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params, BuildRuleResolver resolver, CxxPlatform cxxPlatform, Arg args)
+  public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      CxxBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -94,8 +98,8 @@ public class CxxBinaryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<CxxBinaryDescriptionArg> getConstructorArgType() {
+    return CxxBinaryDescriptionArg.class;
   }
 
   private CxxPlatform getCxxPlatform(
@@ -122,7 +126,7 @@ public class CxxBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      CxxBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(targetGraph, params, resolver, cellRoots, args, ImmutableSortedSet.of());
   }
@@ -133,7 +137,7 @@ public class CxxBinaryDescription
       BuildRuleParams metadataRuleParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args,
+      CxxBinaryDescriptionArg args,
       ImmutableSortedSet<BuildTarget> extraDeps)
       throws NoSuchBuildTargetException {
 
@@ -154,7 +158,7 @@ public class CxxBinaryDescription
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args.defaultPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args.getDefaultPlatform());
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors =
           ImmutableSet.copyOf(
@@ -282,8 +286,8 @@ public class CxxBinaryDescription
             cxxPlatform,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
-            args.frameworks,
-            args.tests,
+            args.getFrameworks(),
+            args.getTests(),
             params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
     resolver.addToIndex(cxxBinary);
     return cxxBinary;
@@ -293,15 +297,17 @@ public class CxxBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractCxxBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        findDepsForTargetFromConstructorArgs(buildTarget, constructorArg.defaultPlatform));
-    constructorArg.depsQuery.ifPresent(
-        depsQuery ->
-            QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                .forEach(extraDepsBuilder::add));
+        findDepsForTargetFromConstructorArgs(buildTarget, constructorArg.getDefaultPlatform()));
+    constructorArg
+        .getDepsQuery()
+        .ifPresent(
+            depsQuery ->
+                QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+                    .forEach(extraDepsBuilder::add));
   }
 
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
@@ -365,7 +371,7 @@ public class CxxBinaryDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      CxxBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       final Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -412,10 +418,15 @@ public class CxxBinaryDescription
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends LinkableCxxConstructorArg {
-    public Optional<Query> depsQuery = Optional.empty();
-    public Optional<String> versionUniverse;
-    public Optional<Flavor> defaultPlatform;
+  public interface CommonArg extends LinkableCxxConstructorArg {
+    Optional<Query> getDepsQuery();
+
+    Optional<String> getVersionUniverse();
+
+    Optional<Flavor> getDefaultPlatform();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {}
 }

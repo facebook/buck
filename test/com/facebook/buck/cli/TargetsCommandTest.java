@@ -431,6 +431,7 @@ public class TargetsCommandTest {
         AppleTestBuilder.createBuilder(testTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m"))))
             .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(libraryNode, testNode);
@@ -550,6 +551,7 @@ public class TargetsCommandTest {
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m"))))
             .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     TargetNode<?, ?> libraryTestNode2 =
@@ -557,6 +559,7 @@ public class TargetsCommandTest {
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m"))))
             .setDeps(ImmutableSortedSet.of(testLibraryTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     TargetNode<?, ?> testLibraryNode =
@@ -572,6 +575,7 @@ public class TargetsCommandTest {
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("testlib/testlib-test.m"))))
             .setDeps(ImmutableSortedSet.of(testLibraryTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> nodes =

@@ -36,9 +36,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
@@ -53,13 +53,14 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class CxxTestDescription
-    implements Description<CxxTestDescription.Arg>,
+    implements Description<CxxTestDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<CxxTestDescription.Arg>,
-        MetadataProvidingDescription<CxxTestDescription.Arg>,
-        VersionRoot<CxxTestDescription.Arg> {
+        ImplicitDepsInferringDescription<CxxTestDescription.AbstractCxxTestDescriptionArg>,
+        MetadataProvidingDescription<CxxTestDescriptionArg>,
+        VersionRoot<CxxTestDescriptionArg> {
 
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
@@ -79,15 +80,16 @@ public class CxxTestDescription
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
-  private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(Arg constructorArg) {
+  private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(
+      AbstractCxxTestDescriptionArg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
-    CxxTestType type = constructorArg.framework.orElse(getDefaultTestType());
+    CxxTestType type = constructorArg.getFramework().orElse(getDefaultTestType());
     switch (type) {
       case GTEST:
         {
           cxxBuckConfig.getGtestDep().ifPresent(deps::add);
-          if (constructorArg.useDefaultTestMain.orElse(true)) {
+          if (constructorArg.getUseDefaultTestMain().orElse(true)) {
             cxxBuckConfig.getGtestDefaultTestMainDep().ifPresent(deps::add);
           }
           break;
@@ -106,7 +108,8 @@ public class CxxTestDescription
     return deps.build();
   }
 
-  private CxxPlatform getCxxPlatform(BuildTarget target, CxxBinaryDescription.Arg constructorArg) {
+  private CxxPlatform getCxxPlatform(
+      BuildTarget target, CxxBinaryDescription.CommonArg constructorArg) {
 
     // First check if the build target is setting a particular target.
     Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
@@ -115,8 +118,8 @@ public class CxxTestDescription
     }
 
     // Next, check for a constructor arg level default platform.
-    if (constructorArg.defaultPlatform.isPresent()) {
-      return cxxPlatforms.getValue(constructorArg.defaultPlatform.get());
+    if (constructorArg.getDefaultPlatform().isPresent()) {
+      return cxxPlatforms.getValue(constructorArg.getDefaultPlatform().get());
     }
 
     // Otherwise, fallback to the description-level default platform.
@@ -124,8 +127,8 @@ public class CxxTestDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<CxxTestDescriptionArg> getConstructorArgType() {
+    return CxxTestDescriptionArg.class;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -135,7 +138,7 @@ public class CxxTestDescription
       BuildRuleParams inputParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args)
+      final CxxTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
@@ -215,14 +218,14 @@ public class CxxTestDescription
     ImmutableMap<String, String> testEnv =
         ImmutableMap.copyOf(
             Maps.transformValues(
-                args.env,
+                args.getEnv(),
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                     params.getBuildTarget(), cellRoots, resolver)));
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =
         () ->
-            args.args
+            args.getArgs()
                 .stream()
                 .map(
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
@@ -241,7 +244,7 @@ public class CxxTestDescription
                   params.getBuildDeps(), cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
 
           // Add any build-time from any macros embedded in the `env` or `args` parameter.
-          for (String part : Iterables.concat(args.args, args.env.values())) {
+          for (String part : Iterables.concat(args.getArgs(), args.getEnv().values())) {
             try {
               deps.addAll(
                   CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
@@ -257,7 +260,7 @@ public class CxxTestDescription
 
     CxxTest test;
 
-    CxxTestType type = args.framework.orElse(getDefaultTestType());
+    CxxTestType type = args.getFramework().orElse(getDefaultTestType());
     switch (type) {
       case GTEST:
         {
@@ -269,15 +272,15 @@ public class CxxTestDescription
                   cxxLinkAndCompileRules.executable,
                   testEnv,
                   testArgs,
-                  FluentIterable.from(args.resources)
+                  FluentIterable.from(args.getResources())
                       .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                       .toSortedSet(Ordering.natural()),
-                  args.additionalCoverageTargets,
+                  args.getAdditionalCoverageTargets(),
                   additionalDeps,
-                  args.labels,
-                  args.contacts,
-                  args.runTestSeparately.orElse(false),
-                  args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+                  args.getLabels(),
+                  args.getContacts(),
+                  args.getRunTestSeparately().orElse(false),
+                  args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
                   cxxBuckConfig.getMaximumTestOutputSize());
           break;
         }
@@ -291,15 +294,15 @@ public class CxxTestDescription
                   cxxLinkAndCompileRules.executable,
                   testEnv,
                   testArgs,
-                  FluentIterable.from(args.resources)
+                  FluentIterable.from(args.getResources())
                       .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
                       .toSortedSet(Ordering.natural()),
-                  args.additionalCoverageTargets,
+                  args.getAdditionalCoverageTargets(),
                   additionalDeps,
-                  args.labels,
-                  args.contacts,
-                  args.runTestSeparately.orElse(false),
-                  args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+                  args.getLabels(),
+                  args.getContacts(),
+                  args.getRunTestSeparately().orElse(false),
+                  args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
           break;
         }
       default:
@@ -316,7 +319,7 @@ public class CxxTestDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractCxxTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
@@ -327,8 +330,8 @@ public class CxxTestDescription
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.args)
-            .add(constructorArg.env.values())
+            .add(constructorArg.getArgs())
+            .add(constructorArg.getEnv().values())
             .build();
     for (String macroString : Iterables.concat(macroStrings)) {
       try {
@@ -342,10 +345,12 @@ public class CxxTestDescription
     // Add in any implicit framework deps.
     extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));
 
-    constructorArg.depsQuery.ifPresent(
-        depsQuery ->
-            QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                .forEach(extraDepsBuilder::add));
+    constructorArg
+        .getDepsQuery()
+        .ifPresent(
+            depsQuery ->
+                QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+                    .forEach(extraDepsBuilder::add));
   }
 
   public CxxTestType getDefaultTestType() {
@@ -388,7 +393,7 @@ public class CxxTestDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      CxxTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       final Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -406,16 +411,26 @@ public class CxxTestDescription
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends CxxBinaryDescription.Arg {
-    public ImmutableSet<String> contacts = ImmutableSet.of();
-    public Optional<CxxTestType> framework;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
-    public ImmutableList<String> args = ImmutableList.of();
-    public Optional<Boolean> runTestSeparately;
-    public Optional<Boolean> useDefaultTestMain;
-    public Optional<Long> testRuleTimeoutMs;
-    public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
-    public ImmutableSet<SourcePath> additionalCoverageTargets = ImmutableSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCxxTestDescriptionArg extends CxxBinaryDescription.CommonArg {
+    ImmutableSet<String> getContacts();
+
+    Optional<CxxTestType> getFramework();
+
+    ImmutableMap<String, String> getEnv();
+
+    ImmutableList<String> getArgs();
+
+    Optional<Boolean> getRunTestSeparately();
+
+    Optional<Boolean> getUseDefaultTestMain();
+
+    Optional<Long> getTestRuleTimeoutMs();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<Path> getResources();
+
+    ImmutableSet<SourcePath> getAdditionalCoverageTargets();
   }
 }

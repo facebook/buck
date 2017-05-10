@@ -29,7 +29,13 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractCxxSource {
+// PMD is disabled for the line below. We have a check that Abstract immutable types are
+// package-private. The Immutables generator is super-helpeful and makes references to the abstract
+// version of Immutables if they're referenced from other immutables, not just the generated
+// immutable type. So if any Immutables are defined in other packages which have a getter which
+// returns a CxxSource, internally an AbstractCxxSource is referenced in the generated code, which
+// doesn't have visibility to access this type, causing a compile error.
+public abstract class AbstractCxxSource { // NOPMD
 
   public enum Type {
     C("c", "cpp-output", Optional.of("c-header"), "c"),

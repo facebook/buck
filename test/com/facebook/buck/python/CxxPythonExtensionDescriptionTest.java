@@ -233,7 +233,8 @@ public class CxxPythonExtensionDescriptionTest {
                 CxxTestUtils.createDefaultPlatforms())
             .build()
             .getDescription();
-    CxxPythonExtensionDescription.Arg constructorArg = new CxxPythonExtensionDescription.Arg();
+    CxxPythonExtensionDescriptionArg constructorArg =
+        CxxPythonExtensionDescriptionArg.builder().setName("target").build();
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
