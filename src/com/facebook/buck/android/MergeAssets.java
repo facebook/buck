@@ -46,8 +46,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -55,9 +53,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 /**
  * MergeAssets adds the assets for an APK into the output of aapt.
@@ -170,26 +169,24 @@ public class MergeAssets extends AbstractBuildRule {
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       try (CustomZipOutputStream output = ZipOutputStreams.newOutputStream(pathToMergedAssets)) {
-        try (ZipInputStream base =
-            new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(pathToBaseApk.toFile())))) {
-          for (ZipEntry inputEntry = base.getNextEntry();
-              inputEntry != null;
-              base.closeEntry(), inputEntry = base.getNextEntry()) {
+        try (ZipFile base = new ZipFile(pathToBaseApk.toFile())) {
+          for (ZipEntry inputEntry : Collections.list(base.entries())) {
             String extension = Files.getFileExtension(inputEntry.getName());
             // Only compress if aapt compressed it and the extension looks compressible.
             // This is a workaround for aapt2 compressing everything.
             boolean shouldCompress =
                 inputEntry.getMethod() != ZipEntry.STORED
                     && !NO_COMPRESS_EXTENSIONS.contains(extension);
-            addEntry(
-                output,
-                base,
-                inputEntry.getSize(),
-                inputEntry.getCrc(),
-                inputEntry.getName(),
-                shouldCompress ? Deflater.BEST_COMPRESSION : 0,
-                inputEntry.isDirectory());
+            try (InputStream stream = base.getInputStream(inputEntry)) {
+              addEntry(
+                  output,
+                  stream,
+                  inputEntry.getSize(),
+                  inputEntry.getCrc(),
+                  inputEntry.getName(),
+                  shouldCompress ? Deflater.BEST_COMPRESSION : 0,
+                  inputEntry.isDirectory());
+            }
           }
         }
         Path assetsZipRoot = Paths.get("assets");
