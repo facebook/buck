@@ -697,7 +697,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void distBuildStarted(BuildEvent.DistBuildFinished finished) {
+  public void distBuildFinished(BuildEvent.DistBuildFinished finished) {
     distBuildFinished = finished;
   }
 

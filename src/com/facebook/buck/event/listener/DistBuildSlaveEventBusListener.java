@@ -17,12 +17,14 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.distributed.BuildSlaveFinishedEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
@@ -31,6 +33,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.timing.Clock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
@@ -82,6 +85,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   protected final AtomicInteger httpArtifactUploadFailureCount = new AtomicInteger(0);
 
   private volatile @Nullable DistBuildService distBuildService;
+  private volatile @Nullable BuckEventBus eventBus;
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId, RunId runId, Clock clock, ScheduledExecutorService networkScheduler) {
@@ -107,6 +111,10 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     this.distBuildService = service;
   }
 
+  public void setEventBus(BuckEventBus eventBus) {
+    this.eventBus = eventBus;
+  }
+
   @Override
   public void outputTrace(BuildId buildId) throws InterruptedException {}
 
@@ -117,11 +125,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     sendServerUpdates();
   }
 
-  private void sendStatusToFrontend() {
-    if (distBuildService == null) {
-      return;
-    }
-
+  private BuildSlaveStatus createBuildSlaveStatus() {
     BuildSlaveStatus status = new BuildSlaveStatus();
     status.setStampedeId(stampedeId);
     status.setRunId(runId);
@@ -139,8 +143,16 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     status.setHttpArtifactUploadSuccessCount(httpArtifactUploadSuccessCount.get());
     status.setHttpArtifactUploadFailureCount(httpArtifactUploadFailureCount.get());
 
+    return status;
+  }
+
+  private void sendStatusToFrontend() {
+    if (distBuildService == null) {
+      return;
+    }
+
     try {
-      distBuildService.updateBuildSlaveStatus(stampedeId, runId, status);
+      distBuildService.updateBuildSlaveStatus(stampedeId, runId, createBuildSlaveStatus());
     } catch (IOException e) {
       LOG.error(e, "Could not update slave status to frontend.");
     }
@@ -171,6 +183,13 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private void sendServerUpdates() {
     sendStatusToFrontend();
     sendConsoleEventsToFrontend();
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void distBuildFinished(BuildEvent.DistBuildFinished finished) {
+    Preconditions.checkNotNull(eventBus);
+    eventBus.post(new BuildSlaveFinishedEvent(createBuildSlaveStatus()));
   }
 
   @Subscribe

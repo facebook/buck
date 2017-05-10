@@ -97,6 +97,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
         slaveEventListener.setDistBuildService(service);
+        slaveEventListener.setEventBus(params.getBuckEventBus());
       }
 
       try {
