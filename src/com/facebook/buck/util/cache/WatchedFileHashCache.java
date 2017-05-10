@@ -34,10 +34,14 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
-  private long newCacheAggregatedNanoTime = 0;
-  private long oldCacheAggregatedNanoTime = 0;
+  private long newCacheInvalidationAggregatedNanoTime = 0;
+  private long oldCacheInvalidationAggregatedNanoTime = 0;
   private long numberOfInvalidations = 0;
+  private long newCacheRetrievalAggregatedNanoTime = 0;
+  private long oldCacheRetrievalAggregatedNanoTime = 0;
+  private long numberOfRetrievals = 0;
   private long sha1Mismatches = 0;
+  private String sha1MismatchInfo = "";
 
   public WatchedFileHashCache(ProjectFilesystem projectFilesystem) {
     super(projectFilesystem, Optional.empty());
@@ -57,36 +61,52 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     // parent paths will be invalidated and, if possible, removed too.
     long start = System.nanoTime();
     invalidateNew(path);
-    newCacheAggregatedNanoTime += System.nanoTime() - start;
+    newCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
     start = System.nanoTime();
     invalidateOldCache(path);
-    oldCacheAggregatedNanoTime += System.nanoTime() - start;
+    oldCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
     numberOfInvalidations++;
   }
 
   // TODO(rvitale): remove block below after the file hash cache experiment is over.
   /* *****************************************************************************/
   public void resetCounters() {
-    newCacheAggregatedNanoTime = 0;
-    oldCacheAggregatedNanoTime = 0;
+    newCacheInvalidationAggregatedNanoTime = 0;
+    oldCacheInvalidationAggregatedNanoTime = 0;
     numberOfInvalidations = 0;
     sha1Mismatches = 0;
   }
 
-  public long getNewCacheAggregatedNanoTime() {
-    return newCacheAggregatedNanoTime;
+  public long getNewCacheInvalidationAggregatedNanoTime() {
+    return newCacheInvalidationAggregatedNanoTime;
   }
 
-  public long getOldCacheAggregatedNanoTime() {
-    return oldCacheAggregatedNanoTime;
+  public long getOldCacheInvalidationAggregatedNanoTime() {
+    return oldCacheInvalidationAggregatedNanoTime;
   }
 
   public long getNumberOfInvalidations() {
     return numberOfInvalidations;
   }
 
+  public long getNewCacheRetrievalAggregatedNanoTime() {
+    return newCacheRetrievalAggregatedNanoTime;
+  }
+
+  public long getOldCacheRetrievalAggregatedNanoTime() {
+    return oldCacheRetrievalAggregatedNanoTime;
+  }
+
+  public long getNumberOfRetrievals() {
+    return numberOfRetrievals;
+  }
+
   public long getSha1Mismatches() {
     return sha1Mismatches;
+  }
+
+  public String getSha1MismatchInfo() {
+    return sha1MismatchInfo;
   }
 
   private void invalidateOldCache(Path path) {
@@ -124,9 +144,25 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+    long start = System.nanoTime();
     HashCode sha1 = super.get(archiveMemberPath);
+    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
     HashCode newSha1 = getFromNewCache(archiveMemberPath);
-    sha1Mismatches += sha1.equals(newSha1) ? 0 : 1;
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    numberOfRetrievals++;
+    if (!sha1.equals(newSha1)) {
+      if (sha1Mismatches == 0) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Path: ").append(archiveMemberPath.toString());
+        sb.append("\nOld hash: ").append(sha1.toString());
+        sb.append("\nNew hash: ").append(newSha1.toString());
+        sb.append("\nOld hash rerun: ").append(super.get(archiveMemberPath));
+        sb.append("\nNew hash rerun: ").append(getFromNewCache(archiveMemberPath));
+        sha1MismatchInfo = sb.toString();
+      }
+      sha1Mismatches += 1;
+    }
     return sha1;
   }
   /* *****************************************************************************/
@@ -149,12 +185,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   public synchronized void onFileSystemChange(WatchmanOverflowEvent event) {
     // Non-path change event, likely an overflow due to many change events: invalidate everything.
     LOG.debug("Invalidating all");
-    long start = System.nanoTime();
     invalidateAll();
-    oldCacheAggregatedNanoTime += System.nanoTime() - start;
-    start = System.nanoTime();
     invalidateAllNew();
-    newCacheAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
   }
 }

@@ -270,25 +270,39 @@ final class Daemon implements Closeable {
                 if (cache.getNumberOfInvalidations() != 0) {
                   eventBus.post(
                       new FileHashCacheEvent(
-                          "new",
-                          cache.getNewCacheAggregatedNanoTime(),
-                          cache.getNewCacheAggregatedNanoTime(),
+                          "new.invalidation",
+                          cache.getNewCacheInvalidationAggregatedNanoTime(),
+                          cache.getNewCacheInvalidationAggregatedNanoTime(),
                           cache.getNumberOfInvalidations()));
                   eventBus.post(
                       new FileHashCacheEvent(
-                          "old",
-                          cache.getOldCacheAggregatedNanoTime(),
-                          cache.getOldCacheAggregatedNanoTime(),
+                          "old.invalidation",
+                          cache.getOldCacheInvalidationAggregatedNanoTime(),
+                          cache.getOldCacheInvalidationAggregatedNanoTime(),
                           cache.getNumberOfInvalidations()));
-                  eventBus.post(
-                      new ExperimentEvent(
-                          "file_hash_cache_invalidation",
-                          "sha1",
-                          "mismatches",
-                          cache.getSha1Mismatches(),
-                          null));
-                  cache.resetCounters();
                 }
+                if (cache.getNumberOfRetrievals() != 0) {
+                  eventBus.post(
+                      new FileHashCacheEvent(
+                          "new.retrieval",
+                          cache.getNewCacheRetrievalAggregatedNanoTime(),
+                          cache.getNewCacheRetrievalAggregatedNanoTime(),
+                          cache.getNumberOfRetrievals()));
+                  eventBus.post(
+                      new FileHashCacheEvent(
+                          "old.retrieval",
+                          cache.getOldCacheRetrievalAggregatedNanoTime(),
+                          cache.getOldCacheRetrievalAggregatedNanoTime(),
+                          cache.getNumberOfRetrievals()));
+                }
+                eventBus.post(
+                    new ExperimentEvent(
+                        "file_hash_cache_invalidation",
+                        "sha1",
+                        "mismatches",
+                        cache.getSha1Mismatches(),
+                        cache.getSha1MismatchInfo()));
+                cache.resetCounters();
               }
             });
       }
