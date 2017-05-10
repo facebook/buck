@@ -17,14 +17,12 @@
 package com.facebook.buck.ide.intellij.projectview;
 
 import com.facebook.buck.config.Config;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -76,9 +74,9 @@ public class ProjectView {
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      BuckEventBus eventBus,
+      ActionGraphAndResolver actionGraph,
       Config config) {
-    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, eventBus, config)
+    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, actionGraph, config)
         .run();
   }
 
@@ -112,7 +110,7 @@ public class ProjectView {
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      BuckEventBus eventBus,
+      ActionGraphAndResolver actionGraph,
       Config config) {
     this.stdErr = stdErr;
     this.viewPath = viewPath;
@@ -120,11 +118,9 @@ public class ProjectView {
 
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
+    this.actionGraph = actionGraph;
 
     this.config = config;
-
-    // TODO(shemitz) Use ActionGraphCache.getActionGraph()?
-    actionGraph = ActionGraphCache.getFreshActionGraph(eventBus, targetGraph);
   }
 
   private int run() {

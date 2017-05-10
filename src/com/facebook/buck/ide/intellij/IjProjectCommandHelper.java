@@ -159,7 +159,7 @@ public class IjProjectCommandHelper {
           projectView,
           projectGraph,
           passedInTargetsSet,
-          buckEventBus,
+          getActionGraph(projectGraph),
           buckConfig.getConfig());
     }
 
@@ -202,6 +202,15 @@ public class IjProjectCommandHelper {
     }
 
     return runIntellijProjectGenerator(targetGraphAndTargets);
+  }
+
+  private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
+    return actionGraphCache.getActionGraph(
+        buckEventBus,
+        buckConfig.isActionGraphCheckingEnabled(),
+        buckConfig.isSkipActionGraphCache(),
+        targetGraph,
+        buckConfig.getKeySeed());
   }
 
   private TargetGraph getProjectGraphForIde(
@@ -250,13 +259,7 @@ public class IjProjectCommandHelper {
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphAndTargets targetGraphAndTargets) throws IOException {
     ActionGraphAndResolver result =
-        Preconditions.checkNotNull(
-            actionGraphCache.getActionGraph(
-                buckEventBus,
-                buckConfig.isActionGraphCheckingEnabled(),
-                buckConfig.isSkipActionGraphCache(),
-                targetGraphAndTargets.getTargetGraph(),
-                buckConfig.getKeySeed()));
+        Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
 
     BuildRuleResolver ruleResolver = result.getResolver();
 
