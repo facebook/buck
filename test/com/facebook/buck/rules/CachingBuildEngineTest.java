@@ -117,6 +117,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -143,6 +145,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Ensuring that build rule caching works correctly in Buck is imperative for both its performance
@@ -175,13 +178,15 @@ public class CachingBuildEngineTest {
       new DefaultDependencyFileRuleKeyFactory(
           FIELD_LOADER, new NullFileHashCache(), DEFAULT_SOURCE_PATH_RESOLVER, DEFAULT_RULE_FINDER);
 
+  @RunWith(Parameterized.class)
   public abstract static class CommonFixture extends EasyMockSupport {
     @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
     protected final InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected final FakeBuckEventListener listener = new FakeBuckEventListener();
     protected FakeProjectFilesystem filesystem;
-    protected FilesystemBuildInfoStore buildInfoStore;
+    protected BuildInfoStoreManager buildInfoStoreManager;
+    protected BuildInfoStore buildInfoStore;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected BuildRuleResolver resolver;
@@ -190,11 +195,25 @@ public class CachingBuildEngineTest {
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
     protected BuildRuleDurationTracker durationTracker;
+    protected CachingBuildEngine.MetadataStorage metadataStorage;
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+      return Arrays.stream(CachingBuildEngine.MetadataStorage.values())
+          .map(v -> new Object[] {v})
+          .collect(MoreCollectors.toImmutableList());
+    }
+
+    public CommonFixture(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+      this.metadataStorage = metadataStorage;
+    }
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
-      buildInfoStore = new FilesystemBuildInfoStore(filesystem);
+      buildInfoStoreManager = new BuildInfoStoreManager();
+      Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
+      buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
       fileHashCache =
           new StackedFileHashCache(
               ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
@@ -219,7 +238,7 @@ public class CachingBuildEngineTest {
     }
 
     protected CachingBuildEngineFactory cachingBuildEngineFactory() {
-      return new CachingBuildEngineFactory(resolver)
+      return new CachingBuildEngineFactory(resolver, buildInfoStoreManager)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 
@@ -235,6 +254,10 @@ public class CachingBuildEngineTest {
   }
 
   public static class OtherTests extends CommonFixture {
+    public OtherTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+      super(metadataStorage);
+    }
+
     /**
      * Tests what should happen when a rule is built for the first time: it should have no cached
      * RuleKey, nor should it have any artifact in the ArtifactCache. The sequence of events should
@@ -424,11 +447,12 @@ public class CachingBuildEngineTest {
               BuildInfo.MetadataKey.BUILD_ID,
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
-              buildContext.getBuildId().toString(),
-              BuildInfo.MetadataKey.RECORDED_PATHS,
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()));
+              buildContext.getBuildId().toString());
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
+              BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
       expect(artifactCache.fetch(eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
@@ -506,12 +530,13 @@ public class CachingBuildEngineTest {
               defaultRuleKeyFactory.build(buildRule).toString(),
               BuildInfo.MetadataKey.BUILD_ID,
               buildContext.getBuildId().toString(),
-              BuildInfo.MetadataKey.RECORDED_PATHS,
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
+              BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
       expect(artifactCache.fetch(eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
@@ -1272,6 +1297,7 @@ public class CachingBuildEngineTest {
 
       // Clear the file system.
       filesystem.clear();
+      buildInfoStore.deleteMetadata(target);
 
       // Now run a second build that gets a cache hit.  We use an empty `FakeFileHashCache` which
       // does *not* contain the path, so any attempts to hash it will fail.
@@ -1293,6 +1319,11 @@ public class CachingBuildEngineTest {
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
+    public InputBasedRuleKeyTests(CachingBuildEngine.MetadataStorage metadataStorage)
+        throws IOException {
+      super(metadataStorage);
+    }
+
     @Test
     public void inputBasedRuleKeyAndArtifactAreWrittenForSupportedRules() throws Exception {
       // Create a simple rule which just writes a file.
@@ -1595,6 +1626,10 @@ public class CachingBuildEngineTest {
   public static class DepFileTests extends CommonFixture {
 
     private DefaultDependencyFileRuleKeyFactory depFileFactory;
+
+    public DepFileTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+      super(metadataStorage);
+    }
 
     @Before
     public void setUpDepFileFixture() {
@@ -2132,6 +2167,10 @@ public class CachingBuildEngineTest {
   }
 
   public static class ManifestTests extends CommonFixture {
+    public ManifestTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+      super(metadataStorage);
+    }
+
     @Test
     public void manifestIsWrittenWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
@@ -2690,6 +2729,11 @@ public class CachingBuildEngineTest {
   }
 
   public static class UncachableRuleTests extends CommonFixture {
+    public UncachableRuleTests(CachingBuildEngine.MetadataStorage metadataStorage)
+        throws IOException {
+      super(metadataStorage);
+    }
+
     @Test
     public void uncachableRulesDoNotTouchTheCache() throws Exception {
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -2753,6 +2797,10 @@ public class CachingBuildEngineTest {
   }
 
   public static class ScheduleOverrideTests extends CommonFixture {
+    public ScheduleOverrideTests(CachingBuildEngine.MetadataStorage metadataStorage)
+        throws IOException {
+      super(metadataStorage);
+    }
 
     @Test
     public void customWeights() throws Exception {
@@ -2867,6 +2915,11 @@ public class CachingBuildEngineTest {
     // Use a executor service which uses a new thread for every task to help expose case where
     // the build engine issues begin and end rule events on different threads.
     private static final ListeningExecutorService SERVICE = new NewThreadExecutorService();
+
+    public BuildRuleEventTests(CachingBuildEngine.MetadataStorage metadataStorage)
+        throws IOException {
+      super(metadataStorage);
+    }
 
     @Test
     public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
@@ -3079,6 +3132,7 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result1.getSuccess());
 
       filesystem.clear();
+      buildInfoStore.deleteMetadata(target);
 
       // Run the build and extract the event.
       CachingBuildEngine cachingBuildEngine2 = cachingBuildEngineFactory().build();

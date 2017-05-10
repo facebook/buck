@@ -226,6 +226,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
+      BuildInfoStoreManager buildInfoStoreManager,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
@@ -247,7 +248,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
-    this.buildInfoStoreManager = new BuildInfoStoreManager();
+    this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.ruleDeps = new RuleDepsCache(service, resolver);
     this.unskippedRulesTracker =

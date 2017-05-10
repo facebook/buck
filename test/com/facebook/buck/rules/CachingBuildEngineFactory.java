@@ -44,11 +44,14 @@ public class CachingBuildEngineFactory {
   private BuildRuleResolver buildRuleResolver;
   private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
+  private BuildInfoStoreManager buildInfoStoreManager;
 
-  public CachingBuildEngineFactory(BuildRuleResolver buildRuleResolver) {
+  public CachingBuildEngineFactory(
+      BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new NullFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
+    this.buildInfoStoreManager = buildInfoStoreManager;
   }
 
   public CachingBuildEngineFactory setBuildMode(CachingBuildEngine.BuildMode buildMode) {
@@ -107,6 +110,7 @@ public class CachingBuildEngineFactory {
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
           buildRuleResolver,
+          buildInfoStoreManager,
           ruleFinder,
           new SourcePathResolver(ruleFinder),
           ruleKeyFactories.get(),
@@ -124,7 +128,7 @@ public class CachingBuildEngineFactory {
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         buildRuleResolver,
-        new BuildInfoStoreManager(),
+        buildInfoStoreManager,
         resourceAwareSchedulingInfo,
         RuleKeyFactories.of(
             0,
