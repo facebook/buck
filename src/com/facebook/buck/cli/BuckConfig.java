@@ -92,8 +92,6 @@ public class BuckConfig implements ConfigPathGetter {
    */
   private static final Pattern ALIAS_PATTERN = Pattern.compile("[a-zA-Z_-][a-zA-Z0-9_-]*");
 
-  private static final String DEFAULT_MAX_TRACES = "25";
-
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART;
 
   private final CellPathResolver cellPathResolver;
@@ -453,14 +451,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   private static final String LOG_SECTION = "log";
 
-  public int getMaxTraces() {
-    return parseInt(getValue(LOG_SECTION, "max_traces").orElse(DEFAULT_MAX_TRACES));
-  }
-
-  public boolean isChromeTraceCreationEnabled() {
-    return getBooleanValue(LOG_SECTION, "chrome_trace_generation", true);
-  }
-
   public boolean isPublicAnnouncementsEnabled() {
     return getBooleanValue(LOG_SECTION, "public_announcements", true);
   }
@@ -484,10 +474,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   public boolean isMachineReadableLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "machine_readable_logger_enabled", true);
-  }
-
-  public boolean getCompressTraces() {
-    return getBooleanValue("log", "compress_traces", false);
   }
 
   public ProjectTestsMode xcodeProjectTestsMode() {

@@ -40,6 +40,7 @@ import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
+import com.facebook.buck.event.listener.ChromeTraceBuckConfig;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -1308,15 +1309,12 @@ public final class Main {
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
 
-    if (buckConfig.isChromeTraceCreationEnabled()) {
+    ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
+    if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
       try {
         eventListenersBuilder.add(
             new ChromeTraceBuildListener(
-                projectFilesystem,
-                invocationInfo,
-                clock,
-                buckConfig.getMaxTraces(),
-                buckConfig.getCompressTraces()));
+                projectFilesystem, invocationInfo, clock, chromeTraceConfig));
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }

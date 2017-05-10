@@ -364,15 +364,6 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetMaxTraces() throws InterruptedException, IOException {
-    assertEquals(25, FakeBuckConfig.builder().build().getMaxTraces());
-
-    Reader reader = new StringReader(Joiner.on('\n').join("[log]", "max_traces = 42"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    assertEquals(42, config.getMaxTraces());
-  }
-
-  @Test
   public void testGetAndroidTargetSdkWithSpaces() throws IOException {
     BuckConfig config = createFromText("[android]", "target = Google Inc.:Google APIs:16");
     assertEquals("Google Inc.:Google APIs:16", config.getValue("android", "target").get());
