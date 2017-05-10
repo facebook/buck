@@ -20,6 +20,8 @@ import static java.lang.Integer.parseInt;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import java.net.URI;
+import java.util.Optional;
 
 public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_MAX_TRACES = "25";
@@ -46,6 +48,17 @@ public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean getCompressTraces() {
     return delegate.getBooleanValue(LOG_SECTION, "compress_traces", false);
+  }
+
+  public Optional<URI> getTraceUploadUri() {
+    if (!getShouldUploadBuildTraces()) {
+      return Optional.empty();
+    }
+    return delegate.getUrl(LOG_SECTION, "trace_upload_uri");
+  }
+
+  private boolean getShouldUploadBuildTraces() {
+    return delegate.getBooleanValue("experiments", "upload_build_traces", false);
   }
 
   @Override

@@ -67,6 +67,7 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -226,6 +227,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       jsonGenerator.writeEndArray();
       jsonGenerator.close();
       traceStream.close();
+      uploadTraceIfConfigured(buildId);
 
       String symlinkName = config.getCompressTraces() ? "build.trace.gz" : "build.trace";
       Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
@@ -749,6 +751,40 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               }
               return null;
             });
+  }
+
+  private void uploadTraceIfConfigured(BuildId buildId) {
+    Optional<URI> traceUploadUri = config.getTraceUploadUri();
+    if (!traceUploadUri.isPresent()) {
+      return;
+    }
+
+    Path fullPath = projectFilesystem.resolve(tracePath);
+    Path logFile =
+        projectFilesystem.resolve(
+            invocationInfo.getLogDirectoryPath().resolve("upload-build-trace.log"));
+    LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
+
+    try {
+      String[] args = {
+        "java",
+        "-cp",
+        System.getenv("BUCK_CLASSPATH"),
+        "com.facebook.buck.util.trace.uploader.Main",
+        "--buildId",
+        buildId.toString(),
+        "--traceFilePath",
+        fullPath.toString(),
+        "--baseUrl",
+        traceUploadUri.get().toString(),
+        "--log",
+        logFile.toString()
+      };
+
+      Runtime.getRuntime().exec(args);
+    } catch (IOException e) {
+      LOG.error(e, e.getMessage());
+    }
   }
 
   private static class TracePathAndStream {
