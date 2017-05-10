@@ -1,6 +1,11 @@
 language: java
 jdk:
   - oraclejdk8
+env:
+  - CI_ACTION=build
+  - CI_ACTION=unit
+  - CI_ACTION=integration
+  - CI_ACTION=ant
 
 # Enable container-based architecture.
 sudo: false
@@ -43,10 +48,9 @@ before_install:
   # Set up the Groovy environment
   - export GROOVY_HOME=/usr/share/groovy/
 
-cache:
-  directories:
-    - $HOME/android-ndk-linux
-    - $HOME/android-sdk-linux
+# https://docs.travis-ci.com/user/caching#Things-not-to-cache
+# https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
+cache: false
 
 notifications:
     slack: buckbuild:TnJN80RxFaSAuCGswsnWLdoj
