@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -61,7 +61,6 @@ public class JarBuilder {
   }
 
   private final ProjectFilesystem filesystem;
-  private final PrintStream stdErr;
 
   private Observer observer = Observer.IGNORING;
   @Nullable private Path outputFile;
@@ -74,9 +73,8 @@ public class JarBuilder {
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
 
-  public JarBuilder(ProjectFilesystem filesystem, PrintStream stdErr) {
+  public JarBuilder(ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
-    this.stdErr = stdErr;
   }
 
   public JarBuilder setObserver(Observer observer) {
@@ -153,8 +151,7 @@ public class JarBuilder {
     }
 
     if (mainClass != null && !mainClassPresent()) {
-      stdErr.print(String.format("ERROR: Main class %s does not exist.\n", mainClass));
-      return 1;
+      throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
     }
 
     return 0;

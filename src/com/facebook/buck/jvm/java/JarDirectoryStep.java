@@ -152,7 +152,7 @@ public class JarDirectoryStep implements Step {
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
     return StepExecutionResult.of(
-        new JarBuilder(filesystem, context.getStdErr())
+        new JarBuilder(filesystem)
             .setObserver(new LoggingJarBuilderObserver(eventSink))
             .setEntriesToJar(entriesToJar)
             .setMainClass(Optional.ofNullable(mainClass).orElse(null))

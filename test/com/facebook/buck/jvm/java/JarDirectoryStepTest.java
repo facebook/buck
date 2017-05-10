@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -136,7 +137,7 @@ public class JarDirectoryStepTest {
     assertThat(listener.getLogMessages(), hasItem(expectedMessage));
   }
 
-  @Test
+  @Test(expected = HumanReadableException.class)
   public void shouldFailIfMainClassMissing() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("zipup");
 
@@ -152,12 +153,14 @@ public class JarDirectoryStepTest {
     TestConsole console = new TestConsole();
     ExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
 
-    int returnCode = step.execute(context).getExitCode();
-
-    assertEquals(1, returnCode);
-    assertEquals(
-        "ERROR: Main class com.example.MissingMain does not exist.\n",
-        console.getTextWrittenToStdErr());
+    try {
+      step.execute(context);
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "ERROR: Main class com.example.MissingMain does not exist.",
+          e.getHumanReadableErrorMessage());
+      throw e;
+    }
   }
 
   @Test

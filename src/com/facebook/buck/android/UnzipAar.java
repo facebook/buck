@@ -125,7 +125,7 @@ public class UnzipAar extends AbstractBuildRule
                 new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
             if (!getProjectFilesystem().exists(classesJar)) {
               try {
-                new JarBuilder(getProjectFilesystem(), context.getStdErr())
+                new JarBuilder(getProjectFilesystem())
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .createJarFile(classesJar);
               } catch (IOException e) {
@@ -158,7 +158,7 @@ public class UnzipAar extends AbstractBuildRule
               ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
               try {
 
-                new JarBuilder(getProjectFilesystem(), context.getStdErr())
+                new JarBuilder(getProjectFilesystem())
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .setEntriesToJar(entriesToJar)
                     .setMainClass(Optional.<String>empty().orElse(null))
