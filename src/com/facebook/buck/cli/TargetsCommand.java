@@ -34,7 +34,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -801,9 +800,14 @@ public class TargetsCommand extends AbstractCommand {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
       ActionGraphAndResolver result =
-          Preconditions.checkNotNull(
-              ActionGraphCache.getFreshActionGraph(
-                  params.getBuckEventBus(), targetGraphAndTargetNodes.getTargetGraph()));
+          params
+              .getActionGraphCache()
+              .getActionGraph(
+                  params.getBuckEventBus(),
+                  params.getBuckConfig().isActionGraphCheckingEnabled(),
+                  params.getBuckConfig().isSkipActionGraphCache(),
+                  targetGraphAndTargetNodes.getTargetGraph(),
+                  params.getBuckConfig().getKeySeed());
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
