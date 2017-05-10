@@ -202,13 +202,17 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   @Override
-  protected MacroHandler getMacroHandler(
+  protected Optional<MacroHandler> getMacroHandler(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       TargetGraph targetGraph,
       CxxGenruleDescriptionArg args) {
-    CxxPlatform cxxPlatform = cxxPlatforms.getRequiredValue(buildTarget);
+    Optional<CxxPlatform> maybeCxxPlatform = cxxPlatforms.getValue(buildTarget);
+    if (!maybeCxxPlatform.isPresent()) {
+      return Optional.empty();
+    }
+    CxxPlatform cxxPlatform = maybeCxxPlatform.get();
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new CxxLocationMacroExpander(cxxPlatform));
@@ -250,7 +254,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                 buildTarget, filesystem, cxxPlatform, depType, args.getOut(), filter));
       }
     }
-    return new MacroHandler(macros.build());
+    return Optional.of(new MacroHandler(macros.build()));
   }
 
   @Override

@@ -82,22 +82,23 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return PARSE_TIME_MACRO_HANDLER;
   }
 
-  protected MacroHandler getMacroHandler(
+  protected Optional<MacroHandler> getMacroHandler(
       @SuppressWarnings("unused") BuildTarget buildTarget,
       @SuppressWarnings("unused") ProjectFilesystem filesystem,
       @SuppressWarnings("unused") BuildRuleResolver resolver,
       TargetGraph targetGraph,
       @SuppressWarnings("unused") T args) {
-    return new MacroHandler(
-        ImmutableMap.<String, MacroExpander>builder()
-            .put("classpath", new ClasspathMacroExpander())
-            .put("exe", new ExecutableMacroExpander())
-            .put("worker", new WorkerMacroExpander())
-            .put("location", new LocationMacroExpander())
-            .put("maven_coords", new MavenCoordinatesMacroExpander())
-            .put("query_targets", new QueryTargetsMacroExpander(Optional.of(targetGraph)))
-            .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
-            .build());
+    return Optional.of(
+        new MacroHandler(
+            ImmutableMap.<String, MacroExpander>builder()
+                .put("classpath", new ClasspathMacroExpander())
+                .put("exe", new ExecutableMacroExpander())
+                .put("worker", new WorkerMacroExpander())
+                .put("location", new LocationMacroExpander())
+                .put("maven_coords", new MavenCoordinatesMacroExpander())
+                .put("query_targets", new QueryTargetsMacroExpander(Optional.of(targetGraph)))
+                .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
+                .build()));
   }
 
   @Override
@@ -108,39 +109,38 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       CellPathResolver cellRoots,
       final T args)
       throws NoSuchBuildTargetException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(
-                getMacroHandler(
-                    params.getBuildTarget(),
-                    params.getProjectFilesystem(),
-                    resolver,
-                    targetGraph,
-                    args),
-                params.getBuildTarget(),
-                cellRoots,
-                resolver)
-            ::apply;
-    final Optional<com.facebook.buck.rules.args.Arg> cmd = args.getCmd().map(macroArgFunction);
-    final Optional<com.facebook.buck.rules.args.Arg> bash = args.getBash().map(macroArgFunction);
-    final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
-        args.getCmdExe().map(macroArgFunction);
+    Optional<MacroHandler> maybeMacroHandler =
+        getMacroHandler(
+            params.getBuildTarget(), params.getProjectFilesystem(), resolver, targetGraph, args);
+    if (maybeMacroHandler.isPresent()) {
+      MacroHandler macroHandler = maybeMacroHandler.get();
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+          MacroArg.toMacroArgFunction(macroHandler, params.getBuildTarget(), cellRoots, resolver)
+              ::apply;
+      final Optional<com.facebook.buck.rules.args.Arg> cmd = args.getCmd().map(macroArgFunction);
+      final Optional<com.facebook.buck.rules.args.Arg> bash = args.getBash().map(macroArgFunction);
+      final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
+          args.getCmdExe().map(macroArgFunction);
+      return createBuildRule(
+          params.copyReplacingExtraDeps(
+              Suppliers.ofInstance(
+                  Stream.concat(
+                          ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
+                          Stream.of(cmd, bash, cmdExe)
+                              .flatMap(Optionals::toStream)
+                              .flatMap(input -> input.getDeps(ruleFinder).stream()))
+                      .collect(
+                          MoreCollectors.toImmutableSortedSet(
+                              Comparator.<BuildRule>naturalOrder())))),
+          resolver,
+          args,
+          cmd,
+          bash,
+          cmdExe);
+    }
     return createBuildRule(
-        params.copyReplacingExtraDeps(
-            Suppliers.ofInstance(
-                Stream.concat(
-                        ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
-                        Stream.of(cmd, bash, cmdExe)
-                            .flatMap(Optionals::toStream)
-                            .flatMap(input -> input.getDeps(ruleFinder).stream()))
-                    .collect(
-                        MoreCollectors.toImmutableSortedSet(
-                            Comparator.<BuildRule>naturalOrder())))),
-        resolver,
-        args,
-        cmd,
-        bash,
-        cmdExe);
+        params, resolver, args, Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @Override
@@ -174,6 +174,40 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           extraDepsBuilder,
           targetGraphOnlyDepsBuilder);
     }
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      TargetGraph targetGraph,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> nonBuildDepsBuilder) {
+    Optional<MacroHandler> maybeMacroHandler =
+        getMacroHandler(buildTarget, projectFilesystem, resolver, targetGraph, constructorArg);
+    maybeMacroHandler.ifPresent(
+        macroHandler -> {
+          Stream.of(constructorArg.getCmd(), constructorArg.getCmd(), constructorArg.getCmdExe())
+              .flatMap(Optionals::toStream)
+              .forEach(
+                  s -> {
+                    try {
+                      macroHandler.extractParseTimeDeps(
+                          buildTarget, cellRoots, s, extraDepsBuilder, nonBuildDepsBuilder);
+                      ImmutableList<BuildRule> buildDeps =
+                          macroHandler.extractBuildTimeDeps(buildTarget, cellRoots, resolver, s);
+                      for (BuildRule dep : buildDeps) {
+                        extraDepsBuilder.add(dep.getBuildTarget());
+                      }
+                    } catch (MacroException e) {
+                      throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+                    }
+                  });
+        });
   }
 
   private void addDepsFromParam(
