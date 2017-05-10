@@ -188,7 +188,10 @@ public abstract class Jsr199Javac implements Javac {
             .setShouldMergeManifests(true)
             .setEntryPatternBlacklist(ImmutableSet.of())
             .appendToJarFile(
-                context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
+                context
+                    .getProjectFilesystem()
+                    .resolve(
+                        context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath()),
                 Preconditions.checkNotNull(jarOutputStream));
 
       } finally {

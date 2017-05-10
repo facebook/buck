@@ -24,6 +24,7 @@ import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipOutputStreams;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteStreams;
@@ -130,17 +131,17 @@ public class JarBuilder {
   }
 
   public int createJarFile(Path outputFile) throws IOException {
-    Path absoluteOutputPath = filesystem.getPathForRelativePath(outputFile);
+    Preconditions.checkArgument(outputFile.isAbsolute());
     try (CustomJarOutputStream jar =
-        ZipOutputStreams.newJarOutputStream(absoluteOutputPath, APPEND_TO_ZIP)) {
+        ZipOutputStreams.newJarOutputStream(outputFile, APPEND_TO_ZIP)) {
       jar.setEntryHashingEnabled(shouldHashEntries);
       return appendToJarFile(outputFile, jar);
     }
   }
 
-  public int appendToJarFile(Path relativeOutputFile, CustomJarOutputStream jar)
-      throws IOException {
-    this.outputFile = filesystem.getPathForRelativePath(relativeOutputFile);
+  public int appendToJarFile(Path outputFile, CustomJarOutputStream jar) throws IOException {
+    Preconditions.checkArgument(outputFile.isAbsolute());
+    this.outputFile = outputFile;
     this.jar = jar;
 
     // Write the manifest first.

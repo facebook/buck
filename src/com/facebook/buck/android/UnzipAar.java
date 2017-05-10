@@ -127,7 +127,7 @@ public class UnzipAar extends AbstractBuildRule
               try {
                 new JarBuilder(filesystem)
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
-                    .createJarFile(classesJar);
+                    .createJarFile(filesystem.resolve(classesJar));
               } catch (IOException e) {
                 context.logError(e, "Failed to create empty jar %s", classesJar);
                 return StepExecutionResult.ERROR;
@@ -164,7 +164,7 @@ public class UnzipAar extends AbstractBuildRule
                     .setManifestFile(Optional.<Path>empty().orElse(null))
                     .setShouldMergeManifests(true)
                     .setEntryPatternBlacklist(ImmutableSet.of())
-                    .createJarFile(uberClassesJar);
+                    .createJarFile(filesystem.resolve(uberClassesJar));
               } catch (IOException e) {
                 context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
                 return StepExecutionResult.ERROR;

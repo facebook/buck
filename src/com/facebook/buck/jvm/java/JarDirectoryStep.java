@@ -160,6 +160,6 @@ public class JarDirectoryStep implements Step {
             .setShouldMergeManifests(mergeManifests)
             .setShouldHashEntries(hashEntries)
             .setEntryPatternBlacklist(blacklist)
-            .createJarFile(pathToOutputFile));
+            .createJarFile(filesystem.resolve(pathToOutputFile)));
   }
 }
