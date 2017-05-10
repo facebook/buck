@@ -182,6 +182,7 @@ java_immutables_library(
         "JdkProvidedInMemoryJavac.java",
         "Jsr199Javac.java",
         "Jsr199TracingBridge.java",
+        "LoggingJarBuilderObserver.java",
         "MavenPublishable.java",
         "NoOpClassUsageFileWriter.java",
         "OptionsConsumer.java",

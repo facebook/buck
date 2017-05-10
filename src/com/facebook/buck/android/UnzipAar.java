@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JarBuilder;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
+import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -124,7 +125,8 @@ public class UnzipAar extends AbstractBuildRule
                 new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
             if (!getProjectFilesystem().exists(classesJar)) {
               try {
-                new JarBuilder(getProjectFilesystem(), eventSink, context.getStdErr())
+                new JarBuilder(getProjectFilesystem(), context.getStdErr())
+                    .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .createJarFile(classesJar);
               } catch (IOException e) {
                 context.logError(e, "Failed to create empty jar %s", classesJar);
@@ -156,7 +158,8 @@ public class UnzipAar extends AbstractBuildRule
               ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
               try {
 
-                new JarBuilder(getProjectFilesystem(), eventSink, context.getStdErr())
+                new JarBuilder(getProjectFilesystem(), context.getStdErr())
+                    .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .setEntriesToJar(entriesToJar)
                     .setMainClass(Optional.<String>empty().orElse(null))
                     .setManifestFile(Optional.<Path>empty().orElse(null))

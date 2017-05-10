@@ -39,16 +39,31 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 public class JarBuilder {
+  public interface Observer {
+    Observer IGNORING =
+        new Observer() {
+          @Override
+          public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier)
+              throws IOException {}
+
+          @Override
+          public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier)
+              throws IOException {}
+        };
+
+    void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) throws IOException;
+
+    void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) throws IOException;
+  }
+
   private final ProjectFilesystem filesystem;
-  private final JavacEventSink eventSink;
   private final PrintStream stdErr;
 
+  private Observer observer = Observer.IGNORING;
   @Nullable private Path outputFile;
   @Nullable private CustomJarOutputStream jar;
   @Nullable private String mainClass;
@@ -59,10 +74,14 @@ public class JarBuilder {
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
 
-  public JarBuilder(ProjectFilesystem filesystem, JavacEventSink eventSink, PrintStream stdErr) {
+  public JarBuilder(ProjectFilesystem filesystem, PrintStream stdErr) {
     this.filesystem = filesystem;
-    this.eventSink = eventSink;
     this.stdErr = stdErr;
+  }
+
+  public JarBuilder setObserver(Observer observer) {
+    this.observer = observer;
+    return this;
   }
 
   public JarBuilder setEntriesToJar(ImmutableSortedSet<Path> entriesToJar) {
@@ -182,8 +201,12 @@ public class JarBuilder {
     return className.replace('.', '/') + ".class";
   }
 
-  private Level determineSeverity(ZipEntry entry) {
-    return entry.isDirectory() ? Level.FINE : Level.INFO;
+  public static String pathToClassName(String relativePath) {
+    String entry = relativePath;
+    if (relativePath.contains(".class")) {
+      entry = relativePath.replace('/', '.').replace(".class", "");
+    }
+    return entry;
   }
 
   private void addEntriesToJar(JarEntryContainer container) throws IOException {
@@ -203,7 +226,7 @@ public class JarBuilder {
     }
 
     // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-    if (shouldEntryBeRemovedFromJar(entryName)) {
+    if (shouldEntryBeRemovedFromJar(entrySupplier)) {
       return;
     }
 
@@ -215,13 +238,7 @@ public class JarBuilder {
     // duplicate class files.
     if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
       if (!entryName.endsWith("/")) {
-        // Duplicate entries. Skip.
-        eventSink.reportEvent(
-            determineSeverity(entry),
-            "Duplicate found when adding '%s' to '%s' from '%s'",
-            entryName,
-            outputFile,
-            entrySupplier.getEntryOwner());
+        observer.onDuplicateEntry(String.valueOf(outputFile), entrySupplier);
       }
       return;
     }
@@ -236,14 +253,12 @@ public class JarBuilder {
     jar.closeEntry();
   }
 
-  private boolean shouldEntryBeRemovedFromJar(String relativePath) {
-    String entry = relativePath;
-    if (relativePath.contains(".class")) {
-      entry = relativePath.replace('/', '.').replace(".class", "");
-    }
+  private boolean shouldEntryBeRemovedFromJar(JarEntrySupplier supplier) throws IOException {
+    CustomZipEntry entry = supplier.getEntry();
+    String entryKey = pathToClassName(entry.getName());
     for (Pattern pattern : blacklist) {
-      if (pattern.matcher(entry).find()) {
-        eventSink.reportEvent(Level.FINE, "%s is excluded from the Jar.", entry);
+      if (pattern.matcher(entryKey).find()) {
+        observer.onEntryOmitted(String.valueOf(outputFile), supplier);
         return true;
       }
     }
