@@ -126,6 +126,4 @@ public class GenruleDescriptionTest {
 
     assertThat(genrule.getBuildDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
   }
-
-
 }
