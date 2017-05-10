@@ -100,10 +100,14 @@ public class MetadataChecker {
       Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
       if (metadataString.isPresent()) {
         // Only need consistency check if type file exists, otherwise it's a clean build.
-        CachingBuildEngine.MetadataStorage fromFile =
-            CachingBuildEngine.MetadataStorage.valueOf(metadataString.get());
+        Optional<CachingBuildEngine.MetadataStorage> fromFile;
+        try {
+          fromFile = Optional.of(CachingBuildEngine.MetadataStorage.valueOf(metadataString.get()));
+        } catch (IllegalArgumentException e) {
+          fromFile = Optional.empty();
+        }
 
-        if (fromConfig == fromFile) {
+        if (fromFile.isPresent() && fromConfig == fromFile.get()) {
           // Our configured metadata storage backend is consistent with the last-used one.
           continue;
         }
@@ -111,7 +115,7 @@ public class MetadataChecker {
         // An inconsistent metadata backend has been requested; we need to clean the repo.
         LOG.debug(
             "Changing metadata_storage from %s to %s, cleaning: %s",
-            fromFile, fromConfig, cell.getFilesystem().getRootPath());
+            metadataString.get(), fromConfig, cell.getFilesystem().getRootPath());
         deleteScratchDir(filesystem);
         filesystem.deleteRecursivelyIfExists(filesystem.getBuckPaths().getGenDir());
         filesystem.deleteRecursivelyIfExists(filesystem.getBuckPaths().getTrashDir());
