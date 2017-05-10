@@ -108,12 +108,12 @@ public class UnzipAar extends AbstractBuildRule
           public StepExecutionResult execute(ExecutionContext context) {
             Path libsDirectory = unpackDirectory.resolve("libs");
             boolean dirDoesNotExistOrIsEmpty;
-            if (!getProjectFilesystem().exists(libsDirectory)) {
+            ProjectFilesystem filesystem = getProjectFilesystem();
+            if (!filesystem.exists(libsDirectory)) {
               dirDoesNotExistOrIsEmpty = true;
             } else {
               try {
-                dirDoesNotExistOrIsEmpty =
-                    getProjectFilesystem().getDirectoryContents(libsDirectory).isEmpty();
+                dirDoesNotExistOrIsEmpty = filesystem.getDirectoryContents(libsDirectory).isEmpty();
               } catch (IOException e) {
                 context.logError(e, "Failed to get directory contents of %s", libsDirectory);
                 return StepExecutionResult.ERROR;
@@ -123,9 +123,9 @@ public class UnzipAar extends AbstractBuildRule
             Path classesJar = unpackDirectory.resolve("classes.jar");
             JavacEventSinkToBuckEventBusBridge eventSink =
                 new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
-            if (!getProjectFilesystem().exists(classesJar)) {
+            if (!filesystem.exists(classesJar)) {
               try {
-                new JarBuilder(getProjectFilesystem())
+                new JarBuilder(filesystem)
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .createJarFile(classesJar);
               } catch (IOException e) {
@@ -136,8 +136,7 @@ public class UnzipAar extends AbstractBuildRule
 
             if (dirDoesNotExistOrIsEmpty) {
               try {
-                getProjectFilesystem()
-                    .copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
+                filesystem.copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
               } catch (IOException e) {
                 context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
                 return StepExecutionResult.ERROR;
@@ -158,7 +157,7 @@ public class UnzipAar extends AbstractBuildRule
               ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
               try {
 
-                new JarBuilder(getProjectFilesystem())
+                new JarBuilder(filesystem)
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
                     .setEntriesToJar(entriesToJar)
                     .setMainClass(Optional.<String>empty().orElse(null))
