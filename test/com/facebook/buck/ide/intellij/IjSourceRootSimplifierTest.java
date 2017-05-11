@@ -197,6 +197,36 @@ public class IjSourceRootSimplifierTest {
   }
 
   @Test
+  public void testMergingIntoBiggerNumberOfSourceFolders() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder aaSource = buildSourceFolder("a/a");
+    IjFolder abSource = buildSourceFolder("a/b");
+    IjFolder acTest = buildTestFolder("a/c");
+
+    ImmutableSet<IjFolder> mergedFolders =
+        simplifier.simplify(0, ImmutableSet.of(aaSource, abSource, acTest));
+
+    IjFolder aSource = buildSourceFolder("a");
+    assertThat(mergedFolders, Matchers.containsInAnyOrder(aSource, acTest));
+  }
+
+  @Test
+  public void testMergingIntoBiggerNumberOfTestFolders() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder aaSource = buildSourceFolder("a/a");
+    IjFolder abSource = buildSourceFolder("a/b");
+    IjFolder acTest = buildTestFolder("a/c");
+    IjFolder adTest = buildTestFolder("a/d");
+    IjFolder aeTest = buildTestFolder("a/e");
+
+    ImmutableSet<IjFolder> mergedFolders =
+        simplifier.simplify(0, ImmutableSet.of(aaSource, abSource, acTest, adTest, aeTest));
+
+    IjFolder aTest = buildTestFolder("a");
+    assertThat(mergedFolders, Matchers.containsInAnyOrder(aaSource, abSource, aTest));
+  }
+
+  @Test
   public void testDifferentTypesAreNotMergedIntoParent() {
     IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
     IjFolder aSource = buildSourceFolder("a");
