@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import traceback
 import math
 
 from rulekey_diff2 import *
@@ -239,7 +240,7 @@ class Graph:
 def print_deps(g, u, sort_col_id, cacheable_only, reverse_deps=False):
     is_proper_node = (0 <= u < len(g))
     if not is_proper_node and u != g.id_all and u != g.id_roots:
-        print('id out of range:', u)
+        eprint('id out of range:', u)
         return
 
     def col_cmp(v1, v2):
@@ -274,7 +275,7 @@ def print_deps(g, u, sort_col_id, cacheable_only, reverse_deps=False):
 
 def print_node(g, u):
     if u < 0 or u >= len(g):
-        print('id out of range:', u)
+        eprint('id out of range:', u)
         return
     tbl = Table()
     tbl.add_row([])
@@ -304,6 +305,7 @@ interactive commands:
     fk <criteria>       finds and lists all the keys matching the given criteria
     fkr <criteria>      finds and lists all the reference keys matching the given criteria
                         criteria: pattern1 field1 [pattern2 field2 pattern3 field3 ...]
+                        e.g.: `fk java/com/example/my_target .name`
     pk <hahs>           shows rulekey composition for the given key hash
     pkr <hahs>          shows rulekey composition for the given reference key hash
     pt                  shows all the targets whose rulekey differ from the reference key hash
@@ -445,77 +447,83 @@ def main():
             parts = raw_input('> ').strip().split(' ')
         except EOFError:
             break
-        cmd = parts[0]
-        if cmd == 'q' or cmd == 'quit':
-            break
-        if cmd == 'h' or cmd == 'help':
-            print_help()
-        elif cmd == 'lg' or cmd == 'load_graph':
-            path = parts[1]
-            d.load_graph(path)
-        elif cmd == 'r' or cmd == 'roots':
-            bstk.append(d.graph.id_roots)
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-        elif cmd == 'a' or cmd == 'all':
-            bstk.append(d.graph.id_all)
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-        elif cmd == 'c' or cmd == 'cacheable_only':
-            cacheable_only = not cacheable_only
-            print('cacheable_only: %s' % cacheable_only)
-        elif cmd == 'd' or cmd == 'deps':
-            bstk.append(int(parts[1]))
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-        elif cmd == 'rd' or cmd == 'parents':
-            bstk.append(int(parts[1]))
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only, True)
-        elif cmd == 'b' or cmd == 'back':
-            if len(bstk) > 1:
-                bstk.pop()
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-        elif cmd == 's' or cmd == 'sort':
-            sort_col_id = int(parts[1])
-            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-        elif cmd == 'p' or cmd == 'print':
-            u = int(parts[1])
-            print_node(d.graph, u)
-        elif cmd == 'ft' or cmd == 'find_target':
-            pattern = parts[1]
-            for u in d.find_targets(pattern):
-                print(u, d.graph.nodes[u].target)
-        elif cmd == 'lk' or cmd == 'load_keys':
-            path = parts[1]
-            d.load_keys(path)
-        elif cmd == 'lkr' or cmd == 'load_keys_ref':
-            path = parts[1]
-            d.load_keys_ref(path)
-        elif cmd == 'fk' or cmd == 'find_keys':
-            criteria = zip(*[iter(parts[1:])]*2)
-            for key in find_keys(d.keys, criteria):
-                print(key)
-        elif cmd == 'fkr' or cmd == 'find_keys_ref':
-            criteria = zip(*[iter(parts[1:])]*2)
-            for key in find_keys(d.keys_ref, criteria):
-                print(key)
-        elif cmd == 'pk' or cmd == 'print_key':
-            rulekey_hash = parts[1]
-            print_rulekey(d.keys.get(rulekey_hash, []))
-        elif cmd == 'pkr' or cmd == 'print_key_ref':
-            rulekey_hash = parts[1]
-            print_rulekey(d.keys_ref.get(rulekey_hash, []))
-        elif cmd == 'pt' or cmd == 'print_targets':
-            d.print_targets_intersection(True, cacheable_only)
-        elif cmd == 'pta' or cmd == 'print_targets_all':
-            d.print_targets_intersection(False, cacheable_only)
-        elif cmd == 'dt' or cmd == 'diff_target':
-            try:
-                d.diff_keys_for_target(d.graph.nodes[int(parts[1])].target)
-            except ValueError:
-                d.diff_keys_for_target(parts[1])
-        elif cmd == 'gv' or cmd == 'save_graphviz':
-            path = parts[1]
-            d.save_graphviz(path)
-        else:
-            eprint('unknown command: ', parts)
+        try:
+            cmd = parts[0]
+            if cmd == 'q' or cmd == 'quit':
+                break
+            if cmd == 'h' or cmd == 'help':
+                print_help()
+            elif cmd == 'lg' or cmd == 'load_graph':
+                path = parts[1]
+                d.load_graph(path)
+            elif cmd == 'r' or cmd == 'roots':
+                bstk.append(d.graph.id_roots)
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+            elif cmd == 'a' or cmd == 'all':
+                bstk.append(d.graph.id_all)
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+            elif cmd == 'c' or cmd == 'cacheable_only':
+                cacheable_only = not cacheable_only
+                print('cacheable_only: %s' % cacheable_only)
+            elif cmd == 'd' or cmd == 'deps':
+                bstk.append(int(parts[1]))
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+            elif cmd == 'rd' or cmd == 'parents':
+                bstk.append(int(parts[1]))
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only, True)
+            elif cmd == 'b' or cmd == 'back':
+                if len(bstk) > 1:
+                    bstk.pop()
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+            elif cmd == 's' or cmd == 'sort':
+                sort_col_id = int(parts[1])
+                print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+            elif cmd == 'p' or cmd == 'print':
+                u = int(parts[1])
+                print_node(d.graph, u)
+            elif cmd == 'ft' or cmd == 'find_target':
+                pattern = parts[1]
+                for u in d.find_targets(pattern):
+                    print(u, d.graph.nodes[u].target)
+            elif cmd == 'lk' or cmd == 'load_keys':
+                path = parts[1]
+                d.load_keys(path)
+            elif cmd == 'lkr' or cmd == 'load_keys_ref':
+                path = parts[1]
+                d.load_keys_ref(path)
+            elif cmd == 'fk' or cmd == 'find_keys':
+                criteria = zip(*[iter(parts[1:])]*2)
+                for key in find_keys(d.keys, criteria):
+                    print(key)
+            elif cmd == 'fkr' or cmd == 'find_keys_ref':
+                criteria = zip(*[iter(parts[1:])]*2)
+                for key in find_keys(d.keys_ref, criteria):
+                    print(key)
+            elif cmd == 'pk' or cmd == 'print_key':
+                rulekey_hash = parts[1]
+                print_rulekey(d.keys.get(rulekey_hash, []))
+            elif cmd == 'pkr' or cmd == 'print_key_ref':
+                rulekey_hash = parts[1]
+                print_rulekey(d.keys_ref.get(rulekey_hash, []))
+            elif cmd == 'pt' or cmd == 'print_targets':
+                d.print_targets_intersection(True, cacheable_only)
+            elif cmd == 'pta' or cmd == 'print_targets_all':
+                d.print_targets_intersection(False, cacheable_only)
+            elif cmd == 'dt' or cmd == 'diff_target':
+                try:
+                    d.diff_keys_for_target(d.graph.nodes[int(parts[1])].target)
+                except ValueError:
+                    d.diff_keys_for_target(parts[1])
+            elif cmd == 'gv' or cmd == 'save_graphviz':
+                path = parts[1]
+                d.save_graphviz(path)
+            else:
+                eprint('unknown command: ', parts)
+        except Exception:
+            eprint('Something went wrong. Make sure you loaded all the required data and\n'
+                   'specified all the required arguments necessary for performing the command.')
+            eprint(traceback.format_exc())
+
 
 if __name__ == '__main__':
     main()
