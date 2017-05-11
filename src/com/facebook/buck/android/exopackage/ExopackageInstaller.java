@@ -45,10 +45,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -287,12 +289,10 @@ public class ExopackageInstaller {
               .replaceAll(
                   "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
 
-      installFiles(
-          "secondary_dex",
-          ImmutableMap.copyOf(filesToInstallByHash),
-          metadataContents,
-          "secondary-%s.dex.jar",
-          SECONDARY_DEX_DIR);
+      ImmutableMap<Path, Path> filesToInstall =
+          applyFilenameFormat(filesToInstallByHash, SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
+      installFiles("secondary_dex", filesToInstall);
+      installMetadata(ImmutableMap.of(SECONDARY_DEX_DIR.resolve("metadata.txt"), metadataContents));
     }
 
     private void installResourcesFiles() throws Exception {
@@ -317,12 +317,10 @@ public class ExopackageInstaller {
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(hashToSources, hashesToInstall::contains);
 
-      installFiles(
-          "resources",
-          ImmutableMap.copyOf(filesToInstallByHash),
-          metadataContent,
-          "%s.apk",
-          RESOURCES_DIR);
+      ImmutableMap<Path, Path> filesToInstall =
+          applyFilenameFormat(filesToInstallByHash, RESOURCES_DIR, "%s.apk");
+      installFiles("resources", filesToInstall);
+      installMetadata(ImmutableMap.of(RESOURCES_DIR.resolve("metadata.txt"), metadataContent));
     }
 
     private void installNativeLibraryFiles() throws Exception {
@@ -361,12 +359,11 @@ public class ExopackageInstaller {
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(libraries, Predicates.not(presentHashes::contains));
 
-      installFiles(
-          "native_library",
-          ImmutableMap.copyOf(filesToInstallByHash),
-          metadataContents,
-          "native-%s.so",
-          NATIVE_LIBS_DIR.resolve(abi));
+      Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
+      ImmutableMap<Path, Path> filesToInstall =
+          applyFilenameFormat(filesToInstallByHash, abiDir, "native-%s.so");
+      installFiles("native_library", filesToInstall);
+      installMetadata(ImmutableMap.of(abiDir.resolve("metadata.txt"), metadataContents));
     }
 
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
@@ -460,34 +457,45 @@ public class ExopackageInstaller {
       }
     }
 
-    private void installFiles(
-        String filesType,
-        ImmutableMap<String, Path> filesToInstallByHash,
-        String metadataFileContents,
-        String filenameFormat,
-        Path destinationDirRelativeToDataRoot)
-        throws Exception {
-      try (SimplePerfEvent.Scope ignored1 =
-              SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
-          AutoCloseable ignored2 = device.createForward()) {
-        Path destinationDir = dataRoot.resolve(destinationDirRelativeToDataRoot);
-        for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
-          Path destination = destinationDir.resolve(String.format(filenameFormat, entry.getKey()));
-          Path source = entry.getValue();
+    private ImmutableMap<Path, Path> applyFilenameFormat(
+        Map<String, Path> filesToHashes, Path deviceDir, String filenameFormat) {
+      ImmutableMap.Builder<Path, Path> filesBuilder = ImmutableMap.builder();
+      for (Map.Entry<String, Path> entry : filesToHashes.entrySet()) {
+        filesBuilder.put(
+            deviceDir.resolve(String.format(filenameFormat, entry.getKey())), entry.getValue());
+      }
+      return filesBuilder.build();
+    }
 
-          try (SimplePerfEvent.Scope ignored3 =
-              SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-            device.installFile(destination, projectFilesystem.resolve(source));
-          }
+    private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
+        throws Exception {
+      try (SimplePerfEvent.Scope ignored =
+              SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
+          AutoCloseable ignored1 = device.createForward()) {
+        filesToInstall.forEach(
+            (devicePath, hostPath) -> {
+              Path destination = dataRoot.resolve(devicePath);
+              Path source = projectFilesystem.resolve(hostPath);
+              try (SimplePerfEvent.Scope ignored2 =
+                  SimplePerfEvent.scope(eventBus, "install_file")) {
+                device.installFile(destination, source);
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+    }
+
+    private void installMetadata(ImmutableMap<Path, String> metadataToInstall) throws Exception {
+      try (Closer closer = Closer.create()) {
+        Map<Path, Path> filesToInstall = new HashMap<>();
+        for (Map.Entry<Path, String> entry : metadataToInstall.entrySet()) {
+          NamedTemporaryFile temp = closer.register(new NamedTemporaryFile("metadata", "tmp"));
+          com.google.common.io.Files.write(
+              entry.getValue().getBytes(Charsets.UTF_8), temp.get().toFile());
+          filesToInstall.put(entry.getKey(), temp.get());
         }
-        try (SimplePerfEvent.Scope ignored3 =
-            SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
-          try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
-            com.google.common.io.Files.write(
-                metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
-            device.installFile(destinationDir.resolve("metadata.txt"), temp.get());
-          }
-        }
+        installFiles("metadata", ImmutableMap.copyOf(filesToInstall));
       }
     }
   }
