@@ -26,11 +26,11 @@ public interface ExopackageDevice {
 
   void stopPackage(String packageName) throws Exception;
 
-  Optional<ExopackageInstaller.PackageInfo> getPackageInfo(String packageName) throws Exception;
+  Optional<PackageInfo> getPackageInfo(String packageName) throws Exception;
 
   void uninstallPackage(String packageName) throws InstallException;
 
-  String getSignature(String agentCommand, String packagePath) throws Exception;
+  String getSignature(String packagePath) throws Exception;
 
   String listDir(String dirPath) throws Exception;
 
@@ -40,10 +40,9 @@ public interface ExopackageDevice {
 
   void removeForward(int localPort, int remotePort) throws Exception;
 
-  void installFile(String agentCommand, int port, Path targetDevicePath, Path source)
-      throws Exception;
+  void installFile(int port, Path targetDevicePath, Path source) throws Exception;
 
-  void mkDirP(String mkdirCommand, String dirpath) throws Exception;
+  void mkDirP(String dirpath) throws Exception;
 
   String getProperty(String name) throws Exception;
 }

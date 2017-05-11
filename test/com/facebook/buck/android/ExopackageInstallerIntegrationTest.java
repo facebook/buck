@@ -27,6 +27,7 @@ import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.android.exopackage.ExopackageDevice;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -428,8 +429,8 @@ public class ExopackageInstallerIntegrationTest {
     // Persistent "device" state.
     private NavigableMap<String, String> deviceState;
 
-    private Optional<ExopackageInstaller.PackageInfo> deviceAgentPackageInfo;
-    private Optional<ExopackageInstaller.PackageInfo> fakePackageInfo;
+    private Optional<PackageInfo> deviceAgentPackageInfo;
+    private Optional<PackageInfo> fakePackageInfo;
     private String packageSignature;
 
     // Per install state.
@@ -457,13 +458,13 @@ public class ExopackageInstallerIntegrationTest {
       if (apk.equals(filesystem.resolve(agentPath).toFile())) {
         deviceAgentPackageInfo =
             Optional.of(
-                new ExopackageInstaller.PackageInfo(
+                new PackageInfo(
                     "/data/app/Agent.apk", "/data/data/whatever", AgentUtil.AGENT_VERSION_CODE));
         return true;
       } else if (apk.equals(filesystem.resolve(apkPath).toFile())) {
         fakePackageInfo =
             Optional.of(
-                new ExopackageInstaller.PackageInfo(
+                new PackageInfo(
                     apkDevicePath.toString(), "/data/data/whatever_else", apkVersionCode));
         try {
           deviceState.put(apkDevicePath.toString(), filesystem.computeSha1(apkPath).toString());
@@ -484,8 +485,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public Optional<ExopackageInstaller.PackageInfo> getPackageInfo(String packageName)
-        throws Exception {
+    public Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
       if (packageName.equals(AgentUtil.AGENT_PACKAGE_NAME)) {
         return deviceAgentPackageInfo;
       } else if (packageName.equals(FAKE_PACKAGE_NAME)) {
@@ -500,7 +500,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public String getSignature(String agentCommand, String packagePath) throws Exception {
+    public String getSignature(String packagePath) throws Exception {
       assertTrue(deviceState.containsKey(packagePath));
       return packageSignature;
     }
@@ -550,8 +550,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public void installFile(String agentCommand, int port, Path targetDevicePath, Path source)
-        throws Exception {
+    public void installFile(int port, Path targetDevicePath, Path source) throws Exception {
       // TODO(cjhopman): verify port and agentCommand
       assertTrue(targetDevicePath.isAbsolute());
       assertTrue(source.isAbsolute());
@@ -585,7 +584,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public void mkDirP(String mkdirCommand, String dirpath) throws Exception {
+    public void mkDirP(String dirpath) throws Exception {
       // TODO(cjhopman): verify that directories are made before being written to.
     }
 
@@ -638,7 +637,7 @@ public class ExopackageInstallerIntegrationTest {
 
   private class FakeAdbInterface extends ExopackageInstaller.AdbInterface {
     FakeAdbInterface() {
-      super(null);
+      super(null, null, null);
     }
 
     @Override
@@ -776,7 +775,6 @@ public class ExopackageInstallerIntegrationTest {
                   pathResolver,
                   executionContext,
                   new FakeAdbInterface(),
-                  filesystem.resolve(agentPath),
                   new FakeApkRule(pathResolver, apkInfo))
               .install(true));
     } catch (InterruptedException e) {

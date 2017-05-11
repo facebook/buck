@@ -18,7 +18,6 @@ package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -59,27 +58,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
 public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
-
-  /** Prefix of the path to the agent apk on the device. */
-  private static final String AGENT_DEVICE_PATH = "/data/app/" + AgentUtil.AGENT_PACKAGE_NAME;
-
-  /** Command line to invoke the agent on the device. */
-  private static final String JAVA_AGENT_COMMAND =
-      "dalvikvm -classpath "
-          + AGENT_DEVICE_PATH
-          + "-1.apk:"
-          + AGENT_DEVICE_PATH
-          + "-2.apk:"
-          + AGENT_DEVICE_PATH
-          + "-1/base.apk:"
-          + AGENT_DEVICE_PATH
-          + "-2/base.apk "
-          + "com.facebook.buck.android.agent.AgentMain ";
 
   @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
@@ -95,7 +77,7 @@ public class ExopackageInstaller {
   public static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
   @VisibleForTesting
-  static final Pattern RESOURCES_FILE_PATTERN = Pattern.compile("([0-9a-f]+)\\.apk");
+  public static final Pattern RESOURCES_FILE_PATTERN = Pattern.compile("([0-9a-f]+)\\.apk");
 
   private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
@@ -107,7 +89,6 @@ public class ExopackageInstaller {
   private final HasInstallableApk apkRule;
   private final String packageName;
   private final Path dataRoot;
-  private final Path agentApkPath;
 
   private final ExopackageInfo exopackageInfo;
 
@@ -121,9 +102,13 @@ public class ExopackageInstaller {
   @VisibleForTesting
   public static class AdbInterface {
     private AdbHelper adbHelper;
+    private BuckEventBus eventBus;
+    private Path agentApkPath;
 
-    protected AdbInterface(AdbHelper adbHelper) {
+    protected AdbInterface(BuckEventBus eventBus, AdbHelper adbHelper, Path agentApkPath) {
+      this.eventBus = eventBus;
       this.adbHelper = adbHelper;
+      this.agentApkPath = agentApkPath;
     }
 
     /**
@@ -140,7 +125,8 @@ public class ExopackageInstaller {
           new AdbHelper.AdbCallable() {
             @Override
             public boolean call(IDevice device) throws Exception {
-              return func.apply(new RealExopackageDevice(device, adbHelper));
+              return func.apply(
+                  new RealExopackageDevice(eventBus, device, adbHelper, agentApkPath));
             }
 
             @Override
@@ -159,19 +145,6 @@ public class ExopackageInstaller {
    */
   private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
-  @VisibleForTesting
-  public static class PackageInfo {
-    public final String apkPath;
-    public final String nativeLibPath;
-    public final String versionCode;
-
-    public PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
-      this.nativeLibPath = nativeLibPath;
-      this.apkPath = apkPath;
-      this.versionCode = versionCode;
-    }
-  }
-
   private static Path getApkFilePathFromProperties() {
     String apkFileName = System.getProperty("buck.android_agent_path");
     if (apkFileName == null) {
@@ -188,8 +161,7 @@ public class ExopackageInstaller {
     this(
         pathResolver,
         context,
-        new AdbInterface(adbHelper),
-        getApkFilePathFromProperties(),
+        new AdbInterface(context.getBuckEventBus(), adbHelper, getApkFilePathFromProperties()),
         apkRule);
   }
 
@@ -197,11 +169,9 @@ public class ExopackageInstaller {
       SourcePathResolver pathResolver,
       ExecutionContext context,
       AdbInterface adbInterface,
-      Path agentApkPath,
       HasInstallableApk apkRule) {
     this.pathResolver = pathResolver;
     this.adbHelper = adbInterface;
-    this.agentApkPath = agentApkPath;
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
@@ -248,26 +218,12 @@ public class ExopackageInstaller {
     /** Port to use for sending files to the agent. */
     private final int agentPort;
 
-    /** True iff we should use the native agent. */
-    private boolean useNativeAgent = true;
-
-    /** Set after the agent is installed. */
-    @Nullable private String nativeAgentPath;
-
     private SingleDeviceInstaller(ExopackageDevice device, int agentPort) {
       this.device = device;
       this.agentPort = agentPort;
     }
 
     boolean doInstall() throws Exception {
-      Optional<PackageInfo> agentInfo = installAgentIfNecessary();
-      if (!agentInfo.isPresent()) {
-        return false;
-      }
-
-      nativeAgentPath = agentInfo.get().nativeLibPath;
-      determineBestAgent();
-
       final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
       // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
@@ -434,69 +390,11 @@ public class ExopackageInstaller {
           NATIVE_LIBS_DIR.resolve(abi));
     }
 
-    /**
-     * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
-     * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
-     */
-    private void determineBestAgent() throws Exception {
-      String value = device.getProperty("ro.build.version.sdk");
-      try {
-        if (Integer.valueOf(value.trim()) > 19) {
-          useNativeAgent = false;
-        }
-      } catch (NumberFormatException exn) {
-        useNativeAgent = false;
-      }
-    }
-
-    private String getAgentCommand() {
-      if (useNativeAgent) {
-        return nativeAgentPath + "/libagent.so ";
-      } else {
-        return JAVA_AGENT_COMMAND;
-      }
-    }
-
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
               eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
         return device.getPackageInfo(packageName);
-      }
-    }
-
-    /** @return PackageInfo for the agent, or absent if installation failed. */
-    private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
-      Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
-      if (!agentInfo.isPresent()) {
-        LOG.debug("Agent not installed.  Installing.");
-        return installAgentApk();
-      }
-      LOG.debug("Agent version: %s", agentInfo.get().versionCode);
-      if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
-        // Always uninstall before installing.  We might be downgrading, which requires
-        // an uninstall, or we might just want a clean installation.
-        uninstallAgent();
-        return installAgentApk();
-      }
-      return agentInfo;
-    }
-
-    private void uninstallAgent() throws InstallException {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "uninstall_old_agent")) {
-        device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
-      }
-    }
-
-    private Optional<PackageInfo> installAgentApk() throws Exception {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
-        File apkPath = agentApkPath.toFile();
-        boolean success =
-            device.installApkOnDevice(apkPath, /* installViaSd */ false, /* quiet */ false);
-        if (!success) {
-          return Optional.empty();
-        }
-        return getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
     }
 
@@ -526,7 +424,7 @@ public class ExopackageInstaller {
 
     private String getInstalledAppSignature(final String packagePath) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
-        String output = device.getSignature(getAgentCommand(), packagePath);
+        String output = device.getSignature(packagePath);
 
         String result = output.trim();
         if (result.contains("\n") || result.contains("\r")) {
@@ -569,11 +467,7 @@ public class ExopackageInstaller {
         Path dirname, Pattern filePattern, ImmutableSet<String> requiredHashes) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
         String dirPath = dataRoot.resolve(dirname).toString();
-        // Kind of a hack here.  The java agent can't force the proper permissions on the
-        // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
-        // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
-        String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
-        device.mkDirP(mkdirP, dirPath);
+        device.mkDirP(dirPath);
 
         String output = device.listDir(dirPath);
 
@@ -606,8 +500,7 @@ public class ExopackageInstaller {
 
             try (SimplePerfEvent.Scope ignored2 =
                 SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-              device.installFile(
-                  getAgentCommand(), agentPort, destination, projectFilesystem.resolve(source));
+              device.installFile(agentPort, destination, projectFilesystem.resolve(source));
             }
           }
           try (SimplePerfEvent.Scope ignored3 =
@@ -615,8 +508,7 @@ public class ExopackageInstaller {
             try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
               com.google.common.io.Files.write(
                   metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
-              device.installFile(
-                  getAgentCommand(), agentPort, destinationDir.resolve("metadata.txt"), temp.get());
+              device.installFile(agentPort, destinationDir.resolve("metadata.txt"), temp.get());
             }
           }
         } finally {

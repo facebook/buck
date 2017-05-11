@@ -21,10 +21,13 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closer;
 import java.io.File;
@@ -46,10 +49,15 @@ public class RealExopackageDevice implements ExopackageDevice {
 
   private IDevice device;
   private AdbHelper adbHelper;
+  private Supplier<ExopackageAgent> agent;
 
-  RealExopackageDevice(IDevice device, AdbHelper adbHelper) {
+  RealExopackageDevice(
+      BuckEventBus eventBus, IDevice device, AdbHelper adbHelper, Path agentApkPath) {
     this.device = device;
     this.adbHelper = adbHelper;
+    this.agent =
+        Suppliers.memoize(
+            () -> ExopackageAgent.installAgentIfNecessary(eventBus, this, agentApkPath));
   }
 
   /**
@@ -92,8 +100,7 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public Optional<ExopackageInstaller.PackageInfo> getPackageInfo(String packageName)
-      throws Exception {
+  public Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     /* "dumpsys package <package>" produces output that looks like
 
      Package [com.facebook.katana] (4229ce68):
@@ -124,8 +131,8 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public String getSignature(String agentCommand, String packagePath) throws Exception {
-    String command = agentCommand + "get-signature " + packagePath;
+  public String getSignature(String packagePath) throws Exception {
+    String command = agent.get().getAgentCommand() + "get-signature " + packagePath;
     LOG.debug("Executing %s", command);
     return AdbHelper.executeCommandWithErrorChecking(device, command);
   }
@@ -158,8 +165,7 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public void installFile(
-      final String agentCommand, final int port, final Path targetDevicePath, final Path source)
+  public void installFile(final int port, final Path targetDevicePath, final Path source)
       throws Exception {
     Preconditions.checkArgument(source.isAbsolute());
     Preconditions.checkArgument(targetDevicePath.isAbsolute());
@@ -211,7 +217,7 @@ public class RealExopackageDevice implements ExopackageDevice {
     String targetFileName = targetDevicePath.toString();
     String command =
         "umask 022 && "
-            + agentCommand
+            + agent.get().getAgentCommand()
             + "receive-file "
             + port
             + " "
@@ -255,7 +261,12 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public void mkDirP(String mkdirCommand, String dirpath) throws Exception {
+  public void mkDirP(String dirpath) throws Exception {
+    // Kind of a hack here.  The java agent can't force the proper permissions on the
+    // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
+    // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
+    String mkdirCommand = agent.get().getMkDirCommand();
+
     AdbHelper.executeCommandWithErrorChecking(
         device, "umask 022 && " + mkdirCommand + " " + dirpath);
   }

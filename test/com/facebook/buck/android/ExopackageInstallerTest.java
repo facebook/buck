@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.android.exopackage.RealExopackageDevice;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
@@ -93,11 +94,11 @@ public class ExopackageInstallerTest {
             + "    versionCode=1640376 targetSdk=14\r\n"
             + "    versionName=8.0.0.0.23\r\n"
             + "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
+    Optional<PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertTrue(optionalInfo.isPresent());
-    ExopackageInstaller.PackageInfo info = optionalInfo.get();
+    PackageInfo info = optionalInfo.get();
 
     assertEquals("/data/app/com.facebook.katana-1.apk", info.apkPath);
     assertEquals("/data/app-lib/com.facebook.katana-1", info.nativeLibPath);
@@ -119,11 +120,11 @@ public class ExopackageInstallerTest {
             + "    versionCode=3 targetSdk=19\r\n"
             + "    versionName=3\r\n"
             + "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
+    Optional<PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
 
     assertTrue(optionalInfo.isPresent());
-    ExopackageInstaller.PackageInfo info = optionalInfo.get();
+    PackageInfo info = optionalInfo.get();
 
     assertEquals("/data/app/com.facebook.buck.android.agent-1/base.apk", info.apkPath);
     assertEquals("/data/app/com.facebook.buck.android.agent-1/lib", info.nativeLibPath);
@@ -143,7 +144,7 @@ public class ExopackageInstallerTest {
             + "    versionCode=1640376 targetSdk=14\r\n"
             + "    versionName=8.0.0.0.23\r\n"
             + "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
+    Optional<PackageInfo> optionalInfo =
         ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertFalse(optionalInfo.isPresent());
