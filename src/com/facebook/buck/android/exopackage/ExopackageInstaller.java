@@ -38,7 +38,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +45,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import java.io.File;
@@ -58,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
@@ -70,13 +67,6 @@ public class ExopackageInstaller {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
 
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
-
-  @VisibleForTesting
-  public static final Pattern DEX_FILE_PATTERN =
-      Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
-
-  @VisibleForTesting
-  public static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
   private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
@@ -349,36 +339,42 @@ public class ExopackageInstaller {
       }
     }
 
-    private void installNativeLibrariesForAbi(String abi, ImmutableMap<String, Path> libraries)
+    private void installNativeLibrariesForAbi(String abi, ImmutableMap<String, Path> filesByHash)
         throws Exception {
-      if (libraries.isEmpty()) {
+      if (filesByHash.isEmpty()) {
         return;
       }
-
-      String metadataContents =
-          Joiner.on('\n')
-              .join(
-                  FluentIterable.from(libraries.entrySet())
-                      .transform(
-                          input -> {
-                            String hash = input.getKey();
-                            String filename = input.getValue().getFileName().toString();
-                            int index = filename.indexOf('.');
-                            String libname = index == -1 ? filename : filename.substring(0, index);
-                            return String.format("%s native-%s.so", libname, hash);
-                          }));
-
-      ImmutableSet<String> requiredHashes = libraries.keySet();
-      ImmutableSet<String> presentHashes = prepareNativeLibsDir(abi, requiredHashes);
-
-      Map<String, Path> filesToInstallByHash =
-          Maps.filterKeys(libraries, Predicates.not(presentHashes::contains));
-
       Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
-      ImmutableMap<Path, Path> filesToInstall =
-          applyFilenameFormat(filesToInstallByHash, abiDir, "native-%s.so");
-      installFiles("native_library", filesToInstall);
-      installMetadata(ImmutableMap.of(abiDir.resolve("metadata.txt"), metadataContents));
+      ImmutableMap<Path, Path> wantedFilesToInstall =
+          applyFilenameFormat(filesByHash, abiDir, "native-%s.so");
+      device.mkDirP(dataRoot.resolve(abiDir).toString());
+      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
+
+      installMissingFiles(presentFiles, wantedFilesToInstall);
+
+      // filesToDelete will contain the old metadata, so delete first.
+      ImmutableSortedSet<Path> filesInAbiDir =
+          ImmutableSortedSet.copyOf(Sets.filter(presentFiles, p -> p.startsWith(abiDir)));
+      deleteUnwantedFiles(filesInAbiDir, wantedFilesToInstall.keySet());
+      String metadataContents = getNativeLibraryMetadataContents(filesByHash);
+
+      ImmutableMap<Path, String> metadataToInstall =
+          ImmutableMap.of(abiDir.resolve("metadata.txt"), metadataContents);
+      installMetadata(metadataToInstall);
+    }
+
+    private String getNativeLibraryMetadataContents(ImmutableMap<String, Path> libraries) {
+      return Joiner.on('\n')
+          .join(
+              FluentIterable.from(libraries.entrySet())
+                  .transform(
+                      input -> {
+                        String hash = input.getKey();
+                        String filename = input.getValue().getFileName().toString();
+                        int index = filename.indexOf('.');
+                        String libname = index == -1 ? filename : filename.substring(0, index);
+                        return String.format("%s native-%s.so", libname, hash);
+                      }));
     }
 
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
@@ -437,29 +433,6 @@ public class ExopackageInstaller {
         builder.put(entry);
       }
       return builder.build();
-    }
-
-    private ImmutableSet<String> prepareNativeLibsDir(
-        String abi, ImmutableSet<String> requiredHashes) throws Exception {
-      return prepareDirectory(NATIVE_LIBS_DIR.resolve(abi), NATIVE_LIB_PATTERN, requiredHashes);
-    }
-
-    private ImmutableSet<String> prepareDirectory(
-        Path dirname, Pattern filePattern, ImmutableSet<String> requiredHashes) throws Exception {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
-        String dirPath = dataRoot.resolve(dirname).toString();
-        device.mkDirP(dirPath);
-
-        String output = device.listDir(dirPath);
-
-        ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
-        ImmutableSet.Builder<String> filesToDelete = ImmutableSet.builder();
-
-        processLsOutput(output, filePattern, requiredHashes, foundHashes, filesToDelete);
-
-        device.rmFiles(dirPath, filesToDelete.build());
-        return foundHashes.build();
-      }
     }
 
     private void installMissingFiles(
@@ -702,38 +675,5 @@ public class ExopackageInstaller {
     }
 
     return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
-  }
-
-  /**
-   * @param output Output of "ls" command.
-   * @param filePattern A {@link Pattern} that is used to check if a file is valid, and if it
-   *     matches, {@code filePattern.group(1)} should return the hash in the file name.
-   * @param requiredHashes Hashes of dex files required for this apk.
-   * @param foundHashes Builder to receive hashes that we need and were found.
-   * @param toDelete Builder to receive files that we need to delete.
-   */
-  @VisibleForTesting
-  public static void processLsOutput(
-      String output,
-      Pattern filePattern,
-      ImmutableSet<String> requiredHashes,
-      ImmutableSet.Builder<String> foundHashes,
-      ImmutableSet.Builder<String> toDelete) {
-    for (String line : Splitter.on(LINE_ENDING).omitEmptyStrings().split(output)) {
-      if (line.equals("lock")) {
-        continue;
-      }
-
-      Matcher m = filePattern.matcher(line);
-      if (m.matches()) {
-        if (requiredHashes.contains(m.group(1))) {
-          foundHashes.add(m.group(1));
-        } else {
-          toDelete.add(line);
-        }
-      } else {
-        toDelete.add(line);
-      }
-    }
   }
 }
