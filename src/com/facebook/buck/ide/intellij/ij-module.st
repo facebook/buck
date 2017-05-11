@@ -9,7 +9,9 @@
       <configuration>
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="%androidFacet.module_gen_path%" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%androidFacet.module_gen_path%" />
+%if(androidFacet.android_manifest)%
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%androidFacet.android_manifest%" />
+%endif%
         <option name="RES_FOLDERS_RELATIVE_PATH" value="%androidFacet.res%" />
 %if(androidFacet.asset_folder)%
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%androidFacet.asset_folder%" />

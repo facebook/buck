@@ -398,7 +398,9 @@ public class IjProjectTemplateDataPreparer {
       manifestPath =
           moduleBasePath.relativize(Paths.get("").resolve("android_res/AndroidManifest.xml"));
     }
-    androidProperties.put(ANDROID_MANIFEST_TEMPLATE_PARAMETER, "/" + manifestPath);
+    if (!"AndroidManifest.xml".equals(manifestPath.toString())) {
+      androidProperties.put(ANDROID_MANIFEST_TEMPLATE_PARAMETER, "/" + manifestPath);
+    }
   }
 
   private void addAndroidProguardPath(

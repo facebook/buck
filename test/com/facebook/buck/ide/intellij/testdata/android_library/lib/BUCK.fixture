@@ -1,3 +1,4 @@
 android_library(
-    name = 'src_release'
+    name = "src_release",
+    manifest = "AndroidManifest.xml"
 )
