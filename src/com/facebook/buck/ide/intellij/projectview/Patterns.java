@@ -144,7 +144,7 @@ class Patterns {
   }
 
   /**
-   * Convenience function to generate a capture group. {@code "capture("foo"} is bigger (and more
+   * Convenience function to generate a capture group. {@code "capture("foo")} is bigger (and more
    * expensive) than {@code "(foo)"} but it's very explicit, and contrasts naturally with {@link
    * #noncapture(String)}.
    */
@@ -153,7 +153,7 @@ class Patterns {
   }
 
   /**
-   * Convenience function to generate a capture group. {@code "capture("foo"} is bigger (and more
+   * Convenience function to generate a capture group. {@code "capture("foo")} is bigger (and more
    * expensive) than {@code "(foo)"} but it's very explicit, and contrasts naturally with {@link
    * #noncapture(String)}.
    */
