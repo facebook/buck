@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import java.util.Optional;
@@ -63,7 +64,12 @@ public class StepFailedException extends Exception {
   }
 
   static StepFailedException createForFailingStepWithException(
-      Step step, Throwable throwable, Optional<BuildTarget> buildTarget) {
+      Step step, ExecutionContext context, Throwable throwable, Optional<BuildTarget> buildTarget) {
+    if (throwable instanceof HumanReadableException) {
+      return createForFailingStepWithHumanReadableException(
+          step, context, (HumanReadableException) throwable, buildTarget);
+    }
+
     CapturingPrintStream printStream = new CapturingPrintStream();
     throwable.printStackTrace(printStream);
     String stackTrace = printStream.getContentsAsString(Charsets.UTF_8);
@@ -82,6 +88,27 @@ public class StepFailedException extends Exception {
           String.format(
               "Failed on step %s with an exception:\n%s\n%s",
               step.getShortName(), throwable.getMessage(), stackTrace);
+    }
+    return new StepFailedException(message, step, 1);
+  }
+
+  private static StepFailedException createForFailingStepWithHumanReadableException(
+      Step step,
+      ExecutionContext context,
+      HumanReadableException exception,
+      Optional<BuildTarget> buildTarget) {
+    String description = step.getDescription(context);
+    String message;
+    if (buildTarget.isPresent()) {
+      message =
+          String.format(
+              "%s failed:\n%s\n%s",
+              buildTarget.get().getFullyQualifiedName(),
+              description,
+              exception.getHumanReadableErrorMessage());
+    } else {
+      message =
+          String.format("Failed:\n%s\n%s", description, exception.getHumanReadableErrorMessage());
     }
     return new StepFailedException(message, step, 1);
   }

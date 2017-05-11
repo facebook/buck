@@ -44,7 +44,7 @@ public final class DefaultStepRunner implements StepRunner {
     try {
       executionResult = step.execute(context);
     } catch (IOException | RuntimeException e) {
-      throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
+      throw StepFailedException.createForFailingStepWithException(step, context, e, buildTarget);
     } finally {
       StepEvent.Finished finished = StepEvent.finished(started, executionResult.getExitCode());
       LOG.verbose(finished.toString());
