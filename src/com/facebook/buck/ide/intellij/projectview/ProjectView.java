@@ -231,7 +231,7 @@ public class ProjectView {
           .add("/res/", capture("drawable", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("layout", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
-          .add("/res/", capture("raw"), "/")
+          .add("/res/", capture("raw", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("xml", NONCAPTURE_DASH_PART), "/")
           .build();
 
