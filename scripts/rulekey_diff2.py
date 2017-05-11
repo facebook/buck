@@ -78,6 +78,8 @@ def read_rulekeys_autodetect(path):
     """
     if not os.path.exists(path):
         raise Exception(path + ' does not exist')
+    if os.path.isdir(path):
+        path = os.path.join(path, 'rule_key_diag_keys.txt')
     eprint('Loading:', path)
     with codecs.open(path, 'r', 'utf-8') as keys_file:
         line = keys_file.readline()

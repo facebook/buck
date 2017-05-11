@@ -312,7 +312,8 @@ interactive commands:
     gv path             saves the graph as a graphviz file
 
     Note that some commands require the corresponding graph or keys file to be loaded.
-    These files can be found at buck-out/log/{build}/rule_key_diag_{graph|keys}.txt
+    These files can be found at `buck-out/log/{build}/rule_key_diag_{graph|keys}.txt`.
+    It is enough to specify just the containing folder though.
     '''
     print(description)
 
@@ -331,6 +332,8 @@ class Diag:
     def load_graph(self, path):
         if not os.path.exists(path):
             raise Exception(path + ' does not exist')
+        if os.path.isdir(path):
+            path = os.path.join(path, 'rule_key_diag_graph.txt')
         eprint('Loading:', path)
         with codecs.open(path, 'r', 'utf-8') as graph_file:
             self.graph = Graph(graph_file)
@@ -404,6 +407,11 @@ def parse_args():
         metavar='<path>',
         help='path to a keys file to load')
     parser.add_argument(
+        '-l',
+        '--log_folder',
+        metavar='<path>',
+        help='folder containing the keys and graph file (use instead of -g and -k)')
+    parser.add_argument(
         '-r',
         '--ref_keys',
         metavar='<path>',
@@ -421,10 +429,10 @@ def main():
     d = Diag()
 
     args = parse_args()
-    if args.graph is not None:
-        d.load_graph(args.graph)
-    if args.keys is not None:
-        d.load_keys(args.keys)
+    if (args.graph or args.log_folder) is not None:
+        d.load_graph(args.graph or args.log_folder)
+    if (args.keys or args.log_folder) is not None:
+        d.load_keys(args.keys or args.log_folder)
     if args.ref_keys is not None:
         d.load_keys_ref(args.ref_keys)
 
