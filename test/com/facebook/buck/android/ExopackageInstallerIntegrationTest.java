@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -51,6 +52,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -437,6 +439,7 @@ public class ExopackageInstallerIntegrationTest {
     public String abi;
     // Persistent "device" state.
     private NavigableMap<String, String> deviceState;
+    private Set<Path> directories;
 
     private Optional<PackageInfo> deviceAgentPackageInfo;
     private Optional<PackageInfo> fakePackageInfo;
@@ -450,6 +453,7 @@ public class ExopackageInstallerIntegrationTest {
 
     TestExopackageDevice() {
       deviceState = new TreeMap<>();
+      directories = new HashSet<>();
       deviceAgentPackageInfo = Optional.empty();
       fakePackageInfo = Optional.empty();
 
@@ -552,6 +556,7 @@ public class ExopackageInstallerIntegrationTest {
               "Exopackage should only install files to the install root (%s, %s)",
               INSTALL_ROOT, targetDevicePath),
           targetDevicePath.startsWith(INSTALL_ROOT));
+      MoreAsserts.assertContainsOne(directories, targetDevicePath.getParent());
       debug("installing " + targetDevicePath);
       deviceState.put(targetDevicePath.toString(), filesystem.readFileIfItExists(source).get());
 
@@ -577,8 +582,12 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public void mkDirP(String dirpath) throws Exception {
-      // TODO(cjhopman): verify that directories are made before being written to.
+    public void mkDirP(String dir) throws Exception {
+      Path dirPath = Paths.get(dir);
+      while (dirPath != null) {
+        directories.add(dirPath);
+        dirPath = dirPath.getParent();
+      }
     }
 
     @Override
