@@ -58,6 +58,8 @@
   <property name="test.gensrc.dir" value="${build.dir}/test-gen" />
   <property name="aosp.gensrc.dir" value="${build.dir}/aosp-gen" />
 
+  <property name="devbuild" value="0" />
+
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
   <condition
@@ -334,6 +336,7 @@
       <ecj-params>
         <!-- suppress ManifestMerger2 warnings -->
         <compilerarg value="-err:-all"/>
+        <compilerarg value="-warn:-all"/>
       </ecj-params>
     </ecj>
   </target>
@@ -359,6 +362,12 @@
     -->
     <element name="ecj-params" optional="true" />
     <sequential>
+      <condition property="eclipse.jdt.core.prefs.file"
+                 value="org.eclipse.jdt.core.prefs"
+                 else="org.eclipse.jdt.core.prefs-dev"
+                 >
+        <equals arg1="${devbuild}" arg2="0" />
+      </condition>
       <javac srcdir="@{srcdir}"
              sourcepath=""
              destdir="@{destdir}"
@@ -378,7 +387,7 @@
           http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2FJavaCore.html
           Apparently Eclipse refuses to publish traditional Javadoc with manageable URLs.
         -->
-        <compilerarg line="-properties '${eclipse.dir}/org.eclipse.jdt.core.prefs'" />
+        <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'" />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
         <compilerarg value="-Xlint:serial" />
