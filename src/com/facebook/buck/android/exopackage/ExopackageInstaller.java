@@ -96,6 +96,8 @@ public class ExopackageInstaller {
    * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather than
    * IDevices).
    *
+   * <p>
+   *
    * <p>All of ExopackageInstaller's interaction with devices and adb goes through this class and
    * ExopackageDevice making it easy to provide different implementations in tests.
    */
@@ -481,6 +483,23 @@ public class ExopackageInstaller {
       }
     }
 
+    AutoCloseable createForward(int localPort, int remotePort) throws Exception {
+      device.createForward(localPort, remotePort);
+      return () -> {
+        try {
+          device.removeForward(localPort, remotePort);
+        } catch (AdbCommandRejectedException e) {
+          LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
+          eventBus.post(
+              ConsoleEvent.warning(
+                  "Failed to remove adb forward %d. This is not necessarily a problem\n"
+                      + "because it will be recreated during the next exopackage installation.\n"
+                      + "See the log for the full exception.",
+                  agentPort));
+        }
+      };
+    }
+
     private void installFiles(
         String filesType,
         ImmutableMap<String, Path> filesToInstallByHash,
@@ -489,39 +508,24 @@ public class ExopackageInstaller {
         Path destinationDirRelativeToDataRoot)
         throws Exception {
       try (SimplePerfEvent.Scope ignored1 =
-          SimplePerfEvent.scope(eventBus, "multi_install_" + filesType)) {
-        device.createForward(agentPort, agentPort);
+              SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
+          AutoCloseable ignored2 = createForward(agentPort, agentPort)) {
         Path destinationDir = dataRoot.resolve(destinationDirRelativeToDataRoot);
-        try {
-          for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
-            Path destination =
-                destinationDir.resolve(String.format(filenameFormat, entry.getKey()));
-            Path source = entry.getValue();
+        for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
+          Path destination = destinationDir.resolve(String.format(filenameFormat, entry.getKey()));
+          Path source = entry.getValue();
 
-            try (SimplePerfEvent.Scope ignored2 =
-                SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-              device.installFile(agentPort, destination, projectFilesystem.resolve(source));
-            }
-          }
           try (SimplePerfEvent.Scope ignored3 =
-              SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
-            try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
-              com.google.common.io.Files.write(
-                  metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
-              device.installFile(agentPort, destinationDir.resolve("metadata.txt"), temp.get());
-            }
+              SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+            device.installFile(agentPort, destination, projectFilesystem.resolve(source));
           }
-        } finally {
-          try {
-            device.removeForward(agentPort, agentPort);
-          } catch (AdbCommandRejectedException e) {
-            LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
-            eventBus.post(
-                ConsoleEvent.warning(
-                    "Failed to remove adb forward %d. This is not necessarily a problem\n"
-                        + "because it will be recreated during the next exopackage installation.\n"
-                        + "See the log for the full exception.",
-                    agentPort));
+        }
+        try (SimplePerfEvent.Scope ignored3 =
+            SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
+          try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
+            com.google.common.io.Files.write(
+                metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
+            device.installFile(agentPort, destinationDir.resolve("metadata.txt"), temp.get());
           }
         }
       }
