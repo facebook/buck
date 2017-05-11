@@ -53,6 +53,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithResolver
@@ -163,7 +164,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return getBuildDeps();
   }
 

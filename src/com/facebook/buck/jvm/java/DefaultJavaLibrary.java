@@ -290,8 +290,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return ImmutableSortedSet.copyOf(Sets.union(fullJarDeclaredDeps, fullJarExportedDeps));
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return Sets.union(fullJarDeclaredDeps, fullJarExportedDeps);
   }
 
   @Override

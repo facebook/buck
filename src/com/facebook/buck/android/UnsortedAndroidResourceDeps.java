@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 public class UnsortedAndroidResourceDeps {
 
@@ -38,7 +39,7 @@ public class UnsortedAndroidResourceDeps {
           RobolectricTest.class);
 
   public interface Callback {
-    public void onRuleVisited(BuildRule rule, ImmutableSet<BuildRule> depsToVisit);
+    public void onRuleVisited(BuildRule rule, Set<BuildRule> depsToVisit);
   }
 
   private final ImmutableSet<HasAndroidResourceDeps> resourceDeps;
@@ -68,7 +69,7 @@ public class UnsortedAndroidResourceDeps {
         new AbstractBreadthFirstTraversal<BuildRule>(rules) {
 
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+          public Set<BuildRule> visit(BuildRule rule) {
             HasAndroidResourceDeps androidResourceRule = null;
             if (rule instanceof HasAndroidResourceDeps) {
               androidResourceRule = (HasAndroidResourceDeps) rule;
@@ -81,7 +82,7 @@ public class UnsortedAndroidResourceDeps {
             // For JavaLibrary rules, we need to grab the deps directly from the rule and not from
             // the BuildRuleParams object. BuildRuleParams may hold ABI rules which don't allow
             // us to properly traverse and locate the transitive android resource deps
-            ImmutableSet<BuildRule> depsToVisit;
+            Set<BuildRule> depsToVisit;
             if (rule instanceof JavaLibrary) {
               depsToVisit = ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries();
             } else {

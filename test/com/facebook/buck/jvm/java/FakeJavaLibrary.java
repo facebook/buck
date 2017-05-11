@@ -40,6 +40,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
@@ -75,7 +76,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return getBuildDeps();
   }
 

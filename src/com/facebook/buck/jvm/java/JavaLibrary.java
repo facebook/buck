@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 public interface JavaLibrary
     extends BuildRule,
@@ -67,7 +68,7 @@ public interface JavaLibrary
 
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries();
 
   public ImmutableSortedSet<SourcePath> getJavaSrcs();
 
