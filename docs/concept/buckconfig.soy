@@ -910,39 +910,6 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
-  {param name: 'http_cache_names' /}
-  {param description}
-    A comma-separated list of names used to configure multiple caches.  The caches will be used{sp}
-    <b>serially</b> in the order in which their names are specified here.  If an artifact is found
-    further along in the list, an attempt to store it in the caches earlier in the list will be
-    made.  In the following example, if the artifact is found in the <code>global</code> cache, it
-    will be stored in the <code>local</code> cache, but not <code>regional-ro</code> cache (as that
-    one is <code>readonly</code>.
-  {/param}
-  {param raw_example}
-{literal}<pre class="prettyprint lang-ini">
-[cache]
-    mode = http
-    http_cache_names = local, regional-ro, global
-
-[cache#regional-ro]
-    http_url = http://region.com/
-    http_timeout_seconds = 5
-    http_mode = readonly
-
-[cache#local]
-    http_url = http://local.co.uk/
-    http_timeout_seconds = 1
-
-[cache#global]
-    http_url = http://global.com/
-    http_timeout_seconds = 42
-</pre>{/literal}
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
   {param name: 'two_level_cache_enabled' /}
   {param example_value: 'false' /}
   {param description}

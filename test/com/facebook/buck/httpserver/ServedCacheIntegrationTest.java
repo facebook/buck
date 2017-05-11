@@ -24,7 +24,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -42,8 +41,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.DataOutputStream;
@@ -260,78 +257,6 @@ public class ServedCacheIntegrationTest {
     assertThat(
         serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
         Matchers.equalTo(CacheResultType.ERROR));
-  }
-
-  @Test
-  public void testMultipleNamedCaches() throws Exception {
-    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    final RuleKey bFileRuleKey = new RuleKey("baadbeef");
-
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
-    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
-
-    ArtifactCache secondCache =
-        new ArtifactCache() {
-          @Override
-          public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-            if (ruleKey.equals(bFileRuleKey)) {
-              try {
-                projectFilesystem.writeContentsToPath("second", output.get());
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-              return CacheResult.hit("secondCache");
-            }
-            return CacheResult.miss();
-          }
-
-          @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
-            return Futures.immediateFuture(null);
-          }
-
-          @Override
-          public CacheReadMode getCacheReadMode() {
-            return CacheReadMode.READWRITE;
-          }
-
-          @Override
-          public void close() {
-            // Intentional no-op.
-          }
-        };
-    assertThat(
-        secondCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
-        Matchers.equalTo(CacheResultType.MISS));
-    assertThat(
-        secondCache.fetch(bFileRuleKey, fetchedContents).getType(),
-        Matchers.equalTo(CacheResultType.HIT));
-    WebServer secondWebServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
-
-    try {
-      secondWebServer.updateAndStartIfNeeded(Optional.of(secondCache));
-
-      ArtifactCacheBuckConfig mutltiCacheConfig =
-          createMockLocalConfig(
-              "[cache]",
-              "mode = http",
-              "http_cache_names = one, two",
-              "[cache#two]",
-              String.format("http_url = http://127.0.0.1:%d/", secondWebServer.getPort().get()),
-              "[cache#one]",
-              String.format("http_url = http://127.0.0.1:%d/", webServer.getPort().get()));
-
-      ArtifactCache serverBackedCache = createArtifactCache(mutltiCacheConfig);
-
-      assertThat(
-          serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
-          Matchers.equalTo(CacheResultType.HIT));
-      assertThat(
-          serverBackedCache.fetch(bFileRuleKey, fetchedContents).getType(),
-          Matchers.equalTo(CacheResultType.HIT));
-    } finally {
-      secondWebServer.stop();
-    }
   }
 
   @Test

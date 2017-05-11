@@ -25,7 +25,6 @@ import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,10 +67,6 @@ public class ArtifactCacheBuckConfig {
           HTTP_CACHE_ERROR_MESSAGE_NAME,
           HTTP_MAX_STORE_SIZE);
   private static final String HTTP_MAX_FETCH_RETRIES = "http_max_fetch_retries";
-
-  // List of names of cache-* sections that contain the fields above. This is used to emulate
-  // dicts, essentially.
-  private static final String HTTP_CACHE_NAMES_FIELD_NAME = "http_cache_names";
 
   private static final String DIR_FIELD = "dir";
   private static final String DIR_MODE_FIELD = "dir_mode";
@@ -136,15 +131,15 @@ public class ArtifactCacheBuckConfig {
     return buckConfig.getValue(CACHE_SECTION_NAME, SCHEDULE_TYPE).orElse(DEFAULT_SCHEDULE_TYPE);
   }
 
-  public SlbBuckConfig getSlbConfig() {
+  SlbBuckConfig getSlbConfig() {
     return slbConfig;
   }
 
-  public Optional<String> getHybridThriftEndpoint() {
+  Optional<String> getHybridThriftEndpoint() {
     return buckConfig.getValue(CACHE_SECTION_NAME, HYBRID_THRIFT_ENDPOINT);
   }
 
-  public LoadBalancingType getLoadBalancingType() {
+  LoadBalancingType getLoadBalancingType() {
     return buckConfig
         .getEnum(CACHE_SECTION_NAME, LOAD_BALANCING_TYPE, LoadBalancingType.class)
         .orElse(DEFAULT_LOAD_BALANCING_TYPE);
@@ -164,18 +159,19 @@ public class ArtifactCacheBuckConfig {
             .orElse(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
   }
 
-  public int getMaxFetchRetries() {
+  int getMaxFetchRetries() {
     return buckConfig
         .getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES)
         .orElse(DEFAULT_HTTP_MAX_FETCH_RETRIES);
   }
 
   public boolean hasAtLeastOneWriteableCache() {
-    return FluentIterable.from(getHttpCacheEntries())
-        .anyMatch(input -> input.getCacheReadMode().equals(CacheReadMode.READWRITE));
+    return getHttpCacheEntries()
+        .stream()
+        .anyMatch(entry -> entry.getCacheReadMode().equals(CacheReadMode.READWRITE));
   }
 
-  public String getHostToReportToRemoteCacheServer() {
+  String getHostToReportToRemoteCacheServer() {
     return buckConfig.getLocalhost();
   }
 
@@ -188,7 +184,7 @@ public class ArtifactCacheBuckConfig {
     return ImmutableList.of("dir");
   }
 
-  public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
+  ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
     return getArtifactCacheModesRaw()
         .stream()
         .map(
@@ -203,7 +199,7 @@ public class ArtifactCacheBuckConfig {
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  public Optional<DirCacheEntry> getServedLocalCache() {
+  Optional<DirCacheEntry> getServedLocalCache() {
     if (!getServingLocalCacheEnabled()) {
       return Optional.empty();
     }
@@ -222,7 +218,7 @@ public class ArtifactCacheBuckConfig {
     dirCacheEntries
         .stream()
         .filter(isDirCacheEntryWriteable)
-        .collect(Collectors.groupingBy(dirCache -> dirCache.getCacheDir()))
+        .collect(Collectors.groupingBy(DirCacheEntry::getCacheDir))
         .forEach(
             (path, dirCachesPerPath) -> {
               if (dirCachesPerPath.size() > 1) {
@@ -236,6 +232,14 @@ public class ArtifactCacheBuckConfig {
         .setDirCacheEntries(dirCacheEntries)
         .setHttpCacheEntries(httpCacheEntries)
         .build();
+  }
+
+  private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
+    if (getArtifactCacheModes().contains(ArtifactCacheMode.http)
+        || legacyHttpCacheConfigurationFieldsPresent()) {
+      return ImmutableSet.of(obtainHttpEntry());
+    }
+    return ImmutableSet.of();
   }
 
   private ImmutableSet<DirCacheEntry> getDirCacheEntries() {
@@ -255,22 +259,6 @@ public class ArtifactCacheBuckConfig {
     return result.build();
   }
 
-  private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
-    ImmutableSet.Builder<HttpCacheEntry> result = ImmutableSet.builder();
-
-    ImmutableSet<String> httpCacheNames = getHttpCacheNames();
-    boolean implicitLegacyCache =
-        httpCacheNames.isEmpty() && getArtifactCacheModes().contains(ArtifactCacheMode.http);
-    if (implicitLegacyCache || legacyHttpCacheConfigurationFieldsPresent()) {
-      result.add(obtainHttpEntryForName(Optional.empty()));
-    }
-
-    for (String cacheName : httpCacheNames) {
-      result.add(obtainHttpEntryForName(Optional.of(cacheName)));
-    }
-    return result.build();
-  }
-
   // It's important that this number is greater than the `-j` parallelism,
   // as if it's too small, we'll overflow the reusable connection pool and
   // start spamming new connections.  While this isn't the best location,
@@ -283,18 +271,18 @@ public class ArtifactCacheBuckConfig {
         .orElse(DEFAULT_HTTP_THREAD_POOL_SIZE);
   }
 
-  public long getThreadPoolKeepAliveDurationMillis() {
+  long getThreadPoolKeepAliveDurationMillis() {
     return buckConfig
         .getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS)
         .orElse(DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS);
   }
 
-  public boolean getTwoLevelCachingEnabled() {
+  boolean getTwoLevelCachingEnabled() {
     return buckConfig.getBooleanValue(
         CACHE_SECTION_NAME, TWO_LEVEL_CACHING_ENABLED_FIELD_NAME, false);
   }
 
-  public long getTwoLevelCachingMinimumSize() {
+  long getTwoLevelCachingMinimumSize() {
     return buckConfig
         .getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME)
         .map(Optional::of)
@@ -303,7 +291,7 @@ public class ArtifactCacheBuckConfig {
         .orElse(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
   }
 
-  public Optional<Long> getTwoLevelCachingMaximumSize() {
+  Optional<Long> getTwoLevelCachingMaximumSize() {
     return buckConfig
         .getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME)
         .map(SizeUnit::parseBytes);
@@ -344,12 +332,6 @@ public class ArtifactCacheBuckConfig {
     return buckConfig.getListWithoutComments(CACHE_SECTION_NAME, DIR_CACHE_NAMES_FIELD_NAME);
   }
 
-  private ImmutableSet<String> getHttpCacheNames() {
-    ImmutableList<String> httpCacheNames =
-        buckConfig.getListWithoutComments(CACHE_SECTION_NAME, HTTP_CACHE_NAMES_FIELD_NAME);
-    return ImmutableSet.copyOf(httpCacheNames);
-  }
-
   private String getCacheErrorFormatMessage(String section, String fieldName, String defaultValue) {
     return buckConfig.getValue(section, fieldName).orElse(defaultValue);
   }
@@ -376,28 +358,26 @@ public class ArtifactCacheBuckConfig {
         .build();
   }
 
-  private HttpCacheEntry obtainHttpEntryForName(Optional<String> cacheName) {
-    final String section =
-        Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orElse(null));
-
+  private HttpCacheEntry obtainHttpEntry() {
     HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
-    builder.setName(cacheName);
-    builder.setUrl(buckConfig.getUrl(section, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
+    builder.setUrl(
+        buckConfig.getUrl(CACHE_SECTION_NAME, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
     builder.setTimeoutSeconds(
         buckConfig
-            .getLong(section, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
+            .getLong(CACHE_SECTION_NAME, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
             .orElse(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS)
             .intValue());
-    builder.setReadHeaders(getCacheHeaders(section, HTTP_READ_HEADERS_FIELD_NAME));
-    builder.setWriteHeaders(getCacheHeaders(section, HTTP_WRITE_HEADERS_FIELD_NAME));
+    builder.setReadHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_READ_HEADERS_FIELD_NAME));
+    builder.setWriteHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_WRITE_HEADERS_FIELD_NAME));
     builder.setBlacklistedWifiSsids(
-        buckConfig.getListWithoutComments(section, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
+        buckConfig.getListWithoutComments(
+            CACHE_SECTION_NAME, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
     builder.setCacheReadMode(
-        getCacheReadMode(section, HTTP_MODE_FIELD_NAME, DEFAULT_HTTP_CACHE_MODE));
+        getCacheReadMode(CACHE_SECTION_NAME, HTTP_MODE_FIELD_NAME, DEFAULT_HTTP_CACHE_MODE));
     builder.setErrorMessageFormat(
         getCacheErrorFormatMessage(
-            section, HTTP_CACHE_ERROR_MESSAGE_NAME, DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
-    builder.setMaxStoreSize(buckConfig.getLong(section, HTTP_MAX_STORE_SIZE));
+            CACHE_SECTION_NAME, HTTP_CACHE_ERROR_MESSAGE_NAME, DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
+    builder.setMaxStoreSize(buckConfig.getLong(CACHE_SECTION_NAME, HTTP_MAX_STORE_SIZE));
 
     return builder.build();
   }
@@ -420,11 +400,11 @@ public class ArtifactCacheBuckConfig {
     return false;
   }
 
-  public boolean getDirCacheRunsPropagationExperiment() {
+  boolean getDirCacheRunsPropagationExperiment() {
     return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "_exp_propagation", false);
   }
 
-  public boolean getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() {
+  boolean getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() {
     return buckConfig.getBooleanValue(
         CACHE_SECTION_NAME, "_exp_propagation_force_control_group", false);
   }
@@ -458,8 +438,6 @@ public class ArtifactCacheBuckConfig {
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractHttpCacheEntry {
-    public abstract Optional<String> getName();
-
     public abstract URI getUrl();
 
     public abstract int getTimeoutSeconds();
@@ -476,14 +454,11 @@ public class ArtifactCacheBuckConfig {
 
     public abstract Optional<Long> getMaxStoreSize();
 
-    public boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
-      if (currentWifiSsid.isPresent()
-          && getBlacklistedWifiSsids().contains(currentWifiSsid.get())) {
-        // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
-        // a distributed cache.
-        return false;
-      }
-      return true;
+    // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
+    // a distributed cache.
+    boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
+      return !(currentWifiSsid.isPresent()
+          && getBlacklistedWifiSsids().contains(currentWifiSsid.get()));
     }
   }
 }
