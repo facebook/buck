@@ -1,5 +1,6 @@
 from __future__ import print_function
 import errno
+import glob
 import json
 import os
 import platform
@@ -95,8 +96,44 @@ class BuckToolException(Exception):
     pass
 
 
-class BuckTool(object):
+class JvmCrashLogger(object):
+    def __init__(self, buck_tool, project_root):
+        self._buck_tool = buck_tool
+        self._project_root = project_root
 
+    def __enter__(self):
+        self.jvm_errors_before = self._get_jvm_errors()
+
+    def __exit__(self, type, value, traceback):
+        new_errors = self._get_jvm_errors() - self.jvm_errors_before
+        if new_errors:
+            self._log_jvm_errors(new_errors)
+
+    def _get_jvm_errors(self):
+        return set(glob.glob(os.path.join(self._project_root, 'hs_err_pid*.log')))
+
+    @staticmethod
+    def _format_jvm_errors(fp):
+        errors = []
+        keep = False
+        for line in fp:
+            if line.startswith('Stack:'):
+                keep = True
+            if line.startswith('---------------  P R O C E S S  ---------------'):
+                break
+            if keep:
+                errors.append(line)
+        message = 'JVM native crash: ' + (errors[2] if len(errors) > 2 else '')
+        return message, ''.join(errors)
+
+    def _log_jvm_errors(self, errors):
+        for file in errors:
+            with open(file, 'r') as f:
+                message, loglines = self._format_jvm_errors(f)
+                print(loglines, file=sys.stderr)
+
+
+class BuckTool(object):
     def __init__(self, buck_project):
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
@@ -154,83 +191,85 @@ class BuckTool(object):
 
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
-            if self._command_line.command == "clean" and not self._command_line.is_help():
-                self.kill_buckd()
+            with JvmCrashLogger(self, self._buck_project.root):
+                if self._command_line.command == "clean" and not self._command_line.is_help():
+                    self.kill_buckd()
 
-            buck_version_uid = self._get_buck_version_uid()
+                buck_version_uid = self._get_buck_version_uid()
 
-            use_buckd = self._use_buckd
-            if not self._command_line.is_help():
-                has_watchman = bool(which('watchman'))
-                if use_buckd and has_watchman:
-                    running_version = self._buck_project.get_running_buckd_version()
+                use_buckd = self._use_buckd
+                if not self._command_line.is_help():
+                    has_watchman = bool(which('watchman'))
+                    if use_buckd and has_watchman:
+                        running_version = self._buck_project.get_running_buckd_version()
 
-                    if running_version != buck_version_uid:
-                        self.kill_buckd()
+                        if running_version != buck_version_uid:
+                            self.kill_buckd()
 
-                    if not self._is_buckd_running():
-                        self.launch_buckd(buck_version_uid=buck_version_uid)
-                elif use_buckd and not has_watchman:
-                    print("Not using buckd because watchman isn't installed.",
-                          file=sys.stderr)
-                elif not use_buckd:
-                    print("Not using buckd because NO_BUCKD is set.",
-                          file=sys.stderr)
+                        if not self._is_buckd_running():
+                            self.launch_buckd(buck_version_uid=buck_version_uid)
+                    elif use_buckd and not has_watchman:
+                        print("Not using buckd because watchman isn't installed.",
+                              file=sys.stderr)
+                    elif not use_buckd:
+                        print("Not using buckd because NO_BUCKD is set.",
+                              file=sys.stderr)
 
-            env = self._environ_for_buck()
-            env['BUCK_BUILD_ID'] = build_id
+                env = self._environ_for_buck()
+                env['BUCK_BUILD_ID'] = build_id
 
-            if use_buckd and self._is_buckd_running():
-                with Tracing('buck', args={'command': sys.argv[1:]}):
-                    exit_code = 2
-                    last_diagnostic_time = 0
-                    while exit_code == 2:
-                        with NailgunConnection(self._buck_project.get_buckd_transport_address(),
-                                               cwd=self._buck_project.root) as c:
-                            now = int(round(time.time() * 1000))
-                            env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
-                            exit_code = c.send_command(
-                                'com.facebook.buck.cli.Main',
-                                sys.argv[1:],
-                                env=env,
-                                cwd=self._buck_project.root)
-                            if exit_code == 2:
-                                env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                                now = time.time()
-                                if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
-                                    print('Daemon is busy, waiting for it to become free...',
-                                          file=sys.stderr)
-                                    last_diagnostic_time = now
-                                time.sleep(1)
-                    return exit_code
+                if use_buckd and self._is_buckd_running():
+                    with Tracing('buck', args={'command': sys.argv[1:]}):
+                        exit_code = 2
+                        last_diagnostic_time = 0
+                        while exit_code == 2:
+                            with NailgunConnection(
+                                    self._buck_project.get_buckd_transport_address(),
+                                    cwd=self._buck_project.root) as c:
+                                now = int(round(time.time() * 1000))
+                                env['BUCK_PYTHON_SPACE_INIT_TIME'] = \
+                                    str(now - self._init_timestamp)
+                                exit_code = c.send_command(
+                                    'com.facebook.buck.cli.Main',
+                                    sys.argv[1:],
+                                    env=env,
+                                    cwd=self._buck_project.root)
+                                if exit_code == 2:
+                                    env['BUCK_BUILD_ID'] = str(uuid.uuid4())
+                                    now = time.time()
+                                    if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
+                                        print('Daemon is busy, waiting for it to become free...',
+                                              file=sys.stderr)
+                                        last_diagnostic_time = now
+                                    time.sleep(1)
+                        return exit_code
+
+                command = ["buck"]
+                extra_default_options = [
+                    "-Djava.io.tmpdir={0}".format(self._tmp_dir),
+                    "-XX:SoftRefLRUPolicyMSPerMB=0",
+                    "-XX:+UseG1GC",
+                ]
+                command.extend(self._get_java_args(buck_version_uid, extra_default_options))
+                command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
+                command.append("com.facebook.buck.cli.Main")
+                command.extend(sys.argv[1:])
+
+                now = int(round(time.time() * 1000))
+                env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
+                if True:
+                    java = which("java")
+                    if java is None:
+                        raise BuckToolException('Could not find java on $PATH')
+                    with Tracing('buck', args={'command': command}):
+                        buck_exit_code = subprocess.call(command,
+                                                         cwd=self._buck_project.root,
+                                                         env=env,
+                                                         executable=java)
+                return buck_exit_code
 
 
-            command = ["buck"]
-            extra_default_options = [
-                "-Djava.io.tmpdir={0}".format(self._tmp_dir),
-                "-XX:SoftRefLRUPolicyMSPerMB=0",
-                "-XX:+UseG1GC",
-            ]
-            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
-            command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append("com.facebook.buck.cli.Main")
-            command.extend(sys.argv[1:])
-
-            now = int(round(time.time() * 1000))
-            env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
-            if True:
-                java = which("java")
-                if java is None:
-                    raise BuckToolException('Could not find java on $PATH')
-                with Tracing('buck', args={'command': command}):
-                    buck_exit_code = subprocess.call(command,
-                                                     cwd=self._buck_project.root,
-                                                     env=env,
-                                                     executable=java)
-            return buck_exit_code
-
-
-    def _generate_log_entry(self, exit_code, message, logs_array):
+    def _generate_log_entry(self, message, logs_array):
         import socket
         import getpass
         traits = {
@@ -245,12 +284,12 @@ class BuckTool(object):
             "isDaemon": "false",
         }
         entry = {
-          "logs": logs_array,
-          "traits": traits,
-          "message": message,
-          "category": message,
-          "time": int(time.time()),
-          "logger": "com.facebook.buck.python.buck_tool.py",
+            "logs": logs_array,
+            "traits": traits,
+            "message": message,
+            "category": message,
+            "time": int(time.time()),
+            "logger": "com.facebook.buck.python.buck_tool.py",
         }
         return entry
 
@@ -319,6 +358,7 @@ class BuckTool(object):
                 Change the process group of the child buckd process so that when this
                 script is interrupted, it does not kill buckd.
                 '''
+
                 def preexec_fn():
                     # Close any open file descriptors to further separate buckd from its
                     # invoking context (e.g. otherwise we'd hang when running things like
@@ -328,6 +368,7 @@ class BuckTool(object):
                     os.dup2(dev_null_fd, 1)
                     os.dup2(dev_null_fd, 2)
                     os.close(dev_null_fd)
+
                 creationflags = 0
             process = subprocess.Popen(
                 command,
@@ -495,6 +536,7 @@ if os.name == 'nt':
     INVALID_HANDLE_VALUE = -1
     FindFirstFile = ctypes.windll.kernel32.FindFirstFileW
     FindClose = ctypes.windll.kernel32.FindClose
+
 
     # on windows os.path.exists doen't allow to check reliably that pipe exists
     # (os.path.exists tries to open connection to a pipe)
