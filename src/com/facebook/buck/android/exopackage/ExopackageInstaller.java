@@ -29,10 +29,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -43,6 +44,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
@@ -75,9 +78,6 @@ public class ExopackageInstaller {
 
   @VisibleForTesting
   public static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
-
-  @VisibleForTesting
-  public static final Pattern RESOURCES_FILE_PATTERN = Pattern.compile("([0-9a-f]+)\\.apk");
 
   private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
@@ -298,29 +298,41 @@ public class ExopackageInstaller {
     private void installResourcesFiles() throws Exception {
       ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
 
-      ImmutableMap.Builder<String, Path> hashToSourcesBuilder = ImmutableMap.builder();
-      String metadataContent = "";
-      String prefix = "";
-      for (SourcePath sourcePath : info.getResourcesPaths()) {
-        Path path = pathResolver.getRelativePath(sourcePath);
-        String hash = projectFilesystem.computeSha1(path).getHash();
-        metadataContent += prefix + "resources " + hash;
-        prefix = "\n";
-        hashToSourcesBuilder.put(hash, path);
-      }
+      ImmutableMap<String, Path> filesByHash =
+          info.getResourcesPaths()
+              .stream()
+              .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
+              .collect(
+                  MoreCollectors.toImmutableMap(
+                      p -> {
+                        try {
+                          return projectFilesystem.computeSha1(p).getHash();
+                        } catch (IOException e) {
+                          throw new RuntimeException(e);
+                        }
+                      },
+                      i -> i));
+      device.mkDirP(dataRoot.resolve(RESOURCES_DIR).toString());
+      ImmutableMap<Path, Path> wantedFilesToInstall =
+          applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
+      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
 
-      final ImmutableMap<String, Path> hashToSources = hashToSourcesBuilder.build();
-      final ImmutableSet<String> requiredHashes = hashToSources.keySet();
-      final ImmutableSet<String> presentHashes = prepareResourcesDir(requiredHashes);
-      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
+      installMissingFiles(presentFiles, wantedFilesToInstall);
 
-      Map<String, Path> filesToInstallByHash =
-          Maps.filterKeys(hashToSources, hashesToInstall::contains);
+      // filesToDelete will contain the old metadata, so delete first.
+      ImmutableSortedSet<Path> filesInResourceDir =
+          ImmutableSortedSet.copyOf(Sets.filter(presentFiles, p -> p.startsWith(RESOURCES_DIR)));
+      deleteUnwantedFiles(filesInResourceDir, wantedFilesToInstall.keySet());
 
-      ImmutableMap<Path, Path> filesToInstall =
-          applyFilenameFormat(filesToInstallByHash, RESOURCES_DIR, "%s.apk");
-      installFiles("resources", filesToInstall);
-      installMetadata(ImmutableMap.of(RESOURCES_DIR.resolve("metadata.txt"), metadataContent));
+      String metadataContents = getResourceMetadataContents(filesByHash);
+      ImmutableMap<Path, String> metadataToInstall =
+          ImmutableMap.of(RESOURCES_DIR.resolve("metadata.txt"), metadataContents);
+      installMetadata(metadataToInstall);
+    }
+
+    private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {
+      return Joiner.on("\n")
+          .join(RichStream.from(filesByHash.keySet()).map(h -> "resources " + h).toOnceIterable());
     }
 
     private void installNativeLibraryFiles() throws Exception {
@@ -434,11 +446,6 @@ public class ExopackageInstaller {
       return prepareDirectory(NATIVE_LIBS_DIR.resolve(abi), NATIVE_LIB_PATTERN, requiredHashes);
     }
 
-    private ImmutableSet<String> prepareResourcesDir(ImmutableSet<String> requiredHashes)
-        throws Exception {
-      return prepareDirectory(RESOURCES_DIR, RESOURCES_FILE_PATTERN, requiredHashes);
-    }
-
     private ImmutableSet<String> prepareDirectory(
         Path dirname, Pattern filePattern, ImmutableSet<String> requiredHashes) throws Exception {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
@@ -457,6 +464,29 @@ public class ExopackageInstaller {
       }
     }
 
+    private void installMissingFiles(
+        ImmutableSortedSet<Path> presentFiles, ImmutableMap<Path, Path> wantedFilesToInstall)
+        throws Exception {
+      ImmutableSortedMap<Path, Path> filesToInstall =
+          wantedFilesToInstall
+              .entrySet()
+              .stream()
+              .filter(entry -> !presentFiles.contains(entry.getKey()))
+              .collect(MoreCollectors.toImmutableSortedMap(Map.Entry::getKey, Map.Entry::getValue));
+
+      installFiles("resources", filesToInstall);
+    }
+
+    private void deleteUnwantedFiles(
+        ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
+      ImmutableSortedSet<Path> filesToDelete =
+          presentFiles
+              .stream()
+              .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
+              .collect(MoreCollectors.toImmutableSortedSet());
+      deleteFiles(filesToDelete);
+    }
+
     private ImmutableMap<Path, Path> applyFilenameFormat(
         Map<String, Path> filesToHashes, Path deviceDir, String filenameFormat) {
       ImmutableMap.Builder<Path, Path> filesBuilder = ImmutableMap.builder();
@@ -465,6 +495,23 @@ public class ExopackageInstaller {
             deviceDir.resolve(String.format(filenameFormat, entry.getKey())), entry.getValue());
       }
       return filesBuilder.build();
+    }
+
+    private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
+      filesToDelete
+          .stream()
+          .collect(
+              MoreCollectors.toImmutableListMultimap(
+                  Path::getParent, path -> path.getFileName().toString()))
+          .asMap()
+          .forEach(
+              (dir, files) -> {
+                try {
+                  device.rmFiles(dataRoot.resolve(dir).toString(), files);
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              });
     }
 
     private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)

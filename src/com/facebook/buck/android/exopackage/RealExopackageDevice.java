@@ -32,6 +32,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +41,12 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @VisibleForTesting
@@ -49,6 +55,8 @@ public class RealExopackageDevice implements ExopackageDevice {
 
   /** Maximum length of commands that can be passed to "adb shell". */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
+
+  private static final Pattern LINE_ENDING = Pattern.compile("\r?\n");
 
   private final BuckEventBus eventBus;
   private final IDevice device;
@@ -151,6 +159,25 @@ public class RealExopackageDevice implements ExopackageDevice {
   @Override
   public String listDir(String dirPath) throws Exception {
     return AdbHelper.executeCommandWithErrorChecking(device, "ls " + dirPath + " | cat");
+  }
+
+  @Override
+  public ImmutableSortedSet<Path> listDirRecursive(Path root) throws Exception {
+    String lsOutput = AdbHelper.executeCommandWithErrorChecking(device, "ls -R " + root + " | cat");
+    Set<Path> paths = new HashSet<>();
+    Set<Path> dirs = new HashSet<>();
+    Path currentDir = null;
+    Pattern dirMatcher = Pattern.compile(":$");
+    for (String line : Splitter.on(LINE_ENDING).omitEmptyStrings().split(lsOutput)) {
+      if (dirMatcher.matcher(line).matches()) {
+        currentDir = root.relativize(Paths.get(line.substring(0, line.length() - 1)));
+        dirs.add(currentDir);
+      } else {
+        assert currentDir != null;
+        paths.add(currentDir.resolve(line));
+      }
+    }
+    return ImmutableSortedSet.copyOf(Sets.difference(dirs, paths));
   }
 
   @Override
