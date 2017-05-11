@@ -214,7 +214,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     Preconditions.checkArgument(targetGraph.isPresent());
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
-    return targetGraph.get().getOptional(buildTarget).orElse(null);
+    return targetGraph.get().get(buildTarget);
   }
 
   public Stream<QueryTarget> getFirstOrderClasspath(Set<QueryTarget> targets) {
