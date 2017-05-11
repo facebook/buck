@@ -68,6 +68,8 @@ import org.junit.Test;
 public class ExopackageInstallerIntegrationTest {
   private static final boolean DEBUG = false;
   private static final String FAKE_PACKAGE_NAME = "buck.exotest.fake";
+  private static final Path INSTALL_ROOT =
+      ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
 
   @Rule public final TemporaryPaths tmpFolder = new TemporaryPaths();
   private final Path apkPath = Paths.get("fake.apk");
@@ -131,8 +133,12 @@ public class ExopackageInstallerIntegrationTest {
     checkExoInstall(1, 0, 2, 0);
     // This should be checked already, but do it explicitly here too to make it clear
     // that we actually verify that the correct architecture libs are installed.
-    assertTrue(device.deviceState.containsKey("native-libs/armeabi-v7a/metadata.txt"));
-    assertFalse(device.deviceState.containsKey("native-libs/x86/metadata.txt"));
+    assertTrue(
+        device.deviceState.containsKey(
+            INSTALL_ROOT.resolve("native-libs/armeabi-v7a/metadata.txt").toString()));
+    assertFalse(
+        device.deviceState.containsKey(
+            INSTALL_ROOT.resolve("native-libs/x86/metadata.txt").toString()));
   }
 
   @Test
@@ -167,8 +173,12 @@ public class ExopackageInstallerIntegrationTest {
     checkExoInstall(1, 0, 2, 0);
     // This should be checked already, but do it explicitly here too to make it clear
     // that we actually verify that the correct architecture libs are installed.
-    assertFalse(device.deviceState.containsKey("native-libs/armeabi-v7a/metadata.txt"));
-    assertTrue(device.deviceState.containsKey("native-libs/x86/metadata.txt"));
+    assertFalse(
+        device.deviceState.containsKey(
+            INSTALL_ROOT.resolve("native-libs/armeabi-v7a/metadata.txt").toString()));
+    assertTrue(
+        device.deviceState.containsKey(
+            INSTALL_ROOT.resolve("native-libs/x86/metadata.txt").toString()));
   }
 
   @Test
@@ -424,8 +434,6 @@ public class ExopackageInstallerIntegrationTest {
    * happens correctly.
    */
   private class TestExopackageDevice implements ExopackageDevice {
-    // Should be set before any installs.
-    private String installRoot;
     public String abi;
     // Persistent "device" state.
     private NavigableMap<String, String> deviceState;
@@ -444,8 +452,6 @@ public class ExopackageInstallerIntegrationTest {
       deviceState = new TreeMap<>();
       deviceAgentPackageInfo = Optional.empty();
       fakePackageInfo = Optional.empty();
-      installRoot =
-          ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME).toString() + "/";
 
       allowedInstalledApks = 0;
       allowedInstalledDexes = 0;
@@ -509,7 +515,6 @@ public class ExopackageInstallerIntegrationTest {
     @Override
     public String listDir(String dirPath) throws Exception {
       Set<String> res = new TreeSet<>();
-      dirPath = getInstallRootRelative(dirPath);
       for (String s :
           deviceState
               .subMap(dirPath, false, dirPath + Character.toChars(255).toString(), false)
@@ -526,15 +531,9 @@ public class ExopackageInstallerIntegrationTest {
       return output;
     }
 
-    private String getInstallRootRelative(String dirPath) {
-      assertTrue(dirPath.startsWith(installRoot));
-      return dirPath.substring(installRoot.length());
-    }
-
     @Override
     public void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception {
       debug("rmfiles dir=" + dirPath + " files=" + ImmutableList.copyOf(filesToDelete));
-      dirPath = getInstallRootRelative(dirPath);
       for (String s : filesToDelete) {
         deviceState.remove(dirPath + "/" + s);
       }
@@ -554,12 +553,12 @@ public class ExopackageInstallerIntegrationTest {
       assertTrue(
           String.format(
               "Exopackage should only install files to the install root (%s, %s)",
-              installRoot, targetDevicePath),
-          targetDevicePath.toString().startsWith(installRoot.toString()));
+              INSTALL_ROOT, targetDevicePath),
+          targetDevicePath.startsWith(INSTALL_ROOT));
       debug("installing " + targetDevicePath);
-      targetDevicePath = Paths.get(getInstallRootRelative(targetDevicePath.toString()));
       deviceState.put(targetDevicePath.toString(), filesystem.readFileIfItExists(source).get());
 
+      targetDevicePath = INSTALL_ROOT.relativize(targetDevicePath);
       if (targetDevicePath.startsWith(ExopackageInstaller.SECONDARY_DEX_DIR)) {
         if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
           allowedInstalledDexes--;
@@ -655,6 +654,18 @@ public class ExopackageInstallerIntegrationTest {
     }
   }
 
+  class ExpectedStateBuilder {
+    Map<String, String> expectedState = new TreeMap<>();
+
+    void addApk(Path devicePath, Path hostPath) throws IOException {
+      expectedState.put(devicePath.toString(), filesystem.computeSha1(hostPath).toString());
+    }
+
+    void addExoFile(String devicePath, String content) {
+      expectedState.put(INSTALL_ROOT.resolve(devicePath).toString(), content);
+    }
+  }
+
   private void checkExoInstall(
       int expectedApksInstalled,
       int expectedDexesInstalled,
@@ -663,12 +674,12 @@ public class ExopackageInstallerIntegrationTest {
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(null);
 
-    Map<String, String> expectedState = new TreeMap<>();
+    ExpectedStateBuilder builder = new ExpectedStateBuilder();
 
     writeFakeApk(currentBuildState.apkContent);
     writeFile(manifestPath, currentBuildState.manifestContent);
 
-    expectedState.put(apkDevicePath.toString(), filesystem.computeSha1(apkPath).toString());
+    builder.addApk(apkDevicePath, apkPath);
 
     SourcePath apkSourcePath = new PathSourcePath(filesystem, apkPath);
     SourcePath manifestSourcePath = new PathSourcePath(filesystem, manifestPath);
@@ -686,12 +697,12 @@ public class ExopackageInstallerIntegrationTest {
         Sha1HashCode dexHash = filesystem.computeSha1(dexDirectory.resolve(filename));
         dexMetadata += prefix + filename + " " + dexHash;
         prefix = "\n";
-        expectedState.put("secondary-dex/secondary-" + dexHash + ".dex.jar", dexContent);
+        builder.addExoFile("secondary-dex/secondary-" + dexHash + ".dex.jar", dexContent);
       }
       writeFile(dexManifest, dexMetadata);
       dexInfo = Optional.of(ExopackageInfo.DexInfo.of(dexManifest, dexDirectory));
 
-      expectedState.put("secondary-dex/metadata.txt", dexMetadata);
+      builder.addExoFile("secondary-dex/metadata.txt", dexMetadata);
     }
 
     Optional<ExopackageInfo.NativeLibsInfo> nativeLibsInfo = Optional.empty();
@@ -705,7 +716,7 @@ public class ExopackageInstallerIntegrationTest {
         writeFile(libPath, libsContents.get(k));
         if (k.startsWith("libs/" + device.abi)) {
           Sha1HashCode libHash = filesystem.computeSha1(libPath);
-          expectedState.put(
+          builder.addExoFile(
               "native-libs/" + device.abi + "/native-" + libHash + ".so", libsContents.get(k));
           expectedMetadata +=
               prefix
@@ -720,7 +731,7 @@ public class ExopackageInstallerIntegrationTest {
           .execute(executionContext);
       nativeLibsInfo =
           Optional.of(ExopackageInfo.NativeLibsInfo.of(nativeManifest, nativeDirectory));
-      expectedState.put("native-libs/" + device.abi + "/metadata.txt", expectedMetadata);
+      builder.addExoFile("native-libs/" + device.abi + "/metadata.txt", expectedMetadata);
     }
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
@@ -739,10 +750,10 @@ public class ExopackageInstallerIntegrationTest {
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
         expectedMetadata += prefix + "resources " + resourceHash;
         prefix = "\n";
-        expectedState.put("resources/" + resourceHash + ".apk", content);
+        builder.addExoFile("resources/" + resourceHash + ".apk", content);
       }
       resourcesInfo = Optional.of(resourcesInfoBuilder.build());
-      expectedState.put("resources/metadata.txt", expectedMetadata);
+      builder.addExoFile("resources/metadata.txt", expectedMetadata);
     }
 
     ApkInfo apkInfo =
@@ -773,7 +784,7 @@ public class ExopackageInstallerIntegrationTest {
       throw new RuntimeException(e);
     }
 
-    assertEquals(expectedState, device.deviceState);
+    assertEquals(builder.expectedState, device.deviceState);
     assertEquals("apk should be installed but wasn't", 0, device.allowedInstalledApks);
     assertEquals("fewer dexes installed than expected", 0, device.allowedInstalledDexes);
     assertEquals("fewer libs installed than expected", 0, device.allowedInstalledLibs);
