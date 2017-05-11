@@ -76,12 +76,6 @@ public class PathSourcePathTest {
     assertEquals(relativePath1, pathB1.getRelativePath());
     assertEquals(relativePath2, pathB2.getRelativePath());
 
-    // check as reference
-    assertEquals(root.resolve(nameA).toString(), pathA1.asReference());
-    assertEquals(root.resolve(nameA).toString(), pathA2.asReference());
-    assertEquals(root.resolve(nameB).toString(), pathB1.asReference());
-    assertEquals(root.resolve(nameB).toString(), pathB2.asReference());
-
     // different instances, but everything is the same
     assertEquals(pathA1.hashCode(), clonedPathA1.hashCode());
     assertEquals(pathA1, clonedPathA1);

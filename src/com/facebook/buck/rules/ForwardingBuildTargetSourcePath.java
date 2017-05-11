@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import java.util.Objects;
 
 /** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
 public class ForwardingBuildTargetSourcePath
@@ -34,8 +35,27 @@ public class ForwardingBuildTargetSourcePath
   }
 
   @Override
-  protected Object asReference() {
-    return new Pair<>(getTarget(), delegate);
+  public int hashCode() {
+    return Objects.hash(getTarget(), delegate);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof ForwardingBuildTargetSourcePath)) {
+      return false;
+    }
+
+    ForwardingBuildTargetSourcePath that = (ForwardingBuildTargetSourcePath) other;
+    return getTarget().equals(that.getTarget()) && delegate.equals(that.delegate);
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(new Pair<>(getTarget(), delegate));
   }
 
   @Override

@@ -63,7 +63,7 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   }
 
   @Override
-  protected Object asReference() {
+  public String toString() {
     return filesystem.getRootPath().resolve(relativePathName).toString();
   }
 

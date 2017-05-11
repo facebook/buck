@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * A {@link BuildTargetSourcePath} which resolves to a specific (possibly non-default) output of the
@@ -39,8 +40,27 @@ public class ExplicitBuildTargetSourcePath
   }
 
   @Override
-  protected Object asReference() {
-    return new Pair<>(getTarget(), resolvedPath);
+  public int hashCode() {
+    return Objects.hash(getTarget(), resolvedPath);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof ExplicitBuildTargetSourcePath)) {
+      return false;
+    }
+
+    ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
+    return getTarget().equals(that.getTarget()) && resolvedPath.equals(that.resolvedPath);
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(new Pair<>(getTarget(), resolvedPath));
   }
 
   @Override

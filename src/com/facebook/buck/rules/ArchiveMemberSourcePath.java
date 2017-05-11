@@ -39,8 +39,27 @@ public final class ArchiveMemberSourcePath extends AbstractSourcePath<ArchiveMem
   }
 
   @Override
-  protected Object asReference() {
-    return contents;
+  public int hashCode() {
+    return contents.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof ArchiveMemberSourcePath)) {
+      return false;
+    }
+
+    ArchiveMemberSourcePath that = (ArchiveMemberSourcePath) other;
+    return contents.equals(that.contents);
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(contents);
   }
 
   @Override

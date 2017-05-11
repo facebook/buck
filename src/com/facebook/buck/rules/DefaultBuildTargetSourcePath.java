@@ -30,8 +30,27 @@ public class DefaultBuildTargetSourcePath
   }
 
   @Override
-  protected Object asReference() {
-    return getTarget();
+  public int hashCode() {
+    return getTarget().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof DefaultBuildTargetSourcePath)) {
+      return false;
+    }
+
+    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
+    return getTarget().equals(that.getTarget());
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(getTarget());
   }
 
   @Override
