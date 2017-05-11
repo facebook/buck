@@ -540,17 +540,13 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public void createForward(int localPort, int remotePort) throws Exception {
+    public AutoCloseable createForward() throws Exception {
       // TODO(cjhopman): track correct forwarding usage
+      return () -> {};
     }
 
     @Override
-    public void removeForward(int localPort, int remotePort) throws Exception {
-      // TODO(cjhopman): track correct forwarding usage
-    }
-
-    @Override
-    public void installFile(int port, Path targetDevicePath, Path source) throws Exception {
+    public void installFile(Path targetDevicePath, Path source) throws Exception {
       // TODO(cjhopman): verify port and agentCommand
       assertTrue(targetDevicePath.isAbsolute());
       assertTrue(source.isAbsolute());
@@ -635,13 +631,9 @@ public class ExopackageInstallerIntegrationTest {
     }
   }
 
-  private class FakeAdbInterface extends ExopackageInstaller.AdbInterface {
-    FakeAdbInterface() {
-      super(null, null, null);
-    }
-
+  private class FakeAdbInterface implements ExopackageInstaller.AdbInterface {
     @Override
-    protected boolean adbCall(String description, AdbCallable func, boolean quiet)
+    public boolean adbCall(String description, AdbCallable func, boolean quiet)
         throws InterruptedException {
       try {
         return func.apply(device);

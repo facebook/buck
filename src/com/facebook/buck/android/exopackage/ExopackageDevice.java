@@ -36,11 +36,9 @@ public interface ExopackageDevice {
 
   void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception;
 
-  void createForward(int localPort, int remotePort) throws Exception;
+  AutoCloseable createForward() throws Exception;
 
-  void removeForward(int localPort, int remotePort) throws Exception;
-
-  void installFile(int port, Path targetDevicePath, Path source) throws Exception;
+  void installFile(Path targetDevicePath, Path source) throws Exception;
 
   void mkDirP(String dirpath) throws Exception;
 

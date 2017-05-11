@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
@@ -102,33 +101,47 @@ public class ExopackageInstaller {
    * ExopackageDevice making it easy to provide different implementations in tests.
    */
   @VisibleForTesting
-  public static class AdbInterface {
+  public interface AdbInterface {
+    /**
+     * This is basically the same as AdbHelper.AdbCallable except that it takes an ExopackageDevice
+     * instead of an IDevice.
+     */
+    interface AdbCallable {
+      boolean apply(ExopackageDevice device) throws Exception;
+    }
+
+    boolean adbCall(String description, AdbCallable func, boolean quiet)
+        throws InterruptedException;
+  }
+
+  static class RealAdbInterface implements AdbInterface {
     private AdbHelper adbHelper;
     private BuckEventBus eventBus;
     private Path agentApkPath;
 
-    protected AdbInterface(BuckEventBus eventBus, AdbHelper adbHelper, Path agentApkPath) {
+    /**
+     * The next port number to use for communicating with the agent on a device. This resets for
+     * every instance of RealAdbInterface, but is incremented for every device we are installing on
+     * when using "-x".
+     */
+    private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
+
+    RealAdbInterface(BuckEventBus eventBus, AdbHelper adbHelper, Path agentApkPath) {
       this.eventBus = eventBus;
       this.adbHelper = adbHelper;
       this.agentApkPath = agentApkPath;
     }
 
-    /**
-     * This is basically the same as AdbHelper.AdbCallable except that it takes an ExopackageDevice
-     * instead of an IDevice.
-     */
-    protected interface AdbCallable {
-      boolean apply(ExopackageDevice device) throws Exception;
-    }
-
-    protected boolean adbCall(String description, AdbCallable func, boolean quiet)
+    @Override
+    public boolean adbCall(String description, AdbCallable func, boolean quiet)
         throws InterruptedException {
       return adbHelper.adbCall(
           new AdbHelper.AdbCallable() {
             @Override
             public boolean call(IDevice device) throws Exception {
               return func.apply(
-                  new RealExopackageDevice(eventBus, device, adbHelper, agentApkPath));
+                  new RealExopackageDevice(
+                      eventBus, device, adbHelper, agentApkPath, nextAgentPort.getAndIncrement()));
             }
 
             @Override
@@ -139,13 +152,6 @@ public class ExopackageInstaller {
           quiet);
     }
   }
-
-  /**
-   * The next port number to use for communicating with the agent on a device. This resets for every
-   * instance of ExopackageInstaller, but is incremented for every device we are installing on when
-   * using "-x".
-   */
-  private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
   private static Path getApkFilePathFromProperties() {
     String apkFileName = System.getProperty("buck.android_agent_path");
@@ -163,7 +169,7 @@ public class ExopackageInstaller {
     this(
         pathResolver,
         context,
-        new AdbInterface(context.getBuckEventBus(), adbHelper, getApkFilePathFromProperties()),
+        new RealAdbInterface(context.getBuckEventBus(), adbHelper, getApkFilePathFromProperties()),
         apkRule);
   }
 
@@ -196,8 +202,7 @@ public class ExopackageInstaller {
     boolean success =
         adbHelper.adbCall(
             "install exopackage apk",
-            device ->
-                new SingleDeviceInstaller(device, nextAgentPort.getAndIncrement()).doInstall(),
+            device -> new SingleDeviceInstaller(device).doInstall(),
             quiet);
 
     eventBus.post(
@@ -217,12 +222,8 @@ public class ExopackageInstaller {
     /** Device that we are installing onto. */
     private final ExopackageDevice device;
 
-    /** Port to use for sending files to the agent. */
-    private final int agentPort;
-
-    private SingleDeviceInstaller(ExopackageDevice device, int agentPort) {
+    private SingleDeviceInstaller(ExopackageDevice device) {
       this.device = device;
-      this.agentPort = agentPort;
     }
 
     boolean doInstall() throws Exception {
@@ -483,23 +484,6 @@ public class ExopackageInstaller {
       }
     }
 
-    AutoCloseable createForward(int localPort, int remotePort) throws Exception {
-      device.createForward(localPort, remotePort);
-      return () -> {
-        try {
-          device.removeForward(localPort, remotePort);
-        } catch (AdbCommandRejectedException e) {
-          LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
-          eventBus.post(
-              ConsoleEvent.warning(
-                  "Failed to remove adb forward %d. This is not necessarily a problem\n"
-                      + "because it will be recreated during the next exopackage installation.\n"
-                      + "See the log for the full exception.",
-                  agentPort));
-        }
-      };
-    }
-
     private void installFiles(
         String filesType,
         ImmutableMap<String, Path> filesToInstallByHash,
@@ -509,7 +493,7 @@ public class ExopackageInstaller {
         throws Exception {
       try (SimplePerfEvent.Scope ignored1 =
               SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
-          AutoCloseable ignored2 = createForward(agentPort, agentPort)) {
+          AutoCloseable ignored2 = device.createForward()) {
         Path destinationDir = dataRoot.resolve(destinationDirRelativeToDataRoot);
         for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
           Path destination = destinationDir.resolve(String.format(filenameFormat, entry.getKey()));
@@ -517,7 +501,7 @@ public class ExopackageInstaller {
 
           try (SimplePerfEvent.Scope ignored3 =
               SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-            device.installFile(agentPort, destination, projectFilesystem.resolve(source));
+            device.installFile(destination, projectFilesystem.resolve(source));
           }
         }
         try (SimplePerfEvent.Scope ignored3 =
@@ -525,7 +509,7 @@ public class ExopackageInstaller {
           try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
             com.google.common.io.Files.write(
                 metadataFileContents.getBytes(Charsets.UTF_8), temp.get().toFile());
-            device.installFile(agentPort, destinationDir.resolve("metadata.txt"), temp.get());
+            device.installFile(destinationDir.resolve("metadata.txt"), temp.get());
           }
         }
       }

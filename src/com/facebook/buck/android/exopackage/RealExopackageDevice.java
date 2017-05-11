@@ -16,12 +16,14 @@
 
 package com.facebook.buck.android.exopackage;
 
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -47,14 +49,22 @@ public class RealExopackageDevice implements ExopackageDevice {
   /** Maximum length of commands that can be passed to "adb shell". */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
 
-  private IDevice device;
-  private AdbHelper adbHelper;
-  private Supplier<ExopackageAgent> agent;
+  private final BuckEventBus eventBus;
+  private final IDevice device;
+  private final AdbHelper adbHelper;
+  private final Supplier<ExopackageAgent> agent;
+  private final int agentPort;
 
   RealExopackageDevice(
-      BuckEventBus eventBus, IDevice device, AdbHelper adbHelper, Path agentApkPath) {
+      BuckEventBus eventBus,
+      IDevice device,
+      AdbHelper adbHelper,
+      Path agentApkPath,
+      int agentPort) {
+    this.eventBus = eventBus;
     this.device = device;
     this.adbHelper = adbHelper;
+    this.agentPort = agentPort;
     this.agent =
         Suppliers.memoize(
             () -> ExopackageAgent.installAgentIfNecessary(eventBus, this, agentApkPath));
@@ -155,18 +165,25 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public void createForward(int localPort, int remotePort) throws Exception {
-    device.createForward(localPort, remotePort);
+  public AutoCloseable createForward() throws Exception {
+    device.createForward(agentPort, agentPort);
+    return () -> {
+      try {
+        device.removeForward(agentPort, agentPort);
+      } catch (AdbCommandRejectedException e) {
+        LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
+        eventBus.post(
+            ConsoleEvent.warning(
+                "Failed to remove adb forward %d. This is not necessarily a problem\n"
+                    + "because it will be recreated during the next exopackage installation.\n"
+                    + "See the log for the full exception.",
+                agentPort));
+      }
+    };
   }
 
   @Override
-  public void removeForward(int localPort, int remotePort) throws Exception {
-    device.removeForward(localPort, remotePort);
-  }
-
-  @Override
-  public void installFile(final int port, final Path targetDevicePath, final Path source)
-      throws Exception {
+  public void installFile(final Path targetDevicePath, final Path source) throws Exception {
     Preconditions.checkArgument(source.isAbsolute());
     Preconditions.checkArgument(targetDevicePath.isAbsolute());
     Closer closer = Closer.create();
@@ -184,7 +201,7 @@ public class RealExopackageDevice implements ExopackageDevice {
               if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
                 LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
                 startedPayload = true;
-                Socket clientSocket = new Socket("localhost", port);
+                Socket clientSocket = new Socket("localhost", agentPort);
                 closer.register(clientSocket);
                 LOG.verbose("Connected");
                 outToDevice = clientSocket.getOutputStream();
@@ -219,7 +236,7 @@ public class RealExopackageDevice implements ExopackageDevice {
         "umask 022 && "
             + agent.get().getAgentCommand()
             + "receive-file "
-            + port
+            + agentPort
             + " "
             + Files.size(source)
             + " "
