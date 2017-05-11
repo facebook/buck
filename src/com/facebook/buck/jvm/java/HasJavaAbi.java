@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.zip.Unzip;
+import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -109,7 +110,7 @@ public interface HasJavaAbi {
       } else {
         Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
         if (Files.isDirectory(jarAbsolutePath)) {
-          BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) jarSourcePath;
+          BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
           contents =
               Files.walk(jarAbsolutePath)
                   .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
@@ -119,11 +120,12 @@ public interface HasJavaAbi {
                               buildTargetSourcePath.getTarget(), path))
                   .collect(MoreCollectors.toImmutableSortedSet());
         } else {
+          SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
           contents =
               Unzip.getZipMembers(jarAbsolutePath)
                   .stream()
                   .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                  .map(path -> new ArchiveMemberSourcePath(jarSourcePath, path))
+                  .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
                   .collect(MoreCollectors.toImmutableSortedSet());
         }
       }

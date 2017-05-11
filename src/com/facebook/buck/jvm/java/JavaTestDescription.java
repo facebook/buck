@@ -197,7 +197,7 @@ public class JavaTestDescription
               // Could consider including these, but I don't know of any examples.
               continue;
             }
-            BuildTargetSourcePath<?> sourcePath = (BuildTargetSourcePath<?>) entry.getValue();
+            BuildTargetSourcePath sourcePath = (BuildTargetSourcePath) entry.getValue();
             if (cxxLibraryWhitelist.contains(sourcePath.getTarget().withFlavors())) {
               filteredLinks.put(entry.getKey(), entry.getValue());
             }

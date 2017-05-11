@@ -167,8 +167,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public RuleKeyHasher<HashCode> putBuildTargetSourcePath(
-      BuildTargetSourcePath<?> targetSourcePath) {
+  public RuleKeyHasher<HashCode> putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
     this.putBuildTarget(RuleKeyHasherTypes.TARGET_SOURCE_PATH, targetSourcePath.getTarget());
     if (targetSourcePath instanceof ExplicitBuildTargetSourcePath) {
       this.putStringified(

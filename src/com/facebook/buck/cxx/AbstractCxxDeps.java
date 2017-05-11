@@ -111,7 +111,7 @@ abstract class AbstractCxxDeps {
 
     public Builder addDep(SourcePath path) {
       if (path instanceof BuildTargetSourcePath) {
-        deps.add(((BuildTargetSourcePath<?>) path).getTarget());
+        deps.add(((BuildTargetSourcePath) path).getTarget());
       }
       return this;
     }

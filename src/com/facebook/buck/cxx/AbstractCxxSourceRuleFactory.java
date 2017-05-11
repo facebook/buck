@@ -642,7 +642,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
 
-    BuildTarget pchTemplateTarget = ((BuildTargetSourcePath<?>) headerTargetPath).getTarget();
+    BuildTarget pchTemplateTarget = ((BuildTargetSourcePath) headerTargetPath).getTarget();
     Optional<CxxPrecompiledHeaderTemplate> pchTemplateRuleOpt =
         getResolver()
             .getRuleOptionalWithType(pchTemplateTarget, CxxPrecompiledHeaderTemplate.class);

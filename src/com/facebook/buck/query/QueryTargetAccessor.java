@@ -90,7 +90,7 @@ public class QueryTargetAccessor {
     if (sourcePath instanceof PathSourcePath) {
       return QueryFileTarget.of(((PathSourcePath) sourcePath).getRelativePath());
     } else if (sourcePath instanceof BuildTargetSourcePath) {
-      return QueryBuildTarget.of(((BuildTargetSourcePath<?>) sourcePath).getTarget());
+      return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
     }
     throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }

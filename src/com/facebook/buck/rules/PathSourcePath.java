@@ -23,7 +23,7 @@ import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
+public class PathSourcePath implements SourcePath {
 
   private final ProjectFilesystem filesystem;
 
@@ -68,14 +68,21 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   }
 
   @Override
-  protected int compareReferences(PathSourcePath o) {
-    if (o == this) {
+  public int compareTo(SourcePath other) {
+    if (other == this) {
       return 0;
     }
 
+    int classComparison = compareClasses(other);
+    if (classComparison != 0) {
+      return classComparison;
+    }
+
+    PathSourcePath that = (PathSourcePath) other;
+
     return ComparisonChain.start()
-        .compare(filesystem.getRootPath(), o.filesystem.getRootPath())
-        .compare(relativePathName, o.relativePathName)
+        .compare(filesystem.getRootPath(), that.filesystem.getRootPath())
+        .compare(relativePathName, that.relativePathName)
         .result();
   }
 

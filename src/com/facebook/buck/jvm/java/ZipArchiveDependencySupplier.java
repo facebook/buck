@@ -47,7 +47,7 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
         .stream()
         .flatMap(
             zipSourcePath -> {
-              BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath<?>) zipSourcePath);
+              BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) zipSourcePath);
               HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
               Preconditions.checkState(rule.getSourcePathToOutput().equals(zipSourcePath));
               return hasJavaAbi.getJarContents().stream();

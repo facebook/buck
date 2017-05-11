@@ -144,7 +144,7 @@ public class CategorizedRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   @Override
   public CategorizedRuleKeyHasher putBuildTargetSourcePath(
-      BuildTargetSourcePath<?> buildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetSourcePath) {
     current.putBuildTargetSourcePath(buildTargetSourcePath);
     return this;
   }

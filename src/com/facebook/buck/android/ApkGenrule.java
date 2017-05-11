@@ -54,7 +54,7 @@ import java.util.Optional;
 public class ApkGenrule extends Genrule implements HasInstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
-  @AddToRuleKey private final BuildTargetSourcePath<?> apk;
+  @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
 
   ApkGenrule(
@@ -76,7 +76,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
         /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk");
 
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
-    this.apk = (BuildTargetSourcePath<?>) apk;
+    this.apk = (BuildTargetSourcePath) apk;
     BuildRule rule = ruleFinder.getRuleOrThrow(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;

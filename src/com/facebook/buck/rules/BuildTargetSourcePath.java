@@ -23,8 +23,7 @@ import com.facebook.buck.model.BuildTarget;
  *
  * <p>The file is not guaranteed to exist until the {@link BuildRule} has been built.
  */
-public abstract class BuildTargetSourcePath<T extends BuildTargetSourcePath<T>>
-    extends AbstractSourcePath<T> {
+public abstract class BuildTargetSourcePath implements SourcePath {
 
   private final BuildTarget target;
 

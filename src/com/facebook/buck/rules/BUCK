@@ -12,16 +12,28 @@ java_library(
 )
 
 java_library(
+    name = "source_path_interface",
+    srcs = [
+        "SourcePath.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = ["//third-party/java/guava:guava"],
+)
+
+java_library(
     name = "source_path",
     srcs = [
-        "AbstractSourcePath.java",
-        "ArchiveMemberSourcePath.java",
         "BuildTargetSourcePath.java",
         "DefaultBuildTargetSourcePath.java",
         "ExplicitBuildTargetSourcePath.java",
         "ForwardingBuildTargetSourcePath.java",
         "PathSourcePath.java",
-        "SourcePath.java",
+    ],
+    exported_deps = [
+        ":archive_member_source_path",
+        ":source_path_interface",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -29,6 +41,19 @@ java_library(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
         "//third-party/java/guava:guava",
+    ],
+)
+
+java_immutables_library(
+    name = "archive_member_source_path",
+    srcs = [
+        "AbstractArchiveMemberSourcePath.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":source_path_interface",
     ],
 )
 

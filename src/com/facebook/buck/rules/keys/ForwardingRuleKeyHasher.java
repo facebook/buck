@@ -159,7 +159,7 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
 
   @Override
   public ForwardingRuleKeyHasher<HASH, HASH2> putBuildTargetSourcePath(
-      BuildTargetSourcePath<?> buildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetSourcePath) {
     secondHasher.putBuildTargetSourcePath(buildTargetSourcePath);
     delegate.putBuildTargetSourcePath(buildTargetSourcePath);
     return this;

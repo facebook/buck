@@ -79,14 +79,14 @@ public class PathSourcePathTest {
     // different instances, but everything is the same
     assertEquals(pathA1.hashCode(), clonedPathA1.hashCode());
     assertEquals(pathA1, clonedPathA1);
-    assertEquals(0, pathA1.compareReferences(clonedPathA1));
+    assertEquals(0, pathA1.compareTo(clonedPathA1));
     // even though the underlying relative paths are different, their names are the same
     assertEquals(pathA1.hashCode(), pathA2.hashCode());
     assertEquals(pathA1, pathA2);
-    assertEquals(0, pathA1.compareReferences(pathA2));
+    assertEquals(0, pathA1.compareTo(pathA2));
     // even though the underlying relative paths are the same, their names are not
     assertNotEquals(pathA1.hashCode(), pathB1.hashCode());
     assertNotEquals(pathA1, pathB1);
-    assertNotEquals(0, pathA1.compareReferences(pathB1));
+    assertNotEquals(0, pathA1.compareTo(pathB1));
   }
 }

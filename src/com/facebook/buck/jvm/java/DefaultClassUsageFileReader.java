@@ -64,7 +64,7 @@ class DefaultClassUsageFileReader {
         }
 
         for (String classAbsolutePath : jarUsedClassesEntry.getValue()) {
-          builder.add(new ArchiveMemberSourcePath(sourcePath, Paths.get(classAbsolutePath)));
+          builder.add(ArchiveMemberSourcePath.of(sourcePath, Paths.get(classAbsolutePath)));
         }
       }
     } catch (IOException e) {

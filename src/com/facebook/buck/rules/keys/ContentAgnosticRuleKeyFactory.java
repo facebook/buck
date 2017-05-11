@@ -110,7 +110,7 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     @Override
     protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) throws IOException {
       if (sourcePath instanceof BuildTargetSourcePath) {
-        return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
+        return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
       } else {
         return setSourcePathDirectly(sourcePath);
       }

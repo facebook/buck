@@ -196,8 +196,7 @@ public class PolynomialRuleKeyHasher implements RuleKeyHasher<Integer> {
   }
 
   @Override
-  public PolynomialRuleKeyHasher putBuildTargetSourcePath(
-      BuildTargetSourcePath<?> targetSourcePath) {
+  public PolynomialRuleKeyHasher putBuildTargetSourcePath(BuildTargetSourcePath targetSourcePath) {
     feedString(targetSourcePath.getTarget().getFullyQualifiedName());
     feed(RuleKeyHasherTypes.TARGET_SOURCE_PATH);
     if (targetSourcePath instanceof ExplicitBuildTargetSourcePath) {

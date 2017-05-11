@@ -55,14 +55,14 @@ public class SourcePathRuleFinder {
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return Optional.of(getRuleOrThrow((BuildTargetSourcePath<?>) sourcePath));
+      return Optional.of(getRuleOrThrow((BuildTargetSourcePath) sourcePath));
     } else {
       return Optional.empty();
     }
   }
 
   /** @return The {@link BuildRule} whose output {@code sourcePath} refers to its output. */
-  public BuildRule getRuleOrThrow(BuildTargetSourcePath<?> sourcePath) {
+  public BuildRule getRuleOrThrow(BuildTargetSourcePath sourcePath) {
     return Preconditions.checkNotNull(ruleResolver.getRule(sourcePath.getTarget()));
   }
 }

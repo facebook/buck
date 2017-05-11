@@ -110,7 +110,7 @@ public interface RuleKeyHasher<HASH> {
 
   RuleKeyHasher<HASH> putBuildTarget(BuildTarget buildTarget);
 
-  RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath<?> buildTargetSourcePath);
+  RuleKeyHasher<HASH> putBuildTargetSourcePath(BuildTargetSourcePath buildTargetSourcePath);
 
   /** Puts the container signature */
   RuleKeyHasher<HASH> putContainer(Container container, int length);

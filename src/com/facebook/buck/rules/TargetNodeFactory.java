@@ -144,7 +144,7 @@ public class TargetNodeFactory {
             if (object instanceof PathSourcePath) {
               pathsBuilder.add(((PathSourcePath) object).getRelativePath());
             } else if (object instanceof BuildTargetSourcePath) {
-              depsBuilder.add(((BuildTargetSourcePath<?>) object).getTarget());
+              depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
             } else if (object instanceof Path) {
               pathsBuilder.add((Path) object);
             } else if (object instanceof BuildTarget) {

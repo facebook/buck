@@ -465,33 +465,33 @@ public class RuleKeyTest {
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive1, Paths.get("location")))),
+                    "key", ArchiveMemberSourcePath.of(archive1, Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive1, Paths.get("location")))));
+                    "key", ArchiveMemberSourcePath.of(archive1, Paths.get("location")))));
 
     // Verify that just changing the archive changes the rule key
     assertNotEquals(
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive1, Paths.get("location")))),
+                    "key", ArchiveMemberSourcePath.of(archive1, Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive2, Paths.get("location")))));
+                    "key", ArchiveMemberSourcePath.of(archive2, Paths.get("location")))));
 
     // Verify that just changing the member path changes the rule key
     assertNotEquals(
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive1, Paths.get("location")))),
+                    "key", ArchiveMemberSourcePath.of(archive1, Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
-                    "key", new ArchiveMemberSourcePath(archive1, Paths.get("different")))));
+                    "key", ArchiveMemberSourcePath.of(archive1, Paths.get("different")))));
   }
 
   @Test

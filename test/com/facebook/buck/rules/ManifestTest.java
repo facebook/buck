@@ -89,7 +89,7 @@ public class ManifestTest {
     Manifest manifest = new Manifest(new RuleKey("cc"));
     RuleKey key = new RuleKey("aa");
     SourcePath input =
-        new ArchiveMemberSourcePath(
+        ArchiveMemberSourcePath.of(
             new FakeSourcePath("somewhere/a.jar"), Paths.get("Member.class"));
     HashCode hashCode = HashCode.fromInt(20);
     FileHashCache fileHashCache =

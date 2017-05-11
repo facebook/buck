@@ -236,7 +236,7 @@ public class DistBuildFileHashesTest {
                   .setProjectFilesystem(projectFilesystem)
                   .build(),
               null,
-              new ArchiveMemberSourcePath(
+              ArchiveMemberSourcePath.of(
                   new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
     }
 

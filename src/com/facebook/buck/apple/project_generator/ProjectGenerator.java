@@ -636,7 +636,7 @@ public class ProjectGenerator {
       TargetNode<AppleResourceDescription.Arg, ?> resource) {
     // Check that the resource target node is referencing valid files or directories.
     // If a SourcePath is a BuildTargetSourcePath (or some hypothetical future implementation of
-    // AbstractSourcePath), just assume it's the right type; we have no way of checking now as it
+    // SourcePath), just assume it's the right type; we have no way of checking now as it
     // may not exist yet.
     AppleResourceDescription.Arg arg = resource.getConstructorArg();
     for (SourcePath dir : arg.dirs) {
@@ -2552,7 +2552,7 @@ public class ProjectGenerator {
       return projectFilesystem.relativize(defaultPathResolver.getAbsolutePath(sourcePath));
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
-    BuildTargetSourcePath<?> buildTargetSourcePath = (BuildTargetSourcePath<?>) sourcePath;
+    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
     TargetNode<?, ?> node = targetGraph.get(buildTarget);
     Optional<TargetNode<ExportFileDescriptionArg, ?>> exportFileNode =

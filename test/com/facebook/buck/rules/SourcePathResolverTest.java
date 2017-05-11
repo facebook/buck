@@ -367,7 +367,7 @@ public class SourcePathResolverTest {
     SourcePath archiveSourcePath = genrule.getSourcePathToOutput();
 
     ArchiveMemberSourcePath archiveMemberSourcePath =
-        new ArchiveMemberSourcePath(archiveSourcePath, Paths.get("member"));
+        ArchiveMemberSourcePath.of(archiveSourcePath, Paths.get("member"));
 
     pathResolver.getSourcePathName(null, archiveMemberSourcePath);
   }
@@ -456,7 +456,7 @@ public class SourcePathResolverTest {
         new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), archivePath);
     Path memberPath = Paths.get("foo.class");
 
-    ArchiveMemberSourcePath path = new ArchiveMemberSourcePath(archiveSourcePath, memberPath);
+    ArchiveMemberSourcePath path = ArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
 
     ArchiveMemberPath relativePath = pathResolver.getRelativeArchiveMemberPath(path);
     assertEquals(archivePath, relativePath.getArchivePath());
@@ -480,7 +480,7 @@ public class SourcePathResolverTest {
         new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), archivePath);
     Path memberPath = Paths.get("foo.class");
 
-    ArchiveMemberSourcePath path = new ArchiveMemberSourcePath(archiveSourcePath, memberPath);
+    ArchiveMemberSourcePath path = ArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
 
     ArchiveMemberPath absolutePath = pathResolver.getAbsoluteArchiveMemberPath(path);
     assertEquals(archiveAbsolutePath, absolutePath.getArchivePath());
@@ -506,11 +506,11 @@ public class SourcePathResolverTest {
 
     assertThat(
         pathResolver.getPathSourcePath(
-            new ArchiveMemberSourcePath(pathSourcePath, filesystem.getPath("something"))),
+            ArchiveMemberSourcePath.of(pathSourcePath, filesystem.getPath("something"))),
         Matchers.equalTo(Optional.of(pathSourcePath)));
     assertThat(
         pathResolver.getPathSourcePath(
-            new ArchiveMemberSourcePath(
+            ArchiveMemberSourcePath.of(
                 new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//:rule")),
                 filesystem.getPath("something"))),
         Matchers.equalTo(Optional.empty()));

@@ -195,7 +195,7 @@ public class ClasspathMacroExpanderTest {
     Set<BuildTarget> seenBuildTargets = new LinkedHashSet<>();
     for (Object appendable : ((ImmutableSortedSet<?>) ruleKeyAppendables)) {
       assertThat(appendable, Matchers.instanceOf(BuildTargetSourcePath.class));
-      seenBuildTargets.add(((BuildTargetSourcePath<?>) appendable).getTarget());
+      seenBuildTargets.add(((BuildTargetSourcePath) appendable).getTarget());
     }
     assertThat(
         seenBuildTargets,

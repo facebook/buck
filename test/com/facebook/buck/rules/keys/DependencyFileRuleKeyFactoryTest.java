@@ -118,11 +118,11 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     SourcePath archivePath = new PathSourcePath(filesystem, Paths.get("archive"));
-    SourcePath usedSourcePath = new ArchiveMemberSourcePath(archivePath, Paths.get("used"));
-    SourcePath unusedSourcePath = new ArchiveMemberSourcePath(archivePath, Paths.get("unused"));
-    SourcePath noncoveredSourcePath = new ArchiveMemberSourcePath(archivePath, Paths.get("nc"));
+    SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
+    SourcePath unusedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("unused"));
+    SourcePath noncoveredSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("nc"));
     SourcePath interestingSourcePath =
-        new ArchiveMemberSourcePath(archivePath, Paths.get("META-INF"));
+        ArchiveMemberSourcePath.of(archivePath, Paths.get("META-INF"));
 
     testKeysWhenInputContentsChanges(
         ruleFinder,

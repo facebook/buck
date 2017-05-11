@@ -88,9 +88,9 @@ public class RuleKeyBuilderTest {
   private static final SourcePath SOURCE_PATH_1 = new PathSourcePath(FILESYSTEM, PATH_1);
   private static final SourcePath SOURCE_PATH_2 = new PathSourcePath(FILESYSTEM, PATH_2);
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_1 =
-      new ArchiveMemberSourcePath(SOURCE_PATH_1, Paths.get("member"));
+      ArchiveMemberSourcePath.of(SOURCE_PATH_1, Paths.get("member"));
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_2 =
-      new ArchiveMemberSourcePath(SOURCE_PATH_2, Paths.get("member"));
+      ArchiveMemberSourcePath.of(SOURCE_PATH_2, Paths.get("member"));
   private static final DefaultBuildTargetSourcePath TARGET_PATH_1 =
       new DefaultBuildTargetSourcePath(TARGET_1);
   private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
@@ -252,7 +252,7 @@ public class RuleKeyBuilderTest {
       @Override
       protected RuleKeyBuilder<HashCode> setSourcePath(SourcePath sourcePath) throws IOException {
         if (sourcePath instanceof BuildTargetSourcePath) {
-          return setSourcePathAsRule((BuildTargetSourcePath<?>) sourcePath);
+          return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
         } else {
           return setSourcePathDirectly(sourcePath);
         }

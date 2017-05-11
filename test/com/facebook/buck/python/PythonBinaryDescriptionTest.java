@@ -711,7 +711,7 @@ public class PythonBinaryDescriptionTest {
     for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
       CxxLink link =
           resolver
-              .getRuleOptionalWithType(((BuildTargetSourcePath<?>) path).getTarget(), CxxLink.class)
+              .getRuleOptionalWithType(((BuildTargetSourcePath) path).getTarget(), CxxLink.class)
               .get();
       assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
     }

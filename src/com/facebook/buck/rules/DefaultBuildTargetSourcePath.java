@@ -22,8 +22,7 @@ import com.facebook.buck.model.BuildTarget;
  * A {@link BuildTargetSourcePath} which resolves to the default output of the {@link BuildRule}
  * referred to by its target.
  */
-public class DefaultBuildTargetSourcePath
-    extends BuildTargetSourcePath<DefaultBuildTargetSourcePath> {
+public class DefaultBuildTargetSourcePath extends BuildTargetSourcePath {
 
   public DefaultBuildTargetSourcePath(BuildTarget target) {
     super(target);
@@ -54,7 +53,17 @@ public class DefaultBuildTargetSourcePath
   }
 
   @Override
-  protected int compareReferences(DefaultBuildTargetSourcePath o) {
-    return getTarget().compareTo(o.getTarget());
+  public int compareTo(SourcePath other) {
+    if (this == other) {
+      return 0;
+    }
+
+    int classComparison = compareClasses(other);
+    if (classComparison != 0) {
+      return classComparison;
+    }
+
+    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
+    return getTarget().compareTo(that.getTarget());
   }
 }
