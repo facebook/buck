@@ -184,42 +184,14 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
             ? preprocessDelegate.get().getHeaderPathNormalizer()
             : HeaderPathNormalizer.empty(resolver);
 
-    Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
-    if (operation.isPreprocess()) {
-      preprocessorCommand =
-          Optional.of(
-              new CxxPreprocessAndCompileStep.ToolCommand(
-                  preprocessDelegate.get().getCommandPrefix(),
-                  preprocessDelegate
-                      .get()
-                      .getArguments(compilerDelegate.getCompilerFlags(), Optional.empty()),
-                  preprocessDelegate.get().getEnvironment(),
-                  preprocessDelegate.get().getFlagsForColorDiagnostics()));
+    ImmutableList<String> arguments;
+    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
+      arguments =
+          compilerDelegate.getArguments(
+              preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule),
+              getBuildTarget().getCellPath());
     } else {
-      preprocessorCommand = Optional.empty();
-    }
-
-    Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
-    if (operation.isCompile()) {
-      ImmutableList<String> arguments;
-      if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
-        arguments =
-            compilerDelegate.getArguments(
-                preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule),
-                getBuildTarget().getCellPath());
-      } else {
-        arguments =
-            compilerDelegate.getArguments(CxxToolFlags.of(), getBuildTarget().getCellPath());
-      }
-      compilerCommand =
-          Optional.of(
-              new CxxPreprocessAndCompileStep.ToolCommand(
-                  compilerDelegate.getCommandPrefix(),
-                  arguments,
-                  compilerDelegate.getEnvironment(),
-                  compilerDelegate.getFlagsForColorDiagnostics()));
-    } else {
-      compilerCommand = Optional.empty();
+      arguments = compilerDelegate.getArguments(CxxToolFlags.of(), getBuildTarget().getCellPath());
     }
 
     return new CxxPreprocessAndCompileStep(
@@ -230,8 +202,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         getDepFilePath(),
         getRelativeInputPath(resolver),
         inputType,
-        preprocessorCommand,
-        compilerCommand,
+        new CxxPreprocessAndCompileStep.ToolCommand(
+            compilerDelegate.getCommandPrefix(),
+            arguments,
+            compilerDelegate.getEnvironment(),
+            compilerDelegate.getFlagsForColorDiagnostics()),
         headerPathNormalizer,
         sanitizer,
         scratchDir,

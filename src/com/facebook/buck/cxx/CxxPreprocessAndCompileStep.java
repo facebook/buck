@@ -31,7 +31,6 @@ import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -57,8 +56,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Path depFile;
   private final Path input;
   private final CxxSource.Type inputType;
-  private final Optional<ToolCommand> preprocessorCommand;
-  private final Optional<ToolCommand> compilerCommand;
+  private final ToolCommand command;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
@@ -79,16 +77,12 @@ public class CxxPreprocessAndCompileStep implements Step {
       Path depFile,
       Path input,
       CxxSource.Type inputType,
-      Optional<ToolCommand> preprocessorCommand,
-      Optional<ToolCommand> compilerCommand,
+      ToolCommand command,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Path scratchDir,
       boolean useArgfile,
       Compiler compiler) {
-    Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
-    Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
-
     this.target = target;
     this.filesystem = filesystem;
     this.operation = operation;
@@ -96,8 +90,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.depFile = depFile;
     this.input = input;
     this.inputType = inputType;
-    this.preprocessorCommand = preprocessorCommand;
-    this.compilerCommand = compilerCommand;
+    this.command = command;
     this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer.withProjectFilesystem(filesystem);
     this.scratchDir = scratchDir;
@@ -159,7 +152,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       boolean preprocessable,
       boolean allowColorsInDiagnostics) {
     return ImmutableList.<String>builder()
-        .addAll(compilerCommand.get().getArguments(allowColorsInDiagnostics))
+        .addAll(command.getArguments(allowColorsInDiagnostics))
         .addAll(getLanguageArgs(inputLanguage))
         .addAll(sanitizer.getCompilationFlags())
         .add("-c")
@@ -171,7 +164,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private ImmutableList<String> makeGeneratePchArguments(boolean allowColorInDiagnostics) {
     return ImmutableList.<String>builder()
-        .addAll(preprocessorCommand.get().getArguments(allowColorInDiagnostics))
+        .addAll(command.getArguments(allowColorInDiagnostics))
         // Using x-header language type directs the compiler to generate a PCH file.
         .addAll(getLanguageArgs(inputType.getPrecompiledHeaderLanguage().get()))
         // PCH file generation can also output dep files.
@@ -191,13 +184,13 @@ public class CxxPreprocessAndCompileStep implements Step {
           getArgfile());
       builder.setCommand(
           ImmutableList.<String>builder()
-              .addAll(getCommandPrefix())
+              .addAll(command.getCommandPrefix())
               .add("@" + getArgfile())
               .build());
     } else {
       builder.setCommand(
           ImmutableList.<String>builder()
-              .addAll(getCommandPrefix())
+              .addAll(command.getCommandPrefix())
               .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
               .build());
     }
@@ -239,11 +232,7 @@ public class CxxPreprocessAndCompileStep implements Step {
           .post(
               createConsoleEvent(
                   context,
-                  preprocessorCommand
-                      .map(Optional::of)
-                      .orElse(compilerCommand)
-                      .get()
-                      .supportsColorsInDiagnostics(),
+                  command.supportsColorsInDiagnostics(),
                   exitCode == 0 ? Level.WARNING : Level.SEVERE,
                   err));
     }
@@ -307,20 +296,9 @@ public class CxxPreprocessAndCompileStep implements Step {
     // step's description. It is not used to determine what command this step runs, which needs
     // to decide whether to use colors or not based on whether the terminal supports them.
     return ImmutableList.<String>builder()
-        .addAll(getCommandPrefix())
+        .addAll(command.getCommandPrefix())
         .addAll(getArguments(false))
         .build();
-  }
-
-  private ImmutableList<String> getCommandPrefix() {
-    switch (operation) {
-      case COMPILE:
-      case PREPROCESS_AND_COMPILE:
-        return compilerCommand.get().getCommandPrefix();
-      case GENERATE_PCH:
-        return preprocessorCommand.get().getCommandPrefix();
-    }
-    throw new RuntimeException("invalid operation type");
   }
 
   private ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
@@ -341,7 +319,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     if (context.getVerbosity().shouldPrintCommand()) {
-      return Stream.concat(getCommandPrefix().stream(), getArguments(false).stream())
+      return Stream.concat(command.getCommandPrefix().stream(), getArguments(false).stream())
           .map(Escaper.SHELL_ESCAPER::apply)
           .collect(Collectors.joining(" "));
     }

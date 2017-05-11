@@ -71,8 +71,6 @@ public class CxxCompileStepIntegrationTest {
     Path scratchDir = filesystem.getPath("scratchDir");
     filesystem.mkdirs(scratchDir);
 
-    ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();
-
     ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
     compilerArguments.add("-g");
 
@@ -89,18 +87,11 @@ public class CxxCompileStepIntegrationTest {
             depFile,
             relativeInput,
             CxxSource.Type.C,
-            Optional.of(
-                new CxxPreprocessAndCompileStep.ToolCommand(
-                    compilerCommandPrefix,
-                    preprocessorArguments.build(),
-                    ImmutableMap.of(),
-                    Optional.empty())),
-            Optional.of(
-                new CxxPreprocessAndCompileStep.ToolCommand(
-                    compilerCommandPrefix,
-                    compilerArguments.build(),
-                    ImmutableMap.of(),
-                    Optional.empty())),
+            new CxxPreprocessAndCompileStep.ToolCommand(
+                compilerCommandPrefix,
+                compilerArguments.build(),
+                ImmutableMap.of(),
+                Optional.empty()),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             scratchDir,
@@ -155,8 +146,6 @@ public class CxxCompileStepIntegrationTest {
     Path scratchDir = filesystem.getPath("scratchDir");
     filesystem.mkdirs(scratchDir);
 
-    ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();
-
     ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
     compilerArguments.add("-g");
 
@@ -170,18 +159,11 @@ public class CxxCompileStepIntegrationTest {
             depFile,
             relativeInput,
             CxxSource.Type.C,
-            Optional.of(
-                new CxxPreprocessAndCompileStep.ToolCommand(
-                    compilerCommandPrefix,
-                    preprocessorArguments.build(),
-                    ImmutableMap.of(),
-                    Optional.empty())),
-            Optional.of(
-                new CxxPreprocessAndCompileStep.ToolCommand(
-                    compilerCommandPrefix,
-                    compilerArguments.build(),
-                    ImmutableMap.of(),
-                    Optional.empty())),
+            new CxxPreprocessAndCompileStep.ToolCommand(
+                compilerCommandPrefix,
+                compilerArguments.build(),
+                ImmutableMap.of(),
+                Optional.empty()),
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             scratchDir,

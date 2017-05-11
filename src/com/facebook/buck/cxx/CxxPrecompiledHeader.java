@@ -64,8 +64,8 @@ import java.util.function.Predicate;
  *       it is not very flexible.
  * </ul>
  *
- * While the problems are not impossible to overcome, PCH generation is fast enough that it isn't a
- * significant problem. The PCH file is only generated when a source file needs to be compiled,
+ * <p>While the problems are not impossible to overcome, PCH generation is fast enough that it isn't
+ * a significant problem. The PCH file is only generated when a source file needs to be compiled,
  * anyway.
  *
  * <p>Additionally, since PCH files contain information like timestamps, absolute paths, and
@@ -234,22 +234,20 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
         resolver.getRelativePath(input),
         inputType,
-        Optional.of(
-            new CxxPreprocessAndCompileStep.ToolCommand(
-                preprocessorDelegate.getCommandPrefix(),
-                ImmutableList.copyOf(
-                    CxxToolFlags.explicitBuilder()
-                        .addAllRuleFlags(
-                            getCxxIncludePaths()
-                                .getFlags(resolver, preprocessorDelegate.getPreprocessor()))
-                        .addAllRuleFlags(
-                            preprocessorDelegate.getArguments(
-                                compilerFlags, /* no pch */ Optional.empty()))
-                        .build()
-                        .getAllFlags()),
-                preprocessorDelegate.getEnvironment(),
-                preprocessorDelegate.getFlagsForColorDiagnostics())),
-        Optional.empty(),
+        new CxxPreprocessAndCompileStep.ToolCommand(
+            preprocessorDelegate.getCommandPrefix(),
+            ImmutableList.copyOf(
+                CxxToolFlags.explicitBuilder()
+                    .addAllRuleFlags(
+                        getCxxIncludePaths()
+                            .getFlags(resolver, preprocessorDelegate.getPreprocessor()))
+                    .addAllRuleFlags(
+                        preprocessorDelegate.getArguments(
+                            compilerFlags, /* no pch */ Optional.empty()))
+                    .build()
+                    .getAllFlags()),
+            preprocessorDelegate.getEnvironment(),
+            preprocessorDelegate.getFlagsForColorDiagnostics()),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
         scratchDir,
@@ -260,9 +258,13 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
   /**
    * Helper method for dealing with compiler flags in a precompiled header build.
    *
+   * <p>
+   *
    * <p>Triage the given list of compiler flags, and divert {@code -I} flags' arguments to {@code
    * iDirsBuilder}, do similar for {@code -isystem} flags and {@code iSystemDirsBuilder}, and
    * finally output other non-include-path related stuff to {@code nonIncludeFlagsBuilder}.
+   *
+   * <p>
    *
    * <p>Note that while Buck doesn't tend to produce {@code -I} and {@code -isystem} flags without a
    * space between the flag and its argument, though historically compilers have accepted that.
