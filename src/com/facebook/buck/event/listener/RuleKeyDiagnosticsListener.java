@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -49,17 +48,23 @@ import javax.annotation.concurrent.GuardedBy;
 public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
 
+  // Flush every 1000 keys or 10 MB whichever comes first (some keys can be as large as 1 MB)
   private static final int DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH = 1000;
+  private static final int DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH = 10 * 1024 * 1024; // 10 MB
 
   private final ProjectFilesystem projectFilesystem;
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
 
   private final int minDiagKeysForAutoFlush;
+  private final int minSizeForAutoFlush;
   private final Object diagKeysLock = new Object();
 
   @GuardedBy("diagKeysLock")
-  private List<RuleKeyDiagnostics.Result<?, ?>> diagKeys;
+  private List<String> diagKeys;
+
+  @GuardedBy("diagKeysLock")
+  private int diagKeysSize; // total number of characters so far
 
   private final AtomicInteger nextId = new AtomicInteger();
   private final ConcurrentHashMap<BuildRule, RuleInfo> rulesInfo = new ConcurrentHashMap<>();
@@ -70,7 +75,9 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     this.info = info;
     this.outputExecutor = outputExecutor;
     this.minDiagKeysForAutoFlush = DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH;
+    this.minSizeForAutoFlush = DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH;
     this.diagKeys = new ArrayList<>();
+    this.diagKeysSize = 0;
   }
 
   @Subscribe
@@ -80,7 +87,12 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
         .ifPresent(
             diagData -> {
               synchronized (diagKeysLock) {
-                diagKeys.addAll(diagData.diagnosticKeys);
+                diagData.diagnosticKeys.forEach(
+                    result -> {
+                      String line = String.format("%s %s", result.ruleKey, result.diagKey);
+                      diagKeys.add(line);
+                      diagKeysSize += line.length();
+                    });
               }
               flushDiagKeysIfNeeded();
 
@@ -111,7 +123,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
 
   private void flushDiagKeysIfNeeded() {
     synchronized (diagKeysLock) {
-      if (diagKeys.size() > minDiagKeysForAutoFlush) {
+      if (diagKeys.size() > minDiagKeysForAutoFlush || diagKeysSize > minSizeForAutoFlush) {
         submitFlushDiagKeys();
       }
     }
@@ -119,22 +131,23 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
 
   private void submitFlushDiagKeys() {
     synchronized (diagKeysLock) {
-      List<RuleKeyDiagnostics.Result<?, ?>> keysToFlush = diagKeys;
+      List<String> keysToFlush = diagKeys;
       diagKeys = new ArrayList<>();
+      diagKeysSize = 0;
       if (!keysToFlush.isEmpty()) {
         outputExecutor.execute(() -> actuallyFlushDiagKeys(keysToFlush));
       }
     }
   }
 
-  private void actuallyFlushDiagKeys(List<RuleKeyDiagnostics.Result<?, ?>> keysToFlush) {
+  private void actuallyFlushDiagKeys(List<String> keysToFlush) {
     Path path = getDiagKeysFilePath();
     try {
       projectFilesystem.createParentDirs(path);
       try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, true);
           ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8)) {
-        for (RuleKeyDiagnostics.Result<?, ?> keys : keysToFlush) {
-          out.println(String.format("%s %s", keys.ruleKey, keys.diagKey));
+        for (String line : keysToFlush) {
+          out.println(line);
         }
       }
     } catch (IOException e) {
