@@ -19,10 +19,3 @@ java_test(
     '//libs:junit',
   ],
 )
-
-project_config(
-  src_target = ':tip',
-  src_roots = [ 'src' ],
-  test_target = ':test',
-  test_roots = [ 'test' ],
-)

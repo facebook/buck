@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.StringWriter;
-import javax.annotation.Nullable;
 import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
@@ -71,8 +70,6 @@ public class BuckPyFunction {
   }
 
   public String toPythonFunction(BuildRuleType type, Class<?> dtoClass) {
-    @Nullable TargetName defaultName = dtoClass.getAnnotation(TargetName.class);
-
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
@@ -103,7 +100,6 @@ public class BuckPyFunction {
         "params",
         ImmutableList.builder().addAll(mandatory.build()).addAll(optional.build()).build());
     st.add("typePropName", TYPE_PROPERTY_NAME);
-    st.add("defaultName", defaultName == null ? null : defaultName.name());
     StringWriter stringWriter = new StringWriter();
     try {
       st.write(new AutoIndentWriter(stringWriter, "\n"));

@@ -48,7 +48,3 @@ prebuilt_jar(
     name = "jdom",
     binary_jar = "jdom.jar",
 )
-
-project_config(
-    src_target = ":intellij-plugin-sdk",
-)

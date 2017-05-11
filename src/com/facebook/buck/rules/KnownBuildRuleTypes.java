@@ -652,7 +652,6 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new PrebuiltOcamlLibraryDescription());
     builder.register(new PrebuiltPythonLibraryDescription());
-    builder.register(new ProjectConfigDescription());
     builder.register(pythonBinaryDescription);
     PythonLibraryDescription pythonLibraryDescription =
         new PythonLibraryDescription(pythonPlatforms, cxxPlatforms);

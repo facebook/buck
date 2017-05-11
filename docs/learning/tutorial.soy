@@ -95,11 +95,7 @@ echo "android_library(
   name = 'activity',
   srcs = glob(['*.java']),
   visibility = [ 'PUBLIC' ],
-)
-
-project_config(
-  src_target = ':activity',
-)" > java/com/example/activity/BUCK
+) > java/com/example/activity/BUCK
 </pre>{/literal}
 
 <p>
@@ -140,11 +136,7 @@ echo "android_resource(
   visibility = [
     '//apps/myapp:',
   ],
-)
-
-project_config(
-  src_target = ':res',
-)" > res/com/example/activity/BUCK
+) > res/com/example/activity/BUCK
 </pre>{/literal}
 
 <h2>Create a Keystore</h2>
@@ -269,7 +261,7 @@ echo "[alias]
 <h2>Create an IntelliJ Project</h2>
 
 <p>
-  You likely want to develop your Android app using an IDE. Fortunately, Buck can generate an IntelliJ project from the <code><a href="rule/project_config.html">project_config()</code></a> rules you defined in your build files.
+  You likely want to develop your Android app using an IDE. Fortunately, Buck can generate an IntelliJ project from the build rules you defined in your build files.
 </p>
 
 <p>

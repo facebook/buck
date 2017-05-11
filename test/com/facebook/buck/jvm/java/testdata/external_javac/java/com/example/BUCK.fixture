@@ -3,7 +3,3 @@ java_library(
   srcs = ['Example.java'],
   visibility = [ 'PUBLIC' ],
 )
-
-project_config(
-  src_target = ':example',
-)

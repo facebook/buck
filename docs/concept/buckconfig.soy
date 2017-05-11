@@ -2317,10 +2317,10 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'default_android_manifest' /}
   {param example_value: '//shared/AndroidManifest.xml' /}
   {param description}
-    The default manifest file that should be used when the <code>src_target</code> of a{sp}
-    {call buck.project_config /} rule is an Android rule (like {call buck.android_library /}), but
+    The default manifest file that should be used when a project is being generated for an Android
+    rule (like {call buck.android_library /}), but
     there is no <code>AndroidManifest.xml</code> file in the same directory as the{sp}
-    {call buck.build_file /} the {call buck.project_config /} is defined in.  IDEs for Android
+    {call buck.build_file /} the rule is defined in.  IDEs for Android
     projects need a manifest file, and this setting provides a convenient fallback without having
     boilerplate manifest files all over your project.
   {/param}

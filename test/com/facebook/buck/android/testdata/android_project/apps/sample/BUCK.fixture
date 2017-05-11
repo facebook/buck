@@ -663,7 +663,3 @@ android_binary(
     'lib2e.so': ['.*/merge:[EF]'],
   },
 )
-
-project_config(
-  src_target = ':app',
-)

@@ -75,7 +75,7 @@
 <h3 id="intellij">IntelliJ</h3>
 
 <p>
-  This command processes all of the {call buck.project_config /} rules across all of the
+  This command processes all of the 
   {sp}{call buck.build_file /}s whose targets were specified and uses them to generate the
   configuration files for an IDE.  The generated files include:
 </p>
@@ -86,9 +86,8 @@
     always corresponds to a {call buck.prebuilt_jar /}.
   </li>
   <li>
-    <code>.iml</code> files, each of which defines a module in IntelliJ.  An <code>.iml</code> file
-    will be created in each directory with a {call buck.build_file /} that has a
-    {sp}{call buck.project_config /}.  A module can depend on other modules, as well as libraries.
+    <code>.iml</code> files, each of which defines a module in IntelliJ.
+    A module can depend on other modules, as well as libraries.
     It should be noted that although Buck allows multiple build targets per build file, IntelliJ's
     modules are only defined at the directory level.  This means that you may find IntelliJ flagging
     compilation errors because of missing dependencies of classes outside of your project slice, but

@@ -7,8 +7,3 @@ android_resource(
     'PUBLIC',
   ],
 )
-
-project_config(
-  src_target = ':res',
-  src_roots = None,
-)

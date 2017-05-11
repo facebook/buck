@@ -89,34 +89,6 @@ public class LegacyBuckPyFunctionTest {
         definition);
   }
 
-  @TargetName(name = "lollerskates")
-  public static class TargetNameOnly {
-    public String foobar;
-  }
-
-  @Test
-  public void testHasDefaultName() {
-
-    String definition =
-        buckPyFunction.toPythonFunction(BuildRuleType.of("noname"), TargetNameOnly.class);
-
-    assertEquals(
-        Joiner.on("\n")
-            .join(
-                "@provide_for_build",
-                "def noname(foobar, visibility=None, within_view=None, build_env=None):",
-                "    add_rule({",
-                "        'buck.type': 'noname',",
-                "        'name': 'lollerskates',",
-                "        'foobar': foobar,",
-                "        'visibility': visibility,",
-                "        'within_view': within_view,",
-                "    }, build_env)",
-                "",
-                ""),
-        definition);
-  }
-
   public static class BadName {
     public int name;
   }
