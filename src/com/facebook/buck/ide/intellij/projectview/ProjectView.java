@@ -226,13 +226,15 @@ public class ProjectView {
 
   private static final Patterns SIMPLE_RESOURCE_PATTERNS =
       Patterns.builder()
-          .add("/res/", capture("anim", NONCAPTURE_DASH_PART), "/")
-          .add("/res/", capture("animator"), "/")
+          // These are ordered based on the frequency in two large Android projects.
+          // This ordering will not be ideal for every project, but it's probably not too far off.
           .add("/res/", capture("drawable", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("layout", NONCAPTURE_DASH_PART), "/")
-          .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("raw", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("anim", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("xml", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("animator"), "/")
           .build();
 
   private static final String CAPTURE_ALL = capture(".*");
@@ -240,8 +242,9 @@ public class ProjectView {
 
   private static final Patterns MANGLED_RESOURCE_PATTERNS =
       Patterns.builder()
-          .add("^android_res/", CAPTURE_ALL, "res/(color)", CAPTURE_DASH_PART, "/")
+          // These are also ordered based on the frequency in the same two large Android projects.
           .add("^android_res/", CAPTURE_ALL, "res/(values)", CAPTURE_DASH_PART, "/")
+          .add("^android_res/", CAPTURE_ALL, "res/(color)", CAPTURE_DASH_PART, "/")
           .build();
 
   // Group 1 has any path under ...//assets/ while group 2 has the filename
