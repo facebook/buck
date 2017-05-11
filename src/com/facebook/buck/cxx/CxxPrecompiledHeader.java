@@ -230,7 +230,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
         resolver.getRelativePath(getSourcePathToOutput()),
-        getDepFilePath(resolver),
+        Optional.of(getDepFilePath(resolver)),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
         resolver.getRelativePath(input),
         inputType,

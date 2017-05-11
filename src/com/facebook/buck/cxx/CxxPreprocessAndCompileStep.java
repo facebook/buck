@@ -53,7 +53,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Operation operation;
   private final Path output;
-  private final Path depFile;
+  private final Optional<Path> depFile;
   private final Path input;
   private final CxxSource.Type inputType;
   private final ToolCommand command;
@@ -74,7 +74,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       ProjectFilesystem filesystem,
       Operation operation,
       Path output,
-      Path depFile,
+      Optional<Path> depFile,
       Path input,
       CxxSource.Type inputType,
       ToolCommand command,
@@ -108,8 +108,7 @@ public class CxxPreprocessAndCompileStep implements Step {
    *
    * @return Half-configured ProcessExecutorParams.Builder
    */
-  private ProcessExecutorParams.Builder makeSubprocessBuilder(
-      ExecutionContext context, Map<String, String> additionalEnvironment) {
+  private ProcessExecutorParams.Builder makeSubprocessBuilder(ExecutionContext context) {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
 
     env.putAll(
@@ -124,21 +123,10 @@ public class CxxPreprocessAndCompileStep implements Step {
     // Note: the current process's env already contains `BUCK_BUILD_ID`, which will be inherited.
     env.put("BUCK_BUILD_TARGET", target.toString());
 
-    // Add additional environment variables.
-    env.putAll(additionalEnvironment);
-
     return ProcessExecutorParams.builder()
         .setDirectory(filesystem.getRootPath().toAbsolutePath())
         .setRedirectError(ProcessBuilder.Redirect.PIPE)
         .setEnvironment(ImmutableMap.copyOf(env));
-  }
-
-  private ImmutableList<String> getDepFileArgs(Path depFile) {
-    return compiler.outputDependenciesArgs(depFile.toString());
-  }
-
-  private ImmutableList<String> getLanguageArgs(String inputLanguage) {
-    return compiler.languageArgs(inputLanguage);
   }
 
   private Path getArgfile() {
@@ -146,36 +134,27 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  ImmutableList<String> makeCompileArguments(
-      String inputFileName,
-      String inputLanguage,
-      boolean preprocessable,
-      boolean allowColorsInDiagnostics) {
+  ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
+    String inputLanguage =
+        operation == Operation.GENERATE_PCH
+            ? inputType.getPrecompiledHeaderLanguage().get()
+            : inputType.getLanguage();
     return ImmutableList.<String>builder()
         .addAll(command.getArguments(allowColorsInDiagnostics))
-        .addAll(getLanguageArgs(inputLanguage))
+        .addAll(compiler.languageArgs(inputLanguage))
         .addAll(sanitizer.getCompilationFlags())
         .add("-c")
-        .addAll(preprocessable ? getDepFileArgs(depFile) : ImmutableList.of())
-        .add(inputFileName)
+        .addAll(
+            depFile
+                .map(depFile -> compiler.outputDependenciesArgs(depFile.toString()))
+                .orElseGet(ImmutableList::of))
+        .add(input.toString())
         .addAll(compiler.outputArgs(output.toString()))
         .build();
   }
 
-  private ImmutableList<String> makeGeneratePchArguments(boolean allowColorInDiagnostics) {
-    return ImmutableList.<String>builder()
-        .addAll(command.getArguments(allowColorInDiagnostics))
-        // Using x-header language type directs the compiler to generate a PCH file.
-        .addAll(getLanguageArgs(inputType.getPrecompiledHeaderLanguage().get()))
-        // PCH file generation can also output dep files.
-        .addAll(getDepFileArgs(depFile))
-        .add(input.toString())
-        .add("-o", output.toString())
-        .build();
-  }
-
   private int executeCompilation(ExecutionContext context) throws Exception {
-    ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context, ImmutableMap.of());
+    ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
       filesystem.writeLinesToPath(
@@ -289,7 +268,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  @VisibleForTesting
   ImmutableList<String> getCommand() {
     // We set allowColorsInDiagnostics to false here because this function is only used by the
     // compilation database (its contents should not depend on how Buck was invoked) and in the
@@ -299,21 +277,6 @@ public class CxxPreprocessAndCompileStep implements Step {
         .addAll(command.getCommandPrefix())
         .addAll(getArguments(false))
         .build();
-  }
-
-  private ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
-    switch (operation) {
-      case COMPILE:
-      case PREPROCESS_AND_COMPILE:
-        return makeCompileArguments(
-            input.toString(),
-            inputType.getLanguage(),
-            inputType.isPreprocessable(),
-            allowColorsInDiagnostics);
-      case GENERATE_PCH:
-        return makeGeneratePchArguments(allowColorsInDiagnostics);
-    }
-    throw new RuntimeException("invalid operation type");
   }
 
   @Override
@@ -338,30 +301,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     PREPROCESS_AND_COMPILE,
     GENERATE_PCH,
     ;
-
-    /** Returns whether the step has a preprocessor component. */
-    public boolean isPreprocess() {
-      switch (this) {
-        case PREPROCESS_AND_COMPILE:
-        case GENERATE_PCH:
-          return true;
-        case COMPILE:
-          return false;
-      }
-      throw new RuntimeException("unhandled case");
-    }
-
-    /** Returns whether the step has a compilation component. */
-    public boolean isCompile() {
-      switch (this) {
-        case COMPILE:
-        case PREPROCESS_AND_COMPILE:
-          return true;
-        case GENERATE_PCH:
-          return false;
-      }
-      throw new RuntimeException("unhandled case");
-    }
   }
 
   public static class ToolCommand {

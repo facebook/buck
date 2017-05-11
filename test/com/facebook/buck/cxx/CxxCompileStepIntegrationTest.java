@@ -84,7 +84,7 @@ public class CxxCompileStepIntegrationTest {
             filesystem,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,
-            depFile,
+            Optional.of(depFile),
             relativeInput,
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
@@ -156,7 +156,7 @@ public class CxxCompileStepIntegrationTest {
             filesystem,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
             output,
-            depFile,
+            Optional.of(depFile),
             relativeInput,
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(

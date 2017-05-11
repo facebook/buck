@@ -47,8 +47,9 @@ import java.util.function.Predicate;
 public class CxxPreprocessAndCompile extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
-  @AddToRuleKey private final CxxPreprocessAndCompileStep.Operation operation;
+  /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
   @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
+
   @AddToRuleKey private final CompilerDelegate compilerDelegate;
 
   @AddToRuleKey(stringify = true)
@@ -63,7 +64,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @VisibleForTesting
   public CxxPreprocessAndCompile(
       BuildRuleParams params,
-      CxxPreprocessAndCompileStep.Operation operation,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
       Path output,
@@ -74,13 +74,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       Optional<SymlinkTree> sandboxTree) {
     super(params);
     this.sandboxTree = sandboxTree;
-    Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
-          operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
-          "Precompiled headers can only be used for compile operations.");
+          preprocessDelegate.isPresent(),
+          "Precompiled headers are only used when compilation includes preprocessing.");
     }
-    this.operation = operation;
     this.preprocessDelegate = preprocessDelegate;
     this.compilerDelegate = compilerDelegate;
     this.output = output;
@@ -114,7 +112,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
-        CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.empty(),
         compilerDelegate,
         output,
@@ -140,7 +137,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
-        CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
         output,
@@ -155,7 +151,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
-    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
+    if (preprocessDelegate.isPresent()) {
       sink.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
     }
     if (sandboxTree.isPresent()) {
@@ -165,9 +161,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         sink.setReflectively("sandbox(" + path.toString() + ")", source);
       }
     }
-    if (precompiledHeaderRule.isPresent()) {
-      sink.setReflectively("precompiledHeaderRuleInput", precompiledHeaderRule.get().getInput());
-    }
+    precompiledHeaderRule.ifPresent(
+        cxxPrecompiledHeader ->
+            sink.setReflectively("precompiledHeaderRuleInput", cxxPrecompiledHeader.getInput()));
   }
 
   private Path getDepFilePath() {
@@ -180,26 +176,27 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
     // If we're compiling, this will just be empty.
     HeaderPathNormalizer headerPathNormalizer =
-        preprocessDelegate.isPresent()
-            ? preprocessDelegate.get().getHeaderPathNormalizer()
-            : HeaderPathNormalizer.empty(resolver);
+        preprocessDelegate
+            .map(PreprocessorDelegate::getHeaderPathNormalizer)
+            .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
 
-    ImmutableList<String> arguments;
-    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
-      arguments =
-          compilerDelegate.getArguments(
-              preprocessDelegate.get().getFlagsWithSearchPaths(precompiledHeaderRule),
-              getBuildTarget().getCellPath());
-    } else {
-      arguments = compilerDelegate.getArguments(CxxToolFlags.of(), getBuildTarget().getCellPath());
-    }
+    ImmutableList<String> arguments =
+        compilerDelegate.getArguments(
+            preprocessDelegate
+                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderRule))
+                .orElseGet(CxxToolFlags::of),
+            getBuildTarget().getCellPath());
 
     return new CxxPreprocessAndCompileStep(
         getBuildTarget(),
         getProjectFilesystem(),
-        operation,
+        preprocessDelegate.isPresent()
+            ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
+            : CxxPreprocessAndCompileStep.Operation.COMPILE,
         output,
-        getDepFilePath(),
+        // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
+        // getInputsAfterBuildingLocally.
+        preprocessDelegate.isPresent() ? Optional.of(getDepFilePath()) : Optional.empty(),
         getRelativeInputPath(resolver),
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
@@ -252,23 +249,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   // Used for compdb
   public ImmutableList<String> getCommand(SourcePathResolver pathResolver) {
-    if (operation == CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE) {
-      return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
-    }
-
-    PreprocessorDelegate effectivePreprocessorDelegate = preprocessDelegate.get();
-    ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(
-        compilerDelegate.getCommand(
-            effectivePreprocessorDelegate.getFlagsWithSearchPaths(/*pch*/ Optional.empty()),
-            getBuildTarget().getCellPath()));
-    // use the input of the preprocessor, since the fact that this is going through preprocessor is
-    // hidden to compdb.
-    cmd.add("-x", inputType.getLanguage());
-    cmd.add("-c");
-    cmd.add("-o", output.toString());
-    cmd.add(pathResolver.getAbsolutePath(input).toString());
-    return cmd.build();
+    return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
   }
 
   @Override
@@ -324,9 +305,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     }
 
     // If present, include all inputs coming from the compiler tool.
-    if (operation.isCompile()) {
-      inputs.addAll(compilerDelegate.getInputsAfterBuildingLocally());
-    }
+    inputs.addAll(compilerDelegate.getInputsAfterBuildingLocally());
 
     if (precompiledHeaderRule.isPresent()) {
       CxxPrecompiledHeader pch = precompiledHeaderRule.get();

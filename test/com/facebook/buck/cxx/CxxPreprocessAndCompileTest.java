@@ -370,9 +370,6 @@ public class CxxPreprocessAndCompileTest {
             .add("-O3")
             .add("-x", "c++")
             .add("-c")
-            .add("-MD")
-            .add("-MF")
-            .add("test.o.dep")
             .add(input.toString())
             .add("-o", output.toString())
             .build();
@@ -482,21 +479,13 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> command =
         buildRule
             .makeMainStep(pathResolver, buildRule.getProjectFilesystem().getRootPath(), false)
-            .makeCompileArguments(
-                input.toString(),
-                "c++",
-                /* preprocessable */ true,
-                /* allowColorsInDiagnostics */ false);
+            .getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule
             .makeMainStep(pathResolver, scratchDir, false)
-            .makeCompileArguments(
-                input.toString(),
-                "c++",
-                /* preprocessable */ true,
-                /* allowColorsInDiagnostics */ true);
+            .getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 
@@ -541,21 +530,13 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> command =
         buildRule
             .makeMainStep(pathResolver, scratchDir, false)
-            .makeCompileArguments(
-                input.toString(),
-                "c++",
-                /* preprocessable */ true,
-                /* allowColorsInDiagnostics */ false);
+            .getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule
             .makeMainStep(pathResolver, scratchDir, false)
-            .makeCompileArguments(
-                input.toString(),
-                "c++",
-                /* preprocessable */ true,
-                /* allowColorsInDiagnostics */ true);
+            .getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 }
