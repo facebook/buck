@@ -88,7 +88,7 @@ class NodeInfo:
         self.total_duration = -1
         self.rule_type = parts[2]
         self.target = parts[3]
-        self.is_cacheable = int(parts[4])
+        self.is_cacheable = bool(int(parts[4]))
         self.default_key = parts[5]
         self.input_key = parts[6]
         self.depfile_key = parts[7]
@@ -102,6 +102,7 @@ class NodeInfo:
             str(self.target),
             format_duration(self.duration / 1e9),
             format_duration(self.total_duration / 1e9),
+            str(self.is_cacheable),
             str(self.default_key),
             str(self.input_key),
             str(self.depfile_key),
@@ -111,7 +112,7 @@ class NodeInfo:
 
     @staticmethod
     def num_columns():
-        return 10
+        return 11
 
     @staticmethod
     def get_column_names():
@@ -121,6 +122,7 @@ class NodeInfo:
             "target",
             "duration",
             "total_duration",
+            "is_cacheable",
             "default_key",
             "input_key",
             "depfile_key",
@@ -136,6 +138,7 @@ class NodeInfo:
             1000,  # "target"
             1000,  # "duration"
             1000,  # "total_duration"
+            1000,  # "is_cacheable"
             1000,  # "default_key"
             0,  # "input_key"
             0,  # "depfile_key"
@@ -156,14 +159,16 @@ class NodeInfo:
         elif col_id == 4:
             return -cmp(info1.total_duration, info2.total_duration)
         elif col_id == 5:
-            return cmp(info1.default_key, info2.default_key)
+            return cmp(info1.is_cacheable, info2.is_cacheable)
         elif col_id == 6:
-            return cmp(info1.input_key, info2.input_key)
+            return cmp(info1.default_key, info2.default_key)
         elif col_id == 7:
-            return cmp(info1.depfile_key, info2.depfile_key)
+            return cmp(info1.input_key, info2.input_key)
         elif col_id == 8:
-            return cmp(info1.manifest_key, info2.manifest_key)
+            return cmp(info1.depfile_key, info2.depfile_key)
         elif col_id == 9:
+            return cmp(info1.manifest_key, info2.manifest_key)
+        elif col_id == 10:
             return cmp(info1.output_hash, info2.output_hash)
         else:
             return 0
@@ -186,12 +191,14 @@ class Graph:
         # read deps
         m = int(next(it))
         self.deps = [[] for _ in range((n + 2))]
+        self.rdeps = [[] for _ in range((n + 2))]
         deg = [0] * (n + 1)
         for i in range(m):
             parts = next(it).split(' ')
             u = int(parts[0])
             v = int(parts[1])
             self.deps[u].append(v)
+            self.rdeps[v].append(u)
             deg[v] += 1
         # all nodes: convenience sink (has all the nodes as its direct dep)
         self.id_all = n + 0
@@ -201,6 +208,7 @@ class Graph:
         self.deps[self.id_roots] = [i for i in range(n) if deg[i] == 0]
         # compute additional data
         self.calc_total_durations()
+        self.calc_target_index()
         dt = time.clock() - t0
         eprint('nodes: ', n, ', edges: ', m, ', time: ', dt, sep='')
 
@@ -222,8 +230,13 @@ class Graph:
                             stk.append(v)
                 self.nodes[u].total_duration = total
 
+    def calc_target_index(self):
+        self.target_index = {}
+        for node in self.nodes:
+            self.target_index[node.target] = node
 
-def print_deps(g, u, sort_col_id):
+
+def print_deps(g, u, sort_col_id, cacheable_only, reverse_deps=False):
     is_proper_node = (0 <= u < len(g))
     if not is_proper_node and u != g.id_all and u != g.id_roots:
         print('id out of range:', u)
@@ -243,11 +256,19 @@ def print_deps(g, u, sort_col_id):
     if is_proper_node:
         tbl.add_row(g.nodes[u].get_column_values())
     tbl.add_row([])
-    for v in sorted(g.deps[u], col_cmp):
-        if g.nodes[v].is_cacheable:
+    deps = g.rdeps[u] if reverse_deps else g.deps[u]
+    for v in sorted(deps, col_cmp):
+        if g.nodes[v].is_cacheable or not cacheable_only:
             tbl.add_row(g.nodes[v].get_column_values())
     tbl.add_row([])
-    print('deps for:', u)
+    if u == g.id_all:
+        print('all:')
+    elif u == g.id_roots:
+        print('roots:')
+    elif reverse_deps:
+        print('reverse deps for:', u)
+    else:
+        print('deps for:', u)
     print(str(tbl))
 
 
@@ -269,9 +290,11 @@ interactive commands:
     q                   quits
     h                   prints this help message
     lg <path>           loads graph from a file
+    c                   toggles cacheable_only mode (only cacheable rules get displayed)
     r                   shows root nodes
     a                   shows all nodes
     d 12                shows deps of node 12
+    rd 12               shows reverse deps (parents) of node 12
     b                   shows deps of the previously queried node
     s 3                 selects 3-rd column as the sort column
     p 12                prints the node 12
@@ -283,6 +306,8 @@ interactive commands:
                         criteria: pattern1 field1 [pattern2 field2 pattern3 field3 ...]
     pk <hahs>           shows rulekey composition for the given key hash
     pkr <hahs>          shows rulekey composition for the given reference key hash
+    pt                  shows all the targets whose rulekey differ from the reference key hash
+    pta                 shows all the targets that are present in the both keys sets
     dt <target>         diffs the keys and reference keys for the given target
     gv path             saves the graph as a graphviz file
 
@@ -317,6 +342,23 @@ class Diag:
     def load_keys_ref(self, path):
         self.keys_ref = read_rulekeys_autodetect(path)
         self.targets_to_keys_ref = build_targets_to_rulekeys_index(self.keys_ref)
+
+    def print_targets_intersection(self, only_different, only_cacheable):
+        same = 0
+        nonc = 0
+        for target, keys in self.targets_to_keys.iteritems():
+            if target in self.targets_to_keys_ref:
+                keys_ref = self.targets_to_keys_ref[target]
+                cacheable = False
+                if self.graph is not None and target in self.graph.target_index:
+                    cacheable = self.graph.target_index[target].is_cacheable
+                if keys == keys_ref:
+                    same += 1
+                    if not cacheable:
+                        nonc += 1
+                if (keys != keys_ref or not only_different) and (cacheable or not only_cacheable):
+                    print(target, keys, keys_ref)
+        print("%d with mathcing keys, %d out of which non-cacheable" % (same, nonc))
 
     def save_graphviz(self, path):
         # $ dot -Tpng graph.gv -o graph.png
@@ -388,8 +430,10 @@ def main():
 
     bstk = []
     sort_col_id = 4
+    cacheable_only = True
     while True:
         try:
+            print()
             parts = raw_input('> ').strip().split(' ')
         except EOFError:
             break
@@ -403,20 +447,26 @@ def main():
             d.load_graph(path)
         elif cmd == 'r' or cmd == 'roots':
             bstk.append(d.graph.id_roots)
-            print_deps(d.graph, bstk[-1], sort_col_id)
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
         elif cmd == 'a' or cmd == 'all':
             bstk.append(d.graph.id_all)
-            print_deps(d.graph, bstk[-1], sort_col_id)
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+        elif cmd == 'c' or cmd == 'cacheable_only':
+            cacheable_only = not cacheable_only
+            print('cacheable_only: %s' % cacheable_only)
         elif cmd == 'd' or cmd == 'deps':
             bstk.append(int(parts[1]))
-            print_deps(d.graph, bstk[-1], sort_col_id)
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
+        elif cmd == 'rd' or cmd == 'parents':
+            bstk.append(int(parts[1]))
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only, True)
         elif cmd == 'b' or cmd == 'back':
             if len(bstk) > 1:
                 bstk.pop()
-            print_deps(d.graph, bstk[-1], sort_col_id)
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
         elif cmd == 's' or cmd == 'sort':
             sort_col_id = int(parts[1])
-            print_deps(d.graph, bstk[-1], sort_col_id)
+            print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
         elif cmd == 'p' or cmd == 'print':
             u = int(parts[1])
             print_node(d.graph, u)
@@ -444,6 +494,10 @@ def main():
         elif cmd == 'pkr' or cmd == 'print_key_ref':
             rulekey_hash = parts[1]
             print_rulekey(d.keys_ref.get(rulekey_hash, []))
+        elif cmd == 'pt' or cmd == 'print_targets':
+            d.print_targets_intersection(True, cacheable_only)
+        elif cmd == 'pta' or cmd == 'print_targets_all':
+            d.print_targets_intersection(False, cacheable_only)
         elif cmd == 'dt' or cmd == 'diff_target':
             try:
                 d.diff_keys_for_target(d.graph.nodes[int(parts[1])].target)

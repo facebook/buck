@@ -359,12 +359,15 @@ def build_targets_to_rulekeys_index(keys):
     Builds the index of target -> rulekeys
     """
     res = {}
+    t0 = time.clock()
     for key, tokens in keys.iteritems():
         target = extract_target(reconstruct_rulekey(tokens))
         if target is not None:
             if target not in res:
                 res[target] = []
             res[target].append(key)
+    dt = time.clock() - t0
+    eprint('index built; targets: ', len(res), ', time: ', dt, sep='')
     return res
 
 
