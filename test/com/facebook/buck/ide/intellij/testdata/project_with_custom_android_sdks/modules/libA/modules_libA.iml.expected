@@ -15,11 +15,11 @@
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-    </content>
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/libA/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/libA/gen" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Google Inc.:Google APIs:24" jdkType="AndroidSDK" />
     <orderEntry type="sourceFolder" forTests="false" />

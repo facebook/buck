@@ -15,10 +15,10 @@
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$">
-    </content>
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/tip/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/tip/gen" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
