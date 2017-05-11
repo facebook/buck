@@ -365,8 +365,12 @@ public class ParamInfo implements Comparable<ParamInfo> {
      */
     private final Supplier<Method> closestGetterOnAbstractClassOrInterface;
 
+    /** Holds the getter for the concrete Immutable class. */
+    private final Supplier<Method> concreteGetter;
+
     private final Supplier<Boolean> isOptional;
 
+    @SuppressWarnings("PMD.EmptyCatchBlock")
     public BuilderParamInteractor(Method setter) {
       Preconditions.checkArgument(
           setter.getParameterCount() == 1,
@@ -384,6 +388,34 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
       this.closestGetterOnAbstractClassOrInterface =
           Suppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
+
+      this.concreteGetter =
+          Suppliers.memoize(
+              () -> {
+                // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
+                // getter from a superclass.
+                // Accordingly, we manually find the getter there, rather than using
+                // closestGetterOnAbstractClassOrInterface.
+                Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
+                if (enclosingClass == null) {
+                  throw new IllegalStateException(
+                      String.format(
+                          "Couldn't find enclosing class of Builder %s",
+                          setter.getDeclaringClass()));
+                }
+                Iterable<String> getterNames = getGetterNames();
+                for (String possibleGetterName : getterNames) {
+                  try {
+                    return enclosingClass.getMethod(possibleGetterName);
+                  } catch (NoSuchMethodException e) {
+                    // Handled below
+                  }
+                }
+                throw new IllegalStateException(
+                    String.format(
+                        "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
+                        setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
+              });
       this.isOptional =
           Suppliers.memoize(
               () -> {
@@ -417,35 +449,17 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
     /** @param target The built Immutable from which to get the value. */
     @Override
-    @SuppressWarnings("PMD.EmptyCatchBlock")
     public Object get(Object target) {
-      // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
-      // getter from a superclass.
-      // Accordingly, we manually find the getter there, rather than using
-      // closestGetterOnAbstractClassOrInterface.
-      Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
-      if (enclosingClass == null) {
+      Method getter = this.concreteGetter.get();
+      try {
+        return getter.invoke(target);
+      } catch (InvocationTargetException | IllegalAccessException e) {
         throw new IllegalStateException(
             String.format(
-                "Couldn't find enclosing class of Builder %s", setter.getDeclaringClass()));
+                "Error invoking getter %s on class %s",
+                getter.getName(), getter.getDeclaringClass()),
+            e);
       }
-      Iterable<String> getterNames = getGetterNames();
-      for (String possibleGetterName : getterNames) {
-        try {
-          return enclosingClass.getMethod(possibleGetterName).invoke(target);
-        } catch (NoSuchMethodException e) {
-          // Handled below
-        } catch (InvocationTargetException | IllegalAccessException e) {
-          throw new IllegalStateException(
-              String.format(
-                  "Error invoking getter %s on class %s", possibleGetterName, enclosingClass),
-              e);
-        }
-      }
-      throw new IllegalStateException(
-          String.format(
-              "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
-              setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
     }
 
     @Override
