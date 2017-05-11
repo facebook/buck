@@ -515,10 +515,7 @@ public class ExopackageInstallerIntegrationTest {
     @Override
     public String listDir(String dirPath) throws Exception {
       Set<String> res = new TreeSet<>();
-      for (String s :
-          deviceState
-              .subMap(dirPath, false, dirPath + Character.toChars(255).toString(), false)
-              .keySet()) {
+      for (String s : deviceState.subMap(dirPath, false, dirPath + "\u00FF", false).keySet()) {
         s = s.substring(dirPath.length() + 1);
         if (s.contains("/")) {
           res.add(s.substring(0, s.indexOf("/")));
