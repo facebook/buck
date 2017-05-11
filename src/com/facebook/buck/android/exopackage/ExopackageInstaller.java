@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -263,26 +264,14 @@ public class ExopackageInstaller {
     }
 
     private void installSecondaryDexFiles() throws Exception {
-      final ImmutableMap<String, Path> filesByHash = getRequiredDexFiles();
-      ImmutableMap<Path, Path> wantedFilesToInstall =
-          applyFilenameFormat(filesByHash, SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
-      device.mkDirP(dataRoot.resolve(SECONDARY_DEX_DIR).toString());
-      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-      installMissingFiles(presentFiles, wantedFilesToInstall);
+      final ImmutableMap<String, Path> hashToSources = getRequiredDexFiles();
+      final ImmutableSet<String> requiredHashes = hashToSources.keySet();
+      final ImmutableSet<String> presentHashes = prepareSecondaryDexDir(requiredHashes);
+      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
 
-      // filesToDelete will contain the old metadata, so delete first.
-      ImmutableSortedSet<Path> filesInDexDir =
-          ImmutableSortedSet.copyOf(
-              Sets.filter(presentFiles, p -> p.startsWith(SECONDARY_DEX_DIR)));
-      deleteUnwantedFiles(filesInDexDir, wantedFilesToInstall.keySet());
-      String metadataContents = getSecondaryDexMetadataContents();
+      Map<String, Path> filesToInstallByHash =
+          Maps.filterKeys(hashToSources, hashesToInstall::contains);
 
-      ImmutableMap<Path, String> metadataToInstall =
-          ImmutableMap.of(SECONDARY_DEX_DIR.resolve("metadata.txt"), metadataContents);
-      installMetadata(metadataToInstall);
-    }
-
-    private String getSecondaryDexMetadataContents() throws IOException {
       // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
       // it wouldn't be terrible if we don't.  We store the dexed jars on the device
       // with the full SHA-1 hashes in their names.  This is the format that the loader uses
@@ -291,11 +280,19 @@ public class ExopackageInstaller {
       // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
-      return com.google.common.io.Files.toString(
-              projectFilesystem.resolve(exopackageInfo.getDexInfo().get().getMetadata()).toFile(),
-              Charsets.UTF_8)
-          .replaceAll(
-              "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
+      String metadataContents =
+          com.google.common.io.Files.toString(
+                  projectFilesystem
+                      .resolve(exopackageInfo.getDexInfo().get().getMetadata())
+                      .toFile(),
+                  Charsets.UTF_8)
+              .replaceAll(
+                  "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
+
+      ImmutableMap<Path, Path> filesToInstall =
+          applyFilenameFormat(filesToInstallByHash, SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
+      installFiles("secondary_dex", filesToInstall);
+      installMetadata(ImmutableMap.of(SECONDARY_DEX_DIR.resolve("metadata.txt"), metadataContents));
     }
 
     private void installResourcesFiles() throws Exception {
@@ -437,6 +434,11 @@ public class ExopackageInstaller {
         builder.put(entry);
       }
       return builder.build();
+    }
+
+    private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
+        throws Exception {
+      return prepareDirectory(SECONDARY_DEX_DIR, DEX_FILE_PATTERN, requiredHashes);
     }
 
     private ImmutableSet<String> prepareNativeLibsDir(
