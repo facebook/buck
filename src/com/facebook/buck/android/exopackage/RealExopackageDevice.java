@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,7 +38,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 @VisibleForTesting
-class RealExopackageDevice implements ExopackageDevice {
+public class RealExopackageDevice implements ExopackageDevice {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   /** Maximum length of commands that can be passed to "adb shell". */
@@ -57,7 +58,8 @@ class RealExopackageDevice implements ExopackageDevice {
    * limit in adb is about 1k instead of 512k or 2M on Linux.
    */
   @VisibleForTesting
-  static ImmutableList<ImmutableList<String>> chunkArgs(Iterable<String> args, int sizeLimit) {
+  public static ImmutableList<ImmutableList<String>> chunkArgs(
+      Iterable<String> args, int sizeLimit) {
     ImmutableList.Builder<ImmutableList<String>> topLevelBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> chunkBuilder = ImmutableList.builder();
     int chunkSize = 0;

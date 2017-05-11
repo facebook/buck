@@ -25,6 +25,8 @@ import static org.junit.Assume.assumeTrue;
 import com.android.common.SdkConstants;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.android.exopackage.ExopackageDevice;
+import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -640,7 +642,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    boolean adbCall(String description, AdbCallable func, boolean quiet)
+    protected boolean adbCall(String description, AdbCallable func, boolean quiet)
         throws InterruptedException {
       try {
         return func.apply(device);

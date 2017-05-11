@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.InstallException;
 import java.io.File;

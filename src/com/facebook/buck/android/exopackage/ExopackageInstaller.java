@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -79,17 +81,18 @@ public class ExopackageInstaller {
           + "-2/base.apk "
           + "com.facebook.buck.android.agent.AgentMain ";
 
-  @VisibleForTesting static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
+  @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
-  @VisibleForTesting static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
+  @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
 
-  @VisibleForTesting static final Path RESOURCES_DIR = Paths.get("resources");
-
-  @VisibleForTesting
-  static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
+  @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
 
   @VisibleForTesting
-  static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
+  public static final Pattern DEX_FILE_PATTERN =
+      Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
+
+  @VisibleForTesting
+  public static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
   @VisibleForTesting
   static final Pattern RESOURCES_FILE_PATTERN = Pattern.compile("([0-9a-f]+)\\.apk");
@@ -116,10 +119,10 @@ public class ExopackageInstaller {
    * ExopackageDevice making it easy to provide different implementations in tests.
    */
   @VisibleForTesting
-  static class AdbInterface {
+  public static class AdbInterface {
     private AdbHelper adbHelper;
 
-    AdbInterface(AdbHelper adbHelper) {
+    protected AdbInterface(AdbHelper adbHelper) {
       this.adbHelper = adbHelper;
     }
 
@@ -127,11 +130,11 @@ public class ExopackageInstaller {
      * This is basically the same as AdbHelper.AdbCallable except that it takes an ExopackageDevice
      * instead of an IDevice.
      */
-    interface AdbCallable {
+    protected interface AdbCallable {
       boolean apply(ExopackageDevice device) throws Exception;
     }
 
-    boolean adbCall(String description, AdbCallable func, boolean quiet)
+    protected boolean adbCall(String description, AdbCallable func, boolean quiet)
         throws InterruptedException {
       return adbHelper.adbCall(
           new AdbHelper.AdbCallable() {
@@ -157,12 +160,12 @@ public class ExopackageInstaller {
   private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
   @VisibleForTesting
-  static class PackageInfo {
-    final String apkPath;
-    final String nativeLibPath;
-    final String versionCode;
+  public static class PackageInfo {
+    public final String apkPath;
+    public final String nativeLibPath;
+    public final String versionCode;
 
-    PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
+    public PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
       this.nativeLibPath = nativeLibPath;
       this.apkPath = apkPath;
       this.versionCode = versionCode;
@@ -651,7 +654,7 @@ public class ExopackageInstaller {
   }
 
   @VisibleForTesting
-  static ImmutableMap<String, Path> filterLibrariesForAbi(
+  public static ImmutableMap<String, Path> filterLibrariesForAbi(
       Path nativeLibsDir,
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
@@ -681,7 +684,7 @@ public class ExopackageInstaller {
    *     {@code resolvePathAgainst}.
    */
   @VisibleForTesting
-  static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
+  public static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
       Path metadataTxt, Path resolvePathAgainst, ProjectFilesystem filesystem) throws IOException {
     ImmutableMultimap.Builder<String, Path> builder = ImmutableMultimap.builder();
     for (String line : filesystem.readLines(metadataTxt)) {
@@ -699,7 +702,8 @@ public class ExopackageInstaller {
   }
 
   @VisibleForTesting
-  static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
+  public static Optional<PackageInfo> parsePathAndPackageInfo(
+      String packageName, String rawOutput) {
     Iterable<String> lines = Splitter.on(LINE_ENDING).omitEmptyStrings().split(rawOutput);
     String pmPathPrefix = "package:";
 
@@ -800,7 +804,7 @@ public class ExopackageInstaller {
    * @param toDelete Builder to receive files that we need to delete.
    */
   @VisibleForTesting
-  static void processLsOutput(
+  public static void processLsOutput(
       String output,
       Pattern filePattern,
       ImmutableSet<String> requiredHashes,
