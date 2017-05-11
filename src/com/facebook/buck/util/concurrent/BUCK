@@ -1,6 +1,9 @@
 java_immutables_library(
     name = "concurrent",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//third-party/java/concurrent-locks:concurrent-locks",
+    ],
     tests = [
         "//test/com/facebook/buck/util/concurrent:concurrent",
     ],
@@ -8,7 +11,6 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
-        "//third-party/java/concurrent-locks:concurrent-locks",
     ],
 )
 

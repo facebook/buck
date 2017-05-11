@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import org.junit.Test;
 
 public class FileSystemMapTest {
@@ -173,36 +172,12 @@ public class FileSystemMapTest {
   }
 
   @Test
-  public void testGetIfPresentWithPathThatExists() {
-    Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    FileSystemMap.Entry<Boolean> usr = new FileSystemMap.Entry<>();
-    fsMap.root.subLevels.put(Paths.get("usr"), usr);
-    FileSystemMap.Entry<Boolean> helloWorld = new FileSystemMap.Entry<>(true);
-    usr.subLevels.put(Paths.get("HelloWorld.java"), helloWorld);
-    Boolean entry = fsMap.getIfPresent(path);
-    assertNotNull(entry);
-    assertTrue(entry);
-  }
-
-  @Test
   public void testGetAtRootLevelWithPathThatExists() throws IOException {
     Path path = Paths.get("HelloWorld.java");
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
     FileSystemMap.Entry<Boolean> helloWorld = new FileSystemMap.Entry<>(true);
     fsMap.root.subLevels.put(Paths.get("HelloWorld.java"), helloWorld);
     assertTrue(fsMap.get(path));
-  }
-
-  @Test
-  public void testGetIfPresentAtRootLevelWithPathThatExists() {
-    Path path = Paths.get("HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    FileSystemMap.Entry<Boolean> helloWorld = new FileSystemMap.Entry<>(true);
-    fsMap.root.subLevels.put(Paths.get("HelloWorld.java"), helloWorld);
-    Boolean entry = fsMap.getIfPresent(path);
-    assertNotNull(entry);
-    assertTrue(entry);
   }
 
   @Test
@@ -216,32 +191,5 @@ public class FileSystemMapTest {
     Boolean entry = fsMap.get(path);
     assertNotNull(entry);
     assertTrue(entry);
-  }
-
-  @Test
-  public void testGetIfPresentWithPathThatDoesntExist() {
-    Path path = Paths.get("foo/bar/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    assertNull(fsMap.getIfPresent(path));
-  }
-
-  @Test
-  public void testAsMapWithEmptyTrie() {
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    Map<Path, Boolean> map = fsMap.convertToMap();
-    assertSame(map.size(), 0);
-  }
-
-  @Test
-  public void testAsMap() {
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    FileSystemMap.Entry<Boolean> usr = new FileSystemMap.Entry<>();
-    fsMap.root.subLevels.put(Paths.get("usr"), usr);
-    usr.subLevels.put(Paths.get("HelloWorld.java"), new FileSystemMap.Entry<>(true));
-    usr.subLevels.put(Paths.get("Yo.java"), new FileSystemMap.Entry<>(true));
-    Map<Path, Boolean> map = fsMap.convertToMap();
-    assertEquals(map.size(), 2);
-    assertTrue(map.containsKey(Paths.get("usr/HelloWorld.java")));
-    assertTrue(map.containsKey(Paths.get("usr/Yo.java")));
   }
 }
