@@ -32,6 +32,10 @@ public class TestFolder extends InclusiveFolder {
     super(path);
   }
 
+  public TestFolder(Path path, boolean wantsPackagePrefix) {
+    super(path, wantsPackagePrefix);
+  }
+
   @Override
   public IJFolderFactory getFactory() {
     return FACTORY;

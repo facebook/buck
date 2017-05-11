@@ -17,11 +17,13 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
@@ -29,14 +31,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 
 /**
  * Groups {@link IjFolder}s into sets which are of the same type and belong to the same package
@@ -111,8 +111,11 @@ public class IjSourceRootSimplifier {
 
     /**
      * Walks the trie of paths attempting to merge all of the children of the current path into
-     * itself. As soon as this fails we know we can't merge the parent path with the current path
-     * either.
+     * itself.
+     *
+     * <p>If a parent folder is present then the merge happens only for children folders that can be
+     * merged into a parent folder. Otherwise a parent folder is created and matching children
+     * folders are merged into it.
      *
      * @param currentPath current path
      * @return Optional.of(a successfully merged folder) or absent if merging did not succeed.
@@ -123,88 +126,228 @@ public class IjSourceRootSimplifier {
               .map(this::walk)
               .collect(MoreCollectors.toImmutableList());
 
-      List<IjFolder> presentChildren = new ArrayList<>(children.size());
-      for (Optional<IjFolder> folderOptional : children) {
-        if (!folderOptional.isPresent()) {
-          return Optional.empty();
-        }
-
-        IjFolder folder = folderOptional.get();
-        // We don't want to merge exclude folders.
-        if (folder instanceof ExcludeFolder) {
-          continue;
-        }
-        presentChildren.add(folderOptional.get());
-      }
+      ImmutableSet<IjFolder> presentChildren =
+          children
+              .stream()
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(MoreCollectors.toImmutableSet());
 
       IjFolder currentFolder = mergePathsMap.get(currentPath);
       if (presentChildren.isEmpty()) {
         return Optional.ofNullable(currentFolder);
       }
 
-      final IjFolder mergeDistination;
-      if (currentFolder != null) {
-        mergeDistination = currentFolder;
-      } else {
-        mergeDistination = findBestChildToAggregateTo(presentChildren).createCopyWith(currentPath);
+      boolean hasNonPresentChildren = presentChildren.size() != children.size();
+
+      return tryMergingParentAndChildren(
+          currentPath, currentFolder, presentChildren, hasNonPresentChildren);
+    }
+
+    /** Tries to merge children to a parent folder. */
+    private Optional<IjFolder> tryMergingParentAndChildren(
+        Path currentPath,
+        @Nullable IjFolder parentFolder,
+        ImmutableSet<IjFolder> children,
+        boolean hasNonPresentChildren) {
+      if (parentFolder == null) {
+        return mergeChildrenIntoNewParentFolder(currentPath, children);
       }
 
-      boolean allChildrenCanBeMerged =
-          presentChildren
+      if (parentFolder instanceof SelfMergingOnlyFolder) {
+        return Optional.of(parentFolder);
+      }
+
+      if ((parentFolder instanceof ExcludeFolder)) {
+        if (hasNonPresentChildren
+            || children.stream().anyMatch(folder -> !ExcludeFolder.class.isInstance(folder))) {
+          return Optional.empty();
+        }
+        return mergeAndRemoveSimilarChildren(parentFolder, children);
+      }
+
+      // SourceFolder or TestFolder
+      if (parentFolder.getWantsPackagePrefix()) {
+        return mergeFoldersWithMatchingPackageIntoParent(parentFolder, children);
+      } else {
+        return mergeAndRemoveSimilarChildren(parentFolder, children);
+      }
+    }
+
+    /**
+     * Creates a new parent folder and merges children into it.
+     *
+     * <p>The type of the result folder depends on the children.
+     */
+    private Optional<IjFolder> mergeChildrenIntoNewParentFolder(
+        Path currentPath, ImmutableSet<IjFolder> children) {
+      Optional<IjFolder> result;
+      // SourceFolder with a matching package
+      result =
+          tryCreateNewParentFolderFromChildrenWithPackage(
+              SourceFolder.FACTORY, SourceFolder.class, currentPath, children);
+      if (result.isPresent()) {
+        return result;
+      }
+
+      // SourceFolder without a package
+      result =
+          tryCreateNewParentFolderFromChildrenWithoutPackages(
+              SourceFolder.FACTORY, SourceFolder.class, currentPath, children);
+      if (result.isPresent()) {
+        return result;
+      }
+
+      // TestFolder with a matching package
+      result =
+          tryCreateNewParentFolderFromChildrenWithPackage(
+              TestFolder.FACTORY, TestFolder.class, currentPath, children);
+      if (result.isPresent()) {
+        return result;
+      }
+
+      // TestFolder without a package
+      result =
+          tryCreateNewParentFolderFromChildrenWithoutPackages(
+              TestFolder.FACTORY, TestFolder.class, currentPath, children);
+      return result;
+    }
+
+    /** Merges either SourceFolders or TestFolders without packages. */
+    private Optional<IjFolder> tryCreateNewParentFolderFromChildrenWithoutPackages(
+        IJFolderFactory factory,
+        Class<? extends IjFolder> folderClass,
+        Path currentPath,
+        ImmutableSet<IjFolder> children) {
+      ImmutableSet<IjFolder> childrenToMerge =
+          children
               .stream()
-              .allMatch(input -> canMerge(mergeDistination, input, packagePathCache));
-      if (!allChildrenCanBeMerged) {
+              .filter(folderClass::isInstance)
+              .filter(folder -> !folder.getWantsPackagePrefix())
+              .collect(MoreCollectors.toImmutableSet());
+
+      if (childrenToMerge.isEmpty()) {
         return Optional.empty();
       }
 
-      return attemptMerge(mergeDistination, presentChildren);
+      IjFolder mergedFolder =
+          factory.create(
+              currentPath,
+              false,
+              childrenToMerge
+                  .stream()
+                  .flatMap(folder -> folder.getInputs().stream())
+                  .collect(MoreCollectors.toImmutableSortedSet()));
+
+      removeFolders(childrenToMerge);
+      mergePathsMap.put(currentPath, mergedFolder);
+
+      return Optional.of(mergedFolder);
     }
 
-    private Optional<IjFolder> attemptMerge(IjFolder mergePoint, Collection<IjFolder> children) {
-      List<Path> mergedPaths = new ArrayList<>(children.size());
-      for (IjFolder presentChild : children) {
-        mergedPaths.add(presentChild.getPath());
-        if (!canMerge(mergePoint, presentChild, packagePathCache)) {
-          return Optional.empty();
-        }
-        mergePoint = presentChild.merge(mergePoint);
+    /** Merges either SourceFolders or TestFolders with matching packages. */
+    private Optional<IjFolder> tryCreateNewParentFolderFromChildrenWithPackage(
+        IJFolderFactory factory,
+        Class<? extends IjFolder> folderClass,
+        Path currentPath,
+        ImmutableSet<IjFolder> children) {
+      Optional<Path> currentPackage = packagePathCache.lookup(currentPath);
+      if (!currentPackage.isPresent()) {
+        return Optional.empty();
       }
 
-      for (Path path : mergedPaths) {
-        mergePathsMap.remove(path);
-      }
-      mergePathsMap.put(mergePoint.getPath(), mergePoint);
+      ImmutableSet<IjFolder> childrenToMerge =
+          children
+              .stream()
+              .filter(folderClass::isInstance)
+              .filter(IjFolder::getWantsPackagePrefix)
+              .filter(
+                  child ->
+                      canMergeWithKeepingPackage(
+                          currentPath, currentPackage.get(), child, packagePathCache))
+              .collect(MoreCollectors.toImmutableSet());
 
-      return Optional.of(mergePoint);
+      if (childrenToMerge.isEmpty()) {
+        return Optional.empty();
+      }
+
+      IjFolder mergedFolder =
+          factory.create(
+              currentPath,
+              true,
+              childrenToMerge
+                  .stream()
+                  .flatMap(folder -> folder.getInputs().stream())
+                  .collect(MoreCollectors.toImmutableSortedSet()));
+
+      removeFolders(childrenToMerge);
+      mergePathsMap.put(currentPath, mergedFolder);
+
+      return Optional.of(mergedFolder);
+    }
+
+    /**
+     * Merges children that have package name matching the parent folder package.
+     *
+     * <p>For example:
+     *
+     * <pre>
+     * a/b/c (package com.facebook.test)
+     * +-----> d (package com.facebook.test.d)
+     * +-----> e (package com.facebook.test.f)
+     * </pre>
+     *
+     * <p>will be merged into:
+     *
+     * <pre>
+     * a/b/c (package com.facebook.test)
+     * +-----> e (package com.facebook.test.f)
+     * </pre>
+     */
+    private Optional<IjFolder> mergeFoldersWithMatchingPackageIntoParent(
+        IjFolder parentFolder, ImmutableSet<IjFolder> children) {
+
+      ImmutableSet<IjFolder> childrenToMerge =
+          children
+              .stream()
+              .filter(child -> canMergeWithKeepingPackage(parentFolder, child, packagePathCache))
+              .collect(MoreCollectors.toImmutableSet());
+
+      IjFolder result = mergeFolders(parentFolder, childrenToMerge);
+
+      removeFolders(childrenToMerge);
+      mergePathsMap.put(parentFolder.getPath(), result);
+
+      return Optional.of(result);
+    }
+
+    /** Merges children that can be merged into a parent. */
+    private Optional<IjFolder> mergeAndRemoveSimilarChildren(
+        IjFolder parentFolder, ImmutableSet<IjFolder> children) {
+      ImmutableSet<IjFolder> childrenToMerge =
+          children
+              .stream()
+              .filter(folder -> folder.canMergeWith(parentFolder))
+              .collect(MoreCollectors.toImmutableSet());
+
+      IjFolder result = mergeFolders(parentFolder, childrenToMerge);
+
+      removeFolders(childrenToMerge);
+      mergePathsMap.put(result.getPath(), result);
+
+      return Optional.of(result);
+    }
+
+    private void removeFolders(Collection<IjFolder> folders) {
+      folders.stream().map(IjFolder::getPath).forEach(mergePathsMap::remove);
     }
   }
 
   /**
-   * Find a child which can be used as the aggregation point for the other folders. The order of
-   * preference is; - AndroidResource - because there should be only one - SourceFolder - because
-   * most things should merge into it - First Child - because no other folders significantly affect
-   * aggregation.
+   * @return <code>true</code> if parent and child can be merged and they have correct package
+   *     structure (child's package name matches parent's package + child's folder name).
    */
-  private static IjFolder findBestChildToAggregateTo(Iterable<IjFolder> children) {
-    Iterator<IjFolder> childIterator = children.iterator();
-
-    IjFolder bestCandidate = childIterator.next();
-    while (childIterator.hasNext()) {
-      IjFolder candidate = childIterator.next();
-
-      if (candidate instanceof AndroidResourceFolder) {
-        return candidate;
-      }
-
-      if (candidate instanceof SourceFolder) {
-        bestCandidate = candidate;
-      }
-    }
-
-    return bestCandidate;
-  }
-
-  private static boolean canMerge(
+  private static boolean canMergeWithKeepingPackage(
       IjFolder parent, IjFolder child, PackagePathCache packagePathCache) {
     Preconditions.checkArgument(child.getPath().startsWith(parent.getPath()));
 
@@ -212,23 +355,50 @@ public class IjSourceRootSimplifier {
       return false;
     }
 
-    if (parent.getWantsPackagePrefix()) {
-      Optional<Path> parentPackage = packagePathCache.lookup(parent);
-      if (!parentPackage.isPresent()) {
-        return false;
-      }
-      Path childPackage = packagePathCache.lookup(child).get();
-
-      int pathDifference = child.getPath().getNameCount() - parent.getPath().getNameCount();
-      Preconditions.checkState(pathDifference == 1);
-      if (childPackage.getNameCount() == 0) {
-        return false;
-      }
-      if (!MorePaths.getParentOrEmpty(childPackage).equals(parentPackage.get())) {
-        return false;
-      }
+    Optional<Path> parentPackage = packagePathCache.lookup(parent);
+    if (!parentPackage.isPresent()) {
+      return false;
     }
-    return true;
+    Optional<Path> childPackageOptional = packagePathCache.lookup(child);
+    if (!childPackageOptional.isPresent()) {
+      return false;
+    }
+    Path childPackage = childPackageOptional.get();
+
+    int pathDifference = child.getPath().getNameCount() - parent.getPath().getNameCount();
+    Preconditions.checkState(
+        pathDifference == 1,
+        "Path difference is wrong: %s and %s",
+        child.getPath(),
+        parent.getPath());
+    if (childPackage.getNameCount() == 0) {
+      return false;
+    }
+    return MorePaths.getParentOrEmpty(childPackage).equals(parentPackage.get());
+  }
+
+  private static boolean canMergeWithKeepingPackage(
+      Path currentPath, Path parentPackage, IjFolder child, PackagePathCache packagePathCache) {
+    Optional<Path> childPackageOptional = packagePathCache.lookup(child);
+    if (!childPackageOptional.isPresent()) {
+      return false;
+    }
+    Path childPackage = childPackageOptional.get();
+
+    int pathDifference = child.getPath().getNameCount() - currentPath.getNameCount();
+    Preconditions.checkState(pathDifference == 1);
+    if (childPackage.getNameCount() == 0) {
+      return false;
+    }
+    return MorePaths.getParentOrEmpty(childPackage).equals(parentPackage);
+  }
+
+  private static IjFolder mergeFolders(IjFolder destinationFolder, Iterable<IjFolder> folders) {
+    IjFolder result = destinationFolder;
+    for (IjFolder folder : folders) {
+      result = folder.merge(result);
+    }
+    return result;
   }
 
   /**
@@ -257,6 +427,10 @@ public class IjSourceRootSimplifier {
 
     public Optional<Path> lookup(IjFolder folder) {
       return delegate.lookup(lookupPath(folder));
+    }
+
+    public Optional<Path> lookup(Path path) {
+      return delegate.lookup(path.resolve("notfound"));
     }
   }
 }
