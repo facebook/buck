@@ -361,6 +361,9 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidAssetPaths(
       Map<String, Object> androidProperties, IjModule module, IjModuleAndroidFacet androidFacet) {
+    if (androidFacet.isAndroidLibrary()) {
+      return;
+    }
     ImmutableSet<Path> assetPaths = androidFacet.getAssetPaths();
     if (assetPaths.isEmpty()) {
       return;
