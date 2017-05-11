@@ -16,6 +16,10 @@
 
 package com.facebook.buck.ide.intellij.projectview;
 
+import static com.facebook.buck.ide.intellij.projectview.Patterns.capture;
+import static com.facebook.buck.ide.intellij.projectview.Patterns.noncapture;
+import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
+
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -217,54 +221,51 @@ public class ProjectView {
 
   // region linkResourceFile
 
-  private static final Pattern ANIM_RES = Pattern.compile("/res/(anim(?:-[^/]+)?)/");
-  private static final Pattern ANIMATOR_RES = Pattern.compile("/res/(animator)/");
-  private static final Pattern DRAWABLE_RES = Pattern.compile("/res/(drawable(?:-[^/]+)?)/");
-  private static final Pattern LAYOUT_RES = Pattern.compile("/res/(layout(?:-[^/]+)?)/");
-  private static final Pattern MENU_RES = Pattern.compile("/res/(menu(?:-[^/]+)?)/");
-  private static final Pattern RAW_RES = Pattern.compile("/res/(raw)/");
-  private static final Pattern XML_RES = Pattern.compile("/res/(xml(?:-[^/]+)?)/");
+  private static final String DASH_PART = "-[^/]+";
+  private static final String NONCAPTURE_DASH_PART = optional(noncapture(DASH_PART));
 
-  private static final Pattern[] SIMPLE_RESOURCE_PATTERNS =
-      new Pattern[] {ANIM_RES, ANIMATOR_RES, DRAWABLE_RES, LAYOUT_RES, MENU_RES, RAW_RES, XML_RES};
+  private static final Patterns SIMPLE_RESOURCE_PATTERNS =
+      Patterns.builder()
+          .add("/res/", capture("anim", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("animator"), "/")
+          .add("/res/", capture("drawable", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("layout", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("raw"), "/")
+          .add("/res/", capture("xml", NONCAPTURE_DASH_PART), "/")
+          .build();
 
-  private static final Pattern COLOR_RES =
-      Pattern.compile("^android_res/(.*)res/(color)(-[^/]+)?/");
-  private static final Pattern VALUES_RES =
-      Pattern.compile("^android_res/(.*)res/(values)(-[^/]+)?/");
+  private static final String CAPTURE_ALL = capture(".*");
+  private static final String CAPTURE_DASH_PART = optional(capture(DASH_PART));
 
-  private static final Pattern[] MANGLED_RESOURCE_PATTERNS = new Pattern[] {COLOR_RES, VALUES_RES};
+  private static final Patterns MANGLED_RESOURCE_PATTERNS =
+      Patterns.builder()
+          .add("^android_res/", CAPTURE_ALL, "res/(color)", CAPTURE_DASH_PART, "/")
+          .add("^android_res/", CAPTURE_ALL, "res/(values)", CAPTURE_DASH_PART, "/")
+          .build();
 
   // Group 1 has any path under ...//assets/ while group 2 has the filename
-  private static final Pattern ASSETS_RES = Pattern.compile("/assets/" + "((?:[^/]+/)*)" + "(.*)");
-  private static final Pattern FONTS_RES = Pattern.compile("/fonts/(.*\\.\\w+)");
+  private static final Patterns ASSETS_RES =
+      Patterns.build("/assets/", capture(noncapture("[^/]+/"), "*"), CAPTURE_ALL);
+
+  private static final Patterns FONTS_RES = Patterns.build("/fonts/", capture(".*\\.\\w+"));
 
   private void linkResourceFile(String input) {
-    Matcher match;
-
     // TODO(shemitz) Convert (say) "res/drawable-hdpi/" to "res/drawable/"
 
-    match = firstMatch(SIMPLE_RESOURCE_PATTERNS, input);
-    if (match != null) {
-      simpleResourceLink(match, input);
+    if (SIMPLE_RESOURCE_PATTERNS.onAnyMatch(input, this::simpleResourceLink)) {
       return;
     }
 
-    match = firstMatch(MANGLED_RESOURCE_PATTERNS, input);
-    if (match != null) {
-      mangledResourceLink(match, input);
+    if (MANGLED_RESOURCE_PATTERNS.onAnyMatch(input, this::mangledResourceLink)) {
       return;
     }
 
-    match = matches(ASSETS_RES, input);
-    if (match != null) {
-      assetsLink(match, input);
+    if (ASSETS_RES.onAnyMatch(input, this::assetsLink)) {
       return;
     }
 
-    match = matches(FONTS_RES, input);
-    if (match != null) {
-      fontsLink(match, input);
+    if (FONTS_RES.onAnyMatch(input, this::fontsLink)) {
       return;
     }
 
@@ -318,23 +319,6 @@ public class ProjectView {
     String path = dirname(target);
     mkdir(path);
     symlink(fileJoin(repository, input), target);
-  }
-
-  @Nullable
-  private static Matcher firstMatch(Pattern[] patterns, String target) {
-    for (Pattern pattern : patterns) {
-      Matcher match = pattern.matcher(target);
-      if (match.find()) {
-        return match;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Matcher matches(Pattern pattern, String target) {
-    Matcher match = pattern.matcher(target);
-    return match.find() ? match : null;
   }
 
   // endregion linkResourceFile
