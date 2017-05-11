@@ -28,6 +28,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -291,5 +292,28 @@ public class RealExopackageDevice implements ExopackageDevice {
   @Override
   public String getProperty(String name) throws Exception {
     return AdbHelper.executeCommandWithErrorChecking(device, "getprop " + name).trim();
+  }
+
+  @Override
+  public List<String> getDeviceAbis() throws Exception {
+    ImmutableList.Builder<String> abis = ImmutableList.builder();
+    // Rare special indigenous to Lollipop devices
+    String abiListProperty = getProperty("ro.product.cpu.abilist");
+    if (!abiListProperty.isEmpty()) {
+      abis.addAll(Splitter.on(',').splitToList(abiListProperty));
+    } else {
+      String abi1 = getProperty("ro.product.cpu.abi");
+      if (abi1.isEmpty()) {
+        throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
+      }
+
+      abis.add(abi1);
+      String abi2 = getProperty("ro.product.cpu.abi2");
+      if (!abi2.isEmpty()) {
+        abis.add(abi2);
+      }
+    }
+
+    return abis.build();
   }
 }

@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -326,35 +325,12 @@ public class ExopackageInstaller {
           RESOURCES_DIR);
     }
 
-    private ImmutableList<String> getDeviceAbis() throws Exception {
-      ImmutableList.Builder<String> abis = ImmutableList.builder();
-      // Rare special indigenous to Lollipop devices
-      String abiListProperty = device.getProperty("ro.product.cpu.abilist");
-      if (!abiListProperty.isEmpty()) {
-        abis.addAll(Splitter.on(',').splitToList(abiListProperty));
-      } else {
-        String abi1 = device.getProperty("ro.product.cpu.abi");
-        if (abi1.isEmpty()) {
-          throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
-        }
-
-        abis.add(abi1);
-        String abi2 = device.getProperty("ro.product.cpu.abi2");
-        if (!abi2.isEmpty()) {
-          abis.add(abi2);
-        }
-      }
-
-      return abis.build();
-    }
-
     private void installNativeLibraryFiles() throws Exception {
       ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
       ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
-      for (String abi : getDeviceAbis()) {
+      for (String abi : device.getDeviceAbis()) {
         ImmutableMap<String, Path> libraries =
             getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
-
         installNativeLibrariesForAbi(abi, libraries);
         providedLibraries.addAll(libraries.keySet());
       }

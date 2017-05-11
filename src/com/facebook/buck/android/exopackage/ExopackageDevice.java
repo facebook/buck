@@ -19,6 +19,7 @@ package com.facebook.buck.android.exopackage;
 import com.android.ddmlib.InstallException;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 public interface ExopackageDevice {
@@ -43,4 +44,6 @@ public interface ExopackageDevice {
   void mkDirP(String dirpath) throws Exception;
 
   String getProperty(String name) throws Exception;
+
+  List<String> getDeviceAbis() throws Exception;
 }

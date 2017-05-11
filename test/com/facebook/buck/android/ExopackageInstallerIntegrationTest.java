@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -589,14 +590,13 @@ public class ExopackageInstallerIntegrationTest {
       switch (name) {
         case "ro.build.version.sdk":
           return "20";
-        case "ro.product.cpu.abilist":
-          return "";
-        case "ro.product.cpu.abi":
-          return abi;
-        case "ro.product.cpu.abi2":
-          return "";
       }
       throw new UnsupportedOperationException("Tried to get prop " + name);
+    }
+
+    @Override
+    public List<String> getDeviceAbis() throws Exception {
+      return ImmutableList.of(abi);
     }
 
     public void setAllowedInstallCounts(
