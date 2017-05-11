@@ -17,7 +17,6 @@
 package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.InstallException;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
@@ -35,8 +34,6 @@ public interface ExopackageDevice {
   String getSignature(String packagePath) throws Exception;
 
   String listDir(String dirPath) throws Exception;
-
-  ImmutableSortedSet<Path> listDirRecursive(Path dirPath) throws Exception;
 
   void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception;
 

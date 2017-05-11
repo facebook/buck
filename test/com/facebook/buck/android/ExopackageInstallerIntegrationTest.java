@@ -39,7 +39,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -47,7 +46,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -532,17 +530,6 @@ public class ExopackageInstallerIntegrationTest {
       String output = Joiner.on("\n").join(res) + "\n";
       debug("ls " + dirPath + "\n" + output);
       return output;
-    }
-
-    @Override
-    public ImmutableSortedSet<Path> listDirRecursive(Path dirPath) throws Exception {
-      String dir = dirPath.toString();
-      return deviceState
-          .subMap(dir, false, dir + new String(Character.toChars(255)), false)
-          .keySet()
-          .stream()
-          .map(f -> dirPath.relativize(Paths.get(f)))
-          .collect(MoreCollectors.toImmutableSortedSet());
     }
 
     @Override
