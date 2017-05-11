@@ -1,15 +1,25 @@
 #!/bin/bash
 set -x
 
-# Because we cache NDK_HOME in Travis, we cannot test for the existence of the
-# directory; it always gets created before we run.  Instead, check for the
-# release text file, and if it doesn't exist, download the NDK.
-if [ ! -f ${NDK_HOME}/RELEASE.TXT ]; then
-  wget https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
-  chmod a+x android-ndk-r10e-linux-x86_64.bin
-  # Suppress the output to not spam the logs.
-  ./android-ndk-r10e-linux-x86_64.bin > /dev/null
-  rm android-ndk-r10e-linux-x86_64.bin
-  rm -rf ${NDK_HOME}
-  mv android-ndk-r10e ${NDK_HOME}
+export NDK_VERSION_STRING="android-ndk-r10e"
+export NDK_FILENAME="$NDK_VERSION_STRING-linux-x86_64.bin"
+
+export CACHED_PATH="${HOME}/ndk_cache/$NDK_FILENAME"
+
+if [ ! -f "$CACHED_PATH" ]; then
+  echo "Downloading NDK."
+  wget "https://dl.google.com/android/ndk/$NDK_FILENAME"
+else
+  echo "Using cached NDK."
+  mv "$CACHED_PATH" .
 fi
+
+# Uncpack the ndk.
+chmod a+x "$NDK_FILENAME"
+# Suppress the output to not spam the logs.
+"./$NDK_FILENAME" > /dev/null
+rm "$NDK_FILENAME";
+
+# Move ndk into the proper place.
+rm -rf ${NDK_HOME}
+mv android-ndk-r10e ${NDK_HOME}

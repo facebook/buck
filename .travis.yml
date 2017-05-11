@@ -50,7 +50,10 @@ before_install:
 
 # https://docs.travis-ci.com/user/caching#Things-not-to-cache
 # https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
-cache: false
+cache:
+  directories:
+    - $HOME/ndk_cache
+    - $HOME/sdk_cache
 
 notifications:
     slack: buckbuild:TnJN80RxFaSAuCGswsnWLdoj
