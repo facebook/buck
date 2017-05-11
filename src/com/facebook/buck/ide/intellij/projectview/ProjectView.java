@@ -512,7 +512,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaFolder(List<String> inputs) {
     String dotIdea = fileJoin(viewPath, DOT_IDEA);
-    mkdir(dotIdea);
+    immediateMkdir(dotIdea);
 
     writeModulesXml(dotIdea);
     writeMiscXml(dotIdea);
@@ -621,7 +621,7 @@ public class ProjectView {
 
   private List<String> buildDotIdeaDotLibrariesFolder(String dotIdea, List<String> inputs) {
     String libraries = fileJoin(dotIdea, "libraries");
-    mkdir(libraries);
+    immediateMkdir(libraries);
 
     Map<String, List<String>> directories = new HashMap<>();
     inputs
@@ -993,15 +993,7 @@ public class ProjectView {
     // Make any directories that don't already exist
     for (Path path : directoriesToMake) {
       if (!existingDirectories.contains(path)) {
-        if (dryRun) {
-          stderr("mkdir(%s)\n", path);
-        } else {
-          try {
-            Files.createDirectories(path);
-          } catch (IOException e) {
-            stderr("'%s' creating directory %s\n", e.getMessage(), path);
-          }
-        }
+        immediateMkdir(path);
       }
     }
 
@@ -1088,6 +1080,22 @@ public class ProjectView {
 
   private void mkdir(String name) {
     directoriesToMake.add(Paths.get(name));
+  }
+
+  private void immediateMkdir(String path) {
+    immediateMkdir(Paths.get(path));
+  }
+
+  private void immediateMkdir(Path path) {
+    if (dryRun) {
+      stderr("mkdir(%s)\n", path);
+    } else {
+      try {
+        Files.createDirectories(path);
+      } catch (IOException e) {
+        stderr("'%s' creating directory %s\n", e.getMessage(), path);
+      }
+    }
   }
 
   private void symlink(String filename, String linkname) {
