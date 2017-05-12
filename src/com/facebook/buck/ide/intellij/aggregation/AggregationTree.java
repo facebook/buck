@@ -66,7 +66,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
   }
 
   public void aggregateModules(int minimumPathDepth) {
-    LOG.debug("Aggregating modules with depth %s", minimumPathDepth);
+    LOG.verbose("Aggregating modules with depth %s", minimumPathDepth);
 
     createStartingNodes(rootNode, minimumPathDepth);
 
@@ -159,7 +159,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
 
     Path moduleBasePath = parentNode.getModuleBasePath();
 
-    LOG.info("Aggregating module at %s: %s", moduleBasePath, nodeModule);
+    LOG.verbose("Aggregating module at %s: %s", moduleBasePath, nodeModule);
 
     String aggregationTag;
     IjModuleType rootModuleType;
@@ -215,7 +215,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
     } else {
       parentNode.setModule(ModuleAggregator.aggregate(nodeModule, modulesToAggregate, excludes));
     }
-    LOG.info("Module after aggregation: %s", parentNode.getModule());
+    LOG.verbose("Module after aggregation: %s", parentNode.getModule());
   }
 
   private ImmutableSet<Path> findExcludes(
