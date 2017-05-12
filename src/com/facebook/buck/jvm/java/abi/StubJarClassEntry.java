@@ -20,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
@@ -73,6 +75,7 @@ class StubJarClassEntry extends StubJarEntry {
   private InputStream openInputStream() throws IOException {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
+    visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
     visitor = new AbiFilteringClassVisitor(visitor, referencedClassNames);
     stub.accept(visitor);
 
@@ -97,5 +100,62 @@ class StubJarClassEntry extends StubJarEntry {
     }
 
     return null;
+  }
+
+  private static class InnerClassSortingClassVisitor extends ClassVisitor {
+    private final String className;
+    private final List<InnerClassNode> innerClasses = new ArrayList<>();
+
+    private InnerClassSortingClassVisitor(String className, ClassVisitor cv) {
+      super(Opcodes.ASM5, cv);
+      this.className = className;
+    }
+
+    @Override
+    public void visitInnerClass(String name, String outerName, String innerName, int access) {
+      innerClasses.add(new InnerClassNode(name, outerName, innerName, access));
+    }
+
+    @Override
+    public void visitEnd() {
+      innerClasses.sort(
+          (o1, o2) -> {
+            // Enclosing classes and member classes should come first, with their order preserved
+            boolean o1IsEnclosingOrMember = isEnclosingOrMember(o1);
+            boolean o2IsEnclosingOrMember = isEnclosingOrMember(o2);
+            if (o1IsEnclosingOrMember && o2IsEnclosingOrMember) {
+              // Preserve order among these
+              return 0;
+            } else if (o1IsEnclosingOrMember) {
+              return -1;
+            } else if (o2IsEnclosingOrMember) {
+              return 1;
+            }
+
+            // References to other classes get sorted.
+            return o1.name.compareTo(o2.name);
+          });
+
+      for (InnerClassNode innerClass : innerClasses) {
+        innerClass.accept(cv);
+      }
+
+      super.visitEnd();
+    }
+
+    private boolean isEnclosingOrMember(InnerClassNode innerClass) {
+      if (className.equals(innerClass.name)) {
+        // Self!
+        return true;
+      }
+
+      if (className.equals(innerClass.outerName)) {
+        // Member class
+        return true;
+      }
+
+      // Enclosing class
+      return className.startsWith(innerClass.name + "$");
+    }
   }
 }
