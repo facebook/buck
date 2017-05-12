@@ -99,7 +99,14 @@ public class WorkerProcess {
         new JsonReader(new BufferedReader(new InputStreamReader(launchedProcess.getInputStream())));
     protocol =
         new WorkerProcessProtocolZero(
-            executor, launchedProcess, processStdinWriter, processStdoutReader, stdErr);
+            processStdinWriter,
+            processStdoutReader,
+            stdErr,
+            () -> {
+              if (launchedProcess != null) {
+                executor.destroyLaunchedProcess(launchedProcess);
+              }
+            });
 
     int messageID = currentMessageID.getAndAdd(1);
     LOG.debug("Sending handshake to process %d", this.hashCode());

@@ -20,12 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
@@ -33,6 +28,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,18 +38,11 @@ public class WorkerProcessProtocolZeroTest {
 
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
-  private ProcessExecutor fakeProcessExecutor;
-  private ProcessExecutor.LaunchedProcess fakeLaunchedProcess;
-  private FakeProcess fakeProcess;
   private JsonWriter dummyJsonWriter;
   private JsonReader dummyJsonReader;
 
   @Before
   public void setUp() throws IOException {
-    ProcessExecutorParams fakeParams = ProcessExecutorParams.ofCommand("");
-    fakeProcess = new FakeProcess(0);
-    fakeProcessExecutor = new FakeProcessExecutor(ImmutableMap.of(fakeParams, fakeProcess));
-    fakeLaunchedProcess = fakeProcessExecutor.launchProcess(fakeParams);
     dummyJsonWriter = new JsonWriter(new StringWriter());
     dummyJsonReader = new JsonReader(new StringReader(""));
   }
@@ -63,11 +52,7 @@ public class WorkerProcessProtocolZeroTest {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
-            new JsonWriter(jsonSentToWorkerProcess),
-            dummyJsonReader,
-            newTempFile());
+            new JsonWriter(jsonSentToWorkerProcess), dummyJsonReader, newTempFile(), () -> {});
 
     int handshakeID = 123;
     protocol.sendHandshake(handshakeID);
@@ -83,11 +68,7 @@ public class WorkerProcessProtocolZeroTest {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
-            new JsonWriter(jsonSentToWorkerProcess),
-            dummyJsonReader,
-            newTempFile());
+            new JsonWriter(jsonSentToWorkerProcess), dummyJsonReader, newTempFile(), () -> {});
 
     int messageID = 123;
     Path argsPath = Paths.get("args");
@@ -117,8 +98,7 @@ public class WorkerProcessProtocolZeroTest {
     JsonReader jsonReader = createMockJsonReaderForReceiveHandshake(handshakeID, "handshake", "0");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     protocol.receiveHandshake(handshakeID);
   }
@@ -129,11 +109,10 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
             dummyJsonWriter,
             new JsonReader(new StringReader(malformedJson)),
-            newTempFile());
+            newTempFile(),
+            () -> {});
 
     try {
       protocol.receiveHandshake(123);
@@ -150,8 +129,7 @@ public class WorkerProcessProtocolZeroTest {
         createMockJsonReaderForReceiveHandshake(differentHandshakeID, "handshake", "0");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveHandshake(handshakeID);
@@ -171,8 +149,7 @@ public class WorkerProcessProtocolZeroTest {
         createMockJsonReaderForReceiveHandshake(handshakeID, "INCORRECT MESSAGE TYPE", "0");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveHandshake(handshakeID);
@@ -190,8 +167,7 @@ public class WorkerProcessProtocolZeroTest {
         createMockJsonReaderForReceiveHandshake(handshakeID, "handshake", "BAD PROTOCOL VERSION");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveHandshake(handshakeID);
@@ -216,8 +192,7 @@ public class WorkerProcessProtocolZeroTest {
     JsonReader jsonReader = createMockJsonReaderForReceiveCommandResponse(messageID, "result", 0);
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -228,11 +203,10 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
             dummyJsonWriter,
             new JsonReader(new StringReader(malformedJson)),
-            newTempFile());
+            newTempFile(),
+            () -> {});
 
     try {
       protocol.receiveCommandResponse(123);
@@ -249,8 +223,7 @@ public class WorkerProcessProtocolZeroTest {
         createMockJsonReaderForReceiveCommandResponse(differentMessageID, "result", 0);
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveCommandResponse(messageID);
@@ -269,8 +242,7 @@ public class WorkerProcessProtocolZeroTest {
         createMockJsonReaderForReceiveCommandResponse(messageID, "INVALID RESPONSE TYPE", 0);
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveCommandResponse(messageID);
@@ -293,15 +265,15 @@ public class WorkerProcessProtocolZeroTest {
     JsonReader reader = new JsonReader(new StringReader("[]"));
     reader.beginArray();
 
+    AtomicBoolean cleanedUp = new AtomicBoolean(false);
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, writer, reader, newTempFile());
+        new WorkerProcessProtocolZero(writer, reader, newTempFile(), () -> cleanedUp.set(true));
 
     protocol.close();
 
     String expectedJson = "]";
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.endsWith(expectedJson));
-    assertTrue(fakeProcess.isDestroyed());
+    assertTrue(cleanedUp.get());
   }
 
   @Test
@@ -313,16 +285,16 @@ public class WorkerProcessProtocolZeroTest {
 
     JsonReader reader = new JsonReader(new StringReader("invalid JSON"));
 
+    AtomicBoolean cleanedUp = new AtomicBoolean(false);
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, writer, reader, newTempFile());
+        new WorkerProcessProtocolZero(writer, reader, newTempFile(), () -> cleanedUp.set(true));
 
     try {
       protocol.close();
     } catch (IOException e) {
       assertThat(e.getMessage(), Matchers.containsString("malformed JSON"));
       // assert that process was still destroyed despite the exception
-      assertTrue(fakeProcess.isDestroyed());
+      assertTrue(cleanedUp.get());
     }
   }
 
@@ -346,8 +318,7 @@ public class WorkerProcessProtocolZeroTest {
             stderrPath.toString());
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     WorkerProcessCommand command = protocol.receiveCommand(messageId);
     assertThat(command.getArgsPath(), Matchers.equalToObject(argsPath));
@@ -361,11 +332,10 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
             dummyJsonWriter,
             new JsonReader(new StringReader(malformedJson)),
-            newTempFile());
+            newTempFile(),
+            () -> {});
 
     try {
       protocol.receiveCommand(123);
@@ -384,8 +354,7 @@ public class WorkerProcessProtocolZeroTest {
             differentMessageID, "command", "/path/to/args", "/path/to/stdout", "/path/to/stderr");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveCommand(messageID);
@@ -409,8 +378,7 @@ public class WorkerProcessProtocolZeroTest {
             "/path/to/stderr");
 
     WorkerProcessProtocol protocol =
-        new WorkerProcessProtocolZero(
-            fakeProcessExecutor, fakeLaunchedProcess, dummyJsonWriter, jsonReader, newTempFile());
+        new WorkerProcessProtocolZero(dummyJsonWriter, jsonReader, newTempFile(), () -> {});
 
     try {
       protocol.receiveCommand(messageID);
@@ -441,11 +409,7 @@ public class WorkerProcessProtocolZeroTest {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
-            new JsonWriter(jsonSentToWorkerProcess),
-            dummyJsonReader,
-            newTempFile());
+            new JsonWriter(jsonSentToWorkerProcess), dummyJsonReader, newTempFile(), () -> {});
 
     int messageID = 123;
     protocol.sendCommandResponse(messageID, "result", 0);
@@ -459,11 +423,7 @@ public class WorkerProcessProtocolZeroTest {
     StringWriter jsonSentToWorkerProcess = new StringWriter();
     WorkerProcessProtocol protocol =
         new WorkerProcessProtocolZero(
-            fakeProcessExecutor,
-            fakeLaunchedProcess,
-            new JsonWriter(jsonSentToWorkerProcess),
-            dummyJsonReader,
-            newTempFile());
+            new JsonWriter(jsonSentToWorkerProcess), dummyJsonReader, newTempFile(), () -> {});
     try {
       protocol.sendCommandResponse(123, "WRONG_TYPE", 1);
     } catch (HumanReadableException e) {
