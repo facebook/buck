@@ -1999,6 +1999,96 @@ public class StubJarTest {
   }
 
   @Test
+  public void doesNotStubReferencesFromBridgeMethodsToInnerClassesOtherTypes() throws IOException {
+    notYetImplementedForSource();
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public class B extends C { }",
+            "}",
+            "class C {",
+            "  public D foo() { return new D(); }",
+            "  static class D {",
+            "  }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A$B",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$B extends com/example/buck/C  {",
+            "",
+            "  // access flags 0x8",
+            // The following entry won't be present, because it's only here for the bridge method
+            "  static INNERCLASS com/example/buck/C$D com/example/buck/C D",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1010",
+            "  final synthetic Lcom/example/buck/A; this$0",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lcom/example/buck/A;)V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge foo()Lcom/example/buck/C$D;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$B",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$B extends com/example/buck/C  {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lcom/example/buck/A;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/C$D",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/C$D {",
+            "",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/C$D com/example/buck/C D",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/C",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/C {",
+            "",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/C$D com/example/buck/C D",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public foo()Lcom/example/buck/C$D;",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsStaticMemberClasses() throws IOException {
     tester
         .setSourceFile(

@@ -80,11 +80,9 @@ public class StubJar {
             .collect(Collectors.toList());
 
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path);
+      StubJarEntry entry = StubJarEntry.of(input, path, sourceAbiCompatible);
       if (entry == null) {
         continue;
-      } else if (entry instanceof StubJarClassEntry) {
-        ((StubJarClassEntry) entry).setSourceAbiCompatible(sourceAbiCompatible);
       }
       entry.write(writer);
     }

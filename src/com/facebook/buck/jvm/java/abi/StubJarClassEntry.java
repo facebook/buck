@@ -32,17 +32,25 @@ class StubJarClassEntry extends StubJarEntry {
   @Nullable private final Set<String> referencedClassNames;
   private final Path path;
   private final ClassNode stub;
-  private boolean sourceAbiCompatible;
 
   @Nullable
-  public static StubJarClassEntry of(LibraryReader input, Path path) throws IOException {
+  public static StubJarClassEntry of(LibraryReader input, Path path, boolean sourceAbiCompatible)
+      throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM5);
 
     // As we read the class in, we create a partial stub that removes non-ABI methods and fields
     // but leaves the entire InnerClasses table. We record all classes that are referenced from
     // ABI methods and fields, and will use that information later to filter the InnerClasses table.
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
-    input.visitClass(path, new AbiFilteringClassVisitor(referenceTracker));
+    ClassVisitor firstLevelFiltering = new AbiFilteringClassVisitor(referenceTracker);
+
+    // If we want ABIs that are compatible with those generated from source, we add a visitor
+    // at the very start of the chain which transforms the event stream coming out of `ClassNode`
+    // to look like what ClassVisitorDriverFromElement would have produced.
+    if (sourceAbiCompatible) {
+      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering);
+    }
+    input.visitClass(path, firstLevelFiltering);
 
     if (!isAnonymousOrLocalClass(stub)) {
       return new StubJarClassEntry(path, stub, referenceTracker.getReferencedClassNames());
@@ -57,13 +65,6 @@ class StubJarClassEntry extends StubJarEntry {
     this.referencedClassNames = referencedClassNames;
   }
 
-  /**
-   * Filters the stub class through {@link SourceAbiCompatibleVisitor}. See that class for details.
-   */
-  public void setSourceAbiCompatible(boolean sourceAbiCompatible) {
-    this.sourceAbiCompatible = sourceAbiCompatible;
-  }
-
   @Override
   public void write(StubJarWriter writer) throws IOException {
     writer.writeEntry(path, this::openInputStream);
@@ -72,9 +73,6 @@ class StubJarClassEntry extends StubJarEntry {
   private InputStream openInputStream() throws IOException {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
-    if (sourceAbiCompatible) {
-      visitor = new SourceAbiCompatibleVisitor(visitor);
-    }
     visitor = new AbiFilteringClassVisitor(visitor, referencedClassNames);
     stub.accept(visitor);
 
