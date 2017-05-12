@@ -51,6 +51,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -67,18 +68,18 @@ public class MergeAssets extends AbstractBuildRule {
   // shouldn't actually be necessary anymore as we can just take the full list of source paths
   // directly here.
   @AddToRuleKey private final ImmutableSet<SourcePath> assetsDirectories;
-  @AddToRuleKey private SourcePath baseApk;
+  @AddToRuleKey private Optional<SourcePath> baseApk;
 
   public MergeAssets(
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      SourcePath baseApk,
+      Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories) {
     super(
         buildRuleParams.copyAppendingExtraDeps(
             ImmutableSortedSet.copyOf(
                 ruleFinder.filterBuildRuleInputs(
-                    FluentIterable.from(assetsDirectories).append(baseApk)))));
+                    FluentIterable.from(assetsDirectories).append(baseApk.orElse(null))))));
     this.baseApk = baseApk;
     this.assetsDirectories = assetsDirectories;
   }
@@ -126,7 +127,7 @@ public class MergeAssets extends AbstractBuildRule {
     steps.add(
         new MergeAssetsStep(
             getProjectFilesystem().getPathForRelativePath(getPathToMergedAssets()),
-            pathResolver.getAbsolutePath(baseApk),
+            baseApk.map(pathResolver::getAbsolutePath),
             assets));
     buildableContext.recordArtifact(getPathToMergedAssets());
     return steps.build();
@@ -151,11 +152,11 @@ public class MergeAssets extends AbstractBuildRule {
             "3gpp2", "amr", "awb", "wma", "wmv", "webm", "mkv");
 
     private final Path pathToMergedAssets;
-    private final Path pathToBaseApk;
+    private final Optional<Path> pathToBaseApk;
     private final TreeMultimap<Path, Path> assets;
 
     public MergeAssetsStep(
-        Path pathToMergedAssets, Path pathToBaseApk, TreeMultimap<Path, Path> assets) {
+        Path pathToMergedAssets, Optional<Path> pathToBaseApk, TreeMultimap<Path, Path> assets) {
       super("merging_assets");
       this.pathToMergedAssets = pathToMergedAssets;
       this.pathToBaseApk = pathToBaseApk;
@@ -166,22 +167,24 @@ public class MergeAssets extends AbstractBuildRule {
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       try (ResourcesZipBuilder output = new ResourcesZipBuilder(pathToMergedAssets)) {
-        try (ZipFile base = new ZipFile(pathToBaseApk.toFile())) {
-          for (ZipEntry inputEntry : Collections.list(base.entries())) {
-            String extension = Files.getFileExtension(inputEntry.getName());
-            // Only compress if aapt compressed it and the extension looks compressible.
-            // This is a workaround for aapt2 compressing everything.
-            boolean shouldCompress =
-                inputEntry.getMethod() != ZipEntry.STORED
-                    && !NO_COMPRESS_EXTENSIONS.contains(extension);
-            try (InputStream stream = base.getInputStream(inputEntry)) {
-              output.addEntry(
-                  stream,
-                  inputEntry.getSize(),
-                  inputEntry.getCrc(),
-                  inputEntry.getName(),
-                  shouldCompress ? Deflater.BEST_COMPRESSION : 0,
-                  inputEntry.isDirectory());
+        if (pathToBaseApk.isPresent()) {
+          try (ZipFile base = new ZipFile(pathToBaseApk.get().toFile())) {
+            for (ZipEntry inputEntry : Collections.list(base.entries())) {
+              String extension = Files.getFileExtension(inputEntry.getName());
+              // Only compress if aapt compressed it and the extension looks compressible.
+              // This is a workaround for aapt2 compressing everything.
+              boolean shouldCompress =
+                  inputEntry.getMethod() != ZipEntry.STORED
+                      && !NO_COMPRESS_EXTENSIONS.contains(extension);
+              try (InputStream stream = base.getInputStream(inputEntry)) {
+                output.addEntry(
+                    stream,
+                    inputEntry.getSize(),
+                    inputEntry.getCrc(),
+                    inputEntry.getName(),
+                    shouldCompress ? Deflater.BEST_COMPRESSION : 0,
+                    inputEntry.isDirectory());
+              }
             }
           }
         }

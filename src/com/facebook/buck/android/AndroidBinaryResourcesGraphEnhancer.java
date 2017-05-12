@@ -330,7 +330,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                     Suppliers.ofInstance(ImmutableSortedSet.of()),
                     Suppliers.ofInstance(ImmutableSortedSet.of())),
             ruleFinder,
-            aaptOutputApk,
+            Optional.of(aaptOutputApk),
             ImmutableSortedSet.copyOf(assetsDirectories));
     ruleResolver.addToIndex(mergeAssets);
     return mergeAssets;
