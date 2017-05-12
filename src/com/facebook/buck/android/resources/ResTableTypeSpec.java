@@ -180,6 +180,14 @@ public class ResTableTypeSpec extends ResChunk {
     configs.forEach(c -> c.visitStringReferences(visitor));
   }
 
+  public void visitStringReferences(int[] ids, RefVisitor visitor) {
+    configs.forEach(c -> c.visitStringReferences(ids, visitor));
+  }
+
+  public void visitReferences(int[] ids, RefVisitor visitor) {
+    configs.forEach(c -> c.visitReferences(ids, visitor));
+  }
+
   public void reassignIds(ReferenceMapper refMapping) {
     refMapping.rewrite(getResourceType(), entryFlags.asIntBuffer());
     configs.forEach(c -> c.reassignIds(refMapping));

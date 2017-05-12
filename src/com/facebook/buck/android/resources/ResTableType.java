@@ -385,6 +385,15 @@ public class ResTableType extends ResChunk {
     }
   }
 
+  public void transformStringReferences(int[] idsToVisit, RefTransformer visitor) {
+    for (int i : idsToVisit) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        transformStringReferencesAt(visitor, offset);
+      }
+    }
+  }
+
   public void visitStringReferences(RefVisitor visitor) {
     transformStringReferences(
         i -> {
@@ -393,13 +402,13 @@ public class ResTableType extends ResChunk {
         });
   }
 
-  public void transformStringReferences(int[] idsToVisit, RefTransformer visitor) {
-    for (int i : idsToVisit) {
-      int offset = getEntryValueOffset(i);
-      if (offset != -1) {
-        transformStringReferencesAt(visitor, offset);
-      }
-    }
+  public void visitStringReferences(int[] idsToVisit, RefVisitor visitor) {
+    transformStringReferences(
+        idsToVisit,
+        i -> {
+          visitor.visit(i);
+          return i;
+        });
   }
 
   private void transformReferencesAt(RefTransformer visitor, int offset) {
@@ -439,6 +448,24 @@ public class ResTableType extends ResChunk {
         transformReferencesAt(visitor, offset);
       }
     }
+  }
+
+  public void transformReferences(int[] ids, RefTransformer visitor) {
+    for (int i : ids) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        transformReferencesAt(visitor, offset);
+      }
+    }
+  }
+
+  public void visitReferences(int[] ids, RefVisitor visitor) {
+    transformReferences(
+        ids,
+        i -> {
+          visitor.visit(i);
+          return i;
+        });
   }
 
   public void reassignIds(ReferenceMapper refMapping) {
