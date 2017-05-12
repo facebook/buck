@@ -22,11 +22,11 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MorePaths;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.CharStreams;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -66,16 +66,20 @@ public class ZipInspector {
   }
 
   public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
-    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
-      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
-      assertThat(
-          CharStreams.toString(new InputStreamReader(zipFile.getInputStream(entry))),
-          Matchers.equalTo(expected));
-    }
+    assertThat(
+        new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
+        Matchers.equalTo(expected));
   }
 
   public void assertFileContents(Path pathRelativeToRoot, String expected) throws IOException {
     assertFileContents(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
+  }
+
+  public byte[] getFileContents(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      return ByteStreams.toByteArray(zipFile.getInputStream(entry));
+    }
   }
 
   public ImmutableSet<String> getZipFileEntries() {
