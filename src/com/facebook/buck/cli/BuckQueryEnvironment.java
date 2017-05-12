@@ -41,9 +41,11 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +59,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -307,7 +311,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     try {
       List<ListenableFuture<TargetNode<?, ?>>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
-        depsFuture.add(buildTransitiveClosureRecursiveWorker(buildTarget, jobsCache));
+        depsFuture.add(
+            buildTransitiveClosureRecursiveWorker(buildTarget, ImmutableSet.of(), jobsCache));
       }
       Futures.allAsList(depsFuture).get();
     } catch (ExecutionException e) {
@@ -332,8 +337,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private ListenableFuture<TargetNode<?, ?>> buildTransitiveClosureRecursiveWorker(
       BuildTarget buildTarget,
+      Set<BuildTarget> parents,
       ConcurrentHashMap<BuildTarget, ListenableFuture<TargetNode<?, ?>>> jobsCache)
       throws InterruptedException, QueryException, BuildFileParseException, BuildTargetException {
+    if (parents.contains(buildTarget)) {
+      // Note: if we ever make this method not parse the full transitive closure of dependencies
+      // (say, when we finally get around to respecting the 'maxDepth' argument) this check will
+      // probably become insufficient to detect all cycles.
+      throw createCycleHumanReadableException(buildTarget, parents);
+    }
     ListenableFuture<TargetNode<?, ?>> job = jobsCache.get(buildTarget);
     if (job != null) {
       return job;
@@ -343,6 +355,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       return Preconditions.checkNotNull(jobsCache.get(buildTarget));
     }
 
+    final ImmutableSet<BuildTarget> parentsAndMe =
+        ImmutableSet.<BuildTarget>builder().addAll(parents).add(buildTarget).build();
     ListenableFuture<TargetNode<?, ?>> future =
         Futures.transformAsync(
             parserState.getTargetNodeJob(buildTarget),
@@ -353,7 +367,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
               for (BuildTarget parseDep : parseDeps) {
                 depsFuture.add(
                     Futures.transform(
-                        buildTransitiveClosureRecursiveWorker(parseDep, jobsCache),
+                        buildTransitiveClosureRecursiveWorker(parseDep, parentsAndMe, jobsCache),
                         depNode -> {
                           graph.addEdge(targetNode, depNode);
                           return depNode;
@@ -436,5 +450,29 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public Iterable<QueryFunction> getFunctions() {
     return DEFAULT_QUERY_FUNCTIONS;
+  }
+
+  private static HumanReadableException createCycleHumanReadableException(
+      BuildTarget cycleInducingTarget, Set<BuildTarget> parents) {
+
+    Deque<BuildTarget> cycle = new ArrayDeque<>();
+    cycle.add(cycleInducingTarget);
+    boolean foundCycle = false;
+    for (BuildTarget target : ImmutableList.copyOf(parents).reverse()) {
+      if (foundCycle) {
+        break;
+      }
+      cycle.addFirst(target);
+      if (target.equals(cycleInducingTarget)) {
+        foundCycle = true;
+      }
+    }
+    Preconditions.checkState(
+        foundCycle,
+        "Start of cycle %s should appear in traversal history %s.",
+        cycleInducingTarget,
+        parents);
+
+    return new HumanReadableException("Cycle found: %s", Joiner.on(" -> ").join(cycle));
   }
 }

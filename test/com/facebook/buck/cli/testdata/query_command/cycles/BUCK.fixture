@@ -1,0 +1,34 @@
+java_library(
+  name = 'a',
+  deps = [
+    ':a',
+  ],
+)
+
+java_library(
+  name = 'b',
+  deps = [
+    ':a',
+  ],
+)
+
+java_library(
+  name = 'c',
+  deps = [
+    ':d',
+  ],
+)
+
+java_library(
+  name = 'd',
+  deps = [
+    ':c',
+  ],
+)
+
+java_library(
+  name = 'e',
+  deps = [
+    ':c',
+  ],
+)
