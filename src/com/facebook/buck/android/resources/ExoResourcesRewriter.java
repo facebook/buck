@@ -18,7 +18,6 @@ package com.facebook.buck.android.resources;
 
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.zip.DeterministicZipBuilder;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +111,7 @@ public class ExoResourcesRewriter {
         xml.transformReferences(resMapping::map);
       }
       // Write the full (rearranged) resources to the exo resources.
-      try (DeterministicZipBuilder zipBuilder = new DeterministicZipBuilder(exoResources)) {
+      try (ResourcesZipBuilder zipBuilder = new ResourcesZipBuilder(exoResources)) {
         for (ZipEntry entry : apkZip.getEntries()) {
           addEntry(
               zipBuilder,
@@ -123,7 +122,7 @@ public class ExoResourcesRewriter {
         }
       }
       // Then, slice out the resources needed for the primary apk.
-      try (DeterministicZipBuilder zipBuilder = new DeterministicZipBuilder(primaryResources)) {
+      try (ResourcesZipBuilder zipBuilder = new ResourcesZipBuilder(primaryResources)) {
         ResourceTable primaryResourceTable =
             ResourceTable.slice(
                 apkZip.getResourceTable(),
@@ -150,7 +149,7 @@ public class ExoResourcesRewriter {
   }
 
   private static void addEntry(
-      DeterministicZipBuilder zipBuilder,
+      ResourcesZipBuilder zipBuilder,
       String name,
       byte[] content,
       int compressionLevel,

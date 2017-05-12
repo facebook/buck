@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -32,7 +33,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.zip.DeterministicZipBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -165,7 +165,7 @@ public class MergeAssets extends AbstractBuildRule {
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      try (DeterministicZipBuilder output = new DeterministicZipBuilder(pathToMergedAssets)) {
+      try (ResourcesZipBuilder output = new ResourcesZipBuilder(pathToMergedAssets)) {
         try (ZipFile base = new ZipFile(pathToBaseApk.toFile())) {
           for (ZipEntry inputEntry : Collections.list(base.entries())) {
             String extension = Files.getFileExtension(inputEntry.getName());
