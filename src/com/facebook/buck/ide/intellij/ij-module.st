@@ -26,6 +26,7 @@
 %if(androidFacet.proguard_config)%
         <option name="PROGUARD_CFG_PATH" value="%androidFacet.proguard_config%" />
 %endif%
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
         <option name="ENABLE_SOURCES_AUTOGENERATION" value="%androidFacet.autogenerate_sources%" />
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
       </configuration>

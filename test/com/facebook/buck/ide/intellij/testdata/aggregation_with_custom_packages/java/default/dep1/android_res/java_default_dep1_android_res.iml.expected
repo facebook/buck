@@ -8,6 +8,7 @@
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/../../../../android_res/AndroidManifest.xml" />
         <option name="RES_FOLDERS_RELATIVE_PATH" value="/../../../../buck-out/gen/java/default/dep1/android_res/android_res#resources-symlink-tree/res" />
         <option name="LIBRARY_PROJECT" value="true" />
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
         <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
       </configuration>
