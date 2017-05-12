@@ -262,12 +262,18 @@ public class StubJarTest {
             "  public class B { }",
             "  public class C { }",
             "  public void bar() { }",
+            "    public F.H third;",
             "  public class D { }",
+            "    public F.G fourth;",
             "    int between;",
             "  public class E {",
             "    public void hello() { }",
             "    public void test() { }",
             "  }",
+            "}",
+            "class F {",
+            "  class G { }",
+            "  class H { }",
             "}")
         .addExpectedStub(
             "com/example/buck/A$B",
@@ -337,12 +343,22 @@ public class StubJarTest {
             "  public INNERCLASS com/example/buck/A$C com/example/buck/A C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$G com/example/buck/F G",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$H com/example/buck/F H",
             "",
             "  // access flags 0x0",
             "  Z first",
             "",
             "  // access flags 0x0",
             "  F second",
+            "",
+            "  // access flags 0x1",
+            "  public Lcom/example/buck/F$H; third",
+            "",
+            "  // access flags 0x1",
+            "  public Lcom/example/buck/F$G; fourth",
             "",
             "  // access flags 0x0",
             "  I between",
@@ -355,6 +371,44 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public bar()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/F$G",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/F$G {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$G com/example/buck/F G",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lcom/example/buck/F;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/F$H",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/F$H {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$H com/example/buck/F H",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lcom/example/buck/F;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/F",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/F {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$H com/example/buck/F H",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$G com/example/buck/F G",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
             "}")
         .createAndCheckStubJar();
   }
@@ -501,8 +555,6 @@ public class StubJarTest {
 
   @Test
   public void shouldGeneratePrivateNestedClassDefaultConstructor() throws IOException {
-    notYetImplementedForSource();
-
     tester
         .setSourceFile(
             "Outer.java",
@@ -1695,8 +1747,6 @@ public class StubJarTest {
 
   @Test
   public void stubsNestedInnerClasses() throws IOException {
-    notYetImplementedForSource();
-
     tester
         .setSourceFile(
             "A.java",
@@ -1852,7 +1902,6 @@ public class StubJarTest {
 
   @Test
   public void stubsReferencesToInnerClassesOfOtherTypes() throws IOException {
-    notYetImplementedForSource();
     tester
         .setSourceFile(
             "A.java",
@@ -2064,7 +2113,6 @@ public class StubJarTest {
 
   @Test
   public void doesNotStubReferencesFromBridgeMethodsToInnerClassesOtherTypes() throws IOException {
-    notYetImplementedForSource();
     tester
         .setSourceFile(
             "A.java",
@@ -2317,7 +2365,7 @@ public class StubJarTest {
 
   @Test
   public void shouldIncludeInnerClassTypeParameterReferenceInMethodParameter() throws IOException {
-    notYetImplementedForSource();
+    notYetImplementedForMissingClasspath();
 
     tester
         .setSourceFile(

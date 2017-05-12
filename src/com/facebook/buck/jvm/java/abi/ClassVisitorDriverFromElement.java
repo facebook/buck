@@ -20,17 +20,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
@@ -96,15 +101,13 @@ class ClassVisitorDriverFromElement {
 
   private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
     boolean classVisitorStarted = false;
-    List<TypeElement> innerMembers = new ArrayList<>();
 
     // TODO(jkeljo): Type annotations
 
     @Override
     public Void visitType(TypeElement e, ClassVisitor visitor) {
       if (classVisitorStarted) {
-        // Collect inner classes/interfaces and visit them at the end
-        innerMembers.add(e);
+        // We'll get inner class references later
         return null;
       }
 
@@ -139,29 +142,13 @@ class ClassVisitorDriverFromElement {
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
 
-      if (e.getNestingKind() == NestingKind.MEMBER) {
-        visitMemberClass(e, visitor);
-      }
-
       visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
 
       super.visitType(e, visitor);
 
-      // We visit all inner members in reverse to match the order in original, full jars
-      for (TypeElement element : Lists.reverse(innerMembers)) {
-        visitMemberClass(element, visitor);
-      }
+      reportInnerClassReferences(e, visitor);
 
       return null;
-    }
-
-    private void visitMemberClass(TypeElement e, ClassVisitor visitor) {
-      visitor.visitInnerClass(
-          descriptorFactory.getInternalName(e),
-          descriptorFactory.getInternalName((TypeElement) e.getEnclosingElement()),
-          e.getSimpleName().toString(),
-          AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_SUPER);
-      // We remove ACC_SUPER above because javac does as well for InnerClasses entries.
     }
 
     @Override
@@ -330,5 +317,122 @@ class ClassVisitorDriverFromElement {
         return null;
       }
     }
+  }
+
+  private void reportInnerClassReferences(TypeElement typeElement, ClassVisitor visitor) {
+    List<TypeElement> enclosingClasses = new ArrayList<>();
+    List<TypeElement> memberClasses = new ArrayList<>();
+    Set<TypeElement> referencesToInners = new HashSet<>();
+
+    TypeElement walker = typeElement;
+    while (walker.getNestingKind() == NestingKind.MEMBER) {
+      enclosingClasses.add(walker);
+      walker = (TypeElement) walker.getEnclosingElement();
+    }
+
+    ElementScanner8<Void, Void> elementScanner =
+        new ElementScanner8<Void, Void>() {
+          @Override
+          public Void scan(Element e, Void aVoid) {
+            addTypeReferences(e.asType());
+            addTypeReferences(e.getAnnotationMirrors());
+            return super.scan(e, aVoid);
+          }
+
+          @Override
+          public Void visitType(TypeElement e, Void aVoid) {
+            if (e != typeElement && !memberClasses.contains(e)) {
+              memberClasses.add(e);
+            }
+
+            addTypeReferences(e.getSuperclass());
+            e.getInterfaces().forEach(this::addTypeReferences);
+
+            return super.visitType(e, aVoid);
+          }
+
+          private void addTypeReferences(TypeMirror type) {
+            new TypeScanner8<Void, Void>() {
+              @Override
+              public Void scan(@Nullable TypeMirror t, Void aVoid) {
+                if (t == null) {
+                  return null;
+                }
+                return super.scan(t, aVoid);
+              }
+
+              @Override
+              public Void visitDeclared(DeclaredType t, Void aVoid) {
+                TypeElement element = (TypeElement) t.asElement();
+                if (element.getNestingKind() == NestingKind.MEMBER) {
+                  referencesToInners.add(element);
+                }
+
+                return super.visitDeclared(t, aVoid);
+              }
+            }.scan(type);
+          }
+
+          private void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
+            annotationMirrors.forEach(this::addTypeReferences);
+          }
+
+          private void addTypeReferences(AnnotationMirror annotationMirror) {
+            addTypeReferences(annotationMirror.getAnnotationType());
+            annotationMirror.getElementValues().values().forEach(this::addTypeReferences);
+          }
+
+          private void addTypeReferences(AnnotationValue annotationValue) {
+            new AnnotationValueScanner8<Void, Void>() {
+              @Override
+              public Void visitType(TypeMirror t, Void aVoid) {
+                addTypeReferences(t);
+                return super.visitType(t, aVoid);
+              }
+
+              @Override
+              public Void visitEnumConstant(VariableElement c, Void aVoid) {
+                addTypeReferences(c.asType());
+                return super.visitEnumConstant(c, aVoid);
+              }
+
+              @Override
+              public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
+                addTypeReferences(a.getAnnotationType());
+                return super.visitAnnotation(a, aVoid);
+              }
+            }.scan(annotationValue);
+          }
+        };
+    elementScanner.scan(typeElement);
+
+    for (TypeElement element : Lists.reverse(enclosingClasses)) {
+      visitor.visitInnerClass(
+          descriptorFactory.getInternalName(element),
+          descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+          element.getSimpleName().toString(),
+          AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+    }
+
+    for (TypeElement element : Lists.reverse(memberClasses)) {
+      elementScanner.scan(element);
+      visitor.visitInnerClass(
+          descriptorFactory.getInternalName(element),
+          descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+          element.getSimpleName().toString(),
+          AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+    }
+
+    referencesToInners
+        .stream()
+        .sorted(Comparator.comparing(e -> e.getQualifiedName().toString()))
+        .forEach(
+            element -> {
+              visitor.visitInnerClass(
+                  descriptorFactory.getInternalName(element),
+                  descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+                  element.getSimpleName().toString(),
+                  AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+            });
   }
 }
