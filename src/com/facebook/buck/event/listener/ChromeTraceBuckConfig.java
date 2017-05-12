@@ -18,8 +18,10 @@ package com.facebook.buck.event.listener;
 
 import static java.lang.Integer.parseInt;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.util.environment.NetworkInfo;
 import java.net.URI;
 import java.util.Optional;
 
@@ -29,6 +31,7 @@ public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
   private static final String LOG_SECTION = "log";
 
   private final BuckConfig delegate;
+  private final ArtifactCacheBuckConfig artifactCacheBuckConfig;
 
   public static ChromeTraceBuckConfig of(BuckConfig delegate) {
     return new ChromeTraceBuckConfig(delegate);
@@ -36,6 +39,7 @@ public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
 
   private ChromeTraceBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
+    this.artifactCacheBuckConfig = delegate.getView(ArtifactCacheBuckConfig.class);
   }
 
   public int getMaxTraces() {
@@ -58,7 +62,19 @@ public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private boolean getShouldUploadBuildTraces() {
-    return delegate.getBooleanValue("experiments", "upload_build_traces", false);
+    if (!delegate.getBooleanValue("experiments", "upload_build_traces", false)) {
+      return false;
+    }
+
+    Optional<String> wifiSsid = NetworkInfo.getWifiSsid();
+    if (!wifiSsid.isPresent()) {
+      // Either we don't know how to detect the SSID, or we're wired. Either way, upload
+      return true;
+    }
+
+    boolean blacklisted =
+        artifactCacheBuckConfig.getBlacklistedWifiSsids().contains(wifiSsid.get());
+    return !blacklisted;
   }
 
   @Override

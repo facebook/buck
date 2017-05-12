@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** Represents configuration specific to the {@link ArtifactCache}s. */
-public class ArtifactCacheBuckConfig {
+public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String CACHE_SECTION_NAME = "cache";
 
   private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.READWRITE.name();
@@ -118,9 +119,18 @@ public class ArtifactCacheBuckConfig {
   private final BuckConfig buckConfig;
   private final SlbBuckConfig slbConfig;
 
+  public static ArtifactCacheBuckConfig of(BuckConfig delegate) {
+    return new ArtifactCacheBuckConfig(delegate);
+  }
+
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
     this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
+  }
+
+  @Override
+  public BuckConfig getDelegate() {
+    return buckConfig;
   }
 
   public String getRepository() {
@@ -369,9 +379,7 @@ public class ArtifactCacheBuckConfig {
             .intValue());
     builder.setReadHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_READ_HEADERS_FIELD_NAME));
     builder.setWriteHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_WRITE_HEADERS_FIELD_NAME));
-    builder.setBlacklistedWifiSsids(
-        buckConfig.getListWithoutComments(
-            CACHE_SECTION_NAME, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
+    builder.setBlacklistedWifiSsids(getBlacklistedWifiSsids());
     builder.setCacheReadMode(
         getCacheReadMode(CACHE_SECTION_NAME, HTTP_MODE_FIELD_NAME, DEFAULT_HTTP_CACHE_MODE));
     builder.setErrorMessageFormat(
@@ -380,6 +388,12 @@ public class ArtifactCacheBuckConfig {
     builder.setMaxStoreSize(buckConfig.getLong(CACHE_SECTION_NAME, HTTP_MAX_STORE_SIZE));
 
     return builder.build();
+  }
+
+  public ImmutableSet<String> getBlacklistedWifiSsids() {
+    return ImmutableSet.copyOf(
+        buckConfig.getListWithoutComments(
+            CACHE_SECTION_NAME, HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME));
   }
 
   private boolean legacyHttpCacheConfigurationFieldsPresent() {
