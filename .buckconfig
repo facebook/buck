@@ -5,7 +5,10 @@
     source_level = 8
     target_level = 8
     jar_spool_mode = direct_to_jar
-    abi_generation_mode = migrating_to_source
+    abi_generation_mode = source_with_deps
+    source_abi_verification_mode = off
+    # Uncomment the following line if you suspect source ABIs to be incorrect
+    # source_abi_verification_mode = fail
     compile_against_abis = True
 [alias]
     buck = //programs:buck
