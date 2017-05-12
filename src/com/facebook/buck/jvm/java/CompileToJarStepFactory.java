@@ -70,6 +70,15 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);
 
+  void createJarStep(
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
+      Path outputJar,
+      ImmutableList.Builder<Step> steps);
+
   void createCompileToJarStep(
       BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,

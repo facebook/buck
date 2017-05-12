@@ -106,6 +106,25 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
                 declaredClasspathEntries,
                 getBootClasspath(context))));
 
+    createJarStep(
+        filesystem,
+        outputDirectory,
+        mainClass,
+        manifestFile,
+        classesToRemoveFromJar,
+        outputJar,
+        steps);
+  }
+
+  @Override
+  public void createJarStep(
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
+      Path outputJar,
+      ImmutableList.Builder<Step> steps) {
     steps.add(
         new JarDirectoryStep(
             filesystem,

@@ -163,15 +163,14 @@ public class JavaLibraryRules {
 
       // No source files, only resources
       if (srcs.isEmpty()) {
-        steps.add(
-            new JarDirectoryStep(
-                rule.getProjectFilesystem(),
-                output,
-                ImmutableSortedSet.of(outputDirectory),
-                /* mainClass */ null,
-                manifestFile.map(context.getSourcePathResolver()::getAbsolutePath).orElse(null),
-                true,
-                classesToRemoveFromJar));
+        compileStepFactory.createJarStep(
+            rule.getProjectFilesystem(),
+            outputDirectory,
+            Optional.empty(),
+            manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
+            classesToRemoveFromJar,
+            output,
+            steps);
       }
       buildableContext.recordArtifact(output);
     }

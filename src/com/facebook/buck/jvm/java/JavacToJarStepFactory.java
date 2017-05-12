@@ -116,6 +116,27 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
+  public void createJarStep(
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
+      Path outputJar,
+      ImmutableList.Builder<Step> steps) {
+    steps.add(
+        new JarDirectoryStep(
+            filesystem,
+            outputJar,
+            ImmutableSortedSet.of(outputDirectory),
+            mainClass.orElse(null),
+            manifestFile.orElse(null),
+            true,
+            javacOptions.getCompilationMode() == JavacCompilationMode.ABI,
+            classesToRemoveFromJar));
+  }
+
+  @Override
   Optional<String> getBootClasspath(BuildContext context) {
     JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
     return buildTimeOptions.getBootclasspath();
