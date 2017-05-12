@@ -298,7 +298,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean argsAllowSourceAbis() {
-      return Preconditions.checkNotNull(args).getGenerateAbiFromSource().orElse(true);
+      return args == null || args.getGenerateAbiFromSource().orElse(true);
     }
 
     private boolean pluginsSupportSourceAbis() {
