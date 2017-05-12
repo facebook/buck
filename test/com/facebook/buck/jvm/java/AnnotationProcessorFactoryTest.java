@@ -73,8 +73,9 @@ public class AnnotationProcessorFactoryTest {
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget);
         AnnotationProcessorFactory factory2 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget)) {
-      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(processorGroup);
-      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(processorGroup);
+      JavacPluginJsr199Fields fields = processorGroup.getJavacPluginJsr199Fields();
+      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(fields);
+      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(fields);
       return classLoader1 == classLoader2;
     } catch (IOException e) {
       throw new AssertionError(e);

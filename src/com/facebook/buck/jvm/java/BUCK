@@ -136,6 +136,7 @@ java_immutables_library(
         "AbstractJavaOptions.java",
         "AbstractJavacExecutionContext.java",
         "AbstractJavacOptions.java",
+        "AbstractJavacPluginJsr199Fields.java",
         "AbstractJavacPluginProperties.java",
         "AbstractJavacSpec.java",
         "AbstractJavacVersion.java",

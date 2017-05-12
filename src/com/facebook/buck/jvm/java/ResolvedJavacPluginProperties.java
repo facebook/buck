@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -88,5 +89,13 @@ public class ResolvedJavacPluginProperties implements RuleKeyAppendable {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     inner.appendToRuleKey(sink);
+  }
+
+  public JavacPluginJsr199Fields getJavacPluginJsr199Fields() {
+    return JavacPluginJsr199Fields.builder()
+        .setCanReuseClassLoader(getCanReuseClassLoader())
+        .setClasspath(ImmutableList.copyOf(getClasspath()))
+        .setProcessorNames(getProcessorNames())
+        .build();
   }
 }

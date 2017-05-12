@@ -117,7 +117,7 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
@@ -159,7 +159,7 @@ public abstract class Jsr199Javac implements Javac {
                 context,
                 invokingRule,
                 options,
-                annotationProcessors,
+                pluginFields,
                 javaSourceFilePaths,
                 pathToSrcsList,
                 compiler,
@@ -232,7 +232,7 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
@@ -341,7 +341,7 @@ public abstract class Jsr199Javac implements Javac {
         taskListener = new TracingTaskListener(tracer, taskListener);
 
         javacTask.setTaskListener(taskListener);
-        javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
+        javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
 
         // Invoke the compilation and inspect the result.
         isSuccess = javacTask.call();

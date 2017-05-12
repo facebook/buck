@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public class JavacStep implements Step {
@@ -119,7 +120,6 @@ public class JavacStep implements Step {
         CapturingPrintStream stderr = new CapturingPrintStream();
         ExecutionContext firstOrderContext =
             context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
-      Javac javac = getJavac();
       JavacExecutionContext javacExecutionContext =
           JavacExecutionContext.of(
               new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
@@ -132,9 +132,9 @@ public class JavacStep implements Step {
               usedClassesFileWriter,
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
-              getAbsolutePathsForJavacInputs(javac),
+              getAbsolutePathsForJavacInputs(getJavac()),
               directToJarOutputSettings);
-      return performBuild(context, stdout, stderr, javac, javacExecutionContext);
+      return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
     }
   }
 
@@ -145,14 +145,20 @@ public class JavacStep implements Step {
       Javac javac,
       JavacExecutionContext javacExecutionContext)
       throws InterruptedException {
+    ImmutableList<JavacPluginJsr199Fields> pluginFields =
+        ImmutableList.copyOf(
+            javacOptions
+                .getAnnotationProcessingParams()
+                .getAnnotationProcessors(filesystem, resolver)
+                .stream()
+                .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                .collect(Collectors.toList()));
     int declaredDepsBuildResult =
         javac.buildWithClasspath(
             javacExecutionContext,
             invokingRule,
             getOptions(context, declaredClasspathEntries),
-            javacOptions
-                .getAnnotationProcessingParams()
-                .getAnnotationProcessors(filesystem, resolver),
+            pluginFields,
             javaSourceFilePaths,
             pathToSrcsList,
             workingDirectory,

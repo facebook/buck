@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
 
@@ -46,7 +47,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
@@ -65,10 +66,11 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
             serializedContext,
             invokingRule.getFullyQualifiedName(),
             options,
-            ImmutableList.copyOf(javaSourceFilePaths.stream().map(Path::toString).iterator()),
+            javaSourceFilePaths.stream().map(Path::toString).collect(Collectors.toList()),
             pathToSrcsList.toString(),
             workingDirectory.isPresent() ? workingDirectory.get().toString() : null,
-            compilationMode);
+            pluginFields,
+            compilationMode.toString());
   }
 
   @Override

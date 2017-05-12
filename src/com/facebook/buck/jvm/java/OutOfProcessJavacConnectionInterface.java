@@ -29,7 +29,6 @@ public interface OutOfProcessJavacConnectionInterface {
    * @param serializedJavacExecutionContext JavacExecutionContext converted to String
    * @param invokingRuleBuildTargetAsString BuildTarget converted to String
    * @param options Immutable list of string options
-   * @param setOfSafeAnnotationProcessorsAsList ImmutableSet represented as a List
    * @param sortedSetOfJavaSourceFilePathsAsStringsAsList ImmutableSortedSet<Path> represented as
    *     List of String objects.
    * @param pathToSrcsListAsString Path represented as String.
@@ -44,5 +43,6 @@ public interface OutOfProcessJavacConnectionInterface {
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
-      Javac.CompilationMode abiGenerationMode);
+      List<JavacPluginJsr199Fields> pluginFields,
+      String javaCompilationModeAsString);
 }

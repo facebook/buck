@@ -51,22 +51,17 @@ class AnnotationProcessorFactory implements AutoCloseable {
     localClassLoaderCache.close();
   }
 
-  public List<Processor> createProcessors(
-      ImmutableList<ResolvedJavacPluginProperties> processorsProperties) {
-    return processorsProperties
+  public List<Processor> createProcessors(ImmutableList<JavacPluginJsr199Fields> fields) {
+    return fields
         .stream()
         .map(this::createProcessorsWithCommonClasspath)
         .flatMap(Function.identity())
         .collect(Collectors.toList());
   }
 
-  private Stream<Processor> createProcessorsWithCommonClasspath(
-      ResolvedJavacPluginProperties processorGroup) {
-    ClassLoader classLoader = getClassLoaderForProcessorGroup(processorGroup);
-    return processorGroup
-        .getProcessorNames()
-        .stream()
-        .map(name -> createProcessor(classLoader, name));
+  private Stream<Processor> createProcessorsWithCommonClasspath(JavacPluginJsr199Fields fields) {
+    ClassLoader classLoader = getClassLoaderForProcessorGroup(fields);
+    return fields.getProcessorNames().stream().map(name -> createProcessor(classLoader, name));
   }
 
   private Processor createProcessor(ClassLoader classLoader, String name) {
@@ -82,7 +77,7 @@ class AnnotationProcessorFactory implements AutoCloseable {
   }
 
   @VisibleForTesting
-  ClassLoader getClassLoaderForProcessorGroup(ResolvedJavacPluginProperties processorGroup) {
+  ClassLoader getClassLoaderForProcessorGroup(JavacPluginJsr199Fields processorGroup) {
     ClassLoaderCache cache;
     // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
     // processors. However, some annotation processors use static variables in a way that assumes
