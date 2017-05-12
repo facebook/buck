@@ -8,6 +8,7 @@ java_library(
         "CustomZipEntry.java",
         "CustomZipOutputStream.java",
         "DeterministicManifest.java",
+        "DeterministicZipBuilder.java",
         "EntryAccounting.java",
         "OverwritingZipOutputStreamImpl.java",
         "ZipConstants.java",

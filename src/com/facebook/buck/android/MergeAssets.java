@@ -32,9 +32,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.zip.DeterministicZipBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +42,6 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
@@ -168,7 +165,7 @@ public class MergeAssets extends AbstractBuildRule {
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      try (CustomZipOutputStream output = ZipOutputStreams.newOutputStream(pathToMergedAssets)) {
+      try (DeterministicZipBuilder output = new DeterministicZipBuilder(pathToMergedAssets)) {
         try (ZipFile base = new ZipFile(pathToBaseApk.toFile())) {
           for (ZipEntry inputEntry : Collections.list(base.entries())) {
             String extension = Files.getFileExtension(inputEntry.getName());
@@ -178,8 +175,7 @@ public class MergeAssets extends AbstractBuildRule {
                 inputEntry.getMethod() != ZipEntry.STORED
                     && !NO_COMPRESS_EXTENSIONS.contains(extension);
             try (InputStream stream = base.getInputStream(inputEntry)) {
-              addEntry(
-                  output,
+              output.addEntry(
                   stream,
                   inputEntry.getSize(),
                   inputEntry.getCrc(),
@@ -198,8 +194,7 @@ public class MergeAssets extends AbstractBuildRule {
             int compression =
                 NO_COMPRESS_EXTENSIONS.contains(extension) ? 0 : Deflater.BEST_COMPRESSION;
             try (InputStream assetStream = assetSource.openStream()) {
-              addEntry(
-                  output,
+              output.addEntry(
                   assetStream,
                   assetSource.size(),
                   // CRC32s are only 32 bits, but setCrc() takes a
@@ -212,29 +207,8 @@ public class MergeAssets extends AbstractBuildRule {
             }
           }
         }
-        return StepExecutionResult.SUCCESS;
       }
-    }
-
-    private void addEntry(
-        CustomZipOutputStream output,
-        InputStream data,
-        long dataLength,
-        long crc,
-        String name,
-        int compressionLevel,
-        boolean isDirectory)
-        throws IOException {
-      CustomZipEntry outputEntry = new CustomZipEntry(Paths.get(name), isDirectory);
-      outputEntry.setCompressionLevel(compressionLevel);
-      outputEntry.setCrc(crc);
-      if (compressionLevel == 0) {
-        outputEntry.setCompressedSize(dataLength);
-      }
-      outputEntry.setSize(dataLength);
-      output.putNextEntry(outputEntry);
-      ByteStreams.copy(data, output);
-      output.closeEntry();
+      return StepExecutionResult.SUCCESS;
     }
   }
 }
