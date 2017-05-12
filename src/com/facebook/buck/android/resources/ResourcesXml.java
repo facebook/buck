@@ -103,6 +103,39 @@ public class ResourcesXml extends ResChunk {
     this.nodeBuf = nodeBuf;
   }
 
+  public void visitReferences(RefVisitor visitor) {
+    refMap.ifPresent(m -> m.visitReferences(visitor));
+    int offset = 0;
+    while (offset < nodeBuf.limit()) {
+      int type = nodeBuf.getShort(offset);
+      if (type == XML_START_ELEMENT) {
+        int nodeHeaderSize = nodeBuf.getShort(offset + 2);
+
+        int extOffset = offset + nodeHeaderSize;
+        int attrStart = extOffset + nodeBuf.getShort(extOffset + 8);
+        Preconditions.checkState(attrStart == extOffset + 20);
+        int attrCount = nodeBuf.getShort(extOffset + 12);
+        for (int i = 0; i < attrCount; i++) {
+          int attrOffset = attrStart + i * 20;
+          int attrType = nodeBuf.get(attrOffset + 15);
+          switch (attrType) {
+            case RES_REFERENCE:
+            case RES_ATTRIBUTE:
+              visitEntryDataOffset(nodeBuf, attrOffset + 16, visitor);
+              break;
+            case RES_DYNAMIC_ATTRIBUTE:
+            case RES_DYNAMIC_REFERENCE:
+              throw new UnsupportedOperationException();
+            default:
+              break;
+          }
+        }
+      }
+      int chunkSize = nodeBuf.getInt(offset + 4);
+      offset += chunkSize;
+    }
+  }
+
   public void dump(PrintStream out) {
     int indent = 0;
     final Map<String, String> nsMap = new HashMap<>();
@@ -247,6 +280,12 @@ public class ResourcesXml extends ResChunk {
         return buf.getInt(getHeaderSize() + index * 4);
       }
       return -1;
+    }
+
+    public void visitReferences(RefVisitor visitor) {
+      for (int i = 0; i < refCount; i++) {
+        visitEntryDataOffset(buf, getHeaderSize() + i * 4, visitor);
+      }
     }
   }
 }

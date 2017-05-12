@@ -73,6 +73,10 @@ public class ResourceTable extends ResChunk {
     resPackage.put(buf);
   }
 
+  public void reassignIds(ReferenceMapper refMapping) {
+    resPackage.reassignIds(refMapping);
+  }
+
   public void dump(PrintStream out) {
     out.format("Package Groups (1)\n");
     resPackage.dump(strings, out);

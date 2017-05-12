@@ -149,4 +149,17 @@ public class ResTableTypeSpec extends ResChunk {
   public List<ResTableType> getConfigs() {
     return configs;
   }
+
+  public void visitReferences(RefVisitor visitor) {
+    configs.forEach(c -> c.visitReferences(visitor));
+  }
+
+  public void reassignIds(ReferenceMapper refMapping) {
+    refMapping.rewrite(getResourceType(), entryFlags.asIntBuffer());
+    configs.forEach(c -> c.reassignIds(refMapping));
+  }
+
+  public int getEntryCount() {
+    return entryCount;
+  }
 }

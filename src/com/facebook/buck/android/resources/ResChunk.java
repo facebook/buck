@@ -114,6 +114,18 @@ public abstract class ResChunk {
     output.putInt(chunkSize);
   }
 
+  public interface RefVisitor {
+    int visit(int ref);
+  }
+
+  static void visitEntryDataOffset(ByteBuffer buf, int offset, RefVisitor visitor) {
+    int oldValue = buf.getInt(offset);
+    int newValue = visitor.visit(oldValue);
+    if (oldValue != newValue) {
+      buf.putInt(offset, newValue);
+    }
+  }
+
   // These are some utilities used widely by subclasses for dealing with ByteBuffers.
   static ByteBuffer copy(ByteBuffer buf) {
     return wrap(

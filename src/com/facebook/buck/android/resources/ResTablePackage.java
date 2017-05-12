@@ -45,6 +45,12 @@ public class ResTablePackage extends ResChunk {
   private final StringPool keys;
   private final List<ResTableTypeSpec> typeSpecs;
 
+  public void reassignIds(ReferenceMapper refMapping) {
+    for (ResTableTypeSpec spec : typeSpecs) {
+      spec.reassignIds(refMapping);
+    }
+  }
+
   static ResTablePackage get(ByteBuffer buf) {
     int chunkType = buf.getShort();
     int headerSize = buf.getShort();

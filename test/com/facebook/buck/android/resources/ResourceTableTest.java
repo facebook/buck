@@ -103,4 +103,66 @@ public class ResourceTableTest {
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
     }
   }
+
+  @Test
+  public void testRewriteResources() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+
+      ReferenceMapper reversingMapper = ReversingMapper.construct(resourceTable);
+      resourceTable.reassignIds(reversingMapper);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path resourcesOutput =
+          filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.reversed"));
+
+      // We don't care about dumping the correct config string.
+      Pattern re = Pattern.compile("      config.*:");
+      String expected =
+          Joiner.on("\n")
+              .join(
+                  Files.readAllLines(resourcesOutput)
+                      .stream()
+                      .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
+                      .iterator());
+      MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
+    }
+  }
+
+  @Test
+  public void testDoubleReverseResources() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+
+      ReferenceMapper reversingMapper = ReversingMapper.construct(resourceTable);
+      resourceTable.reassignIds(reversingMapper);
+      resourceTable.reassignIds(reversingMapper);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
+
+      // We don't care about dumping the correct config string.
+      Pattern re = Pattern.compile("      config.*:");
+      String expected =
+          Joiner.on("\n")
+              .join(
+                  Files.readAllLines(resourcesOutput)
+                      .stream()
+                      .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
+                      .iterator());
+      MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
+    }
+  }
 }

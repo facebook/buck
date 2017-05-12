@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
 import org.junit.Before;
@@ -75,12 +76,76 @@ public class ResourcesXmlTest {
           ResChunk.wrap(
               ByteStreams.toByteArray(
                   apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+
       ResourcesXml xml = ResourcesXml.get(buf);
+
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       xml.dump(new PrintStream(baos));
       String content = new String(baos.toByteArray(), Charsets.UTF_8);
 
       Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest"));
+      String expected = new String(Files.readAllBytes(xmltreeOutput));
+      MoreAsserts.assertLargeStringsEqual(expected, content);
+    }
+  }
+
+  @Test
+  public void testVisitReferences() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(
+                  apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+
+      // Convert to hex strings so that a failed assertion is easier to read.
+      List<String> refs = new ArrayList<>();
+      ResourcesXml xml = ResourcesXml.get(buf);
+      xml.visitReferences(
+          i -> {
+            refs.add(String.format("0x%08x", i));
+            return i;
+          });
+      assertEquals(
+          ImmutableList.of(
+              "0x0101020c",
+              "0x01010270",
+              "0x01010003",
+              "0x01010001",
+              "0x01010002",
+              "0x0101000f",
+              "0x01010025",
+              "0x01010010",
+              "0x7f040001",
+              "0x7f020001",
+              "0x7f050001",
+              "0x7f050002",
+              "0x7f030000"),
+          refs);
+    }
+  }
+
+  @Test
+  public void testAaptDumpReversedXmlTree() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ResourceTable resourceTable =
+          ResourceTable.get(
+              ResChunk.wrap(
+                  ByteStreams.toByteArray(
+                      apkZip.getInputStream(apkZip.getEntry("resources.arsc")))));
+      ReferenceMapper reversingMapper = ReversingMapper.construct(resourceTable);
+
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(
+                  apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
+
+      ResourcesXml xml = ResourcesXml.get(buf);
+      xml.visitReferences(reversingMapper::map);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      xml.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest.reversed"));
       String expected = new String(Files.readAllBytes(xmltreeOutput));
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }

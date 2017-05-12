@@ -285,4 +285,48 @@ public class ResTableType extends ResChunk {
   public int getEntryValueOffset(int i) {
     return entryOffsets.getInt(i * 4);
   }
+
+  private void visitReferencesAt(RefVisitor visitor, int offset) {
+    int flags = entryData.getShort(offset + 2);
+    if ((flags & FLAG_COMPLEX) != 0) {
+      int parent = entryData.getInt(offset + 8);
+      if (parent != 0) {
+        // An attribute map can derive from another. If it does, visit that parent.
+        visitEntryDataOffset(entryData, offset + 8, visitor);
+      }
+      int count = entryData.getInt(offset + 12);
+      int entryOffset = offset;
+      for (int j = 0; j < count; j++) {
+        // Visit the name attribute reference.
+        visitEntryDataOffset(entryData, entryOffset + 16, visitor);
+        int size = entryData.getShort(entryOffset + 20);
+        int type = entryData.get(entryOffset + 23);
+        if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
+          // Visit the value if it's a reference.
+          visitEntryDataOffset(entryData, entryOffset + 24, visitor);
+        }
+        entryOffset += 4 + size;
+      }
+    } else {
+      int type = entryData.get(offset + 11);
+      if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
+        // Visit the value if it's a reference.
+        visitEntryDataOffset(entryData, offset + 12, visitor);
+      }
+    }
+  }
+
+  public void visitReferences(RefVisitor visitor) {
+    for (int i = 0; i < entryCount; i++) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        visitReferencesAt(visitor, offset);
+      }
+    }
+  }
+
+  public void reassignIds(ReferenceMapper refMapping) {
+    visitReferences(refMapping::map);
+    refMapping.rewrite(getResourceType(), entryOffsets.asIntBuffer());
+  }
 }
