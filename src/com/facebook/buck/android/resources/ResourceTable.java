@@ -17,9 +17,15 @@
 package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
  * A ResourceTable is the top-level representation of resources.arsc. It consists of a header:
@@ -80,8 +86,27 @@ public class ResourceTable extends ResChunk {
 
   public static ResourceTable slice(ResourceTable table, Map<Integer, Integer> countsToExtract) {
     ResTablePackage newPackage = ResTablePackage.slice(table.resPackage, countsToExtract);
-    // TODO(cjhopman): Only copy the strings that are actually used.
-    return new ResourceTable(table.strings.copy(), newPackage);
+
+    StringPool strings = table.strings;
+    // Figure out what strings are used by the retained references.
+    ImmutableSortedSet.Builder<Integer> stringRefs =
+        ImmutableSortedSet.orderedBy(
+            Comparator.comparing(strings::getString).thenComparingInt(i -> i));
+    newPackage.visitStringReferences(stringRefs::add);
+    ImmutableList<Integer> stringsToExtract = stringRefs.build().asList();
+    ImmutableMap<Integer, Integer> stringMapping =
+        Maps.uniqueIndex(
+            IntStream.range(0, stringsToExtract.size())::iterator, stringsToExtract::get);
+
+    // Extract a StringPool that contains just the strings used by the new package.
+    // This drops styles.
+    StringPool newStrings =
+        StringPool.create(stringsToExtract.stream().map(strings::getString)::iterator);
+
+    // Adjust the string references.
+    newPackage.transformStringReferences(stringMapping::get);
+
+    return new ResourceTable(newStrings, newPackage);
   }
 
   public void dump(PrintStream out) {

@@ -219,4 +219,63 @@ public class ResourceTableTest {
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
+
+  @Test
+  public void testSliceResourceTableStringsAreOptimized() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      Map<Integer, Integer> counts = new HashMap<>();
+      for (ResTableTypeSpec spec : resourceTable.getPackage().getTypeSpecs()) {
+        counts.put(spec.getResourceType(), Math.min(spec.getEntryCount(), 1));
+      }
+      resourceTable = ResourceTable.slice(resourceTable, counts);
+
+      resourceTable.getStrings().dump(System.out);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.getStrings().dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      assertEquals(
+          "String pool of 4 unique UTF-8 non-sorted strings, "
+              + "4 entries and 0 styles using 120 bytes:\n"
+              + "String #0: \n"
+              + "String #1: res/drawable/aaa_image.png\n"
+              + "String #2: res/xml/meta_xml.xml\n"
+              + "String #3: some other string\n",
+          content);
+
+      baos = new ByteArrayOutputStream();
+      resourceTable.getPackage().getKeys().dump(new PrintStream(baos));
+      content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      assertEquals(
+          "String pool of 5 unique UTF-8 non-sorted strings, "
+              + "5 entries and 0 styles using 112 bytes:\n"
+              + "String #0: aaa_array\n"
+              + "String #1: aaa_image\n"
+              + "String #2: aaa_string_other\n"
+              + "String #3: meta_xml\n"
+              + "String #4: some_id\n",
+          content);
+
+      baos = new ByteArrayOutputStream();
+      resourceTable.getPackage().getTypes().dump(new PrintStream(baos));
+      content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      assertEquals(
+          "String pool of 6 unique UTF-8 non-sorted strings, "
+              + "6 entries and 0 styles using 100 bytes:\n"
+              + "String #0: attr\n"
+              + "String #1: drawable\n"
+              + "String #2: xml\n"
+              + "String #3: string\n"
+              + "String #4: array\n"
+              + "String #5: id\n",
+          content);
+    }
+  }
 }

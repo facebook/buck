@@ -164,8 +164,20 @@ public class ResTableTypeSpec extends ResChunk {
     return configs;
   }
 
-  public void visitReferences(RefVisitor visitor) {
-    configs.forEach(c -> c.visitReferences(visitor));
+  public void transformKeyReferences(RefTransformer visitor) {
+    configs.forEach(c -> c.transformKeyReferences(visitor));
+  }
+
+  public void visitKeyReferences(RefVisitor visitor) {
+    configs.forEach(c -> c.visitKeyReferences(visitor));
+  }
+
+  public void transformStringReferences(RefTransformer visitor) {
+    configs.forEach(c -> c.transformStringReferences(visitor));
+  }
+
+  public void visitStringReferences(RefVisitor visitor) {
+    configs.forEach(c -> c.visitStringReferences(visitor));
   }
 
   public void reassignIds(ReferenceMapper refMapping) {

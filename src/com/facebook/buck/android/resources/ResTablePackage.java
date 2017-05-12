@@ -22,11 +22,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
  * A Package consists of a header: ResTable_header u16 chunk_type u16 header_size u32 chunk_size u32
@@ -63,6 +67,9 @@ public class ResTablePackage extends ResChunk {
       ResTablePackage resPackage, Map<Integer, Integer> countsToSlice) {
     resPackage.assertValidIds(countsToSlice.keySet());
 
+    int packageId = resPackage.packageId;
+    byte[] nameData = Arrays.copyOf(resPackage.nameData, NAME_DATA_LENGTH);
+
     List<ResTableTypeSpec> newSpecs =
         resPackage
             .getTypeSpecs()
@@ -73,22 +80,32 @@ public class ResTablePackage extends ResChunk {
                         spec, countsToSlice.getOrDefault(spec.getResourceType(), 0)))
             .collect(MoreCollectors.toImmutableList());
 
-    // TODO(cjhopman): Only copy the types/keys that are actually sliced out.
-    StringPool types = resPackage.types.copy();
-    StringPool keys = resPackage.keys.copy();
+    StringPool keys = resPackage.keys;
 
-    int chunkSize = HEADER_SIZE + types.getChunkSize() + keys.getChunkSize();
+    // Figure out what keys are used by the retained references.
+    ImmutableSortedSet.Builder<Integer> keyRefs =
+        ImmutableSortedSet.orderedBy(Comparator.comparing(keys::getString));
+    newSpecs.forEach(spec -> spec.visitKeyReferences(keyRefs::add));
+    ImmutableList<Integer> keysToExtract = keyRefs.build().asList();
+    Map<Integer, Integer> keyMapping =
+        Maps.uniqueIndex(IntStream.range(0, keysToExtract.size())::iterator, keysToExtract::get);
+
+    // Extract a StringPool that contains just the keys used by the new specs.
+    StringPool newKeys = StringPool.create(keysToExtract.stream().map(keys::getString)::iterator);
+
+    // Adjust the key references.
+    for (ResTableTypeSpec spec : newSpecs) {
+      spec.transformKeyReferences(keyMapping::get);
+    }
+
+    StringPool types = resPackage.types.copy();
+
+    int chunkSize = HEADER_SIZE + types.getChunkSize() + newKeys.getChunkSize();
     for (ResTableTypeSpec spec : newSpecs) {
       chunkSize += spec.getTotalSize();
     }
 
-    return new ResTablePackage(
-        chunkSize,
-        resPackage.packageId,
-        Arrays.copyOf(resPackage.nameData, NAME_DATA_LENGTH),
-        types,
-        keys,
-        newSpecs);
+    return new ResTablePackage(chunkSize, packageId, nameData, types, newKeys, newSpecs);
   }
 
   static ResTablePackage get(ByteBuffer buf) {
@@ -213,6 +230,14 @@ public class ResTablePackage extends ResChunk {
 
   public byte[] getNameData() {
     return nameData;
+  }
+
+  public void transformStringReferences(RefTransformer visitor) {
+    typeSpecs.forEach(c -> c.transformStringReferences(visitor));
+  }
+
+  public void visitStringReferences(RefVisitor visitor) {
+    typeSpecs.forEach(c -> c.visitStringReferences(visitor));
   }
 
   public String getRefName(int i) {

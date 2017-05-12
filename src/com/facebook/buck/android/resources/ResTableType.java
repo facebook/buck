@@ -334,24 +334,92 @@ public class ResTableType extends ResChunk {
     return entryCount;
   }
 
-  private void visitReferencesAt(RefVisitor visitor, int offset) {
+  public void transformKeyReferences(RefTransformer visitor) {
+    for (int i = 0; i < entryCount; i++) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        transformEntryDataOffset(entryData, offset + 4, visitor);
+      }
+    }
+  }
+
+  public void visitKeyReferences(RefVisitor visitor) {
+    transformKeyReferences(
+        i -> {
+          visitor.visit(i);
+          return i;
+        });
+  }
+
+  private void transformStringReferencesAt(RefTransformer visitor, int offset) {
+    int flags = entryData.getShort(offset + 2);
+    if ((flags & FLAG_COMPLEX) != 0) {
+      int count = entryData.getInt(offset + 12);
+      int entryOffset = offset;
+      for (int j = 0; j < count; j++) {
+        int name = entryData.getInt(entryOffset + 16);
+        if ((name >> 24) == ResTablePackage.APP_PACKAGE_ID) {
+          Preconditions.checkState(((name >> 16) & 0xFF) != 0);
+        }
+        int vsize = entryData.getShort(entryOffset + 20);
+        int type = entryData.get(entryOffset + 23);
+        if (type == RES_STRING) {
+          transformEntryDataOffset(entryData, entryOffset + 24, visitor);
+        }
+        entryOffset += 4 + vsize;
+      }
+    } else {
+      int type = entryData.get(offset + 11);
+      if (type == RES_STRING) {
+        transformEntryDataOffset(entryData, offset + 12, visitor);
+      }
+    }
+  }
+
+  public void transformStringReferences(RefTransformer visitor) {
+    for (int i = 0; i < entryCount; i++) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        transformStringReferencesAt(visitor, offset);
+      }
+    }
+  }
+
+  public void visitStringReferences(RefVisitor visitor) {
+    transformStringReferences(
+        i -> {
+          visitor.visit(i);
+          return i;
+        });
+  }
+
+  public void transformStringReferences(int[] idsToVisit, RefTransformer visitor) {
+    for (int i : idsToVisit) {
+      int offset = getEntryValueOffset(i);
+      if (offset != -1) {
+        transformStringReferencesAt(visitor, offset);
+      }
+    }
+  }
+
+  private void transformReferencesAt(RefTransformer visitor, int offset) {
     int flags = entryData.getShort(offset + 2);
     if ((flags & FLAG_COMPLEX) != 0) {
       int parent = entryData.getInt(offset + 8);
       if (parent != 0) {
         // An attribute map can derive from another. If it does, visit that parent.
-        visitEntryDataOffset(entryData, offset + 8, visitor);
+        transformEntryDataOffset(entryData, offset + 8, visitor);
       }
       int count = entryData.getInt(offset + 12);
       int entryOffset = offset;
       for (int j = 0; j < count; j++) {
         // Visit the name attribute reference.
-        visitEntryDataOffset(entryData, entryOffset + 16, visitor);
+        transformEntryDataOffset(entryData, entryOffset + 16, visitor);
         int size = entryData.getShort(entryOffset + 20);
         int type = entryData.get(entryOffset + 23);
         if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
           // Visit the value if it's a reference.
-          visitEntryDataOffset(entryData, entryOffset + 24, visitor);
+          transformEntryDataOffset(entryData, entryOffset + 24, visitor);
         }
         entryOffset += 4 + size;
       }
@@ -359,22 +427,22 @@ public class ResTableType extends ResChunk {
       int type = entryData.get(offset + 11);
       if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
         // Visit the value if it's a reference.
-        visitEntryDataOffset(entryData, offset + 12, visitor);
+        transformEntryDataOffset(entryData, offset + 12, visitor);
       }
     }
   }
 
-  public void visitReferences(RefVisitor visitor) {
+  public void transformReferences(RefTransformer visitor) {
     for (int i = 0; i < entryCount; i++) {
       int offset = getEntryValueOffset(i);
       if (offset != -1) {
-        visitReferencesAt(visitor, offset);
+        transformReferencesAt(visitor, offset);
       }
     }
   }
 
   public void reassignIds(ReferenceMapper refMapping) {
-    visitReferences(refMapping::map);
+    transformReferences(refMapping::map);
     refMapping.rewrite(getResourceType(), entryOffsets.asIntBuffer());
   }
 }

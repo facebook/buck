@@ -104,7 +104,7 @@ public class ResourcesXml extends ResChunk {
     this.nodeBuf = nodeBuf;
   }
 
-  public void visitReferences(RefVisitor visitor) {
+  public void transformReferences(RefTransformer visitor) {
     refMap.ifPresent(m -> m.visitReferences(visitor));
     int offset = 0;
     while (offset < nodeBuf.limit()) {
@@ -122,7 +122,7 @@ public class ResourcesXml extends ResChunk {
           switch (attrType) {
             case RES_REFERENCE:
             case RES_ATTRIBUTE:
-              visitEntryDataOffset(nodeBuf, attrOffset + 16, visitor);
+              transformEntryDataOffset(nodeBuf, attrOffset + 16, visitor);
               break;
             case RES_DYNAMIC_ATTRIBUTE:
             case RES_DYNAMIC_REFERENCE:
@@ -135,6 +135,14 @@ public class ResourcesXml extends ResChunk {
       int chunkSize = nodeBuf.getInt(offset + 4);
       offset += chunkSize;
     }
+  }
+
+  public void visitReferences(RefVisitor visitor) {
+    transformReferences(
+        i -> {
+          visitor.visit(i);
+          return i;
+        });
   }
 
   public void dump(PrintStream out) {
@@ -284,9 +292,9 @@ public class ResourcesXml extends ResChunk {
       return -1;
     }
 
-    public void visitReferences(RefVisitor visitor) {
+    public void visitReferences(RefTransformer visitor) {
       for (int i = 0; i < refCount; i++) {
-        visitEntryDataOffset(buf, getHeaderSize() + i * 4, visitor);
+        transformEntryDataOffset(buf, getHeaderSize() + i * 4, visitor);
       }
     }
   }

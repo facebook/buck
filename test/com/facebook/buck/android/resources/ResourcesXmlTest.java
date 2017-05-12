@@ -100,11 +100,7 @@ public class ResourcesXmlTest {
       // Convert to hex strings so that a failed assertion is easier to read.
       List<String> refs = new ArrayList<>();
       ResourcesXml xml = ResourcesXml.get(buf);
-      xml.visitReferences(
-          i -> {
-            refs.add(String.format("0x%08x", i));
-            return i;
-          });
+      xml.visitReferences(i -> refs.add(String.format("0x%08x", i)));
       assertEquals(
           ImmutableList.of(
               "0x0101020c",
@@ -140,7 +136,7 @@ public class ResourcesXmlTest {
                   apkZip.getInputStream(apkZip.getEntry("AndroidManifest.xml"))));
 
       ResourcesXml xml = ResourcesXml.get(buf);
-      xml.visitReferences(reversingMapper::map);
+      xml.transformReferences(reversingMapper::map);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       xml.dump(new PrintStream(baos));
       String content = new String(baos.toByteArray(), Charsets.UTF_8);

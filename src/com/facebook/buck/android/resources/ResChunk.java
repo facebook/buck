@@ -114,13 +114,17 @@ public abstract class ResChunk {
     output.putInt(chunkSize);
   }
 
-  public interface RefVisitor {
-    int visit(int ref);
+  public interface RefTransformer {
+    int transform(int ref);
   }
 
-  static void visitEntryDataOffset(ByteBuffer buf, int offset, RefVisitor visitor) {
+  public interface RefVisitor {
+    void visit(int ref);
+  }
+
+  static void transformEntryDataOffset(ByteBuffer buf, int offset, RefTransformer visitor) {
     int oldValue = buf.getInt(offset);
-    int newValue = visitor.visit(oldValue);
+    int newValue = visitor.transform(oldValue);
     if (oldValue != newValue) {
       buf.putInt(offset, newValue);
     }
