@@ -1,0 +1,9 @@
+java_library(
+    name = "oop_javac",
+    srcs = glob(["*.java"]),
+    tests = [
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
