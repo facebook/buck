@@ -159,7 +159,10 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
         sb.append("\nNew hash: ").append(newSha1.toString());
         sb.append("\nOld hash rerun: ").append(super.get(archiveMemberPath));
         sb.append("\nNew hash rerun: ").append(getFromNewCache(archiveMemberPath));
+        Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
+        sb.append("\nHash recomputed: ").append(super.getHashCodeAndFileType(relativeFilePath));
         sha1MismatchInfo = sb.toString();
+        LOG.debug(sha1MismatchInfo);
       }
       sha1Mismatches += 1;
     }

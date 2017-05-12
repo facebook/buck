@@ -150,7 +150,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
+  // TODO(rvitale): restrict visibility of this method after the file hash cache experiment is over.
+  HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
