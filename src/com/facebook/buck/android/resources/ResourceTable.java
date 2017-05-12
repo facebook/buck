@@ -19,6 +19,7 @@ package com.facebook.buck.android.resources;
 import com.google.common.base.Preconditions;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 /**
  * A ResourceTable is the top-level representation of resources.arsc. It consists of a header:
@@ -75,6 +76,12 @@ public class ResourceTable extends ResChunk {
 
   public void reassignIds(ReferenceMapper refMapping) {
     resPackage.reassignIds(refMapping);
+  }
+
+  public static ResourceTable slice(ResourceTable table, Map<Integer, Integer> countsToExtract) {
+    ResTablePackage newPackage = ResTablePackage.slice(table.resPackage, countsToExtract);
+    // TODO(cjhopman): Only copy the strings that are actually used.
+    return new ResourceTable(table.strings.copy(), newPackage);
   }
 
   public void dump(PrintStream out) {

@@ -20,15 +20,21 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,6 +74,33 @@ public class ResTablePackageTest {
       byte[] actual = resPackage.serialize();
 
       assertArrayEquals(expected, actual);
+    }
+  }
+
+  @Test
+  public void testFullSliceResTablePackage() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      ResTablePackage resPackage = resourceTable.getPackage();
+      Map<Integer, Integer> counts = new HashMap<>();
+      for (ResTableTypeSpec spec : resPackage.getTypeSpecs()) {
+        counts.put(spec.getResourceType(), spec.getEntryCount());
+      }
+      ResTablePackage copy = ResTablePackage.slice(resPackage, counts);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resPackage.dump(resourceTable.getStrings(), new PrintStream(baos));
+      String expected = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      baos = new ByteArrayOutputStream();
+      copy.dump(resourceTable.getStrings(), new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
 }

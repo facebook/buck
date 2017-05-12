@@ -34,7 +34,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 import org.junit.Before;
@@ -163,6 +165,58 @@ public class ResourceTableTest {
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
+    }
+  }
+
+  @Test
+  public void testFullSliceResourceTable() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      Map<Integer, Integer> counts = new HashMap<>();
+      for (ResTableTypeSpec spec : resourceTable.getPackage().getTypeSpecs()) {
+        counts.put(spec.getResourceType(), spec.getEntryCount());
+      }
+      // When we slice a resource table, we sort the string pool. The offsets into the
+      // string pool are part of the dump output. For this test, we compare a single slice of
+      // everything to a double slice so that the reordering is ignored.
+      resourceTable = ResourceTable.slice(resourceTable, counts);
+      ResourceTable copy = ResourceTable.slice(resourceTable, counts);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.dump(new PrintStream(baos));
+      String expected = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      baos = new ByteArrayOutputStream();
+      copy.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      MoreAsserts.assertLargeStringsEqual(expected, content);
+    }
+  }
+
+  @Test
+  public void testSliceResourceTable() throws Exception {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      ByteBuffer buf =
+          ResChunk.wrap(
+              ByteStreams.toByteArray(apkZip.getInputStream(apkZip.getEntry("resources.arsc"))));
+      ResourceTable resourceTable = ResourceTable.get(buf);
+      Map<Integer, Integer> counts = new HashMap<>();
+      for (ResTableTypeSpec spec : resourceTable.getPackage().getTypeSpecs()) {
+        counts.put(spec.getResourceType(), Math.min(spec.getEntryCount(), 1));
+      }
+      resourceTable = ResourceTable.slice(resourceTable, counts);
+      Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.sliced"));
+      String expected = filesystem.readFileIfItExists(resourcesOutput).get();
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      resourceTable.dump(new PrintStream(baos));
+      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.resources;
 
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -23,7 +24,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Package consists of a header: ResTable_header u16 chunk_type u16 header_size u32 chunk_size u32
@@ -37,6 +40,7 @@ import java.util.List;
 public class ResTablePackage extends ResChunk {
   public static final int HEADER_SIZE = 288;
   public static final int APP_PACKAGE_ID = 0x7F;
+  public static final int NAME_DATA_LENGTH = 256;
 
   private final int packageId;
   private final byte[] nameData;
@@ -51,12 +55,48 @@ public class ResTablePackage extends ResChunk {
     }
   }
 
+  private void assertValidIds(Iterable<Integer> ids) {
+    ids.forEach(this::getTypeSpec);
+  }
+
+  public static ResTablePackage slice(
+      ResTablePackage resPackage, Map<Integer, Integer> countsToSlice) {
+    resPackage.assertValidIds(countsToSlice.keySet());
+
+    List<ResTableTypeSpec> newSpecs =
+        resPackage
+            .getTypeSpecs()
+            .stream()
+            .map(
+                spec ->
+                    ResTableTypeSpec.slice(
+                        spec, countsToSlice.getOrDefault(spec.getResourceType(), 0)))
+            .collect(MoreCollectors.toImmutableList());
+
+    // TODO(cjhopman): Only copy the types/keys that are actually sliced out.
+    StringPool types = resPackage.types.copy();
+    StringPool keys = resPackage.keys.copy();
+
+    int chunkSize = HEADER_SIZE + types.getChunkSize() + keys.getChunkSize();
+    for (ResTableTypeSpec spec : newSpecs) {
+      chunkSize += spec.getTotalSize();
+    }
+
+    return new ResTablePackage(
+        chunkSize,
+        resPackage.packageId,
+        Arrays.copyOf(resPackage.nameData, NAME_DATA_LENGTH),
+        types,
+        keys,
+        newSpecs);
+  }
+
   static ResTablePackage get(ByteBuffer buf) {
     int chunkType = buf.getShort();
     int headerSize = buf.getShort();
     int chunkSize = buf.getInt();
     int packageId = buf.getInt();
-    byte[] nameData = new byte[256];
+    byte[] nameData = new byte[NAME_DATA_LENGTH];
     buf.get(nameData);
 
     int typeStringOffset = buf.getInt();

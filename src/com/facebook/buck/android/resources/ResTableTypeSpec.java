@@ -16,11 +16,13 @@
 
 package com.facebook.buck.android.resources;
 
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * ResTableTypeSpec is a ResChunk specifying the flags for each resource of a given type. These
@@ -41,6 +43,18 @@ public class ResTableTypeSpec extends ResChunk {
   private final List<ResTableType> configs;
   private final int totalSize;
   private final ByteBuffer entryFlags;
+
+  public static ResTableTypeSpec slice(ResTableTypeSpec spec, int count) {
+    ImmutableList<ResTableType> configs =
+        spec.getConfigs()
+            .stream()
+            .map(config -> ResTableType.slice(config, count))
+            .filter(Objects::nonNull)
+            .collect(MoreCollectors.toImmutableList());
+
+    return new ResTableTypeSpec(
+        spec.id, count, copy(slice(spec.entryFlags, 0, 4 * count)), configs);
+  }
 
   @Override
   public void put(ByteBuffer output) {

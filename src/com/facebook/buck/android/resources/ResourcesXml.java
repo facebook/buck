@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * ResourcesXml handles Android's compiled xml format. It consists of: ResChunk_header u16
@@ -231,8 +232,9 @@ public class ResourcesXml extends ResChunk {
         rawValue == null ? "" : String.format(" (Raw: \"%s\")", rawValue));
   }
 
+  @Nullable
   private static String getValueForDump(
-      StringPool strings, String rawValue, int attrType, int data) {
+      StringPool strings, @Nullable String rawValue, int attrType, int data) {
     switch (attrType) {
       case RES_REFERENCE:
         return String.format("@0x%x", data);

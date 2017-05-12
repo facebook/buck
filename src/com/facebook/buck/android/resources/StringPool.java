@@ -254,4 +254,16 @@ public class StringPool extends ResChunk {
   public String getOutputNormalizedString(int data) {
     return getString(data).replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"");
   }
+
+  public StringPool copy() {
+    return new StringPool(
+        stringCount,
+        styleCount,
+        utf8,
+        sorted,
+        copy(stringOffsets),
+        copy(styleOffsets),
+        copy(stringData),
+        copy(styleData));
+  }
 }

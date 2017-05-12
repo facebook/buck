@@ -17,9 +17,11 @@
 package com.facebook.buck.android.resources;
 
 import com.google.common.base.Preconditions;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
+import javax.annotation.Nullable;
 
 /**
  * ResTableType is a ResChunk holding the resource values for a given type and configuration. It
@@ -47,6 +49,48 @@ public class ResTableType extends ResChunk {
   private final ByteBuffer config;
   private final ByteBuffer entryOffsets;
   private final ByteBuffer entryData;
+
+  @Nullable
+  public static ResTableType slice(ResTableType type, int count) {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    int currentOffset = 0;
+    ByteBuffer entryOffsets = wrap(new byte[count * 4]);
+    for (int i = 0; i < count; i++) {
+      int offset = type.getEntryValueOffset(i);
+      if (offset == -1) {
+        entryOffsets.putInt(i * 4, -1);
+      } else {
+        entryOffsets.putInt(i * 4, currentOffset);
+        int dataSize = type.getEntrySizeAtOffset(offset);
+        currentOffset += dataSize;
+        output.write(type.entryData.array(), type.entryData.arrayOffset() + offset, dataSize);
+      }
+    }
+
+    byte[] entryData = output.toByteArray();
+    if (entryData.length == 0) {
+      return null;
+    }
+    int headerSize = type.getHeaderSize();
+    int chunkSize = headerSize + count * 4 + entryData.length;
+
+    return new ResTableType(
+        headerSize, chunkSize, type.id, count, copy(type.config), entryOffsets, wrap(entryData));
+  }
+
+  private int getEntrySizeAtOffset(int offset) {
+    int size = entryData.getShort(offset);
+    int flags = entryData.getShort(offset + 2);
+    if ((flags & FLAG_COMPLEX) == 0) {
+      return size + entryData.getShort(offset + size);
+    } else {
+      int count = entryData.getInt(offset + 12);
+      for (int i = 0; i < count; i++) {
+        size += 4 + entryData.getShort(offset + size + 4);
+      }
+      return size;
+    }
+  }
 
   @Override
   public void put(ByteBuffer output) {
@@ -284,6 +328,10 @@ public class ResTableType extends ResChunk {
 
   public int getEntryValueOffset(int i) {
     return entryOffsets.getInt(i * 4);
+  }
+
+  public int getEntryCount() {
+    return entryCount;
   }
 
   private void visitReferencesAt(RefVisitor visitor, int offset) {
