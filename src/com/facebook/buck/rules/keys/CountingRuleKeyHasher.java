@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
@@ -40,12 +39,6 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
 
   public long getCount() {
     return count;
-  }
-
-  @Override
-  public CountingRuleKeyHasher<HASH> selectCategory(RuleKeyFieldCategory category) {
-    delegate.selectCategory(category);
-    return this;
   }
 
   @Override

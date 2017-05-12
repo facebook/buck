@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
@@ -72,11 +71,6 @@ public interface RuleKeyHasher<HASH> {
     APPENDABLE,
   }
 
-  /**
-   * Selects the field's category (for the upcoming field). Must be called before any other put
-   * method for that field.
-   */
-  RuleKeyHasher<HASH> selectCategory(RuleKeyFieldCategory category);
   /** Puts the field's key (i.e. the name of the field) */
   RuleKeyHasher<HASH> putKey(String key);
 

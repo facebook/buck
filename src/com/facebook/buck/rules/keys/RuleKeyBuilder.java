@@ -35,7 +35,6 @@ import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -127,13 +126,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   @Override
   public final RuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
-    return setReflectively(key, val, RuleKeyFieldCategory.UNKNOWN);
-  }
-
-  @Override
-  public final RuleKeyBuilder<RULE_KEY> setReflectively(
-      String key, @Nullable Object val, RuleKeyFieldCategory category) {
-    hasher.selectCategory(category);
     try (Scope keyScope = scopedHasher.keyScope(key)) {
       return setReflectively(val);
     }

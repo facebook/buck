@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
@@ -54,9 +53,6 @@ public class ForwardingRuleKeyHasherTest {
     RuleKeyHasher<String> stringHasher = createStrictMock(RuleKeyHasher.class);
     @SuppressWarnings("unchecked")
     RuleKeyHasher<HashCode> guavaHasher = createStrictMock(RuleKeyHasher.class);
-
-    expect(guavaHasher.selectCategory(RuleKeyFieldCategory.UNKNOWN)).andReturn(guavaHasher);
-    expect(stringHasher.selectCategory(RuleKeyFieldCategory.UNKNOWN)).andReturn(stringHasher);
 
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
@@ -221,8 +217,6 @@ public class ForwardingRuleKeyHasherTest {
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
-    expect(guavaHasher.selectCategory(RuleKeyFieldCategory.SOURCE)).andReturn(guavaHasher);
-    expect(stringHasher.selectCategory(RuleKeyFieldCategory.SOURCE)).andReturn(stringHasher);
     expect(guavaHasher.putKey("45")).andReturn(guavaHasher);
     expect(stringHasher.putKey("45")).andReturn(stringHasher);
     expect(guavaHasher.putNull()).andReturn(guavaHasher);
@@ -272,8 +266,6 @@ public class ForwardingRuleKeyHasherTest {
 
     replay(stringHasher, guavaHasher);
 
-    newHasher(guavaHasher, stringHasher).selectCategory(RuleKeyFieldCategory.UNKNOWN);
-
     newHasher(guavaHasher, stringHasher).hash();
     newHasher(guavaHasher, stringHasher).putKey("42").hash();
     newHasher(guavaHasher, stringHasher).putNull().hash();
@@ -313,7 +305,6 @@ public class ForwardingRuleKeyHasherTest {
     newHasher(guavaHasher, stringHasher).putWrapper(RuleKeyHasher.Wrapper.APPENDABLE).hash();
 
     newHasher(guavaHasher, stringHasher)
-        .selectCategory(RuleKeyFieldCategory.SOURCE)
         .putKey("45")
         .putNull()
         .putBoolean(true)

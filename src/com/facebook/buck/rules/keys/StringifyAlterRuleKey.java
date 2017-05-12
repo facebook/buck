@@ -19,7 +19,6 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
@@ -36,11 +35,9 @@ class StringifyAlterRuleKey implements AlterRuleKey {
   private static final Logger LOG = Logger.get(StringifyAlterRuleKey.class);
 
   private final ValueExtractor valueExtractor;
-  private final RuleKeyFieldCategory category;
 
-  public StringifyAlterRuleKey(ValueExtractor valueExtractor, RuleKeyFieldCategory category) {
+  public StringifyAlterRuleKey(ValueExtractor valueExtractor) {
     this.valueExtractor = valueExtractor;
-    this.category = category;
   }
 
   @VisibleForTesting
@@ -74,7 +71,7 @@ class StringifyAlterRuleKey implements AlterRuleKey {
   public void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
     Object val = valueExtractor.getValue(rule);
     String stringVal = (val == null) ? null : String.valueOf(val);
-    sink.setReflectively(valueExtractor.getName(), stringVal, category);
+    sink.setReflectively(valueExtractor.getName(), stringVal);
 
     if (val != null) {
       Iterable<Path> absolutePaths = findAbsolutePaths(val);

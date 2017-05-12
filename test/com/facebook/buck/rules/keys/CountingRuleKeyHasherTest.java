@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -25,7 +24,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
@@ -46,9 +44,6 @@ public class CountingRuleKeyHasherTest {
   @Test
   public void testForwarding() {
     assertEquals(newGuavaHasher().hash(), newCountHasher().hash());
-    assertEquals(
-        newGuavaHasher().selectCategory(RuleKeyFieldCategory.SOURCE).hash(),
-        newCountHasher().selectCategory(RuleKeyFieldCategory.SOURCE).hash());
     assertEquals(newGuavaHasher().putKey("").hash(), newCountHasher().putKey("").hash());
     assertEquals(newGuavaHasher().putKey("42").hash(), newCountHasher().putKey("42").hash());
     assertEquals(
@@ -272,8 +267,6 @@ public class CountingRuleKeyHasherTest {
     CountingRuleKeyHasher<HashCode> hasher = newCountHasher();
     int count = 0;
     assertEquals(count, hasher.getCount());
-    hasher.selectCategory(RuleKeyFieldCategory.SOURCE);
-    assertEquals(count, hasher.getCount()); // does not increment count!
     hasher.putKey("");
     assertEquals(++count, hasher.getCount());
     hasher.putKey("42").putKey("43").putKey("44");
@@ -420,12 +413,6 @@ public class CountingRuleKeyHasherTest {
         .putNumber(1)
         .putNull();
     assertEquals(count += 5, hasher.getCount());
-  }
-
-  @Test
-  public void testSelectCategory() {
-    CountingRuleKeyHasher<HashCode> hasher = newCountHasher();
-    assertSame(hasher, hasher.selectCategory(RuleKeyFieldCategory.UNKNOWN));
   }
 
   private ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {

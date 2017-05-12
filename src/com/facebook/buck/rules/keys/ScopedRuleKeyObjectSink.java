@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -38,15 +37,6 @@ public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
   public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
     try (RuleKeyScopedHasher.Scope elementScope = scope.elementScope()) {
       delegate.setReflectively(key, val);
-      return this;
-    }
-  }
-
-  @Override
-  public RuleKeyObjectSink setReflectively(
-      String key, @Nullable Object val, RuleKeyFieldCategory cat) {
-    try (RuleKeyScopedHasher.Scope elementScope = scope.elementScope()) {
-      delegate.setReflectively(key, val, cat);
       return this;
     }
   }

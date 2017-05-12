@@ -24,8 +24,6 @@ public interface RuleKeyObjectSink {
 
   RuleKeyObjectSink setReflectively(String key, @Nullable Object val);
 
-  RuleKeyObjectSink setReflectively(String key, @Nullable Object val, RuleKeyFieldCategory cat);
-
   /**
    * Do not use this method, instead call {@link #setReflectively(String, Object)} with the
    * corresponding {@link SourcePath} as a parameter.

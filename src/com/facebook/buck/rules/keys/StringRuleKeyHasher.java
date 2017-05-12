@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyFieldCategory;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -36,12 +35,6 @@ import java.util.regex.Pattern;
 public class StringRuleKeyHasher implements RuleKeyHasher<String> {
 
   private final List<String> parts = new ArrayList<>();
-
-  @Override
-  public StringRuleKeyHasher selectCategory(RuleKeyFieldCategory category) {
-    // No need for storing category, StringRuleKeyHasher is already verbose enough.
-    return this;
-  }
 
   @Override
   public StringRuleKeyHasher putKey(String key) {

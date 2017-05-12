@@ -56,9 +56,9 @@ class ReflectiveAlterKeyLoader
 
   private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, AddToRuleKey annotation) {
     if (annotation.stringify()) {
-      return new StringifyAlterRuleKey(valueExtractor, annotation.category());
+      return new StringifyAlterRuleKey(valueExtractor);
     } else {
-      return new DefaultAlterRuleKey(valueExtractor, annotation.category());
+      return new DefaultAlterRuleKey(valueExtractor);
     }
   }
 }
