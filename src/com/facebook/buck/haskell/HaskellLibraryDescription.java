@@ -32,12 +32,13 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -48,8 +49,8 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -61,12 +62,14 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class HaskellLibraryDescription
-    implements Description<HaskellLibraryDescription.Arg>,
-        ImplicitDepsInferringDescription<HaskellLibraryDescription.Arg>,
+    implements Description<HaskellLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<
+            HaskellLibraryDescription.AbstractHaskellLibraryDescriptionArg>,
         Flavored,
-        VersionPropagator<HaskellLibraryDescription.Arg> {
+        VersionPropagator<HaskellLibraryDescriptionArg> {
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
@@ -85,8 +88,8 @@ public class HaskellLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<HaskellLibraryDescriptionArg> getConstructorArgType() {
+    return HaskellLibraryDescriptionArg.class;
   }
 
   private BuildTarget getBaseBuildTarget(BuildTarget target) {
@@ -108,7 +111,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
@@ -122,7 +125,7 @@ public class HaskellLibraryDescription
         depType,
         Optional.empty(),
         Optional.of(getPackageInfo(params.getBuildTarget())),
-        args.compilerFlags,
+        args.getCompilerFlags(),
         HaskellSources.from(
             params.getBuildTarget(),
             resolver,
@@ -130,7 +133,7 @@ public class HaskellLibraryDescription
             ruleFinder,
             cxxPlatform,
             "srcs",
-            args.srcs));
+            args.getSrcs()));
   }
 
   private Archive createStaticLibrary(
@@ -140,7 +143,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
@@ -171,7 +174,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
@@ -209,7 +212,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
@@ -283,7 +286,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
@@ -330,7 +333,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps)
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
@@ -364,7 +367,7 @@ public class HaskellLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      Arg args,
+      HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps)
       throws NoSuchBuildTargetException {
     Preconditions.checkArgument(
@@ -389,14 +392,14 @@ public class HaskellLibraryDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args)
+      final HaskellLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
     final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     CxxDeps allDeps =
-        CxxDeps.builder().addDeps(args.deps).addPlatformDeps(args.platformDeps).build();
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -532,7 +535,7 @@ public class HaskellLibraryDescription
                     allDeps.get(resolver, cxxPlatform),
                     type);
             linkArgs =
-                args.linkWhole.orElse(false)
+                args.getLinkWhole()
                     ? cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg())
                     : ImmutableList.of(archive.toArg());
             break;
@@ -557,7 +560,7 @@ public class HaskellLibraryDescription
 
       @Override
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return args.preferredLinkage.orElse(Linkage.ANY);
+        return args.getPreferredLinkage();
       }
 
       @Override
@@ -602,7 +605,7 @@ public class HaskellLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractHaskellLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
@@ -637,14 +640,29 @@ public class HaskellLibraryDescription
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourceList srcs = SourceList.EMPTY;
-    public ImmutableList<String> compilerFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
-        PatternMatchedCollection.of();
-    public Optional<Boolean> linkWhole;
-    public Optional<NativeLinkable.Linkage> preferredLinkage;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractHaskellLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    @Value.Default
+    default SourceList getSrcs() {
+      return SourceList.EMPTY;
+    }
+
+    ImmutableList<String> getCompilerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
+
+    @Value.Default
+    default boolean getLinkWhole() {
+      return false;
+    }
+
+    @Value.Default
+    default NativeLinkable.Linkage getPreferredLinkage() {
+      return NativeLinkable.Linkage.ANY;
+    }
   }
 }
