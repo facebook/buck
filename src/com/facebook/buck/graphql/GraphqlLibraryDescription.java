@@ -16,24 +16,24 @@
 
 package com.facebook.buck.graphql;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class GraphqlLibraryDescription implements Description<GraphqlLibraryDescription.Arg> {
+public class GraphqlLibraryDescription implements Description<GraphqlLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<GraphqlLibraryDescriptionArg> getConstructorArgType() {
+    return GraphqlLibraryDescriptionArg.class;
   }
 
   @Override
@@ -42,15 +42,14 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      GraphqlLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    return new GraphqlLibrary(params, args.srcs);
+    return new GraphqlLibrary(params, args.getSrcs());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGraphqlLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {}
 }
