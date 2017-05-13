@@ -16,25 +16,25 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
 public class CxxPrecompiledHeaderDescription
-    implements Description<CxxPrecompiledHeaderDescription.Arg>,
-        VersionPropagator<CxxPrecompiledHeaderDescription.Arg> {
+    implements Description<CxxPrecompiledHeaderDescriptionArg>,
+        VersionPropagator<CxxPrecompiledHeaderDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<CxxPrecompiledHeaderDescriptionArg> getConstructorArgType() {
+    return CxxPrecompiledHeaderDescriptionArg.class;
   }
 
   @Override
@@ -43,14 +43,17 @@ public class CxxPrecompiledHeaderDescription
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      CxxPrecompiledHeaderDescriptionArg args) {
     return new CxxPrecompiledHeaderTemplate(
-        params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.deps)), ruleResolver, args.src);
+        params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.getDeps())),
+        ruleResolver,
+        args.getSrc());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath src;
-    public ImmutableSortedSet<BuildTarget> deps;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCxxPrecompiledHeaderDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getSrc();
   }
 }
