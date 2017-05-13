@@ -30,12 +30,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,7 +48,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -64,8 +66,9 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-public class NdkLibraryDescription implements Description<NdkLibraryDescription.Arg> {
+public class NdkLibraryDescription implements Description<NdkLibraryDescriptionArg> {
 
   private static final Pattern EXTENSIONS_REGEX =
       Pattern.compile(
@@ -88,8 +91,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<NdkLibraryDescriptionArg> getConstructorArgType() {
+    return NdkLibraryDescriptionArg.class;
   }
 
   private Iterable<String> escapeForMakefile(ProjectFilesystem filesystem, Iterable<String> args) {
@@ -323,13 +326,13 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      NdkLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
 
     ImmutableSortedSet<SourcePath> sources;
-    if (!args.srcs.isEmpty()) {
-      sources = args.srcs;
+    if (!args.getSrcs().isEmpty()) {
+      sources = args.getSrcs();
     } else {
       sources = findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath());
     }
@@ -339,17 +342,21 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
         makefilePair.getFirst(),
         sources,
-        args.flags,
-        args.isAsset.orElse(false),
+        args.getFlags(),
+        args.getIsAsset(),
         ndkVersion,
         MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableList<String> flags = ImmutableList.of();
-    public Optional<Boolean> isAsset;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractNdkLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    ImmutableList<String> getFlags();
+
+    @Value.Default
+    default boolean getIsAsset() {
+      return false;
+    }
   }
 }

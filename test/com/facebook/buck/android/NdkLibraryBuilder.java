@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -31,8 +31,9 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public class NdkLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        NdkLibraryDescription.Arg, NdkLibraryDescription, NdkLibrary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        NdkLibraryDescriptionArg.Builder, NdkLibraryDescriptionArg, NdkLibraryDescription,
+        NdkLibrary> {
 
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
       NdkCxxPlatform.builder()
@@ -68,17 +69,17 @@ public class NdkLibraryBuilder
   }
 
   public NdkLibraryBuilder addDep(BuildTarget target) {
-    arg.deps = amend(arg.deps, target);
+    getArgForPopulating().addDeps(target);
     return this;
   }
 
   public NdkLibraryBuilder setFlags(Iterable<String> flags) {
-    arg.flags = ImmutableList.copyOf(flags);
+    getArgForPopulating().setFlags(ImmutableList.copyOf(flags));
     return this;
   }
 
   public NdkLibraryBuilder setIsAsset(boolean isAsset) {
-    arg.isAsset = Optional.of(isAsset);
+    getArgForPopulating().setIsAsset(isAsset);
     return this;
   }
 }
