@@ -24,7 +24,7 @@ java_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "file",
     srcs = [
         "DownloadStep.java",

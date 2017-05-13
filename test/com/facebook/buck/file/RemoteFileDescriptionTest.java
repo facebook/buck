@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -36,8 +35,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.net.URI;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -64,11 +63,15 @@ public class RemoteFileDescriptionTest {
   }
 
   @Test
-  public void badSha1HasUseableException() throws NoSuchBuildTargetException {
+  public void badSha1HasUseableException() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
 
-    RemoteFileDescription.Arg arg = new RemoteFileDescription.Arg();
-    arg.sha1 = "";
+    RemoteFileDescriptionArg arg =
+        RemoteFileDescriptionArg.builder()
+            .setName(target.getShortName())
+            .setSha1("")
+            .setUrl(new URI("https://example.com/cheeeeeese-cake"))
+            .build();
 
     exception.expect(HumanReadableException.class);
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
@@ -76,6 +79,7 @@ public class RemoteFileDescriptionTest {
     description.createBuildRule(
         TargetGraph.EMPTY,
         RemoteFileBuilder.createBuilder(downloader, target)
+            .from(arg)
             .createBuildRuleParams(ruleResolver, filesystem),
         ruleResolver,
         TestCellBuilder.createCellRoots(filesystem),
@@ -83,18 +87,23 @@ public class RemoteFileDescriptionTest {
   }
 
   @Test
-  public void remoteFileBinaryRuleIsCreatedForExecutableType() throws NoSuchBuildTargetException {
+  public void remoteFileBinaryRuleIsCreatedForExecutableType() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//mmmm:kale");
 
-    RemoteFileDescription.Arg arg = new RemoteFileDescription.Arg();
-    arg.type = Optional.of(RemoteFile.Type.EXECUTABLE);
-    arg.sha1 = "cf23df2207d99a74fbe169e3eba035e633b65d94";
-    arg.out = Optional.of("kale");
+    RemoteFileDescriptionArg arg =
+        RemoteFileDescriptionArg.builder()
+            .setName(target.getShortName())
+            .setType(RemoteFile.Type.EXECUTABLE)
+            .setSha1("cf23df2207d99a74fbe169e3eba035e633b65d94")
+            .setOut("kale")
+            .setUrl(new URI("https://example.com/tasty-kale"))
+            .build();
 
     BuildRule buildRule =
         description.createBuildRule(
             TargetGraph.EMPTY,
             RemoteFileBuilder.createBuilder(downloader, target)
+                .from(arg)
                 .createBuildRuleParams(ruleResolver, filesystem),
             ruleResolver,
             TestCellBuilder.createCellRoots(filesystem),
