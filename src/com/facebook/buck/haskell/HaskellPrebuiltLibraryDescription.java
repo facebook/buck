@@ -28,33 +28,34 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
+import org.immutables.value.Value;
 
 public class HaskellPrebuiltLibraryDescription
-    implements Description<HaskellPrebuiltLibraryDescription.Arg>,
-        VersionPropagator<HaskellPrebuiltLibraryDescription.Arg> {
+    implements Description<HaskellPrebuiltLibraryDescriptionArg>,
+        VersionPropagator<HaskellPrebuiltLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<HaskellPrebuiltLibraryDescriptionArg> getConstructorArgType() {
+    return HaskellPrebuiltLibraryDescriptionArg.class;
   }
 
   @Override
@@ -63,7 +64,7 @@ public class HaskellPrebuiltLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args)
+      final HaskellPrebuiltLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return new PrebuiltHaskellLibrary(params) {
 
@@ -75,7 +76,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
-        return RichStream.from(args.deps)
+        return RichStream.from(args.getDeps())
             .map(resolver::getRule)
             .filter(HaskellCompileDep.class::isInstance)
             .toImmutableList();
@@ -86,22 +87,18 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
           throws NoSuchBuildTargetException {
         return HaskellCompileInput.builder()
-            .addAllFlags(args.exportedCompilerFlags)
+            .addAllFlags(args.getExportedCompilerFlags())
             .addPackages(
                 HaskellPackage.builder()
                     .setInfo(
                         HaskellPackageInfo.of(
-                            getBuildTarget().getShortName(),
-                            args.version,
-                            args.id.orElse(
-                                String.format(
-                                    "%s-%s", getBuildTarget().getShortName(), args.version))))
-                    .setPackageDb(args.db)
-                    .addAllInterfaces(args.importDirs)
+                            getBuildTarget().getShortName(), args.getVersion(), args.getId()))
+                    .setPackageDb(args.getDb())
+                    .addAllInterfaces(args.getImportDirs())
                     .addAllLibraries(
                         depType == Linker.LinkableDepType.SHARED
-                            ? args.sharedLibs.values()
-                            : args.staticLibs)
+                            ? args.getSharedLibs().values()
+                            : args.getStaticLibs())
                     .build())
             .build();
       }
@@ -120,11 +117,11 @@ public class HaskellPrebuiltLibraryDescription
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
-        builder.addAllArgs(StringArg.from(args.exportedLinkerFlags));
+        builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
-          builder.addAllArgs(SourcePathArg.from(args.sharedLibs.values()));
+          builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
-          builder.addAllArgs(SourcePathArg.from(args.staticLibs));
+          builder.addAllArgs(SourcePathArg.from(args.getStaticLibs()));
         }
         return builder.build();
       }
@@ -136,7 +133,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-        return args.sharedLibs;
+        return args.getSharedLibs();
       }
 
       @Override
@@ -150,7 +147,7 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-        for (SourcePath headerDir : args.cxxHeaderDirs) {
+        for (SourcePath headerDir : args.getCxxHeaderDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
         }
         return builder.build();
@@ -166,17 +163,30 @@ public class HaskellPrebuiltLibraryDescription
     };
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public String version;
-    public Optional<String> id;
-    public SourcePath db;
-    public ImmutableList<SourcePath> importDirs = ImmutableList.of();
-    public ImmutableList<SourcePath> staticLibs = ImmutableList.of();
-    public ImmutableMap<String, SourcePath> sharedLibs = ImmutableMap.of();
-    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
-    public ImmutableList<String> exportedCompilerFlags = ImmutableList.of();
-    public ImmutableSortedSet<SourcePath> cxxHeaderDirs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractHaskellPrebuiltLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    String getVersion();
+
+    @Value.Default
+    default String getId() {
+      return String.format("%s-%s", getName(), getVersion());
+    }
+
+    SourcePath getDb();
+
+    ImmutableList<SourcePath> getImportDirs();
+
+    ImmutableList<SourcePath> getStaticLibs();
+
+    ImmutableMap<String, SourcePath> getSharedLibs();
+
+    ImmutableList<String> getExportedLinkerFlags();
+
+    ImmutableList<String> getExportedCompilerFlags();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getCxxHeaderDirs();
   }
 }
