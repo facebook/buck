@@ -16,25 +16,24 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
+import org.immutables.value.Value;
 
 public class ZipFileDescription
-    implements Description<ZipFileDescription.Arg>, VersionPropagator<ZipFileDescription.Arg> {
+    implements Description<ZipFileDescriptionArg>, VersionPropagator<ZipFileDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<ZipFileDescriptionArg> getConstructorArgType() {
+    return ZipFileDescriptionArg.class;
   }
 
   @Override
@@ -43,16 +42,16 @@ public class ZipFileDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
-    return new Zip(
-        params, args.out.orElse(params.getBuildTarget().getShortName() + ".zip"), args.srcs);
+      ZipFileDescriptionArg args) {
+    return new Zip(params, args.getOut(), args.getSrcs());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<String> out;
-    public ImmutableSortedSet<SourcePath> srcs;
-
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    @Value.Default
+    default String getOut() {
+      return getName() + ".zip";
+    }
   }
 }
