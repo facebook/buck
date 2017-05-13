@@ -23,11 +23,11 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -36,7 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -48,11 +48,13 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 public class ApplePackageDescription
-    implements Description<ApplePackageDescription.Arg>,
+    implements Description<ApplePackageDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
+        ImplicitDepsInferringDescription<
+            ApplePackageDescription.AbstractApplePackageDescriptionArg> {
 
   private final CxxPlatform defaultCxxPlatform;
   private final AppleConfig config;
@@ -73,10 +75,10 @@ public class ApplePackageDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      ApplePackageDescriptionArg args)
       throws NoSuchBuildTargetException {
     final BuildRule bundle =
-        resolver.getRule(propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
+        resolver.getRule(propagateFlavorsToTarget(params.getBuildTarget(), args.getBundle()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
@@ -108,8 +110,8 @@ public class ApplePackageDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<ApplePackageDescriptionArg> getConstructorArgType() {
+    return ApplePackageDescriptionArg.class;
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
@@ -121,10 +123,10 @@ public class ApplePackageDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractApplePackageDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
+    extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
     addDepsFromParam(extraDepsBuilder, targetGraphOnlyDepsBuilder, buildTarget, cellRoots);
   }
 
@@ -138,10 +140,11 @@ public class ApplePackageDescription
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
     @Hint(isDep = false)
-    public BuildTarget bundle;
+    BuildTarget getBundle();
   }
 
   /**
