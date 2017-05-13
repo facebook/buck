@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
@@ -27,71 +27,72 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryGroupBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        PrebuiltCxxLibraryGroupDescription.Args, PrebuiltCxxLibraryGroupDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        PrebuiltCxxLibraryGroupDescriptionArg.Builder, PrebuiltCxxLibraryGroupDescriptionArg,
+        PrebuiltCxxLibraryGroupDescription, BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
     super(PrebuiltCxxLibraryGroupDescription.of(), target);
   }
 
   public PrebuiltCxxLibraryGroupBuilder setExportedPreprocessorFlags(ImmutableList<String> flags) {
-    arg.exportedPreprocessorFlags = flags;
+    getArgForPopulating().setExportedPreprocessorFlags(flags);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setIncludeDirs(ImmutableList<SourcePath> includeDirs) {
-    arg.includeDirs = includeDirs;
+    getArgForPopulating().setIncludeDirs(includeDirs);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticLink(ImmutableList<String> args) {
-    arg.staticLink = args;
+    getArgForPopulating().setStaticLink(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticLibs(ImmutableList<SourcePath> args) {
-    arg.staticLibs = args;
+    getArgForPopulating().setStaticLibs(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticPicLink(ImmutableList<String> args) {
-    arg.staticPicLink = args;
+    getArgForPopulating().setStaticPicLink(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticPicLibs(ImmutableList<SourcePath> args) {
-    arg.staticPicLibs = args;
+    getArgForPopulating().setStaticPicLibs(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setSharedLink(ImmutableList<String> args) {
-    arg.sharedLink = args;
+    getArgForPopulating().setSharedLink(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setSharedLibs(ImmutableMap<String, SourcePath> args) {
-    arg.sharedLibs = args;
+    getArgForPopulating().setSharedLibs(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setProvidedSharedLibs(
       ImmutableMap<String, SourcePath> args) {
-    arg.providedSharedLibs = args;
+    getArgForPopulating().setProvidedSharedLibs(args);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.exportedDeps = deps;
+    getArgForPopulating().setExportedDeps(deps);
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setSupportedPlatformsRegex(Pattern pattern) {
-    arg.supportedPlatformsRegex = Optional.of(pattern);
+    getArgForPopulating().setSupportedPlatformsRegex(Optional.of(pattern));
     return this;
   }
 }
