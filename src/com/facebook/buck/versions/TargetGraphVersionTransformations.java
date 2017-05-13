@@ -40,9 +40,9 @@ class TargetGraphVersionTransformations {
             .isVersionRoot(node.getBuildTarget().getFlavors()));
   }
 
-  public static Optional<TargetNode<VersionedAliasDescription.Arg, ?>> getVersionedNode(
+  public static Optional<TargetNode<VersionedAliasDescriptionArg, ?>> getVersionedNode(
       TargetNode<?, ?> node) {
-    return node.castArg(VersionedAliasDescription.Arg.class);
+    return node.castArg(VersionedAliasDescriptionArg.class);
   }
 
   @SuppressWarnings("unchecked")

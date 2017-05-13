@@ -17,26 +17,26 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractVersionedAliasDescription
-    implements Description<AbstractVersionedAliasDescription.Arg> {
+    implements Description<VersionedAliasDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<VersionedAliasDescriptionArg> getConstructorArgType() {
+    return VersionedAliasDescriptionArg.class;
   }
 
   @Override
@@ -45,14 +45,15 @@ abstract class AbstractVersionedAliasDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      VersionedAliasDescriptionArg args) {
     throw new IllegalStateException(
         String.format(
             "%s: `versioned_alias()` rules cannot produce build rules", params.getBuildTarget()));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableMap<Version, BuildTarget> versions;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractVersionedAliasDescriptionArg extends CommonDescriptionArg {
+    ImmutableMap<Version, BuildTarget> getVersions();
   }
 }

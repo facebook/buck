@@ -133,11 +133,11 @@ public class VersionedTargetGraphBuilder {
 
     Map<BuildTarget, ImmutableSet<Version>> versionDomain = new HashMap<>();
 
-    Optional<TargetNode<VersionedAliasDescription.Arg, ?>> versionedNode =
+    Optional<TargetNode<VersionedAliasDescriptionArg, ?>> versionedNode =
         TargetGraphVersionTransformations.getVersionedNode(node);
     if (versionedNode.isPresent()) {
       ImmutableMap<Version, BuildTarget> versions =
-          versionedNode.get().getConstructorArg().versions;
+          versionedNode.get().getConstructorArg().getVersions();
 
       // Merge in the versioned deps and the version domain.
       versionDomain.put(node.getBuildTarget(), versions.keySet());
@@ -190,8 +190,8 @@ public class VersionedTargetGraphBuilder {
 
   private TargetNode<?, ?> resolveVersions(
       TargetNode<?, ?> node, ImmutableMap<BuildTarget, Version> selectedVersions) {
-    Optional<TargetNode<VersionedAliasDescription.Arg, ?>> versionedNode =
-        node.castArg(VersionedAliasDescription.Arg.class);
+    Optional<TargetNode<VersionedAliasDescriptionArg, ?>> versionedNode =
+        node.castArg(VersionedAliasDescriptionArg.class);
     if (versionedNode.isPresent()) {
       node =
           getNode(
@@ -199,7 +199,7 @@ public class VersionedTargetGraphBuilder {
                   versionedNode
                       .get()
                       .getConstructorArg()
-                      .versions
+                      .getVersions()
                       .get(selectedVersions.get(node.getBuildTarget()))));
     }
     return node;
