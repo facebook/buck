@@ -19,15 +19,18 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.coercer.SourceList;
 
 public class DBinaryBuilder
-    extends AbstractNodeBuilderWithMutableArg<DBinaryDescription.Arg, DBinaryDescription, DBinary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        DBinaryDescriptionArg.Builder, DBinaryDescriptionArg, DBinaryDescription, DBinary> {
 
   public DBinaryBuilder(
       BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {
     super(
         new DBinaryDescription(dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG, defaultCxxPlatform),
         target);
+    getArgForPopulating().setSrcs(SourceList.EMPTY);
   }
 }
