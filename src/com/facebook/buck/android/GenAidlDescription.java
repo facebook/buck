@@ -16,22 +16,22 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
+public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<GenAidlDescriptionArg> getConstructorArgType() {
+    return GenAidlDescriptionArg.class;
   }
 
   @Override
@@ -40,18 +40,17 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
-    return new GenAidl(params, args.aidl, args.importPath);
+      GenAidlDescriptionArg args) {
+    return new GenAidl(params, args.getAidl(), args.getImportPath());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath aidl;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGenAidlDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getAidl();
 
     // import_path is an anomaly: it is a path that is relative to the project root rather than
     // relative to the build file directory.
-    public String importPath;
-
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    String getImportPath();
   }
 }
