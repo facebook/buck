@@ -35,14 +35,14 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
     this.scalaBuckConfig = scalaBuckConfig;
   }
 
-  public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.Arg args) {
-    this.setSrcs(args.srcs)
-        .setResources(args.resources)
-        .setResourcesRoot(args.resourcesRoot)
-        .setProvidedDeps(args.providedDeps)
-        .setManifestFile(args.manifestFile)
-        .setMavenCoords(args.mavenCoords);
-    extraArguments = args.extraArguments;
+  public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.CoreArg args) {
+    this.setSrcs(args.getSrcs())
+        .setResources(args.getResources())
+        .setResourcesRoot(args.getResourcesRoot())
+        .setProvidedDeps(args.getProvidedDeps())
+        .setManifestFile(args.getManifestFile())
+        .setMavenCoords(args.getMavenCoords());
+    extraArguments = args.getExtraArguments();
 
     return this;
   }

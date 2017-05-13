@@ -36,7 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.OptionalCompat;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -45,10 +45,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
 public class ScalaTestDescription
-    implements Description<ScalaTestDescription.Arg>,
-        ImplicitDepsInferringDescription<ScalaTestDescription.Arg> {
+    implements Description<ScalaTestDescriptionArg>,
+        ImplicitDepsInferringDescription<ScalaTestDescription.AbstractScalaTestDescriptionArg> {
 
   private final ScalaBuckConfig config;
   private final JavaOptions javaOptions;
@@ -67,8 +68,8 @@ public class ScalaTestDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<ScalaTestDescriptionArg> getConstructorArgType() {
+    return ScalaTestDescriptionArg.class;
   }
 
   @Override
@@ -77,14 +78,14 @@ public class ScalaTestDescription
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      ScalaTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             rawParams,
-            args.useCxxLibraries,
-            args.cxxLibraryWhitelist,
+            args.getUseCxxLibraries(),
+            args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
             cxxPlatform);
@@ -109,26 +110,26 @@ public class ScalaTestDescription
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        args.labels,
-        args.contacts,
-        args.testType.orElse(TestType.JUNIT),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType(),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
+        args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
-        args.runTestSeparately.orElse(false),
-        args.forkMode.orElse(ForkMode.NONE),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel);
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        args.getEnv(),
+        args.getRunTestSeparately(),
+        args.getForkMode(),
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel());
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractScalaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder
@@ -136,19 +137,41 @@ public class ScalaTestDescription
         .addAll(OptionalCompat.asSet(config.getScalacTarget()));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends ScalaLibraryDescription.Arg {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableList<String> vmArgs = ImmutableList.of();
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<ForkMode> forkMode;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Boolean> useCxxLibraries;
-    public ImmutableSet<BuildTarget> cxxLibraryWhitelist = ImmutableSet.of();
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<Long> testCaseTimeoutMs;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractScalaTestDescriptionArg extends ScalaLibraryDescription.CoreArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
+
+    ImmutableList<String> getVmArgs();
+
+    @Value.Default
+    default TestType getTestType() {
+      return TestType.JUNIT;
+    }
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
+    }
+
+    @Value.Default
+    default ForkMode getForkMode() {
+      return ForkMode.NONE;
+    }
+
+    Optional<Level> getStdErrLogLevel();
+
+    Optional<Level> getStdOutLogLevel();
+
+    Optional<Boolean> getUseCxxLibraries();
+
+    ImmutableSet<BuildTarget> getCxxLibraryWhitelist();
+
+    Optional<Long> getTestRuleTimeoutMs();
+
+    Optional<Long> getTestCaseTimeoutMs();
+
+    ImmutableMap<String, String> getEnv();
   }
 }
