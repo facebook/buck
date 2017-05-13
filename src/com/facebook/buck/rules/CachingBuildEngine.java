@@ -77,7 +77,6 @@ import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.BufferedInputStream;
@@ -200,8 +199,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
     this.ruleDeps = new RuleDepsCache(resolver);
-    this.unskippedRulesTracker =
-        createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
+    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics =
         new RuleKeyDiagnostics<>(
             rule ->
@@ -251,8 +249,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.ruleDeps = new RuleDepsCache(resolver);
-    this.unskippedRulesTracker =
-        createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
+    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
   }
 
@@ -273,15 +270,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
-      BuildMode buildMode,
-      RuleDepsCache ruleDeps,
-      BuildRuleResolver resolver,
-      ListeningExecutorService service) {
+      BuildMode buildMode, RuleDepsCache ruleDeps, BuildRuleResolver resolver) {
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
-    return Optional.of(new UnskippedRulesTracker(ruleDeps, resolver, service));
+    return Optional.of(new UnskippedRulesTracker(ruleDeps, resolver));
   }
 
   @VisibleForTesting
@@ -510,13 +504,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
       final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
       if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
-        return Futures.transform(
-            markRuleAsUsed(rule, buildContext.getEventBus()),
-            Functions.constant(
-                BuildResult.success(
-                    rule,
-                    BuildRuleSuccessType.MATCHING_RULE_KEY,
-                    CacheResult.localKeyUnchangedHit())));
+        markRuleAsUsed(rule, buildContext.getEventBus());
+        return Futures.immediateFuture(
+            BuildResult.success(
+                rule, BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
       }
 
       // 2. Rule key cache lookup.
@@ -575,19 +566,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RuleKeyFactories ruleKeyFactories,
       CacheResult cacheResult) {
     if (cacheResult.getType().isSuccess()) {
-      return Futures.transform(
-          markRuleAsUsed(rule, buildContext.getEventBus()),
-          Functions.constant(
-              BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult)));
+      markRuleAsUsed(rule, buildContext.getEventBus());
+      return Futures.immediateFuture(
+          BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
     }
 
     // 3. Build deps.
     ListenableFuture<List<BuildResult>> getDepResults =
         Futures.transformAsync(
             getDepResults(rule, buildContext, executionContext, asyncCallbacks),
-            input ->
-                Futures.transform(
-                    markRuleAsUsed(rule, buildContext.getEventBus()), Functions.constant(input)),
+            input -> {
+              markRuleAsUsed(rule, buildContext.getEventBus());
+              return Futures.immediateFuture(input);
+            },
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
 
     // 4. Return to the current rule and check caches to see if we can avoid building
@@ -1144,20 +1135,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return new RuntimeException(betterMessage, thrown);
   }
 
-  private ListenableFuture<Void> registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
-    if (unskippedRulesTracker.isPresent()) {
-      return unskippedRulesTracker.get().registerTopLevelRule(rule, eventBus);
-    } else {
-      return Futures.immediateFuture(null);
-    }
+  private void registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
+    unskippedRulesTracker.ifPresent(tracker -> tracker.registerTopLevelRule(rule, eventBus));
   }
 
-  private ListenableFuture<Void> markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
-    if (unskippedRulesTracker.isPresent()) {
-      return unskippedRulesTracker.get().markRuleAsUsed(rule, eventBus);
-    } else {
-      return Futures.immediateFuture(null);
-    }
+  private void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
+    unskippedRulesTracker.ifPresent(tracker -> tracker.markRuleAsUsed(rule, eventBus));
   }
 
   // Provide a future that resolves to the result of executing this rule and its runtime
@@ -1311,11 +1294,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // to make sure we wait for these before calling yielding the final build result.
     final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks =
         new ConcurrentLinkedQueue<>();
+    registerTopLevelRule(rule, buildContext.getEventBus());
     ListenableFuture<BuildResult> resultFuture =
-        MoreFutures.chainExceptions(
-            registerTopLevelRule(rule, buildContext.getEventBus()),
-            getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, asyncCallbacks),
-            serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+        getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, asyncCallbacks);
     return BuildEngineResult.builder()
         .setResult(
             Futures.transformAsync(
