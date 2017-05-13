@@ -65,7 +65,7 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
   protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
   @Nullable protected JavacOptions javacOptions = null;
-  @Nullable private JavaLibraryDescription.Arg args = null;
+  @Nullable private JavaLibraryDescription.CoreArg args = null;
 
   protected DefaultJavaLibraryBuilder(
       BuildRuleParams params, BuildRuleResolver buildRuleResolver, JavaBuckConfig javaBuckConfig) {
@@ -87,17 +87,17 @@ public class DefaultJavaLibraryBuilder {
     javaBuckConfig = null;
   }
 
-  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     this.args = args;
-    return setSrcs(args.srcs)
-        .setResources(args.resources)
-        .setResourcesRoot(args.resourcesRoot)
-        .setProguardConfig(args.proguardConfig)
-        .setPostprocessClassesCommands(args.postprocessClassesCommands)
-        .setExportedDeps(args.exportedDeps)
-        .setProvidedDeps(args.providedDeps)
-        .setManifestFile(args.manifestFile)
-        .setMavenCoords(args.mavenCoords);
+    return setSrcs(args.getSrcs())
+        .setResources(args.getResources())
+        .setResourcesRoot(args.getResourcesRoot())
+        .setProguardConfig(args.getProguardConfig())
+        .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
+        .setExportedDeps(args.getExportedDeps())
+        .setProvidedDeps(args.getProvidedDeps())
+        .setManifestFile(args.getManifestFile())
+        .setMavenCoords(args.getMavenCoords());
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
@@ -298,7 +298,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean argsAllowSourceAbis() {
-      return Preconditions.checkNotNull(args).generateAbiFromSource.orElse(true);
+      return Preconditions.checkNotNull(args).getGenerateAbiFromSource().orElse(true);
     }
 
     private boolean pluginsSupportSourceAbis() {

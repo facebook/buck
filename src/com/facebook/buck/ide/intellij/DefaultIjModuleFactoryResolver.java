@@ -82,8 +82,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   @Override
   public Optional<Path> getLibraryAndroidManifestPath(
-      TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
-    Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
+      TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
+    Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
     Optional<Path> defaultAndroidManifestPath =
         projectConfig.getAndroidManifest().map(Path::toAbsolutePath);
     return manifestPath

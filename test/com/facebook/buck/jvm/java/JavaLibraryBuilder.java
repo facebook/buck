@@ -23,7 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -34,8 +34,9 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class JavaLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        JavaLibraryDescription.Arg, JavaLibraryDescription, DefaultJavaLibrary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        JavaLibraryDescriptionArg.Builder, JavaLibraryDescriptionArg, JavaLibraryDescription,
+        DefaultJavaLibrary> {
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -90,42 +91,42 @@ public class JavaLibraryBuilder
   }
 
   public JavaLibraryBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addAnnotationProcessorDep(BuildTarget rule) {
-    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, rule);
+    getArgForPopulating().addAnnotationProcessorDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addExportedDep(BuildTarget rule) {
-    arg.exportedDeps = amend(arg.exportedDeps, rule);
+    getArgForPopulating().addExportedDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addResource(SourcePath sourcePath) {
-    arg.resources = amend(arg.resources, sourcePath);
+    getArgForPopulating().addResources(sourcePath);
     return this;
   }
 
   public JavaLibraryBuilder setResourcesRoot(Path root) {
-    arg.resourcesRoot = Optional.of(root);
+    getArgForPopulating().setResourcesRoot(Optional.of(root));
     return this;
   }
 
   public JavaLibraryBuilder setMavenCoords(String mavenCoords) {
-    arg.mavenCoords = Optional.of(mavenCoords);
+    getArgForPopulating().setMavenCoords(Optional.of(mavenCoords));
     return this;
   }
 
   public JavaLibraryBuilder addSrc(SourcePath path) {
-    arg.srcs = amend(arg.srcs, path);
+    getArgForPopulating().addSrcs(path);
     return this;
   }
 
@@ -138,33 +139,33 @@ public class JavaLibraryBuilder
   }
 
   public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {
-    arg.proguardConfig = Optional.of(proguardConfig);
+    getArgForPopulating().setProguardConfig(Optional.of(proguardConfig));
     return this;
   }
 
   public JavaLibraryBuilder setCompiler(SourcePath javac) {
     Either<BuiltInJavac, SourcePath> value = Either.ofRight(javac);
-    arg.compiler = Optional.of(value);
+    getArgForPopulating().setCompiler(Optional.of(value));
     return this;
   }
 
   public JavaLibraryBuilder setSourceLevel(String sourceLevel) {
-    arg.source = Optional.of(sourceLevel);
+    getArgForPopulating().setSource(Optional.of(sourceLevel));
     return this;
   }
 
   public JavaLibraryBuilder setTargetLevel(String targetLevel) {
-    arg.target = Optional.of(targetLevel);
+    getArgForPopulating().setTarget(Optional.of(targetLevel));
     return this;
   }
 
   public JavaLibraryBuilder setAnnotationProcessors(ImmutableSet<String> annotationProcessors) {
-    arg.annotationProcessors = annotationProcessors;
+    getArgForPopulating().setAnnotationProcessors(annotationProcessors);
     return this;
   }
 
   public JavaLibraryBuilder addTest(BuildTarget test) {
-    arg.tests = amend(arg.tests, test);
+    getArgForPopulating().addTests(test);
     return this;
   }
 }

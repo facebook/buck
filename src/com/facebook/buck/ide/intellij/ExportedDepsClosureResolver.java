@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -54,13 +53,10 @@ public class ExportedDepsClosureResolver {
 
     ImmutableSet<BuildTarget> exportedDeps = ImmutableSet.of();
     TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
-    if (targetNode.getDescription() instanceof JavaLibraryDescription) {
-      JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();
-      exportedDeps = arg.exportedDeps;
-    } else if (targetNode.getDescription() instanceof AndroidLibraryDescription) {
-      AndroidLibraryDescription.Arg arg =
-          (AndroidLibraryDescription.Arg) targetNode.getConstructorArg();
-      exportedDeps = arg.exportedDeps;
+    if (targetNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg) {
+      JavaLibraryDescription.CoreArg arg =
+          (JavaLibraryDescription.CoreArg) targetNode.getConstructorArg();
+      exportedDeps = arg.getExportedDeps();
     }
 
     ImmutableSet<BuildTarget> exportedDepsClosure =

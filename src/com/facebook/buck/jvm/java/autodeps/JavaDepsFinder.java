@@ -99,7 +99,7 @@ public class JavaDepsFinder {
         continue;
       }
 
-      if (!(node.getConstructorArg() instanceof JavaLibraryDescription.Arg)
+      if (!(node.getConstructorArg() instanceof JavaLibraryDescription.CoreArg)
           && !(node.getConstructorArg() instanceof PrebuiltJarDescription.Arg)) {
         throw new IllegalStateException("This rule is not supported by suggest: " + node);
       }
@@ -119,9 +119,9 @@ public class JavaDepsFinder {
     BuildTarget buildTarget = node.getBuildTarget();
     Object argForNode = node.getConstructorArg();
     JavaSymbolsRule.SymbolsFinder symbolsFinder;
-    if (argForNode instanceof JavaLibraryDescription.Arg) {
-      JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) argForNode;
-      symbolsFinder = new JavaLibrarySymbolsFinder(arg.srcs, javaFileParser);
+    if (argForNode instanceof JavaLibraryDescription.CoreArg) {
+      JavaLibraryDescription.CoreArg arg = (JavaLibraryDescription.CoreArg) argForNode;
+      symbolsFinder = new JavaLibrarySymbolsFinder(arg.getSrcs(), javaFileParser);
     } else {
       PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) argForNode;
       symbolsFinder = new PrebuiltJarSymbolsFinder(arg.binaryJar);

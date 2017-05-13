@@ -34,7 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -46,10 +46,11 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
 public class JavaTestDescription
-    implements Description<JavaTestDescription.Arg>,
-        ImplicitDepsInferringDescription<JavaTestDescription.Arg> {
+    implements Description<JavaTestDescriptionArg>,
+        ImplicitDepsInferringDescription<JavaTestDescription.AbstractJavaTestDescriptionArg> {
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -71,8 +72,8 @@ public class JavaTestDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<JavaTestDescriptionArg> getConstructorArgType() {
+    return JavaTestDescriptionArg.class;
   }
 
   @Override
@@ -81,7 +82,7 @@ public class JavaTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      JavaTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(templateJavacOptions, params, resolver, args);
@@ -90,8 +91,8 @@ public class JavaTestDescription
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             params,
-            args.useCxxLibraries,
-            args.cxxLibraryWhitelist,
+            args.getUseCxxLibraries(),
+            args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
             cxxPlatform);
@@ -121,56 +122,69 @@ public class JavaTestDescription
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        args.labels,
-        args.contacts,
-        args.testType.orElse(TestType.JUNIT),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType().orElse(TestType.JUNIT),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
+        args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        args.getEnv(),
         args.getRunTestSeparately(),
         args.getForkMode(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel);
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel());
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractJavaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    if (constructorArg.useCxxLibraries.orElse(false)) {
+    if (constructorArg.getUseCxxLibraries().orElse(false)) {
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableList<String> vmArgs = ImmutableList.of();
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<ForkMode> forkMode;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Boolean> useCxxLibraries;
-    public ImmutableSet<BuildTarget> cxxLibraryWhitelist = ImmutableSet.of();
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<Long> testCaseTimeoutMs;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
 
-    public boolean getRunTestSeparately() {
-      return runTestSeparately.orElse(false);
+    ImmutableList<String> getVmArgs();
+
+    Optional<TestType> getTestType();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
     }
 
-    public ForkMode getForkMode() {
-      return forkMode.orElse(ForkMode.NONE);
+    @Value.Default
+    default ForkMode getForkMode() {
+      return ForkMode.NONE;
     }
+
+    Optional<Level> getStdErrLogLevel();
+
+    Optional<Level> getStdOutLogLevel();
+
+    Optional<Boolean> getUseCxxLibraries();
+
+    ImmutableSet<BuildTarget> getCxxLibraryWhitelist();
+
+    Optional<Long> getTestRuleTimeoutMs();
+
+    Optional<Long> getTestCaseTimeoutMs();
+
+    ImmutableMap<String, String> getEnv();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractJavaTestDescriptionArg extends CoreArg {}
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;

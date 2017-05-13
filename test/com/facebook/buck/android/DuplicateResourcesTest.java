@@ -75,8 +75,8 @@ public class DuplicateResourcesTest {
   private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> directDepRes;
   private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> transitiveDepRes;
   private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> bottomDepRes;
-  private TargetNode<AndroidLibraryDescription.Arg, AndroidLibraryDescription> transitiveDepLib;
-  private TargetNode<AndroidLibraryDescription.Arg, AndroidLibraryDescription> library;
+  private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> transitiveDepLib;
+  private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> library;
   private TargetNode<KeystoreDescription.Arg, KeystoreDescription> keystore;
 
   /*

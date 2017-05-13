@@ -34,7 +34,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,8 +42,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
-public class GroovyTestDescription implements Description<GroovyTestDescription.Arg> {
+public class GroovyTestDescription implements Description<GroovyTestDescriptionArg> {
 
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaOptions javaOptions;
@@ -62,8 +63,8 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<GroovyTestDescriptionArg> getConstructorArgType() {
+    return GroovyTestDescriptionArg.class;
   }
 
   @Override
@@ -72,7 +73,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      GroovyTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
@@ -100,40 +101,49 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        args.labels,
-        args.contacts,
-        args.testType.orElse(TestType.JUNIT),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType().orElse(TestType.JUNIT),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
+        args.getVmArgs(),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        args.getEnv(),
         args.getRunTestSeparately(),
         args.getForkMode(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel);
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends GroovyLibraryDescription.Arg {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableList<String> vmArgs = ImmutableList.of();
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<ForkMode> forkMode;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<Long> testCaseTimeoutMs;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGroovyTestDescriptionArg extends GroovyLibraryDescription.CoreArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
 
-    public boolean getRunTestSeparately() {
-      return runTestSeparately.orElse(false);
+    ImmutableList<String> getVmArgs();
+
+    Optional<TestType> getTestType();
+
+    Optional<Level> getStdErrLogLevel();
+
+    Optional<Level> getStdOutLogLevel();
+
+    Optional<Long> getTestRuleTimeoutMs();
+
+    Optional<Long> getTestCaseTimeoutMs();
+
+    ImmutableMap<String, String> getEnv();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
     }
 
-    public ForkMode getForkMode() {
-      return forkMode.orElse(ForkMode.NONE);
+    @Value.Default
+    default ForkMode getForkMode() {
+      return ForkMode.NONE;
     }
   }
 }

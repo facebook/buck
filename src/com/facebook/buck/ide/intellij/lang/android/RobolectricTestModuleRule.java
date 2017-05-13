@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.RobolectricTestDescription;
+import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
@@ -25,7 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
-public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTestDescription.Arg> {
+public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTestDescriptionArg> {
 
   public RobolectricTestModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -41,14 +42,14 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
 
   @Override
   public void apply(
-      TargetNode<RobolectricTestDescription.Arg, ?> target, ModuleBuildContext context) {
+      TargetNode<RobolectricTestDescriptionArg, ?> target, ModuleBuildContext context) {
     super.apply(target, context);
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<RobolectricTestDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<RobolectricTestDescriptionArg, ?> targetNode) {
     return IjModuleType.ANDROID_MODULE;
   }
 }

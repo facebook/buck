@@ -160,15 +160,6 @@ public abstract class AbstractNodeBuilder<
     return toReturn.build();
   }
 
-  // Thanks to type erasure, this needs a unique name.
-  protected <C extends Comparable<?>> ImmutableSet<C> amendSet(
-      ImmutableSet<C> existing, C instance) {
-    ImmutableSet.Builder<C> toReturn = ImmutableSet.builder();
-    toReturn.addAll(existing);
-    toReturn.add(instance);
-    return toReturn.build();
-  }
-
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<BuildTarget> findImplicitDeps() {
     ImplicitDepsInferringDescription<TArg> desc =

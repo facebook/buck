@@ -27,6 +27,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -332,8 +333,8 @@ public class IjProjectCommandHelper {
     if (target.getDescription() instanceof JavaLibraryDescription) {
       return false;
     }
-    JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());
-    return !arg.annotationProcessors.isEmpty();
+    JavaLibraryDescriptionArg arg = ((JavaLibraryDescriptionArg) target.getConstructorArg());
+    return !arg.getAnnotationProcessors().isEmpty();
   }
 
   public JavaPackageFinder getJavaPackageFinder(BuckConfig buckConfig) {

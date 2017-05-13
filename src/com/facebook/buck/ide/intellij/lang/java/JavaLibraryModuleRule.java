@@ -28,7 +28,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import java.util.Optional;
 
-public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.Arg> {
+public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.CoreArg> {
 
   public JavaLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -43,20 +43,21 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   }
 
   @Override
-  public void apply(TargetNode<JavaLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
+  public void apply(
+      TargetNode<JavaLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.CoreArg, ?> targetNode) {
     return IjModuleType.JAVA_MODULE;
   }
 
   @Override
   public void applyDuringAggregation(
-      AggregationContext context, TargetNode<JavaLibraryDescription.Arg, ?> targetNode) {
+      AggregationContext context, TargetNode<JavaLibraryDescription.CoreArg, ?> targetNode) {
     super.applyDuringAggregation(context, targetNode);
 
     Optional<String> languageLevel =

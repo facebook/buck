@@ -44,7 +44,7 @@ import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -55,11 +55,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class AndroidLibraryDescription
-    implements Description<AndroidLibraryDescription.Arg>,
+    implements Description<AndroidLibraryDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
+        ImplicitDepsInferringDescription<
+            AndroidLibraryDescription.AbstractAndroidLibraryDescriptionArg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
@@ -85,8 +87,8 @@ public class AndroidLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AndroidLibraryDescriptionArg> getConstructorArgType() {
+    return AndroidLibraryDescriptionArg.class;
   }
 
   @Override
@@ -95,10 +97,10 @@ public class AndroidLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      AndroidLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, args.srcs, args.mavenCoords);
+      return new JavaSourceJar(params, args.getSrcs(), args.getMavenCoords());
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -119,16 +121,16 @@ public class AndroidLibraryDescription
     JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
     final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier =
-        args.depsQuery.isPresent()
+        args.getDepsQuery().isPresent()
             ? Suppliers.memoize(
                 () ->
                     QueryUtils.resolveDepQuery(
                             params.getBuildTarget(),
-                            args.depsQuery.get(),
+                            args.getDepsQuery().get(),
                             resolver,
                             cellRoots,
                             targetGraph,
-                            args.deps)
+                            args.getDeps())
                         .collect(MoreCollectors.toImmutableList()))
             : ImmutableList::of;
 
@@ -136,7 +138,7 @@ public class AndroidLibraryDescription
         Suppliers.memoize(
             () ->
                 resolver
-                    .getAllRulesStream(args.exportedDeps)
+                    .getAllRulesStream(args.getExportedDeps())
                     .collect(MoreCollectors.toImmutableList()));
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -150,8 +152,8 @@ public class AndroidLibraryDescription
             javacOptions,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
-            args.resourceUnionPackage,
-            args.finalRName,
+            args.getResourceUnionPackage(),
+            args.getFinalRName(),
             false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
@@ -171,15 +173,15 @@ public class AndroidLibraryDescription
               Suppliers.ofInstance(declaredDeps), params.getExtraDeps());
 
       ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
-          ImmutableSortedSet.<BuildTarget>naturalOrder().addAll(args.providedDeps);
-      if (args.providedDepsQuery.isPresent()) {
+          ImmutableSortedSet.<BuildTarget>naturalOrder().addAll(args.getProvidedDeps());
+      if (args.getProvidedDepsQuery().isPresent()) {
         QueryUtils.resolveDepQuery(
                 params.getBuildTarget(),
-                args.providedDepsQuery.get(),
+                args.getProvidedDepsQuery().get(),
                 resolver,
                 cellRoots,
                 targetGraph,
-                args.providedDeps)
+                args.getProvidedDeps())
             .map(BuildRule::getBuildTarget)
             .forEach(providedDepsTargetsBuilder::add);
       }
@@ -189,7 +191,7 @@ public class AndroidLibraryDescription
           .setArgs(args)
           .setJavacOptions(javacOptions)
           .setProvidedDeps(providedDepsTargetsBuilder.build())
-          .setTests(args.tests)
+          .setTests(args.getTests())
           .build();
     }
   }
@@ -205,22 +207,30 @@ public class AndroidLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractAndroidLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
-        .getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
+        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA))
         .findDepsForTargetFromConstructorArgs(
             buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg {
-    public Optional<SourcePath> manifest;
-    public Optional<String> resourceUnionPackage;
-    public Optional<String> finalRName;
-    public Optional<JvmLanguage> language;
-    public Optional<Query> depsQuery;
-    public Optional<Query> providedDepsQuery;
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
+    Optional<SourcePath> getManifest();
+
+    Optional<String> getResourceUnionPackage();
+
+    Optional<String> getFinalRName();
+
+    Optional<JvmLanguage> getLanguage();
+
+    Optional<Query> getDepsQuery();
+
+    Optional<Query> getProvidedDepsQuery();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {}
 }

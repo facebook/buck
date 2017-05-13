@@ -40,14 +40,15 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
+public class RobolectricTestDescription implements Description<RobolectricTestDescriptionArg> {
 
 
   private final JavaBuckConfig javaBuckConfig;
@@ -70,8 +71,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<RobolectricTestDescriptionArg> getConstructorArgType() {
+    return RobolectricTestDescriptionArg.class;
   }
 
   @Override
@@ -80,7 +81,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      RobolectricTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
@@ -105,16 +106,16 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         new AndroidLibraryGraphEnhancer(
             params.getBuildTarget(),
             params.copyReplacingExtraDeps(
-                Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
+                Suppliers.ofInstance(resolver.getAllRules(args.getExportedDeps()))),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
-            args.forceFinalResourceIds,
+            args.isForceFinalResourceIds(),
             /* resourceUnionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            args.useOldStyleableFormat);
+            args.isUseOldStyleableFormat());
 
-    ImmutableList<String> vmArgs = args.vmArgs;
+    ImmutableList<String> vmArgs = args.getVmArgs();
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(resolver, /* createBuildableIfEmpty */ true);
@@ -133,8 +134,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             params,
-            args.useCxxLibraries,
-            args.cxxLibraryWhitelist,
+            args.getUseCxxLibraries(),
+            args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
             cxxPlatform);
@@ -159,29 +160,40 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         ruleFinder,
         testsLibrary,
-        args.labels,
-        args.contacts,
+        args.getLabels(),
+        args.getContacts(),
         TestType.JUNIT,
         javaOptions,
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         dummyRDotJava,
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        args.getEnv(),
         args.getRunTestSeparately(),
         args.getForkMode(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel,
-        args.robolectricRuntimeDependency,
-        args.robolectricManifest);
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel(),
+        args.getRobolectricRuntimeDependency(),
+        args.getRobolectricManifest());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JavaTestDescription.Arg {
-    public Optional<String> robolectricRuntimeDependency;
-    public Optional<SourcePath> robolectricManifest;
-    public boolean useOldStyleableFormat = false;
-    public boolean forceFinalResourceIds = true;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractRobolectricTestDescriptionArg extends JavaTestDescription.CoreArg {
+    Optional<String> getRobolectricRuntimeDependency();
+
+    Optional<SourcePath> getRobolectricManifest();
+
+    @Value.Default
+    default boolean isUseOldStyleableFormat() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isForceFinalResourceIds() {
+      return true;
+    }
+
   }
 }

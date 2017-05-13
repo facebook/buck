@@ -45,7 +45,7 @@ public interface IjModuleFactoryResolver {
    * @return path on disk to the AndroidManifest.
    */
   Optional<Path> getLibraryAndroidManifestPath(
-      TargetNode<AndroidLibraryDescription.Arg, ?> targetNode);
+      TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode);
 
   /**
    * @param targetNode node describing the Android binary to get the Proguard config of.

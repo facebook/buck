@@ -41,10 +41,10 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
   }
 
   @Override
-  public DefaultGroovyLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+  public DefaultGroovyLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     super.setArgs(args);
-    GroovyLibraryDescription.Arg groovyArgs = (GroovyLibraryDescription.Arg) args;
-    extraGroovycArguments = groovyArgs.extraGroovycArguments;
+    GroovyLibraryDescription.CoreArg groovyArgs = (GroovyLibraryDescription.CoreArg) args;
+    extraGroovycArguments = groovyArgs.getExtraGroovycArguments();
     return this;
   }
 

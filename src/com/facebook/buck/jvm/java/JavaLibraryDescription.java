@@ -26,14 +26,16 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -43,11 +45,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class JavaLibraryDescription
-    implements Description<JavaLibraryDescription.Arg>,
+    implements Description<JavaLibraryDescriptionArg>,
         Flavored,
-        VersionPropagator<JavaLibraryDescription.Arg> {
+        VersionPropagator<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(Javadoc.DOC_JAR, JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
@@ -66,8 +69,8 @@ public class JavaLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<JavaLibraryDescriptionArg> getConstructorArgType() {
+    return JavaLibraryDescriptionArg.class;
   }
 
   @Override
@@ -76,7 +79,7 @@ public class JavaLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      JavaLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     BuildTarget target = params.getBuildTarget();
@@ -127,7 +130,11 @@ public class JavaLibraryDescription
               Suppliers.ofInstance(deps.build()), Suppliers.ofInstance(ImmutableSortedSet.of()));
 
       return new Javadoc(
-          emptyParams, args.mavenCoords, args.mavenPomTemplate, summary.getMavenDeps(), sources);
+          emptyParams,
+          args.getMavenCoords(),
+          args.getMavenPomTemplate(),
+          summary.getMavenDeps(),
+          sources);
     }
 
     BuildRuleParams paramsWithMavenFlavor = null;
@@ -140,18 +147,18 @@ public class JavaLibraryDescription
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords =
-          args.mavenCoords.map(
-              input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
+      Optional<String> mavenCoords =
+          args.getMavenCoords()
+              .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(params, args.srcs, args.mavenCoords);
+        return new JavaSourceJar(params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
-            args.srcs,
-            args.mavenCoords,
-            args.mavenPomTemplate);
+            args.getSrcs(),
+            mavenCoords,
+            args.getMavenPomTemplate());
       }
     }
 
@@ -177,36 +184,38 @@ public class JavaLibraryDescription
       return MavenUberJar.create(
           defaultJavaLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
-          args.mavenCoords,
-          args.mavenPomTemplate);
+          args.getMavenCoords(),
+          args.getMavenPomTemplate());
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JvmLibraryArg implements HasTests {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+  public interface CoreArg extends JvmLibraryArg, HasDeclaredDeps, HasSrcs, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getResources();
 
-    public Optional<SourcePath> proguardConfig;
-    public ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
+    Optional<SourcePath> getProguardConfig();
+
+    ImmutableList<String> getPostprocessClassesCommands();
 
     @Hint(isInput = false)
-    public Optional<Path> resourcesRoot;
+    Optional<Path> getResourcesRoot();
 
-    public Optional<SourcePath> manifestFile;
-    public Optional<String> mavenCoords;
-    public Optional<SourcePath> mavenPomTemplate;
+    Optional<SourcePath> getManifestFile();
 
-    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    Optional<String> getMavenCoords();
 
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    Optional<SourcePath> getMavenPomTemplate();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
-    }
+    Optional<Boolean> getAutodeps();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getProvidedDeps();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExportedDeps();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractJavaLibraryDescriptionArg extends CoreArg {}
 }

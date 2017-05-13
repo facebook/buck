@@ -34,13 +34,15 @@ import java.nio.file.Path;
  * different compilers for different {@link JvmLanguage}.
  */
 public abstract class AndroidLibraryCompiler
-    implements ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
+    implements ImplicitDepsInferringDescription<AndroidLibraryDescription.CoreArg> {
 
   public static final Function<BuildContext, Iterable<Path>> ANDROID_CLASSPATH_FROM_CONTEXT =
       context -> context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
 
   public abstract CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg args, JavacOptions javacOptions, BuildRuleResolver resolver);
+      AndroidLibraryDescription.CoreArg args,
+      JavacOptions javacOptions,
+      BuildRuleResolver resolver);
 
   public boolean trackClassUsage(JavacOptions javacOptions) {
     return javacOptions.trackClassUsage();
@@ -50,7 +52,7 @@ public abstract class AndroidLibraryCompiler
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.Arg constructorArg,
+      AndroidLibraryDescription.CoreArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }

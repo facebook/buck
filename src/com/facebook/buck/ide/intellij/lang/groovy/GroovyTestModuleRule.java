@@ -22,10 +22,11 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
+import com.facebook.buck.jvm.groovy.GroovyTestDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
-public class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription.Arg> {
+public class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescriptionArg> {
 
   public GroovyTestModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -40,12 +41,12 @@ public class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription
   }
 
   @Override
-  public void apply(TargetNode<GroovyTestDescription.Arg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<GroovyTestDescriptionArg, ?> target, ModuleBuildContext context) {
     addDepsAndTestSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<GroovyTestDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<GroovyTestDescriptionArg, ?> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

@@ -27,11 +27,10 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDescription.Arg> {
+public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDescription.CoreArg> {
 
   public AndroidLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -47,7 +46,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
 
   @Override
   public void apply(
-      TargetNode<AndroidLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
+      TargetNode<AndroidLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
     super.apply(target, context);
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
@@ -67,21 +66,19 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
 
   @Override
   public void applyDuringAggregation(
-      AggregationContext context, TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
+      AggregationContext context, TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
     super.applyDuringAggregation(context, targetNode);
 
-    Optional<String> languageLevel = JavaLibraryRuleHelper.getLanguageLevel(
-        projectConfig,
-        targetNode);
+    Optional<String> languageLevel =
+        JavaLibraryRuleHelper.getLanguageLevel(projectConfig, targetNode);
     if (languageLevel.isPresent()) {
-      context.addAggregationKey(
-          AggregationKeys.JAVA_LANGUAGE_LEVEL,
-          languageLevel);
+      context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
     }
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(
+      TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
     return IjModuleType.ANDROID_MODULE;
   }
 }

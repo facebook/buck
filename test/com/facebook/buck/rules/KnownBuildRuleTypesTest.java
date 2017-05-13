@@ -30,6 +30,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -47,15 +48,12 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -111,33 +109,6 @@ public class KnownBuildRuleTypesTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build();
   }
 
-  private void populateJavaArg(JavaLibraryDescription.Arg arg) {
-    arg.srcs = ImmutableSortedSet.of();
-    arg.resources = ImmutableSortedSet.of();
-    arg.source = Optional.empty();
-    arg.target = Optional.empty();
-    arg.javaVersion = Optional.empty();
-    arg.javac = Optional.empty();
-    arg.javacJar = Optional.empty();
-    arg.compilerClassName = Optional.empty();
-    arg.compiler = Optional.empty();
-    arg.extraArguments = ImmutableList.of();
-    arg.removeClasses = ImmutableSet.of();
-    arg.proguardConfig = Optional.empty();
-    arg.annotationProcessorDeps = ImmutableSortedSet.of();
-    arg.annotationProcessorParams = ImmutableList.of();
-    arg.annotationProcessors = ImmutableSet.of();
-    arg.annotationProcessorOnly = Optional.empty();
-    arg.postprocessClassesCommands = ImmutableList.of();
-    arg.resourcesRoot = Optional.empty();
-    arg.manifestFile = Optional.empty();
-    arg.providedDeps = ImmutableSortedSet.of();
-    arg.exportedDeps = ImmutableSortedSet.of();
-    arg.deps = ImmutableSortedSet.of();
-    arg.tests = ImmutableSortedSet.of();
-    arg.generateAbiFromSource = Optional.empty();
-  }
-
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)
       throws NoSuchBuildTargetException {
     JavaLibraryDescription description =
@@ -145,8 +116,7 @@ public class KnownBuildRuleTypesTest {
             buildRuleTypes.getDescription(
                 Description.getBuildRuleType(JavaLibraryDescription.class));
 
-    JavaLibraryDescription.Arg arg = new JavaLibraryDescription.Arg();
-    populateJavaArg(arg);
+    JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return (DefaultJavaLibrary)

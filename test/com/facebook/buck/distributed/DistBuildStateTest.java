@@ -32,7 +32,7 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -191,9 +191,9 @@ public class DistBuildStateTest {
         reconstructedGraph
             .getNodes()
             .stream()
-            .map(targetNode -> targetNode.castArg(JavaLibraryDescription.Arg.class).get())
+            .map(targetNode -> targetNode.castArg(JavaLibraryDescriptionArg.class).get())
             .sorted()
-            .map(targetNode -> targetNode.getConstructorArg().srcs)
+            .map(targetNode -> targetNode.getConstructorArg().getSrcs())
             .collect(Collectors.toList()),
         Lists.newArrayList("A.java", "B.java", "C.java")
             .stream()

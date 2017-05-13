@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
@@ -117,16 +118,16 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   @Test
   public void rulesMatchingDepQueryBecomeFirstOrderDeps() throws Exception {
     // Set up target graph: rule -> lib -> sublib -> bottom
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> bottomNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> bottomNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:bottom"), javaBuckConfig)
             .build();
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> sublibNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> sublibNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:sublib"), javaBuckConfig)
             .addDep(bottomNode.getBuildTarget())
             .build();
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> libNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> libNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
             .addDep(sublibNode.getBuildTarget())
             .build();

@@ -39,7 +39,9 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg args, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      AndroidLibraryDescription.CoreArg args,
+      JavacOptions javacOptions,
+      BuildRuleResolver resolver) {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         ImmutableList.of(),

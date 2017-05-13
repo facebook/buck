@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -110,13 +110,13 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   private GraphEnhancementQueryEnvironment buildQueryEnvironmentWithGraph() {
     // Set up target graph: lib -> sublib -> bottom
-    TargetNode<JavaLibraryDescription.Arg, ?> bottomNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> bottomNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:bottom")).build();
-    TargetNode<JavaLibraryDescription.Arg, ?> sublibNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> sublibNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:sublib"))
             .addDep(bottomNode.getBuildTarget())
             .build();
-    TargetNode<JavaLibraryDescription.Arg, ?> libNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> libNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(sublibNode.getBuildTarget())
             .build();

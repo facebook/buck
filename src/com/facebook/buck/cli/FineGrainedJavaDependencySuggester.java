@@ -81,17 +81,18 @@ class FineGrainedJavaDependencySuggester {
    */
   void suggestRefactoring() {
     final TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
-    if (!(suggestedNode.getConstructorArg() instanceof JavaLibraryDescription.Arg)) {
+    if (!(suggestedNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg)) {
       console.printErrorText(
           String.format("'%s' does not correspond to a Java rule", suggestedTarget));
       throw new IllegalArgumentException();
     }
 
-    JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) suggestedNode.getConstructorArg();
+    JavaLibraryDescription.CoreArg arg =
+        (JavaLibraryDescription.CoreArg) suggestedNode.getConstructorArg();
     JavaFileParser javaFileParser = javaDepsFinder.getJavaFileParser();
     Multimap<String, String> providedSymbolToRequiredSymbols = HashMultimap.create();
     Map<String, PathSourcePath> providedSymbolToSrc = new HashMap<>();
-    for (SourcePath src : arg.srcs) {
+    for (SourcePath src : arg.getSrcs()) {
       extractProvidedSymbolInfoFromSourceFile(
           src, javaFileParser, providedSymbolToRequiredSymbols, providedSymbolToSrc);
     }

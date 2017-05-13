@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -27,8 +27,9 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public class KotlinLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        KotlinLibraryDescription.Arg, KotlinLibraryDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        KotlinLibraryDescriptionArg.Builder, KotlinLibraryDescriptionArg, KotlinLibraryDescription,
+        BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -43,7 +44,7 @@ public class KotlinLibraryBuilder
   }
 
   public KotlinLibraryBuilder addSrc(SourcePath path) {
-    arg.srcs = amend(arg.srcs, path);
+    getArgForPopulating().addSrcs(path);
     return this;
   }
 

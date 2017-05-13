@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 /**
  * Provides either an {@link ExternalJavac} or {@link JarBackedJavac}, depending on its parameters.
- * This is here to support {@link JvmLibraryArg#compiler}.
+ * This is here to support {@link JvmLibraryArg#getCompiler}.
  */
 public class ExternalOrJarBackedJavacProvider implements JavacProvider {
   private final SourcePath compiler;

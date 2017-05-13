@@ -35,7 +35,7 @@ public class JavaLibraryRuleHelper {
     return paths.stream().anyMatch(path -> !(path instanceof PathSourcePath));
   }
 
-  public static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
+  public static <T extends JavaLibraryDescription.CoreArg> void addCompiledShadowIfNeeded(
       IjProjectConfig projectConfig, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
     if (projectConfig.isExcludeArtifactsEnabled()) {
       return;
@@ -43,26 +43,26 @@ public class JavaLibraryRuleHelper {
 
     T arg = targetNode.getConstructorArg();
     // TODO(mkosiba): investigate supporting annotation processors without resorting to this.
-    boolean hasAnnotationProcessors = !arg.annotationProcessors.isEmpty();
-    if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
+    boolean hasAnnotationProcessors = !arg.getAnnotationProcessors().isEmpty();
+    if (containsNonSourcePath(arg.getSrcs()) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());
     }
   }
 
-  public static <T extends JavaLibraryDescription.Arg> Optional<String> getLanguageLevel(
+  public static <T extends JavaLibraryDescription.CoreArg> Optional<String> getLanguageLevel(
       IjProjectConfig projectConfig, TargetNode<T, ?> targetNode) {
 
-    JavaLibraryDescription.Arg arg = targetNode.getConstructorArg();
+    JavaLibraryDescription.CoreArg arg = targetNode.getConstructorArg();
 
-    if (arg.source.isPresent()) {
+    if (arg.getSource().isPresent()) {
       JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
       String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
       String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
       boolean languageLevelsAreDifferent =
-          !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel))
-              || !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
+          !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
+              || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));
       if (languageLevelsAreDifferent) {
-        return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.source.get()));
+        return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.getSource().get()));
       }
     }
 

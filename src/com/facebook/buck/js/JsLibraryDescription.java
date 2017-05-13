@@ -223,8 +223,11 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     }
   }
 
-  private static <A extends JsLibraryDescriptionArg> BuildRule createReleaseFileRule(
-      BuildRuleParams params, BuildRuleResolver resolver, A args, WorkerTool worker)
+  private static BuildRule createReleaseFileRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      JsLibraryDescriptionArg args,
+      WorkerTool worker)
       throws NoSuchBuildTargetException {
     final BuildTarget devTarget = withFileFlavorOnly(params.getBuildTarget());
     final BuildRule devFile = resolver.requireRule(devTarget);
@@ -235,7 +238,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
         worker);
   }
 
-  private static <A extends JsLibraryDescriptionArg> BuildRule createDevFileRule(
+  private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,

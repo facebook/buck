@@ -785,7 +785,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup a Java library which builds against another Java library dep.
-    TargetNode<JavaLibraryDescription.Arg, ?> depNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> depNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), filesystem)
             .addSrc(Paths.get("Source.java"))
             .build();
@@ -878,7 +878,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     // Setup a Java library which builds against another Java library dep exporting another Java
     // library dep.
 
-    TargetNode<JavaLibraryDescription.Arg, ?> exportedDepNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> exportedDepNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:edep"), filesystem)
             .addSrc(Paths.get("Source1.java"))
             .build();
@@ -979,7 +979,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     // Setup a Java library which builds against another Java library dep exporting another Java
     // library dep.
-    TargetNode<JavaLibraryDescription.Arg, ?> exportedDepNode =
+    TargetNode<JavaLibraryDescriptionArg, ?> exportedDepNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:edep"), filesystem)
             .addSrc(Paths.get("Source1.java"))
             .build();

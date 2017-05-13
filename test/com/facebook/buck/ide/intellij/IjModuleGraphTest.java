@@ -665,7 +665,7 @@ public class IjModuleGraphTest {
 
               @Override
               public Optional<Path> getLibraryAndroidManifestPath(
-                  TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
+                  TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
                 return Optional.empty();
               }
 

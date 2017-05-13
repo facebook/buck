@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.query.Query;
@@ -30,8 +30,9 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class AndroidLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        AndroidLibraryDescription.Arg, AndroidLibraryDescription, AndroidLibrary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        AndroidLibraryDescriptionArg.Builder, AndroidLibraryDescriptionArg,
+        AndroidLibraryDescription, AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       language -> new JavaAndroidLibraryCompiler(DEFAULT_JAVA_CONFIG);
@@ -53,37 +54,37 @@ public class AndroidLibraryBuilder
   }
 
   public AndroidLibraryBuilder addProcessor(String processor) {
-    arg.annotationProcessors = amendSet(arg.annotationProcessors, processor);
+    getArgForPopulating().addAnnotationProcessors(processor);
     return this;
   }
 
   public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
-    arg.annotationProcessorDeps = amend(arg.annotationProcessorDeps, processorRule);
+    getArgForPopulating().addAnnotationProcessorDeps(processorRule);
     return this;
   }
 
   public AndroidLibraryBuilder setManifestFile(SourcePath manifestFile) {
-    arg.manifest = Optional.of(manifestFile);
+    getArgForPopulating().setManifest(Optional.of(manifestFile));
     return this;
   }
 
   public AndroidLibraryBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
     return this;
   }
 
   public AndroidLibraryBuilder setDepsQuery(Query query) {
-    arg.depsQuery = Optional.of(query);
+    getArgForPopulating().setDepsQuery(Optional.of(query));
     return this;
   }
 
   public AndroidLibraryBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
 
   public AndroidLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
+    getArgForPopulating().addSrcs(new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
 }

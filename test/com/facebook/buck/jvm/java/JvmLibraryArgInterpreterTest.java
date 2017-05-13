@@ -17,42 +17,32 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
-import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.ParamInfoException;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JvmLibraryArgInterpreterTest {
   private JavacOptions defaults;
-  private JvmLibraryArg arg;
   private BuildRuleResolver ruleResolver;
 
   @Before
   public void createHelpers() throws Exception {
     defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
-
-    arg = makeArgWithDefaultValues();
 
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -60,9 +50,8 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void javaVersionSetsBothSourceAndTargetLevels() {
-    arg.source = Optional.empty();
-    arg.target = Optional.empty();
-    arg.javaVersion = Optional.of("1.4"); // Set in the past, so if we ever bump the default....
+    // Set in the past, so if we ever bump the default....
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").setJavaVersion("1.4").build();
 
     JavacOptions options = createJavacOptions(arg);
 
@@ -72,9 +61,12 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void settingJavaVersionAndSourceLevelIsAnError() {
-    arg.source = Optional.of("1.4");
-    arg.target = Optional.empty();
-    arg.javaVersion = Optional.of("1.4");
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setSource("1.4")
+            .setJavaVersion("1.4")
+            .build();
 
     try {
       createJavacOptions(arg);
@@ -88,9 +80,12 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void settingJavaVersionAndTargetLevelIsAnError() {
-    arg.source = Optional.empty();
-    arg.target = Optional.of("1.4");
-    arg.javaVersion = Optional.of("1.4");
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setTarget("1.4")
+            .setJavaVersion("1.4")
+            .build();
 
     try {
       createJavacOptions(arg);
@@ -104,42 +99,54 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void compilerArgIsSet() {
-    Either<BuiltInJavac, SourcePath> either = Either.ofLeft(DEFAULT);
-    arg.compiler = Optional.of(either);
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setCompiler(Either.ofLeft(DEFAULT)).build();
 
-    assertEquals(arg.compiler, arg.getJavacSpec().getCompiler());
+    assertEquals(arg.getCompiler(), arg.getJavacSpec().getCompiler());
   }
 
   @Test
   public void javacArgIsSet() {
-    arg.javac = Optional.of(Paths.get("does-not-exist"));
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setJavac(Paths.get("does-not-exist")).build();
 
-    assertEquals(Optional.of(Either.ofLeft(arg.javac.get())), arg.getJavacSpec().getJavacPath());
+    assertEquals(
+        Optional.of(Either.ofLeft(arg.getJavac().get())), arg.getJavacSpec().getJavacPath());
   }
 
   @Test
   public void testJavacJarArgIsSet() {
-    arg.javacJar = Optional.of(new FakeSourcePath("does-not-exist"));
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .build();
 
-    assertEquals(arg.javacJar, arg.getJavacSpec().getJavacJarPath());
+    assertEquals(arg.getJavacJar(), arg.getJavacSpec().getJavacJarPath());
   }
 
   @Test
   public void testCompilerClassNameArgIsSet() {
-    arg.javacJar = Optional.of(new FakeSourcePath("does-not-exist"));
-    arg.compilerClassName = Optional.of("compiler");
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .setCompilerClassName("compiler")
+            .build();
 
-    assertEquals(arg.compilerClassName, arg.getJavacSpec().getCompilerClassName());
+    assertEquals(arg.getCompilerClassName(), arg.getJavacSpec().getCompilerClassName());
   }
 
   @Test
   public void testNoJavacSpecIfNoJavacArg() {
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").build();
     assertNull(arg.getJavacSpec());
   }
 
   @Test
   public void sourceAbiGenerationCanBeDisabledPerTarget() {
-    arg.generateAbiFromSource = Optional.of(false);
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(false).build();
     defaults = defaults.withCompilationMode(Javac.CompilationMode.FULL_ENFORCING_REFERENCES);
 
     JavacOptions options = createJavacOptions(arg);
@@ -151,7 +158,8 @@ public class JvmLibraryArgInterpreterTest {
   public void sourceAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
     assertEquals(defaults.getCompilationMode(), Javac.CompilationMode.FULL);
 
-    arg.generateAbiFromSource = Optional.of(true);
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(true).build();
 
     JavacOptions options = createJavacOptions(arg);
 
@@ -163,15 +171,7 @@ public class JvmLibraryArgInterpreterTest {
         defaults, new FakeBuildRuleParamsBuilder("//not:real").build(), ruleResolver, arg);
   }
 
-  private JvmLibraryArg makeArgWithDefaultValues() throws ParamInfoException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    return new ConstructorArgMarshaller(new DefaultTypeCoercerFactory())
-        .populate(
-            createCellRoots(filesystem),
-            filesystem,
-            BuildTargetFactory.newInstance("//example:target"),
-            JvmLibraryArg.class,
-            ImmutableSet.builder(),
-            ImmutableMap.of());
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractExampleJvmLibraryArg extends JvmLibraryArg {}
 }

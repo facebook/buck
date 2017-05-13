@@ -60,7 +60,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleResolver buildRuleResolver,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
-      AndroidLibraryDescription.Arg args,
+      AndroidLibraryDescription.CoreArg args,
       AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
         params, buildRuleResolver, javaBuckConfig, javacOptions, args, compilerFactory);
@@ -123,7 +123,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   public static class Builder extends DefaultJavaLibraryBuilder {
-    private final AndroidLibraryDescription.Arg args;
+    private final AndroidLibraryDescription.CoreArg args;
     private final AndroidLibraryCompilerFactory compilerFactory;
 
     private AndroidLibraryDescription.JvmLanguage language =
@@ -135,7 +135,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleResolver buildRuleResolver,
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
-        AndroidLibraryDescription.Arg args,
+        AndroidLibraryDescription.CoreArg args,
         AndroidLibraryCompilerFactory compilerFactory) {
       super(params, buildRuleResolver, javaBuckConfig);
       this.args = args;
@@ -143,17 +143,17 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       setJavacOptions(javacOptions);
       setArgs(args);
       // Set only if this is not Scala/Kotlin
-      if (!args.language.filter(l -> l != JvmLanguage.JAVA).isPresent()) {
+      if (!args.getLanguage().filter(l -> l != JvmLanguage.JAVA).isPresent()) {
         setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
       }
     }
 
     @Override
-    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
       super.setArgs(args);
-      AndroidLibraryDescription.Arg androidArgs = (AndroidLibraryDescription.Arg) args;
-      language = androidArgs.language.orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
-      return setManifestFile(androidArgs.manifest);
+      AndroidLibraryDescription.CoreArg androidArgs = (AndroidLibraryDescription.CoreArg) args;
+      language = androidArgs.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
+      return setManifestFile(androidArgs.getManifest());
     }
 
     @Override

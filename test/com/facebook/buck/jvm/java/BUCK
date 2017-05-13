@@ -458,6 +458,7 @@ java_test(
         ["*Test.java"],
         excludes = SLOW_INTEGRATION_TESTS,
     ),
+    has_immutable_types = True,
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],

@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -112,7 +113,7 @@ public class TestRunningTest {
             .build();
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:lib");
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrcTarget(genSrcTarget).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
@@ -149,7 +150,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -184,7 +185,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -214,7 +215,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("java/package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -261,7 +262,7 @@ public class TestRunningTest {
     Path pathToNonGenFile2 = Paths.get("package/src-gen/SourceFile2.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescription.Arg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget)
             .addSrc(pathToNonGenFile1)
             .addSrc(pathToNonGenFile2)

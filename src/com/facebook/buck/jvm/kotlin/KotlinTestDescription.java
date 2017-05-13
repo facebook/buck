@@ -35,7 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,8 +44,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
-public class KotlinTestDescription implements Description<KotlinTestDescription.Arg> {
+public class KotlinTestDescription implements Description<KotlinTestDescriptionArg> {
 
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaOptions javaOptions;
@@ -64,8 +65,8 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<KotlinTestDescriptionArg> getConstructorArgType() {
+    return KotlinTestDescriptionArg.class;
   }
 
   @Override
@@ -74,7 +75,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      KotlinTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
@@ -99,40 +100,49 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         pathResolver,
         testsLibrary,
         ImmutableSet.<Either<SourcePath, Path>>of(kotlinBuckConfig.getPathToRuntimeJar()),
-        args.labels,
-        args.contacts,
-        args.testType.orElse(TestType.JUNIT),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType().orElse(TestType.JUNIT),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
+        args.getVmArgs(),
         ImmutableMap.of(), /* nativeLibsEnvironment */
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        args.getEnv(),
         args.getRunTestSeparately(),
         args.getForkMode(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel);
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends KotlinLibraryDescription.Arg {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableList<String> vmArgs = ImmutableList.of();
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<ForkMode> forkMode;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<Long> testCaseTimeoutMs;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractKotlinTestDescriptionArg extends KotlinLibraryDescription.CoreArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
 
-    public boolean getRunTestSeparately() {
-      return runTestSeparately.orElse(false);
+    ImmutableList<String> getVmArgs();
+
+    Optional<TestType> getTestType();
+
+    Optional<Level> getStdErrLogLevel();
+
+    Optional<Level> getStdOutLogLevel();
+
+    Optional<Long> getTestRuleTimeoutMs();
+
+    Optional<Long> getTestCaseTimeoutMs();
+
+    ImmutableMap<String, String> getEnv();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
     }
 
-    public ForkMode getForkMode() {
-      return forkMode.orElse(ForkMode.NONE);
+    @Value.Default
+    default ForkMode getForkMode() {
+      return ForkMode.NONE;
     }
   }
 }

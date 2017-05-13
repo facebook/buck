@@ -25,7 +25,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
-public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg> {
+public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.CoreArg> {
 
   public JavaTestModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -40,13 +40,13 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Arg
   }
 
   @Override
-  public void apply(TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<JavaTestDescription.CoreArg, ?> target, ModuleBuildContext context) {
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaTestDescription.Arg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<JavaTestDescription.CoreArg, ?> targetNode) {
     return IjModuleType.JAVA_MODULE;
   }
 }

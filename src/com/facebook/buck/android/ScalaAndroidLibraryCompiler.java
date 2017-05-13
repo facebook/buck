@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableCollection;
 import javax.annotation.Nullable;
 
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
-
   private final ScalaBuckConfig scalaBuckConfig;
   private @Nullable Tool scalac;
 
@@ -51,13 +50,15 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      AndroidLibraryDescription.CoreArg arg,
+      JavacOptions javacOptions,
+      BuildRuleResolver resolver) {
 
     return new ScalacToJarStepFactory(
         getScalac(resolver),
         resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),
-        arg.extraArguments,
+        arg.getExtraArguments(),
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
         ANDROID_CLASSPATH_FROM_CONTEXT);
   }
@@ -66,7 +67,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.Arg constructorArg,
+      AndroidLibraryDescription.CoreArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 

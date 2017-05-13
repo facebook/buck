@@ -33,14 +33,16 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 public class KotlinLibraryDescription
-    implements Description<KotlinLibraryDescription.Arg>, Flavored {
+    implements Description<KotlinLibraryDescriptionArg>, Flavored {
 
   private final KotlinBuckConfig kotlinBuckConfig;
 
@@ -57,8 +59,8 @@ public class KotlinLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<KotlinLibraryDescriptionArg> getConstructorArgType() {
+    return KotlinLibraryDescriptionArg.class;
   }
 
   @Override
@@ -67,7 +69,7 @@ public class KotlinLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      KotlinLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
     BuildTarget target = params.getBuildTarget();
@@ -84,18 +86,18 @@ public class KotlinLibraryDescription
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords =
-          args.mavenCoords.map(
-              input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
+      Optional<String> mavenCoords =
+          args.getMavenCoords()
+              .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(params, args.srcs, args.mavenCoords);
+        return new JavaSourceJar(params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
-            args.srcs,
-            args.mavenCoords,
-            args.mavenPomTemplate);
+            args.getSrcs(),
+            mavenCoords,
+            args.getMavenPomTemplate());
       }
     }
 
@@ -116,13 +118,16 @@ public class KotlinLibraryDescription
       return MavenUberJar.create(
           defaultKotlinLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
-          args.mavenCoords,
-          args.mavenPomTemplate);
+          args.getMavenCoords(),
+          args.getMavenPomTemplate());
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg {
-    public ImmutableList<String> extraKotlincArguments = ImmutableList.of();
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
+    ImmutableList<String> getExtraKotlincArguments();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractKotlinLibraryDescriptionArg extends CoreArg {}
 }

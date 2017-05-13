@@ -37,11 +37,11 @@ public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
   }
 
   @Override
-  public DefaultKotlinLibraryBuilder setArgs(JavaLibraryDescription.Arg args) {
+  public DefaultKotlinLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     super.setArgs(args);
 
-    KotlinLibraryDescription.Arg kotlinArgs = (KotlinLibraryDescription.Arg) args;
-    extraKotlincArguments = kotlinArgs.extraKotlincArguments;
+    KotlinLibraryDescription.CoreArg kotlinArgs = (KotlinLibraryDescription.CoreArg) args;
+    extraKotlincArguments = kotlinArgs.getExtraKotlincArguments();
     return this;
   }
 

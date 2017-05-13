@@ -18,12 +18,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,46 +31,67 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
-@SuppressFieldNotInitialized
-public class JvmLibraryArg extends AbstractDescriptionArg {
-  public Optional<String> source;
-  public Optional<String> target;
-  public Optional<String> javaVersion;
-  public Optional<Path> javac;
-  public Optional<SourcePath> javacJar;
-  public Optional<String> compilerClassName;
-  public Optional<Either<BuiltInJavac, SourcePath>> compiler;
-  public ImmutableList<String> extraArguments = ImmutableList.of();
-  public ImmutableSet<Pattern> removeClasses = ImmutableSet.of();
-  public ImmutableSortedSet<BuildTarget> annotationProcessorDeps = ImmutableSortedSet.of();
-  public ImmutableList<String> annotationProcessorParams = ImmutableList.of();
-  public ImmutableSet<String> annotationProcessors = ImmutableSet.of();
-  public Optional<Boolean> annotationProcessorOnly;
-  public ImmutableList<BuildTarget> plugins = ImmutableList.of();
-  public Optional<Boolean> generateAbiFromSource;
+public interface JvmLibraryArg extends CommonDescriptionArg {
+  Optional<String> getSource();
 
+  Optional<String> getTarget();
+
+  Optional<String> getJavaVersion();
+
+  Optional<Path> getJavac();
+
+  Optional<SourcePath> getJavacJar();
+
+  Optional<String> getCompilerClassName();
+
+  Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
+
+  ImmutableList<String> getExtraArguments();
+
+  ImmutableSet<Pattern> getRemoveClasses();
+
+  @Value.NaturalOrder
+  ImmutableSortedSet<BuildTarget> getAnnotationProcessorDeps();
+
+  ImmutableList<String> getAnnotationProcessorParams();
+
+  ImmutableSet<String> getAnnotationProcessors();
+
+  Optional<Boolean> getAnnotationProcessorOnly();
+
+  ImmutableList<BuildTarget> getPlugins();
+
+  Optional<Boolean> getGenerateAbiFromSource();
+
+  @Value.Derived
   @Nullable
-  public JavacSpec getJavacSpec() {
-    if (!compiler.isPresent() && !javac.isPresent() && !javacJar.isPresent()) {
+  default JavacSpec getJavacSpec() {
+    if (!getCompiler().isPresent() && !getJavac().isPresent() && !getJavacJar().isPresent()) {
       return null;
     }
 
     return JavacSpec.builder()
-        .setCompiler(compiler)
+        .setCompiler(getCompiler())
         .setJavacPath(
-            javac.isPresent() ? Optional.of(Either.ofLeft(javac.get())) : Optional.empty())
-        .setJavacJarPath(javacJar)
-        .setCompilerClassName(compilerClassName)
+            getJavac().isPresent()
+                ? Optional.of(Either.ofLeft(getJavac().get()))
+                : Optional.empty())
+        .setJavacJarPath(getJavacJar())
+        .setCompilerClassName(getCompilerClassName())
         .build();
   }
 
-  public AnnotationProcessingParams buildAnnotationProcessingParams(
+  @Value.Derived
+  default AnnotationProcessingParams buildAnnotationProcessingParams(
       BuildTarget owner,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       Set<String> safeAnnotationProcessors) {
-    if (annotationProcessors.isEmpty() && plugins.isEmpty() && annotationProcessorDeps.isEmpty()) {
+    if (getAnnotationProcessors().isEmpty()
+        && getPlugins().isEmpty()
+        && getAnnotationProcessorDeps().isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
     }
 
@@ -83,17 +103,17 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
     addLegacyProcessors(builder, resolver);
     addProcessors(builder, resolver, owner);
 
-    for (String processorParam : annotationProcessorParams) {
+    for (String processorParam : getAnnotationProcessorParams()) {
       builder.addParameters(processorParam);
     }
-    builder.setProcessOnly(annotationProcessorOnly.orElse(Boolean.FALSE));
+    builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
 
     return builder.build();
   }
 
-  void addProcessors(
+  default void addProcessors(
       AnnotationProcessingParams.Builder builder, BuildRuleResolver resolver, BuildTarget owner) {
-    for (BuildTarget pluginTarget : plugins) {
+    for (BuildTarget pluginTarget : getPlugins()) {
       BuildRule pluginRule = resolver.getRule(pluginTarget);
       if (!(pluginRule instanceof JavaAnnotationProcessor)) {
         throw new HumanReadableException(
@@ -107,9 +127,11 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
     }
   }
 
-  void addLegacyProcessors(AnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
-    builder.setLegacyAnnotationProcessorNames(annotationProcessors);
-    ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);
+  default void addLegacyProcessors(
+      AnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
+    builder.setLegacyAnnotationProcessorNames(getAnnotationProcessors());
+    ImmutableSortedSet<BuildRule> processorDeps =
+        resolver.getAllRules(getAnnotationProcessorDeps());
     for (BuildRule processorDep : processorDeps) {
       builder.addLegacyAnnotationProcessorDeps(processorDep);
     }

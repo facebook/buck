@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -30,8 +30,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class JavaTestBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        JavaTestDescription.Arg, JavaTestDescription, JavaTest> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        JavaTestDescriptionArg.Builder, JavaTestDescriptionArg, JavaTestDescription, JavaTest> {
   private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(
@@ -52,22 +52,22 @@ public class JavaTestBuilder
   }
 
   public JavaTestBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
     return this;
   }
 
   public JavaTestBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
 
   public JavaTestBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
+    getArgForPopulating().addSrcs(new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
 
   public JavaTestBuilder setVmArgs(@Nullable ImmutableList<String> vmArgs) {
-    arg.vmArgs = Optional.ofNullable(vmArgs).orElse(ImmutableList.of());
+    getArgForPopulating().setVmArgs(Optional.ofNullable(vmArgs).orElse(ImmutableList.of()));
     return this;
   }
 }
