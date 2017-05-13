@@ -21,12 +21,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
@@ -38,17 +38,18 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class WorkerToolDescription
-    implements Description<WorkerToolDescription.Arg>,
-        ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
+    implements Description<WorkerToolDescriptionArg>,
+        ImplicitDepsInferringDescription<WorkerToolDescription.AbstractWorkerToolDescriptionArg> {
 
   private static final String CONFIG_SECTION = "worker";
   private static final String CONFIG_PERSISTENT_KEY = "persistent";
@@ -68,8 +69,8 @@ public class WorkerToolDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<WorkerToolDescriptionArg> getConstructorArgType() {
+    return WorkerToolDescriptionArg.class;
   }
 
   @Override
@@ -78,15 +79,15 @@ public class WorkerToolDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      WorkerToolDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    BuildRule rule = resolver.requireRule(args.exe);
+    BuildRule rule = resolver.requireRule(args.getExe());
     if (!(rule instanceof BinaryBuildRule)) {
       throw new HumanReadableException(
           "The 'exe' argument of %s, %s, needs to correspond to a "
               + "binary rule, such as sh_binary().",
-          params.getBuildTarget(), args.exe.getFullyQualifiedName());
+          params.getBuildTarget(), args.getExe().getFullyQualifiedName());
     }
 
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
@@ -95,20 +96,14 @@ public class WorkerToolDescription
         args.getStartupArgs().stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
 
     ImmutableMap<String, com.facebook.buck.rules.args.Arg> unexpandedEnv =
-        args.env
+        args.getEnv()
             .entrySet()
             .stream()
             .collect(
                 MoreCollectors.toImmutableMap(Map.Entry::getKey, e -> toArg.apply(e.getValue())));
 
-    int maxWorkers;
-    if (args.maxWorkers.isPresent()) {
-      // negative or zero: unlimited number of worker processes
-      maxWorkers = args.maxWorkers.get() < 1 ? Integer.MAX_VALUE : args.maxWorkers.get();
-    } else {
-      // default is 1 worker process (for backwards compatibility)
-      maxWorkers = 1;
-    }
+    // negative or zero: unlimited number of worker processes
+    int maxWorkers = args.getMaxWorkers() < 1 ? Integer.MAX_VALUE : args.getMaxWorkers();
 
     return new DefaultWorkerTool(
         params,
@@ -116,15 +111,15 @@ public class WorkerToolDescription
         workerToolArgs,
         unexpandedEnv,
         maxWorkers,
-        args.persistent.orElse(
-            buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
+        args.getPersistent()
+            .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractWorkerToolDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
@@ -132,7 +127,7 @@ public class WorkerToolDescription
         MACRO_HANDLER.extractParseTimeDeps(
             buildTarget, cellRoots, arg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
       }
-      for (Map.Entry<String, String> env : constructorArg.env.entrySet()) {
+      for (Map.Entry<String, String> env : constructorArg.getEnv().entrySet()) {
         MACRO_HANDLER.extractParseTimeDeps(
             buildTarget, cellRoots, env.getValue(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
       }
@@ -141,20 +136,32 @@ public class WorkerToolDescription
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableMap<String, String> env = ImmutableMap.of();
-    public Either<String, ImmutableList<String>> args = Either.ofRight(ImmutableList.of());
-    public BuildTarget exe;
-    public Optional<Integer> maxWorkers;
-    public Optional<Boolean> persistent;
-
-    public ImmutableList<String> getStartupArgs() {
-      if (args.isLeft()) {
-        return ImmutableList.of(args.getLeft());
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
+    @Value.Derived
+    default ImmutableList<String> getStartupArgs() {
+      if (getArgs().isLeft()) {
+        return ImmutableList.of(getArgs().getLeft());
       } else {
-        return args.getRight();
+        return getArgs().getRight();
       }
     }
+
+    ImmutableMap<String, String> getEnv();
+
+    @Value.Default
+    default Either<String, ImmutableList<String>> getArgs() {
+      return Either.ofRight(ImmutableList.of());
+    }
+
+    BuildTarget getExe();
+
+    @Value.Default
+    default int getMaxWorkers() {
+      return 1;
+    }
+
+    Optional<Boolean> getPersistent();
   }
 }
