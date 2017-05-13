@@ -16,30 +16,29 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class LuaLibraryDescription
-    implements Description<LuaLibraryDescription.Arg>,
-        VersionPropagator<LuaLibraryDescription.Arg> {
+    implements Description<LuaLibraryDescriptionArg>, VersionPropagator<LuaLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<LuaLibraryDescriptionArg> getConstructorArgType() {
+    return LuaLibraryDescriptionArg.class;
   }
 
   @Override
@@ -48,7 +47,7 @@ public class LuaLibraryDescription
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args) {
+      final LuaLibraryDescriptionArg args) {
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(params) {
@@ -60,17 +59,22 @@ public class LuaLibraryDescription
                     params.getBuildTarget(),
                     pathResolver,
                     "srcs",
-                    LuaUtil.getBaseModule(params.getBuildTarget(), args.baseModule),
-                    ImmutableList.of(args.srcs)))
+                    LuaUtil.getBaseModule(params.getBuildTarget(), args.getBaseModule()),
+                    ImmutableList.of(args.getSrcs())))
             .build();
       }
     };
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourceList srcs = SourceList.EMPTY;
-    public Optional<String> baseModule;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractLuaLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+
+    @Value.Default
+    default SourceList getSrcs() {
+      return SourceList.EMPTY;
+    }
+
+    Optional<String> getBaseModule();
   }
 }
