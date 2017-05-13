@@ -479,7 +479,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     };
   }
 
-  private ListenableFuture<BuildResult> processBuildRule(
+  private ListenableFuture<BuildResult> buildOrFetchFromCache(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
@@ -661,7 +661,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     final AtomicReference<Long> outputSize = Atomics.newReference();
 
     ListenableFuture<BuildResult> buildResult =
-        processBuildRule(
+        buildOrFetchFromCache(
             rule,
             buildContext,
             executionContext,
