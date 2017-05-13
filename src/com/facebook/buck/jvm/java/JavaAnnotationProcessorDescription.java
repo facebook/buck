@@ -16,32 +16,32 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
 /**
  * Description of a rule that builds a Java compiler plugin (either a {@link
  * javax.annotation.processing.Processor} or TODO(jkeljo): a {@link com.sun.source.util.Plugin}).
  */
 public class JavaAnnotationProcessorDescription
-    implements Description<JavaAnnotationProcessorDescription.Arg>,
-        VersionPropagator<JavaAnnotationProcessorDescription.Arg> {
+    implements Description<JavaAnnotationProcessorDescriptionArg>,
+        VersionPropagator<JavaAnnotationProcessorDescriptionArg> {
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<JavaAnnotationProcessorDescriptionArg> getConstructorArgType() {
+    return JavaAnnotationProcessorDescriptionArg.class;
   }
 
   @Override
@@ -50,10 +50,10 @@ public class JavaAnnotationProcessorDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      JavaAnnotationProcessorDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
-    propsBuilder.addProcessorNames(args.processorClass);
+    propsBuilder.addProcessorNames(args.getProcessorClass());
     for (BuildRule dep : params.getBuildDeps()) {
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
@@ -64,10 +64,10 @@ public class JavaAnnotationProcessorDescription
       propsBuilder.addDep(dep);
     }
 
-    boolean reuseClassLoader = !args.isolateClassLoader;
+    boolean reuseClassLoader = !args.isIsolateClassLoader();
     propsBuilder.setCanReuseClassLoader(reuseClassLoader);
-    propsBuilder.setDoesNotAffectAbi(args.doesNotAffectAbi);
-    propsBuilder.setSupportsAbiGenerationFromSource(args.supportsAbiGenerationFromSource);
+    propsBuilder.setDoesNotAffectAbi(args.isDoesNotAffectAbi());
+    propsBuilder.setSupportsAbiGenerationFromSource(args.isSupportsAbiGenerationFromSource());
     JavacPluginProperties properties = propsBuilder.build();
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -75,11 +75,17 @@ public class JavaAnnotationProcessorDescription
         params.copyAppendingExtraDeps(properties.getClasspathDeps()), pathResolver, properties);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public String processorClass;
-    public boolean isolateClassLoader = false;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractJavaAnnotationProcessorDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    String getProcessorClass();
+
+    @Value.Default
+    default boolean isIsolateClassLoader() {
+      return false;
+    }
+
     /**
      * A value of false indicates that the annotation processor generates classes that are intended
      * for use outside of the code being processed. Annotation processors that affect the ABI of the
@@ -89,7 +95,10 @@ public class JavaAnnotationProcessorDescription
      * source, having as few ABI-affecting processors as possible will yield the fastest ABI
      * generation.
      */
-    public boolean doesNotAffectAbi = false;
+    @Value.Default
+    default boolean isDoesNotAffectAbi() {
+      return false;
+    }
 
     /**
      * If true, allows ABI-affecting annotation processors to run during ABI generation from source.
@@ -112,6 +121,9 @@ public class JavaAnnotationProcessorDescription
      * source, having as many ABI-affecting processors as possible running during ABI generation
      * will result in the flattest build graph.
      */
-    public boolean supportsAbiGenerationFromSource = false;
+    @Value.Default
+    default boolean isSupportsAbiGenerationFromSource() {
+      return false;
+    }
   }
 }
