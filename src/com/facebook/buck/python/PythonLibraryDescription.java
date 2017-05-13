@@ -23,14 +23,13 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonLibraryDescription.Arg;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -38,9 +37,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,9 +47,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class PythonLibraryDescription
-    implements Description<Arg>, VersionPropagator<Arg>, MetadataProvidingDescription<Arg> {
+    implements Description<PythonLibraryDescriptionArg>,
+        VersionPropagator<PythonLibraryDescriptionArg>,
+        MetadataProvidingDescription<PythonLibraryDescriptionArg> {
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -65,8 +67,8 @@ public class PythonLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<PythonLibraryDescriptionArg> getConstructorArgType() {
+    return PythonLibraryDescriptionArg.class;
   }
 
   @Override
@@ -75,7 +77,7 @@ public class PythonLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      PythonLibraryDescriptionArg args) {
     return new PythonLibrary(params, resolver);
   }
 
@@ -83,7 +85,7 @@ public class PythonLibraryDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      PythonLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -110,7 +112,7 @@ public class PythonLibraryDescription
 
           SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
           SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-          Path baseModule = PythonUtil.getBasePath(baseTarget, args.baseModule);
+          Path baseModule = PythonUtil.getBasePath(baseTarget, args.getBaseModule());
           PythonPackageComponents components =
               PythonPackageComponents.of(
                   PythonUtil.getModules(
@@ -122,9 +124,9 @@ public class PythonLibraryDescription
                       cxxPlatform.getValue(),
                       "srcs",
                       baseModule,
-                      args.srcs,
-                      args.platformSrcs,
-                      args.versionedSrcs,
+                      args.getSrcs(),
+                      args.getPlatformSrcs(),
+                      args.getVersionedSrcs(),
                       selectedVersions),
                   PythonUtil.getModules(
                       baseTarget,
@@ -135,13 +137,13 @@ public class PythonLibraryDescription
                       cxxPlatform.getValue(),
                       "resources",
                       baseModule,
-                      args.resources,
-                      args.platformResources,
-                      args.versionedResources,
+                      args.getResources(),
+                      args.getPlatformResources(),
+                      args.getVersionedResources(),
                       selectedVersions),
                   ImmutableMap.of(),
                   ImmutableSet.of(),
-                  args.zipSafe);
+                  args.getZipSafe());
 
           return Optional.of(components).map(metadataClass::cast);
         }
@@ -157,7 +159,10 @@ public class PythonLibraryDescription
           baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
           ImmutableList<BuildTarget> depTargets =
               PythonUtil.getDeps(
-                  pythonPlatform.getValue(), cxxPlatform.getValue(), args.deps, args.platformDeps);
+                  pythonPlatform.getValue(),
+                  cxxPlatform.getValue(),
+                  args.getDeps(),
+                  args.getPlatformDeps());
           return Optional.of(resolver.getAllRules(depTargets)).map(metadataClass::cast);
         }
     }
@@ -182,26 +187,42 @@ public class PythonLibraryDescription
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public SourceList srcs = SourceList.EMPTY;
-    public Optional<VersionMatchedCollection<SourceList>> versionedSrcs = Optional.empty();
-    public PatternMatchedCollection<SourceList> platformSrcs = PatternMatchedCollection.of();
-    public SourceList resources = SourceList.EMPTY;
-    public Optional<VersionMatchedCollection<SourceList>> versionedResources;
-    public PatternMatchedCollection<SourceList> platformResources = PatternMatchedCollection.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
-        PatternMatchedCollection.of();
-    public Optional<String> baseModule = Optional.empty();
-    public Optional<Boolean> zipSafe = Optional.empty();
-
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
+  interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+    @Value.Default
+    default SourceList getSrcs() {
+      return SourceList.EMPTY;
     }
+
+    Optional<VersionMatchedCollection<SourceList>> getVersionedSrcs();
+
+    @Value.Default
+    default PatternMatchedCollection<SourceList> getPlatformSrcs() {
+      return PatternMatchedCollection.of();
+    }
+
+    @Value.Default
+    default SourceList getResources() {
+      return SourceList.EMPTY;
+    }
+
+    Optional<VersionMatchedCollection<SourceList>> getVersionedResources();
+
+    @Value.Default
+    default PatternMatchedCollection<SourceList> getPlatformResources() {
+      return PatternMatchedCollection.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
+
+    Optional<String> getBaseModule();
+
+    Optional<Boolean> getZipSafe();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractPythonLibraryDescriptionArg extends CoreArg {}
 }

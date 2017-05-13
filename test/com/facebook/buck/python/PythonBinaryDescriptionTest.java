@@ -287,6 +287,9 @@ public class PythonBinaryDescriptionTest {
           new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
       PythonLibraryBuilder pythonLibraryBuilder =
           new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+              .setSrcs(
+                  SourceList.ofUnnamedSources(
+                      ImmutableSortedSet.of(new FakeSourcePath("something.py"))))
               .setDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
       PythonBinaryBuilder pythonBinaryBuilder =
           PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
