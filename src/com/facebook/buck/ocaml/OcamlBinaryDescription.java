@@ -20,29 +20,30 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class OcamlBinaryDescription
-    implements Description<OcamlBinaryDescription.Arg>,
-        ImplicitDepsInferringDescription<OcamlBinaryDescription.Arg>,
-        VersionRoot<OcamlBinaryDescription.Arg> {
+    implements Description<OcamlBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<OcamlBinaryDescription.AbstractOcamlBinaryDescriptionArg>,
+        VersionRoot<OcamlBinaryDescriptionArg> {
 
   private final OcamlBuckConfig ocamlBuckConfig;
 
@@ -55,8 +56,8 @@ public class OcamlBinaryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<OcamlBinaryDescriptionArg> getConstructorArgType() {
+    return OcamlBinaryDescriptionArg.class;
   }
 
   @Override
@@ -65,28 +66,28 @@ public class OcamlBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      OcamlBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    ImmutableList<OcamlSource> srcs = args.srcs;
+    ImmutableList<OcamlSource> srcs = args.getSrcs();
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
     flags.addAll(
         OcamlDescriptionEnhancer.toStringWithMacrosArgs(
-            params.getBuildTarget(), cellRoots, resolver, args.compilerFlags));
-    if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.warningsFlags.isPresent()) {
+            params.getBuildTarget(), cellRoots, resolver, args.getCompilerFlags()));
+    if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
       flags.addAll(StringArg.from("-w"));
       flags.addAll(
           StringArg.from(
-              ocamlBuckConfig.getWarningsFlags().orElse("") + args.warningsFlags.orElse("")));
+              ocamlBuckConfig.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
-    ImmutableList<String> linkerFlags = args.linkerFlags;
+    ImmutableList<String> linkerFlags = args.getLinkerFlags();
     return OcamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
         params,
         resolver,
         srcs,
         /*isLibrary*/ false,
-        args.bytecodeOnly.orElse(false),
+        args.getBytecodeOnly().orElse(false),
         flags.build(),
         linkerFlags,
         /*buildNativePlugin*/ false);
@@ -96,7 +97,7 @@ public class OcamlBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractOcamlBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(ocamlBuckConfig.getCxxPlatform()));
@@ -107,13 +108,17 @@ public class OcamlBinaryDescription
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableList<OcamlSource> srcs = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableList<StringWithMacros> compilerFlags = ImmutableList.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
-    public Optional<String> warningsFlags;
-    public Optional<Boolean> bytecodeOnly;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractOcamlBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    ImmutableList<OcamlSource> getSrcs();
+
+    ImmutableList<StringWithMacros> getCompilerFlags();
+
+    ImmutableList<String> getLinkerFlags();
+
+    Optional<String> getWarningsFlags();
+
+    Optional<Boolean> getBytecodeOnly();
   }
 }
