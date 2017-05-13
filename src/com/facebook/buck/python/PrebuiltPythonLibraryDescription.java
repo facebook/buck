@@ -16,23 +16,23 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
 public class PrebuiltPythonLibraryDescription
-    implements Description<PrebuiltPythonLibraryDescription.Arg> {
+    implements Description<PrebuiltPythonLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<PrebuiltPythonLibraryDescriptionArg> getConstructorArgType() {
+    return PrebuiltPythonLibraryDescriptionArg.class;
   }
 
   @Override
@@ -41,13 +41,14 @@ public class PrebuiltPythonLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
-    return new PrebuiltPythonLibrary(params, args.binarySrc);
+      PrebuiltPythonLibraryDescriptionArg args) {
+    return new PrebuiltPythonLibrary(params, args.getBinarySrc());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath binarySrc;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractPrebuiltPythonLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getBinarySrc();
   }
 }
