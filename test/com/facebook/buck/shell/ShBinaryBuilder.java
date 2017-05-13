@@ -17,31 +17,31 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ShBinaryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        ShBinaryDescription.Arg, ShBinaryDescription, ShBinary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        ShBinaryDescriptionArg.Builder, ShBinaryDescriptionArg, ShBinaryDescription, ShBinary> {
 
   public ShBinaryBuilder(BuildTarget target) {
     super(new ShBinaryDescription(), target);
   }
 
   public ShBinaryBuilder setMain(SourcePath path) {
-    arg.main = path;
+    getArgForPopulating().setMain(path);
     return this;
   }
 
   public ShBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public ShBinaryBuilder setResources(ImmutableSet<SourcePath> resources) {
-    arg.resources = resources;
+    getArgForPopulating().setResources(resources);
     return this;
   }
 }
