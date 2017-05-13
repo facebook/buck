@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -96,7 +97,8 @@ public class PrebuiltOcamlLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractPrebuiltOcamlLibraryDescriptionArg implements CommonDescriptionArg {
+  abstract static class AbstractPrebuiltOcamlLibraryDescriptionArg
+      implements CommonDescriptionArg, HasDeclaredDeps {
 
     @Value.Default
     String getLibDir() {
