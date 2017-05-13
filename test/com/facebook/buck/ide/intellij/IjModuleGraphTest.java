@@ -392,6 +392,8 @@ public class IjModuleGraphTest {
     TargetNode<?, ?> productKeystoreTarget =
         KeystoreBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/library:keystore"))
+            .setStore(new FakeSourcePath("store"))
+            .setProperties(new FakeSourcePath("properties"))
             .build();
 
     TargetNode<?, ?> libraryJavaTarget =

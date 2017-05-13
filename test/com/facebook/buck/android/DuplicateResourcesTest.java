@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeFalse;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescription;
+import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -77,7 +78,7 @@ public class DuplicateResourcesTest {
   private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> bottomDepRes;
   private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> transitiveDepLib;
   private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> library;
-  private TargetNode<KeystoreDescription.Arg, KeystoreDescription> keystore;
+  private TargetNode<KeystoreDescriptionArg, KeystoreDescription> keystore;
 
   /*
    * Builds up the following dependency graph, which an android_binary can depend on how it likes:

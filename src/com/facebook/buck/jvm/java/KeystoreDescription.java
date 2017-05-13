@@ -16,22 +16,22 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class KeystoreDescription implements Description<KeystoreDescription.Arg> {
+public class KeystoreDescription implements Description<KeystoreDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<KeystoreDescriptionArg> getConstructorArgType() {
+    return KeystoreDescriptionArg.class;
   }
 
   @Override
@@ -40,15 +40,15 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
-    return new Keystore(params, args.store, args.properties);
+      KeystoreDescriptionArg args) {
+    return new Keystore(params, args.getStore(), args.getProperties());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath store;
-    public SourcePath properties;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractKeystoreDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getStore();
 
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    SourcePath getProperties();
   }
 }
