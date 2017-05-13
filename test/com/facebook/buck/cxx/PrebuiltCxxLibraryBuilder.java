@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -29,8 +29,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        PrebuiltCxxLibraryDescription.Arg, PrebuiltCxxLibraryDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        PrebuiltCxxLibraryDescriptionArg.Builder, PrebuiltCxxLibraryDescriptionArg,
+        PrebuiltCxxLibraryDescription, BuildRule> {
 
   public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(new PrebuiltCxxLibraryDescription(CxxPlatformUtils.DEFAULT_CONFIG, cxxPlatforms), target);
@@ -41,84 +42,84 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {
-    arg.includeDirs = includeDirs;
+    getArgForPopulating().setIncludeDirs(includeDirs);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setLibName(String libName) {
-    arg.libName = Optional.of(libName);
+    getArgForPopulating().setLibName(Optional.of(libName));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setLibDir(String libDir) {
-    arg.libDir = Optional.of(libDir);
+    getArgForPopulating().setLibDir(Optional.of(libDir));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setLinkWithoutSoname(boolean linkWithoutSoname) {
-    arg.linkWithoutSoname = linkWithoutSoname;
+    getArgForPopulating().setLinkWithoutSoname(linkWithoutSoname);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedHeaders(SourceList exportedHeaders) {
-    arg.exportedHeaders = exportedHeaders;
+    getArgForPopulating().setExportedHeaders(exportedHeaders);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
       PatternMatchedCollection<SourceList> collection) {
-    arg.exportedPlatformHeaders = collection;
+    getArgForPopulating().setExportedPlatformHeaders(collection);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderNamespace(String headerNamespace) {
-    arg.headerNamespace = Optional.of(headerNamespace);
+    getArgForPopulating().setHeaderNamespace(Optional.of(headerNamespace));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderOnly(boolean headerOnly) {
-    arg.headerOnly = Optional.of(headerOnly);
+    getArgForPopulating().setHeaderOnly(Optional.of(headerOnly));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setProvided(boolean provided) {
-    arg.provided = provided;
+    getArgForPopulating().setProvided(provided);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.exportedLinkerFlags = linkerFlags;
+    getArgForPopulating().setExportedLinkerFlags(linkerFlags);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setSoname(String soname) {
-    arg.soname = Optional.of(soname);
+    getArgForPopulating().setSoname(Optional.of(soname));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setForceStatic(boolean forceStatic) {
-    arg.forceStatic = Optional.of(forceStatic);
+    getArgForPopulating().setForceStatic(Optional.of(forceStatic));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    arg.exportedDeps = exportedDeps;
+    getArgForPopulating().setExportedDeps(exportedDeps);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
-    arg.supportedPlatformsRegex = Optional.of(supportedPlatformsRegex);
+    getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setVersionedSubDir(
       VersionMatchedCollection<String> versionedSubDir) {
-    arg.versionedSubDir = Optional.of(versionedSubDir);
+    getArgForPopulating().setVersionedSubDir(Optional.of(versionedSubDir));
     return this;
   }
 }

@@ -70,31 +70,31 @@ public class PrebuiltCxxLibraryDescriptionTest {
   private static final BuildTarget TARGET_TWO = BuildTargetFactory.newInstance("//two/:target");
   private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
-  private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.orElse("lib");
-    String libName = arg.libName.orElse(TARGET.getShortName());
+  private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescriptionArg arg) {
+    String libDir = arg.getLibDir().orElse("lib");
+    String libName = arg.getLibName().orElse(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(String.format("lib%s.a", libName));
   }
 
-  private static Path getStaticPicLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.orElse("lib");
-    String libName = arg.libName.orElse(TARGET.getShortName());
+  private static Path getStaticPicLibraryPath(PrebuiltCxxLibraryDescriptionArg arg) {
+    String libDir = arg.getLibDir().orElse("lib");
+    String libName = arg.getLibName().orElse(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(String.format("lib%s_pic.a", libName));
   }
 
-  private static Path getSharedLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.orElse("lib");
-    String libName = arg.libName.orElse(TARGET.getShortName());
+  private static Path getSharedLibraryPath(PrebuiltCxxLibraryDescriptionArg arg) {
+    String libDir = arg.getLibDir().orElse("lib");
+    String libName = arg.getLibName().orElse(TARGET.getShortName());
     return TARGET
         .getBasePath()
         .resolve(libDir)
         .resolve(String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
-  private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libName = arg.libName.orElse(TARGET.getShortName());
-    return arg.soname.orElse(
-        String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
+  private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescriptionArg arg) {
+    String libName = arg.getLibName().orElse(TARGET.getShortName());
+    return arg.getSoname()
+        .orElse(String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
   private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {
@@ -124,7 +124,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
+    PrebuiltCxxLibraryDescriptionArg arg = libBuilder.build().getConstructorArg();
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput =
@@ -185,7 +185,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
+    PrebuiltCxxLibraryDescriptionArg arg = libBuilder.build().getConstructorArg();
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput =
@@ -248,7 +248,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
-    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
+    PrebuiltCxxLibraryDescriptionArg arg = libBuilder.build().getConstructorArg();
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg), new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
