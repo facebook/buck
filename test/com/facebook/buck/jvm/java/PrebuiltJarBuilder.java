@@ -17,15 +17,16 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 
 public class PrebuiltJarBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        PrebuiltJarDescription.Arg, PrebuiltJarDescription, PrebuiltJar> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        PrebuiltJarDescriptionArg.Builder, PrebuiltJarDescriptionArg, PrebuiltJarDescription,
+        PrebuiltJar> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
     super(new PrebuiltJarDescription(), target);
@@ -40,12 +41,12 @@ public class PrebuiltJarBuilder
   }
 
   public PrebuiltJarBuilder setBinaryJar(SourcePath binaryJar) {
-    arg.binaryJar = binaryJar;
+    getArgForPopulating().setBinaryJar(binaryJar);
     return this;
   }
 
   public PrebuiltJarBuilder addDep(BuildTarget dep) {
-    arg.deps = amend(arg.deps, dep);
+    getArgForPopulating().addDeps(dep);
     return this;
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
@@ -100,7 +101,7 @@ public class JavaDepsFinder {
       }
 
       if (!(node.getConstructorArg() instanceof JavaLibraryDescription.CoreArg)
-          && !(node.getConstructorArg() instanceof PrebuiltJarDescription.Arg)) {
+          && !(node.getConstructorArg() instanceof PrebuiltJarDescriptionArg)) {
         throw new IllegalStateException("This rule is not supported by suggest: " + node);
       }
 
@@ -123,8 +124,8 @@ public class JavaDepsFinder {
       JavaLibraryDescription.CoreArg arg = (JavaLibraryDescription.CoreArg) argForNode;
       symbolsFinder = new JavaLibrarySymbolsFinder(arg.getSrcs(), javaFileParser);
     } else {
-      PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) argForNode;
-      symbolsFinder = new PrebuiltJarSymbolsFinder(arg.binaryJar);
+      PrebuiltJarDescriptionArg arg = (PrebuiltJarDescriptionArg) argForNode;
+      symbolsFinder = new PrebuiltJarSymbolsFinder(arg.getBinaryJar());
     }
 
     // Build the rule, leveraging Buck's build cache.
