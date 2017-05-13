@@ -42,13 +42,14 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -61,8 +62,8 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -85,11 +86,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 public class LuaBinaryDescription
-    implements Description<LuaBinaryDescription.Arg>,
-        ImplicitDepsInferringDescription<LuaBinaryDescription.Arg>,
-        VersionRoot<LuaBinaryDescription.Arg> {
+    implements Description<LuaBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<LuaBinaryDescription.AbstractLuaBinaryDescriptionArg>,
+        VersionRoot<LuaBinaryDescriptionArg> {
 
   private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
@@ -113,8 +115,8 @@ public class LuaBinaryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<LuaBinaryDescriptionArg> getConstructorArgType() {
+    return LuaBinaryDescriptionArg.class;
   }
 
   @VisibleForTesting
@@ -723,7 +725,7 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      LuaBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -734,7 +736,7 @@ public class LuaBinaryDescription
             .getValue(params.getBuildTarget())
             .orElse(
                 pythonPlatforms.getValue(
-                    args.pythonPlatform
+                    args.getPythonPlatform()
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     LuaBinaryPackageComponents components =
@@ -745,18 +747,21 @@ public class LuaBinaryDescription
             ruleFinder,
             cxxPlatform,
             pythonPlatform,
-            args.nativeStarterLibrary.map(Optional::of).orElse(luaConfig.getNativeStarterLibrary()),
-            args.mainModule,
-            args.packageStyle.orElse(luaConfig.getPackageStyle()),
+            args.getNativeStarterLibrary()
+                .map(Optional::of)
+                .orElse(luaConfig.getNativeStarterLibrary()),
+            args.getMainModule(),
+            args.getPackageStyle().orElse(luaConfig.getPackageStyle()),
             params.getDeclaredDeps().get());
-    LuaConfig.PackageStyle packageStyle = args.packageStyle.orElse(luaConfig.getPackageStyle());
+    LuaConfig.PackageStyle packageStyle =
+        args.getPackageStyle().orElse(luaConfig.getPackageStyle());
     Tool binary =
         getBinary(
             params,
             resolver,
             ruleFinder,
             cxxPlatform,
-            args.mainModule,
+            args.getMainModule(),
             components.getStarter(),
             components.getComponents(),
             packageStyle);
@@ -765,7 +770,7 @@ public class LuaBinaryDescription
         ruleFinder,
         getOutputPath(params.getBuildTarget(), params.getProjectFilesystem()),
         binary,
-        args.mainModule,
+        args.getMainModule(),
         components.getComponents(),
         luaConfig.getLua(resolver),
         packageStyle);
@@ -775,7 +780,7 @@ public class LuaBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractLuaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (luaConfig.getPackageStyle() == LuaConfig.PackageStyle.STANDALONE) {
@@ -794,12 +799,15 @@ public class LuaBinaryDescription
     NATIVE,
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public String mainModule;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<BuildTarget> nativeStarterLibrary;
-    public Optional<String> pythonPlatform;
-    public Optional<LuaConfig.PackageStyle> packageStyle;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractLuaBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    String getMainModule();
+
+    Optional<BuildTarget> getNativeStarterLibrary();
+
+    Optional<String> getPythonPlatform();
+
+    Optional<LuaConfig.PackageStyle> getPackageStyle();
   }
 }
