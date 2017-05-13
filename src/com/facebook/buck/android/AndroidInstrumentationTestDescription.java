@@ -18,21 +18,22 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
-    implements Description<AndroidInstrumentationTestDescription.Arg> {
+    implements Description<AndroidInstrumentationTestDescriptionArg> {
 
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
@@ -44,8 +45,8 @@ public class AndroidInstrumentationTestDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AndroidInstrumentationTestDescriptionArg> getConstructorArgType() {
+    return AndroidInstrumentationTestDescriptionArg.class;
   }
 
   @Override
@@ -54,8 +55,8 @@ public class AndroidInstrumentationTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
-    BuildRule apk = resolver.getRule(args.apk);
+      AndroidInstrumentationTestDescriptionArg args) {
+    BuildRule apk = resolver.getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, instrumentation_apk='%s' must be an android_binary(), apk_genrule() or "
@@ -66,16 +67,20 @@ public class AndroidInstrumentationTestDescription
     return new AndroidInstrumentationTest(
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
-        args.labels,
-        args.contacts,
+        args.getLabels(),
+        args.getContacts(),
         javaOptions.getJavaRuntimeLauncher(),
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public BuildTarget apk;
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public Optional<Long> testRuleTimeoutMs;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAndroidInstrumentationTestDescriptionArg extends CommonDescriptionArg {
+    BuildTarget getApk();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getContacts();
+
+    Optional<Long> getTestRuleTimeoutMs();
   }
 }
