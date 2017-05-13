@@ -110,13 +110,17 @@ public class AndroidInstrumentationApkTest {
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
     ImmutableSortedSet<BuildTarget> apkOriginalDepsTargets =
         ImmutableSortedSet.of(javaLibrary2.getBuildTarget(), javaLibrary4.getBuildTarget());
-    AndroidInstrumentationApkDescription.Arg arg = new AndroidInstrumentationApkDescription.Arg();
-    arg.apk = androidBinary.getBuildTarget();
-    arg.deps = apkOriginalDepsTargets;
-    arg.manifest = new FakeSourcePath("apps/InstrumentationAndroidManifest.xml");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//apps:instrumentation");
+    AndroidInstrumentationApkDescriptionArg arg =
+        AndroidInstrumentationApkDescriptionArg.builder()
+            .setName(buildTarget.getShortName())
+            .setApk(androidBinary.getBuildTarget())
+            .setDeps(apkOriginalDepsTargets)
+            .setManifest(new FakeSourcePath("apps/InstrumentationAndroidManifest.xml"))
+            .build();
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//apps:instrumentation"))
+        new FakeBuildRuleParamsBuilder(buildTarget)
             .setDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
             .setExtraDeps(ImmutableSortedSet.of(androidBinary))
             .build();

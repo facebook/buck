@@ -22,15 +22,15 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidInstrumentationApkBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        AndroidInstrumentationApkDescription.Arg, AndroidInstrumentationApkDescription,
-        AndroidInstrumentationApk> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        AndroidInstrumentationApkDescriptionArg.Builder, AndroidInstrumentationApkDescriptionArg,
+        AndroidInstrumentationApkDescription, AndroidInstrumentationApk> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
@@ -50,12 +50,12 @@ public class AndroidInstrumentationApkBuilder
   }
 
   public AndroidInstrumentationApkBuilder setManifest(SourcePath manifest) {
-    arg.manifest = manifest;
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 
   public AndroidInstrumentationApkBuilder setApk(BuildTarget apk) {
-    arg.apk = apk;
+    getArgForPopulating().setApk(apk);
     return this;
   }
 }

@@ -75,7 +75,7 @@ public class AndroidPackageableCollector {
   /**
    * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
    *     remove resources that are already included in the {@link
-   *     AndroidInstrumentationApkDescription.Arg#apk}
+   *     AndroidInstrumentationApkDescription.AndroidInstrumentationApkDescriptionArg#apk}
    */
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
