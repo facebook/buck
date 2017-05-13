@@ -21,7 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
-import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.RuleUtils;
@@ -119,8 +119,8 @@ class NewNativeTargetProjectMutator {
   private Optional<SourcePath> bridgingHeader = Optional.empty();
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
-  private ImmutableSet<AppleResourceDescription.Arg> recursiveResources = ImmutableSet.of();
-  private ImmutableSet<AppleResourceDescription.Arg> directResources = ImmutableSet.of();
+  private ImmutableSet<AppleResourceDescriptionArg> recursiveResources = ImmutableSet.of();
+  private ImmutableSet<AppleResourceDescriptionArg> directResources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleWrapperResourceArg> wrapperResources = ImmutableSet.of();
@@ -221,13 +221,13 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setRecursiveResources(
-      Set<AppleResourceDescription.Arg> recursiveResources) {
+      Set<AppleResourceDescriptionArg> recursiveResources) {
     this.recursiveResources = ImmutableSet.copyOf(recursiveResources);
     return this;
   }
 
   public NewNativeTargetProjectMutator setDirectResources(
-      ImmutableSet<AppleResourceDescription.Arg> directResources) {
+      ImmutableSet<AppleResourceDescriptionArg> directResources) {
     this.directResources = directResources;
     return this;
   }
@@ -581,16 +581,17 @@ class NewNativeTargetProjectMutator {
   }
 
   private void collectResourcePathsFromConstructorArgs(
-      Set<AppleResourceDescription.Arg> resourceArgs,
+      Set<AppleResourceDescriptionArg> resourceArgs,
       Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
       Set<AppleWrapperResourceArg> resourcePathArgs,
       ImmutableSet.Builder<Path> resourceFilesBuilder,
       ImmutableSet.Builder<Path> resourceDirsBuilder,
       ImmutableSet.Builder<Path> variantResourceFilesBuilder) {
-    for (AppleResourceDescription.Arg arg : resourceArgs) {
-      resourceFilesBuilder.addAll(Iterables.transform(arg.files, sourcePathResolver));
-      resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
-      variantResourceFilesBuilder.addAll(Iterables.transform(arg.variants, sourcePathResolver));
+    for (AppleResourceDescriptionArg arg : resourceArgs) {
+      resourceFilesBuilder.addAll(Iterables.transform(arg.getFiles(), sourcePathResolver));
+      resourceDirsBuilder.addAll(Iterables.transform(arg.getDirs(), sourcePathResolver));
+      variantResourceFilesBuilder.addAll(
+          Iterables.transform(arg.getVariants(), sourcePathResolver));
     }
 
     for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {

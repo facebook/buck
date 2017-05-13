@@ -34,6 +34,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
@@ -501,7 +502,7 @@ public class ProjectGenerator {
           Optional.of(generateAppleTestTarget((TargetNode<AppleTestDescriptionArg, ?>) targetNode));
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
-          (TargetNode<AppleResourceDescription.Arg, ?>) targetNode);
+          (TargetNode<AppleResourceDescriptionArg, ?>) targetNode);
     } else if (targetNode.getDescription() instanceof HalideLibraryDescription) {
       TargetNode<HalideLibraryDescriptionArg, ?> halideTargetNode =
           (TargetNode<HalideLibraryDescriptionArg, ?>) targetNode;
@@ -633,20 +634,20 @@ public class ProjectGenerator {
   }
 
   private void checkAppleResourceTargetNodeReferencingValidContents(
-      TargetNode<AppleResourceDescription.Arg, ?> resource) {
+      TargetNode<AppleResourceDescriptionArg, ?> resource) {
     // Check that the resource target node is referencing valid files or directories.
     // If a SourcePath is a BuildTargetSourcePath (or some hypothetical future implementation of
     // SourcePath), just assume it's the right type; we have no way of checking now as it
     // may not exist yet.
-    AppleResourceDescription.Arg arg = resource.getConstructorArg();
-    for (SourcePath dir : arg.dirs) {
+    AppleResourceDescriptionArg arg = resource.getConstructorArg();
+    for (SourcePath dir : arg.getDirs()) {
       if (dir instanceof PathSourcePath && !projectFilesystem.isDirectory(resolveSourcePath(dir))) {
         throw new HumanReadableException(
             "%s specified in the dirs parameter of %s is not a directory",
             dir.toString(), resource.toString());
       }
     }
-    for (SourcePath file : arg.files) {
+    for (SourcePath file : arg.getFiles()) {
       if (file instanceof PathSourcePath && !projectFilesystem.isFile(resolveSourcePath(file))) {
         throw new HumanReadableException(
             "%s specified in the files parameter of %s is not a regular file",
@@ -821,7 +822,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateCxxLibraryTarget(
       PBXProject project,
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode,
-      ImmutableSet<AppleResourceDescription.Arg> directResources,
+      ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
       throws IOException {
@@ -869,8 +870,8 @@ public class ProjectGenerator {
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
-      ImmutableSet<AppleResourceDescription.Arg> recursiveResources,
-      ImmutableSet<AppleResourceDescription.Arg> directResources,
+      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
+      ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,

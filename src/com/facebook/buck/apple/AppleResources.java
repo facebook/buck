@@ -42,7 +42,7 @@ public class AppleResources {
    * @param targetNodes {@link TargetNode} at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  public static ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
+  public static ImmutableSet<AppleResourceDescriptionArg> collectRecursiveResources(
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
       Iterable<? extends TargetNode<?, ?>> targetNodes) {
@@ -55,7 +55,7 @@ public class AppleResources {
                     AppleBuildRules.RecursiveDependenciesMode.COPYING,
                     node,
                     ImmutableSet.of(AppleResourceDescription.class)))
-        .transform(input -> (AppleResourceDescription.Arg) input.getConstructorArg())
+        .transform(input -> (AppleResourceDescriptionArg) input.getConstructorArg())
         .toSet();
   }
 
@@ -88,13 +88,13 @@ public class AppleResources {
     return builder.build();
   }
 
-  public static ImmutableSet<AppleResourceDescription.Arg> collectDirectResources(
+  public static ImmutableSet<AppleResourceDescriptionArg> collectDirectResources(
       TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
-    ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<AppleResourceDescriptionArg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {
       if (node.getDescription() instanceof AppleResourceDescription) {
-        builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
+        builder.add((AppleResourceDescriptionArg) node.getConstructorArg());
       }
     }
     return builder.build();

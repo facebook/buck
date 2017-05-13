@@ -20,7 +20,6 @@ import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtil
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.getSingletonPhaseByType;
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.populateArgWithDefaults;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -35,7 +34,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
-import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -251,8 +250,11 @@ public class NewNativeTargetProjectMutatorTest {
   public void testResourcesBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    AppleResourceDescription.Arg arg = populateArgWithDefaults(new AppleResourceDescription.Arg());
-    arg.files = ImmutableSet.of(new FakeSourcePath("foo.png"));
+    AppleResourceDescriptionArg arg =
+        AppleResourceDescriptionArg.builder()
+            .setName("resources")
+            .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
+            .build();
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =

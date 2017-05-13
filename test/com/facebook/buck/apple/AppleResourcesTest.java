@@ -40,7 +40,7 @@ public class AppleResourcesTest {
   public void emptyInputHasEmptyResources() {
     ImmutableSet<TargetNode<?, ?>> graphNodes = ImmutableSet.of();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleResourceDescription.Arg, ?>> targetNodes = ImmutableSet.of();
+    ImmutableSet<TargetNode<AppleResourceDescriptionArg, ?>> targetNodes = ImmutableSet.of();
 
     assertThat(AppleResources.collectRecursiveResources(targetGraph, null, targetNodes), empty());
   }
@@ -55,7 +55,7 @@ public class AppleResourcesTest {
             new FakeSourcePath("path/bb.lproj/Localizable.strings"),
             new FakeSourcePath("path/cc.lproj/Localizable.strings"));
 
-    TargetNode<AppleResourceDescription.Arg, ?> resourceNode =
+    TargetNode<AppleResourceDescriptionArg, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
             .setDirs(ImmutableSet.of())
@@ -77,7 +77,7 @@ public class AppleResourcesTest {
   @Test
   public void libWithTransitiveResourceDepReturnsAllResources() {
     BuildTarget fooResourceTarget = BuildTargetFactory.newInstance("//foo:resource");
-    TargetNode<AppleResourceDescription.Arg, ?> fooResourceNode =
+    TargetNode<AppleResourceDescriptionArg, ?> fooResourceNode =
         AppleResourceBuilder.createBuilder(fooResourceTarget)
             .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
             .setDirs(ImmutableSet.of())
@@ -88,7 +88,7 @@ public class AppleResourcesTest {
             .setDeps(ImmutableSortedSet.of(fooResourceTarget))
             .build();
     BuildTarget barResourceTarget = BuildTargetFactory.newInstance("//bar:resource");
-    TargetNode<AppleResourceDescription.Arg, ?> barResourceNode =
+    TargetNode<AppleResourceDescriptionArg, ?> barResourceNode =
         AppleResourceBuilder.createBuilder(barResourceTarget)
             .setFiles(ImmutableSet.of(new FakeSourcePath("bar.png")))
             .setDirs(ImmutableSet.of())
