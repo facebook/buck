@@ -18,29 +18,30 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class XcodeWorkspaceConfigDescription
-    implements Description<XcodeWorkspaceConfigDescription.Arg> {
+    implements Description<XcodeWorkspaceConfigDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<XcodeWorkspaceConfigDescriptionArg> getConstructorArgType() {
+    return XcodeWorkspaceConfigDescriptionArg.class;
   }
 
   @Override
@@ -49,41 +50,54 @@ public class XcodeWorkspaceConfigDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      XcodeWorkspaceConfigDescriptionArg args) {
     return new NoopBuildRule(params);
   }
 
-  public static String getWorkspaceNameFromArg(Arg arg) {
-    if (arg.workspaceName.isPresent()) {
-      return arg.workspaceName.get();
-    } else if (arg.srcTarget.isPresent()) {
-      return arg.srcTarget.get().getShortName();
+  public static String getWorkspaceNameFromArg(XcodeWorkspaceConfigDescriptionArg arg) {
+    if (arg.getWorkspaceName().isPresent()) {
+      return arg.getWorkspaceName().get();
+    } else if (arg.getSrcTarget().isPresent()) {
+      return arg.getSrcTarget().get().getShortName();
     } else {
       throw new HumanReadableException(
           "Either workspace_name or src_target is required for xcode_workspace_config");
     }
   }
 
-  public static ImmutableMap<SchemeActionType, String> getActionConfigNamesFromArg(Arg arg) {
+  public static ImmutableMap<SchemeActionType, String> getActionConfigNamesFromArg(
+      XcodeWorkspaceConfigDescriptionArg arg) {
     // Start out with the default action config names..
     Map<SchemeActionType, String> newActionConfigNames =
         new HashMap<>(SchemeActionType.DEFAULT_CONFIG_NAMES);
     // And override them with any provided in the "action_config_names" map.
-    newActionConfigNames.putAll(arg.actionConfigNames);
+    newActionConfigNames.putAll(arg.getActionConfigNames());
 
     return ImmutableMap.copyOf(newActionConfigNames);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<BuildTarget> srcTarget;
-    public ImmutableSortedSet<BuildTarget> extraTests = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> extraTargets = ImmutableSortedSet.of();
-    public Optional<String> workspaceName;
-    public ImmutableMap<SchemeActionType, String> actionConfigNames = ImmutableMap.of();
-    public ImmutableSortedMap<String, BuildTarget> extraSchemes = ImmutableSortedMap.of();
-    public Optional<Boolean> isRemoteRunnable;
-    public Optional<String> explicitRunnablePath;
-    public Optional<XCScheme.LaunchAction.LaunchStyle> launchStyle;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractXcodeWorkspaceConfigDescriptionArg extends CommonDescriptionArg {
+    Optional<BuildTarget> getSrcTarget();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExtraTests();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExtraTargets();
+
+    Optional<String> getWorkspaceName();
+
+    ImmutableMap<SchemeActionType, String> getActionConfigNames();
+
+    @Value.NaturalOrder
+    ImmutableSortedMap<String, BuildTarget> getExtraSchemes();
+
+    Optional<Boolean> getIsRemoteRunnable();
+
+    Optional<String> getExplicitRunnablePath();
+
+    Optional<XCScheme.LaunchAction.LaunchStyle> getLaunchStyle();
   }
 }

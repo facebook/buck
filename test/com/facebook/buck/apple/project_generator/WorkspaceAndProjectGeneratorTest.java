@@ -35,6 +35,7 @@ import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -96,9 +97,9 @@ public class WorkspaceAndProjectGeneratorTest {
   private SwiftBuckConfig swiftBuckConfig;
 
   private TargetGraph targetGraph;
-  private TargetNode<XcodeWorkspaceConfigDescription.Arg, XcodeWorkspaceConfigDescription>
+  private TargetNode<XcodeWorkspaceConfigDescriptionArg, XcodeWorkspaceConfigDescription>
       workspaceNode;
-  private TargetNode<XcodeWorkspaceConfigDescription.Arg, XcodeWorkspaceConfigDescription>
+  private TargetNode<XcodeWorkspaceConfigDescriptionArg, XcodeWorkspaceConfigDescription>
       workspaceWithExtraSchemeNode;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -427,7 +428,7 @@ public class WorkspaceAndProjectGeneratorTest {
                     SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
             .build();
 
-    TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode =
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
             .setSrcTarget(Optional.of(libraryTarget))
@@ -473,7 +474,7 @@ public class WorkspaceAndProjectGeneratorTest {
                     SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
             .build();
 
-    TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode =
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
             .setSrcTarget(Optional.of(libraryTarget))
@@ -726,7 +727,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .build();
 
-    TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode =
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
             .setWorkspaceName(Optional.of("workspace"))
@@ -798,7 +799,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
-    TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode =
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
             .setWorkspaceName(Optional.of("workspace"))
@@ -847,7 +848,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
-    TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> workspaceNode =
+    TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
             .setWorkspaceName(Optional.of("workspace"))

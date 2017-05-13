@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -63,8 +64,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -344,9 +343,9 @@ public class XCodeProjectCommandHelper {
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (final BuildTarget inputTarget : targets) {
       TargetNode<?, ?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
-      XcodeWorkspaceConfigDescription.Arg workspaceArgs;
+      XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
+        TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(inputNode);
         workspaceArgs = castedWorkspaceNode.getConstructorArg();
       } else if (canGenerateImplicitWorkspaceForDescription(inputNode.getDescription())) {
@@ -474,11 +473,11 @@ public class XCodeProjectCommandHelper {
   }
 
   @SuppressWarnings(value = "unchecked")
-  private static TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castToXcodeWorkspaceTargetNode(
+  private static TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castToXcodeWorkspaceTargetNode(
       TargetNode<?, ?> targetNode) {
     Preconditions.checkArgument(
         targetNode.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    return (TargetNode<XcodeWorkspaceConfigDescription.Arg, ?>) targetNode;
+    return (TargetNode<XcodeWorkspaceConfigDescriptionArg, ?>) targetNode;
   }
 
   private void checkForAndKillXcodeIfRunning(boolean enablePrompt)
@@ -638,9 +637,9 @@ public class XCodeProjectCommandHelper {
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
     for (TargetNode<?, ?> node : targetNodes) {
       if (node.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
+        TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(node);
-        Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().srcTarget;
+        Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().getSrcTarget();
         if (srcTarget.isPresent()) {
           resultBuilder.add(srcTarget.get());
         } else {
@@ -667,19 +666,12 @@ public class XCodeProjectCommandHelper {
    * @return Workspace Args that describe a generic Xcode workspace containing `src_target` and its
    *     tests
    */
-  private static XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
+  private static XcodeWorkspaceConfigDescriptionArg createImplicitWorkspaceArgs(
       TargetNode<?, ?> sourceTargetNode) {
-    XcodeWorkspaceConfigDescription.Arg workspaceArgs = new XcodeWorkspaceConfigDescription.Arg();
-    workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());
-    workspaceArgs.actionConfigNames = ImmutableMap.of();
-    workspaceArgs.extraTests = ImmutableSortedSet.of();
-    workspaceArgs.extraTargets = ImmutableSortedSet.of();
-    workspaceArgs.workspaceName = Optional.empty();
-    workspaceArgs.extraSchemes = ImmutableSortedMap.of();
-    workspaceArgs.isRemoteRunnable = Optional.empty();
-    workspaceArgs.explicitRunnablePath = Optional.empty();
-    workspaceArgs.launchStyle = Optional.empty();
-    return workspaceArgs;
+    return XcodeWorkspaceConfigDescriptionArg.builder()
+        .setName("dummy")
+        .setSrcTarget(sourceTargetNode.getBuildTarget())
+        .build();
   }
 
   /**

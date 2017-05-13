@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -76,7 +77,7 @@ public class WorkspaceAndProjectGenerator {
   private final Cell rootCell;
   private final TargetGraph projectGraph;
   private final AppleDependenciesCache dependenciesCache;
-  private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
+  private final XcodeWorkspaceConfigDescriptionArg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final FocusedModuleTargetMatcher focusModules;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
@@ -99,7 +100,7 @@ public class WorkspaceAndProjectGenerator {
   public WorkspaceAndProjectGenerator(
       Cell cell,
       TargetGraph projectGraph,
-      XcodeWorkspaceConfigDescription.Arg workspaceArguments,
+      XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       boolean combinedProject,
@@ -134,7 +135,7 @@ public class WorkspaceAndProjectGenerator {
             inputs ->
                 // Update the focused modules list (if present) to contain srcTarget (if present).
                 workspaceArguments
-                    .srcTarget
+                    .getSrcTarget()
                     .map(
                         srcTarget ->
                             ImmutableSet.<UnflavoredBuildTarget>builder()
@@ -181,7 +182,7 @@ public class WorkspaceAndProjectGenerator {
         new WorkspaceGenerator(
             rootCell.getFilesystem(), combinedProject ? "project" : workspaceName, outputDirectory);
 
-    ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder =
+    ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder =
         ImmutableMap.builder();
     ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
         schemeNameToSrcTargetNodeBuilder = ImmutableSetMultimap.builder();
@@ -201,7 +202,7 @@ public class WorkspaceAndProjectGenerator {
         buildForTestNodesBuilder,
         testsBuilder);
 
-    ImmutableMap<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigs =
+    ImmutableMap<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigs =
         schemeConfigsBuilder.build();
     ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode =
         schemeNameToSrcTargetNodeBuilder.build();
@@ -317,8 +318,8 @@ public class WorkspaceAndProjectGenerator {
         }
 
         final boolean isMainProject =
-            workspaceArguments.srcTarget.isPresent()
-                && rules.contains(workspaceArguments.srcTarget.get());
+            workspaceArguments.getSrcTarget().isPresent()
+                && rules.contains(workspaceArguments.getSrcTarget().get());
         projectGeneratorFutures.add(
             listeningExecutorService.submit(
                 () -> {
@@ -406,7 +407,7 @@ public class WorkspaceAndProjectGenerator {
                 buildFileName,
                 projectGeneratorOptions,
                 isMainProject,
-                workspaceArguments.srcTarget,
+                workspaceArguments.getSrcTarget(),
                 targetsInRequiredProjects,
                 focusModules,
                 defaultCxxPlatform,
@@ -457,7 +458,7 @@ public class WorkspaceAndProjectGenerator {
             buildFileName,
             projectGeneratorOptions,
             true,
-            workspaceArguments.srcTarget,
+            workspaceArguments.getSrcTarget(),
             targetsInRequiredProjects,
             focusModules,
             defaultCxxPlatform,
@@ -485,8 +486,8 @@ public class WorkspaceAndProjectGenerator {
       boolean includeProjectTests,
       boolean includeDependenciesTests,
       String workspaceName,
-      XcodeWorkspaceConfigDescription.Arg workspaceArguments,
-      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      XcodeWorkspaceConfigDescriptionArg workspaceArguments,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<?, ?>> buildForTestNodesBuilder,
@@ -504,7 +505,7 @@ public class WorkspaceAndProjectGenerator {
     addExtraWorkspaceSchemes(
         projectGraph,
         dependenciesCache,
-        workspaceArguments.extraSchemes,
+        workspaceArguments.getExtraSchemes(),
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
         extraTestNodesBuilder);
@@ -514,7 +515,7 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder.build();
 
     buildWorkspaceSchemeTests(
-        workspaceArguments.srcTarget,
+        workspaceArguments.getSrcTarget(),
         projectGraph,
         includeProjectTests,
         includeDependenciesTests,
@@ -528,22 +529,22 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       String schemeName,
-      XcodeWorkspaceConfigDescription.Arg schemeArguments,
-      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      XcodeWorkspaceConfigDescriptionArg schemeArguments,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
           extraTestNodesBuilder) {
     LOG.debug("Adding scheme %s", schemeName);
     schemeConfigsBuilder.put(schemeName, schemeArguments);
-    if (schemeArguments.srcTarget.isPresent()) {
+    if (schemeArguments.getSrcTarget().isPresent()) {
       schemeNameToSrcTargetNodeBuilder.putAll(
           schemeName,
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
                   Optional.of(dependenciesCache),
-                  projectGraph.get(schemeArguments.srcTarget.get())),
+                  projectGraph.get(schemeArguments.getSrcTarget().get())),
               Optional::of));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
@@ -551,7 +552,7 @@ public class WorkspaceAndProjectGenerator {
           Optional.empty());
     }
 
-    for (BuildTarget extraTarget : schemeArguments.extraTargets) {
+    for (BuildTarget extraTarget : schemeArguments.getExtraTargets()) {
       schemeNameToSrcTargetNodeBuilder.putAll(
           schemeName,
           Iterables.transform(
@@ -563,14 +564,14 @@ public class WorkspaceAndProjectGenerator {
     }
 
     extraTestNodesBuilder.putAll(
-        schemeName, getExtraTestTargetNodes(projectGraph, schemeArguments.extraTests));
+        schemeName, getExtraTestTargetNodes(projectGraph, schemeArguments.getExtraTests()));
   }
 
   private static void addExtraWorkspaceSchemes(
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       ImmutableSortedMap<String, BuildTarget> extraSchemes,
-      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
           schemeNameToSrcTargetNodeBuilder,
       ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg, ?>>
@@ -584,8 +585,8 @@ public class WorkspaceAndProjectGenerator {
             "Extra scheme target '%s' should be of type 'xcode_workspace_config'",
             extraSchemeTarget);
       }
-      XcodeWorkspaceConfigDescription.Arg extraSchemeArg =
-          (XcodeWorkspaceConfigDescription.Arg) extraSchemeNode.get().getConstructorArg();
+      XcodeWorkspaceConfigDescriptionArg extraSchemeArg =
+          (XcodeWorkspaceConfigDescriptionArg) extraSchemeNode.get().getConstructorArg();
       String schemeName = extraSchemeEntry.getKey();
       addWorkspaceScheme(
           projectGraph,
@@ -784,19 +785,19 @@ public class WorkspaceAndProjectGenerator {
   private void writeWorkspaceSchemes(
       String workspaceName,
       Path outputDirectory,
-      ImmutableMap<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigs,
+      ImmutableMap<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigs,
       ImmutableSetMultimap<String, Optional<TargetNode<?, ?>>> schemeNameToSrcTargetNode,
       ImmutableSetMultimap<String, TargetNode<?, ?>> buildForTestNodes,
       ImmutableSetMultimap<String, TargetNode<AppleTestDescriptionArg, ?>> ungroupedTests,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget)
       throws IOException {
-    for (Map.Entry<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigEntry :
+    for (Map.Entry<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigEntry :
         schemeConfigs.entrySet()) {
       String schemeName = schemeConfigEntry.getKey();
-      XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();
-      if (schemeConfigArg.srcTarget.isPresent()
-          && !focusModules.isFocusedOn(schemeConfigArg.srcTarget.get())) {
+      XcodeWorkspaceConfigDescriptionArg schemeConfigArg = schemeConfigEntry.getValue();
+      if (schemeConfigArg.getSrcTarget().isPresent()
+          && !focusModules.isFocusedOn(schemeConfigArg.getSrcTarget().get())) {
         continue;
       }
       ImmutableSet<PBXTarget> orderedBuildTargets =
@@ -825,9 +826,9 @@ public class WorkspaceAndProjectGenerator {
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
               .collect(MoreCollectors.toImmutableSet());
-      Optional<String> runnablePath = schemeConfigArg.explicitRunnablePath;
+      Optional<String> runnablePath = schemeConfigArg.getExplicitRunnablePath();
       Optional<String> remoteRunnablePath;
-      if (schemeConfigArg.isRemoteRunnable.orElse(false)) {
+      if (schemeConfigArg.getIsRemoteRunnable().orElse(false)) {
         // XXX TODO(beng): Figure out the actual name of the binary to launch
         remoteRunnablePath = Optional.of("/" + workspaceName);
       } else {
@@ -836,7 +837,7 @@ public class WorkspaceAndProjectGenerator {
       SchemeGenerator schemeGenerator =
           new SchemeGenerator(
               rootCell.getFilesystem(),
-              schemeConfigArg.srcTarget.map(buildTargetToPBXTarget::get),
+              schemeConfigArg.getSrcTarget().map(buildTargetToPBXTarget::get),
               orderedBuildTargets,
               orderedBuildTestTargets,
               orderedRunTestTargets,
@@ -849,7 +850,7 @@ public class WorkspaceAndProjectGenerator {
               remoteRunnablePath,
               XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
               targetToProjectPathMap,
-              schemeConfigArg.launchStyle.orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
+              schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
