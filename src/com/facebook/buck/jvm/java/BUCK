@@ -317,7 +317,7 @@ java_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "rules",
     srcs = [
         "BuiltInJavac.java",

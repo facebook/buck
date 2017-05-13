@@ -23,13 +23,14 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
+import com.facebook.buck.jvm.java.JavaBinaryDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription.Args> {
+public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescriptionArg> {
 
   public JavaBinaryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -44,18 +45,18 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
   }
 
   @Override
-  public void apply(TargetNode<JavaBinaryDescription.Args, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<JavaBinaryDescriptionArg, ?> target, ModuleBuildContext context) {
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
     saveMetaInfDirectoryForIntellijPlugin(target, context);
   }
 
   private void saveMetaInfDirectoryForIntellijPlugin(
-      TargetNode<JavaBinaryDescription.Args, ?> target, ModuleBuildContext context) {
+      TargetNode<JavaBinaryDescriptionArg, ?> target, ModuleBuildContext context) {
     ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
     if (intellijPluginLabels.isEmpty()) {
       return;
     }
-    Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
+    Optional<Path> metaInfDirectory = target.getConstructorArg().getMetaInfDirectory();
     if (metaInfDirectory.isPresent()
         && target.getConstructorArg().labelsContainsAnyOf(intellijPluginLabels)) {
       context.setMetaInfDirectory(metaInfDirectory.get());
@@ -63,12 +64,12 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescription.Args, ?> target) {
+  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescriptionArg, ?> target) {
     ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
     if (intellijPluginLabels.isEmpty()) {
       return IjModuleType.JAVA_MODULE;
     }
-    Optional<Path> metaInfDirectory = target.getConstructorArg().metaInfDirectory;
+    Optional<Path> metaInfDirectory = target.getConstructorArg().getMetaInfDirectory();
     if (metaInfDirectory.isPresent()
         && target.getConstructorArg().labelsContainsAnyOf(intellijPluginLabels)) {
       return IjModuleType.INTELLIJ_PLUGIN_MODULE;

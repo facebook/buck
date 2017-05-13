@@ -150,16 +150,6 @@ public abstract class AbstractNodeBuilder<
         .build();
   }
 
-  protected <C extends Comparable<?>> ImmutableSortedSet<C> amend(
-      ImmutableSortedSet<C> existing, C instance) {
-    ImmutableSortedSet.Builder<C> toReturn = ImmutableSortedSet.naturalOrder();
-    if (existing != null) {
-      toReturn.addAll(existing);
-    }
-    toReturn.add(instance);
-    return toReturn.build();
-  }
-
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<BuildTarget> findImplicitDeps() {
     ImplicitDepsInferringDescription<TArg> desc =
