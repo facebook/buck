@@ -27,13 +27,13 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -45,8 +45,8 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -59,11 +59,13 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 public class PythonBinaryDescription
-    implements Description<PythonBinaryDescription.Arg>,
-        ImplicitDepsInferringDescription<PythonBinaryDescription.Arg>,
-        VersionRoot<PythonBinaryDescription.Arg> {
+    implements Description<PythonBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<
+            PythonBinaryDescription.AbstractPythonBinaryDescriptionArg>,
+        VersionRoot<PythonBinaryDescriptionArg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
@@ -87,8 +89,8 @@ public class PythonBinaryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<PythonBinaryDescriptionArg> getConstructorArgType() {
+    return PythonBinaryDescriptionArg.class;
   }
 
   public static BuildTarget getEmptyInitTarget(BuildTarget baseTarget) {
@@ -237,10 +239,10 @@ public class PythonBinaryDescription
     }
   }
 
-  private CxxPlatform getCxxPlatform(BuildTarget target, Arg args) {
+  private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
     return cxxPlatforms
         .getValue(target)
-        .orElse(args.cxxPlatform.map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
+        .orElse(args.getCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
   }
 
   @Override
@@ -249,13 +251,13 @@ public class PythonBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      PythonBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
+    if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
       throw new HumanReadableException(
           "%s: must set exactly one of `main_module` and `main`", params.getBuildTarget());
     }
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.getBaseModule());
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
@@ -264,16 +266,17 @@ public class PythonBinaryDescription
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
-    if (args.main.isPresent()) {
+    if (args.getMain().isPresent()) {
       LOG.warn(
           "%s: parameter `main` is deprecated, please use `main_module` instead.",
           params.getBuildTarget());
-      String mainName = pathResolver.getSourcePathName(params.getBuildTarget(), args.main.get());
+      String mainName =
+          pathResolver.getSourcePathName(params.getBuildTarget(), args.getMain().get());
       Path main = baseModule.resolve(mainName);
-      modules.put(baseModule.resolve(mainName), args.main.get());
+      modules.put(baseModule.resolve(mainName), args.getMain().get());
       mainModule = PythonUtil.toModuleName(params.getBuildTarget(), main.toString());
     } else {
-      mainModule = args.mainModule.get();
+      mainModule = args.getMainModule().get();
     }
     // Build up the list of all components going into the python binary.
     PythonPackageComponents binaryPackageComponents =
@@ -282,7 +285,7 @@ public class PythonBinaryDescription
             /* resources */ ImmutableMap.of(),
             /* nativeLibraries */ ImmutableMap.of(),
             /* prebuiltLibraries */ ImmutableSet.of(),
-            /* zipSafe */ args.zipSafe);
+            /* zipSafe */ args.getZipSafe());
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
     PythonPlatform pythonPlatform =
@@ -290,7 +293,7 @@ public class PythonBinaryDescription
             .getValue(params.getBuildTarget())
             .orElse(
                 pythonPlatforms.getValue(
-                    args.platform
+                    args.getPlatform()
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
@@ -299,7 +302,7 @@ public class PythonBinaryDescription
             params,
             resolver,
             ruleFinder,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.deps, args.platformDeps)
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(resolver::getRule)
                 .collect(MoreCollectors.toImmutableList()),
@@ -307,7 +310,7 @@ public class PythonBinaryDescription
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            args.linkerFlags
+            args.getLinkerFlags()
                 .stream()
                 .map(
                     MacroArg.toMacroArgFunction(
@@ -315,7 +318,7 @@ public class PythonBinaryDescription
                         ::apply)
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.preloadDeps);
+            args.getPreloadDeps());
     return createPackageRule(
         params,
         resolver,
@@ -323,25 +326,25 @@ public class PythonBinaryDescription
         pythonPlatform,
         cxxPlatform,
         mainModule,
-        args.extension,
+        args.getExtension(),
         allPackageComponents,
-        args.buildArgs,
-        args.packageStyle.orElse(pythonBuckConfig.getPackageStyle()),
-        PythonUtil.getPreloadNames(resolver, cxxPlatform, args.preloadDeps));
+        args.getBuildArgs(),
+        args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()),
+        PythonUtil.getPreloadNames(resolver, cxxPlatform, args.getPreloadDeps()));
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractPythonBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // We need to use the C/C++ linker for native libs handling, so add in the C/C++ linker to
     // parse time deps.
     extraDepsBuilder.addAll(getCxxPlatform(buildTarget, constructorArg).getLd().getParseTimeDeps());
 
-    if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle())
+    if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
         == PythonBuckConfig.PackageStyle.STANDALONE) {
       extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexTarget()));
       extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexExecutorTarget()));
@@ -353,31 +356,37 @@ public class PythonBinaryDescription
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public Optional<SourcePath> main;
-    public Optional<String> mainModule;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
-        PatternMatchedCollection.of();
-    public Optional<String> baseModule;
-    public Optional<Boolean> zipSafe;
-    public ImmutableList<String> buildArgs = ImmutableList.of();
-    public Optional<String> platform;
-    public Optional<Flavor> cxxPlatform;
-    public Optional<PythonBuckConfig.PackageStyle> packageStyle;
-    public ImmutableSet<BuildTarget> preloadDeps = ImmutableSet.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
-    public Optional<String> extension;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractPythonBinaryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+    Optional<SourcePath> getMain();
 
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    Optional<String> getMainModule();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
     }
 
-    public Optional<String> versionUniverse;
+    Optional<String> getBaseModule();
+
+    Optional<Boolean> getZipSafe();
+
+    ImmutableList<String> getBuildArgs();
+
+    Optional<String> getPlatform();
+
+    Optional<Flavor> getCxxPlatform();
+
+    Optional<PythonBuckConfig.PackageStyle> getPackageStyle();
+
+    ImmutableSet<BuildTarget> getPreloadDeps();
+
+    ImmutableList<String> getLinkerFlags();
+
+    Optional<String> getExtension();
+
+    Optional<String> getVersionUniverse();
   }
 }
