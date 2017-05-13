@@ -504,7 +504,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
       final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
       if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
-        markRuleAsUsed(rule, buildContext.getEventBus());
         return Futures.immediateFuture(
             BuildResult.success(
                 rule, BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
@@ -566,20 +565,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RuleKeyFactories ruleKeyFactories,
       CacheResult cacheResult) {
     if (cacheResult.getType().isSuccess()) {
-      markRuleAsUsed(rule, buildContext.getEventBus());
       return Futures.immediateFuture(
           BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
     }
 
     // 3. Build deps.
     ListenableFuture<List<BuildResult>> getDepResults =
-        Futures.transformAsync(
-            getDepResults(rule, buildContext, executionContext, asyncCallbacks),
-            input -> {
-              markRuleAsUsed(rule, buildContext.getEventBus());
-              return Futures.immediateFuture(input);
-            },
-            serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+        getDepResults(rule, buildContext, executionContext, asyncCallbacks);
 
     // 4. Return to the current rule and check caches to see if we can avoid building
     // locally.
@@ -677,6 +669,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           MoreFutures.chainExceptions(
               getDepResults(rule, buildContext, executionContext, asyncCallbacks), buildResult);
     }
+
+    buildResult =
+        Futures.transform(
+            buildResult,
+            (result) -> {
+              markRuleAsUsed(rule, buildContext.getEventBus());
+              return result;
+            },
+            MoreExecutors.directExecutor());
 
     // Setup a callback to handle either the cached or built locally cases.
     AsyncFunction<BuildResult, BuildResult> callback =
