@@ -22,35 +22,37 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
+public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg> {
 
-  /** Default value for {@link Arg#style}. */
+  /** Default value for {@link GwtBinaryDescriptionArg#style}. */
   private static final Style DEFAULT_STYLE = Style.OBF;
 
-  /** Default value for {@link Arg#localWorkers}. */
+  /** Default value for {@link GwtBinaryDescriptionArg#localWorkers}. */
   private static final Integer DEFAULT_NUM_LOCAL_WORKERS = Integer.valueOf(2);
 
-  /** Default value for {@link Arg#draftCompile}. */
+  /** Default value for {@link GwtBinaryDescriptionArg#draftCompile}. */
   private static final Boolean DEFAULT_DRAFT_COMPILE = Boolean.FALSE;
 
-  /** Default value for {@link Arg#strict}. */
+  /** Default value for {@link GwtBinaryDescriptionArg#strict}. */
   private static final Boolean DEFAULT_STRICT = Boolean.FALSE;
 
   /** This value is taken from GWT's source code: http://bit.ly/1nZtmMv */
@@ -63,8 +65,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<GwtBinaryDescriptionArg> getConstructorArgType() {
+    return GwtBinaryDescriptionArg.class;
   }
 
   @Override
@@ -73,7 +75,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      GwtBinaryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
@@ -82,7 +84,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
     final ImmutableSortedSet.Builder<SourcePath> gwtModuleJarsBuilder =
         ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.moduleDeps);
+    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.getModuleDeps());
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
@@ -137,46 +139,49 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
     return new GwtBinary(
         params.copyReplacingExtraDeps(Suppliers.ofInstance(extraDeps.build())),
-        args.modules,
+        args.getModules(),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
-        args.style.orElse(DEFAULT_STYLE),
-        args.draftCompile.orElse(DEFAULT_DRAFT_COMPILE),
-        args.optimize.orElse(DEFAULT_OPTIMIZE),
-        args.localWorkers.orElse(DEFAULT_NUM_LOCAL_WORKERS),
-        args.strict.orElse(DEFAULT_STRICT),
-        args.experimentalArgs,
+        args.getVmArgs(),
+        args.getStyle().orElse(DEFAULT_STYLE),
+        args.getDraftCompile().orElse(DEFAULT_DRAFT_COMPILE),
+        args.getOptimize().orElse(DEFAULT_OPTIMIZE),
+        args.getLocalWorkers().orElse(DEFAULT_NUM_LOCAL_WORKERS),
+        args.getStrict().orElse(DEFAULT_STRICT),
+        args.getExperimentalArgs(),
         gwtModuleJarsBuilder.build());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<String> modules = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> moduleDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGwtBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getModules();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getModuleDeps();
 
     /** In practice, these may be values such as {@code -Xmx512m}. */
-    public ImmutableList<String> vmArgs = ImmutableList.of();
+    ImmutableList<String> getVmArgs();
 
     /** This will be passed to the GWT Compiler's {@code -style} flag. */
-    public Optional<Style> style;
+    Optional<Style> getStyle();
 
     /** If {@code true}, the GWT Compiler's {@code -draftCompile} flag will be set. */
-    public Optional<Boolean> draftCompile;
+    Optional<Boolean> getDraftCompile();
 
     /** This will be passed to the GWT Compiler's {@code -optimize} flag. */
-    public Optional<Integer> optimize;
+    Optional<Integer> getOptimize();
 
     /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
-    public Optional<Integer> localWorkers;
+    Optional<Integer> getLocalWorkers();
 
     /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
-    public Optional<Boolean> strict;
+    Optional<Boolean> getStrict();
 
     /**
      * In practice, these may be values such as {@code -XenableClosureCompiler}, {@code
      * -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
      */
-    public ImmutableList<String> experimentalArgs = ImmutableList.of();
+    ImmutableList<String> getExperimentalArgs();
   }
 }
