@@ -42,7 +42,8 @@ public class SwiftDescriptionsTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
-    SwiftLibraryDescription.Arg output = new SwiftLibraryDescription.Arg();
+    SwiftLibraryDescriptionArg.Builder outputBuilder =
+        SwiftLibraryDescriptionArg.builder().setName("bar");
 
     CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
 
@@ -53,14 +54,16 @@ public class SwiftDescriptionsTest {
             SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        pathResolver, output, args.build(), buildTarget);
-    assertThat(output.moduleName.get(), equalTo("bar"));
-    assertThat(output.srcs, equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
+        pathResolver, outputBuilder, args.build(), buildTarget);
+    SwiftLibraryDescriptionArg output = outputBuilder.build();
+    assertThat(output.getModuleName().get(), equalTo("bar"));
+    assertThat(output.getSrcs(), equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
 
     args.setModuleName("baz");
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        pathResolver, output, args.build(), buildTarget);
-    assertThat(output.moduleName.get(), equalTo("baz"));
+        pathResolver, outputBuilder, args.build(), buildTarget);
+    output = outputBuilder.build();
+    assertThat(output.getModuleName().get(), equalTo("baz"));
   }
 }

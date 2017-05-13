@@ -52,27 +52,29 @@ public class SwiftDescriptions {
 
   static void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
-      SwiftLibraryDescription.Arg output,
+      SwiftLibraryDescriptionArg.Builder output,
       final CxxLibraryDescription.CommonArg args,
       BuildTarget buildTarget) {
 
-    output.srcs = filterSwiftSources(sourcePathResolver, args.getSrcs());
+    output.setName(args.getName());
+    output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
     if (args instanceof HasSwiftCompilerFlags) {
-      output.compilerFlags = ((HasSwiftCompilerFlags) args).getSwiftCompilerFlags();
+      output.setCompilerFlags(((HasSwiftCompilerFlags) args).getSwiftCompilerFlags());
     } else {
-      output.compilerFlags = args.getCompilerFlags();
+      output.setCompilerFlags(args.getCompilerFlags());
     }
-    output.frameworks = args.getFrameworks();
-    output.libraries = args.getLibraries();
-    output.deps = args.getDeps();
-    output.supportedPlatformsRegex = args.getSupportedPlatformsRegex();
-    output.moduleName =
-        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
-    output.enableObjcInterop = Optional.of(true);
-    output.bridgingHeader = args.getBridgingHeader();
+    output.setFrameworks(args.getFrameworks());
+    output.setLibraries(args.getLibraries());
+    output.setDeps(args.getDeps());
+    output.setSupportedPlatformsRegex(args.getSupportedPlatformsRegex());
+    output.setModuleName(
+        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName())));
+    output.setEnableObjcInterop(true);
+    output.setBridgingHeader(args.getBridgingHeader());
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
-    output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage();
+    output.setPreferredLinkage(
+        isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage());
   }
 
   static String toSwiftHeaderName(String moduleName) {

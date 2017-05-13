@@ -34,12 +34,14 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -48,7 +50,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -62,8 +64,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-public class SwiftLibraryDescription implements Description<SwiftLibraryDescription.Arg>, Flavored {
+public class SwiftLibraryDescription implements Description<SwiftLibraryDescriptionArg>, Flavored {
 
   static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
@@ -110,8 +113,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<SwiftLibraryDescriptionArg> getConstructorArgType() {
+    return SwiftLibraryDescriptionArg.class;
   }
 
   @Override
@@ -139,7 +142,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      SwiftLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -197,7 +200,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                 target,
                 swiftPlatform.get(),
                 cxxPlatform,
-                args.soname,
+                args.getSoname(),
                 flavoredLinkerMapMode);
           case STATIC:
           case MACH_O_BUNDLE:
@@ -248,13 +251,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           swiftBuckConfig,
           params,
           swiftPlatform.get().getSwiftc(),
-          args.frameworks,
-          args.moduleName.orElse(buildTarget.getShortName()),
+          args.getFrameworks(),
+          args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s"),
-          args.srcs,
-          args.compilerFlags,
-          args.enableObjcInterop,
-          args.bridgingHeader);
+          args.getSrcs(),
+          args.getCompilerFlags(),
+          args.getEnableObjcInterop(),
+          args.getBridgingHeader());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -264,10 +267,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         resolver,
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
-        args.frameworks,
-        args.libraries,
-        args.supportedPlatformsRegex,
-        args.preferredLinkage.orElse(NativeLinkable.Linkage.ANY));
+        args.getFrameworks(),
+        args.getLibraries(),
+        args.getSupportedPlatformsRegex(),
+        args.getPreferredLinkage().orElse(NativeLinkable.Linkage.ANY));
   }
 
   private BuildRule createSharedLibraryBuildRule(
@@ -348,13 +351,14 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           : Optional.empty();
     }
 
-    Arg delegateArgs = new Arg();
+    SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),
-        delegateArgs,
+        delegateArgsBuilder,
         args,
         buildTarget);
-    if (!delegateArgs.srcs.isEmpty()) {
+    SwiftLibraryDescriptionArg delegateArgs = delegateArgsBuilder.build();
+    if (!delegateArgs.getSrcs().isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
               createBuildRule(targetGraph, params, resolver, cellRoots, delegateArgs)));
@@ -368,18 +372,28 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<String> moduleName;
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableList<String> compilerFlags = ImmutableList.of();
-    public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
-    public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
-    public Optional<Boolean> enableObjcInterop;
-    public Optional<Pattern> supportedPlatformsRegex;
-    public Optional<String> soname;
-    public Optional<SourcePath> bridgingHeader;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<NativeLinkable.Linkage> preferredLinkage;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractSwiftLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    Optional<String> getModuleName();
+
+    ImmutableList<String> getCompilerFlags();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<FrameworkPath> getFrameworks();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<FrameworkPath> getLibraries();
+
+    Optional<Boolean> getEnableObjcInterop();
+
+    Optional<Pattern> getSupportedPlatformsRegex();
+
+    Optional<String> getSoname();
+
+    Optional<SourcePath> getBridgingHeader();
+
+    Optional<NativeLinkable.Linkage> getPreferredLinkage();
   }
 }

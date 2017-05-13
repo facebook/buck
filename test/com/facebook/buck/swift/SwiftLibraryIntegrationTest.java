@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -110,7 +109,7 @@ public class SwiftLibraryIntegrationTest {
             .setDeclaredDeps(ImmutableSortedSet.of(depRule))
             .build();
 
-    SwiftLibraryDescription.Arg args = createDummySwiftArg();
+    SwiftLibraryDescriptionArg args = createDummySwiftArg();
 
     SwiftCompile buildRule =
         (SwiftCompile)
@@ -135,7 +134,7 @@ public class SwiftLibraryIntegrationTest {
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(swiftCompileTarget).build();
 
-    SwiftLibraryDescription.Arg args = createDummySwiftArg();
+    SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
@@ -186,18 +185,7 @@ public class SwiftLibraryIntegrationTest {
         linkRule.getArgs(), Matchers.not(Matchers.hasItem(SourcePathArg.of(fileListSourcePath))));
   }
 
-  private SwiftLibraryDescription.Arg createDummySwiftArg() {
-    SwiftLibraryDescription.Arg args = new SwiftLibraryDescription.Arg();
-    args.soname = Optional.empty();
-    args.moduleName = Optional.empty();
-    args.srcs = ImmutableSortedSet.of();
-    args.compilerFlags = ImmutableList.of();
-    args.frameworks = ImmutableSortedSet.of();
-    args.libraries = ImmutableSortedSet.of();
-    args.enableObjcInterop = Optional.empty();
-    args.supportedPlatformsRegex = Optional.empty();
-    args.bridgingHeader = Optional.empty();
-    args.preferredLinkage = Optional.empty();
-    return args;
+  private SwiftLibraryDescriptionArg createDummySwiftArg() {
+    return SwiftLibraryDescriptionArg.builder().setName("dummy").build();
   }
 }
