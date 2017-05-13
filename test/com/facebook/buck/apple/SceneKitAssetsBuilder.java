@@ -17,12 +17,13 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import java.nio.file.Path;
 
 public class SceneKitAssetsBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        AppleWrapperResourceArg, SceneKitAssetsDescription, SceneKitAssets> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        AppleWrapperResourceArg.Builder, AppleWrapperResourceArg, SceneKitAssetsDescription,
+        SceneKitAssets> {
 
   protected SceneKitAssetsBuilder(BuildTarget target) {
     super(new SceneKitAssetsDescription(), target);
@@ -33,7 +34,7 @@ public class SceneKitAssetsBuilder
   }
 
   public SceneKitAssetsBuilder setPath(Path path) {
-    arg.path = path;
+    getArgForPopulating().setPath(path);
     return this;
   }
 }

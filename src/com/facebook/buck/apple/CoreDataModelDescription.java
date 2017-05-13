@@ -50,7 +50,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleWrapperResourceArg args) {
-    String extension = Files.getFileExtension(args.path.getFileName().toString());
+    String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension)
             || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
@@ -60,7 +60,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {
     return VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(
-        Files.getFileExtension(arg.path.getFileName().toString()));
+        Files.getFileExtension(arg.getPath().getFileName().toString()));
   }
 
   @Override

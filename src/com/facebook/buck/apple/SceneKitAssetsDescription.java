@@ -49,7 +49,7 @@ public class SceneKitAssetsDescription implements Description<AppleWrapperResour
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleWrapperResourceArg args) {
-    String extension = Files.getFileExtension(args.path.getFileName().toString());
+    String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(SCENEKIT_ASSETS_EXTENSION.equals(extension));
 
     return new NoopBuildRule(params);

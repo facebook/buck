@@ -598,7 +598,7 @@ class NewNativeTargetProjectMutator {
     }
 
     for (AppleWrapperResourceArg arg : resourcePathArgs) {
-      resourceDirsBuilder.add(arg.path);
+      resourceDirsBuilder.add(arg.getPath());
     }
   }
 

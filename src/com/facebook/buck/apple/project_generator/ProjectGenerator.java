@@ -1529,7 +1529,7 @@ public class ProjectGenerator {
       resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
           new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputDirToRootRelative(sceneKitAssets.path),
+              pathRelativizer.outputDirToRootRelative(sceneKitAssets.getPath()),
               Optional.empty()));
     }
   }
@@ -1832,15 +1832,15 @@ public class ProjectGenerator {
             resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
-                    pathRelativizer.outputDirToRootRelative(dataModel.path),
+                    pathRelativizer.outputDirToRootRelative(dataModel.getPath()),
                     Optional.empty()));
 
         projectFilesystem.walkRelativeFileTree(
-            dataModel.path,
+            dataModel.getPath(),
             new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.equals(dataModel.path)) {
+                if (dir.equals(dataModel.getPath())) {
                   return FileVisitResult.CONTINUE;
                 }
                 versionGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -1852,7 +1852,7 @@ public class ProjectGenerator {
               }
             });
 
-        Path currentVersionPath = dataModel.path.resolve(currentVersionFileName);
+        Path currentVersionPath = dataModel.getPath().resolve(currentVersionFileName);
         try (InputStream in = projectFilesystem.newFileInputStream(currentVersionPath)) {
           NSObject rootObject;
           try {
@@ -1875,7 +1875,7 @@ public class ProjectGenerator {
                   new SourceTreePath(
                       PBXReference.SourceTree.SOURCE_ROOT,
                       pathRelativizer.outputDirToRootRelative(
-                          dataModel.path.resolve(currentVersionName.toString())),
+                          dataModel.getPath().resolve(currentVersionName.toString())),
                       Optional.empty()));
           versionGroup.setCurrentVersion(Optional.of(ref));
         } catch (NoSuchFileException e) {
@@ -1888,7 +1888,7 @@ public class ProjectGenerator {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(dataModel.path),
+                pathRelativizer.outputDirToRootRelative(dataModel.getPath()),
                 Optional.empty()));
       }
     }

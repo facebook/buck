@@ -397,7 +397,7 @@ public class AppleDescriptions {
               moduleName,
               coreDataModelArgs
                   .stream()
-                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.path))
+                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.getPath()))
                   .collect(MoreCollectors.toImmutableSet())));
     }
   }
@@ -429,7 +429,7 @@ public class AppleDescriptions {
               appleCxxPlatform,
               sceneKitAssetsArgs
                   .stream()
-                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.path))
+                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.getPath()))
                   .collect(MoreCollectors.toImmutableSet())));
     }
   }
