@@ -107,12 +107,12 @@ public class GoTestDescription
 
       ImmutableSet<BuildTarget> deps;
       if (args.getLibrary().isPresent()) {
-        GoLibraryDescription.Arg libraryArg =
-            resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescription.Arg.class).get();
+        GoLibraryDescriptionArg libraryArg =
+            resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class).get();
         deps =
             ImmutableSortedSet.<BuildTarget>naturalOrder()
                 .addAll(args.getDeps())
-                .addAll(libraryArg.deps)
+                .addAll(libraryArg.getDeps())
                 .build();
       } else {
         deps = args.getDeps();
@@ -224,8 +224,8 @@ public class GoTestDescription
     target = target.withFlavors(); // remove flavors.
 
     if (args.getLibrary().isPresent()) {
-      final Optional<GoLibraryDescription.Arg> libraryArg =
-          resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescription.Arg.class);
+      final Optional<GoLibraryDescriptionArg> libraryArg =
+          resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class);
       if (!libraryArg.isPresent()) {
         throw new HumanReadableException(
             "Library specified in %s (%s) is not a go_library rule.",
@@ -238,7 +238,7 @@ public class GoTestDescription
             target);
       }
 
-      if (!libraryArg.get().tests.contains(target)) {
+      if (!libraryArg.get().getTests().contains(target)) {
         throw new HumanReadableException(
             "go internal test target %s is not listed in `tests` of library %s",
             target, args.getLibrary().get());
@@ -246,7 +246,7 @@ public class GoTestDescription
 
       return libraryArg
           .get()
-          .packageName
+          .getPackageName()
           .map(Paths::get)
           .orElse(goBuckConfig.getDefaultPackageName(args.getLibrary().get()));
     } else if (args.getPackageName().isPresent()) {
@@ -267,8 +267,8 @@ public class GoTestDescription
     GoCompile testLibrary;
     if (args.getLibrary().isPresent()) {
       // We should have already type-checked the arguments in the base rule.
-      final GoLibraryDescription.Arg libraryArg =
-          resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescription.Arg.class).get();
+      final GoLibraryDescriptionArg libraryArg =
+          resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class).get();
 
       final BuildRuleParams originalParams = params;
       BuildRuleParams testTargetParams =
@@ -276,14 +276,14 @@ public class GoTestDescription
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(originalParams.getDeclaredDeps().get())
-                      .addAll(resolver.getAllRules(libraryArg.deps))
+                      .addAll(resolver.getAllRules(libraryArg.getDeps()))
                       .build(),
               () -> {
                 SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
                 return ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(originalParams.getExtraDeps().get())
                     // Make sure to include dynamically generated sources as deps.
-                    .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
+                    .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
                     .build();
               });
 
@@ -294,15 +294,15 @@ public class GoTestDescription
               goBuckConfig,
               packageName,
               ImmutableSet.<SourcePath>builder()
-                  .addAll(libraryArg.srcs)
+                  .addAll(libraryArg.getSrcs())
                   .addAll(args.getSrcs())
                   .build(),
               ImmutableList.<String>builder()
-                  .addAll(libraryArg.compilerFlags)
+                  .addAll(libraryArg.getCompilerFlags())
                   .addAll(args.getCompilerFlags())
                   .build(),
               ImmutableList.<String>builder()
-                  .addAll(libraryArg.assemblerFlags)
+                  .addAll(libraryArg.getAssemblerFlags())
                   .addAll(args.getAssemblerFlags())
                   .build(),
               platform,
