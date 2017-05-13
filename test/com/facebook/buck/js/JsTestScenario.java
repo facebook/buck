@@ -111,8 +111,9 @@ public class JsTestScenario {
 
     Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
-          new JsLibraryBuilder(target, workerTarget, filesystem)
+          new JsLibraryBuilder(target, filesystem)
               .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
+              .setWorker(workerTarget)
               .build());
       return this;
     }
@@ -138,9 +139,10 @@ public class JsTestScenario {
         @Nullable String basePath,
         Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       nodes.add(
-          new JsLibraryBuilder(target, workerTarget, filesystem)
+          new JsLibraryBuilder(target, filesystem)
               .setBasePath(basePath)
               .setSrcs(sources.collect(MoreCollectors.toImmutableSet()))
+              .setWorker(workerTarget)
               .build());
     }
 

@@ -20,7 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.test.selectors.Nullable;
 import com.google.common.collect.ImmutableSet;
@@ -28,35 +28,36 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class JsLibraryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        JsLibraryDescription.Arg, JsLibraryDescription, JsLibrary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        JsLibraryDescriptionArg.Builder, JsLibraryDescriptionArg, JsLibraryDescription, JsLibrary> {
   private static final JsLibraryDescription libraryDescription = new JsLibraryDescription();
 
-  JsLibraryBuilder(BuildTarget target, BuildTarget worker, ProjectFilesystem filesystem) {
+  JsLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(libraryDescription, target, filesystem);
-    arg.extraArgs = Optional.empty();
-    arg.worker = worker;
-    arg.srcs = ImmutableSortedSet.of();
-    arg.basePath = Optional.empty();
   }
 
   JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
-    arg.libs = libs;
+    getArgForPopulating().setLibs(libs);
     return this;
   }
 
   JsLibraryBuilder setExtraArgs(String extraArgs) {
-    arg.extraArgs = Optional.of(extraArgs);
+    getArgForPopulating().setExtraArgs(Optional.of(extraArgs));
     return this;
   }
 
   JsLibraryBuilder setSrcs(ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   JsLibraryBuilder setBasePath(@Nullable String basePath) {
-    arg.basePath = Optional.ofNullable(basePath);
+    getArgForPopulating().setBasePath(Optional.ofNullable(basePath));
+    return this;
+  }
+
+  JsLibraryBuilder setWorker(BuildTarget worker) {
+    getArgForPopulating().setWorker(worker);
     return this;
   }
 }
