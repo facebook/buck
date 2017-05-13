@@ -26,20 +26,21 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,12 +48,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.immutables.value.Value;
 
 public class RustBinaryDescription
-    implements Description<RustBinaryDescription.Arg>,
-        ImplicitDepsInferringDescription<RustBinaryDescription.Arg>,
+    implements Description<RustBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<RustBinaryDescription.AbstractRustBinaryDescriptionArg>,
         Flavored,
-        VersionRoot<RustBinaryDescription.Arg> {
+        VersionRoot<RustBinaryDescriptionArg> {
 
   public static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Rust Binary Type", Type.class);
@@ -71,8 +73,8 @@ public class RustBinaryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<RustBinaryDescriptionArg> getConstructorArgType() {
+    return RustBinaryDescriptionArg.class;
   }
 
   @Override
@@ -81,12 +83,12 @@ public class RustBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      RustBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
 
     Linker.LinkableDepType linkStyle =
-        RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.linkStyle);
+        RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.getLinkStyle());
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         BINARY_TYPE.getFlavorAndValue(buildTarget);
@@ -99,16 +101,16 @@ public class RustBinaryDescription
         rustBuckConfig,
         cxxPlatforms,
         defaultCxxPlatform,
-        args.crate,
-        args.features,
-        Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.rustcFlags.stream())
+        args.getCrate(),
+        args.getFeatures(),
+        Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
             .flatMap(x -> x)
             .iterator(),
-        args.linkerFlags.iterator(),
+        args.getLinkerFlags().iterator(),
         linkStyle,
-        args.rpath,
-        args.srcs,
-        args.crateRoot,
+        args.isRpath(),
+        args.getSrcs(),
+        args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
         isCheck);
   }
@@ -117,7 +119,7 @@ public class RustBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractRustBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
@@ -182,24 +184,26 @@ public class RustBinaryDescription
     return Optional.of(ImmutableSet.of(cxxPlatforms, BINARY_TYPE));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
-    public ImmutableList<String> rustcFlags = ImmutableList.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<Linker.LinkableDepType> linkStyle;
-    public Optional<String> crate;
-    public Optional<SourcePath> crateRoot;
-    public boolean rpath = true;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractRustBinaryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getFeatures();
 
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    ImmutableList<String> getRustcFlags();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
+    ImmutableList<String> getLinkerFlags();
+
+    Optional<Linker.LinkableDepType> getLinkStyle();
+
+    Optional<String> getCrate();
+
+    Optional<SourcePath> getCrateRoot();
+
+    @Value.Default
+    default boolean isRpath() {
+      return true;
     }
   }
 }

@@ -19,14 +19,15 @@ package com.facebook.buck.rust;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class RustBinaryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        RustBinaryDescription.Arg, RustBinaryDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        RustBinaryDescriptionArg.Builder, RustBinaryDescriptionArg, RustBinaryDescription,
+        BuildRule> {
 
   private RustBinaryBuilder(RustBinaryDescription description, BuildTarget target) {
     super(description, target);
@@ -42,12 +43,12 @@ public class RustBinaryBuilder
   }
 
   public RustBinaryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   public RustBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 }
